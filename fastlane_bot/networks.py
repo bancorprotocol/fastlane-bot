@@ -153,14 +153,6 @@ class EthereumNetwork(NetworkBase):
         """
         return self.web3.toHex(dict(tx_receipt)["transactionHash"])
 
-    def sign_transaction(self, transaction: HexBytes) -> HexBytes:
-        """
-        Sign a transaction
-        :param transaction:
-        :return: the signed transaction
-        """
-        return self.web3.eth.account.sign_transaction(transaction, ec.ETHERSCAN_TOKEN)
-
     def connect_network(self):
         """
         Connect to the network
