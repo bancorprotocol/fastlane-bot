@@ -26,7 +26,7 @@ setup(
     url="https://github.com/bancorprotocol/fastlane",
     install_requires=open("requirements.txt").readlines(),
     extras_require=extras_require,
-    tests_require=['pytest==6.2.5', 'pytest-mock==3.10.0'],
+    tests_require=['pytest~=6.2.5', 'pytest-mock~=3.10.0', 'imgkit~=1.2.3'],
     packages=find_packages(),
     include_package_data=True,
     python_requires=">= 3.8, != 3.11.*",
