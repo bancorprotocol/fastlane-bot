@@ -6,7 +6,6 @@ Licensed under MIT
 """
 
 import os
-import shutil
 import time
 import click
 from decimal import Decimal
@@ -102,7 +101,7 @@ def main(
 
     ETH_PRIVATE_KEY = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
     if env != "local":
-        shutil.rm(".env")
+        os.remove(".env")
 
     # Initialize the bot
     bot = FastLaneArbBotUI(
