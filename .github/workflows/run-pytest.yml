@@ -1,0 +1,42 @@
+
+# This is a basic workflow to run regression tests
+
+name: CI-PyTest
+
+
+on: [pull_request]
+
+
+jobs:
+ build:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.8 
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Install Ganesh-CLI
+      run: npm install -g ganache
+    - name: Install Dependencies
+      run: |
+           python -m pip install --upgrade pip
+           pip install . --force-reinstall
+    - name: Setup Brownie
+      run: |
+           brownie networks import ./brownie-config.yaml true
+           brownie networks add Ethereum tenderly chainid=1 host=https://rpc.tenderly.co/fork/c3206084-8ff9-491c-ade7-1d6547073f49
+      env:
+           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+    - name: Run Tests
+      run: |
+           echo $WEB3_ALCHEMY_PROJECT_ID > fastlane_bot/.env
+           echo $ETHERSCAN_TOKEN >> fastlane_bot/.env
+           pytest fastlane_bot/tests
+      env:
+           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+
