@@ -31,13 +31,14 @@ all_tokens = all_tokens[:-1]
 @click.option("--tokens", default=all_tokens, type=str)
 @click.option("--min_profit", default=ec.DEFAULT_MIN_PROFIT, type=Decimal)
 @click.option("--search_delay", default=ec.DEFAULT_SEARCH_DELAY, type=int)
-@click.option("--network_name", default=ec.PRODUCTION_NETWORK_NAME, type=str)
+@click.option("--network_name", default=ec.TEST_NETWORK_NAME, type=str)
 @click.option(
     "--fastlane_contract_address", default=ec.FASTLANE_CONTRACT_ADDRESS, type=str
 )
 @click.option("--max_slippage", default=ec.DEFAULT_MAX_SLIPPAGE, type=Decimal)
 @click.option("--tenderly_fork_id", default=ec.TENDERLY_FORK, type=str)
 @click.option("--blocktime_deviation", default=ec.DEFAULT_BLOCKTIME_DEVIATION, type=int)
+@click.option("--env", default="local", type=str)
 def main(
         base_path: str,
         filetype: str,
@@ -53,13 +54,13 @@ def main(
         fastlane_contract_address: str,
         max_slippage: Decimal,
         tenderly_fork_id: str,
-        blocktime_deviation: int
+        blocktime_deviation: int,
+        env: str,
 ):
     """
     Takes a list of tkn addresses, collects liquidity pool data for each pool in Bancor, Uniswap V2, and Sushi,
     and calculates possible arbitrage in the path
 
-    :param wallet_address: (str), public address of the wallet to run the bot on
     :param network_name: (str), name of the network to run the bot on
     :param fastlane_contract_address: (str), address of the arb contract
     :param search_delay: (int), number of seconds to wait between each search
@@ -78,6 +79,7 @@ def main(
     :param max_slippage: (float), this is the maximum slippage percentage that is allowed for a trade to be executed.
     :param tenderly_fork_id: (str), the fork id to use for tenderly
     :param blocktime_deviation: (int), the maximum blocktime deviation allowed for a trade to be executed
+    :param env: (str), the environment to run the bot on (local, dev, prod)
     """
 
     # Initialize the logger
@@ -98,6 +100,8 @@ def main(
     check_paths(base_path)
 
     ETH_PRIVATE_KEY = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
+    if env != "local":
+        os.remove(".env")
 
     # Initialize the bot
     bot = FastLaneArbBotUI(
@@ -138,7 +142,7 @@ def main(
     initial_search = True
     while True:
 
-        if network_name == "tenderly" and not initial_search:
+        if "tenderly" in network_name and not initial_search:
             try:
                 bot.execute_random_swaps(
                     num=5, web3=bot.web3, unique_pools=bot.unique_pools
