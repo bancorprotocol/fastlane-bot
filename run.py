@@ -31,7 +31,7 @@ all_tokens = all_tokens[:-1]
 @click.option("--tokens", default=all_tokens, type=str)
 @click.option("--min_profit", default=ec.DEFAULT_MIN_PROFIT, type=Decimal)
 @click.option("--search_delay", default=ec.DEFAULT_SEARCH_DELAY, type=int)
-@click.option("--network_name", default=ec.PRODUCTION_NETWORK_NAME, type=str)
+@click.option("--network_name", default=ec.TEST_NETWORK, type=str)
 @click.option(
     "--fastlane_contract_address", default=ec.FASTLANE_CONTRACT_ADDRESS, type=str
 )
