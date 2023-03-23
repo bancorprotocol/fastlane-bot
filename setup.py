@@ -29,5 +29,5 @@ setup(
     tests_require=['pytest==6.2.5', 'pytest-mock==3.10.0'],
     packages=find_packages(),
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">= 3.8, != 3.11.*",
 )
