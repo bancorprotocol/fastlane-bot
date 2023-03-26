@@ -121,9 +121,7 @@ class BaseHelper:
         """
         Gets the trade routes from the collection path
         """
-        collections_path = os.path.normpath(
-            f"{ec.COLLECTION_PATH}/*.{self.filetype}"
-        )
+        collections_path = os.path.normpath(f"{ec.COLLECTION_PATH}/*.{self.filetype}")
         logger.debug(f"Looking for cached trade routes in {collections_path}")
         filenames = list(glob.glob(collections_path))
         return pd.concat([pd.read_csv(f) for f in filenames]) if filenames else None
