@@ -122,7 +122,7 @@ class BaseHelper:
         Gets the trade routes from the collection path
         """
         collections_path = os.path.normpath(
-            f"{self.base_path}/fastlane/data/collection/*.{self.filetype}"
+            f"{ec.COLLECTION_PATH}/*.{self.filetype}"
         )
         logger.debug(f"Looking for cached trade routes in {collections_path}")
         filenames = list(glob.glob(collections_path))
@@ -149,7 +149,7 @@ class CacheHelpers(BaseHelper):
         """
         Archives trade routes that have been read
         """
-        collection_path = f"{self.base_path}/fastlane/data/collection"
+        collection_path = f"{ec.COLLECTION_PATH}"
         readpath = os.path.normpath(f"{collection_path}/*.{self.filetype}")
         files = glob.glob(readpath)
         archive_path = os.path.normpath(f"{self.base_path}/fastlane/data/archive")
@@ -534,11 +534,10 @@ class SearchHelpers(BaseHelper):
             return
         block_number = self.block_number
         real_ts, ts = self.ts
-        collection_path = f"{self.base_path}/fastlane/data/collection"
         filetype = self.filetype
         lst = [self.create_route_report(idx) for idx in range(len(self.search_results))]
         results_path = os.path.normpath(
-            f"{collection_path}/{str(block_number)}_{ts}.{filetype}"
+            f"{ec.COLLECTION_PATH}/{str(block_number)}_{ts}.{filetype}"
         )
         output = pd.concat(lst)
         output["ts"] = [real_ts for _ in range(len(output))]
