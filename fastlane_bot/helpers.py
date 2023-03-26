@@ -147,11 +147,9 @@ class CacheHelpers(BaseHelper):
         """
         Archives trade routes that have been read
         """
-        collection_path = f"{ec.COLLECTION_PATH}"
-        readpath = os.path.normpath(f"{collection_path}/*.{self.filetype}")
+        readpath = os.path.normpath(f"{ec.COLLECTION_PATH}/*.{self.filetype}")
         files = glob.glob(readpath)
-        archive_path = os.path.normpath(f"{self.base_path}/fastlane/data/archive")
-        [shutil.move(file, archive_path) for file in files]
+        [shutil.move(file, ec.ARCHIVE_PATH) for file in files]
 
     def trade_to_pandas(
         self,
@@ -174,7 +172,7 @@ class CacheHelpers(BaseHelper):
         :return: None
         """
         dtts, ts = self.ts
-        tx_path = f"{self.base_path}/fastlane/data/transactions"
+        tx_path = f"{ec.DATA_PATH}/transactions"
         results_path = os.path.normpath(
             f"{tx_path}/{block_number}_{ts}.{self.filetype}"
         )
