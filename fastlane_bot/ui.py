@@ -82,7 +82,7 @@ class FastLaneArbBotUI(
         # Use current Bancor V3 BNT/ETH liquidity to convert gas price to BNT
         bnt, eth = self.get_bnt_eth_liquidity()
 
-        block_number = self.web3.eth.get_block("latest")['number']
+        block_number = self.web3.eth.get_block("latest")["number"]
 
         try:
             for src_amt, trade_path, bnt_profit in valid_routes:
@@ -144,14 +144,15 @@ class FastLaneArbBotUI(
                             Decimal(bnt_profit) * ec.DEFAULT_REWARD_PERCENT
                         )
 
-
                         if adjusted_reward > gas_in_bnt:
                             logger.info(
                                 f"Expected profit of {bnt_profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
                             )
 
                             # Submit the transaction
-                            tx_receipt = self.submit_private_transaction(arb_tx=arb_tx, block_number=block_number)
+                            tx_receipt = self.submit_private_transaction(
+                                arb_tx=arb_tx, block_number=block_number
+                            )
 
                             if tx_receipt is None:
                                 break
@@ -175,7 +176,7 @@ class FastLaneArbBotUI(
                     ) if success else logger.error(
                         f"Execute transaction failed, route={trade_path}\ntx_hash = {tx_hash}"
                     )
-    
+
                     # Get the block number of the transaction
                     block_number = int(dict(tx_receipt)["blockNumber"])
 
