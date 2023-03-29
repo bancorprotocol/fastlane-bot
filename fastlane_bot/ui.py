@@ -111,6 +111,8 @@ class FastLaneArbBotUI(
                             max_priority=current_max_priority_gas,
                             nonce=nonce,
                         )
+                        if arb_tx is None:
+                            break
                         gas_estimate = arb_tx["gas"]
 
                         current_gas_price = (
@@ -175,7 +177,6 @@ class FastLaneArbBotUI(
                     ) if success else logger.error(
                         f"Execute transaction failed, route={trade_path}\ntx_hash = {tx_hash}"
                     )
-    
                     # Get the block number of the transaction
                     block_number = int(dict(tx_receipt)["blockNumber"])
 
