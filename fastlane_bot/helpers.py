@@ -326,11 +326,13 @@ class TransactionHelpers(BaseHelper):
 
         try:
             estimated_gas = (
-                    self.web3.eth.estimate_gas(transaction=transaction)
-                    + ec.DEFAULT_GAS_SAFETY_OFFSET
+                self.web3.eth.estimate_gas(transaction=transaction)
+                + ec.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
-            logger.info(f"Failed to estimate gas due to exception {e}, scrapping transaction :(.")
+            logger.info(
+                f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
+            )
             return None
         transaction["gas"] = estimated_gas
         return transaction
