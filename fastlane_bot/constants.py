@@ -24,6 +24,8 @@ load_dotenv()
 PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
 BASE_PATH = os.path.normpath(f"{PROJECT_PATH}/fastlane_bot")
 DATA_PATH = os.path.normpath(f"{BASE_PATH}/data")
+COLLECTION_PATH = os.path.normpath(f"{DATA_PATH}/collection")
+ARCHIVE_PATH = os.path.normpath(f"{DATA_PATH}/archive")
 
 @dataclass
 class EthereumNetworkConstants:
