@@ -25,7 +25,7 @@ import requests
 from joblib import parallel_backend, Parallel, delayed
 from tabulate import tabulate
 from web3.exceptions import TimeExhausted
-
+from alchemy import Alchemy, Network
 from fastlane_bot.exceptions import ResultLoggingException
 from fastlane_bot.networks import *
 from fastlane_bot.pools import LiquidityPool, UniswapV3LiquidityPool
@@ -206,6 +206,12 @@ class TransactionHelpers(BaseHelper):
     nonce: int = 0
     transactions_submitted = []
     transaction_routes_submitted = []
+    network = Network.ETH_MAINNET
+    alchemy = Alchemy(
+        api_key=ec.WEB3_ALCHEMY_PROJECT_ID,
+        network=network,
+        max_retries=ec.DEFAULT_NUM_RETRIES,
+    )
 
     def get_gas_price(self) -> int:
         """
@@ -263,44 +269,6 @@ class TransactionHelpers(BaseHelper):
         """
         return self.web3.eth.estimate_gas(transaction=transaction)
 
-    # def get_gas_estimate(self, transaction: TxReceipt) -> Tuple[int, bool]:
-    #     """
-    #     Returns the estimated gas cost of the transaction
-    #
-    #     transaction: the transaction to be submitted to the blockchain
-    #
-    #     returns: the estimated gas cost of the transaction
-    #     """
-    #     try:
-    #         return self.web3.eth.estimate_gas(transaction=transaction), False
-    #     except ValueError as e:
-    #         message = str(e).split("baseFee: ")
-    #         split_fee = message[1].split(" (supplied gas ")
-    #         baseFee = int(split_fee[0])
-    #         return baseFee, True
-
-    # def _build_transaction(
-    #         self,
-    #         routes: List[Dict[str, Any]],
-    #         src_amt: int,
-    #         nonce: int,
-    #         gas_price: int = None,
-    #         gas_estimate: int = None,
-    # ) -> str:
-    #     """
-    #     Builds the transaction to be submitted to the blockchain.
-    #
-    #     routes: the routes to be used in the transaction
-    #     src_amt: the amount of the source token to be sent to the transaction
-    #     gas_price: the gas price to be used in the transaction
-    #
-    #     returns: the transaction to be submitted to the blockchain
-    #     """
-    #
-    #     return self.arb_contract.functions.execute(routes, src_amt).build_transaction(
-    #         self.build_tx(gas_price=gas_price, gas_estimate=gas_estimate, nonce=nonce),
-    #     )
-
     def build_transaction_tenderly(
         self,
         routes: List[Dict[str, Any]],
@@ -356,11 +324,16 @@ class TransactionHelpers(BaseHelper):
                 )
             )
 
-        # estimated_gas = self.get_gas_estimate_alchemy(transaction)
-        estimated_gas = (
-            self.web3.eth.estimate_gas(transaction=transaction)
-            + ec.DEFAULT_GAS_SAFETY_OFFSET
-        )
+        try:
+            estimated_gas = (
+                self.web3.eth.estimate_gas(transaction=transaction)
+                + ec.DEFAULT_GAS_SAFETY_OFFSET
+            )
+        except Exception as e:
+            logger.info(
+                f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
+            )
+            return None
         transaction["gas"] = estimated_gas
         return transaction
 
@@ -413,6 +386,47 @@ class TransactionHelpers(BaseHelper):
             logger.info(f"Transaction is stuck in mempool, exception: {e}")
             return None
 
+    def submit_private_transaction(self, arb_tx, block_number: int) -> Any:
+        """
+        Submits the transaction privately through Alchemy -> Flashbots RPC to mitigate frontrunning.
+
+        :param arb_tx: the transaction to be submitted to the blockchain
+        :param block_number: the current block number
+
+        returns: The transaction receipt, or None if the transaction failed
+        """
+        logger.info(f"Attempting to submit private tx {arb_tx}")
+        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+        signed_tx_string = signed_arb_tx.hex()
+
+        max_block_number = hex(block_number + 10)
+
+        params = [
+            {
+                "tx": signed_tx_string,
+                "maxBlockNumber": max_block_number,
+                "preferences": {"fast": True},
+            }
+        ]
+        response = self.alchemy.core.provider.make_request(
+            method="eth_sendPrivateTransaction",
+            params=params,
+            method_name="eth_sendPrivateTransaction",
+            headers=self._get_headers,
+        )
+        logger.info(f"Submitted to Flashbots RPC, response: {response}")
+        if response != 400:
+            tx_hash = response.get("result")
+            try:
+                tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+                return tx_receipt
+            except TimeExhausted as e:
+                logger.info(f"Transaction is stuck in mempool, exception: {e}")
+                return None
+        else:
+            logger.info(f"Failed to submit transaction to Flashbots RPC")
+            return None
+
     def sign_transaction(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
         """
         Signs the transaction.
@@ -444,7 +458,7 @@ class TransactionHelpers(BaseHelper):
         :param method: the API method to call
         """
 
-        if method == "eth_estimateGas":
+        if method == "eth_estimateGas" or method == "eth_sendPrivateTransaction":
             return {"id": 1, "jsonrpc": "2.0", "method": method, "params": params}
         else:
             return {"id": 1, "jsonrpc": "2.0", "method": method}
@@ -483,6 +497,21 @@ class TransactionHelpers(BaseHelper):
         return self._query_alchemy_api_gas_methods(
             method="eth_estimateGas", params=params
         )
+
+
+class HexbytesEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Hexbytes):
+            return obj.hex()
+        return super().default(obj)
+
+
+class Hexbytes:
+    def __init__(self, value):
+        self.value = value
+
+    def hex(self):
+        return self.value.hex()
 
 
 @dataclass

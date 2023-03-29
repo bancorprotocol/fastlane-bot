@@ -82,6 +82,8 @@ class FastLaneArbBotUI(
         # Use current Bancor V3 BNT/ETH liquidity to convert gas price to BNT
         bnt, eth = self.get_bnt_eth_liquidity()
 
+        block_number = self.web3.eth.get_block("latest")["number"]
+
         try:
             for src_amt, trade_path, bnt_profit in valid_routes:
                 # Get the trade path
@@ -109,6 +111,8 @@ class FastLaneArbBotUI(
                             max_priority=current_max_priority_gas,
                             nonce=nonce,
                         )
+                        if arb_tx is None:
+                            break
                         gas_estimate = arb_tx["gas"]
 
                         current_gas_price = (
@@ -139,16 +143,19 @@ class FastLaneArbBotUI(
                         )
 
                         adjusted_reward = Decimal(
-                            bnt_profit * ec.DEFAULT_REWARD_PERCENT
+                            Decimal(bnt_profit) * ec.DEFAULT_REWARD_PERCENT
                         )
+
                         if adjusted_reward > gas_in_bnt:
                             logger.info(
                                 f"Expected profit of {bnt_profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
                             )
 
                             # Submit the transaction
-                            tx_receipt = self.submit_transaction(arb_tx)
-                            print(tx_receipt)
+                            tx_receipt = self.submit_private_transaction(
+                                arb_tx=arb_tx, block_number=block_number
+                            )
+
                             if tx_receipt is None:
                                 break
                         else:
@@ -201,7 +208,7 @@ class FastLaneArbBotUI(
             if self.network_name in ec.VALID_TENDERLY_NETWORKS
             else Web3(Web3.HTTPProvider(ec.ETHEREUM_MAINNET_PROVIDER))
         )
-        self.web3 = web3
+        self.web3: Web3 = web3
 
         # Set the local account
         self.local_account = web3.eth.account.from_key(self._ETH_PRIVATE_KEY)
