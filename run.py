@@ -54,7 +54,7 @@ def main(
     bot = CarbonBot(
         mode=mode,
         polling_interval=update_pools,
-        update_pools=update_pools,
+        update_pools=True,
         # seed_pools=True,
     )
 

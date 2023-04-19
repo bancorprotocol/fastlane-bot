@@ -559,6 +559,7 @@ class DatabaseManager:
                         continue
 
                     if exchange == BANCOR_V3_NAME:
+                        print('updating bancor v3 pool')
                         tkn0_address, tkn1_address = BNT_ADDRESS, pool_address
                         self.get_or_create_token(tkn0_address)
                         self.get_or_create_token(tkn1_address)
