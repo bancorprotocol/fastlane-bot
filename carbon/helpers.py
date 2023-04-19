@@ -80,6 +80,8 @@ class TradeInstruction:
     cid_tkn: str
         If the curve is a Carbon curve, the cid will have a "-1" or "-0" to denote which side of the strategy the trade is on.
         This parameter is used to remove the "-1" or "-0" from the cid.
+    raw_txs: str
+    pair_sorting: str
 
     Attributes
     ----------
@@ -109,6 +111,8 @@ class TradeInstruction:
     amtin: Union[int, Decimal, float]
     tknout: str
     amtout: Union[int, Decimal, float]
+    raw_txs: str
+    pair_sorting: str
 
     @property
     def tknin_key(self) -> str:
@@ -148,6 +152,8 @@ class TradeInstruction:
         self._amtout_quantized = self._quantize(
             self._amtout_decimals, self._tknout_decimals
         )
+        self.raw_txs = '[]'
+        self.pair_sorting = ''
 
     @staticmethod
     def _quantize(amount: Decimal, decimals: int) -> Decimal:
@@ -632,6 +638,89 @@ class TxRouteHandler:
         )
         src_amount = int(self.trade_instructions_dic[0]["amtin"])
         return src_token, src_amount, route_struct
+    
+    def _agg_carbon_independentIDs(trade_instructions):
+        listti = []
+        for instr in trade_instructions:
+            listti += [
+                {'cid': instr.cid,
+                'tknin': instr.tknin,
+                'amtin': instr.amtin,
+                'tknout': instr.tknout,
+                'amtout': instr.amtout}
+            ]
+        df = pd.DataFrame.from_dict(listti)
+        carbons = df[df.cid.str.contains("-")].copy()
+        nocarbons = df[~df.cid.str.contains("-")]
+        dropindexes = []
+        new_trade_instructions = []
+        carbons['pair_sorting'] = carbons.tknin + carbons.tknout
+        for pair_sorting in carbons.pair_sorting.unique():
+            newdf = carbons[carbons.pair_sorting==pair_sorting]
+            newoutput = {
+                'pair_sorting': pair_sorting, 
+                'cid': newdf.cid.values,
+                'tknin': newdf.tknin.values[0],
+                'amtin': newdf.sum()['amtin'],
+                'tknout': newdf.tknout.values[0],
+                'amtout': newdf.sum()['amtout'],
+                'raw_txs': str(newdf.to_dict(orient='records'))
+            }
+            
+            new_trade_instructions.append(newoutput)
+
+        nocarbons_instructions = []
+        dictnocarbons =  nocarbons.to_dict(orient='records')
+        for dict in dictnocarbons:
+            dict['pair_sorting'] = dict['tknin']+dict['tknout']
+            dict['raw_txs'] = str([])
+            nocarbons_instructions += [dict]
+
+        new_trade_instructions = new_trade_instructions + nocarbons_instructions
+        trade_instructions = [TradeInstruction(**new_trade_instructions[i]) for i in range(len(new_trade_instructions))]
+        return trade_instructions
+
+    def _find_tradematches(trade_instructions):
+        factor_high = 1.00001
+        factor_low = 0.99999
+
+        listti = []
+        for instr in trade_instructions:
+            listti += [
+                {'cid': instr.cid,
+                'tknin': instr.tknin,
+                'amtin': instr.amtin,
+                'tknout': instr.tknout,
+                'amtout': instr.amtout}
+            ]
+        df = pd.DataFrame.from_dict(listti)
+        df["matchedout"] = None
+        df["matchedin"] = None
+
+        for i in df.index:
+            for j in df.index:
+                if i!=j:
+                    if df.tknin[i] == df.tknout[j] and  ((df.amtin[i] <= -df.amtout[j]*factor_high) & (df.amtin[i] >= -df.amtout[j]*factor_low)):
+                        df.loc[i,"matchedin"] = j
+                    if df.tknout[i] == df.tknin[j] and  ((df.amtout[i] >= -df.amtin[j]*factor_high) & (df.amtout[i] <= -df.amtin[j]*factor_low)):
+                        df.loc[i,"matchedout"] = j
+
+
+        pos =  df[df.matchedin.isna()].index.values[0]
+        route = [pos]
+        ismatchedin = True
+
+        if pos is None:
+            ordered_trade_instructions = trade_instructions
+        else:
+            while len(route) < len(df.index):
+                pos = df.loc[pos, "matchedout"]
+                route.append(pos)
+                ismatchedin = not ismatchedin
+
+        trade_instructions = [trade_instructions[i] for i in route]
+        return trade_instructions
+
 
     def _determine_trade_route(
         self, trade_instructions: List[TradeInstruction]

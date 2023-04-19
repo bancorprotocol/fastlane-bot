@@ -6,8 +6,6 @@ Note: You should configure the bot in config.py before running this script.
 (c) Copyright Bprotocol foundation 2022.
 Licensed under MIT
 """
-from typing import List
-
 import click
 from carbon.tools.cpc import T
 from carbon.bot import CarbonBot
@@ -17,7 +15,7 @@ flashloan_tokens = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
 
 @click.command()
 @click.option("--mode", default="single", type=str)
-@click.option("--flashloan_tokens", default=flashloan_tokens, type=List[str])
+@click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--update_pools", default=False, type=bool)
 def main(
         mode,

@@ -18,3 +18,4 @@ topaze
 .ipynb_checkpoints
 carbon/tools/*
 
+/.env
