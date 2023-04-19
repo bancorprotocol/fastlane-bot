@@ -211,6 +211,7 @@ class CarbonBot:
         Tuple[Decimal, List[Dict[str, Any]]]
             The best profit and the trade instructions.
         """
+        print("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
@@ -224,20 +225,31 @@ class CarbonBot:
                 pstart = {
                     tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
                 }
-                O = CPCArbOptimizer(CC)
-                r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                if (
-                    r.result < best_profit
-                    and len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic)) > 0
-                ):
-                    best_profit = r.result
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
+                print("pstart", pstart)
             else:
-                print(f"No curve found for {tkn0}/{tkn1}")
-                pass
+                pstart=None
+            # try:
+            O = CPCArbOptimizer(CC)
+            print(tkn0, tkn1)
+            r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+            trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+            trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+            print("r", r)
+            print("trade_instructions_df", trade_instructions_df)
+            print("trade_instructions_dic", trade_instructions_dic)
+            if (
+                r.result < best_profit
+                and len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic)) > 0
+            ):
+                best_profit = r.result
+                best_trade_instructions_df = trade_instructions_df
+                best_trade_instructions_dic = trade_instructions_dic
+            # except:
+            #     print(f"No curve found for {tkn0}/{tkn1}")
+            #     pass
+            # else:
+            #     print(f"No curve found for {tkn0}/{tkn1}")
+            #     pass
         return best_profit, best_trade_instructions_df, best_trade_instructions_dic
 
     def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer) -> str:

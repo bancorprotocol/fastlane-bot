@@ -10,7 +10,10 @@ import click
 from carbon.tools.cpc import T
 from carbon.bot import CarbonBot
 
-flashloan_tokens = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+from carbon.models import *
+session.rollback()
+
+flashloan_tokens = [T.BNT, T.WETH]
 
 
 @click.command()
@@ -52,6 +55,7 @@ def main(
         mode=mode,
         polling_interval=update_pools,
         update_pools=update_pools,
+        # seed_pools=True,
     )
 
     # Run the bot
