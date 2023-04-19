@@ -1,0 +1,10 @@
+networks:
+  default: mainnet
+  mainnet:
+    default: ${DEFAULT_NETWORK:-mainnet}
+    multicall: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696'
+
+  tenderly:
+    default: ${DEFAULT_NETWORK:-tenderly}
+    multicall: '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696'
+dotenv: .env
