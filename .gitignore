@@ -16,4 +16,5 @@ topaze
 *.sqlite
 .hypothesis
 .ipynb_checkpoints
+carbon/tools/*
 
