@@ -1355,6 +1355,7 @@ class TxRouteHandler:
             raw_txs_lst = []
             if trade.raw_txs != '[]':
                 data = eval(trade.raw_txs)
+                total_out = 0
 
                 for tx in data:
                     cid = tx['cid']
@@ -1370,7 +1371,19 @@ class TxRouteHandler:
                         if tknin_key == curve.tkn0_key
                         else curve.tkn1_decimals
                     )
-                    amount_in_wei = TradeInstruction._convert_to_wei(amtin, tkn_in_decimals)
+                    curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
+                    (
+                        amount_in,
+                        amount_out,
+                        amount_in_wei,
+                        amount_out_wei,
+                    ) = self._solve_trade_output(
+                        curve=curve, trade=trade, amount_in=next_amount_in
+                    )
+
+                    total_out += amount_out
+
+                    #amount_in_wei = TradeInstruction._convert_to_wei(amtin, tkn_in_decimals)
 
                     print(f"amount_in_wei: {amount_in_wei}, {str(amount_in_wei)}")
 
@@ -1378,21 +1391,26 @@ class TxRouteHandler:
                         'cid': cid,
                         'amtin': amount_in_wei,
                         'tknin': tknin_key,
+                        'amtout': amount_out_wei
                     }
                     raw_txs_lst.append(raw_txs)
 
-            curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
-            (
-                amount_in,
-                amount_out,
-                amount_in_wei,
-                amount_out_wei,
-            ) = self._solve_trade_output(
-                curve=curve, trade=trade, amount_in=next_amount_in
-            )
+                amount_out = total_out
+
+            else:
+                curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
+                (
+                    amount_in,
+                    amount_out,
+                    amount_in_wei,
+                    amount_out_wei,
+                ) = self._solve_trade_output(
+                    curve=curve, trade=trade, amount_in=next_amount_in
+                )
+                trade_instructions[idx].amtin = amount_in_wei
+                trade_instructions[idx].amtout = amount_out_wei
+
             next_amount_in = amount_out
-            trade_instructions[idx].amtin = amount_in_wei
-            trade_instructions[idx].amtout = amount_out_wei
             trade_instructions[idx].raw_txs = str(raw_txs_lst)
         return trade_instructions
 

@@ -384,14 +384,14 @@ class DatabaseManager:
             pool_balances = pool_contract.tradingLiquidity(tkn1_address)
             if pool_balances:
                 return {
-                    "fee": "0.003",
+                    "fee": "0.000",
                     "tkn0_balance": pool_balances[0],
                     "tkn1_balance": pool_balances[1],
                 }
         elif exchange_name == BANCOR_V2_NAME:
             reserve0, reserve1 = pool_contract.caller.reserveBalances()
             return {
-                "fee": "0.003",
+                "fee": 
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
             }
