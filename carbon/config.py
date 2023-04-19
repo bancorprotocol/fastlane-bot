@@ -31,7 +31,7 @@ DEFAULT_GAS_PRICE = 0
 
 DEFAULT_GAS_PRICE_OFFSET = 1.05
 DEFAULT_GAS_SAFETY_OFFSET = 25_000
-BACKEND = "sqlite"  # "sqlite" or "postgres"
+BACKEND = "postgres"  # "sqlite" or "postgres"
 VERBOSE = "INFO"
 DEFAULT_NETWORK = "tenderly"
 DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"
@@ -176,9 +176,8 @@ carbon_controller = Contract.from_abi(
     address=CARBON_CONTROLLER_ADDRESS,
     abi=CARBON_CONTROLLER_ABI,
 )
-arb_contract = Contract.from_abi(
-    name=FASTLANE_CONTRACT_ADDRESS,
-    address=FASTLANE_CONTRACT_ADDRESS,
+arb_contract = w3.eth.contract(
+    address=w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
     abi=FAST_LANE_CONTRACT_ABI,
 )
 

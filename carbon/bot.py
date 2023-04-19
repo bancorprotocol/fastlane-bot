@@ -55,7 +55,7 @@ from carbon.helpers import (
     TxReceiptHandler,
 )
 from carbon.manager import DatabaseManager
-from carbon.models import Pool, session
+from carbon.models import Pool, session, Token
 from carbon.tools import tokenscale as ts
 from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
 from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -68,7 +68,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List, Dict, Tuple
 
 
@@ -221,36 +221,34 @@ class CarbonBot:
             assert(tkn == tkn1)
 
             CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
-            if len(CC) != 0:
-                pstart = {
+            pstart = (
+                {
                     tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
                 }
-                print("pstart", pstart)
-            else:
-                pstart=None
-            # try:
+                if len(CC) != 0
+                else None
+            )
             O = CPCArbOptimizer(CC)
-            print(tkn0, tkn1)
-            r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+            src_token = tkn1
+            try:
+                r = O.margp_optimizer(tkn1,
+                                  params=dict(pstart=pstart)
+                                  )
+            except Exception as e:
+                logger.debug(e)
+                r = O.margp_optimizer(tkn1)
             trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-            print("r", r)
+            print("r.result", r.result, f"carbon curves count: {len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic))}")
             print("trade_instructions_df", trade_instructions_df)
             print("trade_instructions_dic", trade_instructions_dic)
-            if (
-                r.result < best_profit
-                and len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic)) > 0
-            ):
-                best_profit = r.result
+
+            if (-r.result > best_profit):
+                best_src_token = src_token
+                best_profit = -r.result
                 best_trade_instructions_df = trade_instructions_df
                 best_trade_instructions_dic = trade_instructions_dic
-            # except:
-            #     print(f"No curve found for {tkn0}/{tkn1}")
-            #     pass
-            # else:
-            #     print(f"No curve found for {tkn0}/{tkn1}")
-            #     pass
-        return best_profit, best_trade_instructions_df, best_trade_instructions_dic
+        return best_profit, best_trade_instructions_df, best_trade_instructions_dic, best_src_token
 
     def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer) -> str:
         """
@@ -272,30 +270,62 @@ class CarbonBot:
             best_profit,
             best_trade_instructions_df,
             trade_instructions_dic,
+            best_src_token,
         ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+
+        new_trade_instructions = []
+        for inst in trade_instructions_dic:
+            if '-0' in inst['cid']:
+                continue
+            new_trade_instructions += [inst]
+
+        trade_instructions_dic = new_trade_instructions
+
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
-
         tx_route_handler = TxRouteHandler(trade_instructions)
-        if not tx_route_handler.contains_carbon:
-            logger.info("No arb opportunities found on Carbon.")
-            return None
 
-        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions)
-        trade_instructions = tx_route_handler._find_tradematches(agg_trade_instructions)
+        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions=trade_instructions)
+
+        print('agg_trade_instructions', agg_trade_instructions)
+
+        new_trade_instructions = []
+        if len(agg_trade_instructions) == 2:
+            for inst in agg_trade_instructions:
+                if inst.tknin == best_src_token:
+                    new_trade_instructions += [inst]
+            missing = [inst for inst in agg_trade_instructions if inst not in new_trade_instructions]
+            new_trade_instructions.append(missing[0])
+        else:
+            new_trade_instructions = tx_route_handler._find_tradematches(agg_trade_instructions)
+
         trade_instructions = tx_route_handler._calculate_trade_outputs(
-            trade_instructions
+            new_trade_instructions
         )
+        src_address = session.query(Token).filter(Token.key==best_src_token).first().address
+        src_address = w3.toChecksumAddress(src_address)
 
-        tx_submit_handler = TxSubmitHandler(trade_instructions)
+        trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
+
+        tx_submit_handler = TxSubmitHandler(trade_instructions,
+                                            src_amount=trade_instructions[0].amtin_wei,
+                                            src_address=src_address)
         deadline = tx_submit_handler._get_deadline()
 
-        route_struct, src_address, src_amount = tx_route_handler.get_route_structs(
+        route_struct, src_amount = tx_route_handler.get_arb_contract_args(
             trade_instructions, deadline
         )
+
+
         tx_details = tx_submit_handler._get_tx_details()
+        tx_submit_handler.token_contract.functions.approve(
+            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), 0
+        ).transact(tx_details)
         tx_submit_handler.token_contract.functions.approve(
             w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
+
+        # src_token = trade_instructions[0].tknin_key
+        print("src_address", src_address)
 
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount

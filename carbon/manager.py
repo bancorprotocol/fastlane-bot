@@ -40,6 +40,14 @@ class DatabaseManager:
     def __post_init__(self):
         if self.drop_tables:
             self.drop_all_tables()
+
+        try:
+            self.create_ethereum_chain()
+            self.create_supported_exchanges()
+        except Exception as e:
+            print(e)
+            session.rollback()
+
         self.data = self.data.sort_values("exchange", ascending=False)
 
     def refresh_session(self):
@@ -64,12 +72,12 @@ class DatabaseManager:
         """
         Drops all tables in the database
         """
-        Blockchain.__table__.drop(engine)
-        Exchange.__table__.drop(engine)
-        Token.__table__.drop(engine)
-        Pool.__table__.drop(engine)
-        Pair.__table__.drop(engine)
-        self.create_tables()
+        # Blockchain.__table__.drop(engine)
+        # Exchange.__table__.drop(engine)
+        # Token.__table__.drop(engine)
+        # Pool.__table__.drop(engine)
+        # Pair.__table__.drop(engine)
+        # self.create_tables()
         self.create_ethereum_chain()
         self.create_supported_exchanges()
 
