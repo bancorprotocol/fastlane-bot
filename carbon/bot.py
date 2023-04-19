@@ -167,24 +167,29 @@ class CarbonBot:
         List[Dict[str, Any]]
             The trade instructions.
         """
-        for trade_instruction in trade_instructions_dic:
-            if 'raw_txs' not in trade_instruction.keys():
-                trade_instruction["raw_txs"] = '[]'
-            if 'pair_sorting' not in trade_instruction.keys():
-                trade_instruction["pair_sorting"] = '' 
-
-        return [
-            TradeInstruction(
-                cid=trade_instruction["cid"],
-                tknin=trade_instruction["tknin"],
-                amtin=trade_instruction["amtin"],
-                tknout=trade_instruction["tknout"],
-                amtout=trade_instruction["amtout"],
-                raw_txs=trade_instruction["raw_txs"],
-                pair_sorting=trade_instruction["pair_sorting"],
-            )
-            for trade_instruction in trade_instructions_dic
-        ]
+        trade_instructions = []
+        if trade_instructions_dic is None:
+            pass
+        else:
+            for trade_instruction in trade_instructions_dic:
+                if trade_instruction is None:
+                    pass
+                else:
+                    if 'raw_txs' not in trade_instruction.keys():
+                        trade_instruction["raw_txs"] = '[]'
+                    if 'pair_sorting' not in trade_instruction.keys():
+                        trade_instruction["pair_sorting"] = '' 
+                    trade_instructions += [
+                    TradeInstruction(
+                                    cid=trade_instruction["cid"],
+                                    tknin=trade_instruction["tknin"],
+                                    amtin=trade_instruction["amtin"],
+                                    tknout=trade_instruction["tknout"],
+                                    amtout=trade_instruction["amtout"],
+                                    raw_txs=trade_instruction["raw_txs"],
+                                    pair_sorting=trade_instruction["pair_sorting"],
+                                )]
+        return trade_instructions
 
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin"
