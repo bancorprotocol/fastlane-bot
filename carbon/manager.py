@@ -391,7 +391,7 @@ class DatabaseManager:
         elif exchange_name == BANCOR_V2_NAME:
             reserve0, reserve1 = pool_contract.caller.reserveBalances()
             return {
-                "fee": 
+                "fee": pool_contract.caller.conversionFee(),
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
             }
