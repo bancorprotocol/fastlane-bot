@@ -58,7 +58,7 @@ from carbon.manager import DatabaseManager
 from carbon.models import Pool, session
 from carbon.tools import tokenscale as ts
 from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from carbon.tools.optimizer import CPCArbOptimizer
 
 plt.style.use("seaborn-dark")
@@ -167,6 +167,12 @@ class CarbonBot:
         List[Dict[str, Any]]
             The trade instructions.
         """
+        for trade_instruction in trade_instructions_dic:
+            if 'raw_txs' not in trade_instruction.keys():
+                trade_instruction["raw_txs"] = '[]'
+            if 'pair_sorting' not in trade_instruction.keys():
+                trade_instruction["pair_sorting"] = '' 
+
         return [
             TradeInstruction(
                 cid=trade_instruction["cid"],
@@ -174,6 +180,8 @@ class CarbonBot:
                 amtin=trade_instruction["amtin"],
                 tknout=trade_instruction["tknout"],
                 amtout=trade_instruction["amtout"],
+                raw_txs=trade_instruction["raw_txs"],
+                pair_sorting=trade_instruction["pair_sorting"],
             )
             for trade_instruction in trade_instructions_dic
         ]
@@ -204,18 +212,27 @@ class CarbonBot:
         for idx, tkn in enumerate(flashloan_tokens):
             tkn0 = flashloan_tokens[idx - 1]
             tkn1 = flashloan_tokens[idx]
+            assert(tkn == tkn1)
+
             CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
-            O = CPCArbOptimizer(CC)
-            r = O.margp_optimizer(tkn)
-            trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-            trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-            if (
-                r.result < best_profit
-                and len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic)) > 0
-            ):
-                best_profit = r.result
-                best_trade_instructions_df = trade_instructions_df
-                best_trade_instructions_dic = trade_instructions_dic
+            if len(CC) != 0:
+                pstart = {
+                    tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
+                }
+                O = CPCArbOptimizer(CC)
+                r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                if (
+                    r.result < best_profit
+                    and len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic)) > 0
+                ):
+                    best_profit = r.result
+                    best_trade_instructions_df = trade_instructions_df
+                    best_trade_instructions_dic = trade_instructions_dic
+            else:
+                print(f"No curve found for {tkn0}/{tkn1}")
+                pass
         return best_profit, best_trade_instructions_df, best_trade_instructions_dic
 
     def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer) -> str:
@@ -246,10 +263,8 @@ class CarbonBot:
             logger.info("No arb opportunities found on Carbon.")
             return None
 
-        new_route = tx_route_handler._determine_trade_route(trade_instructions)
-        trade_instructions = tx_route_handler._reorder_trade_instructions(
-            trade_instructions, new_route
-        )
+        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions)
+        trade_instructions = tx_route_handler._find_tradematches(agg_trade_instructions)
         trade_instructions = tx_route_handler._calculate_trade_outputs(
             trade_instructions
         )
@@ -293,7 +308,7 @@ class CarbonBot:
             The transaction hash.
         """
         if not flashloan_tokens:
-            flashloan_tokens = ["USDC", "DAI", "USDT", "BNT", "WETH"]
+            flashloan_tokens = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
         if CCm is None:
             CCm = self.get_curves()
         if update_pools:
