@@ -392,18 +392,28 @@ class CarbonBot:
             self.db.update_pools()
         if self.mode == "continuous":
             while True:
-                tx_hash = self._execute_strategy(flashloan_tokens, CCm)
-                if tx_hash:
-                    logger.info(
-                        f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
+                try:
+                    tx_hash = self._execute_strategy(flashloan_tokens, CCm)
+                    if tx_hash:
+                        logger.info(
+                            f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
+                        )
+                        if update_pools:
+                            self.db.update_pools()
+                    time.sleep(
+                        self.polling_interval
+                    )  # Sleep for 60 seconds before searching for opportunities again
+                except Exception as e:
+                    logger.warning(e)
+                    time.sleep(
+                        self.polling_interval
                     )
-                    if update_pools:
-                        self.db.update_pools()
-                time.sleep(
-                    self.polling_interval
-                )  # Sleep for 60 seconds before searching for opportunities again
         else:
-            tx_hash = self._execute_strategy(flashloan_tokens, CCm)
+            try:
+                tx_hash = self._execute_strategy(flashloan_tokens, CCm)
+            except Exception as e:
+                logger.warning(e)
+                tx_hash = None
             if tx_hash:
                 logger.info(
                     f"Flashloan arbitrage executed with transaction hash: {tx_hash}"

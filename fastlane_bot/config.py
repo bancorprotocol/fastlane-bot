@@ -160,7 +160,6 @@ CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
 # ETHEREUM NETWORK CONNECTION SECTION
 #######################################################################################
-print("ETHEREUM_MAINNET_PROVIDER", ETHEREUM_MAINNET_PROVIDER)
 if DEFAULT_NETWORK == "mainnet":
     network_id = PRODUCTION_NETWORK
     network_name = PRODUCTION_NETWORK_NAME
