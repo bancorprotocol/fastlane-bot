@@ -31,7 +31,7 @@ DEFAULT_GAS_PRICE = 0
 
 DEFAULT_GAS_PRICE_OFFSET = 1.05
 DEFAULT_GAS_SAFETY_OFFSET = 25_000
-BACKEND = "postgres"  # "sqlite" or "postgres"
+BACKEND = "sqlite"  # "sqlite" or "postgres"
 VERBOSE = "INFO"
 DEFAULT_NETWORK = "tenderly"
 DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"

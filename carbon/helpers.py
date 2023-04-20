@@ -549,8 +549,11 @@ class TxRouteHandler:
     def custom_data_encoder(wei_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
         for i in range(len(wei_instructions)):
             instr = wei_instructions[i]
+            print('DETAILS',i, instr.amtin, instr.amtout)
             if instr.raw_txs == '[]':
                 instr.customData = ''
+                # instr.amtin =  int(instr.amtin * 0.9)
+                wei_instructions[i] = instr
             else:
                 tradeInfo = eval(instr.raw_txs)
 
@@ -560,7 +563,9 @@ class TxRouteHandler:
                     tradeActions += [
                         {
                             'strategyId': int(trade['cid'].split('-')[0]),
-                            'amount': int(Decimal(trade['amtin']) * 10 ** instr.tknin_decimals * Decimal(".9"))
+                            'amount': int(Decimal(trade['amtin']) * 10 ** instr.tknin_decimals
+                                           * Decimal("0.99")
+                                           )
                         }
                     ]
 
