@@ -53,11 +53,11 @@ from pandas import DataFrame, Series
 
 from fastlane_bot.config import *
 from fastlane_bot.helpers import (
-    TxSubmitHandler,
-    TradeInstruction,
-    TxRouteHandler,
-    TxReceiptHandler,
-    TransactionHelpers,
+    TxSubmitHandler, TxSubmitHandlerBase,
+    TxReceiptHandler, TxReceiptHandlerBase,
+    TxRouteHandler, TxRouteHandlerBase,
+    TxHelpers, TxHelpersBase,
+    TradeInstruction
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
@@ -103,15 +103,31 @@ class CarbonBot:
     # update_pools: bool = False
     polling_interval: int = 60
 
-    tx_submitter_handler: TxSubmitHandler = None  # TODO REVIEW: WHY AREN'T THOSE USED?
-    tx_receipt_handler: TxReceiptHandler = None
-    tx_route_handler: TxRouteHandler = None
+    TxSubmitHandlerClass: any = None
+    TxReceiptHandlerClass: any = None
+    TxRouteHandlerClass: any = None
+    TxHelpersClass: any = None
 
     def __post_init__(self, drop_tables: bool = False):
         """
         The post init method.
         """
-        self._check_mode()
+        if self.TxSubmitHandlerClass is None:
+            self.TxSubmitHandlerClass = TxSubmitHandler
+        assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
+        
+        if self.TxReceiptHandlerClass is None:
+            self.TxReceiptHandlerClass = TxReceiptHandler
+        assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
+        
+        if self.TxRouteHandlerClass is None:
+            self.TxRouteHandlerClass = TxRouteHandler
+        assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
+        
+        if self.TxHelpersClass is None:
+            self.TxHelpersClass = TxHelpers
+        assert issubclass(self.TxHelpersClass, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
+        
         if self.db is None:
             self.db = DatabaseManager(
                 data=self.genesis_data, drop_tables=self.drop_tables
@@ -356,7 +372,7 @@ class CarbonBot:
         ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
 
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
-        tx_route_handler = TxRouteHandler(trade_instructions)
+        tx_route_handler = self.TxRouteHandlerClass(trade_instructions)
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
             trade_instructions=trade_instructions
         )
@@ -382,15 +398,13 @@ class CarbonBot:
             return self._validate_and_submit_transaction_tenderly(
                 trade_instructions, src_address, route_struct, src_amount
             )
-        tx_submit_handler = TransactionHelpers()
-        return tx_submit_handler.validate_and_submit_transaction(
-            route_struct, src_address, src_amount, best_profit
+        tx_helper = self.TxHelperClass()
+        return tx_helper.validate_and_submit_transaction(
+            route_struct, src_address, src_amount
         )
 
-    def _validate_and_submit_transaction_tenderly(
-        self, trade_instructions, src_address, route_struct, src_amount
-    ):
-        tx_submit_handler = TxSubmitHandler(
+    def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
+        tx_submit_handler = self.TxSubmitHandlerClass(
             trade_instructions,
             src_address=src_address,
             src_amount=trade_instructions[0].amtin_wei,
