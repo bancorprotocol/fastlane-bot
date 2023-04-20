@@ -30,7 +30,7 @@ async def create_tasks_and_run(updater):
         exchange, _filter = args['exchange'], args['_filter']
         task = asyncio.create_task(updater._log_loop(exchange, _filter))
         tasks.append(task)
-        logger.info(exchange, _filter)
+        logger.info(f"Created task for {exchange} {_filter}")
 
     await asyncio.gather(*tasks)
 

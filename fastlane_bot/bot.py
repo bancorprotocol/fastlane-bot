@@ -41,6 +41,8 @@ Licensed under MIT
     MB@RICHARDSON@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
+
+import itertools
 import time
 from typing import Any, Union, Optional, Tuple, List, Dict
 
@@ -57,10 +59,10 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
-from carbon.tools import tokenscale as ts
-from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from carbon.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools import tokenscale as ts
+from fastlane_bot.tools.arbgraphs import ArbGraph, plt  # convenience imports
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
+from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 plt.style.use("seaborn-dark")
 plt.rcParams["figure.figsize"] = [12, 6]
@@ -227,37 +229,54 @@ class CarbonBot:
         best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
-        for idx, tkn in enumerate(flashloan_tokens):
-            tkn0 = flashloan_tokens[idx - 1]
-            tkn1 = flashloan_tokens[idx]
-            assert tkn == tkn1
-
-            CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
-            pstart = (
-                {
-                    tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
-                }
-                if len(CC) != 0
-                else None
-            )
-            O = CPCArbOptimizer(CC)
-            src_token = tkn1
+        pools = session.query(Pool).filter(
+                (Pool.tkn0_balance > 0)
+                | (Pool.tkn1_balance > 0)
+                | (Pool.liquidity > 0)
+                | (Pool.y_0 > 0)
+            ).all()
+        logger.debug(f"Number of pools: {len(pools)}")
+        all_tokens = [p.pair_name.split('/')[0] for p in pools] + [p.pair_name.split('/')[1] for p in pools]
+        all_tokens = list(set(all_tokens))
+        combos = [
+            (tkn0, tkn1)
+            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens)
+            if tkn0 != tkn1
+        ]
+        for tkn0, tkn1 in combos:
             try:
-                r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+                logger.debug(f"Checking {tkn0} -> {tkn1}")
+                CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
+                pstart = (
+                    {
+                        tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
+                    }
+                    if len(CC) != 0
+                    else None
+                )
+                O = CPCArbOptimizer(CC)
+                src_token = tkn1
+                try:
+                    r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+                except Exception as e:
+                    logger.debug(e)
+                    r = O.margp_optimizer(tkn1)
+                profit_src = -r.result
+
+                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+
+                profit = self._get_profit_in_bnt(profit_src, src_token)
+                logger.debug(f"Profit in BNT: {profit}")
+                logger.debug(f"Profit in {src_token}: {profit_src}")
+                if profit > best_profit:
+                    best_profit = profit
+                    best_src_token = src_token
+                    best_trade_instructions_df = trade_instructions_df
+                    best_trade_instructions_dic = trade_instructions_dic
             except Exception as e:
                 logger.debug(e)
-                r = O.margp_optimizer(tkn1)  # TODO: catch again
-            profit_src = -r.result
-            trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-            trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-
-            profit = self._get_profit_in_bnt(profit_src, src_token)
-
-            if profit > best_profit:
-                best_src_token = src_token
-                best_profit = profit
-                best_trade_instructions_df = trade_instructions_df
-                best_trade_instructions_dic = trade_instructions_dic
+                pass
         return (
             best_profit,
             best_trade_instructions_df,
@@ -430,8 +449,8 @@ class CarbonBot:
                         logger.info(
                             f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                         )
-                        if update_pools:
-                            self.db.update_pools()
+                        # if update_pools:
+                        #     self.db.update_pools()
                     time.sleep(
                         self.polling_interval
                     )  # Sleep for 60 seconds before searching for opportunities again

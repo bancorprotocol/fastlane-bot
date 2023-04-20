@@ -29,7 +29,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import registry, sessionmaker
 
 from fastlane_bot.config import *
-from carbon.tools.cpc import ConstantProductCurve
+from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import (
     get_abi_and_router,
     convert_decimals,
