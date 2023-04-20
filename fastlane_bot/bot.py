@@ -76,38 +76,38 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 from dataclasses import dataclass, asdict, InitVar, field
 from typing import List, Dict, Tuple
 
-
-@dataclass
-class CarbonBot:
+class CarbonBotBase():
     """
-    A class that handles the business logic of the bot.
-
+    Base class for the business logic of the bot.
+    
     Attributes
     ----------
-    tx_submitter_handler: TxSubmitHandler
-        The transaction submitter handler.
-    tx_receipt_handler: TxReceiptHandler
-        The transaction receipt handler.
-    mode: str
-        The mode of the bot. (continuous or single)
-    genesis_data: pd.DataFrame
-        The genesis data. (token pairs)
-
+    db: DatabaseManager
+        the database manager.
+    TxSubmitHandlerClass: class derived from TxSubmitHandlerBase
+        the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
+    TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
+        ditto (default: TxReceiptHandler).
+    TxRouteHandlerClass: class derived from TxRouteHandlerBase
+        ditto (default: TxRouteHandler).
+    TxHelpersClass: class derived from TxHelpersBase
+        ditto (default: TxHelpers).
+    
     """
-
-    mode: str = "single"
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+    
     db: DatabaseManager = None
-    genesis_data = pd.read_csv(DATABASE_SEED_FILE)
-    drop_tables: InitVar = False
-    # seed_pools: bool = False TODO REVIEW
-    # update_pools: bool = False
-    polling_interval: int = 60
-
     TxSubmitHandlerClass: any = None
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
-
+    
+    # TODO-MOVE THOSE
+    genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
+    drop_tables: InitVar = False
+    polling_interval: int = 60
+    
     def __post_init__(self, drop_tables: bool = False):
         """
         The post init method.
@@ -132,22 +132,32 @@ class CarbonBot:
             self.db = DatabaseManager(
                 data=self.genesis_data, drop_tables=self.drop_tables
             )
-        # if self.seed_pools: TODO REVIEW
-        #     self.db.seed_pools()
-        # if self.update_pools:
-        #     self.db.update_pools()
 
-    # TODO REVIEW
-    def seed_pools(self):
+            
+    def versions(self):
+        """
+        Returns the versions of the module and its Carbon dependencies.
+        """
+        s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
+        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale)]
+        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
+        return s
+        
+    def seed_pools(self, drop_tables: bool = False):
         """convenience method for db.seed_pools()"""
-        self.db.seed_pools()
-
-    def update_pools(self):
+        self.db.seed_pools(drop_tables=drop_tables)
+        
+    def update_pools(self, drop_tables: bool = False):
         """convenience method for db.update_pools()"""
-        self.db.update_pools()
+        self.db.update_pools(drop_tables=drop_tables)
 
-    @staticmethod
-    def get_curves() -> CPCContainer:
+    def drop_tables(self):
+        """convenience method for db.drop_tables()"""
+        self.db.drop_all_tables()
+        
+    def get_curves(self) -> CPCContainer:
         """
         Gets the curves from the database.
 
@@ -178,12 +188,18 @@ class CarbonBot:
                 pass
         return CPCContainer(curves)
 
-    def _check_mode(self):
-        """
-        Checks if the mode is valid.
-        """
-        if self.mode not in ["single", "continuous"]:
-            raise Exception("Invalid mode.")
+
+@dataclass
+class CarbonBot(CarbonBotBase):
+    """
+    A class that handles the business logic of the bot.
+
+    MAIN ENTRY POINTS
+    :run:               Runs the bot.
+    """
+
+    def __post_init__(self, drop_tables: bool = None):
+        super().__post_init__(drop_tables)
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
