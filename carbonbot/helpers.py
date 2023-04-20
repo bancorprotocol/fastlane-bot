@@ -1,7 +1,14 @@
-import json
-from dataclasses import dataclass
-from typing import List, Union, Any, Dict, Tuple
+"""
+Database manager object for the Fastlane project.
 
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+import itertools
+import random
+import time
+from dataclasses import dataclass, asdict
+from typing import List, Union, Any, Dict, Tuple
 import eth_abi
 import math
 import pandas as pd
@@ -15,10 +22,9 @@ from web3._utils.transactions import fill_nonce
 from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
-
-from carbon.abi import ERC20_ABI
-from carbon.config import *
-from carbon.models import Token, session, Pool
+from carbonbot.abi import *
+from carbonbot.config import *
+from carbonbot.models import Token, session, Pool
 from carbon.tools.cpc import ConstantProductCurve
 
 
@@ -58,6 +64,7 @@ class RouteStruct:
     customAddress: str
     customInt: int
     customData: bytes
+
 
 
 @dataclass
@@ -111,8 +118,9 @@ class TradeInstruction:
     amtin: Union[int, Decimal, float]
     tknout: str
     amtout: Union[int, Decimal, float]
-    raw_txs: str
-    pair_sorting: str
+    pair_sorting: str = None
+    raw_txs: str = None
+
 
     @property
     def tknin_key(self) -> str:
@@ -152,8 +160,27 @@ class TradeInstruction:
         self._amtout_quantized = self._quantize(
             self._amtout_decimals, self._tknout_decimals
         )
-        self.raw_txs = '[]'
-        self.pair_sorting = ''
+        if self.raw_txs is None:
+            self.raw_txs = '[]'
+        if self.pair_sorting is None:
+            self.pair_sorting = ''
+        self._exchange_name = self._get_pool().exchange_name
+        self._exchange_id = EXCHANGE_IDS[self._exchange_name]
+
+
+    @property
+    def exchange_id(self) -> int:
+        """
+        The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
+        """
+        return self._exchange_id
+
+    @property
+    def exchange_name(self) -> str:
+        """
+        The exchange name.
+        """
+        return self._exchange_name
 
     @staticmethod
     def _quantize(amount: Decimal, decimals: int) -> Decimal:
@@ -172,11 +199,16 @@ class TradeInstruction:
         Decimal
             The quantized amount.
         """
+
         if "." not in str(amount):
             return Decimal(str(amount))
+        amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
         amount_dec = str(amount_dec)[:decimals]
-        return Decimal(str(amount_dec).split(".")[0] + "." + amount_dec)
+        try:
+            return Decimal(f"{str(amount_num)}.{amount_dec}")
+        except Exception as e:
+            print('Error quantizing amount: ', f"{str(amount_num)}.{amount_dec}")
 
     def _get_token_address(self, token_key: str) -> str:
         """
@@ -235,6 +267,7 @@ class TradeInstruction:
         Pool
             The pool object.
         """
+
         return session.query(Pool).filter(Pool.cid == self.cid).first()
 
     @staticmethod
@@ -403,13 +436,6 @@ class TradeInstruction:
         """
         return self._amtout_quantized
 
-    @property
-    def exchange_id(self) -> int:
-        return EXCHANGE_IDS[self._get_pool().exchange_name]
-
-    @property
-    def exchange_name(self) -> str:
-        return self._get_pool().exchange_name
 
 
 @dataclass
@@ -428,6 +454,13 @@ class TxRouteHandler:
     trade_instructions_dic: List[TradeInstruction]
     trade_instructions_df: pd.DataFrame = None
     trade_instructions: List[ConstantProductCurve] = None
+
+    @property
+    def exchange_ids(self) -> List[int]:
+        """
+        Returns
+        """
+        return [trade.exchange_id for trade in self.trade_instructions]
 
     def __post_init__(self):
         self.contains_carbon = True
@@ -484,6 +517,47 @@ class TxRouteHandler:
         """
         return address.lower() == WETH_ADDRESS.lower()
 
+    @staticmethod
+    def custom_data_encoder(wei_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+        for i in range(len(wei_instructions)):
+            instr = wei_instructions[i]
+            print('DETAILS',i, instr.amtin, instr.amtout)
+            if instr.raw_txs == '[]':
+                instr.customData = ''
+                # instr.amtin =  int(instr.amtin * 0.9)
+                wei_instructions[i] = instr
+            else:
+                tradeInfo = eval(instr.raw_txs)
+
+                # convert strategyid to type int
+                tradeActions = []
+                for trade in tradeInfo:
+                    tradeActions += [
+                        {
+                            'strategyId': int(trade['cid'].split('-')[0]),
+                            'amount': int(Decimal(trade['amtin']) * 10 ** instr.tknin_decimals
+                                           * Decimal("0.99")
+                                           )
+                        }
+                    ]
+
+                # Define the types of the keys in the dictionaries
+                types = ['uint256', 'uint128']
+
+                # Extract the values from each dictionary and append them to a list
+                values = [32, len(tradeActions)] + [value for data in tradeActions for value in (data['strategyId'], data['amount'])]
+
+                # Create a list of ABI types based on the number of dictionaries
+                all_types = ['uint32', 'uint32'] + types * len(tradeActions)
+
+                # Encode the extracted values using the ABI types
+                encoded_data = eth_abi.encode(all_types, values)
+                instr.customData = encoded_data
+                wei_instructions[i] = instr
+
+        # print(f"all_types: {all_types}")
+        return wei_instructions
+
     def _abi_encode_data(
         self,
         idx_of_carbon_trades: List[int],
@@ -521,7 +595,6 @@ class TxRouteHandler:
         self,
         min_target_amount: Decimal,
         deadline: int,
-        web3: Web3,
         target_address: str,
         exchange_id: int,
         custom_address: str = None,
@@ -561,7 +634,7 @@ class TxRouteHandler:
         if self.is_weth(target_address):
             target_address = ETH_ADDRESS
 
-        target_address = web3.toChecksumAddress(target_address)
+        target_address = w3.toChecksumAddress(target_address)
 
         if override_min_target_amount:
             min_target_amount = 1
@@ -576,7 +649,7 @@ class TxRouteHandler:
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
             customAddress=custom_address,
-            customInt=fee,
+            customInt=int(fee),
             customData=customData,
         )
 
@@ -599,29 +672,31 @@ class TxRouteHandler:
         custom_address: str
 
         """
+        for t in trade_instructions:
+            print(f"trade_instruction.cid: {t.cid}")
+
         pools = [
             self._cid_to_pool(trade_instruction.cid)
             for trade_instruction in trade_instructions
         ]
-        encoded_data = self._abi_encode_data(
-            idx_of_carbon_trades=self._get_carbon_indexes(),
-            trade_instructions=trade_instructions,
-        )
+
         return [
             self.to_route_struct(
                 min_target_amount=Decimal(trade_instructions[idx].amtout_wei),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
                 exchange_id=trade_instructions[idx].exchange_id,
+                custom_address=trade_instructions[idx].tknout_address, # TODO: rework for bancor 2
                 fee=pools[idx].fee,
-                customData=encoded_data if self.exchange_ids[idx] == 6 else "",
+                customData=trade_instructions[idx].customData,
+                override_min_target_amount=True
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
 
     def get_arb_contract_args(
-        self, trade_instructions: List[TradeInstruction]
-    ) -> Tuple[Any, int, list[RouteStruct]]:
+        self, trade_instructions: List[TradeInstruction], deadline: int
+    ) -> tuple[list[RouteStruct], int]:
         """
         Gets the arguments needed to instantiate the `ArbContract` class.
 
@@ -630,24 +705,21 @@ class TxRouteHandler:
         List[Any]
             The arguments needed to instantiate the `ArbContract` class.
         """
-        route_struct = self.get_route_structs(trade_instructions=trade_instructions)
-        src_token = (
-            ETH_ADDRESS
-            if self.is_weth(self.trade_instructions_dic[0]["tknin"])
-            else self.trade_instructions_dic[0]["tknin"]
-        )
-        src_amount = int(self.trade_instructions_dic[0]["amtin"])
-        return src_token, src_amount, route_struct
-    
+        route_struct = self.get_route_structs(trade_instructions=trade_instructions, deadline=deadline)
+        # src_amount = int(self.trade_instructions_dic[0].amtin_wei)
+        return route_struct
+
+    @staticmethod
     def _agg_carbon_independentIDs(trade_instructions):
         listti = []
         for instr in trade_instructions:
+
             listti += [
-                {'cid': instr.cid,
-                'tknin': instr.tknin,
-                'amtin': instr.amtin,
-                'tknout': instr.tknout,
-                'amtout': instr.amtout}
+                {'cid': instr.cid+'-'+str(instr.cid_tkn) if instr.cid_tkn else instr.cid,
+                 'tknin': instr.tknin,
+                 'amtin': instr.amtin,
+                 'tknout': instr.tknout,
+                 'amtout': instr.amtout}
             ]
         df = pd.DataFrame.from_dict(listti)
         carbons = df[df.cid.str.contains("-")].copy()
@@ -658,17 +730,17 @@ class TxRouteHandler:
         for pair_sorting in carbons.pair_sorting.unique():
             newdf = carbons[carbons.pair_sorting==pair_sorting]
             newoutput = {
-                'pair_sorting': pair_sorting, 
-                'cid': newdf.cid.values,
+                'pair_sorting': pair_sorting,
+                'cid': newdf.cid.values[0],
                 'tknin': newdf.tknin.values[0],
                 'amtin': newdf.sum()['amtin'],
                 'tknout': newdf.tknout.values[0],
                 'amtout': newdf.sum()['amtout'],
                 'raw_txs': str(newdf.to_dict(orient='records'))
             }
-            
             new_trade_instructions.append(newoutput)
 
+        print("new_trade_instructions", new_trade_instructions)
         nocarbons_instructions = []
         dictnocarbons =  nocarbons.to_dict(orient='records')
         for dict in dictnocarbons:
@@ -676,10 +748,11 @@ class TxRouteHandler:
             dict['raw_txs'] = str([])
             nocarbons_instructions += [dict]
 
-        new_trade_instructions = new_trade_instructions + nocarbons_instructions
+        new_trade_instructions += nocarbons_instructions
         trade_instructions = [TradeInstruction(**new_trade_instructions[i]) for i in range(len(new_trade_instructions))]
         return trade_instructions
 
+    @staticmethod
     def _find_tradematches(trade_instructions):
         factor_high = 1.00001
         factor_low = 0.99999
@@ -705,20 +778,19 @@ class TxRouteHandler:
                     if df.tknout[i] == df.tknin[j] and  ((df.amtout[i] >= -df.amtin[j]*factor_high) & (df.amtout[i] <= -df.amtin[j]*factor_low)):
                         df.loc[i,"matchedout"] = j
 
-
         pos =  df[df.matchedin.isna()].index.values[0]
         route = [pos]
         ismatchedin = True
 
         if pos is None:
-            ordered_trade_instructions = trade_instructions
-        else:
-            while len(route) < len(df.index):
-                pos = df.loc[pos, "matchedout"]
-                route.append(pos)
-                ismatchedin = not ismatchedin
+            return trade_instructions
 
-        trade_instructions = [trade_instructions[i] for i in route]
+        while len(route) < len(df.index):
+            pos = df.loc[pos, "matchedout"]
+            route.append(pos)
+            ismatchedin = not ismatchedin
+
+        trade_instructions = [trade_instructions[i] for i in route if i is not None]
         return trade_instructions
 
 
@@ -1102,7 +1174,7 @@ class TxRouteHandler:
         y, z, A, B, fee, tkns_out: Decimal
     ) -> Tuple[Decimal, Decimal]:
         """
-        Refactored get input trade by target carbon.
+        Refactored get input trade by target carbonbot.
 
         Parameters
         ----------
@@ -1137,7 +1209,7 @@ class TxRouteHandler:
         self, y, z, A, B, fee, tkns_in: Decimal
     ) -> Tuple[Decimal, Decimal]:
         """
-        Refactored get output trade by source carbon.
+        Refactored get output trade by source carbonbot.
 
         Parameters
         ----------
@@ -1178,7 +1250,7 @@ class TxRouteHandler:
         self, curve: Pool, tkn_in: str, tkn_out_decimals: int, amount_in: Decimal
     ) -> Decimal:
         """
-        calc carbon output.
+        calc carbonbot output.
 
         Parameters
         ----------
@@ -1219,11 +1291,11 @@ class TxRouteHandler:
         )
 
     def _solve_trade_output(
-        self, curve: Pool, trade: TradeInstruction, amount_in: Decimal
+        self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> tuple[Decimal, Decimal, int, int]:
 
-        if not isinstance(amount_in, TradeInstruction):
-            raise Exception("Amount in must be a TradeInstruction object.")
+        if not isinstance(trade, TradeInstruction):
+            raise Exception("trade in must be a TradeInstruction object.")
 
         tkn_in_decimals = (
             curve.tkn0_decimals
@@ -1236,7 +1308,7 @@ class TxRouteHandler:
             else curve.tkn0_decimals
         )
 
-        amount_in = trade.amtin_quantized
+        amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
         if curve.exchange_name == UNISWAP_V3_NAME:
             amount_out = self._calc_uniswap_v3_output(
@@ -1268,7 +1340,8 @@ class TxRouteHandler:
                 fee=curve.fee,
             )
 
-        amount_out = amount_out * Decimal("0.99999")
+
+        amount_out = amount_out * Decimal("0.999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
@@ -1290,22 +1363,64 @@ class TxRouteHandler:
         List[Dict[str, Any]]
             The trade outputs.
         """
+
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
-            curve_cid = trade.cid
-            curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
-            (
-                amount_in,
-                amount_out,
-                amount_in_wei,
-                amount_out_wei,
-            ) = self._solve_trade_output(
-                curve=curve, trade=trade, amount_in=next_amount_in
-            )
-            next_amount_in = amount_out
-            trade_instructions[idx].amtin = amount_in_wei
-            trade_instructions[idx].amtout = amount_out_wei
+            raw_txs_lst = []
+            if trade.raw_txs != '[]':
+                data = eval(trade.raw_txs)
+                total_out = 0
+                for tx in data:
+                    cid = tx['cid']
+                    cid = cid.split('-')[0]
+                    tknin_key = tx['tknin']
+                    curve = session.query(Pool).filter(Pool.cid == cid).first()
+                    (
+                        amount_in,
+                        amount_out,
+                        amount_in_wei,
+                        amount_out_wei,
+                    ) = self._solve_trade_output(
+                        curve=curve, trade=trade, amount_in=next_amount_in
+                    )
+
+                    raw_txs = {
+                        'cid': cid,
+                        'amtin': amount_in_wei,
+                        'tknin': tknin_key,
+                        'amtout': amount_out_wei
+                    }
+                    raw_txs_lst.append(raw_txs)
+
+                    total_out += amount_out
+                amount_out = total_out
+
+            else:
+
+                curve_cid = trade.cid
+                curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
+                (
+                    amount_in,
+                    amount_out,
+                    amount_in_wei,
+                    amount_out_wei,
+                ) = self._solve_trade_output(
+                    curve=curve, trade=trade, amount_in=next_amount_in
+                )
+                trade_instructions[idx].amtin = amount_in_wei
+                trade_instructions[idx].amtout = amount_out_wei
+
+                next_amount_in = amount_out
+
+            trade_instructions[idx].raw_txs = str(raw_txs_lst)
+
         return trade_instructions
+
+    def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
+        return tkn0_amt / Decimal("10") ** Decimal(str(tkn0_decimals))
+
+    def _cid_to_pool(self, cid: str) -> Pool:
+        return session.query(Pool).filter(Pool.cid == cid).first()
 
 
 @dataclass
@@ -1335,7 +1450,7 @@ class TxSubmitHandler:
 
     """
 
-    route_struct: List[str]
+    route_struct: List[RouteStruct]
     src_amount: int
     src_address: str
 
@@ -1343,11 +1458,12 @@ class TxSubmitHandler:
         self.w3 = w3
         self.arb_contract = arb_contract
         self.bancor_network_info = bancor_network_info
-        self.token_contract = Contract.from_abi(
-            name="Token",
-            address=self.src_address,
-            abi=ERC20_ABI,
-        )
+        # self.token_contract = Contract.from_abi(
+        #     name="Token",
+        #     address=self.src_address,
+        #     abi=ERC20_ABI,
+        # )
+        self.token_contract = w3.eth.contract(address=self.src_address, abi=ERC20_ABI)
 
     def _get_deadline(self) -> int:
         """
@@ -1532,8 +1648,7 @@ class TxSubmitHandler:
         }
 
     def _submit_transaction_tenderly(
-        self, route_struct: RouteStruct, src_address: str, src_amount: int
-    ) -> str:
+        self, route_struct: List[RouteStruct], src_address: str, src_amount: int) -> Any:
         """
         Submits a transaction to the network.
 
@@ -1549,17 +1664,20 @@ class TxSubmitHandler:
         str
             The transaction hash.
         """
-        tx = self.arb_contract.functions.flashloanAndArb(
+        route_struct = [asdict(r) for r in route_struct]
+        for r in route_struct:
+            print(r)
+            print('\n')
+        print(f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}")
+        address = w3.toChecksumAddress(BINANCE14_WALLET_ADDRESS)
+        return self.arb_contract.functions.flashloanAndArb(
             route_struct, src_address, src_amount
         ).transact(
             {
-                "maxFeePerGas": int(
-                    self._get_eth_gas_price_alchemy() * DEFAULT_GAS_PRICE_OFFSET
-                ),
-                "gas": DEFAULT_GAS * 10,
-                "from": w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
-                "nonce": self._get_nonce(),
-                "maxPriorityFeePerGas": self._get_max_priority_fee_per_gas_alchemy(),
+                "gas": DEFAULT_GAS,
+                "from": address,
+                "nonce": self._get_nonce(address),
+                "gasPrice": 0,
             }
         )
 
@@ -1697,3 +1815,133 @@ class TxSubmitHandler:
             tx_function, tx_params, from_address, to_address
         )
         return self._get_transaction_hash(tx_details, key)
+
+
+@dataclass
+class DataFetcher:
+    """
+    Class to fetch data from Yahoo Finance and create random limit orders
+    """
+
+    token_pairs: list
+    data: pd.DataFrame = None
+
+    def get_token_combinations(self):
+        """
+        Returns a list of all possible token combinations
+        """
+        combinations = list(itertools.combinations(self.token_pairs, 2))
+        return [f"{c[0]}/{c[1]}" for c in combinations]
+
+    def fetch(self):
+        """
+        Fetches data from Yahoo Finance for all token pairs
+        """
+        import yfinance as yf
+
+        date_30d_from_today = pd.Timestamp.today() - pd.Timedelta(days=30)
+        date_30d_from_today_to_str = date_30d_from_today.strftime("%Y-%m-%d")
+        end_today = pd.Timestamp.today()
+        end_today_to_str = end_today.strftime("%Y-%m-%d")
+
+        lst = []
+        for pair in self.token_pairs:
+            print(f"Fetching {pair} data...")
+            try:
+                data = yf.download(
+                    pair,
+                    start=date_30d_from_today_to_str,
+                    end=end_today_to_str,
+                    interval="5m",
+                )
+                data["pair"] = [pair for _ in range(len(data))]
+                data.reset_index(inplace=True)
+                lst.append(data)
+            except Exception as e:
+                print(f"Error fetching {pair} data: {e}")
+            time.sleep(2)  # Add delay to avoid rate limiting
+
+        self.data = pd.concat(lst, ignore_index=True)
+
+    @staticmethod
+    def calculate_mean_prices(df, n=100):
+        """
+        Calculates the mean low and high prices for the last n rows of a dataframe
+        :param df: Dataframe containing the data
+        :param n:  Number of rows to consider
+        :return:  Datetime of the last row, mean low price, mean high price
+        """
+        most_recent_df = df.sort_values(by="Datetime", ascending=False)[:n]
+        mean_low = most_recent_df["Low"].mean()
+        mean_high = most_recent_df["High"].mean()
+        max_datetime = most_recent_df["Datetime"].max()
+        return max_datetime, mean_low, mean_high
+
+    def create_limit_orders(
+        self, data: pd.DataFrame = None, n: int = 10
+    ) -> pd.DataFrame:
+        """
+        Creates limit orders for all token pairs
+        :param data: Dataframe containing the data
+        :param n: Number of limit orders to create
+        :return: Dataframe containing the limit orders
+        """
+        if data is None:
+            data = self.data
+        lst = []
+        token_combinations = [
+            pair
+            for pair in self.get_token_combinations()
+            if pair.split("/")[0] != pair.split("/")[1]
+        ]
+
+        for _ in range(n):
+            for pair in token_combinations:
+                tkn0, tkn1 = pair.split("/")
+                if (tkn0 == "USDC-USD") and (tkn1 == "DAI-USD"):
+                    continue
+
+                tkn0_data = data[data["pair"] == tkn0][["Datetime", "Low", "High"]]
+                tkn1_data = data[data["pair"] == tkn1][["Datetime", "Low", "High"]]
+
+                (
+                    datetime_tkn0,
+                    mean_low_tkn0,
+                    mean_high_tkn0,
+                ) = self.calculate_mean_prices(tkn0_data)
+                (
+                    datetime_tkn1,
+                    mean_low_tkn1,
+                    mean_high_tkn1,
+                ) = self.calculate_mean_prices(tkn1_data)
+
+                tkn0_data = pd.DataFrame(
+                    {
+                        "Datetime": [datetime_tkn0],
+                        "Low_0": [mean_low_tkn0 + random.uniform(-0.0001, 0.0001)],
+                        "High_0": [mean_high_tkn0 + random.uniform(-0.0001, 0.0001)],
+                    }
+                )
+
+                tkn1_data = pd.DataFrame(
+                    {
+                        "Datetime": [datetime_tkn1],
+                        "Low_1": [mean_low_tkn1 + random.uniform(-0.0001, 0.0001)],
+                        "High_1": [mean_high_tkn1 + random.uniform(-0.0001, 0.0001)],
+                    }
+                )
+
+                dfx = pd.merge(tkn1_data, tkn0_data, on="Datetime", how="left")
+                dfx["pair"] = [
+                    f"{tkn0.split('-')[0]}/{tkn1.split('-')[0]}"
+                    for _ in range(len(dfx))
+                ]
+                dfx = dfx[["Datetime", "pair", "Low_0", "Low_1", "High_0", "High_1"]]
+                lst.append(dfx)
+
+                if len(lst) >= n:
+                    break
+
+        return pd.concat(lst, ignore_index=True)
+
+

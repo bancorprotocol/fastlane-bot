@@ -28,9 +28,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import registry, sessionmaker
 
-from carbon.config import *
+from carbonbot.config import *
 from carbon.tools.cpc import ConstantProductCurve
-from carbon.utils import get_abi_and_router, convert_decimals, UniV3Helper, EncodedOrder
+from carbonbot.utils import get_abi_and_router, convert_decimals, EncodedOrder, UniV3Helper
 
 global contracts
 contracts = {}
@@ -140,9 +140,9 @@ class Token:
         Column(
             "id", Integer, primary_key=True, index=True, unique=True, autoincrement=True
         ),
-        Column("key", String(20), nullable=True, index=True, unique=True),
-        Column("symbol", String(20), nullable=False, index=True, unique=False),
-        Column("name", String(50), nullable=True, index=True, unique=False),
+        Column("key", String(100), nullable=True, index=True, unique=True),
+        Column("symbol", String(100), nullable=False, index=True, unique=False),
+        Column("name", String(100), nullable=True, index=True, unique=False),
         Column("address", String(64), index=True, unique=True, nullable=False),
         Column("decimals", Integer, nullable=False, default=18),
     )
@@ -180,7 +180,7 @@ class Pair:
         "pairs",
         mapper_registry.metadata,
         Column("id", Integer, primary_key=True, index=True, unique=True),
-        Column("name", String(50), index=True, unique=True, nullable=False),
+        Column("name", String(100), index=True, unique=True, nullable=False),
         Column(
             "tkn0_address",
             String(64),
@@ -196,10 +196,10 @@ class Pair:
             index=True,
         ),
         Column(
-            "tkn0_key", String(20), ForeignKey("tokens.key"), nullable=False, index=True
+            "tkn0_key", String(100), ForeignKey("tokens.key"), nullable=False, index=True
         ),
         Column(
-            "tkn1_key", String(20), ForeignKey("tokens.key"), nullable=False, index=True
+            "tkn1_key", String(100), ForeignKey("tokens.key"), nullable=False, index=True
         ),
     )
     __unique_constraints__ = (
@@ -294,15 +294,13 @@ class Pool:
             "last_updated_block",
             BigInteger,
             nullable=False,
-            default=w3.eth.blockNumber,
             index=True,
             unique=False,
-            onupdate=w3.eth.blockNumber,
         ),
-        Column("descr", String(50), nullable=True),
-        Column("pair_name", String(50), ForeignKey("pairs.name")),
-        Column("exchange_name", String(50), ForeignKey("exchanges.name")),
-        Column("fee", String(10), nullable=False, default="0"),
+        Column("descr", String(100), nullable=True),
+        Column("pair_name", String(100), ForeignKey("pairs.name")),
+        Column("exchange_name", String(100), ForeignKey("exchanges.name")),
+        Column("fee", String(20), nullable=False, default="0"),
         Column("tkn0_balance", Numeric(precision=64), nullable=True),
         Column("tkn1_balance", Numeric(precision=64), nullable=True),
         Column("z_0", Numeric(precision=64), nullable=True),
@@ -460,8 +458,8 @@ class Pool:
 
         :yint:      current pool y-intercept**
         :y:         current pool liquidity in token y
-        :pa:        carbon price range left bound (higher price in dy/dx)
-        :pb:        carbon price range right bound (lower price in dy/dx)
+        :pa:        carbonbot price range left bound (higher price in dy/dx)
+        :pb:        carbonbot price range right bound (lower price in dy/dx)
         :A:         alternative to pa, pb: A = sqrt(pa) - sqrt(pb) in dy/dy
         :B:         alternative to pa, pb: B = sqrt(pb) in dy/dy
         :tkny:      token y
@@ -572,15 +570,6 @@ class Pool:
         P_a = univ3_helper.Pa
         P_b = univ3_helper.Pb
         L = univ3_helper.L
-
-        # extra_params = {
-        #     "tick": self.tick,
-        #     "tick_spacing": self.tick_spacing,
-        #     "sqrt_price_q96": self.sqrt_price_q96,
-        #     "liquidity": self.liquidity,
-        #     "tkn0_decimal": self.tkn0_decimals,
-        #     "tkn1_decimal": self.tkn1_decimals
-        # }
 
         # create a typed-dictionary of the arguments
         typed_args = {
@@ -845,7 +834,7 @@ class Transaction:
 
 sqlalchemy.MetaData()
 if BACKEND == "sqlite":
-    engine = sqlalchemy.create_engine("sqlite:///fastlane-4-18-2023-fullset-1.sqlite")
+    engine = sqlalchemy.create_engine("sqlite:///fastlane-4-19-2023-fullset-1.sqlite")
 else:
     engine = sqlalchemy.create_engine(
         "postgresql://postgres:postgres@localhost/postgres"
