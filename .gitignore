@@ -36,6 +36,9 @@ dist/
 
 # Ignore all files in the .eggs directory
 .eggs/
+*.egg-info
+*.egg
+*.egg-info/*
 
 # Ignore all files in the .tox directory
 .tox/
