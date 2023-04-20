@@ -21,9 +21,9 @@ flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--polling_interval", default=12, type=int)
 def main(
-        mode,
-        flashloan_tokens,
-        polling_interval,
+    mode,
+    flashloan_tokens,
+    polling_interval,
 ):
     """
     Main logic for the Bancor Arbitrage Bot (FastLane) - run.py filescript

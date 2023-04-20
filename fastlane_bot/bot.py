@@ -56,7 +56,8 @@ from fastlane_bot.helpers import (
     TxSubmitHandler,
     TradeInstruction,
     TxRouteHandler,
-    TxReceiptHandler, TransactionHelpers,
+    TxReceiptHandler,
+    TransactionHelpers,
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
@@ -102,7 +103,7 @@ class CarbonBot:
     # update_pools: bool = False
     polling_interval: int = 60
 
-    tx_submitter_handler: TxSubmitHandler = None # TODO REVIEW: WHY AREN'T THOSE USED?
+    tx_submitter_handler: TxSubmitHandler = None  # TODO REVIEW: WHY AREN'T THOSE USED?
     tx_receipt_handler: TxReceiptHandler = None
     tx_route_handler: TxRouteHandler = None
 
@@ -119,12 +120,12 @@ class CarbonBot:
         #     self.db.seed_pools()
         # if self.update_pools:
         #     self.db.update_pools()
-        
+
     # TODO REVIEW
     def seed_pools(self):
         """convenience method for db.seed_pools()"""
         self.db.seed_pools()
-        
+
     def update_pools(self):
         """convenience method for db.update_pools()"""
         self.db.update_pools()
@@ -207,7 +208,9 @@ class CarbonBot:
 
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin"
-    ) -> Tuple[Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str]:
+    ) -> Tuple[
+        Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str
+    ]:
         """
         Finds the arbitrage opportunities.
 
@@ -230,14 +233,20 @@ class CarbonBot:
         best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
-        pools = session.query(Pool).filter(
+        pools = (
+            session.query(Pool)
+            .filter(
                 (Pool.tkn0_balance > 0)
                 | (Pool.tkn1_balance > 0)
                 | (Pool.liquidity > 0)
                 | (Pool.y_0 > 0)
-            ).all()
+            )
+            .all()
+        )
         logger.debug(f"Number of pools: {len(pools)}")
-        all_tokens = [p.pair_name.split('/')[0] for p in pools] + [p.pair_name.split('/')[1] for p in pools]
+        all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
+            p.pair_name.split("/")[1] for p in pools
+        ]
         all_tokens = list(set(all_tokens))
         combos = [
             (tkn0, tkn1)
@@ -318,12 +327,12 @@ class CarbonBot:
             The deadline.
         """
         return (
-                w3.eth.getBlock(w3.eth.block_number).timestamp
-                + DEFAULT_BLOCKTIME_DEVIATION
+            w3.eth.getBlock(w3.eth.block_number).timestamp + DEFAULT_BLOCKTIME_DEVIATION
         )
 
-    def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer, network: str = 'mainnet') -> Optional[
-        Dict[str, Any]]:
+    def _execute_strategy(
+        self, flashloan_tokens: List[str], CCm: CPCContainer, network: str = "mainnet"
+    ) -> Optional[Dict[str, Any]]:
         """
         Refactored execute strategy.
 
@@ -352,7 +361,9 @@ class CarbonBot:
             trade_instructions=trade_instructions
         )
 
-        trade_instructions = self._handle_ordering(agg_trade_instructions, best_src_token, tx_route_handler)
+        trade_instructions = self._handle_ordering(
+            agg_trade_instructions, best_src_token, tx_route_handler
+        )
         src_amount = trade_instructions[0].amtin_wei
         logger.debug(f"src_amount: {src_amount}")
         src_address = (
@@ -367,7 +378,7 @@ class CarbonBot:
             trade_instructions, deadline
         )
 
-        if network != 'mainnet':
+        if network != "mainnet":
             return self._validate_and_submit_transaction_tenderly(
                 trade_instructions, src_address, route_struct, src_amount
             )
@@ -376,8 +387,9 @@ class CarbonBot:
             route_struct, src_address, src_amount, best_profit
         )
 
-
-    def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
+    def _validate_and_submit_transaction_tenderly(
+        self, trade_instructions, src_address, route_struct, src_amount
+    ):
         tx_submit_handler = TxSubmitHandler(
             trade_instructions,
             src_amount=trade_instructions[0].amtin_wei,
@@ -397,7 +409,9 @@ class CarbonBot:
         )
         return w3.eth.wait_for_transaction_receipt(tx)
 
-    def _handle_ordering(self, agg_trade_instructions, best_src_token, tx_route_handler):
+    def _handle_ordering(
+        self, agg_trade_instructions, best_src_token, tx_route_handler
+    ):
         new_trade_instructions = []
         if len(agg_trade_instructions) == 2:
             for inst in agg_trade_instructions:
@@ -420,7 +434,7 @@ class CarbonBot:
         flashloan_tokens: List[str],
         CCm: CPCContainer = None,
         update_pools: bool = False,
-        mode: str = "continuous"
+        mode: str = "continuous",
     ) -> str:
         """
         Runs the bot.
@@ -456,9 +470,7 @@ class CarbonBot:
                     )  # Sleep for 60 seconds before searching for opportunities again
                 except Exception as e:
                     logger.debug(e)
-                    time.sleep(
-                        self.polling_interval
-                    )
+                    time.sleep(self.polling_interval)
         else:
             try:
                 tx_hash = self._execute_strategy(flashloan_tokens, CCm)

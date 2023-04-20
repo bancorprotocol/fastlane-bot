@@ -9,6 +9,7 @@ Licensed under MIT
 # import time
 from dataclasses import dataclass, asdict
 from typing import List, Union, Any, Dict, Tuple, Optional
+
 # import eth_abi
 # import math
 # import pandas as pd
@@ -23,13 +24,11 @@ from web3._utils.transactions import fill_nonce
 from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams, TxReceipt
-from fastlane_bot.abi import *      # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.config import *   # TODO: PRECISE THE IMPORTS or from .. import config
+from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
+from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 from fastlane_bot.models import Token, session, Pool
+
 # from carbon.tools.cpc import ConstantProductCurve
-
-
-
 
 
 @dataclass
@@ -398,4 +397,3 @@ class TradeInstruction:
             The quantized output amount.
         """
         return self._amtout_quantized
-

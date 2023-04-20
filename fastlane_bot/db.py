@@ -32,6 +32,7 @@ class DatabaseManager:
     backend: BACKEND_POSTGRES, [BACKEND_SQLITE]
         The database backend to use.
     """
+
     BACKEND_SQLITE = "sqlite"
     BACKEND_POSTGRES = "postgres"
 
@@ -41,13 +42,13 @@ class DatabaseManager:
     use_multicall: bool = True
     mode: str = "production"
     drop_tables: InitVar = False
-    
+
     _carbon_v1_controller: Any = None
 
     def __post_init__(self, drop_tables: bool = False):
         if self.backend is None:
             self.backend = self.BACKEND_POSTGRES
-        
+
         if drop_tables:
             self.drop_all_tables()
             try:
@@ -275,7 +276,9 @@ class DatabaseManager:
             self.commit_pool(common_data, other_params)
 
         except Exception as e:
-            logger.warning(f"Failed to create pool for {exchange_name}, {pool_address}, {e}")
+            logger.warning(
+                f"Failed to create pool for {exchange_name}, {pool_address}, {e}"
+            )
 
     @staticmethod
     def get_token_addresses_for_pool(
@@ -333,16 +336,19 @@ class DatabaseManager:
                 pool = Pool(**pool_params)
                 session.commit()
             except Exception as e:
-                logger.warning(f"Failed to commit pool pool_params={pool_params}, - {e}, {e.__traceback__}, skipping...")
+                logger.warning(
+                    f"Failed to commit pool pool_params={pool_params}, - {e}, {e.__traceback__}, skipping..."
+                )
 
     @staticmethod
     def create_tasks_and_run(updater):
         tasks = []
         logger.info("Creating tasks")
         for args in updater.filters:
-            exchange, _filter = args['exchange'], args['_filter']
+            exchange, _filter = args["exchange"], args["_filter"]
             updater._log_loop_noasync(exchange, _filter)
             logger.info(f"Created task for {exchange}, {_filter}")
+
     # def get_common_data_for_pool(
     #     self,
     #     cid: str,
@@ -414,7 +420,7 @@ class DatabaseManager:
                 address=w3.toChecksumAddress(pool_address),
                 abi=BANCOR_V2_CONVERTER_ABI,
             )
-        elif (exchange_name == BANCOR_V3_NAME):
+        elif exchange_name == BANCOR_V3_NAME:
             return initialize_contract(
                 web3=w3,
                 address=w3.toChecksumAddress(pool_address),
@@ -446,7 +452,7 @@ class DatabaseManager:
         exchange_name: str,
         pool_contract: Contract,
         tkn1_address: str,
-        processed_event: Any = None
+        processed_event: Any = None,
     ) -> Dict[str, Any]:
         """
         Gets the pool info for a given pair of tokens on Bancor V3
@@ -656,7 +662,9 @@ class DatabaseManager:
                             processed_event=None,
                         )
                 except Exception as e:
-                    logger.warning(f"Error updating pool {pool_address} on {exchange}, {e}, continuing...")
+                    logger.warning(
+                        f"Error updating pool {pool_address} on {exchange}, {e}, continuing..."
+                    )
                     continue
 
     @staticmethod
@@ -837,7 +845,14 @@ class DatabaseManager:
         """
 
         if exchange_name == BANCOR_V3_NAME:
-            return session.query(Pool).filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_address == pool_identifier).first()
+            return (
+                session.query(Pool)
+                .filter(
+                    Pool.exchange_name == BANCOR_V3_NAME,
+                    Pool.tkn1_address == pool_identifier,
+                )
+                .first()
+            )
         elif CARBON_V1_NAME in exchange_name:
             return session.query(Pool).filter(Pool.cid == str(pool_identifier)).first()
         else:
@@ -866,9 +881,15 @@ class DatabaseManager:
             if pool:
                 return pool
 
-
-
-            block_number, cid, pool_address, pool_contract, tkn0_address, tkn1_address, exchange_name = DatabaseManager._parse_processed_event(
+            (
+                block_number,
+                cid,
+                pool_address,
+                pool_contract,
+                tkn0_address,
+                tkn1_address,
+                exchange_name,
+            ) = DatabaseManager._parse_processed_event(
                 exchange_name, pool_identifier, processed_event
             )
             tkn0 = self.get_or_create_token(tkn0_address)
@@ -886,16 +907,20 @@ class DatabaseManager:
                 last_updated_block=block_number,
             )
             other_params = {"fee": self.get_pool_fee(exchange_name, pool_contract)}
-            carbon_params = {
-                "y_0": processed_event["order0"][0],
-                "z_0": processed_event["order0"][1],
-                "A_0": processed_event["order0"][2],
-                "B_0": processed_event["order0"][3],
-                "y_1": processed_event["order1"][0],
-                "z_1": processed_event["order1"][1],
-                "A_1": processed_event["order1"][2],
-                "B_1": processed_event["order1"][3],
-            } if exchange_name == CARBON_V1_NAME else {}
+            carbon_params = (
+                {
+                    "y_0": processed_event["order0"][0],
+                    "z_0": processed_event["order0"][1],
+                    "A_0": processed_event["order0"][2],
+                    "B_0": processed_event["order0"][3],
+                    "y_1": processed_event["order1"][0],
+                    "z_1": processed_event["order1"][1],
+                    "A_1": processed_event["order1"][2],
+                    "B_1": processed_event["order1"][3],
+                }
+                if exchange_name == CARBON_V1_NAME
+                else {}
+            )
             all_params = {**common_data, **other_params, **carbon_params}
             logger.debug(f"all_params={all_params}")
             pool = Pool(**all_params)
@@ -910,7 +935,9 @@ class DatabaseManager:
             return None
 
     @staticmethod
-    def _parse_processed_event(exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]):
+    def _parse_processed_event(
+        exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
+    ):
         block_number = processed_event["block_number"]
         if CARBON_V1_NAME in exchange_name:
             exchange_name = CARBON_V1_NAME
@@ -936,7 +963,15 @@ class DatabaseManager:
                 exchange_name, pool_identifier, pool_contract
             )
             cid = DatabaseManager.next_cid
-        return block_number, cid, pool_address, pool_contract, tkn0_address, tkn1_address, exchange_name
+        return (
+            block_number,
+            cid,
+            pool_address,
+            pool_contract,
+            tkn0_address,
+            tkn1_address,
+            exchange_name,
+        )
 
     @staticmethod
     def get_pool_fee(
@@ -1132,18 +1167,30 @@ class EventUpdater:
         # try:
         processed_event = self.build_processed_event(event_log, exchange)
         pool_identifier = self._get_pool_identifier(event_log, exchange)
-        block_number, cid, pool_address, pool_contract, tkn0_address, tkn1_address, exchange  = DatabaseManager._parse_processed_event(
+        (
+            block_number,
+            cid,
+            pool_address,
+            pool_contract,
+            tkn0_address,
+            tkn1_address,
+            exchange,
+        ) = DatabaseManager._parse_processed_event(
             exchange, pool_identifier, processed_event
         )
 
-        logger.debug(f"Getting or creating pool for processed_event= {processed_event}, pool_identifier = {pool_identifier}")
+        logger.debug(
+            f"Getting or creating pool for processed_event= {processed_event}, pool_identifier = {pool_identifier}"
+        )
         pool = self.db.get_or_create_pool(
             exchange_name=exchange,
             pool_identifier=pool_identifier,
             processed_event=processed_event,
         )
         if pool:
-            logger.debug(f"updating pool for exchange = {exchange}, event = {event_log}, event_type = {event_type}")
+            logger.debug(
+                f"updating pool for exchange = {exchange}, event = {event_log}, event_type = {event_type}"
+            )
             pool.last_updated_block = block_number
 
             if pool.exchange_name == BANCOR_V3_NAME:
@@ -1156,7 +1203,9 @@ class EventUpdater:
                 pool = self._update_other_liquidity(pool, processed_event)
 
             elif CARBON_V1_NAME in pool.exchange_name:
-                pool = self._update_carbon_liquidity(cid, event_type, pool, processed_event)
+                pool = self._update_carbon_liquidity(
+                    cid, event_type, pool, processed_event
+                )
 
             is_created = session.query(Pool).filter(Pool.cid == cid).first()
             if not is_created:
@@ -1205,7 +1254,9 @@ class EventUpdater:
             pool_identifier = event_log["address"]
         return pool_identifier
 
-    def _handle_carbon_pool_update(self, cid: int, pool: Pool, processed_event: Dict[str, Any]) -> Pool:
+    def _handle_carbon_pool_update(
+        self, cid: int, pool: Pool, processed_event: Dict[str, Any]
+    ) -> Pool:
         pool.cid = str(cid)
         pool.y_0 = processed_event["order0"][0]
         pool.z_0 = processed_event["order0"][1]
@@ -1424,7 +1475,9 @@ class EventUpdater:
             try:
                 self._handle_event(exchange=exchange, event_log=event)
             except Exception as e:
-                logger.warning(f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}")
+                logger.warning(
+                    f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}"
+                )
 
     async def _update_current_block(self):
         while True:
@@ -1465,13 +1518,17 @@ class EventUpdater:
                     fromBlock=from_block, toBlock="latest"
                 )
                 for event in delete_events:
-                    logger.debug(f"event = {event}, type = {event_type}, exchange = {_exchange}, from_block = {from_block}")
+                    logger.debug(
+                        f"event = {event}, type = {event_type}, exchange = {_exchange}, from_block = {from_block}"
+                    )
                     self._handle_event(
                         exchange=_exchange, event_log=event, event_type="delete"
                     )
 
             for event in events:
-                logger.debug(f"event = {event}, type = {event_type}, exchange = {_exchange}, from_block = {from_block}")
+                logger.debug(
+                    f"event = {event}, type = {event_type}, exchange = {_exchange}, from_block = {from_block}"
+                )
                 if event is None or len(event) == 0:
                     continue
                 self._handle_event(exchange=_exchange, event_log=event)
@@ -1489,7 +1546,9 @@ class EventUpdater:
                 try:
                     self._handle_event(exchange=exchange, event_log=event)
                 except Exception as e:
-                    logger.warning(f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}")
+                    logger.warning(
+                        f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}"
+                    )
             await asyncio.sleep(1)
 
     @staticmethod

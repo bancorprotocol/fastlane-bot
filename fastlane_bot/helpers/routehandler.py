@@ -12,6 +12,7 @@ from typing import List, Union, Any, Dict, Tuple, Optional
 import eth_abi
 import math
 import pandas as pd
+
 # import requests
 from _decimal import Decimal
 from alchemy import Network, Alchemy
@@ -24,13 +25,12 @@ from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams, TxReceipt
 
-from fastlane_bot.abi import *      # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.config import *   # TODO: PRECISE THE IMPORTS or from .. import config
+from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
+from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 from fastlane_bot.models import Token, session, Pool
 from carbon.tools.cpc import ConstantProductCurve
 
 from .tradeinstruction import TradeInstruction
-
 
 
 @dataclass
@@ -57,7 +57,7 @@ class RouteStruct:
     customData: bytes
         The custom data abi-encoded. Required for trades on Carbon. (abi-encoded)
     """
-    
+
     XCID_BANCOR_V2 = 0
     XCID_BANCOR_V3 = 1
     XCID_UNISWAP_V2 = 2
@@ -66,13 +66,14 @@ class RouteStruct:
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
 
-    exchangeId: int # TODO: WHY IS THIS AN INT? 
+    exchangeId: int  # TODO: WHY IS THIS AN INT?
     targetToken: str
     minTargetAmount: int
     deadline: int
     customAddress: str
     customInt: int
     customData: bytes
+
 
 @dataclass
 class TxRouteHandler:
@@ -1082,5 +1083,3 @@ class TxRouteHandler:
 
     def _cid_to_pool(self, cid: str) -> Pool:
         return session.query(Pool).filter(Pool.cid == cid).first()
-
-
