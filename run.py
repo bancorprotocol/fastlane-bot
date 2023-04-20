@@ -17,7 +17,7 @@ flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 
 
 @click.command()
-@click.option("--mode", default="single", type=str)
+@click.option("--mode", default="continuous", type=str)
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--update_pools", default=False, type=bool)
 def main(
