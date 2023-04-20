@@ -187,6 +187,7 @@ class BaseRoute:
             "customInt": int(self.trade_path[idx].fee)
             if isinstance(self.trade_path[idx], UniswapV3LiquidityPool)
             else 0,
+            "customData": "[]"
         }
 
     def validate_pool_idx(self, idx: int):
