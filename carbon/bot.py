@@ -274,14 +274,8 @@ class CarbonBot:
             best_src_token,
         ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
 
-        new_trade_instructions = [
-            inst for inst in trade_instructions_dic if '-0' not in inst['cid']
-        ]
-        trade_instructions_dic = new_trade_instructions
-
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
         tx_route_handler = TxRouteHandler(trade_instructions)
-
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions=trade_instructions)
 
         # TODO: cleanup
