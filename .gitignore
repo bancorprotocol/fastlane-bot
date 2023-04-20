@@ -19,3 +19,4 @@ topaze
 carbon/tools/*
 
 /.env
+*.env

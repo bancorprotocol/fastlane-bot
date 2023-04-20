@@ -8,12 +8,12 @@ Licensed under MIT
 """
 import click
 from carbon.tools.cpc import T
-from carbon.bot import CarbonBot
+from carbonbot.bot import CarbonBot
+from carbonbot.models import *
 
-from carbon.models import *
 session.rollback()
 
-flashloan_tokens = [T.BNT, T.WETH]
+flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 
 
 @click.command()
