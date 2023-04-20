@@ -42,13 +42,12 @@ class DatabaseManager:
     def __post_init__(self):
         if self.drop_tables:
             self.drop_all_tables()
-
-        try:
-            self.create_ethereum_chain()
-            self.create_supported_exchanges()
-        except Exception as e:
-            print(e)
-            session.rollback()
+            try:
+                self.create_ethereum_chain()
+                self.create_supported_exchanges()
+            except Exception as e:
+                print(e)
+                session.rollback()
 
         self.data = self.data.sort_values("exchange", ascending=False)
 
@@ -409,7 +408,7 @@ class DatabaseManager:
                 address=w3.toChecksumAddress(pool_address),
                 abi=UNISWAP_V3_POOL_ABI,
             )
-        elif exchange_name == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange_name:
             return initialize_contract(
                 web3=w3,
                 address=w3.toChecksumAddress(pool_address),
@@ -464,8 +463,8 @@ class DatabaseManager:
                 "tkn0_balance": reserve_balance[0],
                 "tkn1_balance": reserve_balance[1],
             }
-        elif exchange_name == CARBON_V1_NAME:
-            raise NotImplementedError
+        # elif exchange_name == CARBON_V1_NAME:
+        #     raise NotImplementedError
 
     @staticmethod
     def get_or_create_pair(tkn0_address: str, tkn1_address: str) -> Pair:
@@ -811,7 +810,7 @@ class DatabaseManager:
                 )
                 .first()
             )
-        elif exchange_name == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange_name:
             pool = session.query(Pool).filter(Pool.cid == pool_identifier).first()
         else:
             pool = session.query(Pool).filter(Pool.address == pool_identifier).first()
@@ -836,13 +835,13 @@ class DatabaseManager:
             if pool:
                 return pool
 
-            if processed_event is None:
-                return self._deprecated_get_or_create_pool(
-                    exchange_name, pool_identifier
-                )
+            # if processed_event is None:
+            #     return self._deprecated_get_or_create_pool(
+            #         exchange_name, pool_identifier
+            #     )
 
             block_number = processed_event["block_number"]
-            if exchange_name == CARBON_V1_NAME:
+            if CARBON_V1_NAME in exchange_name:
                 pool_contract = self._carbon_v1_controller
                 tkn0_address, tkn1_address = (
                     processed_event["token0"],
@@ -908,7 +907,7 @@ class DatabaseManager:
             return str(pool_contract.caller.fee())
         elif exchange_name in UNIV2_FORKS:
             return "0.003"
-        elif exchange_name == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange_name:
             return "0.002"
 
     @staticmethod
@@ -955,13 +954,8 @@ class EventUpdater:
             UNISWAP_V2_NAME,
             UNISWAP_V3_NAME,
             BANCOR_V3_NAME,
-            BANCOR_V2_NAME,
-            SUSHISWAP_V2_NAME,
-            CARBON_V1_NAME
+            BANCOR_V2_NAME
         ]
-
-        if self.test_mode and CARBON_V1_NAME in self.exchange_list:
-            self.exchange_list.remove(CARBON_V1_NAME)
 
         logger.debug(f"post init on EventUpdater, exchanges = {self.exchange_list}")
         if (
@@ -1088,7 +1082,7 @@ class EventUpdater:
         try:
             processed_event = self.build_processed_event(event_log, exchange)
 
-            if exchange == CARBON_V1_NAME:
+            if CARBON_V1_NAME in exchange:
                 pool_identifier = event_log["args"].get("id")
 
             elif exchange == BANCOR_V3_NAME:
@@ -1132,7 +1126,7 @@ class EventUpdater:
                 pool.tkn0_balance = processed_event["tkn0_balance"]
                 pool.tkn1_balance = processed_event["tkn1_balance"]
 
-            elif pool.exchange_name == CARBON_V1_NAME:
+            elif CARBON_V1_NAME in pool.exchange_name:
                 logger.debug("processing Carbon event")
                 if event_type == "delete":
                     self.db.delete_carbon_strategy(processed_event["id"])
@@ -1182,7 +1176,7 @@ class EventUpdater:
             processed_event["liquidity"] = event_log["args"].get("liquidity")
             processed_event["tick"] = event_log["args"].get("tick")
             processed_event["tick_spacing"] = event_log["args"].get("tickSpacing")
-        elif exchange == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange:
             processed_event["token0"] = event_log["args"].get("token0")
             processed_event["token1"] = event_log["args"].get("token1")
             if event_log["args"].get("pairId"):
@@ -1218,7 +1212,7 @@ class EventUpdater:
         elif exchange == UNISWAP_V3_NAME:
             return w3.eth.contract(abi=UNISWAP_V3_POOL_ABI, address=pool_address)
 
-        elif exchange == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange:
             return carbon_controller
 
     def get_pair_name_from_contract(self, exchange: str, contract: Contract) -> str:
@@ -1263,7 +1257,7 @@ class EventUpdater:
             return contract.events.Sync.get_logs(fromBlock=from_block, toBlock="latest")
         elif exchange == UNISWAP_V3_NAME:
             return contract.events.Swap.get_logs(fromBlock=from_block, toBlock="latest")
-        elif exchange == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange:
             return [
                 {
                     "exchange": "Carbon",
@@ -1318,7 +1312,7 @@ class EventUpdater:
             return contract.events.Swap.createFilter(
                 fromBlock=from_block, toBlock="latest"
             )
-        elif exchange == CARBON_V1_NAME:
+        elif CARBON_V1_NAME in exchange:
             return [
                 {
                     "exchange": "Carbon",
@@ -1379,7 +1373,7 @@ class EventUpdater:
                     fromBlock=from_block, toBlock="latest"
                 )
 
-            elif _exchange == CARBON_V1_NAME:
+            elif CARBON_V1_NAME in _exchange:
 
                 events += contract.events.StrategyCreated.getLogs(
                     fromBlock=from_block, toBlock="latest"
@@ -1412,7 +1406,10 @@ class EventUpdater:
         """
         while True:
             for event in _filter.get_new_entries():
-                self._handle_event(exchange=exchange, event_log=event)
+                try:
+                    self._handle_event(exchange=exchange, event_log=event)
+                except Exception as e:
+                    logger.warning(f"Failed to handle event: {e}")
             await asyncio.sleep(1)
 
     @staticmethod

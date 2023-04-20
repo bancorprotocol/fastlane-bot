@@ -42,17 +42,18 @@ Licensed under MIT
 
 """
 import time
-from typing import Any, Union, Optional
+from typing import Any, Union, Optional, Tuple, List, Dict
 
 import pandas as pd
 from _decimal import Decimal
+from pandas import DataFrame, Series
 
 from fastlane_bot.config import *
 from fastlane_bot.helpers import (
     TxSubmitHandler,
     TradeInstruction,
     TxRouteHandler,
-    TxReceiptHandler,
+    TxReceiptHandler, TransactionHelpers,
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
@@ -191,7 +192,7 @@ class CarbonBot:
 
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin"
-    ) -> tuple[Union[int, Any], Optional[Any], Optional[Any]]:
+    ) -> tuple[Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str]:
         """
         Finds the arbitrage opportunities.
 
@@ -211,6 +212,7 @@ class CarbonBot:
         """
         logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
+        best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
         for idx, tkn in enumerate(flashloan_tokens):
@@ -274,7 +276,22 @@ class CarbonBot:
         bnt_per_src = bnt / src
         return profit_src * bnt_per_src
 
-    def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer) -> str:
+    def _get_deadline(self) -> int:
+        """
+        Gets the deadline for a transaction.
+
+        Returns
+        -------
+        int
+            The deadline.
+        """
+        return (
+                w3.eth.getBlock(w3.eth.block_number).timestamp
+                + DEFAULT_BLOCKTIME_DEVIATION
+        )
+
+    def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer, network: str = 'mainnet') -> Optional[
+        dict[str, Any]]:
         """
         Refactored execute strategy.
 
@@ -303,7 +320,52 @@ class CarbonBot:
             trade_instructions=trade_instructions
         )
 
-        # TODO: cleanup
+        trade_instructions = self._handle_ordering(agg_trade_instructions, best_src_token, tx_route_handler)
+        src_amount = trade_instructions[0].amtin_wei
+        logger.debug(f"src_amount: {src_amount}")
+        src_address = (
+            session.query(Token).filter(Token.key == best_src_token).first().address
+        )
+        src_address = w3.toChecksumAddress(src_address)
+        trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
+
+        deadline = self._get_deadline()
+
+        route_struct = tx_route_handler.get_arb_contract_args(
+            trade_instructions, deadline
+        )
+
+        if network != 'mainnet':
+            return self._validate_and_submit_transaction_tenderly(
+                trade_instructions, src_address, route_struct, src_amount
+            )
+        tx_submit_handler = TransactionHelpers()
+        return tx_submit_handler.validate_and_submit_transaction(
+            route_struct, src_address, src_amount
+        )
+
+
+    def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
+        tx_submit_handler = TxSubmitHandler(
+            trade_instructions,
+            src_amount=trade_instructions[0].amtin_wei,
+            src_address=src_address,
+        )
+        logger.debug(f"route_struct: {route_struct}")
+        tx_details = tx_submit_handler._get_tx_details()
+        tx_submit_handler.token_contract.functions.approve(
+            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), 0
+        ).transact(tx_details)
+        tx_submit_handler.token_contract.functions.approve(
+            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
+        ).transact(tx_details)
+        logger.debug("src_address", src_address)
+        tx = tx_submit_handler._submit_transaction_tenderly(
+            route_struct, src_address, src_amount
+        )
+        return w3.eth.wait_for_transaction_receipt(tx)
+
+    def _handle_ordering(self, agg_trade_instructions, best_src_token, tx_route_handler):
         new_trade_instructions = []
         if len(agg_trade_instructions) == 2:
             for inst in agg_trade_instructions:
@@ -319,49 +381,7 @@ class CarbonBot:
             new_trade_instructions = tx_route_handler._find_tradematches(
                 agg_trade_instructions
             )
-
-        trade_instructions = new_trade_instructions
-
-        src_amount = trade_instructions[0].amtin_wei
-        print(f"src_amount: {src_amount}")
-        # trade_instructions = tx_route_handler._calculate_trade_outputs(
-        #     new_trade_instructions
-        # )
-        src_address = (
-            session.query(Token).filter(Token.key == best_src_token).first().address
-        )
-        src_address = w3.toChecksumAddress(src_address)
-
-        trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
-
-        tx_submit_handler = TxSubmitHandler(
-            trade_instructions,
-            src_amount=trade_instructions[0].amtin_wei,
-            src_address=src_address,
-        )
-        deadline = tx_submit_handler._get_deadline()
-
-        route_struct = tx_route_handler.get_arb_contract_args(
-            trade_instructions, deadline
-        )
-
-        print(f"route_struct: {route_struct}")
-
-        tx_details = tx_submit_handler._get_tx_details()
-        tx_submit_handler.token_contract.functions.approve(
-            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), 0
-        ).transact(tx_details)
-        tx_submit_handler.token_contract.functions.approve(
-            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
-        ).transact(tx_details)
-
-        print("src_address", src_address)
-
-        tx = tx_submit_handler._submit_transaction_tenderly(
-            route_struct, src_address, src_amount
-        )
-
-        return w3.eth.wait_for_transaction_receipt(tx)
+        return new_trade_instructions
 
     def run(
         self,
