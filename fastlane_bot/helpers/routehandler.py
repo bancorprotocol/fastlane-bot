@@ -395,10 +395,10 @@ class TxRouteHandler:
         print("new_trade_instructions", new_trade_instructions)
         nocarbons_instructions = []
         dictnocarbons = nocarbons.to_dict(orient="records")
-        for dict in dictnocarbons:
-            dict["pair_sorting"] = dict["tknin"] + dict["tknout"]
-            dict["raw_txs"] = str([])
-            nocarbons_instructions += [dict]
+        for dct in dictnocarbons:
+            dct["pair_sorting"] = dct["tknin"] + dct["tknout"]
+            dct["raw_txs"] = str([])
+            nocarbons_instructions += [dct]
 
         new_trade_instructions += nocarbons_instructions
         trade_instructions = [

@@ -8,7 +8,7 @@ Licensed under MIT
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, Dict, List
 
 import sqlalchemy
 from _decimal import Decimal
@@ -398,7 +398,7 @@ class Pool:
         return Decimal(str(tkn_balance / (Decimal("10") ** Decimal(str(tkn_decimals)))))
 
     @staticmethod
-    def _validate_arg_types(typed_args: dict[str, Any]) -> dict[str, Any]:
+    def _validate_arg_types(typed_args: Dict[str, Any]) -> Dict[str, Any]:
         """
         convert the arguments to the correct type if numeric values, else leave as is
         :param typed_args: dictionary of arguments with types
@@ -412,7 +412,7 @@ class Pool:
 
     def to_cpc(
         self, numerical_type: str = "float"
-    ) -> Union[ConstantProductCurve, list[Any]]:
+    ) -> Union[ConstantProductCurve, List[Any]]:
         """
         Returns an instance of the ConstantProductCurve class.
 
@@ -432,7 +432,7 @@ class Pool:
 
         return out
 
-    def _other_to_cpc(self, cpc: ConstantProductCurve) -> list[Any]:
+    def _other_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
 
@@ -549,7 +549,7 @@ class Pool:
             lst.append(cpc.from_carbon(**self._validate_arg_types(typed_args)))
         return lst
 
-    def _univ3_to_cpc(self, cpc: ConstantProductCurve) -> list[Any]:
+    def _univ3_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.
 

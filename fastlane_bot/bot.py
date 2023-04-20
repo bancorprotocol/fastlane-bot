@@ -167,7 +167,7 @@ class CarbonBot:
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
-    ) -> list[TradeInstruction]:
+    ) -> List[TradeInstruction]:
         """
         Converts the trade instructions dictionaries into `TradeInstruction` objects.
 
@@ -204,7 +204,7 @@ class CarbonBot:
 
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin"
-    ) -> tuple[Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str]:
+    ) -> Tuple[Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str]:
         """
         Finds the arbitrage opportunities.
 
@@ -303,7 +303,7 @@ class CarbonBot:
         )
 
     def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer, network: str = 'mainnet') -> Optional[
-        dict[str, Any]]:
+        Dict[str, Any]]:
         """
         Refactored execute strategy.
 
