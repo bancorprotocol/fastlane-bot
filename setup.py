@@ -9,7 +9,7 @@ import re
 
 from setuptools import find_packages, setup
 
-with open("carbon/__init__.py") as fd:
+with open("fastlane_bot/__init__.py") as fd:
     version = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
     )[1]
