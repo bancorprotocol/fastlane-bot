@@ -5,4 +5,4 @@ channels:
 dependencies:
   - python=3.9
   - pip:
-      -r requirements-sqlite.txt
+      -r requirements.txt

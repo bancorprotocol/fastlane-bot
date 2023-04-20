@@ -11,41 +11,41 @@ from decimal import Decimal
 from brownie import Contract
 from dotenv import load_dotenv
 
-from carbon.abi import (
+from carbonbot.abi import (
     BANCOR_V3_NETWORK_INFO_ABI,
     CARBON_CONTROLLER_ABI,
     FAST_LANE_CONTRACT_ABI,
 )
-from carbon.networks import EthereumNetwork
+from carbonbot.networks import EthereumNetwork
 
 load_dotenv()
 
 # DEFAULT VALUES SECTION
 #######################################################################################
+DEFAULT_NETWORK = "mainnet"
+DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"
+DEFAULT_NETWORK_PROVIDER = "alchemy"
+BACKEND = "postgres"  # "sqlite" or "postgres"
+DEFAULT_EXECUTE_MODE = "continuous"  # "continuous" or "single"
+PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
+DATABASE_SEED_FILE = os.path.normpath(f"{PROJECT_PATH}/carbonbot/data/seed_token_pairs.csv")
+TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae" # leave blank or fill with your own fork
 UNIV3_FEE_LIST = [100, 500, 3000, 10000]
-FLASHLOAN_TOKENS = "USDC,ETH,WETH,DAI,USDT,BNT"
-TOKEN_LIST = None
 MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
 DEFAULT_GAS = 950_000
 DEFAULT_GAS_PRICE = 0
-
 DEFAULT_GAS_PRICE_OFFSET = 1.05
 DEFAULT_GAS_SAFETY_OFFSET = 25_000
-BACKEND = "sqlite"  # "sqlite" or "postgres"
 VERBOSE = "INFO"
-DEFAULT_NETWORK = "tenderly"
-DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"
-DEFAULT_FILETYPE = "csv"
 DEFAULT_BLOCKTIME_DEVIATION = 13 * 500  # 10 block time deviation
-DEFAULT_EXECUTE_MODE = "search_and_execute"
 DEFAULT_MIN_PROFIT = Decimal("1")
 DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
-PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
 DEFAULT_CURVES_DATAFILE = os.path.normpath(f"{PROJECT_PATH}/carbon/data/curves.csv.gz")
 CARBON_STRATEGY_CHUNK_SIZE = 200
-CARBON_FEE = Decimal("0.002")
 Q96 = Decimal("2") ** Decimal("96")
 DEFAULT_TIMEOUT = 60
+CARBON_FEE = Decimal("0.002")
+BANCOR_V3_FEE = Decimal("0.0")
 
 # COMMONLY USED TOKEN ADDRESSES SECTION
 #######################################################################################
@@ -86,7 +86,6 @@ WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 # URL SECTION
 #######################################################################################
 ALCHEMY_API_URL = f"https://eth-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_PROJECT_ID}"
-TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
 TENDERLY_FORK_RPC = f"https://rpc.tenderly.co/fork/{TENDERLY_FORK}"
 ETHEREUM_MAINNET_PROVIDER = (
     f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
@@ -131,16 +130,16 @@ TEST_TOKENS = [
     "LINK",
     "AAVE",
 ]
-YF_TOKENS = [
-    "USDC-USD",
-    "DAI-USD",
-    "BNT-USD",
-    "WBTC-USD",
-    "BNB-USD",
-    "MATIC-USD",
-    "SHIB-USD",
-    "UNI-USD",
-    "ETH-USD",
+
+# TOKENS THAT CAN BE FLASHLOANED, DENOTED AS TICKER-ADDRESS(LAST 4 CHARS)
+FLASHLOAN_TOKENS = [
+    "BNT-FF1C",
+    "USDC-EB48",
+    "WETH-6CC2",
+    "WBTC-C599",
+    "USDT-1ec7",
+    "DAI-1d0F",
+    "LINK-86CA"
 ]
 
 # CARBON EVENTS
@@ -153,10 +152,20 @@ CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
 # ETHEREUM NETWORK CONNECTION SECTION
 #######################################################################################
+print('ETHEREUM_MAINNET_PROVIDER', ETHEREUM_MAINNET_PROVIDER)
+if DEFAULT_NETWORK == "mainnet":
+    network_id = PRODUCTION_NETWORK
+    network_name = PRODUCTION_NETWORK_NAME
+    provider_url = ETHEREUM_MAINNET_PROVIDER
+else:
+    network_id = DEFAULT_NETWORK
+    network_name = DEFAULT_NETWORK_NAME
+    provider_url = TENDERLY_FORK_RPC
+
 connection = EthereumNetwork(
-    network_id=DEFAULT_NETWORK,
-    network_name=DEFAULT_NETWORK_NAME,
-    provider_url=TENDERLY_FORK_RPC,
+    network_id=network_id,
+    network_name=network_name,
+    provider_url=provider_url,
 )
 
 connection.connect_network()
@@ -176,9 +185,8 @@ carbon_controller = Contract.from_abi(
     address=CARBON_CONTROLLER_ADDRESS,
     abi=CARBON_CONTROLLER_ABI,
 )
-arb_contract = Contract.from_abi(
-    name=FASTLANE_CONTRACT_ADDRESS,
-    address=FASTLANE_CONTRACT_ADDRESS,
+arb_contract = w3.eth.contract(
+    address=w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
     abi=FAST_LANE_CONTRACT_ABI,
 )
 
