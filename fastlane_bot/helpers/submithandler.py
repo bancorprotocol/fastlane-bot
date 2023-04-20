@@ -34,7 +34,11 @@ from .routehandler import RouteStruct
 
 
 @dataclass
-class TxSubmitHandler:
+class TxSubmitHandlerBase:
+    pass
+    
+@dataclass
+class TxSubmitHandler(TxSubmitHandlerBase):
     """
     A class that handles the submission of transactions to the blockchain.
 

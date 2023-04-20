@@ -7,5 +7,4 @@ TxHelpersBase = TxHelpers
 from .datafetcher import DataFetcher
 
 
-class TxReceiptHandler:
-    pass
+

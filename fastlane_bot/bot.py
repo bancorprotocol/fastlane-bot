@@ -46,10 +46,10 @@ import itertools
 import time
 from typing import Any, Union, Optional, Tuple, List, Dict
 
-import math
+#import math
 import pandas as pd
 from _decimal import Decimal
-from pandas import DataFrame, Series
+#from pandas import DataFrame, Series
 
 from fastlane_bot.config import *
 from fastlane_bot.helpers import (
@@ -66,15 +66,10 @@ from fastlane_bot.tools.arbgraphs import ArbGraph, plt  # convenience imports
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
-plt.style.use("seaborn-dark")
-plt.rcParams["figure.figsize"] = [12, 6]
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
-
 from dataclasses import dataclass, asdict, InitVar, field
 from typing import List, Dict, Tuple
+
+from . import __VERSION__, __DATE__
 
 class CarbonBotBase():
     """

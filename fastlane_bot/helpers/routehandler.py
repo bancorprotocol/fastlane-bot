@@ -74,9 +74,12 @@ class RouteStruct:
     customInt: int
     customData: bytes
 
+@dataclass
+class TxRouteHandlerBase:
+    pass
 
 @dataclass
-class TxRouteHandler:
+class TxRouteHandler(TxRouteHandlerBase):
     """
     A class that handles the routing of the bot. Takes the `trade_instructions` and converts them into the variables needed to instantiate the `TxSubmitHandler` class.
 
