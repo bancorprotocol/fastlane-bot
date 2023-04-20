@@ -28,7 +28,7 @@ from web3.types import TxParams, TxReceipt
 from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 from fastlane_bot.models import Token, session, Pool
-from carbon.tools.cpc import ConstantProductCurve
+from fastlane_bot.tools.cpc import ConstantProductCurve
 
 from .tradeinstruction import TradeInstruction
 

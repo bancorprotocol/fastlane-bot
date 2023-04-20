@@ -923,14 +923,17 @@ class DatabaseManager:
             )
             all_params = {**common_data, **other_params, **carbon_params}
             logger.debug(f"all_params={all_params}")
-            pool = Pool(**all_params)
-            session.add(pool)
-            session.commit()
-            logger.info(f"Successfully created pool!!!: {all_params}")
-            return None
+            try:
+                pool = Pool(**all_params)
+                session.add(pool)
+                session.commit()
+                logger.info(f"Successfully created pool!!!: {all_params}")
+                return None
+            except Exception as e:
+                logger.warning(e)
+                return None
 
         except Exception as e:
-            logger.warning(f"Error creating pool: {pool_identifier}")
             logger.warning(e)
             return None
 
@@ -1213,10 +1216,6 @@ class EventUpdater:
             session.commit()
             logger.info(
                 f"Successfully updated event for {exchange} {pool.pair_name} {pool.fee} at block {block_number}..."
-            )
-        else:
-            logger.warning(
-                f"Pool not found or created for {exchange} {pool_identifier} at block {block_number}..."
             )
 
     def _update_carbon_liquidity(self, cid, event_type, pool, processed_event):

@@ -392,8 +392,8 @@ class CarbonBot:
     ):
         tx_submit_handler = TxSubmitHandler(
             trade_instructions,
-            src_amount=trade_instructions[0].amtin_wei,
             src_address=src_address,
+            src_amount=trade_instructions[0].amtin_wei,
         )
         logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
