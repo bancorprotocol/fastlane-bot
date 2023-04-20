@@ -50,7 +50,7 @@ Q96 = Decimal("2") ** Decimal("96")
 DEFAULT_TIMEOUT = 60
 CARBON_FEE = Decimal("0.002")
 BANCOR_V3_FEE = Decimal("0.0")
-DEFAULT_REWARD_PERCENT = 0.5
+DEFAULT_REWARD_PERCENT = Decimal("0.5")
 
 # COMMONLY USED TOKEN ADDRESSES SECTION
 #######################################################################################
