@@ -69,7 +69,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, InitVar, field
 from typing import List, Dict, Tuple
 
 
@@ -94,16 +94,16 @@ class CarbonBot:
     mode: str = "single"
     db: DatabaseManager = None
     genesis_data = pd.read_csv(DATABASE_SEED_FILE)
-    drop_tables: bool = False
-    seed_pools: bool = False
-    update_pools: bool = False
+    drop_tables: InitVar = False
+    # seed_pools: bool = False TODO REVIEW
+    # update_pools: bool = False
     polling_interval: int = 60
 
-    tx_submitter_handler: TxSubmitHandler = None
+    tx_submitter_handler: TxSubmitHandler = None # TODO REVIEW: WHY AREN'T THOSE USED?
     tx_receipt_handler: TxReceiptHandler = None
     tx_route_handler: TxRouteHandler = None
 
-    def __post_init__(self):
+    def __post_init__(self, drop_tables: bool = False):
         """
         The post init method.
         """
@@ -112,10 +112,19 @@ class CarbonBot:
             self.db = DatabaseManager(
                 data=self.genesis_data, drop_tables=self.drop_tables
             )
-        if self.seed_pools:
-            self.db.seed_pools()
-        if self.update_pools:
-            self.db.update_pools()
+        # if self.seed_pools: TODO REVIEW
+        #     self.db.seed_pools()
+        # if self.update_pools:
+        #     self.db.update_pools()
+        
+    # TODO REVIEW
+    def seed_pools(self):
+        """convenience method for db.seed_pools()"""
+        self.db.seed_pools()
+        
+    def update_pools(self):
+        """convenience method for db.update_pools()"""
+        self.db.update_pools()
 
     @staticmethod
     def get_curves() -> CPCContainer:
@@ -127,6 +136,9 @@ class CarbonBot:
         CPCContainer
             The container of curves.
         """
+        # TODO REVIEW
+        # THIS SHOULD PROBABLY NOT BE A STATIC FUNCTION BECAUSE IT REALLY SHOULD NOT BE CALLED
+        # ON THE CLASS ITSELF. ALSO WHY DOESN'T IT GO VIA THE DATABASE MANAGER?
         pools = (
             session.query(Pool)
             .filter(
