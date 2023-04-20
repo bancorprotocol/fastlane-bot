@@ -51,15 +51,15 @@ from pandas import DataFrame, Series
 
 from fastlane_bot.config import *
 from fastlane_bot.helpers import (
-    TxSubmitHandler,
-    TradeInstruction,
-    TxRouteHandler,
+    TxSubmitHandler, TxSubmitHandlerBase,
+    TradeInstruction, TxReceiptHandlerBase,
+    TxRouteHandler, TxRouteHandlerBase,
     TxReceiptHandler, TransactionHelpers,
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
-from carbon.tools import tokenscale as ts
-from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
+#from carbon.tools import tokenscale as ts
+#from carbon.tools.arbgraphs import ArbGraph
 from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from carbon.tools.optimizer import CPCArbOptimizer
 
@@ -74,14 +74,13 @@ class CarbonBot:
 
     Attributes
     ----------
-    tx_submitter_handler: TxSubmitHandler
-        The transaction submitter handler.
-    tx_receipt_handler: TxReceiptHandler
-        The transaction receipt handler.
-    mode: str
-        The mode of the bot. (continuous or single)
-    genesis_data: pd.DataFrame
-        The genesis data. (token pairs)
+    TxSubmitHandlerClass: class derived from TxSubmitHandlerBase
+        the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
+    TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
+        ditto (default: TxReceiptHandler).
+    TxRouteHandlerClass: class derived from TxRouteHandlerBase
+        ditto (default: TxRouteHandler).
+
 
     
     MAIN ENTRY POINTS
@@ -94,20 +93,30 @@ class CarbonBot:
     __DATE__ = __DATE__
 
     db: DatabaseManager = None
-    genesis_data = pd.read_csv(DATABASE_SEED_FILE)
+    genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
     drop_tables: InitVar = False
-    # seed_pools: bool = False TODO REVIEW
-    # update_pools: bool = False
     polling_interval: int = 60
 
-    tx_submitter_handler: TxSubmitHandler = None # TODO REVIEW: WHY AREN'T THOSE USED?
-    tx_receipt_handler: TxReceiptHandler = None
-    tx_route_handler: TxRouteHandler = None
+    TxSubmitHandlerClass: any = None
+    TxReceiptHandlerClass: any = None
+    TxRouteHandlerClass: any = None
 
     def __post_init__(self, drop_tables: bool = False):
         """
         The post init method.
         """
+        if self.TxSubmitHandlerClass is None:
+            self.TxSubmitHandlerClass = TxSubmitHandler
+        assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
+        
+        if self.TxReceiptHandlerClass is None:
+            self.TxReceiptHandlerClass = TxReceiptHandler
+        assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
+        
+        if self.TxRouteHandlerClass is None:
+            self.TxRouteHandlerClass = TxRouteHandler
+        assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
+        
         if self.db is None:
             self.db = DatabaseManager(
                 data=self.genesis_data, drop_tables=self.drop_tables
@@ -119,8 +128,8 @@ class CarbonBot:
         """
         s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
         s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph)]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale)]
         s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
         return s
         
