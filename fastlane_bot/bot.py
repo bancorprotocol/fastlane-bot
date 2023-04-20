@@ -71,6 +71,7 @@ from typing import List, Dict, Tuple
 
 from . import __VERSION__, __DATE__
 
+@dataclass
 class CarbonBotBase():
     """
     Base class for the business logic of the bot.
