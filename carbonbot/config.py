@@ -152,10 +152,20 @@ CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
 # ETHEREUM NETWORK CONNECTION SECTION
 #######################################################################################
+print('ETHEREUM_MAINNET_PROVIDER', ETHEREUM_MAINNET_PROVIDER)
+if DEFAULT_NETWORK == "mainnet":
+    network_id = PRODUCTION_NETWORK
+    network_name = PRODUCTION_NETWORK_NAME
+    provider_url = ETHEREUM_MAINNET_PROVIDER
+else:
+    network_id = DEFAULT_NETWORK
+    network_name = DEFAULT_NETWORK_NAME
+    provider_url = TENDERLY_FORK_RPC
+
 connection = EthereumNetwork(
-    network_id=DEFAULT_NETWORK,
-    network_name=DEFAULT_NETWORK_NAME,
-    provider_url=TENDERLY_FORK_RPC,
+    network_id=network_id,
+    network_name=network_name,
+    provider_url=provider_url,
 )
 
 connection.connect_network()

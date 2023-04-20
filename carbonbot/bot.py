@@ -47,19 +47,19 @@ from typing import Any, Union, Optional
 import pandas as pd
 from _decimal import Decimal
 
-from carbon.tools import tokenscale as ts
-from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from carbon.tools.optimizer import CPCArbOptimizer
 from carbonbot.config import *
-from carbonbot.db import DatabaseManager
 from carbonbot.helpers import (
     TxSubmitHandler,
     TradeInstruction,
     TxRouteHandler,
     TxReceiptHandler,
 )
+from carbonbot.db import DatabaseManager
 from carbonbot.models import Pool, session, Token
+from carbon.tools import tokenscale as ts
+from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
+from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
+from carbon.tools.optimizer import CPCArbOptimizer
 
 plt.style.use("seaborn-dark")
 plt.rcParams["figure.figsize"] = [12, 6]
@@ -68,7 +68,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List, Dict, Tuple
 
 
@@ -234,16 +234,37 @@ class CarbonBot:
             except Exception as e:
                 logger.debug(e)
                 r = O.margp_optimizer(tkn1) # TODO: catch again
+            profit_src = -r.result
             trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
 
-            # TODO: need to hard-convert to USD to compare
-            if (-r.result > best_profit):
+            profit = self._get_profit_in_bnt(profit_src, src_token)
+
+            if (profit > best_profit):
                 best_src_token = src_token
-                best_profit = -r.result
+                best_profit = profit
                 best_trade_instructions_df = trade_instructions_df
                 best_trade_instructions_dic = trade_instructions_dic
         return best_profit, best_trade_instructions_df, best_trade_instructions_dic, best_src_token
+
+    def _get_profit_in_bnt(self, profit_src, src_token):
+        """
+        Gets the profit in BNT.
+
+        Parameters
+        ----------
+        profit_src: Decimal
+            The profit in the source token.
+        src_token: str
+            The source token.
+        """
+        if src_token == "BNT-FF1C":
+            return profit_src
+        pool = session.query(Pool).filter(Pool.exchange == BANCOR_V3_NAME, Pool.tkn1_key == src_token).first()
+        bnt = Decimal(pool.tkn0_balance) / 10 ** 18
+        src = Decimal(src_token) / 10 ** pool.tkn1_decimals
+        bnt_per_src = bnt / src
+        return profit_src * bnt_per_src
 
     def _execute_strategy(self, flashloan_tokens: List[str], CCm: CPCContainer) -> str:
         """
