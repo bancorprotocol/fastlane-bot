@@ -56,7 +56,7 @@ class TransactionHelpers:
 
     def validate_and_submit_transaction(
         self,
-        routes: List[Dict[str, Any]],
+        routes: tuple[list, int],
         src_amt: int,
         src_address: str,
         expected_profit: Decimal,
@@ -66,6 +66,11 @@ class TransactionHelpers:
 
         Parameters
         ----------
+        :param routes:
+        :param src_amt:
+        :param src_address: the token from which the trade will init
+        :param expected_profit: the amount of profit expected by the trade, converted into BNT.
+
 
         """
 
@@ -217,7 +222,7 @@ class TransactionHelpers:
 
     def build_transaction_with_gas(
         self,
-        routes: List[Dict[str, Any]],
+        routes: tuple[list, int],
         src_amt: int,
         src_address: str,
         gas_price: int,
