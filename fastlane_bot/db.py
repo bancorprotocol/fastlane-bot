@@ -951,15 +951,16 @@ class EventUpdater:
         ]
 
         self.exchange_list = [
+            CARBON_V1_NAME,
             UNISWAP_V2_NAME,
             UNISWAP_V3_NAME,
             BANCOR_V3_NAME,
             BANCOR_V2_NAME,
             SUSHISWAP_V2_NAME,
-            CARBON_V1_NAME,
+            CARBON_V1_NAME
         ]
 
-        if not self.test_mode and CARBON_V1_NAME in self.exchange_list:
+        if self.test_mode and CARBON_V1_NAME in self.exchange_list:
             self.exchange_list.remove(CARBON_V1_NAME)
 
         logger.debug(f"post init on EventUpdater, exchanges = {self.exchange_list}")
