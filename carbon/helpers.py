@@ -193,14 +193,16 @@ class TradeInstruction:
         Decimal
             The quantized amount.
         """
+
         if "." not in str(amount):
             return Decimal(str(amount))
+        amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
         amount_dec = str(amount_dec)[:decimals]
         try:
-            return Decimal(str(amount_dec).split(".")[0] + "." + amount_dec)
+            return Decimal(f"{str(amount_num)}.{amount_dec}")
         except Exception as e:
-            print('Error quantizing amount: ', str(amount_dec).split(".")[0] + "." + amount_dec)
+            print('Error quantizing amount: ', f"{str(amount_num)}.{amount_dec}")
 
     def _get_token_address(self, token_key: str) -> str:
         """
@@ -509,6 +511,40 @@ class TxRouteHandler:
         """
         return address.lower() == WETH_ADDRESS.lower()
 
+    # def custom_data_encoder(wei_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+    #     for i in range(len(wei_instructions)):
+    #         instr = wei_instructions[i]
+    #         if instr.raw_txs == '[]':
+    #             instr.customData = ''
+    #         else:
+    #             tradeInfo = eval(instr.raw_txs)
+    #
+    #             # convert strategyid to type int
+    #             tradeActions = []
+    #             for trade in tradeInfo:
+    #                 tradeActions += [
+    #                     {
+    #                         'strategyId': int(trade['cid'].split('-')[0]),
+    #                         'amount': trade['amtin']
+    #                     }
+    #                 ]
+    #
+    #             # Define the types of the keys in the dictionaries
+    #             types = ['uint256', 'uint128']
+    #
+    #             # Extract the values from each dictionary and append them to a list
+    #             values = [32, len(tradeActions)] + [value for data in tradeActions for value in (data['strategyId'], data['amount'])]
+    #
+    #             # Create a list of ABI types based on the number of dictionaries
+    #             all_types = ['uint32', 'uint32'] + types * len(tradeActions)
+    #
+    #             # Encode the extracted values using the ABI types
+    #             encoded_data = eth_abi.encode(all_types, values)
+    #             instr.customData = encoded_data
+    #             wei_instructions[i] = instr
+    #
+    #     return wei_instructions
+
     @staticmethod
     def custom_data_encoder(wei_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
         for i in range(len(wei_instructions)):
@@ -524,7 +560,7 @@ class TxRouteHandler:
                     tradeActions += [
                         {
                             'strategyId': int(trade['cid'].split('-')[0]),
-                            'amount': trade['amtin']
+                            'amount': int(Decimal(trade['amtin']) * 10 ** instr.tknin_decimals * Decimal(".9"))
                         }
                     ]
 
@@ -542,6 +578,7 @@ class TxRouteHandler:
                 instr.customData = encoded_data
                 wei_instructions[i] = instr
 
+        # print(f"all_types: {all_types}")
         return wei_instructions
 
     def _abi_encode_data(
@@ -692,8 +729,8 @@ class TxRouteHandler:
             The arguments needed to instantiate the `ArbContract` class.
         """
         route_struct = self.get_route_structs(trade_instructions=trade_instructions, deadline=deadline)
-        src_amount = int(self.trade_instructions_dic[0].amtin_wei)
-        return route_struct, src_amount
+        # src_amount = int(self.trade_instructions_dic[0].amtin_wei)
+        return route_struct
 
     @staticmethod
     def _agg_carbon_independentIDs(trade_instructions):
@@ -1277,7 +1314,7 @@ class TxRouteHandler:
         )
 
     def _solve_trade_output(
-        self, curve: Pool, trade: TradeInstruction, amount_in: Decimal
+        self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> tuple[Decimal, Decimal, int, int]:
 
         if not isinstance(trade, TradeInstruction):
@@ -1294,7 +1331,7 @@ class TxRouteHandler:
             else curve.tkn0_decimals
         )
 
-        amount_in = trade.amtin_quantized
+        amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
         if curve.exchange_name == UNISWAP_V3_NAME:
             amount_out = self._calc_uniswap_v3_output(
@@ -1327,7 +1364,7 @@ class TxRouteHandler:
             )
 
 
-        amount_out = amount_out * Decimal("0.99999")
+        amount_out = amount_out * Decimal("0.999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
@@ -1349,29 +1386,18 @@ class TxRouteHandler:
         List[Dict[str, Any]]
             The trade outputs.
         """
+
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
-            curve_cid = trade.cid
             raw_txs_lst = []
             if trade.raw_txs != '[]':
                 data = eval(trade.raw_txs)
                 total_out = 0
-
                 for tx in data:
                     cid = tx['cid']
                     cid = cid.split('-')[0]
-                    curve = session.query(Pool).filter(Pool.cid == cid).first()
                     tknin_key = tx['tknin']
-                    tknout_key = tx['tknout']
-                    amtin = tx['amtin']
-                    amtout = tx['amtout']
-
-                    tkn_in_decimals = (
-                        curve.tkn0_decimals
-                        if tknin_key == curve.tkn0_key
-                        else curve.tkn1_decimals
-                    )
-                    curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
+                    curve = session.query(Pool).filter(Pool.cid == cid).first()
                     (
                         amount_in,
                         amount_out,
@@ -1381,12 +1407,6 @@ class TxRouteHandler:
                         curve=curve, trade=trade, amount_in=next_amount_in
                     )
 
-                    total_out += amount_out
-
-                    #amount_in_wei = TradeInstruction._convert_to_wei(amtin, tkn_in_decimals)
-
-                    print(f"amount_in_wei: {amount_in_wei}, {str(amount_in_wei)}")
-
                     raw_txs = {
                         'cid': cid,
                         'amtin': amount_in_wei,
@@ -1395,9 +1415,12 @@ class TxRouteHandler:
                     }
                     raw_txs_lst.append(raw_txs)
 
+                    total_out += amount_out
                 amount_out = total_out
 
             else:
+
+                curve_cid = trade.cid
                 curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
                 (
                     amount_in,
@@ -1410,8 +1433,10 @@ class TxRouteHandler:
                 trade_instructions[idx].amtin = amount_in_wei
                 trade_instructions[idx].amtout = amount_out_wei
 
-            next_amount_in = amount_out
+                next_amount_in = amount_out
+
             trade_instructions[idx].raw_txs = str(raw_txs_lst)
+
         return trade_instructions
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:

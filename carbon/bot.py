@@ -236,13 +236,14 @@ class CarbonBot:
                                   )
             except Exception as e:
                 logger.debug(e)
-                r = O.margp_optimizer(tkn1)
+                r = O.margp_optimizer(tkn1) # TODO: catch again
             trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-            print("r.result", r.result, f"carbon curves count: {len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic))}")
-            print("trade_instructions_df", trade_instructions_df)
-            print("trade_instructions_dic", trade_instructions_dic)
+            # print("r.result", r.result, f"carbon curves count: {len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic))}")
+            # print("trade_instructions_df", trade_instructions_df)
+            # print("trade_instructions_dic", trade_instructions_dic)
 
+            # TODO: need to hard-convert to USD to compare
             if (-r.result > best_profit):
                 best_src_token = src_token
                 best_profit = -r.result
@@ -273,12 +274,9 @@ class CarbonBot:
             best_src_token,
         ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
 
-        new_trade_instructions = []
-        for inst in trade_instructions_dic:
-            if '-0' in inst['cid']:
-                continue
-            new_trade_instructions += [inst]
-
+        new_trade_instructions = [
+            inst for inst in trade_instructions_dic if '-0' not in inst['cid']
+        ]
         trade_instructions_dic = new_trade_instructions
 
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
@@ -286,8 +284,7 @@ class CarbonBot:
 
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions=trade_instructions)
 
-        print('agg_trade_instructions', agg_trade_instructions)
-
+        # TODO: cleanup
         new_trade_instructions = []
         if len(agg_trade_instructions) == 2:
             for inst in agg_trade_instructions:
@@ -298,9 +295,13 @@ class CarbonBot:
         else:
             new_trade_instructions = tx_route_handler._find_tradematches(agg_trade_instructions)
 
-        trade_instructions = tx_route_handler._calculate_trade_outputs(
-            new_trade_instructions
-        )
+        trade_instructions = new_trade_instructions
+
+        src_amount = trade_instructions[0].amtin_wei
+        print(f"src_amount: {src_amount}")
+        # trade_instructions = tx_route_handler._calculate_trade_outputs(
+        #     new_trade_instructions
+        # )
         src_address = session.query(Token).filter(Token.key==best_src_token).first().address
         src_address = w3.toChecksumAddress(src_address)
 
@@ -311,9 +312,11 @@ class CarbonBot:
                                             src_address=src_address)
         deadline = tx_submit_handler._get_deadline()
 
-        route_struct, src_amount = tx_route_handler.get_arb_contract_args(
+        route_struct = tx_route_handler.get_arb_contract_args(
             trade_instructions, deadline
         )
+
+        print(f"route_struct: {route_struct}")
 
 
         tx_details = tx_submit_handler._get_tx_details()
@@ -324,14 +327,13 @@ class CarbonBot:
             w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
 
-        # src_token = trade_instructions[0].tknin_key
         print("src_address", src_address)
 
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount
         )
-        w3.eth.wait_for_transaction_receipt(tx)
-        return tx.hex()
+
+        return w3.eth.wait_for_transaction_receipt(tx)
 
     def run(
         self,
