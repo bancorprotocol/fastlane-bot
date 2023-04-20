@@ -95,7 +95,7 @@ class CarbonBot:
     db: DatabaseManager = None
     genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
     drop_tables: InitVar = False
-    polling_interval: int = 60
+    polling_interval: int = 12
 
     TxSubmitHandlerClass: any = None
     TxReceiptHandlerClass: any = None
