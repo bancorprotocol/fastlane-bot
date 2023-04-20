@@ -20,7 +20,7 @@ flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 @click.option("--mode", default="continuous", type=str)
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--update_pools", default=False, type=bool)
-@click.option("--polling_interval", default=1, type=int)
+@click.option("--polling_interval", default=12, type=int)
 @click.option("--seed_pools", default=False, type=bool)
 def main(
         mode,
@@ -52,7 +52,7 @@ def main(
     # Initialize the bot
     bot = CarbonBot(
         mode=mode,
-        polling_interval=update_pools,
+        polling_interval=polling_interval,
         update_pools=update_pools,
         seed_pools=seed_pools,
     )
