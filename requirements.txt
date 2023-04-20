@@ -5,7 +5,6 @@ eth-brownie~=1.19.3
 python-dotenv~=0.16.0
 joblib~=1.2.0
 pandas~=1.5.2
-psutil~=5.9.5
 alchemy-sdk~=0.1.1
 pyarrow~=11.0.0
 networkx~=3.0

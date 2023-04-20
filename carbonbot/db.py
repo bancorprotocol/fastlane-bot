@@ -956,9 +956,14 @@ class EventUpdater:
         """
         Creates a _filter for the relevant event for a given exchange
 
-        :param exchange_name: exchange name
-        :param contract: contract object
-        :return: filter for the relevant event
+        Parameters
+        ----------
+        exchanges: [str]
+            The list of exchanges to get the filters for
+
+        Returns
+        -------
+        None
         """
 
         if BANCOR_V2_NAME in exchanges:
@@ -1010,8 +1015,15 @@ class EventUpdater:
     def _handle_event(self, exchange: str, event_log: Any, event_type: str = None):
         """
         Handles an event log from the Ethereum network
-        :param exchange: exchange name
-        :param event_log: event log from web3 Contract.events
+
+        Parameters
+        ----------
+        exchange: str
+            The name of the exchange the event came from
+        event_log: Any
+            The event log to process
+        event_type: str
+            The type of event to process
         """
         try:
             processed_event = self.build_processed_event(event_log, exchange)
@@ -1027,6 +1039,8 @@ class EventUpdater:
             logger.debug(f"processed_event = {processed_event}")
             pool = self.db.get_or_create_pool(exchange_name=exchange, pool_identifier=pool_identifier,
                                               processed_event=processed_event)
+            if pool is None:
+                return
 
             current_block = processed_event["block_number"]
             logger.debug('pool = ', type(pool), pool, exchange, pool_identifier, "\n", processed_event)
