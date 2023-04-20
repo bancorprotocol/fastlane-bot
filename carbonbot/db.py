@@ -11,7 +11,7 @@ import brownie
 import pandas as pd
 from brownie import Contract
 from joblib import parallel_backend, Parallel, delayed
-from sqlalchemy import func
+from sqlalchemy import func, MetaData
 from sqlalchemy.orm import Session
 from web3._utils.filters import LogFilter
 from web3.datastructures import AttributeDict
@@ -62,6 +62,8 @@ class DatabaseManager:
             pool = session.query(Pool).filter(Pool.exchange_name==CARBON_V1_NAME).all()
         session.commit()
 
+
+
     def refresh_session(self):
         """
         Refreshes the database session
@@ -81,6 +83,11 @@ class DatabaseManager:
         """
         Drops all tables in the database
         """
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+        for table in reversed(metadata.sorted_tables):
+            table.drop(bind=engine, checkfirst=False)
+        self.create_tables()
         self.create_ethereum_chain()
         self.create_supported_exchanges()
 
@@ -1006,58 +1013,62 @@ class EventUpdater:
         :param exchange: exchange name
         :param event_log: event log from web3 Contract.events
         """
+        try:
+            processed_event = self.build_processed_event(event_log, exchange)
 
-        processed_event = self.build_processed_event(event_log, exchange)
+            if exchange == CARBON_V1_NAME:
+                pool_identifier = event_log["args"].get("id")
 
-        if exchange == CARBON_V1_NAME:
-            pool_identifier = event_log["args"].get("id")
-
-        elif exchange == BANCOR_V3_NAME:
-            pool_identifier = event_log["args"].get("pool")
-        else:
-            pool_identifier = event_log["address"]
-
-        logger.debug(f"processed_event = {processed_event}")
-        pool = self.db.get_or_create_pool(exchange_name=exchange, pool_identifier=pool_identifier,
-                                          processed_event=processed_event)
-
-        current_block = processed_event["block_number"]
-        logger.debug('pool = ', type(pool), pool, exchange, pool_identifier, "\n", processed_event)
-        pool.last_updated_block = current_block
-
-        if pool.exchange == BANCOR_V3_NAME:
-            if processed_event["token"] == BNT_ADDRESS:
-                pool.tkn0_balance = processed_event["newLiquidity"]
+            elif exchange == BANCOR_V3_NAME:
+                pool_identifier = event_log["args"].get("pool")
             else:
-                pool.tkn1_balance = processed_event["newLiquidity"]
+                pool_identifier = event_log["address"]
 
-        elif pool.exchange == UNISWAP_V3_NAME:
-            pool.sqrt_price_q96 = processed_event["sqrt_price_q96"]
-            pool.liquidity = processed_event["liquidity"]
-            pool.tick = processed_event["tick"]
+            logger.debug(f"processed_event = {processed_event}")
+            pool = self.db.get_or_create_pool(exchange_name=exchange, pool_identifier=pool_identifier,
+                                              processed_event=processed_event)
 
-        elif pool.exchange in UNIV2_FORKS + [BANCOR_V2_NAME]:
-            pool.tkn0_balance = processed_event["tkn0_balance"]
-            pool.tkn1_balance = processed_event["tkn1_balance"]
-        elif pool.exchange == CARBON_V1_NAME:
-            print('processing Carbon event')
-            if event_type == "delete":
-                self.db.delete_carbon_strategy(processed_event["id"])
-            else:
-                pool.cid = processed_event["id"]
-                pool.y_0 = processed_event["order0"][0]
-                pool.z_0 = processed_event["order0"][1]
-                pool.A_0 = processed_event["order0"][2]
-                pool.B_0 = processed_event["order0"][3]
-                pool.y_1 = processed_event["order1"][0]
-                pool.z_1 = processed_event["order1"][1]
-                pool.A_1 = processed_event["order1"][2]
-                pool.B_1 = processed_event["order1"][3]
+            current_block = processed_event["block_number"]
+            logger.debug('pool = ', type(pool), pool, exchange, pool_identifier, "\n", processed_event)
+            pool.last_updated_block = current_block
 
-        session.commit()
-        logger.info(
-            f"Processed event for {exchange} {pool.pair_name} {pool.fee} at block {current_block}..."
-        )
+            if pool.exchange == BANCOR_V3_NAME:
+                if processed_event["token"] == BNT_ADDRESS:
+                    pool.tkn0_balance = processed_event["newLiquidity"]
+                else:
+                    pool.tkn1_balance = processed_event["newLiquidity"]
+
+            elif pool.exchange == UNISWAP_V3_NAME:
+                pool.sqrt_price_q96 = processed_event["sqrt_price_q96"]
+                pool.liquidity = processed_event["liquidity"]
+                pool.tick = processed_event["tick"]
+
+            elif pool.exchange in UNIV2_FORKS + [BANCOR_V2_NAME]:
+                pool.tkn0_balance = processed_event["tkn0_balance"]
+                pool.tkn1_balance = processed_event["tkn1_balance"]
+            elif pool.exchange == CARBON_V1_NAME:
+                print('processing Carbon event')
+                if event_type == "delete":
+                    self.db.delete_carbon_strategy(processed_event["id"])
+                else:
+                    pool.cid = processed_event["id"]
+                    pool.y_0 = processed_event["order0"][0]
+                    pool.z_0 = processed_event["order0"][1]
+                    pool.A_0 = processed_event["order0"][2]
+                    pool.B_0 = processed_event["order0"][3]
+                    pool.y_1 = processed_event["order1"][0]
+                    pool.z_1 = processed_event["order1"][1]
+                    pool.A_1 = processed_event["order1"][2]
+                    pool.B_1 = processed_event["order1"][3]
+
+            session.commit()
+            logger.info(
+                f"Processed event for {exchange} {pool.pair_name} {pool.fee} at block {current_block}..."
+            )
+        except Exception as e:
+            logger.error(f"Error processing event: {e}")
+            session.rollback()
+            raise e
 
     @staticmethod
     def build_processed_event(
