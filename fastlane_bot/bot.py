@@ -41,6 +41,7 @@ Licensed under MIT
     MB@RICHARDSON@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
+from . import __VERSION__, __DATE__
 import time
 from typing import Any, Union, Optional, Tuple, List, Dict
 
@@ -50,24 +51,17 @@ from pandas import DataFrame, Series
 
 from fastlane_bot.config import *
 from fastlane_bot.helpers import (
-    TxSubmitHandler,
-    TradeInstruction,
-    TxRouteHandler,
+    TxSubmitHandler, TxSubmitHandlerBase,
+    TradeInstruction, TxReceiptHandlerBase,
+    TxRouteHandler, TxRouteHandlerBase,
     TxReceiptHandler, TransactionHelpers,
 )
 from fastlane_bot.db import DatabaseManager
 from fastlane_bot.models import Pool, session, Token
-from carbon.tools import tokenscale as ts
-from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
+#from carbon.tools import tokenscale as ts
+#from carbon.tools.arbgraphs import ArbGraph
 from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from carbon.tools.optimizer import CPCArbOptimizer
-
-plt.style.use("seaborn-dark")
-plt.rcParams["figure.figsize"] = [12, 6]
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 from dataclasses import dataclass, asdict, InitVar, field
 from typing import List, Dict, Tuple
@@ -80,54 +74,74 @@ class CarbonBot:
 
     Attributes
     ----------
-    tx_submitter_handler: TxSubmitHandler
-        The transaction submitter handler.
-    tx_receipt_handler: TxReceiptHandler
-        The transaction receipt handler.
-    mode: str
-        The mode of the bot. (continuous or single)
-    genesis_data: pd.DataFrame
-        The genesis data. (token pairs)
+    TxSubmitHandlerClass: class derived from TxSubmitHandlerBase
+        the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
+    TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
+        ditto (default: TxReceiptHandler).
+    TxRouteHandlerClass: class derived from TxRouteHandlerBase
+        ditto (default: TxRouteHandler).
 
+
+    
+    MAIN ENTRY POINTS
+    :run:               Runs the bot.
+    :seed_pools:        Seeds the pools.
+    :update_pools:      Updates the pools.
+    :get_curves:        Gets the curves.
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
-    mode: str = "single"
     db: DatabaseManager = None
-    genesis_data = pd.read_csv(DATABASE_SEED_FILE)
+    genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
     drop_tables: InitVar = False
-    # seed_pools: bool = False TODO REVIEW
-    # update_pools: bool = False
     polling_interval: int = 60
 
-    tx_submitter_handler: TxSubmitHandler = None # TODO REVIEW: WHY AREN'T THOSE USED?
-    tx_receipt_handler: TxReceiptHandler = None
-    tx_route_handler: TxRouteHandler = None
+    TxSubmitHandlerClass: any = None
+    TxReceiptHandlerClass: any = None
+    TxRouteHandlerClass: any = None
 
     def __post_init__(self, drop_tables: bool = False):
         """
         The post init method.
         """
-        self._check_mode()
+        if self.TxSubmitHandlerClass is None:
+            self.TxSubmitHandlerClass = TxSubmitHandler
+        assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
+        
+        if self.TxReceiptHandlerClass is None:
+            self.TxReceiptHandlerClass = TxReceiptHandler
+        assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
+        
+        if self.TxRouteHandlerClass is None:
+            self.TxRouteHandlerClass = TxRouteHandler
+        assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
+        
         if self.db is None:
             self.db = DatabaseManager(
                 data=self.genesis_data, drop_tables=self.drop_tables
             )
-        # if self.seed_pools: TODO REVIEW
-        #     self.db.seed_pools()
-        # if self.update_pools:
-        #     self.db.update_pools()
         
-    # TODO REVIEW
-    def seed_pools(self):
+    def versions(self):
+        """
+        Returns the versions of the module and its Carbon dependencies.
+        """
+        s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
+        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph)]
+        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale)]
+        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
+        return s
+        
+    def seed_pools(self, drop_tables: bool = False):
         """convenience method for db.seed_pools()"""
-        self.db.seed_pools()
+        self.db.seed_pools(drop_tables=drop_tables)
         
-    def update_pools(self):
+    def update_pools(self, drop_tables: bool = False):
         """convenience method for db.update_pools()"""
-        self.db.update_pools()
+        self.db.update_pools(drop_tables=drop_tables)
 
-    @staticmethod
-    def get_curves() -> CPCContainer:
+    def get_curves(self) -> CPCContainer:
         """
         Gets the curves from the database.
 
@@ -136,9 +150,6 @@ class CarbonBot:
         CPCContainer
             The container of curves.
         """
-        # TODO REVIEW
-        # THIS SHOULD PROBABLY NOT BE A STATIC FUNCTION BECAUSE IT REALLY SHOULD NOT BE CALLED
-        # ON THE CLASS ITSELF. ALSO WHY DOESN'T IT GO VIA THE DATABASE MANAGER?
         pools = (
             session.query(Pool)
             .filter(
@@ -157,13 +168,6 @@ class CarbonBot:
             except:
                 pass
         return CPCContainer(curves)
-
-    def _check_mode(self):
-        """
-        Checks if the mode is valid.
-        """
-        if self.mode not in ["single", "continuous"]:
-            raise Exception("Invalid mode.")
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
@@ -356,7 +360,6 @@ class CarbonBot:
             routes=route_struct, src_address=src_address, src_amt=src_amount, expected_profit=best_profit
         )
 
-
     def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
         tx_submit_handler = TxSubmitHandler(
             trade_instructions,
@@ -395,34 +398,42 @@ class CarbonBot:
             )
         return new_trade_instructions
 
+    MODE_SINGLE = "single"
+    MODE_CONTINUOUS = "continuous"
+    MODE_CONT = MODE_CONTINUOUS
     def run(
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer = None,
         update_pools: bool = False,
+        mode: str = None,
     ) -> str:
         """
-        Runs the bot.
+        Runs the bot once.
 
         Parameters
         ----------
         flashloan_tokens: List[str]
             The flashloan tokens.
         CCm: CPCContainer
-            The CPCContainer object.
+            The container object containing all curves to be arbitraged.
+        mode: MODE_SINGLE or MODE_CONTINUOUS
+            Whether to run the bot once or continuously (default: cont).
 
         Returns
         -------
         str
             The transaction hash.
         """
+        if isinstance(flashloan_tokens, str):
+            flashloan_tokens = [t.strip() for t in flashloan_tokens.split(",")]
         if not flashloan_tokens:
             flashloan_tokens = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+        if mode is None:
+            mode = self.MODE_CONTINUOUS
         if CCm is None:
             CCm = self.get_curves()
-        if update_pools:
-            self.db.update_pools()
-        if self.mode == "continuous":
+        if mode == self.MODE_CONTINUOUS:
             while True:
                 try:
                     tx_hash = self._execute_strategy(flashloan_tokens, CCm)
@@ -440,7 +451,7 @@ class CarbonBot:
                     time.sleep(
                         self.polling_interval
                     )
-        else:
+        elif mode == self.MODE_SINGLE:
             try:
                 tx_hash = self._execute_strategy(flashloan_tokens, CCm)
             except Exception as e:
@@ -450,3 +461,5 @@ class CarbonBot:
                 logger.info(
                     f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                 )
+        else:
+            raise ValueError(f"Unknown mode: {mode}")

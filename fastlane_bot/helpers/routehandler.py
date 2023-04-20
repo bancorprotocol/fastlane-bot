@@ -4,6 +4,9 @@ Route handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__ = "20/Apr/2023"
+
 # import itertools
 # import random
 # import time
@@ -14,15 +17,15 @@ import math
 import pandas as pd
 # import requests
 from _decimal import Decimal
-from alchemy import Network, Alchemy
-from brownie.network.transaction import TransactionReceipt
-from eth_utils import to_hex
-from web3 import Web3
-from web3._utils.threads import Timeout
-from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
-from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
+# from alchemy import Network, Alchemy
+# from brownie.network.transaction import TransactionReceipt
+# from eth_utils import to_hex
+# from web3 import Web3
+# from web3._utils.threads import Timeout
+# from web3._utils.transactions import fill_nonce
+# from web3.contract import ContractFunction
+# from web3.exceptions import TimeExhausted
+# from web3.types import TxParams, TxReceipt
 
 from fastlane_bot.abi import *      # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.config import *   # TODO: PRECISE THE IMPORTS or from .. import config
@@ -42,6 +45,7 @@ class RouteStruct:
     ----------
     exchangeId: int
         The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
+        use the `RouteStruct.XCID_XXX` constants for the exchange IDs.
     targetToken: str
         The target token address.
     minTargetAmount: int
@@ -66,7 +70,7 @@ class RouteStruct:
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
 
-    exchangeId: int # TODO: WHY IS THIS AN INT? 
+    exchangeId: int
     targetToken: str
     minTargetAmount: int
     deadline: int
@@ -74,8 +78,12 @@ class RouteStruct:
     customInt: int
     customData: bytes
 
+class TxRouteHandlerBase():
+    """base class for all route handlers"""
+    pass
+
 @dataclass
-class TxRouteHandler:
+class TxRouteHandler(TxRouteHandlerBase):
     """
     A class that handles the routing of the bot. Takes the `trade_instructions` and converts them into the variables needed to instantiate the `TxSubmitHandler` class.
 
@@ -86,6 +94,8 @@ class TxRouteHandler:
     trade_instructions_df: pd.DataFrame
         The trade instructions as a dataframe. Formatted output from the `CPCOptimizer` class.
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
     trade_instructions_dic: List[TradeInstruction]
     trade_instructions_df: pd.DataFrame = None

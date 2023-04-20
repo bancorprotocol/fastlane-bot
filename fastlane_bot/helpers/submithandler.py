@@ -26,14 +26,17 @@ from web3.types import TxParams, TxReceipt
 
 from fastlane_bot.abi import *      # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.config import *   # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.models import Token, session, Pool
-from carbon.tools.cpc import ConstantProductCurve
+# from fastlane_bot.models import Token, session, Pool
+# from carbon.tools.cpc import ConstantProductCurve
 
 from .routehandler import RouteStruct
 
+class TxSubmitHandlerBase():
+    "base class for all submit handlers"
+    pass
 
 @dataclass
-class TxSubmitHandler:
+class TxSubmitHandler(TxSubmitHandlerBase):
     """
     A class that handles the submission of transactions to the blockchain.
 
