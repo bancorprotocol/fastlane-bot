@@ -126,7 +126,6 @@ class DatabaseManager:
         mapper_registry.metadata.create_all(engine)
 
     @property
-    @staticmethod
     def next_cid(self):
         """
         Returns the next cid
@@ -889,14 +888,14 @@ class DatabaseManager:
                 tkn0_address,
                 tkn1_address,
                 exchange_name,
-            ) = DatabaseManager._parse_processed_event(
+            ) = self._parse_processed_event(
                 exchange_name, pool_identifier, processed_event
             )
             tkn0 = self.get_or_create_token(tkn0_address)
             tkn1 = self.get_or_create_token(tkn1_address)
             pair = self.get_or_create_pair(tkn0_address, tkn1_address)
             common_data = self.get_common_data_for_pool(
-                cid=str(cid),
+                cid=cid,
                 exchange_name=exchange_name,
                 pair_name=pair.name,
                 tkn0_address=tkn0_address,
@@ -922,6 +921,7 @@ class DatabaseManager:
                 else {}
             )
             all_params = {**common_data, **other_params, **carbon_params}
+            all_params['cid'] = str(processed_event['cid'])
             logger.debug(f"all_params={all_params}")
             try:
                 pool = Pool(**all_params)
@@ -930,16 +930,17 @@ class DatabaseManager:
                 logger.info(f"Successfully created pool!!!: {all_params}")
                 return None
             except Exception as e:
-                logger.warning(e)
-                return None
-
+                return self._extracted_from_get_or_create_pool(e)
         except Exception as e:
-            logger.warning(e)
-            return None
+            return self._extracted_from_get_or_create_pool(e)
 
-    @staticmethod
+    def _extracted_from_get_or_create_pool(self, e):
+        session.rollback()
+        logger.warning(e)
+        return None
+
     def _parse_processed_event(
-        exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
+        self, exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
     ):
         block_number = processed_event["block_number"]
         if CARBON_V1_NAME in exchange_name:
@@ -956,7 +957,7 @@ class DatabaseManager:
             pool_contract = bancor_network_info
             tkn0_address = BNT_ADDRESS
             tkn1_address = processed_event["pool"]
-            cid = DatabaseManager.next_cid
+            cid = self.next_cid
         else:
             pool_address = pool_identifier
             pool_contract = DatabaseManager.contract_from_address(
@@ -965,7 +966,8 @@ class DatabaseManager:
             tkn0_address, tkn1_address = DatabaseManager.get_token_addresses_for_pool(
                 exchange_name, pool_identifier, pool_contract
             )
-            cid = DatabaseManager.next_cid
+            cid = self.next_cid
+        print(f"cid={cid}")
         return (
             block_number,
             cid,
@@ -1065,6 +1067,56 @@ class EventUpdater:
             logger.info(self.filters)
 
         logger.info(self.exchange_list)
+
+    def _parse_processed_event(
+            self, exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
+    ):
+        block_number = processed_event["block_number"]
+        if CARBON_V1_NAME in exchange_name:
+            exchange_name = CARBON_V1_NAME
+            pool_contract = carbon_controller
+            tkn0_address, tkn1_address = (
+                processed_event["token0"],
+                processed_event["token1"],
+            )
+            pool_address = CARBON_CONTROLLER_ADDRESS
+            cid = processed_event["id"]
+        elif exchange_name == BANCOR_V3_NAME:
+            pool_address = BANCOR_V3_NETWORK_INFO_ADDRESS
+            pool_contract = bancor_network_info
+            tkn0_address = BNT_ADDRESS
+            tkn1_address = processed_event["pool"]
+            cid = self.next_cid
+        else:
+            pool_address = pool_identifier
+            pool_contract = DatabaseManager.contract_from_address(
+                exchange_name, pool_identifier
+            )
+            tkn0_address, tkn1_address = DatabaseManager.get_token_addresses_for_pool(
+                exchange_name, pool_identifier, pool_contract
+            )
+            cid = self.next_cid
+        print(f"cid={cid}")
+        return (
+            block_number,
+            cid,
+            pool_address,
+            pool_contract,
+            tkn0_address,
+            tkn1_address,
+            exchange_name,
+        )
+
+    @property
+    def next_cid(self):
+        """
+        Returns the next cid
+        """
+        max_idxs = session.query(Pool).all()
+        if not max_idxs:
+            return 0
+        max_idx = max(int(x.cid) for x in max_idxs)
+        return max_idx + 1 if max_idx is not None else 0
 
     def _get_event_filters(self, exchanges: [str]) -> Optional[Any]:
         """
@@ -1178,7 +1230,7 @@ class EventUpdater:
             tkn0_address,
             tkn1_address,
             exchange,
-        ) = DatabaseManager._parse_processed_event(
+        ) = self._parse_processed_event(
             exchange, pool_identifier, processed_event
         )
 
