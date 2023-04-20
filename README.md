@@ -5,7 +5,6 @@
 The Fastlane Bot requires an Ethereum private key, and **RUNNING THE FASTLANE ARBITRAGE BOT PUTS USER FUNDS AT RISK** (see the section on _Preparation_ below). It is provided on an as-is basis, and neither the authors nor the Bprotocol foundation can be held responsible for any losses. 
 
 
-
 ## About Fastlane Arbitrage Bot
 
 The Fastlane Arbitrage Bot finds and closes arbitrage opportunities between Carbon, Bancor and the market. This serves to increase market efficiency by ensuring that Carbon and Bancor are in line with the overall market.
@@ -34,6 +33,11 @@ Apart from a number of standard modules, the bot requires the [Carbon Simulator]
 
 [sim]:https://github.com/bancorprotocol/carbon-simulator
 
+### Postgres
+
+If Postgres is not installed on your system you can download it from [here][pgdl] and then follow the installation instructions for your system. In case you change the default user and password from postgres:postgres, which is highly recommended, please refer to the instructions in the preparation section.
+
+[pgdl]:https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
 
 ### Preparation
 
