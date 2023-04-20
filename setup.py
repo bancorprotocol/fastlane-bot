@@ -21,7 +21,7 @@ extras_require = {}
 extras_require["complete"] = sorted(set(sum(extras_require.values(), [])))
 
 setup(
-    name="carbon_bot",
+    name="carbonbot",
     version=version,
     author="Bancor Network",
     author_email="mike@bancor.network",
@@ -31,7 +31,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/bancorprotocol/carbon-bot",
-    install_requires=open("requirements-sqlite.txt").readlines(),
+    install_requires=open("requirements.txt").readlines(),
     extras_require=extras_require,
     tests_require=['pytest~=6.2.5', 'pytest-mock~=3.10.0', 'imgkit~=1.2.3'],
     packages=find_packages(),

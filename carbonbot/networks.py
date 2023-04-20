@@ -58,6 +58,7 @@ class NetworkBase(ABC, metaclass=Singleton):
         network_id: str,
         network_name: str,
         provider_url: str,
+        provider_name: str,
         nonce: int,
     ):
         """
@@ -67,6 +68,7 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.network_id = network_id.lower()
         self.network_name = network_name
         self.provider_url = provider_url
+        self.provider_name = provider_name
         self.web3 = Web3(Web3.HTTPProvider(provider_url))
         self.nonce = nonce
 
@@ -93,6 +95,7 @@ class EthereumNetwork(NetworkBase):
         network_id: str = None,
         network_name: str = None,
         provider_url: str = None,
+        provider_name: str = None,
         nonce: int = 0,
     ):
         """
@@ -103,6 +106,7 @@ class EthereumNetwork(NetworkBase):
         :param network_id: the name of the network to connect to
         :param network_name: the name of the network to connect to
         :param provider_url: the url of the provider
+        :param provider_name: the name of the provider
         :param nonce: the nonce to use for transactions
 
         """
@@ -111,6 +115,7 @@ class EthereumNetwork(NetworkBase):
             network_id,
             network_name,
             provider_url,
+            provider_name,
             nonce,
         )
 
@@ -160,7 +165,7 @@ class EthereumNetwork(NetworkBase):
 
         add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
         mod_tenderly = f'brownie networks modify "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
-        set_tenderly = f'brownie networks set_provider "{self.network_id}"'
+        set_tenderly = f'brownie networks set_provider "{self.provider_name}" host="{self.provider_url}"'
 
         cmds = [add_tenderly, mod_tenderly, set_tenderly]
         for cmd in cmds:

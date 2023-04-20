@@ -47,19 +47,19 @@ from typing import Any, Union, Optional
 import pandas as pd
 from _decimal import Decimal
 
-from carbon.config import *
-from carbon.helpers import (
+from carbon.tools import tokenscale as ts
+from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
+from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
+from carbon.tools.optimizer import CPCArbOptimizer
+from carbonbot.config import *
+from carbonbot.db import DatabaseManager
+from carbonbot.helpers import (
     TxSubmitHandler,
     TradeInstruction,
     TxRouteHandler,
     TxReceiptHandler,
 )
-from carbon.manager import DatabaseManager
-from carbon.models import Pool, session, Token
-from carbon.tools import tokenscale as ts
-from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from carbon.tools.optimizer import CPCArbOptimizer
+from carbonbot.models import Pool, session, Token
 
 plt.style.use("seaborn-dark")
 plt.rcParams["figure.figsize"] = [12, 6]
@@ -68,7 +68,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List, Dict, Tuple
 
 
@@ -92,7 +92,7 @@ class CarbonBot:
 
     mode: str = "single"
     db: DatabaseManager = None
-    genesis_data = pd.read_csv("carbon/data/seed_token_pairs.csv")
+    genesis_data = pd.read_csv(DATABASE_SEED_FILE)
     drop_tables: bool = False
     seed_pools: bool = False
     update_pools: bool = False
@@ -140,6 +140,7 @@ class CarbonBot:
         for p in pools:
             try:
                 curves += p.to_cpc("float")
+                time.sleep(0.00000001)  # to avoid unstable results
             except:
                 pass
         return CPCContainer(curves)
@@ -168,17 +169,13 @@ class CarbonBot:
             The trade instructions.
         """
         trade_instructions = []
-        if trade_instructions_dic is None:
-            pass
-        else:
+        if trade_instructions_dic is not None:
             for trade_instruction in trade_instructions_dic:
-                if trade_instruction is None:
-                    pass
-                else:
+                if trade_instruction is not None:
                     if 'raw_txs' not in trade_instruction.keys():
                         trade_instruction["raw_txs"] = '[]'
                     if 'pair_sorting' not in trade_instruction.keys():
-                        trade_instruction["pair_sorting"] = '' 
+                        trade_instruction["pair_sorting"] = ''
                     trade_instructions += [
                     TradeInstruction(
                                     cid=trade_instruction["cid"],
@@ -239,9 +236,6 @@ class CarbonBot:
                 r = O.margp_optimizer(tkn1) # TODO: catch again
             trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-            # print("r.result", r.result, f"carbon curves count: {len(TxRouteHandler._get_carbon_indexes(trade_instructions_dic))}")
-            # print("trade_instructions_df", trade_instructions_df)
-            # print("trade_instructions_dic", trade_instructions_dic)
 
             # TODO: need to hard-convert to USD to compare
             if (-r.result > best_profit):

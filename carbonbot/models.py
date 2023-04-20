@@ -12,6 +12,7 @@ from typing import Optional, Union, Any
 
 import sqlalchemy
 from _decimal import Decimal
+from carbonbot.tools.cpc import ConstantProductCurve
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -28,9 +29,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import registry, sessionmaker
 
-from carbon.config import *
-from carbon.tools.cpc import ConstantProductCurve
-from carbon.utils import get_abi_and_router, convert_decimals, UniV3Helper, EncodedOrder
+from carbonbot.config import *
+from carbonbot.helpers import EncodedOrder, UniV3Helper
+from carbonbot.utils import get_abi_and_router, convert_decimals
 
 global contracts
 contracts = {}
@@ -460,8 +461,8 @@ class Pool:
 
         :yint:      current pool y-intercept**
         :y:         current pool liquidity in token y
-        :pa:        carbon price range left bound (higher price in dy/dx)
-        :pb:        carbon price range right bound (lower price in dy/dx)
+        :pa:        carbonbot price range left bound (higher price in dy/dx)
+        :pb:        carbonbot price range right bound (lower price in dy/dx)
         :A:         alternative to pa, pb: A = sqrt(pa) - sqrt(pb) in dy/dy
         :B:         alternative to pa, pb: B = sqrt(pb) in dy/dy
         :tkny:      token y
