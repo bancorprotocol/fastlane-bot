@@ -277,7 +277,7 @@ class TransactionHelpers(BaseHelper):
     ):
         logger.info(f"Attempting to submit trade on Tenderly")
         return self.web3.eth.wait_for_transaction_receipt(
-            self.arb_contract.functions.execute(routes, src_amt).transact(
+            self.arb_contract.functions.flashloanAndArb(routes, src_amt).transact(
                 {
                     "maxFeePerGas": 0,
                     "gas": ec.DEFAULT_GAS,
@@ -316,7 +316,7 @@ class TransactionHelpers(BaseHelper):
             message = str(e).split("baseFee: ")
             split_fee = message[1].split(" (supplied gas ")
             baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
-            transaction = self.arb_contract.functions.execute(
+            transaction = self.arb_contract.functions.flashloanAndArb(
                 routes, src_amt
             ).build_transaction(
                 self.build_tx(
