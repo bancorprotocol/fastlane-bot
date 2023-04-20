@@ -147,7 +147,9 @@ class FastLaneArbBotUI(
                         )
 
                         # The 0.81 below can be modified to adjust for the actual expected gas consumption, which is overestimated. Increase this for safer execution and lower it to increase execution frequency.
-                        if adjusted_reward > (gas_in_bnt * Decimal("0.81")) and gas_in_bnt < Decimal("100"):
+                        if adjusted_reward > (
+                            gas_in_bnt * Decimal("0.81")
+                        ) and gas_in_bnt < Decimal("100"):
                             logger.info(
                                 f"Expected profit of {bnt_profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
                             )
