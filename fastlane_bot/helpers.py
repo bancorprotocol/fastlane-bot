@@ -22,9 +22,9 @@ from web3._utils.transactions import fill_nonce
 from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
-from carbonbot.abi import *
-from carbonbot.config import *
-from carbonbot.models import Token, session, Pool
+from fastlane_bot.abi import *
+from fastlane_bot.config import *
+from fastlane_bot.models import Token, session, Pool
 from carbon.tools.cpc import ConstantProductCurve
 
 
@@ -1174,7 +1174,7 @@ class TxRouteHandler:
         y, z, A, B, fee, tkns_out: Decimal
     ) -> Tuple[Decimal, Decimal]:
         """
-        Refactored get input trade by target carbonbot.
+        Refactored get input trade by target fastlane_bot.
 
         Parameters
         ----------
@@ -1209,7 +1209,7 @@ class TxRouteHandler:
         self, y, z, A, B, fee, tkns_in: Decimal
     ) -> Tuple[Decimal, Decimal]:
         """
-        Refactored get output trade by source carbonbot.
+        Refactored get output trade by source fastlane_bot.
 
         Parameters
         ----------
@@ -1250,7 +1250,7 @@ class TxRouteHandler:
         self, curve: Pool, tkn_in: str, tkn_out_decimals: int, amount_in: Decimal
     ) -> Decimal:
         """
-        calc carbonbot output.
+        calc fastlane_bot output.
 
         Parameters
         ----------

@@ -28,9 +28,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import registry, sessionmaker
 
-from carbonbot.config import *
+from fastlane_bot.config import *
 from carbon.tools.cpc import ConstantProductCurve
-from carbonbot.utils import get_abi_and_router, convert_decimals, EncodedOrder, UniV3Helper
+from fastlane_bot.utils import get_abi_and_router, convert_decimals, EncodedOrder, UniV3Helper
 
 global contracts
 contracts = {}
@@ -458,8 +458,8 @@ class Pool:
 
         :yint:      current pool y-intercept**
         :y:         current pool liquidity in token y
-        :pa:        carbonbot price range left bound (higher price in dy/dx)
-        :pb:        carbonbot price range right bound (lower price in dy/dx)
+        :pa:        fastlane_bot price range left bound (higher price in dy/dx)
+        :pb:        fastlane_bot price range right bound (lower price in dy/dx)
         :A:         alternative to pa, pb: A = sqrt(pa) - sqrt(pb) in dy/dy
         :B:         alternative to pa, pb: B = sqrt(pb) in dy/dy
         :tkny:      token y

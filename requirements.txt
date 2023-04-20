@@ -14,3 +14,4 @@ dataclass_wizard~=0.22.2
 hexbytes~=0.2.3
 click~=8.1.3
 setuptools~=67.6.1
+carbon-simulator~=2.5

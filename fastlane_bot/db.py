@@ -16,10 +16,10 @@ from sqlalchemy.orm import Session
 from web3._utils.filters import LogFilter
 from web3.datastructures import AttributeDict
 
-from carbonbot.abi import *
-from carbonbot.models import *
-from carbonbot.models import Pool
-from carbonbot.utils import initialize_contract
+from fastlane_bot.abi import *
+from fastlane_bot.models import *
+from fastlane_bot.models import Pool
+from fastlane_bot.utils import initialize_contract
 
 
 @dataclass

@@ -47,15 +47,15 @@ from typing import Any, Union, Optional
 import pandas as pd
 from _decimal import Decimal
 
-from carbonbot.config import *
-from carbonbot.helpers import (
+from fastlane_bot.config import *
+from fastlane_bot.helpers import (
     TxSubmitHandler,
     TradeInstruction,
     TxRouteHandler,
     TxReceiptHandler,
 )
-from carbonbot.db import DatabaseManager
-from carbonbot.models import Pool, session, Token
+from fastlane_bot.db import DatabaseManager
+from fastlane_bot.models import Pool, session, Token
 from carbon.tools import tokenscale as ts
 from carbon.tools.arbgraphs import ArbGraph, plt  # convenience imports
 from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T

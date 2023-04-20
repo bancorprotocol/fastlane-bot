@@ -8,8 +8,8 @@ Licensed under MIT
 """
 import click
 from carbon.tools.cpc import T
-from carbonbot.bot import CarbonBot
-from carbonbot.models import *
+from fastlane_bot.bot import CarbonBot
+from fastlane_bot.models import *
 
 session.rollback()
 

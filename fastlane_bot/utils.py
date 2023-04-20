@@ -14,8 +14,8 @@ import requests
 from _decimal import Decimal
 from web3 import Web3
 
-from carbonbot.abi import *
-from carbonbot.config import *
+from fastlane_bot.abi import *
+from fastlane_bot.config import *
 
 
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:

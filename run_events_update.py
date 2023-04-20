@@ -5,9 +5,9 @@ Database event updater.
 Licensed under MIT
 """
 import asyncio
-from carbonbot.bot import CarbonBot
-from carbonbot.config import logger
-from carbonbot.db import EventUpdater
+from fastlane_bot.bot import CarbonBot
+from fastlane_bot.config import logger
+from fastlane_bot.db import EventUpdater
 
 bot = CarbonBot(
     mode="single",

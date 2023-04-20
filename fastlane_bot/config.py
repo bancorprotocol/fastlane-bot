@@ -11,12 +11,12 @@ from decimal import Decimal
 from brownie import Contract
 from dotenv import load_dotenv
 
-from carbonbot.abi import (
+from fastlane_bot.abi import (
     BANCOR_V3_NETWORK_INFO_ABI,
     CARBON_CONTROLLER_ABI,
     FAST_LANE_CONTRACT_ABI,
 )
-from carbonbot.networks import EthereumNetwork
+from fastlane_bot.networks import EthereumNetwork
 
 load_dotenv()
 
@@ -28,7 +28,7 @@ DEFAULT_NETWORK_PROVIDER = "alchemy"
 BACKEND = "postgres"  # "sqlite" or "postgres"
 DEFAULT_EXECUTE_MODE = "continuous"  # "continuous" or "single"
 PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
-DATABASE_SEED_FILE = os.path.normpath(f"{PROJECT_PATH}/carbonbot/data/seed_token_pairs.csv")
+DATABASE_SEED_FILE = os.path.normpath(f"{PROJECT_PATH}/fastlane_bot/data/seed_token_pairs.csv")
 TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae" # leave blank or fill with your own fork
 UNIV3_FEE_LIST = [100, 500, 3000, 10000]
 MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
