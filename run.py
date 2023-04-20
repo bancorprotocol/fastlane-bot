@@ -51,14 +51,11 @@ def main(
 
     # Initialize the bot
     bot = CarbonBot(
-        mode=mode,
         polling_interval=polling_interval,
-        update_pools=update_pools,
-        seed_pools=seed_pools,
     )
 
     # Run the bot
-    bot.run(flashloan_tokens=flashloan_tokens, update_pools=update_pools)
+    bot.run(flashloan_tokens=flashloan_tokens, update_pools=update_pools, mode=mode,)
 
 
 if __name__ == "__main__":
