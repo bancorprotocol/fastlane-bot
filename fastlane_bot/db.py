@@ -82,7 +82,7 @@ class DatabaseManager:
 
     def update_db(self):
         """
-        Updates the database with the latest pools and pairs
+        Updates the database with the latest pools and pairs 
         """
         self.refresh_session()
         self.update_pools()
@@ -144,10 +144,13 @@ class DatabaseManager:
         max_idx = session.query(func.max(Pool.id)).first()[0]
         return max_idx + 1 if max_idx is not None else 0
 
-    def update_pools(self):
+    def update_pools(self, drop_tables: bool = False):
         """
-        Updates all pools
+        Updates all pools (drops all tables before if drop_tables is True)
         """
+        if drop_tables:
+            self.drop_all_tables()
+
         carbon_pools, other_pools, v3_pools = self.get_pool_lists()
 
         if self.use_multicall:
@@ -181,10 +184,13 @@ class DatabaseManager:
                 f"Failed to update pool for {exchange_name} {pool_address} {e}"
             )
 
-    def seed_pools(self):
+    def seed_pools(self, drop_tables: bool = False):
         """
-        Adds pools to the database
+        Adds pools to the database (drops all tables before if drop_tables is True)
         """
+        if drop_tables:
+            self.drop_all_tables()
+            
         carbon_pools, other_pools, v3_pools = self.get_pool_lists()
 
         if self.use_multicall:
