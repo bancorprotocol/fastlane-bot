@@ -1036,10 +1036,10 @@ class EventUpdater:
 
         self.exchange_list = [
             CARBON_V1_NAME,
-            # UNISWAP_V2_NAME,
-            # UNISWAP_V3_NAME,
-            # BANCOR_V3_NAME,
-            # BANCOR_V2_NAME
+            UNISWAP_V2_NAME,
+            UNISWAP_V3_NAME,
+            BANCOR_V3_NAME,
+            BANCOR_V2_NAME
         ]
 
         logger.debug(f"post init on EventUpdater, exchanges = {self.exchange_list}")
