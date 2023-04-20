@@ -21,26 +21,34 @@ from fastlane_bot.models import *
 from fastlane_bot.models import Pool
 from fastlane_bot.utils import initialize_contract
 
+from dataclasses import dataclass, field, InitVar
+
 
 @dataclass
 class DatabaseManager:
     """
     Factory class for creating and managing pools.
 
-    backend: The database backend to use. (default: sqlite) (options are: sqlite, postgres)
+    backend: BACKEND_POSTGRES, [BACKEND_SQLITE]
+        The database backend to use.
     """
+    BACKEND_SQLITE = "sqlite"
+    BACKEND_POSTGRES = "postgres"
 
-    backend: str = "sqlite"
+    backend: str = None
     MULTICALL_CONTRACT_ADDRESS: str = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
-    drop_tables: bool = False
     use_multicall: bool = True
     mode: str = "production"
-
+    drop_tables: InitVar = False
+    
     _carbon_v1_controller: Any = None
 
-    def __post_init__(self):
-        if self.drop_tables:
+    def __post_init__(self, drop_tables: bool = False):
+        if self.backend is None:
+            self.backend = self.BACKEND_POSTGRES
+        
+        if drop_tables:
             self.drop_all_tables()
             try:
                 self.create_ethereum_chain()
