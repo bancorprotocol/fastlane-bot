@@ -85,7 +85,7 @@ class EthereumNetworkConstants:
     STAR_PRINT = "*" * 50
     MAX_ROUTE_LENGTH = 3
     TICK_BASE = Decimal("1.0001")
-    Q96 = Decimal("79228162514264300000000000000")
+    Q96 = Decimal(str(2 ** 96))
     MAX_LIQUIDITY_CHECK_LOOPS = 1
     MAX_CROSS_TICK_CHECKS = 1
     DEFAULT_SEARCH_DELAY = 5

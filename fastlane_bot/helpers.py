@@ -305,8 +305,8 @@ class TransactionHelpers(BaseHelper):
         returns: the transaction to be submitted to the blockchain
         """
         try:
-            transaction = self.arb_contract.functions.execute(
-                routes, src_amt
+            transaction = self.arb_contract.functions.flashloanAndArb(
+                routes, ec.BNT_ADDRESS, src_amt
             ).build_transaction(
                 self.build_tx(
                     gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
