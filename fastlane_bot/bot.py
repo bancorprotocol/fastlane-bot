@@ -46,6 +46,7 @@ import itertools
 import time
 from typing import Any, Union, Optional, Tuple, List, Dict
 
+import math
 import pandas as pd
 from _decimal import Decimal
 from pandas import DataFrame, Series
@@ -372,7 +373,7 @@ class CarbonBot:
             )
         tx_submit_handler = TransactionHelpers()
         return tx_submit_handler.validate_and_submit_transaction(
-            route_struct, src_address, src_amount
+            route_struct, src_address, src_amount, best_profit
         )
 
 
@@ -419,6 +420,7 @@ class CarbonBot:
         flashloan_tokens: List[str],
         CCm: CPCContainer = None,
         update_pools: bool = False,
+        mode: str = "continuous"
     ) -> str:
         """
         Runs the bot.
@@ -449,8 +451,6 @@ class CarbonBot:
                         logger.info(
                             f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                         )
-                        # if update_pools:
-                        #     self.db.update_pools()
                     time.sleep(
                         self.polling_interval
                     )  # Sleep for 60 seconds before searching for opportunities again

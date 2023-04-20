@@ -19,15 +19,11 @@ flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 @click.command()
 @click.option("--mode", default="continuous", type=str)
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
-@click.option("--update_pools", default=False, type=bool)
 @click.option("--polling_interval", default=12, type=int)
-@click.option("--seed_pools", default=False, type=bool)
 def main(
         mode,
         flashloan_tokens,
-        update_pools,
         polling_interval,
-        seed_pools
 ):
     """
     Main logic for the Bancor Arbitrage Bot (FastLane) - run.py filescript
@@ -51,14 +47,11 @@ def main(
 
     # Initialize the bot
     bot = CarbonBot(
-        mode=mode,
         polling_interval=polling_interval,
-        update_pools=update_pools,
-        seed_pools=seed_pools,
     )
 
     # Run the bot
-    bot.run(flashloan_tokens=flashloan_tokens, update_pools=update_pools)
+    bot.run(flashloan_tokens=flashloan_tokens, mode=mode)
 
 
 if __name__ == "__main__":

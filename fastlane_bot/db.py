@@ -988,7 +988,7 @@ class EventUpdater:
     """
 
     db: DatabaseManager
-    poll_interval: int = 1
+    poll_interval: int = 12
     test_mode: bool = False
 
     _carbon_v1_contract: Optional[Contract] = None

@@ -10,16 +10,11 @@ from fastlane_bot.config import logger
 from fastlane_bot.db import EventUpdater
 
 bot = CarbonBot(
-    mode="single",
-    polling_interval=1,
-    update_pools=False,
-    # drop_tables=False
+    polling_interval=5,
 )
 
 updater = EventUpdater(
     db=bot.db,
-    poll_interval=bot.polling_interval,
-    test_mode=False
 )
 
 
