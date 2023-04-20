@@ -71,7 +71,7 @@ class EthereumNetworkConstants:
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 35  # 10 block time deviation
     DEFAULT_EXECUTE_MODE = "search_and_execute"
     DEFAULT_RAISEONERROR = False  # TODO: Ensure all errors are caught and handled properly to respect this setting
-    DEFAULT_MIN_PROFIT = Decimal("40")
+    DEFAULT_MIN_PROFIT = Decimal("60")
     DEFAULT_MAX_SLIPPAGE = Decimal('1')  # 1%
 
     DEFAULT_N_JOBS = -1
