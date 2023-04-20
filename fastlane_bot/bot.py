@@ -172,20 +172,21 @@ class CarbonBot:
         if trade_instructions_dic is not None:
             for trade_instruction in trade_instructions_dic:
                 if trade_instruction is not None:
-                    if 'raw_txs' not in trade_instruction.keys():
-                        trade_instruction["raw_txs"] = '[]'
-                    if 'pair_sorting' not in trade_instruction.keys():
-                        trade_instruction["pair_sorting"] = ''
+                    if "raw_txs" not in trade_instruction.keys():
+                        trade_instruction["raw_txs"] = "[]"
+                    if "pair_sorting" not in trade_instruction.keys():
+                        trade_instruction["pair_sorting"] = ""
                     trade_instructions += [
-                    TradeInstruction(
-                                    cid=trade_instruction["cid"],
-                                    tknin=trade_instruction["tknin"],
-                                    amtin=trade_instruction["amtin"],
-                                    tknout=trade_instruction["tknout"],
-                                    amtout=trade_instruction["amtout"],
-                                    raw_txs=trade_instruction["raw_txs"],
-                                    pair_sorting=trade_instruction["pair_sorting"],
-                                )]
+                        TradeInstruction(
+                            cid=trade_instruction["cid"],
+                            tknin=trade_instruction["tknin"],
+                            amtin=trade_instruction["amtin"],
+                            tknout=trade_instruction["tknout"],
+                            amtout=trade_instruction["amtout"],
+                            raw_txs=trade_instruction["raw_txs"],
+                            pair_sorting=trade_instruction["pair_sorting"],
+                        )
+                    ]
         return trade_instructions
 
     def _find_arbitrage_opportunities(
@@ -215,7 +216,7 @@ class CarbonBot:
         for idx, tkn in enumerate(flashloan_tokens):
             tkn0 = flashloan_tokens[idx - 1]
             tkn1 = flashloan_tokens[idx]
-            assert(tkn == tkn1)
+            assert tkn == tkn1
 
             CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
             pstart = (
@@ -228,24 +229,27 @@ class CarbonBot:
             O = CPCArbOptimizer(CC)
             src_token = tkn1
             try:
-                r = O.margp_optimizer(tkn1,
-                                  params=dict(pstart=pstart)
-                                  )
+                r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
             except Exception as e:
                 logger.debug(e)
-                r = O.margp_optimizer(tkn1) # TODO: catch again
+                r = O.margp_optimizer(tkn1)  # TODO: catch again
             profit_src = -r.result
             trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
 
             profit = self._get_profit_in_bnt(profit_src, src_token)
 
-            if (profit > best_profit):
+            if profit > best_profit:
                 best_src_token = src_token
                 best_profit = profit
                 best_trade_instructions_df = trade_instructions_df
                 best_trade_instructions_dic = trade_instructions_dic
-        return best_profit, best_trade_instructions_df, best_trade_instructions_dic, best_src_token
+        return (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+        )
 
     def _get_profit_in_bnt(self, profit_src, src_token):
         """
@@ -260,9 +264,13 @@ class CarbonBot:
         """
         if src_token == "BNT-FF1C":
             return profit_src
-        pool = session.query(Pool).filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_key == src_token).first()
-        bnt = Decimal(pool.tkn0_balance) / 10 ** 18
-        src = Decimal(src_token) / 10 ** pool.tkn1_decimals
+        pool = (
+            session.query(Pool)
+            .filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_key == src_token)
+            .first()
+        )
+        bnt = Decimal(pool.tkn0_balance) / 10**18
+        src = Decimal(src_token) / 10**pool.tkn1_decimals
         bnt_per_src = bnt / src
         return profit_src * bnt_per_src
 
@@ -291,7 +299,9 @@ class CarbonBot:
 
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
         tx_route_handler = TxRouteHandler(trade_instructions)
-        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(trade_instructions=trade_instructions)
+        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
+            trade_instructions=trade_instructions
+        )
 
         # TODO: cleanup
         new_trade_instructions = []
@@ -299,10 +309,16 @@ class CarbonBot:
             for inst in agg_trade_instructions:
                 if inst.tknin == best_src_token:
                     new_trade_instructions += [inst]
-            missing = [inst for inst in agg_trade_instructions if inst not in new_trade_instructions]
+            missing = [
+                inst
+                for inst in agg_trade_instructions
+                if inst not in new_trade_instructions
+            ]
             new_trade_instructions.append(missing[0])
         else:
-            new_trade_instructions = tx_route_handler._find_tradematches(agg_trade_instructions)
+            new_trade_instructions = tx_route_handler._find_tradematches(
+                agg_trade_instructions
+            )
 
         trade_instructions = new_trade_instructions
 
@@ -311,14 +327,18 @@ class CarbonBot:
         # trade_instructions = tx_route_handler._calculate_trade_outputs(
         #     new_trade_instructions
         # )
-        src_address = session.query(Token).filter(Token.key==best_src_token).first().address
+        src_address = (
+            session.query(Token).filter(Token.key == best_src_token).first().address
+        )
         src_address = w3.toChecksumAddress(src_address)
 
         trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
 
-        tx_submit_handler = TxSubmitHandler(trade_instructions,
-                                            src_amount=trade_instructions[0].amtin_wei,
-                                            src_address=src_address)
+        tx_submit_handler = TxSubmitHandler(
+            trade_instructions,
+            src_amount=trade_instructions[0].amtin_wei,
+            src_address=src_address,
+        )
         deadline = tx_submit_handler._get_deadline()
 
         route_struct = tx_route_handler.get_arb_contract_args(
@@ -326,7 +346,6 @@ class CarbonBot:
         )
 
         print(f"route_struct: {route_struct}")
-
 
         tx_details = tx_submit_handler._get_tx_details()
         tx_submit_handler.token_contract.functions.approve(

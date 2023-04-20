@@ -30,7 +30,12 @@ from sqlalchemy.orm import registry, sessionmaker
 
 from fastlane_bot.config import *
 from carbon.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import get_abi_and_router, convert_decimals, EncodedOrder, UniV3Helper
+from fastlane_bot.utils import (
+    get_abi_and_router,
+    convert_decimals,
+    EncodedOrder,
+    UniV3Helper,
+)
 
 global contracts
 contracts = {}
@@ -196,10 +201,18 @@ class Pair:
             index=True,
         ),
         Column(
-            "tkn0_key", String(100), ForeignKey("tokens.key"), nullable=False, index=True
+            "tkn0_key",
+            String(100),
+            ForeignKey("tokens.key"),
+            nullable=False,
+            index=True,
         ),
         Column(
-            "tkn1_key", String(100), ForeignKey("tokens.key"), nullable=False, index=True
+            "tkn1_key",
+            String(100),
+            ForeignKey("tokens.key"),
+            nullable=False,
+            index=True,
         ),
     )
     __unique_constraints__ = (

@@ -28,8 +28,12 @@ DEFAULT_NETWORK_PROVIDER = "alchemy"
 BACKEND = "postgres"  # "sqlite" or "postgres"
 DEFAULT_EXECUTE_MODE = "continuous"  # "continuous" or "single"
 PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
-DATABASE_SEED_FILE = os.path.normpath(f"{PROJECT_PATH}/fastlane_bot/data/seed_token_pairs.csv")
-TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae" # leave blank or fill with your own fork
+DATABASE_SEED_FILE = os.path.normpath(
+    f"{PROJECT_PATH}/fastlane_bot/data/seed_token_pairs.csv"
+)
+TENDERLY_FORK = (
+    "c0d1f990-c095-476f-80a9-72ac65092aae"  # leave blank or fill with your own fork
+)
 UNIV3_FEE_LIST = [100, 500, 3000, 10000]
 MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
 DEFAULT_GAS = 950_000
@@ -46,6 +50,7 @@ Q96 = Decimal("2") ** Decimal("96")
 DEFAULT_TIMEOUT = 60
 CARBON_FEE = Decimal("0.002")
 BANCOR_V3_FEE = Decimal("0.0")
+DEFAULT_REWARD_PERCENT = 0.5
 
 # COMMONLY USED TOKEN ADDRESSES SECTION
 #######################################################################################
@@ -142,7 +147,7 @@ FLASHLOAN_TOKENS = [
     "WBTC-C599",
     "USDT-1ec7",
     "DAI-1d0F",
-    "LINK-86CA"
+    "LINK-86CA",
 ]
 
 # CARBON EVENTS
@@ -155,7 +160,7 @@ CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
 # ETHEREUM NETWORK CONNECTION SECTION
 #######################################################################################
-print('ETHEREUM_MAINNET_PROVIDER', ETHEREUM_MAINNET_PROVIDER)
+print("ETHEREUM_MAINNET_PROVIDER", ETHEREUM_MAINNET_PROVIDER)
 if DEFAULT_NETWORK == "mainnet":
     network_id = PRODUCTION_NETWORK
     network_name = PRODUCTION_NETWORK_NAME
@@ -169,7 +174,7 @@ connection = EthereumNetwork(
     network_id=network_id,
     network_name=network_name,
     provider_url=provider_url,
-    provider_name="alchemy"
+    provider_name="alchemy",
 )
 
 connection.connect_network()

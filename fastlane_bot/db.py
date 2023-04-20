@@ -56,13 +56,13 @@ class DatabaseManager:
         """
         Deletes all the pools in the database
         """
-        pool = session.query(Pool).filter(Pool.exchange_name==CARBON_V1_NAME).all()
+        pool = session.query(Pool).filter(Pool.exchange_name == CARBON_V1_NAME).all()
         while len(pool) > 0:
             session.delete(pool[0])
-            pool = session.query(Pool).filter(Pool.exchange_name==CARBON_V1_NAME).all()
+            pool = (
+                session.query(Pool).filter(Pool.exchange_name == CARBON_V1_NAME).all()
+            )
         session.commit()
-
-
 
     def refresh_session(self):
         """
@@ -351,16 +351,16 @@ class DatabaseManager:
     #     }
 
     def get_common_data_for_pool(
-            self,
-            cid: str,
-            exchange_name: str,
-            pair_name: str,
-            pool_address: str = None,
-            tkn0_address: str = None,
-            tkn1_address: str = None,
-            tkn0_key: str = None,
-            tkn1_key: str = None,
-            last_updated_block: str = None
+        self,
+        cid: str,
+        exchange_name: str,
+        pair_name: str,
+        pool_address: str = None,
+        tkn0_address: str = None,
+        tkn1_address: str = None,
+        tkn0_key: str = None,
+        tkn1_key: str = None,
+        last_updated_block: str = None,
     ) -> Dict[str, Any]:
         """
         Returns the common data for a pool
@@ -612,13 +612,15 @@ class DatabaseManager:
                         continue
 
                     if exchange == BANCOR_V3_NAME:
-                        print('updating bancor v3 pool')
+                        print("updating bancor v3 pool")
                         tkn0_address, tkn1_address = BNT_ADDRESS, pool_address
                         self.get_or_create_token(tkn0_address)
                         self.get_or_create_token(tkn1_address)
                         self.get_or_create_pair(tkn0_address, tkn1_address)
                         self.get_or_create_pool(
-                            exchange_name=exchange, pool_identifier=pool_address, processed_event=None
+                            exchange_name=exchange,
+                            pool_identifier=pool_address,
+                            processed_event=None,
                         )
                 except Exception as e:
                     logger.warning(e)
@@ -782,9 +784,7 @@ class DatabaseManager:
         try:
             last_block = (
                 session.query(Exchange)
-                .filter(
-                    exchange_name == Exchange.name
-                )
+                .filter(exchange_name == Exchange.name)
                 .first()
                 .last_updated_block
             )
@@ -794,15 +794,23 @@ class DatabaseManager:
         except AttributeError:
             return "latest"
 
-    def get_pool_from_identifier(self, exchange_name: str = None, pool_identifier: str = None) -> Pool:
+    def get_pool_from_identifier(
+        self, exchange_name: str = None, pool_identifier: str = None
+    ) -> Pool:
         """
         Gets a Pool object using different identifiers. For Carbon, it uses the pool's CID. For Bancor V3, it uses TKN 1 address.
         For other exchanges, it uses the liquidity pool address.
         """
 
         if exchange_name == BANCOR_V3_NAME:
-            pool = session.query(Pool).filter(Pool.exchange_name == BANCOR_V3_NAME,
-                                              Pool.tkn1_address == pool_identifier).first()
+            pool = (
+                session.query(Pool)
+                .filter(
+                    Pool.exchange_name == BANCOR_V3_NAME,
+                    Pool.tkn1_address == pool_identifier,
+                )
+                .first()
+            )
         elif exchange_name == CARBON_V1_NAME:
             pool = session.query(Pool).filter(Pool.cid == pool_identifier).first()
         else:
@@ -810,7 +818,10 @@ class DatabaseManager:
         return pool or None
 
     def get_or_create_pool(
-            self, exchange_name: str = None, pool_identifier: str = None, processed_event: Dict[str, Any] = None
+        self,
+        exchange_name: str = None,
+        pool_identifier: str = None,
+        processed_event: Dict[str, Any] = None,
     ) -> Pool:
         """
         Creates a pool in the database
@@ -819,17 +830,24 @@ class DatabaseManager:
         """
         try:
 
-            pool = self.get_pool_from_identifier(exchange_name=exchange_name, pool_identifier=pool_identifier)
+            pool = self.get_pool_from_identifier(
+                exchange_name=exchange_name, pool_identifier=pool_identifier
+            )
             if pool:
                 return pool
 
             if processed_event is None:
-                return self._deprecated_get_or_create_pool(exchange_name, pool_identifier)
+                return self._deprecated_get_or_create_pool(
+                    exchange_name, pool_identifier
+                )
 
             block_number = processed_event["block_number"]
             if exchange_name == CARBON_V1_NAME:
                 pool_contract = self._carbon_v1_controller
-                tkn0_address, tkn1_address = processed_event["token0"], processed_event["token1"]
+                tkn0_address, tkn1_address = (
+                    processed_event["token0"],
+                    processed_event["token1"],
+                )
                 pool_address = CARBON_CONTROLLER_ADDRESS
                 cid = processed_event["id"]
             elif exchange_name == BANCOR_V3_NAME:
@@ -840,7 +858,9 @@ class DatabaseManager:
                 cid = self.next_cid
             else:
                 pool_address = pool_identifier
-                pool_contract = self.contract_from_address(exchange_name, pool_identifier)
+                pool_contract = self.contract_from_address(
+                    exchange_name, pool_identifier
+                )
                 tkn0_address, tkn1_address = self.get_token_addresses_for_pool(
                     exchange_name, pool_identifier, pool_contract
                 )
@@ -857,20 +877,22 @@ class DatabaseManager:
                 tkn0_key=tkn0.key,
                 tkn1_key=tkn1.key,
                 pool_address=pool_address,
-                last_updated_block=block_number
+                last_updated_block=block_number,
             )
             other_params = {"fee": self.get_pool_fee(exchange_name, pool_contract)}
             self.commit_pool(common_data, other_params)
 
-            return self.get_pool_from_identifier(exchange_name=exchange_name, pool_identifier=pool_identifier)
+            return self.get_pool_from_identifier(
+                exchange_name=exchange_name, pool_identifier=pool_identifier
+            )
         except Exception as e:
             logger.warning(e)
             return None
 
     @staticmethod
     def get_pool_fee(
-            exchange_name: str,
-            pool_contract: Contract,
+        exchange_name: str,
+        pool_contract: Contract,
     ) -> str:
         """
         Gets the pool info for a given pair of tokens on Bancor V3
@@ -925,17 +947,24 @@ class EventUpdater:
 
     def __post_init__(self):
         self.exchange_list = [
-
             exchange.name for exchange in session.query(Exchange).all()
         ]
 
-        self.exchange_list = [UNISWAP_V2_NAME, UNISWAP_V3_NAME, BANCOR_V3_NAME, BANCOR_V2_NAME]
+        self.exchange_list = [
+            UNISWAP_V2_NAME,
+            UNISWAP_V3_NAME,
+            BANCOR_V3_NAME,
+            BANCOR_V2_NAME,
+        ]
 
         if not self.test_mode and CARBON_V1_NAME in self.exchange_list:
             self.exchange_list.remove(CARBON_V1_NAME)
 
-        logger.debug(f'post init on EventUpdater, exchanges = {self.exchange_list}')
-        if UNISWAP_V2_NAME in self.exchange_list and SUSHISWAP_V2_NAME in self.exchange_list:
+        logger.debug(f"post init on EventUpdater, exchanges = {self.exchange_list}")
+        if (
+            UNISWAP_V2_NAME in self.exchange_list
+            and SUSHISWAP_V2_NAME in self.exchange_list
+        ):
             self.exchange_list.remove(SUSHISWAP_V2_NAME)
 
         if self.test_mode:
@@ -969,48 +998,76 @@ class EventUpdater:
         if BANCOR_V2_NAME in exchanges:
             from_block = self.db.get_latest_block_for_exchange(BANCOR_V2_NAME)
             contract = self._get_contract_for_exchange(exchange=BANCOR_V2_NAME)
-            self.filters.append({"exchange": BANCOR_V2_NAME,
-                                 "_filter": contract.events.TokenRateUpdate.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
+            self.filters.append(
+                {
+                    "exchange": BANCOR_V2_NAME,
+                    "_filter": contract.events.TokenRateUpdate.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
         if BANCOR_V3_NAME in exchanges:
             from_block = self.db.get_latest_block_for_exchange(BANCOR_V3_NAME)
             contract = self._get_contract_for_exchange(exchange=BANCOR_V3_NAME)
-            self.filters.append({"exchange": BANCOR_V3_NAME,
-                                 "_filter": contract.events.TradingLiquidityUpdated.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
+            self.filters.append(
+                {
+                    "exchange": BANCOR_V3_NAME,
+                    "_filter": contract.events.TradingLiquidityUpdated.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
         if UNISWAP_V2_NAME in exchanges:
             from_block = self.db.get_latest_block_for_exchange(UNISWAP_V2_NAME)
             contract = self._get_contract_for_exchange(exchange=UNISWAP_V2_NAME)
-            self.filters.append({"exchange": UNISWAP_V2_NAME,
-                                 "_filter": contract.events.Sync.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
+            self.filters.append(
+                {
+                    "exchange": UNISWAP_V2_NAME,
+                    "_filter": contract.events.Sync.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
 
         if UNISWAP_V3_NAME in exchanges:
             from_block = self.db.get_latest_block_for_exchange(UNISWAP_V3_NAME)
             contract = self._get_contract_for_exchange(exchange=UNISWAP_V3_NAME)
-            self.filters.append({"exchange": UNISWAP_V3_NAME,
-                                 "_filter": contract.events.Swap.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
+            self.filters.append(
+                {
+                    "exchange": UNISWAP_V3_NAME,
+                    "_filter": contract.events.Swap.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
 
         if CARBON_V1_NAME in exchanges:
             from_block = self.db.get_latest_block_for_exchange(CARBON_V1_NAME)
             contract = self._get_contract_for_exchange(exchange=CARBON_V1_NAME)
-            self.filters.append({"exchange": CARBON_STRATEGY_CREATED,
-                                 "_filter": contract.events.StrategyCreated.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
-            self.filters.append({"exchange": CARBON_STRATEGY_DELETED,
-                                 "_filter": contract.events.StrategyDeleted.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
-            self.filters.append({"exchange": CARBON_STRATEGY_UPDATED,
-                                 "_filter": contract.events.StrategyUpdated.createFilter(
-                                     fromBlock=from_block, toBlock="latest"
-                                 )})
+            self.filters.append(
+                {
+                    "exchange": CARBON_STRATEGY_CREATED,
+                    "_filter": contract.events.StrategyCreated.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
+            self.filters.append(
+                {
+                    "exchange": CARBON_STRATEGY_DELETED,
+                    "_filter": contract.events.StrategyDeleted.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
+            self.filters.append(
+                {
+                    "exchange": CARBON_STRATEGY_UPDATED,
+                    "_filter": contract.events.StrategyUpdated.createFilter(
+                        fromBlock=from_block, toBlock="latest"
+                    ),
+                }
+            )
 
     def _handle_event(self, exchange: str, event_log: Any, event_type: str = None):
         """
@@ -1037,13 +1094,24 @@ class EventUpdater:
                 pool_identifier = event_log["address"]
 
             logger.debug(f"processed_event = {processed_event}")
-            pool = self.db.get_or_create_pool(exchange_name=exchange, pool_identifier=pool_identifier,
-                                              processed_event=processed_event)
+            pool = self.db.get_or_create_pool(
+                exchange_name=exchange,
+                pool_identifier=pool_identifier,
+                processed_event=processed_event,
+            )
             if pool is None:
                 return
 
             current_block = processed_event["block_number"]
-            logger.debug('pool = ', type(pool), pool, exchange, pool_identifier, "\n", processed_event)
+            logger.debug(
+                "pool = ",
+                type(pool),
+                pool,
+                exchange,
+                pool_identifier,
+                "\n",
+                processed_event,
+            )
             pool.last_updated_block = current_block
 
             if pool.exchange_name == BANCOR_V3_NAME:
@@ -1062,7 +1130,7 @@ class EventUpdater:
                 pool.tkn1_balance = processed_event["tkn1_balance"]
 
             elif pool.exchange_name == CARBON_V1_NAME:
-                logger.debug('processing Carbon event')
+                logger.debug("processing Carbon event")
                 if event_type == "delete":
                     self.db.delete_carbon_strategy(processed_event["id"])
                 else:
@@ -1087,7 +1155,7 @@ class EventUpdater:
 
     @staticmethod
     def build_processed_event(
-            event_log: AttributeDict, exchange: str
+        event_log: AttributeDict, exchange: str
     ) -> Dict[str, Any]:
         """
         Builds a processed event from the event log and exchange name
@@ -1097,7 +1165,7 @@ class EventUpdater:
         """
         logger.debug(event_log)
         block_number = event_log["blockNumber"]
-        logger.debug(f'exchange = {exchange}, blocknumber = {block_number}')
+        logger.debug(f"exchange = {exchange}, blocknumber = {block_number}")
         processed_event = {"block_number": block_number}
         if exchange == BANCOR_V3_NAME:
             processed_event["pool"] = event_log["args"].get("pool")
@@ -1134,8 +1202,10 @@ class EventUpdater:
 
         elif exchange == BANCOR_V3_NAME:
             if init_contract:
-                return w3.eth.contract(abi=BANCOR_V3_POOL_COLLECTION_ABI,
-                                   address=w3.toChecksumAddress(BANCOR_V3_POOL_COLLECTOR_ADDRESS))
+                return w3.eth.contract(
+                    abi=BANCOR_V3_POOL_COLLECTION_ABI,
+                    address=w3.toChecksumAddress(BANCOR_V3_POOL_COLLECTOR_ADDRESS),
+                )
             else:
                 return bancor_network_info
 
@@ -1187,13 +1257,9 @@ class EventUpdater:
                 fromBlock=from_block, toBlock="latest"
             )
         elif exchange in UNIV2_FORKS:
-            return contract.events.Sync.get_logs(
-                fromBlock=from_block, toBlock="latest"
-            )
+            return contract.events.Sync.get_logs(fromBlock=from_block, toBlock="latest")
         elif exchange == UNISWAP_V3_NAME:
-            return contract.events.Swap.get_logs(
-                fromBlock=from_block, toBlock="latest"
-            )
+            return contract.events.Swap.get_logs(fromBlock=from_block, toBlock="latest")
         elif exchange == CARBON_V1_NAME:
             return [
                 {
@@ -1219,7 +1285,7 @@ class EventUpdater:
                     "_filter": contract.events.StrategyUpdated.get_logs(
                         fromBlock=from_block, toBlock="latest"
                     ),
-                }
+                },
             ]
 
     def _get_event_filter(self, exchange: str, contract: Contract) -> Optional[Any]:
@@ -1293,7 +1359,7 @@ class EventUpdater:
         Polls for new events and processes them
         :param _exchange: exchange name
         """
-        logger.debug(f'log loop tasks, exchange = {_exchange}')
+        logger.debug(f"log loop tasks, exchange = {_exchange}")
         contract = self._get_contract_for_exchange(exchange=_exchange, test_mode=True)
         while True:
             from_block = self.db.get_latest_block_for_exchange(_exchange)
@@ -1323,7 +1389,9 @@ class EventUpdater:
                 )
                 for event in delete_events:
                     logger.debug(event)
-                    self._handle_event(exchange=_exchange, event_log=event, event_type="delete")
+                    self._handle_event(
+                        exchange=_exchange, event_log=event, event_type="delete"
+                    )
 
             for event in events:
                 logger.debug("event: ", type(event), event)
