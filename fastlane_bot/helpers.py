@@ -26,7 +26,7 @@ from web3.types import TxParams, TxReceipt
 from fastlane_bot.abi import *
 from fastlane_bot.config import *
 from fastlane_bot.models import Token, session, Pool
-from carbon.tools.cpc import ConstantProductCurve
+from fastlane_bot.tools.cpc import ConstantProductCurve
 
 
 class TxReceiptHandler:

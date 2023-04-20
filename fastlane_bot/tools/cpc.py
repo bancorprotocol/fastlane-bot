@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
-from carbon.tools.params import Params
+from fastlane_bot.tools.params import Params
 import itertools
 from sys import float_info
 from hashlib import md5 as digest
