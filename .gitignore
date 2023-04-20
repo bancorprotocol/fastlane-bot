@@ -17,6 +17,40 @@ topaze
 .hypothesis
 .ipynb_checkpoints
 carbon/tools/*
+*/.idea/*
+*/.vscode/*
+*/.pytest_cache/*
+*/.cache/*
+*/.coverage
+*/.coverage.*
+*/.cover
 
 /.env
 *.env
+
+# Ignore all files in the build directory
+build/
+
+# Ignore all files in the dist directory
+dist/
+
+# Ignore all files in the .eggs directory
+.eggs/
+
+# Ignore all files in the .tox directory
+.tox/
+
+# Ignore all files in the .venv directory
+.venv/
+
+# Ignore all files in the .mypy_cache directory
+.mypy_cache/
+
+# Ignore all files in the .pytest_cache directory
+.pytest_cache/
+
+# Ignore all files in the .coverage directory
+.coverage
+
+# Ignore all files in the .coverage.* directory
+.coverage.*
