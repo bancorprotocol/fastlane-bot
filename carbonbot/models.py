@@ -593,7 +593,7 @@ class Pool:
         return session.query(Pair).filter(Pair.name == self.pair_name).first()
 
     @property
-    def exchange(self):
+    def exchange_name(self):
         """
         Instance of Exchange for this pool. Used for convenience to get the blockchain the pool is on.
         """
@@ -643,11 +643,11 @@ class Pool:
         Get the contract for the pool.
         """
         if not self.contract_initialized:
-            if self.exchange.name != "bancor_v3":
+            if self.exchange_name.name != "bancor_v3":
                 contract = Contract.from_abi(
                     name=f"{self.address}",
                     address=f"{self.address}",
-                    abi=get_abi_and_router(self.exchange.name)[0],
+                    abi=get_abi_and_router(self.exchange_name.name)[0],
                 )
             else:
                 contract = bancor_network_info
@@ -766,10 +766,10 @@ class Pool:
             self.liquidity = contract.liquidity()
 
         try:
-            self.block_number = self.exchange.blockchain.update_block()
+            self.block_number = self.exchange_name.blockchain.update_block()
         except Exception as e:
             session.rollback()
-            self.block_number = self.exchange.blockchain.update_block()
+            self.block_number = self.exchange_name.blockchain.update_block()
             logger.warning(f"Rollback while updating block number: {e}")
 
         if self.exchange_name not in logged_keys:

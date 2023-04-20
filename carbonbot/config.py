@@ -166,6 +166,7 @@ connection = EthereumNetwork(
     network_id=network_id,
     network_name=network_name,
     provider_url=provider_url,
+    provider_name="alchemy"
 )
 
 connection.connect_network()

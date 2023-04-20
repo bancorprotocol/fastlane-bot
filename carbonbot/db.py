@@ -1032,22 +1032,23 @@ class EventUpdater:
             logger.debug('pool = ', type(pool), pool, exchange, pool_identifier, "\n", processed_event)
             pool.last_updated_block = current_block
 
-            if pool.exchange == BANCOR_V3_NAME:
+            if pool.exchange_name == BANCOR_V3_NAME:
                 if processed_event["token"] == BNT_ADDRESS:
                     pool.tkn0_balance = processed_event["newLiquidity"]
                 else:
                     pool.tkn1_balance = processed_event["newLiquidity"]
 
-            elif pool.exchange == UNISWAP_V3_NAME:
+            elif pool.exchange_name == UNISWAP_V3_NAME:
                 pool.sqrt_price_q96 = processed_event["sqrt_price_q96"]
                 pool.liquidity = processed_event["liquidity"]
                 pool.tick = processed_event["tick"]
 
-            elif pool.exchange in UNIV2_FORKS + [BANCOR_V2_NAME]:
+            elif pool.exchange_name in UNIV2_FORKS + [BANCOR_V2_NAME]:
                 pool.tkn0_balance = processed_event["tkn0_balance"]
                 pool.tkn1_balance = processed_event["tkn1_balance"]
-            elif pool.exchange == CARBON_V1_NAME:
-                print('processing Carbon event')
+
+            elif pool.exchange_name == CARBON_V1_NAME:
+                logger.debug('processing Carbon event')
                 if event_type == "delete":
                     self.db.delete_carbon_strategy(processed_event["id"])
                 else:

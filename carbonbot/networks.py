@@ -163,9 +163,9 @@ class EthereumNetwork(NetworkBase):
         if self.is_connected:
             return
 
-        add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
+        add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}"'
         mod_tenderly = f'brownie networks modify "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
-        set_tenderly = f'brownie networks set_provider "{self.provider_name}" host="{self.provider_url}"'
+        set_tenderly = f'brownie networks set_provider "{self.provider_name}"'
 
         cmds = [add_tenderly, mod_tenderly, set_tenderly]
         for cmd in cmds:

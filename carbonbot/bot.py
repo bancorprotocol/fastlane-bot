@@ -260,7 +260,7 @@ class CarbonBot:
         """
         if src_token == "BNT-FF1C":
             return profit_src
-        pool = session.query(Pool).filter(Pool.exchange == BANCOR_V3_NAME, Pool.tkn1_key == src_token).first()
+        pool = session.query(Pool).filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_key == src_token).first()
         bnt = Decimal(pool.tkn0_balance) / 10 ** 18
         src = Decimal(src_token) / 10 ** pool.tkn1_decimals
         bnt_per_src = bnt / src
