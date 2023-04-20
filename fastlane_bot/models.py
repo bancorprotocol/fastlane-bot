@@ -834,10 +834,10 @@ class Transaction:
 
 sqlalchemy.MetaData()
 if BACKEND == "sqlite":
-    engine = sqlalchemy.create_engine("sqlite:///fastlane-4-19-2023-fullset-1.sqlite")
+    engine = sqlalchemy.create_engine("sqlite:///fastlane.sqlite")
 else:
     engine = sqlalchemy.create_engine(
-        "postgresql://postgres:postgres@localhost/postgres"
+        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/postgres"
     )
 
 engine.connect()
