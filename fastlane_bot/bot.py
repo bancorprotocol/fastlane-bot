@@ -209,7 +209,7 @@ class CarbonBot:
         Tuple[Decimal, List[Dict[str, Any]]]
             The best profit and the trade instructions.
         """
-        print("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
+        logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
@@ -404,7 +404,7 @@ class CarbonBot:
                         self.polling_interval
                     )  # Sleep for 60 seconds before searching for opportunities again
                 except Exception as e:
-                    logger.warning(e)
+                    logger.debug(e)
                     time.sleep(
                         self.polling_interval
                     )
