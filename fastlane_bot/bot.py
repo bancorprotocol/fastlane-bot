@@ -101,7 +101,7 @@ class CarbonBotBase():
     
     # TODO-MOVE THOSE
     genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
-    drop_tables: InitVar = False
+    drop_tables: bool = False
     polling_interval: int = 60
     
     def __post_init__(self, drop_tables: bool = False):
@@ -126,7 +126,7 @@ class CarbonBotBase():
         
         if self.db is None:
             self.db = DatabaseManager(
-                data=self.genesis_data, drop_tables=self.drop_tables
+                data=self.genesis_data, drop_tables=drop_tables
             )
 
             
