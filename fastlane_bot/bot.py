@@ -101,9 +101,12 @@ class CarbonBotBase():
     
     genesis_data: InitVar = None # DEPRECATED; WILL BE REMOVED SOON
     drop_tables: InitVar = False # STAYS
+    seed_pools: InitVar = False # anything else WILL raise
+    update_pools: InitVar = False # anything else WILL raise
+    
     polling_interval: int = 60
     
-    def __post_init__(self, *, drop_tables, genesis_data):
+    def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
         """
         The post init method.
         """
@@ -193,8 +196,8 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    def __post_init__(self, drop_tables: bool = None):
-        super().__post_init__(drop_tables)
+    def __post_init__(self, *, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
+        super().__post_init__(drop_genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools, update_pools=update_pools)
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
@@ -234,6 +237,7 @@ class CarbonBot(CarbonBotBase):
         return trade_instructions
 
     AO_PTC = "ptc"
+    AO_CANDIDATES = "candidates"
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None, 
     ) -> Tuple[
@@ -288,6 +292,7 @@ class CarbonBot(CarbonBotBase):
         if result == self.AO_PTC:
             return pools, all_tokens, combos
         
+        candidates = []
         for tkn0, tkn1 in combos:
             try:
                 cfg.logger.debug(f"Checking {tkn0} -> {tkn1}")
@@ -314,6 +319,7 @@ class CarbonBot(CarbonBotBase):
                 profit = self._get_profit_in_bnt(profit_src, src_token)
                 cfg.logger.debug(f"Profit in BNT: {profit}")
                 cfg.logger.debug(f"Profit in {src_token}: {profit_src}")
+                candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token)]
                 if profit > best_profit:
                     best_profit = profit
                     best_src_token = src_token
@@ -322,6 +328,8 @@ class CarbonBot(CarbonBotBase):
             except Exception as e:
                 cfg.logger.debug(e)
                 pass
+        if result == self.AO_CANDIDATES:
+            return candidates
         return (
             best_profit,
             best_trade_instructions_df,
@@ -418,6 +426,7 @@ class CarbonBot(CarbonBotBase):
         
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions)
+        del trade_instructions
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
             trade_instructions=trade_instructions
         )
@@ -439,7 +448,7 @@ class CarbonBot(CarbonBotBase):
             return ordered_trade_instructions, src_amount, src_address
         
         ## Encode trade instructions
-        encoded_trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
+        encoded_trade_instructions = tx_route_handler.custom_data_encoder(ordered_trade_instructions)
         if result == self.XS_ENCTI:
             return encoded_trade_instructions
         
@@ -450,7 +459,6 @@ class CarbonBot(CarbonBotBase):
         )
         if result == self.XS_ROUTE:
             return route_struct
-        
         
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
@@ -521,12 +529,16 @@ class CarbonBot(CarbonBotBase):
             )
         return new_trade_instructions
 
+    RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+    RM_SINGLE = "single"
+    RM_CONTINUOUS = "continuous"
     def run(
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer = None,
-        update_pools: bool = False,
-        mode: str = "continuous",
+        #update_pools: bool = False,
+        *,
+        mode: str = None,
     ) -> str:
         """
         Runs the bot.
@@ -543,12 +555,15 @@ class CarbonBot(CarbonBotBase):
         str
             The transaction hash.
         """
+        if mode is None:
+            mode = self.RM_CONTINUOUS
+        assert mode in [self.RM_SINGLE, self.RM_CONTINUOUS], f"Unknown mode {mode}"
         if not flashloan_tokens:
-            flashloan_tokens = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+            flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
-        if update_pools:
-            self.db.update_pools()
+        # if update_pools:
+        #     self.db.update_pools()
         if self.mode == "continuous":
             while True:
                 try:
