@@ -57,6 +57,7 @@ class DatabaseManager:
                 print(e)
                 session.rollback()
 
+        self.data = pd.read_csv(DATABASE_SEED_FILE)
         self.data = self.data.sort_values("exchange", ascending=False)
 
     def delete_all_carbon(self):
