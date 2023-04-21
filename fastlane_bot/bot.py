@@ -220,25 +220,25 @@ class CarbonBot(CarbonBotBase):
                 data[i]["amtin"] *= 0.99
         return data, len(dfp) #ordered_scaled_dcts, tx_in_count
 
-    # def _convert_trade_instructions(
-    #     self, trade_instructions_dic: List[Dict[str, Any]]
-    # ) -> List[TradeInstruction]:
-    #     """
-    #     Converts the trade instructions dictionaries into `TradeInstruction` objects.
+    def _convert_trade_instructions(
+        self, trade_instructions_dic: List[Dict[str, Any]]
+    ) -> List[TradeInstruction]:
+        """
+        Converts the trade instructions dictionaries into `TradeInstruction` objects.
 
-    #     Parameters
-    #     ----------
-    #     trade_instructions_dic: List[Dict[str, Any]]
-    #         The trade instructions dictionaries.
+        Parameters
+        ----------
+        trade_instructions_dic: List[Dict[str, Any]]
+            The trade instructions dictionaries.
 
-    #     Returns
-    #     -------
-    #     List[Dict[str, Any]]
-    #         The trade instructions.
-    #     """
-    #     result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
-    #     result = [TradeInstruction(**ti) for ti in result]
-    #     return result
+        Returns
+        -------
+        List[Dict[str, Any]]
+            The trade instructions.
+        """
+        result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
+        result = [TradeInstruction(**ti) for ti in result]
+        return result
 
 
 
@@ -362,19 +362,22 @@ class CarbonBot(CarbonBotBase):
         src_token: str
             The source token.
         """
-        if src_token == "BNT-FF1C":
-            return profit_src
-        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
-        pool = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Pool)
-            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
-            .first()
-        )
-        bnt = Decimal(pool.tkn0_balance) / 10**18
-        src = Decimal(src_token) / 10**pool.tkn1_decimals
-        bnt_per_src = bnt / src
-        return profit_src * bnt_per_src
+        print("BNT HARDCODEDD TODO FIX")
+        return profit_src
+    
+        # if src_token == "BNT-FF1C":
+        #     return profit_src
+        # # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
+        # pool = (
+        #     # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
+        #     session.query(Pool)
+        #     .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
+        #     .first()
+        # )
+        # bnt = Decimal(pool.tkn0_balance) / 10**18
+        # src = Decimal(src_token) / 10**pool.tkn1_decimals
+        # bnt_per_src = bnt / src
+        # return profit_src * bnt_per_src
 
     def _get_deadline(self) -> int:
         """
@@ -436,8 +439,7 @@ class CarbonBot(CarbonBotBase):
             return ordered_scaled_dcts
         
         ## Convert opportunities to trade instructions
-        #trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
-        trade_instructions = [TradeInstruction(**ti) for ti in ordered_scaled_dcts]
+        trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
         if result == self.XS_TI:
             return trade_instructions
         
