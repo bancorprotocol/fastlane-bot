@@ -84,6 +84,7 @@ class TradeInstruction:
     amtout: Union[int, Decimal, float]
     pair_sorting: str = None
     raw_txs: str = None
+    custom_data: any = None
 
     @property
     def tknin_key(self) -> str:
