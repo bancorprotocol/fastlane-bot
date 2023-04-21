@@ -23,7 +23,6 @@ from fastlane_bot.utils import initialize_contract
 
 from dataclasses import dataclass, field, InitVar
 
-
 @dataclass
 class DatabaseManager:
     """
@@ -901,7 +900,7 @@ class DatabaseManager:
             tkn1 = self.get_or_create_token(tkn1_address)
             pair = self.get_or_create_pair(tkn0_address, tkn1_address)
             common_data = self.get_common_data_for_pool(
-                cid=cid,
+                cid=str(cid),
                 exchange_name=exchange_name,
                 pair_name=pair.name,
                 tkn0_address=tkn0_address,
@@ -927,7 +926,7 @@ class DatabaseManager:
                 else {}
             )
             all_params = {**common_data, **other_params, **carbon_params}
-            all_params['cid'] = str(processed_event['cid'])
+            # all_params['cid'] = str(processed_event['cid'])
             logger.debug(f"all_params={all_params}")
             try:
                 pool = Pool(**all_params)
@@ -963,7 +962,7 @@ class DatabaseManager:
             pool_contract = bancor_network_info
             tkn0_address = BNT_ADDRESS
             tkn1_address = processed_event["pool"]
-            cid = self.next_cid
+            cid = str(self.next_cid)
         else:
             pool_address = pool_identifier
             pool_contract = DatabaseManager.contract_from_address(
@@ -972,8 +971,7 @@ class DatabaseManager:
             tkn0_address, tkn1_address = DatabaseManager.get_token_addresses_for_pool(
                 exchange_name, pool_identifier, pool_contract
             )
-            cid = self.next_cid
-        print(f"cid={cid}")
+            cid = str(self.next_cid)
         return (
             block_number,
             cid,
@@ -1092,7 +1090,7 @@ class EventUpdater:
             pool_contract = bancor_network_info
             tkn0_address = BNT_ADDRESS
             tkn1_address = processed_event["pool"]
-            cid = self.next_cid
+            cid = str(self.next_cid)
         else:
             pool_address = pool_identifier
             pool_contract = DatabaseManager.contract_from_address(
@@ -1101,8 +1099,7 @@ class EventUpdater:
             tkn0_address, tkn1_address = DatabaseManager.get_token_addresses_for_pool(
                 exchange_name, pool_identifier, pool_contract
             )
-            cid = self.next_cid
-        print(f"cid={cid}")
+            cid = str(self.next_cid)
         return (
             block_number,
             cid,
