@@ -1,3 +1,10 @@
+"""
+Carbon Arbitrage Bot setup.py installer.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+
 import re
 
 from setuptools import find_packages, setup
@@ -19,14 +26,14 @@ setup(
     author="Bancor Network",
     author_email="mike@bancor.network",
     description="""
-                    Fast Lane, an open-source arbitrage protocol, allows any user to perform arbitrage between Bancor ecosystem protocols and external exchanges and redirect arbitrage profits back to the protocol.
+                    Carbon Arbitrage Bot, an open-source arbitrage protocol, allows any user to perform arbitrage between Bancor ecosystem protocols and external exchanges and redirect arbitrage profits back to the protocol.
                 """,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/bancorprotocol/fastlane",
+    url="https://github.com/bancorprotocol/carbon-bot",
     install_requires=open("requirements.txt").readlines(),
     extras_require=extras_require,
-    tests_require=['pytest~=6.2.5', 'pytest-mock~=3.10.0', 'imgkit~=1.2.3'],
+    tests_require=["pytest~=6.2.5", "pytest-mock~=3.10.0", "imgkit~=1.2.3"],
     packages=find_packages(),
     include_package_data=True,
     python_requires=">= 3.8, != 3.11.*",
