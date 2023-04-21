@@ -435,10 +435,10 @@ class CarbonBot(CarbonBotBase):
         
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions)
-        del trade_instructions
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
             trade_instructions=trade_instructions
         )
+        del trade_instructions # TODO: REMOVE THIS
         if result == self.XS_AGGTI:
             return agg_trade_instructions
 
