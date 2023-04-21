@@ -51,7 +51,7 @@ import pandas as pd
 from _decimal import Decimal
 #from pandas import DataFrame, Series
 
-from fastlane_bot.config import *
+from fastlane_bot import config as cfg
 from fastlane_bot.helpers import (
     TxSubmitHandler, TxSubmitHandlerBase,
     TxReceiptHandler, TxReceiptHandlerBase,
@@ -163,10 +163,8 @@ class CarbonBotBase():
         CPCContainer
             The container of curves.
         """
-        # TODO REVIEW
-        # THIS SHOULD PROBABLY NOT BE A STATIC FUNCTION BECAUSE IT REALLY SHOULD NOT BE CALLED
-        # ON THE CLASS ITSELF. ALSO WHY DOESN'T IT GO VIA THE DATABASE MANAGER?
         pools = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Pool)
             .filter(
                 (Pool.tkn0_balance > 0)
@@ -261,12 +259,13 @@ class CarbonBot(CarbonBotBase):
             The best profit and the trade instructions.
         """
         assert mode == "bothin", "parameter not used"
-        logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
+        cfg.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
         pools = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Pool)
             .filter(
                 (Pool.tkn0_balance > 0)
@@ -276,7 +275,7 @@ class CarbonBot(CarbonBotBase):
             )
             .all()
         )
-        logger.debug(f"Number of pools: {len(pools)}")
+        cfg.logger.debug(f"Number of pools: {len(pools)}")
         all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
             p.pair_name.split("/")[1] for p in pools
         ]
@@ -291,7 +290,7 @@ class CarbonBot(CarbonBotBase):
         
         for tkn0, tkn1 in combos:
             try:
-                logger.debug(f"Checking {tkn0} -> {tkn1}")
+                cfg.logger.debug(f"Checking {tkn0} -> {tkn1}")
                 CC = CCm.bypairs(CCm.filter_pairs(f"{tkn0}/{tkn1}"))
                 pstart = (
                     {
@@ -305,7 +304,7 @@ class CarbonBot(CarbonBotBase):
                 try:
                     r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
                 except Exception as e:
-                    logger.debug(e)
+                    cfg.logger.debug(e)
                     r = O.margp_optimizer(tkn1)
                 profit_src = -r.result
 
@@ -313,15 +312,15 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
 
                 profit = self._get_profit_in_bnt(profit_src, src_token)
-                logger.debug(f"Profit in BNT: {profit}")
-                logger.debug(f"Profit in {src_token}: {profit_src}")
+                cfg.logger.debug(f"Profit in BNT: {profit}")
+                cfg.logger.debug(f"Profit in {src_token}: {profit_src}")
                 if profit > best_profit:
                     best_profit = profit
                     best_src_token = src_token
                     best_trade_instructions_df = trade_instructions_df
                     best_trade_instructions_dic = trade_instructions_dic
             except Exception as e:
-                logger.debug(e)
+                cfg.logger.debug(e)
                 pass
         return (
             best_profit,
@@ -343,7 +342,9 @@ class CarbonBot(CarbonBotBase):
         """
         if src_token == "BNT-FF1C":
             return profit_src
+        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
         pool = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Pool)
             .filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_key == src_token)
             .first()
@@ -363,7 +364,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            w3.eth.getBlock(w3.eth.block_number).timestamp + DEFAULT_BLOCKTIME_DEVIATION
+            w3.eth.getBlock(w3.eth.block_number).timestamp + cfg.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     XS_ARBOPPS = "arbopps"
@@ -428,8 +429,9 @@ class CarbonBot(CarbonBotBase):
             agg_trade_instructions, best_src_token, tx_route_handler
         )
         src_amount = ordered_trade_instructions[0].amtin_wei
-        logger.debug(f"src_amount: {src_amount}")
+        cfg.logger.debug(f"src_amount: {src_amount}")
         src_address = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Token).filter(Token.key == best_src_token).first().address
         )
         src_address = w3.toChecksumAddress(src_address)
@@ -467,7 +469,7 @@ class CarbonBot(CarbonBotBase):
             src_address=src_address,
             src_amount=trade_instructions[0].amtin_wei,
         )
-        logger.debug(f"route_struct: {route_struct}")
+        cfg.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
         tx_submit_handler.token_contract.functions.approve(
             w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), 0
@@ -475,7 +477,7 @@ class CarbonBot(CarbonBotBase):
         tx_submit_handler.token_contract.functions.approve(
             w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
-        logger.debug("src_address", src_address)
+        cfg.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount
         )
@@ -552,22 +554,22 @@ class CarbonBot(CarbonBotBase):
                 try:
                     tx_hash = self._execute_strategy(flashloan_tokens, CCm)
                     if tx_hash:
-                        logger.info(
+                        cfg.logger.info(
                             f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                         )
                     time.sleep(
                         self.polling_interval
                     )  # Sleep for 60 seconds before searching for opportunities again
                 except Exception as e:
-                    logger.debug(e)
+                    cfg.logger.debug(e)
                     time.sleep(self.polling_interval)
         else:
             try:
                 tx_hash = self._execute_strategy(flashloan_tokens, CCm)
             except Exception as e:
-                logger.warning(e)
+                cfg.logger.warning(e)
                 tx_hash = None
             if tx_hash:
-                logger.info(
+                cfg.logger.info(
                     f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                 )
