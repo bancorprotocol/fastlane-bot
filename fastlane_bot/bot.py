@@ -485,9 +485,9 @@ class CarbonBot(CarbonBotBase):
             return self._validate_and_submit_transaction_tenderly(
                 encoded_trade_instructions, src_address, route_struct, src_amount
             )
-        tx_helper = self.TxHelperClass()
+        tx_helper = self.TxHelpersClass()
         return tx_helper.validate_and_submit_transaction(
-            route_struct, src_address, src_amount
+            encoded_trade_instructions, src_address, route_struct, src_amount
         )
 
     def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
