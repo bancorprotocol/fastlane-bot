@@ -581,8 +581,6 @@ class CarbonBot(CarbonBotBase):
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
-        # if update_pools:
-        #     self.db.update_pools()
         if mode == "continuous":
             while True:
                 try:
