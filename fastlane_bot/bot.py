@@ -218,7 +218,7 @@ class CarbonBot(CarbonBotBase):
                 data[i]["amtin"] *= 0.9999
             else:
                 data[i]["amtin"] *= 0.99
-        return data #ordered_scaled_dcts
+        return data, len(dfp) #ordered_scaled_dcts, tx_in_count
 
     # def _convert_trade_instructions(
     #     self, trade_instructions_dic: List[Dict[str, Any]]
@@ -431,7 +431,7 @@ class CarbonBot(CarbonBotBase):
         ) = r
 
         # Order the trades instructions suitable for routing and scale the amounts
-        ordered_scaled_dcts = self._order_and_scale_trade_instruction_dcts(r)
+        ordered_scaled_dcts, tx_in_count = self._order_and_scale_trade_instruction_dcts(r)
         if result == self.XS_ORDSCAL:
             return ordered_scaled_dcts
         
@@ -454,7 +454,7 @@ class CarbonBot(CarbonBotBase):
         # ordered_trade_instructions = self._handle_ordering(
         #     agg_trade_instructions, best_src_token, tx_route_handler
         # )
-        src_amount = agg_trade_instructions[0].amtin_wei
+        src_amount = sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count))
         cfg.logger.debug(f"src_amount: {src_amount}")
         src_address = (
             # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
