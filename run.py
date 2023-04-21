@@ -7,7 +7,7 @@ Note: You should configure the bot in config.py before running this script.
 Licensed under MIT
 """
 import click
-from carbon.tools.cpc import T
+from fastlane_bot.tools.cpc import T
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.models import *
 
