@@ -330,7 +330,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
                 fee=pools[idx].fee,
-                customData=trade_instructions[idx].customData,
+                customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
             )
             for idx, instructions in enumerate(trade_instructions)
