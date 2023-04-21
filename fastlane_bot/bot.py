@@ -234,8 +234,9 @@ class CarbonBot(CarbonBotBase):
                     ]
         return trade_instructions
 
+    AO_PTC = "ptc"
     def _find_arbitrage_opportunities(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin"
+        self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None, 
     ) -> Tuple[
         Union[Union[int, Decimal, Decimal], Any], Optional[Any], Optional[Any], str
     ]:
@@ -248,7 +249,9 @@ class CarbonBot(CarbonBotBase):
             The flashloan tokens.
         CCm: CPCContainer
             The CPCContainer object.
-        mode: str
+        result: AO_XXX or None
+            What (intermediate) result to return.
+            mode: str
             The mode.
 
         Returns
@@ -256,6 +259,7 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, List[Dict[str, Any]]]
             The best profit and the trade instructions.
         """
+        assert mode == "bothin", "parameter not used"
         logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
@@ -281,10 +285,13 @@ class CarbonBot(CarbonBotBase):
             for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens)
             if tkn0 != tkn1
         ]
+        if result == self.AO_PTC:
+            return pools, all_tokens, combos
+        
         for tkn0, tkn1 in combos:
             try:
                 logger.debug(f"Checking {tkn0} -> {tkn1}")
-                CC = CCm.bypairs(CCm.filter_pairs(bothin=f"{tkn0},{tkn1}"))
+                CC = CCm.bypairs(CCm.filter_pairs(f"{tkn0}/{tkn1}"))
                 pstart = (
                     {
                         tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
@@ -352,7 +359,7 @@ class CarbonBot(CarbonBotBase):
         Returns
         -------
         int
-            The deadline.
+            The deadline (as UNIX epoch).
         """
         return (
             w3.eth.getBlock(w3.eth.block_number).timestamp + DEFAULT_BLOCKTIME_DEVIATION
@@ -368,7 +375,7 @@ class CarbonBot(CarbonBotBase):
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
     ) -> Optional[Dict[str, Any]]:
         """
-        Refactored execute strategy.
+        Working-level entry point for run(), performing the actual execution.
 
         Parameters
         ----------
@@ -476,6 +483,24 @@ class CarbonBot(CarbonBotBase):
     def _handle_ordering(
         self, agg_trade_instructions, best_src_token, tx_route_handler
     ):
+        """
+        Handles the ordering of the aggregated trade instructions.
+
+        Parameters
+        ----------
+        agg_trade_instructions:
+            aggregate trade instructions as returned by _agg_carbon_independentIDs
+        
+        best_src_token: 
+            the best source (=flashloan) token as returned by _find_arbitrage_opportunities
+            
+        tx_route_handler: TxRouteHandlerBase
+            the transaction route handler object
+
+        Returns
+        -------
+            ordered trade instructions
+        """
         new_trade_instructions = []
         if len(agg_trade_instructions) == 2:
             for inst in agg_trade_instructions:
