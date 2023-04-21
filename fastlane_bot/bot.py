@@ -583,7 +583,7 @@ class CarbonBot(CarbonBotBase):
             CCm = self.get_curves()
         # if update_pools:
         #     self.db.update_pools()
-        if self.mode == "continuous":
+        if mode == "continuous":
             while True:
                 try:
                     tx_hash = self._execute_strategy(flashloan_tokens, CCm)
