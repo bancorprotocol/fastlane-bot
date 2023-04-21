@@ -199,6 +199,27 @@ class CarbonBot(CarbonBotBase):
     def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
         super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools, update_pools=update_pools)
 
+    def _order_and_scale_trade_instruction_dcts(self, r):
+        print("[_order_and_scale_trade_instruction_dcts] r", r)
+        # note the dictionary values are changed in place
+        _, trade_instruction_df, trade_instruction_dcts, best_src_token = r
+        df = trade_instruction_df.iloc[:-3]
+        assert len(df.columns)==2, "Can only route pairs"
+        dfp = df[df[best_src_token]>0]
+        dfm = df[df[best_src_token]<0]
+        order = list(dfp.index.values) + list(dfm.index.values)
+        # order here
+        trade_dicts = {d['cid'] :d for d in trade_instruction_dcts}
+        ordered_trade_instructions = [trade_dicts[cid] for cid in order]
+        #scale here
+        data = trade_instruction_dcts
+        for i in range(len(data)):
+            if data[i]["tknin"] == 'WETH-6Cc2':
+                data[i]["amtin"] *= 0.9999
+            else:
+                data[i]["amtin"] *= 0.99
+        return data #ordered_scaled_dcts
+
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
     ) -> List[TradeInstruction]:
@@ -370,6 +391,7 @@ class CarbonBot(CarbonBotBase):
 
     XS_ARBOPPS = "arbopps"
     XS_TI = "ti"
+    XS_ORDSCAL = "ordscal"
     XS_AGGTI = "aggti"
     XS_ORDTI = "ordti"
     XS_ENCTI = "encti"
@@ -398,22 +420,23 @@ class CarbonBot(CarbonBotBase):
         # TODO: REMOVE THIS PARAMETER; THE NETWORK MUST BE SET IN THE BOT ITSELF
         
         ## Find arbitrage opportunities
+        r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+        if result == self.XS_ARBOPPS:
+            return r
         (
             best_profit,
             best_trade_instructions_df,
             trade_instructions_dic,
             best_src_token,
-        ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
-        if result == self.XS_ARBOPPS:
-            return (
-                best_profit,
-                best_trade_instructions_df,
-                trade_instructions_dic,
-                best_src_token,
-            )
+        ) = r
 
+        # Order the trades instructions suitable for routing and scale the amounts
+        ordered_scaled_dcts = self._order_and_scale_trade_instruction_dcts(r)
+        if result == self.XS_ORDSCAL:
+            return ordered_scaled_dcts
+        
         ## Convert opportunities to trade instructions
-        trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
+        trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
         if result == self.XS_TI:
             return trade_instructions
         
@@ -426,11 +449,11 @@ class CarbonBot(CarbonBotBase):
         if result == self.XS_AGGTI:
             return agg_trade_instructions
 
-        ## Order trade instructions
-        ordered_trade_instructions = self._handle_ordering(
-            agg_trade_instructions, best_src_token, tx_route_handler
-        )
-        src_amount = ordered_trade_instructions[0].amtin_wei
+        # ## Order trade instructions
+        # ordered_trade_instructions = self._handle_ordering(
+        #     agg_trade_instructions, best_src_token, tx_route_handler
+        # )
+        src_amount = agg_trade_instructions[0].amtin_wei
         cfg.logger.debug(f"src_amount: {src_amount}")
         src_address = (
             # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
@@ -438,10 +461,10 @@ class CarbonBot(CarbonBotBase):
         )
         src_address = cfg.w3.toChecksumAddress(src_address)
         if result == self.XS_ORDTI:
-            return ordered_trade_instructions, src_amount, src_address
+            return agg_trade_instructions, src_amount, src_address
         
         ## Encode trade instructions
-        encoded_trade_instructions = tx_route_handler.custom_data_encoder(ordered_trade_instructions)
+        encoded_trade_instructions = tx_route_handler.custom_data_encoder(agg_trade_instructions)
         if result == self.XS_ENCTI:
             return encoded_trade_instructions
         
