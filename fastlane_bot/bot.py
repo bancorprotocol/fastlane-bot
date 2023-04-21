@@ -149,8 +149,8 @@ class CarbonBotBase():
         """convenience method for db.update_pools()"""
         self.db.update_pools(drop_tables=drop_tables)
 
-    def drop_tables(self):
-        """convenience method for db.drop_tables()"""
+    def drop_all_tables(self):
+        """convenience method for db.drop_all_tables()"""
         self.db.drop_all_tables()
         
     def get_curves(self) -> CPCContainer:
