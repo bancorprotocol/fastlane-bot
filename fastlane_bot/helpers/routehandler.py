@@ -159,28 +159,22 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def custom_data_encoder(
-        wei_instructions: List[TradeInstruction],
+        agg_trade_instructions: List[TradeInstruction],
     ) -> List[TradeInstruction]:
-        for i in range(len(wei_instructions)):
-            instr = wei_instructions[i]
-            print("DETAILS", i, instr.amtin, instr.amtout)
+        for i in range(len(agg_trade_instructions)):
+            instr = agg_trade_instructions[i]
             if instr.raw_txs == "[]":
                 instr.customData = ""
-                # instr.amtin =  int(instr.amtin * 0.9)
-                wei_instructions[i] = instr
+                agg_trade_instructions[i] = instr
             else:
                 tradeInfo = eval(instr.raw_txs)
-
-                # convert strategyid to type int
                 tradeActions = []
                 for trade in tradeInfo:
                     tradeActions += [
                         {
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
-                                Decimal(trade["amtin"])
-                                * 10**instr.tknin_decimals
-                                * Decimal("0.99")
+                                Decimal(trade["amtin"])* 10**instr.tknin_decimals
                             ),
                         }
                     ]
@@ -200,11 +194,9 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 # Encode the extracted values using the ABI types
                 encoded_data = eth_abi.encode(all_types, values)
-                instr.customData = encoded_data
-                wei_instructions[i] = instr
-
-        # print(f"all_types: {all_types}")
-        return wei_instructions
+                instr.custom_data = str(encoded_data)
+            agg_trade_instructions[i] = instr
+        return agg_trade_instructions
 
     def _abi_encode_data(
         self,
