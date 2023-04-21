@@ -1,2 +1,2 @@
-__VERSION__ = "2.0-BETA2"
+__VERSION__ = "2.0"
 __DATE__ = "21/Apr/2023"
