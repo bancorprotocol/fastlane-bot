@@ -248,7 +248,6 @@ class ConstantProductCurve:
     params: AttrDict = field(default=None, repr=True, compare=False, hash=False)
 
     def __post_init__(self):
-
         if self.constr is None:
             super().__setattr__("constr", "default")
 
@@ -1130,7 +1129,6 @@ class CPCContainer:
     tokenscale: ts.TokenScaleBase = field(default=None, repr=False)
 
     def __post_init__(self):
-
         if self.tokenscale is None:
             self.tokenscale = self.TOKENSCALE
         # print("[CPCContainer] tokenscale =", self.tokenscale)

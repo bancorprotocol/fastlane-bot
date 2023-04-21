@@ -46,7 +46,6 @@ class TransactionHelpers:
     arb_contract = arb_contract
 
     def __post_init__(self):
-
         # Set the local account
         self.local_account = self.web3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 

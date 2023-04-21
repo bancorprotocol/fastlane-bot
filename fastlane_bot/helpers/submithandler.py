@@ -36,7 +36,8 @@ from .routehandler import RouteStruct
 @dataclass
 class TxSubmitHandlerBase:
     pass
-    
+
+
 @dataclass
 class TxSubmitHandler(TxSubmitHandlerBase):
     """

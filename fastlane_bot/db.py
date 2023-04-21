@@ -23,6 +23,7 @@ from fastlane_bot.utils import initialize_contract
 
 from dataclasses import dataclass, field, InitVar
 
+
 @dataclass
 class DatabaseManager:
     """
@@ -82,7 +83,7 @@ class DatabaseManager:
 
     def update_db(self):
         """
-        Updates the database with the latest pools and pairs 
+        Updates the database with the latest pools and pairs
         """
         self.refresh_session()
         self.update_pools()
@@ -190,7 +191,7 @@ class DatabaseManager:
         """
         if drop_tables:
             self.drop_all_tables()
-            
+
         carbon_pools, other_pools, v3_pools = self.get_pool_lists()
 
         if self.use_multicall:
@@ -643,7 +644,6 @@ class DatabaseManager:
             return
         with brownie.multicall(address=self.MULTICALL_CONTRACT_ADDRESS):
             for exchange, pool_address in pools:
-
                 try:
                     p = (
                         session.query(Pool)
@@ -1049,7 +1049,7 @@ class EventUpdater:
             UNISWAP_V2_NAME,
             UNISWAP_V3_NAME,
             BANCOR_V3_NAME,
-            BANCOR_V2_NAME
+            BANCOR_V2_NAME,
         ]
 
         logger.debug(f"post init on EventUpdater, exchanges = {self.exchange_list}")
@@ -1074,7 +1074,7 @@ class EventUpdater:
         logger.info(self.exchange_list)
 
     def _parse_processed_event(
-            self, exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
+        self, exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
     ):
         block_number = processed_event["block_number"]
         if CARBON_V1_NAME in exchange_name:
@@ -1234,9 +1234,7 @@ class EventUpdater:
             tkn0_address,
             tkn1_address,
             exchange,
-        ) = self._parse_processed_event(
-            exchange, pool_identifier, processed_event
-        )
+        ) = self._parse_processed_event(exchange, pool_identifier, processed_event)
 
         logger.debug(
             f"Getting or creating pool for processed_event= {processed_event}, pool_identifier = {pool_identifier}"
@@ -1562,7 +1560,6 @@ class EventUpdater:
                 )
 
             elif CARBON_V1_NAME in _exchange:
-
                 events += contract.events.StrategyCreated.getLogs(
                     fromBlock=from_block, toBlock="latest"
                 )

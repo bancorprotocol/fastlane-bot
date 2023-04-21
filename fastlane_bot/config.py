@@ -198,6 +198,7 @@ arb_contract = w3.eth.contract(
     abi=FAST_LANE_CONTRACT_ABI,
 )
 
+
 # LOGGER SETUP SECTION
 #######################################################################################
 def get_logger(verbose: str = "INFO") -> logging.Logger:

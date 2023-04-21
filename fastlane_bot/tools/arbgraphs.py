@@ -1154,7 +1154,6 @@ class ArbGraph(_DCBase):
         :uid:       unique id of the edge
         """
         if not dx * dy < 0:
-
             msg = f"dx and dy must have opposite signs [dx={dx} dy={dy} dx*dy={dx*dy}]"
             if dx * dy > self.EPSDXDY:
                 raise ValueError(msg)
@@ -1748,7 +1747,6 @@ class ArbGraph(_DCBase):
 
         # iterate over all edges in the cycle
         for pair in cycle_pairs:
-
             # get all edges between the nodes of the cycle (e is eg for tokens)
             edges = self.filter_edges(*pair)
             e = edges[0]
@@ -2022,7 +2020,6 @@ class ArbGraph(_DCBase):
             edges = self.edges
 
         if self.is_amounttype:
-
             # Amount-type graph
             df = pd.DataFrame.from_dict(
                 [

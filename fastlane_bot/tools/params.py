@@ -165,6 +165,5 @@ class Params:
             return self.get_default(item, raiseonerror=True)
 
     def __repr__(self):
-
         defaults = f", defaults={self._defaults}" if self._defaults else ""
         return f"{self.__class__.__name__}.construct({self._params}{defaults})"

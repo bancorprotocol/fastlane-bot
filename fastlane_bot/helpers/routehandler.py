@@ -74,9 +74,11 @@ class RouteStruct:
     customInt: int
     customData: bytes
 
+
 @dataclass
 class TxRouteHandlerBase:
     pass
+
 
 @dataclass
 class TxRouteHandler(TxRouteHandlerBase):
@@ -174,7 +176,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                         {
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
-                                Decimal(trade["amtin"])* 10**instr.tknin_decimals
+                                Decimal(trade["amtin"]) * 10**instr.tknin_decimals
                             ),
                         }
                     ]
@@ -357,7 +359,6 @@ class TxRouteHandler(TxRouteHandlerBase):
     def _agg_carbon_independentIDs(trade_instructions):
         listti = []
         for instr in trade_instructions:
-
             listti += [
                 {
                     "cid": instr.cid + "-" + str(instr.cid_tkn)
@@ -951,7 +952,6 @@ class TxRouteHandler(TxRouteHandlerBase):
     def _solve_trade_output(
         self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> Tuple[Decimal, Decimal, int, int]:
-
         if not isinstance(trade, TradeInstruction):
             raise Exception("trade in must be a TradeInstruction object.")
 
@@ -1053,7 +1053,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                 amount_out = total_out
 
             else:
-
                 curve_cid = trade.cid
                 curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
                 (

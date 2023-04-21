@@ -374,7 +374,6 @@ class CPCArbOptimizer(OptimizerBase):
 
     @dataclass
     class ConvexOptimizerResult(OptimizerBase.OptimizerResult):
-
         problem: InitVar
 
         def __post_init__(self, optimizer=None, problem=None, *args, **kwargs):
@@ -778,7 +777,6 @@ class CPCArbOptimizer(OptimizerBase):
 
         # range constraints (min)
         for i, c in enumerate(curves_t):
-
             pass
 
             if not P("nominconstr"):
@@ -1350,7 +1348,6 @@ class CPCArbOptimizer(OptimizerBase):
             #     print("[margp_optimizer] dtkn_d", dtkn_d)
 
         for i in range(maxiter):
-
             if P("progress"):
                 print(
                     f"Iteration [{i:2.0f}]: time elapsed: {time.time()-start_time:.2f}s"
