@@ -8,6 +8,9 @@ import asyncio
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config import logger
 from fastlane_bot.db import EventUpdater
+from fastlane_bot.models import session
+
+session.rollback()
 
 bot = CarbonBot(
     polling_interval=5,
