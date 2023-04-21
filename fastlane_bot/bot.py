@@ -196,8 +196,8 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    def __post_init__(self, *, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
-        super().__post_init__(drop_genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools, update_pools=update_pools)
+    def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
+        super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools, update_pools=update_pools)
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
