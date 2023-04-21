@@ -236,7 +236,7 @@ class CarbonBot(CarbonBotBase):
                     ]
         return trade_instructions
 
-    AO_PTC = "ptc"
+    AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
     def _find_arbitrage_opportunities(
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None, 
@@ -268,35 +268,37 @@ class CarbonBot(CarbonBotBase):
         best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
-        pools = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Pool)
-            .filter(
-                (Pool.tkn0_balance > 0)
-                | (Pool.tkn1_balance > 0)
-                | (Pool.liquidity > 0)
-                | (Pool.y_0 > 0)
-            )
-            .all()
-        )
-        cfg.logger.debug(f"Number of pools: {len(pools)}")
-        all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
-            p.pair_name.split("/")[1] for p in pools
-        ]
+        # pools = (
+        #     # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
+        #     session.query(Pool)
+        #     .filter(
+        #         (Pool.tkn0_balance > 0)
+        #         | (Pool.tkn1_balance > 0)
+        #         | (Pool.liquidity > 0)
+        #         | (Pool.y_0 > 0)
+        #     )
+        #     .all()
+        # )
+        # cfg.logger.debug(f"Number of pools: {len(pools)}")
+        # all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
+        #     p.pair_name.split("/")[1] for p in pools
+        # ]
         all_tokens = list(set(all_tokens))
+        all_tokens = CCm.tokens()
+        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens)
+            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
             if tkn0 != tkn1
         ]
-        if result == self.AO_PTC:
-            return pools, all_tokens, combos
+        if result == self.AO_TOKENS:
+            return all_tokens, combos
         
         candidates = []
         for tkn0, tkn1 in combos:
             try:
                 cfg.logger.debug(f"Checking {tkn0} -> {tkn1}")
-                CC = CCm.bypairs(CCm.filter_pairs(f"{tkn0}/{tkn1}"))
+                CC = CCm.bypairs(f"{tkn0}/{tkn1}")
                 pstart = (
                     {
                         tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
@@ -308,17 +310,24 @@ class CarbonBot(CarbonBotBase):
                 src_token = tkn1
                 try:
                     r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+                    assert not r.is_error
                 except Exception as e:
-                    cfg.logger.debug(e)
-                    r = O.margp_optimizer(tkn1)
+                    cfg.logger.debug(e, r)
+                    try:
+                        r = O.margp_optimizer(tkn1)
+                    except Exception as e:
+                        cfg.logger.error(e)
+                        
                 profit_src = -r.result
 
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
 
                 profit = self._get_profit_in_bnt(profit_src, src_token)
-                cfg.logger.debug(f"Profit in BNT: {profit}")
+                    # TODO: THIS MAY OR MAY NOT GET A PROFIT NUMBER
+                    # WE NEED TO DEAL WITH THIS IF IT DOES NOT
                 cfg.logger.debug(f"Profit in {src_token}: {profit_src}")
+                cfg.logger.debug(f"Profit in BNT: {profit}")
                 candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token)]
                 if profit > best_profit:
                     best_profit = profit
@@ -326,8 +335,8 @@ class CarbonBot(CarbonBotBase):
                     best_trade_instructions_df = trade_instructions_df
                     best_trade_instructions_dic = trade_instructions_dic
             except Exception as e:
-                cfg.logger.debug(e)
-                pass
+                cfg.logger.error(e)
+        
         if result == self.AO_CANDIDATES:
             return candidates
         return (
@@ -372,7 +381,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            w3.eth.getBlock(w3.eth.block_number).timestamp + cfg.DEFAULT_BLOCKTIME_DEVIATION
+            cfg.w3.eth.getBlock(cfg.w3.eth.block_number).timestamp + cfg.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     XS_ARBOPPS = "arbopps"
@@ -443,7 +452,7 @@ class CarbonBot(CarbonBotBase):
             # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Token).filter(Token.key == best_src_token).first().address
         )
-        src_address = w3.toChecksumAddress(src_address)
+        src_address = cfg.w3.toChecksumAddress(src_address)
         if result == self.XS_ORDTI:
             return ordered_trade_instructions, src_amount, src_address
         
@@ -480,16 +489,16 @@ class CarbonBot(CarbonBotBase):
         cfg.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
         tx_submit_handler.token_contract.functions.approve(
-            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), 0
+            cfg.w3.toChecksumAddress(cfg.FASTLANE_CONTRACT_ADDRESS), 0
         ).transact(tx_details)
         tx_submit_handler.token_contract.functions.approve(
-            w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS), src_amount
+            cfg.w3.toChecksumAddress(cfg.FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
         cfg.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount
         )
-        return w3.eth.wait_for_transaction_receipt(tx)
+        return cfg.w3.eth.wait_for_transaction_receipt(tx)
 
     def _handle_ordering(
         self, agg_trade_instructions, best_src_token, tx_route_handler
