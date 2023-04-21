@@ -99,15 +99,17 @@ class CarbonBotBase():
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
     
-    # TODO-MOVE THOSE
-    genesis_data = pd.read_csv(DATABASE_SEED_FILE) # TODO this and drop tables
-    drop_tables: InitVar = False
+    genesis_data: InitVar = None # DEPRECATED; WILL BE REMOVED SOON
+    drop_tables: InitVar = False # STAYS
     polling_interval: int = 60
     
-    def __post_init__(self, drop_tables: bool = False):
+    def __post_init__(self, *, drop_tables, genesis_data):
         """
         The post init method.
         """
+        if not genesis_data is None:
+            print(f"WARNING: genesis_data is deprecated. This argument will be removed soon")
+            
         if self.TxSubmitHandlerClass is None:
             self.TxSubmitHandlerClass = TxSubmitHandler
         assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
@@ -126,10 +128,9 @@ class CarbonBotBase():
         
         if self.db is None:
             self.db = DatabaseManager(
-                data=self.genesis_data, drop_tables=self.drop_tables
+                data=self.genesis_data, drop_tables=drop_tables
             )
-
-            
+                    
     def versions(self):
         """
         Returns the versions of the module and its Carbon dependencies.
