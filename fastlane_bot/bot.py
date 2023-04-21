@@ -362,22 +362,22 @@ class CarbonBot(CarbonBotBase):
         src_token: str
             The source token.
         """
-        print("BNT HARDCODEDD TODO FIX")
-        return profit_src
+        # print("BNT HARDCODEDD TODO FIX")
+        # return profit_src
     
-        # if src_token == "BNT-FF1C":
-        #     return profit_src
-        # # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
-        # pool = (
-        #     # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-        #     session.query(Pool)
-        #     .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
-        #     .first()
-        # )
-        # bnt = Decimal(pool.tkn0_balance) / 10**18
-        # src = Decimal(src_token) / 10**pool.tkn1_decimals
-        # bnt_per_src = bnt / src
-        # return profit_src * bnt_per_src
+        if src_token == "BNT-FF1C":
+            return profit_src
+        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
+        pool = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
+            session.query(Pool)
+            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
+            .first()
+        )
+        bnt = Decimal(pool.tkn0_balance) / 10**18
+        src = Decimal(src_token) / 10**pool.tkn1_decimals
+        bnt_per_src = bnt / src
+        return profit_src * bnt_per_src
 
     def _get_deadline(self) -> int:
         """
