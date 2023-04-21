@@ -283,7 +283,6 @@ class CarbonBot(CarbonBotBase):
         # all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
         #     p.pair_name.split("/")[1] for p in pools
         # ]
-        all_tokens = list(set(all_tokens))
         all_tokens = CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
@@ -363,7 +362,7 @@ class CarbonBot(CarbonBotBase):
         pool = (
             # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
             session.query(Pool)
-            .filter(Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_key == src_token)
+            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
             .first()
         )
         bnt = Decimal(pool.tkn0_balance) / 10**18
