@@ -220,25 +220,25 @@ class CarbonBot(CarbonBotBase):
                 data[i]["amtin"] *= 0.99
         return data #ordered_scaled_dcts
 
-    def _convert_trade_instructions(
-        self, trade_instructions_dic: List[Dict[str, Any]]
-    ) -> List[TradeInstruction]:
-        """
-        Converts the trade instructions dictionaries into `TradeInstruction` objects.
+    # def _convert_trade_instructions(
+    #     self, trade_instructions_dic: List[Dict[str, Any]]
+    # ) -> List[TradeInstruction]:
+    #     """
+    #     Converts the trade instructions dictionaries into `TradeInstruction` objects.
 
-        Parameters
-        ----------
-        trade_instructions_dic: List[Dict[str, Any]]
-            The trade instructions dictionaries.
+    #     Parameters
+    #     ----------
+    #     trade_instructions_dic: List[Dict[str, Any]]
+    #         The trade instructions dictionaries.
 
-        Returns
-        -------
-        List[Dict[str, Any]]
-            The trade instructions.
-        """
-        result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
-        result = list(TradeInstruction(**ti) for ti in result)
-        return result
+    #     Returns
+    #     -------
+    #     List[Dict[str, Any]]
+    #         The trade instructions.
+    #     """
+    #     result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
+    #     result = [TradeInstruction(**ti) for ti in result]
+    #     return result
 
 
 
@@ -436,7 +436,8 @@ class CarbonBot(CarbonBotBase):
             return ordered_scaled_dcts
         
         ## Convert opportunities to trade instructions
-        trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
+        #trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
+        trade_instructions = [TradeInstruction(**ti) for ti in ordered_scaled_dcts]
         if result == self.XS_TI:
             return trade_instructions
         
