@@ -216,29 +216,9 @@ class CarbonBot(CarbonBotBase):
             The trade instructions.
         """
         result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
-        result = list(TradeInstruction(ti) for ti in result)
+        result = list(TradeInstruction(**ti) for ti in result)
         return result
-        
-        # trade_instructions = []
-        # if trade_instructions_dic is not None:
-        #     for trade_instruction in trade_instructions_dic:
-        #         if trade_instruction is not None:
-        #             if "raw_txs" not in trade_instruction.keys():
-        #                 trade_instruction["raw_txs"] = "[]"
-        #             if "pair_sorting" not in trade_instruction.keys():
-        #                 trade_instruction["pair_sorting"] = ""
-        #             trade_instructions += [
-        #                 TradeInstruction(
-        #                     cid=trade_instruction["cid"],
-        #                     tknin=trade_instruction["tknin"],
-        #                     amtin=trade_instruction["amtin"],
-        #                     tknout=trade_instruction["tknout"],
-        #                     amtout=trade_instruction["amtout"],
-        #                     raw_txs=trade_instruction["raw_txs"],
-        #                     pair_sorting=trade_instruction["pair_sorting"],
-        #                 )
-        #             ]
-        # return trade_instructions
+
 
 
     AO_TOKENS = "tokens"
