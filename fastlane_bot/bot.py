@@ -358,8 +358,14 @@ class CarbonBot(CarbonBotBase):
             w3.eth.getBlock(w3.eth.block_number).timestamp + DEFAULT_BLOCKTIME_DEVIATION
         )
 
+    XS_ARBOPPS = "arbopps"
+    XS_TI = "ti"
+    XS_AGGTI = "aggti"
+    XS_ORDTI = "ordti"
+    XS_ENCTI = "encti"
+    XS_ROUTE = "route"
     def _execute_strategy(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, network: str = "mainnet"
+        self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
     ) -> Optional[Dict[str, Any]]:
         """
         Refactored execute strategy.
@@ -367,48 +373,80 @@ class CarbonBot(CarbonBotBase):
         Parameters
         ----------
         flashloan_tokens: List[str]
-            The flashloan tokens.
-        CCm: float
-            The CCm.
+            The flashloan tokens, ie all tokens that can be borrowed.
+        CCm: CPCContainer
+            The CPCContainer object containing all market curves.
+        result: XS_XXX or None
+            What intermediate result to return (default: None)
 
         Returns
         -------
         str
             The transaction hash.
         """
+        assert network == "mainnet", "Only mainnet"
+        # TODO: REMOVE THIS PARAMETER; THE NETWORK MUST BE SET IN THE BOT ITSELF
+        
+        ## Find arbitrage opportunities
         (
             best_profit,
             best_trade_instructions_df,
             trade_instructions_dic,
             best_src_token,
         ) = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+        if result == self.XS_ARBOPPS:
+            return (
+                best_profit,
+                best_trade_instructions_df,
+                trade_instructions_dic,
+                best_src_token,
+            )
 
+        ## Convert opportunities to trade instructions
         trade_instructions = self._convert_trade_instructions(trade_instructions_dic)
+        if result == self.XS_TI:
+            return trade_instructions
+        
+        ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions)
         agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
             trade_instructions=trade_instructions
         )
+        if result == self.XS_AGGTI:
+            return agg_trade_instructions
 
-        trade_instructions = self._handle_ordering(
+        ## Order trade instructions
+        ordered_trade_instructions = self._handle_ordering(
             agg_trade_instructions, best_src_token, tx_route_handler
         )
-        src_amount = trade_instructions[0].amtin_wei
+        src_amount = ordered_trade_instructions[0].amtin_wei
         logger.debug(f"src_amount: {src_amount}")
         src_address = (
             session.query(Token).filter(Token.key == best_src_token).first().address
         )
         src_address = w3.toChecksumAddress(src_address)
-        trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
-
+        if result == self.XS_ORDTI:
+            return ordered_trade_instructions, src_amount, src_address
+        
+        ## Encode trade instructions
+        encoded_trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
+        if result == self.XS_ENCTI:
+            return encoded_trade_instructions
+        
+        ## Determine route
         deadline = self._get_deadline()
-
         route_struct = tx_route_handler.get_arb_contract_args(
-            trade_instructions, deadline
+            encoded_trade_instructions, deadline
         )
-
+        if result == self.XS_ROUTE:
+            return route_struct
+        
+        
+        ## Submit transaction and obtain transaction receipt
+        assert result is None, f"Unknown result requested {result}"
         if network != "mainnet":
             return self._validate_and_submit_transaction_tenderly(
-                trade_instructions, src_address, route_struct, src_amount
+                encoded_trade_instructions, src_address, route_struct, src_amount
             )
         tx_helper = self.TxHelperClass()
         return tx_helper.validate_and_submit_transaction(
