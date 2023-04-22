@@ -70,8 +70,8 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
     def __post_init__(self):
         self.w3 = w3
-        self.arb_contract = arb_contract
-        self.bancor_network_info = bancor_network_info
+        self.arb_contract = BANCOR_ARBITRAGE_CONTRACT
+        self.bancor_network_info = BANCOR_NETWORK_INFO_CONTRACT
         # self.token_contract = Contract.from_abi(
         #     name="Token",
         #     address=self.src_address,

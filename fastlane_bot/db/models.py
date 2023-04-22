@@ -5,12 +5,10 @@ Backend models for the Fastlane project.
 Licensed under MIT
 """
 
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Union, Any, Dict, List
 
-import sqlalchemy
 from _decimal import Decimal
 from sqlalchemy import (
     Column,
@@ -26,7 +24,6 @@ from sqlalchemy import (
     Float,
     Boolean,
 )
-from sqlalchemy.orm import registry, sessionmaker
 
 from fastlane_bot.config import *
 from fastlane_bot.tools.cpc import ConstantProductCurve
@@ -37,9 +34,10 @@ from fastlane_bot.utils import (
     UniV3Helper,
 )
 
+from sqlalchemy.orm import registry
+
 global contracts
 contracts = {}
-
 
 mapper_registry = registry()
 logged_keys = []
@@ -385,6 +383,49 @@ class Pool:
             else f"{self.exchange_name} {self.pair_name} {self.fee}"
         )
 
+    @property
+    def pair(self):
+        """
+        Instance of Pair for this pool. Used for convenience to get the tokens in the pool.
+        """
+        return session.query(Pair).filter(Pair.name == self.pair_name).first()
+
+    @property
+    def tkn0_decimals(self):
+        """
+        Returns the number of decimals for tkn_address 0.
+        """
+        return self.tkn0.decimals
+
+    @property
+    def tkn1_decimals(self):
+        """
+        Returns the number of decimals for tkn_address 1.
+        """
+        return self.tkn1.decimals
+
+    @property
+    def tkn0(self):
+        """
+        Instance of Token for tkn_address 0. Used for convenience to get the tkn_address in the pool.
+        """
+        return self.pair.tkn0
+
+    @tkn0.setter
+    def tkn0(self, value):
+        self.pair.tkn0 = value
+
+    @property
+    def tkn1(self):
+        """
+        Instance of Token for tkn_address 1. Used for convenience to get the tkn_address in the pool.
+        """
+        return self.pair.tkn1
+
+    @tkn1.setter
+    def tkn1(self, value):
+        self.pair.tkn1 = value
+
     def update(self, new):
         for key, value in new.items():
             if hasattr(self, key):
@@ -598,207 +639,7 @@ class Pool:
         }
         return [cpc.from_univ3(**self._validate_arg_types(typed_args))]
 
-    @property
-    def pair(self):
-        """
-        Instance of Pair for this pool. Used for convenience to get the tokens in the pool.
-        """
-        return session.query(Pair).filter(Pair.name == self.pair_name).first()
 
-    @property
-    def exchange_name(self):
-        """
-        Instance of Exchange for this pool. Used for convenience to get the blockchain the pool is on.
-        """
-        return (
-            session.query(Exchange).filter(Exchange.name == self.exchange_name).first()
-        )
-
-    @property
-    def tkn0_decimals(self):
-        """
-        Returns the number of decimals for tkn_address 0.
-        """
-        return self.tkn0.decimals
-
-    @property
-    def tkn1_decimals(self):
-        """
-        Returns the number of decimals for tkn_address 1.
-        """
-        return self.tkn1.decimals
-
-    @property
-    def tkn0(self):
-        """
-        Instance of Token for tkn_address 0. Used for convenience to get the tkn_address in the pool.
-        """
-        return self.pair.tkn0
-
-    @tkn0.setter
-    def tkn0(self, value):
-        self.pair.tkn0 = value
-
-    @property
-    def tkn1(self):
-        """
-        Instance of Token for tkn_address 1. Used for convenience to get the tkn_address in the pool.
-        """
-        return self.pair.tkn1
-
-    @tkn1.setter
-    def tkn1(self, value):
-        self.pair.tkn1 = value
-
-    @property
-    def contract(self):
-        """
-        Get the contract for the pool.
-        """
-        if not self.contract_initialized:
-            if self.exchange_name.name != "bancor_v3":
-                contract = Contract.from_abi(
-                    name=f"{self.address}",
-                    address=f"{self.address}",
-                    abi=get_abi_and_router(self.exchange_name.name)[0],
-                )
-            else:
-                contract = bancor_network_info
-            contracts[self.id] = contract
-            self.contract_initialized = True
-        else:
-            contract = contracts[self.id]
-
-        if not isinstance(contract, Contract):
-            raise ValueError(
-                f"Contract {contract} is not a web3 contract. {self.exchange_name}, {self.pair_name}"
-            )
-        return contract
-
-    def set_tokens_in_order(
-        self, is_reversed: bool, tkn0_balance: Decimal, tkn1_balance: Decimal
-    ):
-        """
-        Handle resetting the order of the tokens in the pool after liquidity is updated.
-        """
-        if is_reversed:
-            self.tkn1_balance = tkn0_balance
-            self.tkn0_balance = tkn1_balance
-        else:
-            self.tkn0_balance = tkn0_balance
-            self.tkn1_balance = tkn1_balance
-        self.correct_decimals()
-        return self
-
-    def get_tokens_in_order(self):
-        """
-        Returns the tkn_address state.
-        """
-        if self.is_reversed:
-            tkn0, tkn1 = self.tkn1, self.tkn0
-        else:
-            tkn0, tkn1 = self.tkn0, self.tkn1
-        return self.is_reversed, tkn0, tkn1
-
-    def convert_to_weth_if_eth(self):
-        """
-        Convert ETH to WETH if necessary.
-        """
-        try:
-            if self.tkn0.is_eth():
-                self.tkn0 = session.query(Token).filter(Token.symbol == "WETH").first()
-            if self.tkn1.is_eth():
-                self.tkn1 = session.query(Token).filter(Token.symbol == "WETH").first()
-            self.pair.to_weth_if_eth()
-        except Exception as e:
-            session.rollback()
-            logger.warning(f"Rollback while converting ETH to WETH: {e}")
-
-    def correct_decimals(self):
-        """
-        Correct the decimals of the tokens in the pool.
-        """
-        try:
-            self.tkn0_balance = convert_decimals(
-                self.tkn0_balance, n=self.tkn0.decimals
-            )
-            self.tkn1_balance = convert_decimals(
-                self.tkn1_balance, n=self.tkn1.decimals
-            )
-        except Exception as e:
-            for i in range(5):
-                try:
-                    session.rollback()
-                    self.tkn0_balance = convert_decimals(
-                        self.tkn0_balance, n=self.tkn0.decimals
-                    )
-                    self.tkn1_balance = convert_decimals(
-                        self.tkn1_balance, n=self.tkn1.decimals
-                    )
-                    break
-                except Exception as e:
-                    logger.error(
-                        f"Retrying {i}/5 correcting decimals of tokens in pool {self.descr}: {e}"
-                    )
-                    time.sleep(5)
-                    if i == 4:
-                        raise ValueError(
-                            f"Error correcting decimals of tokens in pool {self.descr}"
-                        ) from e
-
-    def update_liquidity(self, contract: Contract = None):
-        """
-        Update the liquidity of the pool.
-        """
-
-        contract = self.contract if contract is None else contract
-
-        # try:
-        if self.exchange_name in ["uniswap_v2", "sushiswap_v2"]:
-            self.convert_to_weth_if_eth()
-            is_reversed, tkn0, tkn1 = self.get_tokens_in_order()
-            liquidity = contract.getReserves()
-            tkn0_balance, tkn1_balance = liquidity[0], liquidity[1]
-            self.set_tokens_in_order(is_reversed, tkn0_balance, tkn1_balance)
-        elif self.exchange_name == "bancor_v2":
-            is_reversed, tkn0, tkn1 = self.get_tokens_in_order()
-            tkn0_balance, tkn1_balance = contract.reserveBalances()
-            self.set_tokens_in_order(is_reversed, tkn0_balance, tkn1_balance)
-        elif self.exchange_name == "bancor_v3":
-            is_reversed, tkn0, tkn1 = self.get_tokens_in_order()
-            tkn0_balance, tkn1_balance = contract.tradingLiquidity(tkn1.address)
-            self.set_tokens_in_order(is_reversed, tkn0_balance, tkn1_balance)
-        elif self.exchange_name == "uniswap_v3":
-            """
-            Uniswap V3 uses a different formula for calculating the liquidity of a pool.
-            see https://docs.uniswap.org/contracts/v3/reference/core/interfaces/pool/IUniswapV3PoolState#liquidity
-            """
-            slot0 = self.contract.slot0()
-            self.tick = slot0[1]
-            self.sqrt_price_q96 = slot0[0]
-            self.liquidity = contract.liquidity()
-
-        try:
-            self.block_number = self.exchange_name.blockchain.update_block()
-        except Exception as e:
-            session.rollback()
-            self.block_number = self.exchange_name.blockchain.update_block()
-            logger.warning(f"Rollback while updating block number: {e}")
-
-        if self.exchange_name not in logged_keys:
-            logged_keys.append(self.exchange_name)
-            logger.info(
-                f"Updating: \n"
-                f"exchange_name: {self.exchange_name} \n, "
-                f"pair_name: {self.pair_name} \n"
-                f"fee: {self.fee} \n"
-                f"tkn0: {self.tkn0_balance} \n"
-                f"tkn1: {self.tkn1_balance} \n"
-                f"price: {self.sqrt_price_q96} \n"
-                f"tick: {self.tick} \n"
-                f"liquidity: {self.liquidity} \n"
-                "...\n"
-            )
 
 
 @mapper_registry.mapped
@@ -845,15 +686,4 @@ class Transaction:
     failure_reason: str = field(default=None)
 
 
-sqlalchemy.MetaData()
-if BACKEND == "sqlite":
-    engine = sqlalchemy.create_engine("sqlite:///fastlane.sqlite")
-else:
-    engine = sqlalchemy.create_engine(
-        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/postgres"
-    )
 
-engine.connect()
-mapper_registry.metadata.create_all(engine)
-sesh = sessionmaker(bind=engine)
-session = sesh()

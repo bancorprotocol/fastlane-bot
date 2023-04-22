@@ -75,6 +75,7 @@ BANCOR_V2_CONVERTER_REGISTRY_ADDRESS = "0xC0205e203F423Bcd8B2a4d6f8C8A154b0Aa60F
 FASTLANE_CONTRACT_ADDRESS = "0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB"
 CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
 CABON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
+MULTICALL_CONTRACT_ADDRESS: str = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
 
 # ACCOUNTS SECTION
 #######################################################################################
@@ -102,6 +103,7 @@ COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
 
 # EXCHANGE IDENTIFIERS SECTION
 #######################################################################################
+ETHEREUM_BLOCKCHAIN_NAME = "Ethereum"
 BANCOR_V2_NAME = "bancor_v2"
 BANCOR_V3_NAME = "bancor_v3"
 UNISWAP_V2_NAME = "uniswap_v2"
@@ -183,17 +185,17 @@ FASTLANE_CONTRACT_ADDRESS = w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS)
 
 # SMART CONTRACT INSTANTIATION SECTION
 #######################################################################################
-bancor_network_info = Contract.from_abi(
+BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
     name=BANCOR_V3_NAME,
     address=BANCOR_V3_NETWORK_INFO_ADDRESS,
     abi=BANCOR_V3_NETWORK_INFO_ABI,
 )
-carbon_controller = Contract.from_abi(
+CARBON_CONTROLLER_CONTRACT = Contract.from_abi(
     name=CARBON_V1_NAME,
     address=CARBON_CONTROLLER_ADDRESS,
     abi=CARBON_CONTROLLER_ABI,
 )
-arb_contract = w3.eth.contract(
+BANCOR_ARBITRAGE_CONTRACT = w3.eth.contract(
     address=w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
     abi=FAST_LANE_CONTRACT_ABI,
 )

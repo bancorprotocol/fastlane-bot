@@ -43,7 +43,7 @@ class TransactionHelpers:
     network = Network.ETH_MAINNET
     alchemy = Alchemy(api_key=WEB3_ALCHEMY_PROJECT_ID, network=network, max_retries=3)
     web3 = w3
-    arb_contract = arb_contract
+    arb_contract = BANCOR_ARBITRAGE_CONTRACT
 
     def __post_init__(self):
 
