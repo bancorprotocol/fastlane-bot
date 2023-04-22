@@ -25,9 +25,9 @@ from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams, TxReceipt
 
-from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
+from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.models import Token, session, Pool
+from fastlane_bot.db.models import Token, Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve
 
 from .tradeinstruction import TradeInstruction
@@ -1031,7 +1031,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                     cid = tx["cid"]
                     cid = cid.split("-")[0]
                     tknin_key = tx["tknin"]
-                    curve = session.query(Pool).filter(Pool.cid == cid).first()
+                    curve = self.db.session.query(Pool).filter(Pool.cid == cid).first()
                     (
                         amount_in,
                         amount_out,
@@ -1055,7 +1055,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             else:
 
                 curve_cid = trade.cid
-                curve = session.query(Pool).filter(Pool.cid == curve_cid).first()
+                curve = self.db.session.query(Pool).filter(Pool.cid == curve_cid).first()
                 (
                     amount_in,
                     amount_out,
@@ -1077,4 +1077,4 @@ class TxRouteHandler(TxRouteHandlerBase):
         return tkn0_amt / Decimal("10") ** Decimal(str(tkn0_decimals))
 
     def _cid_to_pool(self, cid: str) -> Pool:
-        return session.query(Pool).filter(Pool.cid == cid).first()
+        return self.db.session.query(Pool).filter(Pool.cid == cid).first()

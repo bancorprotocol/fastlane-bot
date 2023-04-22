@@ -44,14 +44,14 @@ Licensed under MIT
 
 import itertools
 import time
-from typing import Any, Union, Optional, Tuple, List, Dict
-
-#import math
-import pandas as pd
+from dataclasses import dataclass, InitVar
+from typing import Any, Union, Optional
+from typing import List, Dict, Tuple
 from _decimal import Decimal
-#from pandas import DataFrame, Series
 
 from fastlane_bot import config as cfg
+from fastlane_bot.db.manager import DatabaseManager
+from fastlane_bot.db.models import Pool, Token
 from fastlane_bot.helpers import (
     TxSubmitHandler, TxSubmitHandlerBase,
     TxReceiptHandler, TxReceiptHandlerBase,
@@ -59,17 +59,13 @@ from fastlane_bot.helpers import (
     TxHelpers, TxHelpersBase,
     TradeInstruction
 )
-from fastlane_bot.db import DatabaseManager
-from fastlane_bot.models import Pool, session, Token
-from fastlane_bot.tools import tokenscale as ts
-from fastlane_bot.tools.arbgraphs import ArbGraph, plt  # convenience imports
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-
-from dataclasses import dataclass, asdict, InitVar, field
-from typing import List, Dict, Tuple
-
+import fastlane_bot.db.models as models
+import fastlane_bot.config as c
 from . import __VERSION__, __DATE__
+
+
 
 @dataclass
 class CarbonBotBase():
@@ -110,28 +106,30 @@ class CarbonBotBase():
         """
         The post init method.
         """
-        if not genesis_data is None:
-            print(f"WARNING: genesis_data is deprecated. This argument will be removed soon")
-            
+        if genesis_data is not None:
+            print(
+                "WARNING: genesis_data is deprecated. This argument will be removed soon"
+            )
+
         if self.TxSubmitHandlerClass is None:
             self.TxSubmitHandlerClass = TxSubmitHandler
         assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
-        
+
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler
         assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
-        
+
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler
         assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
-        
+
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers
         assert issubclass(self.TxHelpersClass, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
-        
+
         if self.db is None:
             self.db = DatabaseManager(
-                data=self.genesis_data, drop_tables=drop_tables
+                data=self.genesis_data
             )
                     
     def versions(self):
@@ -140,14 +138,8 @@ class CarbonBotBase():
         """
         s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
         s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
-        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph)]
-        #s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale)]
         s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
         return s
-        
-    def seed_pools(self, drop_tables: bool = False):
-        """convenience method for db.seed_pools()"""
-        self.db.seed_pools(drop_tables=drop_tables)
         
     def update_pools(self, drop_tables: bool = False):
         """convenience method for db.update_pools()"""
@@ -166,17 +158,7 @@ class CarbonBotBase():
         CPCContainer
             The container of curves.
         """
-        pools = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Pool)
-            .filter(
-                (Pool.tkn0_balance > 0)
-                | (Pool.tkn1_balance > 0)
-                | (Pool.liquidity > 0)
-                | (Pool.y_0 > 0)
-            )
-            .all()
-        )
+        pools = self.db.get_nonzero_liquidity_pools()
         curves = []
         for p in pools:
             try:
@@ -185,6 +167,8 @@ class CarbonBotBase():
             except:
                 pass
         return CPCContainer(curves)
+
+    
 
 
 @dataclass
@@ -269,26 +253,11 @@ class CarbonBot(CarbonBotBase):
             The best profit and the trade instructions.
         """
         assert mode == "bothin", "parameter not used"
-        cfg.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
+        c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
         best_trade_instructions_df = None
         best_trade_instructions_dic = None
-        # pools = (
-        #     # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-        #     session.query(Pool)
-        #     .filter(
-        #         (Pool.tkn0_balance > 0)
-        #         | (Pool.tkn1_balance > 0)
-        #         | (Pool.liquidity > 0)
-        #         | (Pool.y_0 > 0)
-        #     )
-        #     .all()
-        # )
-        # cfg.logger.debug(f"Number of pools: {len(pools)}")
-        # all_tokens = [p.pair_name.split("/")[0] for p in pools] + [
-        #     p.pair_name.split("/")[1] for p in pools
-        # ]
         all_tokens = CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
@@ -302,7 +271,7 @@ class CarbonBot(CarbonBotBase):
         candidates = []
         for tkn0, tkn1 in combos:
             try:
-                cfg.logger.debug(f"Checking {tkn0} -> {tkn1}")
+                c.logger.debug(f"Checking {tkn0} -> {tkn1}")
                 CC = CCm.bypairs(f"{tkn0}/{tkn1}")
                 pstart = (
                     {
@@ -317,22 +286,22 @@ class CarbonBot(CarbonBotBase):
                     r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
                     assert not r.is_error
                 except Exception as e:
-                    cfg.logger.debug(e, r)
+                    c.logger.debug(e, r)
                     try:
                         r = O.margp_optimizer(tkn1)
                     except Exception as e:
-                        cfg.logger.error(e)
+                        c.logger.error(e)
                         
                 profit_src = -r.result
 
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
 
-                profit = self._get_profit_in_bnt(profit_src, src_token)
+                profit = self._get_profit_in_bnt(profit_src, src_token, tkn0)
                     # TODO: THIS MAY OR MAY NOT GET A PROFIT NUMBER
                     # WE NEED TO DEAL WITH THIS IF IT DOES NOT
-                cfg.logger.debug(f"Profit in {src_token}: {profit_src}")
-                cfg.logger.debug(f"Profit in BNT: {profit}")
+                c.logger.debug(f"Profit in {src_token}: {profit_src}")
+                c.logger.debug(f"Profit in BNT: {profit}")
                 candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token)]
                 if profit > best_profit:
                     best_profit = profit
@@ -340,7 +309,7 @@ class CarbonBot(CarbonBotBase):
                     best_trade_instructions_df = trade_instructions_df
                     best_trade_instructions_dic = trade_instructions_dic
             except Exception as e:
-                cfg.logger.error(e)
+                c.logger.error(e)
         
         if result == self.AO_CANDIDATES:
             return candidates
@@ -351,7 +320,7 @@ class CarbonBot(CarbonBotBase):
             best_src_token,
         )
 
-    def _get_profit_in_bnt(self, profit_src, src_token):
+    def _get_profit_in_bnt(self, profit_src: Decimal, src_token: str, other_token: str) -> Decimal:
         """
         Gets the profit in BNT.
 
@@ -361,19 +330,16 @@ class CarbonBot(CarbonBotBase):
             The profit in the source token.
         src_token: str
             The source token.
+
+        Returns
+        -------
+        Decimal
+            The profit in BNT.
         """
-        # print("BNT HARDCODEDD TODO FIX")
-        # return profit_src
-    
-        if src_token == "BNT-FF1C":
+
+        if src_token == T.BNT:
             return profit_src
-        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
-        pool = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Pool)
-            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
-            .first()
-        )
+        pool = self.db.get_pool_from_exchange_and_token_keys(c.BANCOR_V3_NAME, other_token, src_token)
         bnt = Decimal(pool.tkn0_balance) / 10**18
         src = Decimal(src_token) / 10**pool.tkn1_decimals
         bnt_per_src = bnt / src
@@ -389,7 +355,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            cfg.w3.eth.getBlock(cfg.w3.eth.block_number).timestamp + cfg.DEFAULT_BLOCKTIME_DEVIATION
+            c.w3.eth.getBlock(c.w3.eth.block_number).timestamp + c.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     XS_ARBOPPS = "arbopps"
@@ -452,17 +418,10 @@ class CarbonBot(CarbonBotBase):
         if result == self.XS_AGGTI:
             return agg_trade_instructions
 
-        # ## Order trade instructions
-        # ordered_trade_instructions = self._handle_ordering(
-        #     agg_trade_instructions, best_src_token, tx_route_handler
-        # )
         src_amount = sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count))
-        cfg.logger.debug(f"src_amount: {src_amount}")
-        src_address = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Token).filter(Token.key == best_src_token).first().address
-        )
-        src_address = cfg.w3.toChecksumAddress(src_address)
+        c.logger.debug(f"src_amount: {src_amount}")
+        src_address = self.db.get_token_address_from_token_key(best_src_token)
+        src_address = c.w3.toChecksumAddress(src_address)
         if result == self.XS_ORDTI:
             return agg_trade_instructions, src_amount, src_address
         
@@ -490,25 +449,27 @@ class CarbonBot(CarbonBotBase):
             encoded_trade_instructions, src_address, route_struct, src_amount
         )
 
+
+
     def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
         tx_submit_handler = self.TxSubmitHandlerClass(
             trade_instructions,
             src_address=src_address,
             src_amount=trade_instructions[0].amtin_wei,
         )
-        cfg.logger.debug(f"route_struct: {route_struct}")
+        c.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
         tx_submit_handler.token_contract.functions.approve(
-            cfg.w3.toChecksumAddress(cfg.FASTLANE_CONTRACT_ADDRESS), 0
+            c.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS), 0
         ).transact(tx_details)
         tx_submit_handler.token_contract.functions.approve(
-            cfg.w3.toChecksumAddress(cfg.FASTLANE_CONTRACT_ADDRESS), src_amount
+            c.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
-        cfg.logger.debug("src_address", src_address)
+        c.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount
         )
-        return cfg.w3.eth.wait_for_transaction_receipt(tx)
+        return  c.w3.eth.wait_for_transaction_receipt(tx)
 
     def _handle_ordering(
         self, agg_trade_instructions, best_src_token, tx_route_handler
@@ -586,22 +547,22 @@ class CarbonBot(CarbonBotBase):
                 try:
                     tx_hash = self._execute_strategy(flashloan_tokens, CCm)
                     if tx_hash:
-                        cfg.logger.info(
+                         c.logger.info(
                             f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                         )
                     time.sleep(
                         self.polling_interval
                     )  # Sleep for 60 seconds before searching for opportunities again
                 except Exception as e:
-                    cfg.logger.debug(e)
+                    c.logger.debug(e)
                     time.sleep(self.polling_interval)
         else:
             try:
                 tx_hash = self._execute_strategy(flashloan_tokens, CCm)
             except Exception as e:
-                cfg.logger.warning(e)
+                c.logger.warning(e)
                 tx_hash = None
             if tx_hash:
-                cfg.logger.info(
+                 c.logger.info(
                     f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                 )

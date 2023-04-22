@@ -4,33 +4,22 @@ Submit handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-# import itertools
-# import random
-# import time
+import json
 from dataclasses import dataclass, asdict
-from typing import List, Union, Any, Dict, Tuple, Optional
+from typing import List, Any, Dict
 
-# import eth_abi
-# import math
-# import pandas as pd
-# import requests
-# from _decimal import Decimal
-# from alchemy import Network, Alchemy
+import requests
 from brownie.network.transaction import TransactionReceipt
 from eth_utils import to_hex
-from web3 import Web3
 from web3._utils.threads import Timeout
 from web3._utils.transactions import fill_nonce
 from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
+from web3.types import TxParams
 
-from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.models import Token, session, Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve
-
+import fastlane_bot.config as c
 from .routehandler import RouteStruct
+from ..data.abi import ERC20_ABI
 
 
 @dataclass
@@ -69,15 +58,15 @@ class TxSubmitHandler(TxSubmitHandlerBase):
     src_address: str
 
     def __post_init__(self):
-        self.w3 = w3
-        self.arb_contract = BANCOR_ARBITRAGE_CONTRACT
-        self.bancor_network_info = BANCOR_NETWORK_INFO_CONTRACT
+        self.w3 = c.w3
+        self.arb_contract = c.BANCOR_ARBITRAGE_CONTRACT
+        self.bancor_network_info = c.BANCOR_NETWORK_INFO_CONTRACT
         # self.token_contract = Contract.from_abi(
         #     name="Token",
         #     address=self.src_address,
         #     abi=ERC20_ABI,
         # )
-        self.token_contract = w3.eth.contract(address=self.src_address, abi=ERC20_ABI)
+        self.token_contract = c.w3.eth.contract(address=self.src_address, abi=ERC20_ABI)
 
     def _get_deadline(self) -> int:
         """
@@ -90,7 +79,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         """
         return (
             self.w3.eth.getBlock(self.w3.eth.block_number).timestamp
-            + DEFAULT_BLOCKTIME_DEVIATION
+            + c.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     def _get_transaction(self, tx_details: TxParams) -> TxParams:
@@ -107,10 +96,10 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         TxParams
             The transaction details.
         """
-        return fill_nonce(w3, tx_details)
+        return fill_nonce(c.w3, tx_details)
 
     def _get_transaction_receipt(
-        self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT
+        self, tx_hash: str, timeout: int = c.DEFAULT_TIMEOUT
     ) -> TransactionReceipt:
         """
         Gets the transaction receipt for a given transaction hash.
@@ -130,7 +119,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
 
     def _get_transaction_receipt_with_timeout(
-        self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT, poll_latency: int = 0.1
+        self, tx_hash: str, timeout: int = c.DEFAULT_TIMEOUT, poll_latency: int = 0.1
     ) -> TransactionReceipt:
         """
         Gets the transaction receipt for a given transaction hash.
@@ -151,7 +140,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         """
         with Timeout(timeout) as _timeout:
             while True:
-                tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+                tx_receipt = c.w3.eth.getTransactionReceipt(tx_hash)
                 if tx_receipt is not None:
                     return tx_receipt
                 _timeout.sleep(poll_latency)
@@ -159,7 +148,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
     def _get_transaction_receipt_with_timeout_and_retries(
         self,
         tx_hash: str,
-        timeout: int = DEFAULT_TIMEOUT,
+        timeout: int = c.DEFAULT_TIMEOUT,
         poll_latency: int = 0.1,
         retries: int = 5,
     ) -> TransactionReceipt:
@@ -200,7 +189,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         int
             The gas price for the transaction.
         """
-        return int(w3.eth.gas_price * DEFAULT_GAS_PRICE_OFFSET)
+        return int(c.w3.eth.gas_price * c.DEFAULT_GAS_PRICE_OFFSET)
 
     def _get_gas(self, tx_function: ContractFunction, address: str) -> int:
         """
@@ -242,7 +231,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
     def _query_alchemy_api_gas_methods(self, method: str, params: list = None):
         response = requests.post(
-            ALCHEMY_API_URL,
+            c.ALCHEMY_API_URL,
             json=self._get_payload(method=method, params=params),
             headers=self.headers,
         )
@@ -253,11 +242,11 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         Gets the transaction details for the transaction. (testing purposes)
         """
         return {
-            "gasPrice": DEFAULT_GAS_PRICE,
-            "gas": DEFAULT_GAS,
-            "from": self.w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
+            "gasPrice": c.DEFAULT_GAS_PRICE,
+            "gas": c.DEFAULT_GAS,
+            "from": self.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS),
             "nonce": self.w3.eth.get_transaction_count(
-                self.w3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS)
+                self.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS)
             ),
         }
 
@@ -286,12 +275,12 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         print(
             f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
         )
-        address = w3.toChecksumAddress(BINANCE14_WALLET_ADDRESS)
+        address = c.w3.toChecksumAddress(c.BINANCE14_WALLET_ADDRESS)
         return self.arb_contract.functions.flashloanAndArb(
             route_struct, src_address, src_amount
         ).transact(
             {
-                "gas": DEFAULT_GAS,
+                "gas": c.DEFAULT_GAS,
                 "from": address,
                 "nonce": self._get_nonce(address),
                 "gasPrice": 0,
@@ -346,8 +335,8 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         str
             The transaction hash.
         """
-        return w3.eth.send_raw_transaction(
-            to_hex(w3.eth.account.sign_transaction(tx_details, key).rawTransaction)
+        return c.w3.eth.send_raw_transaction(
+            to_hex(c.w3.eth.account.sign_transaction(tx_details, key).rawTransaction)
         )
 
     def _get_nonce(self, address: str) -> int:
@@ -364,7 +353,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         int
             The nonce for the transaction.
         """
-        return w3.eth.getTransactionCount(address)
+        return c.w3.eth.getTransactionCount(address)
 
     _get_gas_estimate = _get_gas
 

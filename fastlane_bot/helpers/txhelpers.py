@@ -25,9 +25,9 @@ from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams, TxReceipt
 
-from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
+from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.models import Token, session, Pool
+from fastlane_bot.db.models import Token, Pool
 
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 
@@ -139,7 +139,7 @@ class TransactionHelpers:
         Return the current liquidity of the Bancor V3 BNT + ETH pool
         """
         pool = (
-            session.query(Pool)
+            self.db.session.query(Pool)
             .filter(
                 Pool.exchange_name == BANCOR_V3_NAME, Pool.tkn1_address == ETH_ADDRESS
             )

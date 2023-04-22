@@ -73,14 +73,6 @@ class Blockchain:
     name: Optional[str] = None
     block_number: Optional[int] = None
 
-    def update_block(self) -> int:
-        """
-        Updates the block number via web3 and returns the new block number.
-        """
-        self.block_number = w3.eth.blockNumber
-        session.commit()
-        return self.block_number
-
 
 @mapper_registry.mapped
 @dataclass

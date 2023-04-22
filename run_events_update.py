@@ -7,19 +7,24 @@ Licensed under MIT
 import asyncio
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config import logger
-from fastlane_bot.db import EventUpdater
-from fastlane_bot.models import session
+from fastlane_bot.db.events import EventHandler
+from fastlane_bot.db.manager import DatabaseManager
+import fastlane_bot.config as c
 
-session.rollback()
+# TODO: Refactor this with click inputs like in the run.py file
+
+db = DatabaseManager()
+
+# db.drop_all_tables()
 
 bot = CarbonBot(
-    polling_interval=5,
+    db=db,
+    polling_interval=c.DEFAULT_POLL_INTERVAL,
 )
-
-updater = EventUpdater(
-    db=bot.db,
+db.update_pools()
+updater = EventHandler(
+    db=db,
 )
-
 
 async def create_tasks_and_run(updater):
     tasks = []
@@ -31,7 +36,6 @@ async def create_tasks_and_run(updater):
         logger.info(f"Created task for {exchange} {_filter}")
 
     await asyncio.gather(*tasks)
-
 
 try:
     asyncio.run(create_tasks_and_run(updater))

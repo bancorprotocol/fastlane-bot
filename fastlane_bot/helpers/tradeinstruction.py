@@ -4,29 +4,13 @@ Helpers for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-# import itertools
-# import random
-# import time
-from dataclasses import dataclass, asdict
-from typing import List, Union, Any, Dict, Tuple, Optional
-
-# import eth_abi
-# import math
-# import pandas as pd
-# import requests
+from dataclasses import dataclass
+from typing import Union
 from _decimal import Decimal
-from alchemy import Network, Alchemy
-from brownie.network.transaction import TransactionReceipt
-from eth_utils import to_hex
-from web3 import Web3
-from web3._utils.threads import Timeout
-from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
-from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
-from fastlane_bot.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.models import Token, session, Pool
+
+import fastlane_bot.config as c
+from fastlane_bot.db.models import Token, Pool
+
 
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 
@@ -129,7 +113,7 @@ class TradeInstruction:
         if self.pair_sorting is None:
             self.pair_sorting = ""
         self._exchange_name = self._get_pool().exchange_name
-        self._exchange_id = EXCHANGE_IDS[self._exchange_name]
+        self._exchange_id = c.EXCHANGE_IDS[self._exchange_name]
 
     @property
     def exchange_id(self) -> int:
@@ -219,7 +203,7 @@ class TradeInstruction:
         Token
             The token object.
         """
-        return session.query(Token).filter(Token.key == token_key).first()
+        return self.db.session.query(Token).filter(Token.key == token_key).first()
 
     def _get_pool(self) -> Pool:
         """
@@ -231,7 +215,7 @@ class TradeInstruction:
             The pool object.
         """
 
-        return session.query(Pool).filter(Pool.cid == self.cid).first()
+        return self.db.session.query(Pool).filter(Pool.cid == self.cid).first()
 
     @staticmethod
     def _convert_to_wei(amount: Union[int, Decimal, float], decimals: int) -> int:

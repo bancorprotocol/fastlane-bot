@@ -14,7 +14,7 @@ import requests
 from _decimal import Decimal
 from web3 import Web3
 
-from fastlane_bot.abi import *
+from fastlane_bot.data.abi import *
 from fastlane_bot.config import *
 
 
@@ -214,7 +214,7 @@ class EncodedOrder:
     @classmethod
     def encodeRate(cls, value):
         "encodes a rate float to an A,B (using cls.ONE for scaling)"
-        data = int(sqrt(value) * cls.ONE)
+        data = int(math.sqrt(value) * cls.ONE)
         length = cls.bitLength(data // cls.ONE)
         return (data >> length) << length
 

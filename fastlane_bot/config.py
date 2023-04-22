@@ -11,7 +11,7 @@ from decimal import Decimal
 from brownie import Contract
 from dotenv import load_dotenv
 
-from fastlane_bot.abi import (
+from fastlane_bot.data.abi import (
     BANCOR_V3_NETWORK_INFO_ABI,
     CARBON_CONTROLLER_ABI,
     FAST_LANE_CONTRACT_ABI,
@@ -40,6 +40,7 @@ DEFAULT_GAS = 950_000
 DEFAULT_GAS_PRICE = 0
 DEFAULT_GAS_PRICE_OFFSET = 1.05
 DEFAULT_GAS_SAFETY_OFFSET = 25_000
+DEFAULT_POLL_INTERVAL = 12
 VERBOSE = "INFO"
 DEFAULT_BLOCKTIME_DEVIATION = 13 * 500  # 10 block time deviation
 DEFAULT_MIN_PROFIT = Decimal("1")
@@ -160,6 +161,9 @@ CARBON_STRATEGY_DELETED = f"{CARBON_V1_NAME}_StrategyDeleted"
 CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
 CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
+ETHEREUM_MAINNET_PROVIDER = (
+    f"https://eth-mainnet.alchemyapi.io/v2/4STfZVUNXeUfT9DyOl2kDRXOLaiAobrl"
+)
 # ETHEREUM NETWORK CONNECTION SECTION
 #######################################################################################
 if DEFAULT_NETWORK == "mainnet":
