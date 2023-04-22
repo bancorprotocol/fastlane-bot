@@ -162,7 +162,7 @@ class CarbonBotBase():
         curves = []
         for p in pools:
             try:
-                curves += p.to_cpc("float")
+                curves += p.to_cpc(numerical_type="float", db=self.db)
                 time.sleep(0.00000001)  # to avoid unstable results
             except:
                 pass

@@ -349,42 +349,6 @@ class Pool:
             else f"{self.exchange_name} {self.pair_name} {self.fee}"
         )
 
-    @property
-    def tkn0_decimals(self):
-        """
-        Returns the number of decimals for tkn_address 0.
-        """
-        return self.tkn0.decimals
-
-    @property
-    def tkn1_decimals(self):
-        """
-        Returns the number of decimals for tkn_address 1.
-        """
-        return self.tkn1.decimals
-
-    @property
-    def tkn0(self):
-        """
-        Instance of Token for tkn_address 0. Used for convenience to get the tkn_address in the pool.
-        """
-        return self.pair.tkn0
-
-    @tkn0.setter
-    def tkn0(self, value):
-        self.pair.tkn0 = value
-
-    @property
-    def tkn1(self):
-        """
-        Instance of Token for tkn_address 1. Used for convenience to get the tkn_address in the pool.
-        """
-        return self.pair.tkn1
-
-    @tkn1.setter
-    def tkn1(self, value):
-        self.pair.tkn1 = value
-
     def update(self, new):
         for key, value in new.items():
             if hasattr(self, key):
@@ -411,30 +375,36 @@ class Pool:
         return typed_args
 
     def to_cpc(
-        self, numerical_type: str = "float"
+        self, numerical_type: str = "float", db: Any = None
     ) -> Union[ConstantProductCurve, List[Any]]:
         """
         Returns an instance of the ConstantProductCurve class.
 
         :param numerical_type: The type of numerical values. Options are "decimal" or "float".
         """
+        tkn0 = db.query(Token).filter(Token.address == self.tkn0_address).first()
+        tkn1 = db.query(Token).filter(Token.address == self.tkn1_address).first()
 
         cpc = ConstantProductCurve
         self.fee = float(Decimal(self.fee))
         if self.exchange_name == UNISWAP_V3_NAME:
-            out = self._univ3_to_cpc(cpc)
+            out = self._univ3_to_cpc(cpc, tkn0, tkn1)
         elif self.exchange_name == CARBON_V1_NAME:
-            out = self._carbon_to_cpc(cpc)
+            out = self._carbon_to_cpc(cpc, tkn0, tkn1)
         elif self.exchange_name in SUPPORTED_EXCHANGES:
-            out = self._other_to_cpc(cpc)
+            out = self._other_to_cpc(cpc, tkn0, tkn1)
         else:
             raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
 
         return out
 
-    def _other_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
+    def _other_to_cpc(self, cpc: ConstantProductCurve, tkn0: Token, tkn1: Token) -> List[Any]:
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
+
+        :param cpc: ConstantProductCurve class
+        :param tkn0: Token 0
+        :param tkn1: Token 1
 
         :x_tknb:    current pool liquidity in token x (base token of the pair)*
         :y_tknq:    current pool liquidity in token y (quote token of the pair)*
@@ -446,8 +416,8 @@ class Pool:
         arg_type = Decimal
 
         # convert tkn0_balance and tkn1_balance to Decimal from wei
-        tkn0_balance = self.convert_decimals(self.tkn0_balance, self.tkn0_decimals)
-        tkn1_balance = self.convert_decimals(self.tkn1_balance, self.tkn1_decimals)
+        tkn0_balance = self.convert_decimals(self.tkn0_balance, tkn0.decimals)
+        tkn1_balance = self.convert_decimals(self.tkn1_balance, tkn1.decimals)
 
         # create a typed-dictionary of the arguments
         typed_args = {
@@ -464,7 +434,7 @@ class Pool:
         return [cpc.from_univ2(**self._validate_arg_types(typed_args))]
 
     def _carbon_to_cpc(
-        self, cpc: ConstantProductCurve, idx: int = 0
+        self, cpc: ConstantProductCurve, tkn0, tkn1
     ) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
@@ -513,11 +483,11 @@ class Pool:
 
             def decimal_converter(idx):
                 if idx == 0:
-                    dec0 = self.tkn0_decimals
-                    dec1 = self.tkn1_decimals
+                    dec0 = tkn0.decimals
+                    dec1 = tkn1.decimals
                 else:
-                    dec0 = self.tkn1_decimals
-                    dec1 = self.tkn0_decimals
+                    dec0 = tkn1.decimals
+                    dec1 = tkn0.decimals
                 return Decimal(10 ** (dec0 - dec1))
 
             decimal_converter = decimal_converter(i)
@@ -525,10 +495,10 @@ class Pool:
             p_start = Decimal(encoded_order.p_start) * decimal_converter
             p_end = Decimal(encoded_order.p_end) * decimal_converter
             yint = Decimal(yint) / (
-                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
+                Decimal("10") ** [tkn1.decimals, tkn0.decimals][i]
             )
             y = Decimal(y) / (
-                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
+                Decimal("10") ** [tkn1.decimals, tkn0.decimals][i]
             )
 
             tkny = 1 if i == 0 else 0
@@ -549,12 +519,14 @@ class Pool:
             lst.append(cpc.from_carbon(**self._validate_arg_types(typed_args)))
         return lst
 
-    def _univ3_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
+    def _univ3_to_cpc(self, cpc: ConstantProductCurve, tkn0: Token, tkn1: Token) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.
 
         :param arg_type: The type of numerical values. (Decimal or float)
         :param cpc: The ConstantProductCurve class.
+        :param tkn0: The token0 of the pool.
+        :param tkn1: The token1 of the pool.
 
         :return: ConstantProductCurve
             :k:        pool constant k = xy [x=k/y, y=k/x]
@@ -566,6 +538,7 @@ class Pool:
             :fee:      fee (optional); eg 0.01 for 1%
             :descr:    description (optional; eg. "UniV3 0.1%")
             :params:   additional parameters (optional)
+
         """
 
         univ3_helper = UniV3Helper(
@@ -575,8 +548,8 @@ class Pool:
             tick_spacing=self.tick_spacing,
             sqrt_price_q96=self.sqrt_price_q96,
             liquidity=self.liquidity,
-            tkn0_decimal=self.tkn0_decimals,
-            tkn1_decimal=self.tkn1_decimals,
+            tkn0_decimal=tkn0.decimals,
+            tkn1_decimal=tkn1.decimals,
         )
 
         P_marg = univ3_helper.Pmarg
