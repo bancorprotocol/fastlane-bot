@@ -101,18 +101,6 @@ class Exchange:
     name: Optional[str] = None
     blockchain_name: Optional[str] = None
 
-    @property
-    def blockchain(self) -> Blockchain:
-        """
-        The blockchain this exchange is on.
-        :return: Instance of Blockchain
-        """
-        return (
-            session.query(Blockchain)
-            .filter(Blockchain.name == self.blockchain_name)
-            .first()
-        )
-
     def __post_init__(self):
         self.id = EXCHANGE_IDS[self.name]
 
@@ -217,20 +205,6 @@ class Pair:
     tkn0_key: Optional[str] = None
     tkn1_key: Optional[str] = None
 
-    @property
-    def tkn0(self):
-        """
-        Instance of Token for tkn_address 0.
-        """
-        return session.query(Token).filter(Token.key == self.name.split("/")[0]).first()
-
-    @property
-    def tkn1(self):
-        """
-        Instance of Token for tkn_address 1.
-        """
-        return session.query(Token).filter(Token.key == self.name.split("/")[1]).first()
-
     def to_eth(self):
         """
         True if the pair is ETH/TKN
@@ -290,7 +264,7 @@ class Pool:
             nullable=False,
             default=datetime.utcnow,
             index=True,
-            unique=True,
+            unique=False,
             onupdate=datetime.utcnow,
         ),
         Column(
@@ -374,13 +348,6 @@ class Pool:
             if self.descr is not None
             else f"{self.exchange_name} {self.pair_name} {self.fee}"
         )
-
-    @property
-    def pair(self):
-        """
-        Instance of Pair for this pool. Used for convenience to get the tokens in the pool.
-        """
-        return session.query(Pair).filter(Pair.name == self.pair_name).first()
 
     @property
     def tkn0_decimals(self):
