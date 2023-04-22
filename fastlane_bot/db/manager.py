@@ -4,7 +4,7 @@ Database manager object for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field
 from typing import Tuple, List, Dict, Any, Optional
 
 import brownie
@@ -14,7 +14,6 @@ from brownie import Contract
 from joblib import parallel_backend, Parallel, delayed
 from sqlalchemy import MetaData, func
 from sqlalchemy.orm import Session, sessionmaker
-from web3.datastructures import AttributeDict
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI, BANCOR_V3_POOL_COLLECTION_ABI, UNISWAP_V2_POOL_ABI, \
     UNISWAP_V3_POOL_ABI, CARBON_CONTROLLER_ABI, ERC20_ABI
@@ -28,6 +27,16 @@ class DatabaseManager:
     """
     Factory class for creating and managing pools.
 
+    Parameters
+    ----------
+    session : Session
+        The database session
+    engine : sqlalchemy.engine
+        The database engine
+    metadata : MetaData
+        The database metadata
+    data : pd.DataFrame
+        The dataframe containing the pools to add to the database
 
     """
 
@@ -108,7 +117,7 @@ class DatabaseManager:
         Creates the Ethereum chain in the database
         """
         blockchain = models.Blockchain(name=c.ETHEREUM_BLOCKCHAIN_NAME)
-        blockchain.update_block()
+        blockchain.block_number = c.w3.eth.blockNumber
         self.session.add(blockchain)
         self.session.commit()
 
@@ -118,6 +127,12 @@ class DatabaseManager:
         """
         models.mapper_registry.metadata.create_all(self.engine)
 
+    @property
+    def exchange_list(self) -> List[str]:
+        """
+        Returns the list of exchanges
+        """
+        return [x.name for x in self.session.query(models.Exchange).all()]
 
     def _get_next_value(self, attribute: str) -> int:
         """
@@ -165,7 +180,6 @@ class DatabaseManager:
         """
         return self.get_pool_lists()[2]
 
-
     def update_pools(self, drop_tables: bool = False):
         """
         Updates all pools. Used for testing in notebooks only. In production, use the run_events_update.py script.
@@ -180,7 +194,7 @@ class DatabaseManager:
 
         self.update_all_carbon_strategies()
 
-        self.update_liquidity_multicall(self.bancor_v3_pool_list, c.BANCOR_NETWORK_INFO_CONTRACT)
+        self.update_liquidity_multicall(self.bancor_v3_pool_list)
 
         with parallel_backend("threading", n_jobs=1):
             Parallel()(
@@ -209,13 +223,12 @@ class DatabaseManager:
             updated_params = self.get_pool_fee_and_liquidity(
                 exchange_name, pool_contract, pool_address
             )
-            self.session.query(models.Pool).filter_by(address=pool_address).first().update(updated_params)
+            self.session.query(models.Pool).filter(models.Pool.address == pool_address).first().update(updated_params)
             self.session.commit()
         except Exception as e:
             c.logger.warning(
                 f"Failed to update pool for {exchange_name} {pool_address} {e}"
             )
-
 
     def get_pool_lists(self) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]], List[Tuple[str, str]]]:
         """
@@ -272,7 +285,7 @@ class DatabaseManager:
         return self.session.query(models.Token).filter(models.Token.address == address).first().key
 
     def _get_or_create_pool_noevents(
-        self, exchange_name: str = None, pool_address: str = None
+            self, exchange_name: str = None, pool_address: str = None
     ) -> models.Pool:
         """
         Creates a pool in the database. This method is slower because it calls contracts individually instead of using
@@ -299,22 +312,24 @@ class DatabaseManager:
             tkn0 = self.get_or_create_token(tkn0_address)
             tkn1 = self.get_or_create_token(tkn1_address)
             pair = self.get_or_create_pair(tkn0_address, tkn1_address)
-            common_data = self.get_common_data_for_pool(
+            common_data = dict(
+                id=self.next_id,
                 cid=str(self.next_cid),
                 exchange_name=exchange_name,
                 pair_name=pair.name,
-                pool_address=pool_address,
+                address=pool_address,
                 tkn0_address=tkn0_address,
                 tkn1_address=tkn1_address,
                 tkn0_key=tkn0.key,
                 tkn1_key=tkn1.key,
+                last_updated_block=c.w3.eth.blockNumber
             )
             other_params = self.get_pool_fee_and_liquidity(
                 exchange_name, pool_contract, tkn1_address
             )
             self.commit_pool(common_data, other_params)
-            return self.session.query(models.Pool).filter(models.Pool.exchange_name==exchange_name,
-                                                          models.Pool.address==pool_address).first()
+            return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange_name,
+                                                          models.Pool.address == pool_address).first()
 
         except Exception as e:
             c.logger.warning(
@@ -323,7 +338,7 @@ class DatabaseManager:
 
     @staticmethod
     def get_token_addresses_for_pool(
-        exchange_name: str, pool_address: str, pool_contract: Contract
+            exchange_name: str, pool_address: str, pool_contract: Contract
     ) -> Tuple[str, str]:
         """
         Gets the token addresses for a pool
@@ -374,6 +389,9 @@ class DatabaseManager:
             self.session.add(pool)
             self.session.commit()
         except Exception as e:
+            c.logger.warning(
+                f"Failed to commit pool pool_params={pool_params}, - {e}, {e.__traceback__}, rolling back..."
+            )
             self.session.rollback()
             try:
                 models.Pool(**pool_params)
@@ -408,11 +426,12 @@ class DatabaseManager:
                 abi=BANCOR_V2_CONVERTER_ABI,
             )
         elif exchange_name == c.BANCOR_V3_NAME:
-            return initialize_contract(
-                web3=c.w3,
-                address=c.w3.toChecksumAddress(pool_address),
-                abi=BANCOR_V3_POOL_COLLECTION_ABI,
-            )
+            # return initialize_contract(
+            #     web3=c.w3,
+            #     address=c.w3.toChecksumAddress(pool_address),
+            #     abi=BANCOR_V3_POOL_COLLECTION_ABI,
+            # )
+            return c.BANCOR_NETWORK_INFO_CONTRACT
         elif exchange_name in c.UNIV2_FORKS:
             return initialize_contract(
                 web3=c.w3,
@@ -436,10 +455,10 @@ class DatabaseManager:
 
     @staticmethod
     def get_pool_fee_and_liquidity(
-        exchange_name: str,
-        pool_contract: Contract,
-        tkn1_address: str,
-        processed_event: Any = None,
+            exchange_name: str,
+            pool_contract: Contract,
+            tkn1_address: str,
+            processed_event: Any = None,
     ) -> Dict[str, Any]:
         """
         Gets the pool info for a given pair of tokens on Bancor V3
@@ -542,7 +561,8 @@ class DatabaseManager:
         self.session.commit()
         return self.session.query(models.Pair).filter(models.Pair.name == pair_name).first()
 
-    def pair_name_from_token_keys(self, tkn0_key: str, tkn1_key: str) -> str:
+    @staticmethod
+    def pair_name_from_token_keys(tkn0_key: str, tkn1_key: str) -> str:
         """
         Creates a pair name from the token keys
 
@@ -560,7 +580,8 @@ class DatabaseManager:
         """
         return f"{tkn0_key}/{tkn1_key}"
 
-    def _initialize_token(self, address: str, symbol: str, decimals: int, name: str) -> models.Token:
+    @staticmethod
+    def _initialize_token(address: str, symbol: str, decimals: int, name: str) -> models.Token:
         """
         Initializes a token object with the provided details
 
@@ -621,7 +642,6 @@ class DatabaseManager:
             name=contract.caller.name(),
         )
 
-
     def get_or_create_token(self, address: str) -> models.Token:
         """
         Gets or creates a token in the database
@@ -640,7 +660,7 @@ class DatabaseManager:
         tkn = self.session.query(models.Token).filter(models.Token.address == address).first()
         if tkn:
             return tkn
-        tkn = DatabaseManager.tkn_from_address(address)
+        tkn = self.tkn_from_address(address)
         tkn_symbol = tkn.symbol
         tkn_address = tkn.address
         tkn_key = self.token_key_from_symbol_and_address(tkn_address, tkn_symbol)
@@ -734,7 +754,7 @@ class DatabaseManager:
         return self.session.query(models.Pool).filter(models.Pool.address == address).first()
 
     def update_liquidity_multicall(
-        self, pools: List[Tuple[str, str]], contract: Contract
+            self, pools: List[Tuple[str, str]]
     ):
         """
         Setup Bancor V3 pools with multicall to improve efficiency
@@ -765,7 +785,7 @@ class DatabaseManager:
                         continue
 
                     if exchange == c.BANCOR_V3_NAME:
-                        print("updating bancor v3 pool")
+
                         tkn0_address, tkn1_address = c.BNT_ADDRESS, pool_address
                         self.get_or_create_token(tkn0_address)
                         self.get_or_create_token(tkn1_address)
@@ -832,7 +852,7 @@ class DatabaseManager:
 
     @staticmethod
     def get_strategies_by_pair(
-        token0: str, token1: str, start_idx: int, end_idx: int
+            token0: str, token1: str, start_idx: int, end_idx: int
     ) -> List[int]:
         """
         Returns a list of strategy ids for the specified pair, given a start and end index
@@ -869,8 +889,8 @@ class DatabaseManager:
         List[int]
             A list of strategy ids for the specified pair
         """
-        num_strategies = self.get_strategies_count_by_pair(pair)
-        return self.get_strategies_by_pair(pair, 0, num_strategies)
+        num_strategies = self.get_strategies_count_by_pair(pair[0], pair[1])
+        return self.get_strategies_by_pair(pair[0], pair[1], 0, num_strategies)
 
     def get_all_carbon_strategies(self):
         """
@@ -881,7 +901,6 @@ class DatabaseManager:
             strats = [strategy for pair in all_pairs for strategy in self.get_strategies(pair)]
 
         return strats
-
 
     def update_all_carbon_strategies(self):
         """
@@ -907,7 +926,7 @@ class DatabaseManager:
         Any
             A generator of the chunks
         """
-        return (seq[pos : pos + size] for pos in range(0, len(seq), size))
+        return (seq[pos: pos + size] for pos in range(0, len(seq), size))
 
     def get_carbon_strategies_multicall(self, strategy_ids: List[int]) -> List[Any]:
         """
@@ -968,10 +987,11 @@ class DatabaseManager:
                 if last_updated_block is None:
                     last_updated_block = c.w3.eth.blockNumber
                 common_data = dict(
+                    id=self.next_id,
                     cid=strategy_id,
                     exchange_name=c.CARBON_V1_NAME,
                     pair_name=pair.name,
-                    pool_address=c.CARBON_CONTROLLER_ADDRESS,
+                    address=c.CARBON_CONTROLLER_ADDRESS,
                     tkn0_address=tkn0_address,
                     tkn1_address=tkn1_address,
                     tkn0_key=tkn0.key,
@@ -990,7 +1010,7 @@ class DatabaseManager:
                 }
                 self.commit_pool(common_data, other_params)
             except Exception as e:
-                c.logger.warning(f"Error updating Carbon strategy: {strategy_id}")
+                c.logger.warning(f"Error updating Carbon strategy {strategy}")
                 c.logger.warning(e)
                 continue
 
@@ -1010,12 +1030,13 @@ class DatabaseManager:
             The last block from which we collected 0.0-data-archive for a specific exchange.
         """
         try:
-            return self.session.query(models.Exchange).filter(models.Exchange.exchange_name == exchange_name).first().last_updated_block
+            return self.session.query(models.Exchange).filter(
+                models.Exchange.exchange_name == exchange_name).first().last_updated_block
         except AttributeError:
             return "latest"
 
     def get_pool_from_identifier(
-        self, exchange_name: str = None, pool_identifier: Any = None
+            self, exchange_name: str = None, pool_identifier: Any = None
     ) -> Optional[models.Pool or None]:
         """
         Gets a Pool object using different identifiers. For Carbon, it uses the pool's CID. For Bancor V3, it uses TKN 1 address.
@@ -1051,12 +1072,8 @@ class DatabaseManager:
         else:
             return self.session.query(models.Pool).filter(models.Pool.address == pool_identifier).first()
 
-    def get_or_create_pool(
-        self,
-        exchange_name: str = None,
-        pool_identifier: str = None,
-        processed_event: Dict[str, Any] = None,
-    ) -> models.Pool:
+    def get_or_create_pool(self, exchange_name: str = None, pool_identifier: str = None,
+                           processed_event: Dict[str, Any] = None) -> models.Pool:
         """
         Creates a pool in the database
 
@@ -1075,144 +1092,146 @@ class DatabaseManager:
             The Pool object
 
         """
-        try:
-            if processed_event is None:
-                return self._get_or_create_pool_noevents(
-                    exchange_name, pool_identifier
-                )
+        if processed_event is None:
+            return self._get_or_create_pool_noevents(exchange_name, pool_identifier)
 
-            pool = self.get_pool_from_identifier(
-                exchange_name=exchange_name, pool_identifier=pool_identifier
-            )
-            if pool:
-                return pool
-
-            (
-                block_number,
-                cid,
-                pool_address,
-                pool_contract,
-                tkn0_address,
-                tkn1_address,
-                exchange_name,
-            ) = self._parse_processed_event(
-                exchange_name, pool_identifier, processed_event
-            )
-            tkn0 = self.get_or_create_token(tkn0_address)
-            tkn1 = self.get_or_create_token(tkn1_address)
-            pair = self.get_or_create_pair(tkn0_address, tkn1_address)
-            common_data = self.get_common_data_for_pool(
-                cid=str(cid),
-                exchange_name=exchange_name,
-                pair_name=pair.name,
-                tkn0_address=tkn0_address,
-                tkn1_address=tkn1_address,
-                tkn0_key=tkn0.key,
-                tkn1_key=tkn1.key,
-                pool_address=pool_address,
-                last_updated_block=block_number,
-            )
-            other_params = {"fee": self.get_pool_fee(exchange_name, pool_contract)}
-            carbon_params = (
-                {
-                    "y_0": processed_event["order0"][0],
-                    "z_0": processed_event["order0"][1],
-                    "A_0": processed_event["order0"][2],
-                    "B_0": processed_event["order0"][3],
-                    "y_1": processed_event["order1"][0],
-                    "z_1": processed_event["order1"][1],
-                    "A_1": processed_event["order1"][2],
-                    "B_1": processed_event["order1"][3],
-                }
-                if exchange_name == CARBON_V1_NAME
-                else {}
-            )
-            all_params = {**common_data, **other_params, **carbon_params}
-            # all_params['cid'] = str(processed_event['cid'])
-            logger.debug(f"all_params={all_params}")
-            try:
-                pool = Pool(**all_params)
-                session.add(pool)
-                session.commit()
-                logger.info(f"Successfully created pool!!!: {all_params}")
-                return None
-            except Exception as e:
-                return self._extracted_from_get_or_create_pool(e)
-        except Exception as e:
-            return self._extracted_from_get_or_create_pool(e)
-
-    def _extracted_from_get_or_create_pool(self, e):
-        session.rollback()
-        logger.warning(e)
-        return None
-
-    def _parse_processed_event(
-        self, exchange_name: str, pool_identifier: str, processed_event: Dict[str, Any]
-    ):
-        block_number = processed_event["block_number"]
-        if CARBON_V1_NAME in exchange_name:
-            exchange_name = CARBON_V1_NAME
-            pool_contract = carbon_controller
-            tkn0_address, tkn1_address = (
-                processed_event["token0"],
-                processed_event["token1"],
-            )
-            pool_address = CARBON_CONTROLLER_ADDRESS
-            cid = processed_event["id"]
-        elif exchange_name == BANCOR_V3_NAME:
-            pool_address = BANCOR_V3_NETWORK_INFO_ADDRESS
-            pool_contract = bancor_network_info
-            tkn0_address = BNT_ADDRESS
-            tkn1_address = processed_event["pool"]
-            cid = str(self.next_cid)
-        else:
-            pool_address = pool_identifier
-            pool_contract = DatabaseManager.contract_from_address(
-                exchange_name, pool_identifier
-            )
-            tkn0_address, tkn1_address = DatabaseManager.get_token_addresses_for_pool(
-                exchange_name, pool_identifier, pool_contract
-            )
-            cid = str(self.next_cid)
-        return (
-            block_number,
-            cid,
-            pool_address,
-            pool_contract,
-            tkn0_address,
-            tkn1_address,
-            exchange_name,
+        return self.get_pool_from_identifier(
+            exchange_name=exchange_name, pool_identifier=pool_identifier
         )
+
+
+    def _rollback_and_log(self, e: Exception):
+        """
+        Rollbacks the session and logs the error
+
+        Parameters
+        ----------
+        e : Exception
+            The exception
+        """
+        self.session.rollback()
+        c.logger.warning(e)
+
+
+    def get_pool_from_exchange_and_token_keys(self, other_token: str, src_token: str, exchange_name: str) -> Optional[models.Pool]:
+        """
+        Gets the pool from the exchange and token keys
+
+        Parameters
+        ----------
+        other_token : str
+            The other token
+        src_token : str
+            The source token
+        exchange_name : str
+            The exchange name
+
+        Returns
+        -------
+        Optional[models.Pool]
+            The pool
+        """
+        return (
+            self.db.session.query(models.Pool)
+            .filter(
+                models.Pool.exchange_name == exchange_name,
+                models.Pool.tkn1_key == src_token,
+                models.Pool.tkn0_key == other_token,
+            )
+            .first()
+        )
+
+    def get_nonzero_liquidity_pools(self):
+        return (
+            self.session.query(models.Pool)
+            .filter(
+                (models.Pool.tkn0_balance > 0)
+                | (models.Pool.tkn1_balance > 0)
+                | (models.Pool.liquidity > 0)
+                | (models.Pool.y_0 > 0)
+            )
+            .all()
+        )
+
+    def get_token_address_from_token_key(self, tkn_key: str) -> str:
+        """
+        Gets the token address from the token key
+
+        Parameters
+        ----------
+        tkn_key : str
+            The token key
+
+        Returns
+        -------
+        str
+            The token address
+        """
+        return self.session.query(models.Token).filter(models.Token.key == tkn_key).first().address
+
 
     @staticmethod
     def get_pool_fee(
-        exchange_name: str,
-        pool_contract: Contract,
+            exchange_name: str,
+            pool_contract: Contract,
     ) -> str:
         """
-        Gets the pool info for a given pair of tokens on Bancor V3
-        :param exchange_name:  The name of the exchange
-        :param pool_contract:  The contract of the pool
-        :return:  The pool information as a dictionary
+        Gets the pool info for a given pair of tokens in a given exchange
+
+        Parameters
+        ----------
+        exchange_name : str
+            The name of the exchange
+        pool_contract : Contract
+            The pool contract
+
+        Returns
+        -------
+        str
+            The pool fee
         """
-        if exchange_name == BANCOR_V3_NAME:
+        if exchange_name == c.BANCOR_V3_NAME:
             return "0.000"
-        elif exchange_name == BANCOR_V2_NAME:
+        elif exchange_name == c.BANCOR_V2_NAME:
             return str(pool_contract.caller.conversionFee())
-        elif exchange_name == UNISWAP_V3_NAME:
+        elif exchange_name == c.UNISWAP_V3_NAME:
             return str(pool_contract.caller.fee())
-        elif exchange_name in UNIV2_FORKS:
+        elif exchange_name in c.UNIV2_FORKS:
             return "0.003"
-        elif CARBON_V1_NAME in exchange_name:
+        elif c.CARBON_V1_NAME in exchange_name:
             return "0.002"
 
-    @staticmethod
-    def delete_carbon_strategy(strategy_id: int) -> Any:
+    def _add_or_update(self, block_number: int, cid: int, pool: models.Pool):
         """
-        :param strategy_id: the id of the strategy
-        Deletes the specified Carbon Strategy
-        """
-        strategy = session.query(Pool).filter_by(cid=strategy_id).first()
-        session.delete(strategy)
-        session.commit()
+        Adds or updates a pool
 
+        Parameters
+        ----------
+        block_number : int
+            The block number
+        cid : int
+            The cid
+        pool : models.Pool
+            The pool
+
+        """
+        is_created = self.session.query(models.Pool).filter(models.Pool.cid == cid).first()
+        if not is_created:
+            self.session.add(pool)
+        self.session.commit()
+        c.logger.info(
+            f"Successfully updated event for cid={cid} {pool.pair_name} {pool.fee} at block {block_number}..."
+        )
+
+    def delete_carbon_strategy(self, strategy_id: int):
+        """
+        Deletes the specified Carbon Strategy
+
+        Parameters
+        ----------
+        strategy_id : int
+            The id of the strategy to delete
+        """
+        strategy = self.session.query(models.Pool).filter(models.Pool.cid == strategy_id).first()
+        self.session.delete(strategy)
+        self.session.commit()
