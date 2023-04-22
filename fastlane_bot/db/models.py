@@ -382,8 +382,10 @@ class Pool:
 
         :param numerical_type: The type of numerical values. Options are "decimal" or "float".
         """
-        tkn0 = db.query(Token).filter(Token.address == self.tkn0_address).first()
-        tkn1 = db.query(Token).filter(Token.address == self.tkn1_address).first()
+        tkn0_key = self.pair_name.split("/")[0]
+        tkn1_key = self.pair_name.split("/")[1]
+        tkn0 = db.session.query(Token).filter(Token.key == tkn0_key).first()
+        tkn1 = db.session.query(Token).filter(Token.key == tkn1_key).first()
 
         cpc = ConstantProductCurve
         self.fee = float(Decimal(self.fee))
@@ -463,7 +465,6 @@ class Pool:
         lst = []
         for i in [0, 1]:
             pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
-
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
