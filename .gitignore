@@ -24,6 +24,8 @@ carbon/tools/*
 */.coverage
 */.coverage.*
 */.cover
+NBTest/carbon/*
+NBTest/carbon
 
 /.env
 *.env
