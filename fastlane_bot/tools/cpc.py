@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.2"
-__DATE__ = "19/Apr/2023"
+__VERSION__ = "2.6.3"
+__DATE__ = "22/Apr/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
-from fastlane_bot.tools.params import Params
+from .params import Params
 import itertools
 from sys import float_info
 from hashlib import md5 as digest
