@@ -196,9 +196,9 @@ class CarbonBot(CarbonBotBase):
         trade_dicts = {d['cid'] :d for d in trade_instruction_dcts}
         ordered_trade_instructions = [trade_dicts[cid] for cid in order]
         #scale here
-        data = trade_instruction_dcts
+        data = ordered_trade_instructions
         for i in range(len(data)):
-            if data[i]["tknin"] == 'WETH-6Cc2':
+            if data[i]["tknin"] == best_src_token:
                 data[i]["amtin"] *= 0.9999
             else:
                 data[i]["amtin"] *= 0.99
@@ -263,6 +263,8 @@ class CarbonBot(CarbonBotBase):
         combos = [
             (tkn0, tkn1)
             for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
+                # tkn1 is always the token being flash loaned
+                # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1
         ]
         if result == self.AO_TOKENS:
@@ -271,8 +273,10 @@ class CarbonBot(CarbonBotBase):
         candidates = []
         for tkn0, tkn1 in combos:
             try:
-                c.logger.debug(f"Checking {tkn0} -> {tkn1}")
+                c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
                 CC = CCm.bypairs(f"{tkn0}/{tkn1}")
+                if len(CC) < 2:
+                    continue
                 pstart = (
                     {
                         tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
@@ -283,14 +287,16 @@ class CarbonBot(CarbonBotBase):
                 O = CPCArbOptimizer(CC)
                 src_token = tkn1
                 try:
-                    r = O.margp_optimizer(tkn1, params=dict(pstart=pstart))
+                    r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
                     assert not r.is_error
                 except Exception as e:
                     c.logger.debug(e, r)
                     try:
-                        r = O.margp_optimizer(tkn1)
+                        r = O.margp_optimizer(src_token)
+                        assert not r.is_error
                     except Exception as e:
-                        c.logger.error(e)
+                        c.logger.info(e)
+                        continue
                         
                 profit_src = -r.result
 
@@ -320,6 +326,7 @@ class CarbonBot(CarbonBotBase):
             best_src_token,
         )
 
+    # TODO: MOVE THIS ONE TO THE MODEL / DB MANAGER
     def _get_profit_in_bnt(self, profit_src: Decimal, src_token: str, other_token: str) -> Decimal:
         """
         Gets the profit in BNT.
@@ -339,7 +346,13 @@ class CarbonBot(CarbonBotBase):
 
         if src_token == T.BNT:
             return profit_src
-        pool = self.db.get_pool_from_exchange_and_token_keys(c.BANCOR_V3_NAME, other_token, src_token)
+        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
+        pool = (
+            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
+            session.query(Pool)
+            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
+            .first()
+        )
         bnt = Decimal(pool.tkn0_balance) / 10**18
         src = Decimal(src_token) / 10**pool.tkn1_decimals
         bnt_per_src = bnt / src
@@ -365,6 +378,7 @@ class CarbonBot(CarbonBotBase):
     XS_ORDTI = "ordti"
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
+    # TODO: RENAME TO _RUN
     def _execute_strategy(
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
     ) -> Optional[Dict[str, Any]]:
@@ -471,43 +485,43 @@ class CarbonBot(CarbonBotBase):
         )
         return  c.w3.eth.wait_for_transaction_receipt(tx)
 
-    def _handle_ordering(
-        self, agg_trade_instructions, best_src_token, tx_route_handler
-    ):
-        """
-        Handles the ordering of the aggregated trade instructions.
+    # def _handle_ordering(
+    #     self, agg_trade_instructions, best_src_token, tx_route_handler
+    # ):
+    #     """
+    #     Handles the ordering of the aggregated trade instructions.
 
-        Parameters
-        ----------
-        agg_trade_instructions:
-            aggregate trade instructions as returned by _agg_carbon_independentIDs
+    #     Parameters
+    #     ----------
+    #     agg_trade_instructions:
+    #         aggregate trade instructions as returned by _agg_carbon_independentIDs
         
-        best_src_token: 
-            the best source (=flashloan) token as returned by _find_arbitrage_opportunities
+    #     best_src_token: 
+    #         the best source (=flashloan) token as returned by _find_arbitrage_opportunities
             
-        tx_route_handler: TxRouteHandlerBase
-            the transaction route handler object
+    #     tx_route_handler: TxRouteHandlerBase
+    #         the transaction route handler object
 
-        Returns
-        -------
-            ordered trade instructions
-        """
-        new_trade_instructions = []
-        if len(agg_trade_instructions) == 2:
-            for inst in agg_trade_instructions:
-                if inst.tknin == best_src_token:
-                    new_trade_instructions += [inst]
-            missing = [
-                inst
-                for inst in agg_trade_instructions
-                if inst not in new_trade_instructions
-            ]
-            new_trade_instructions.append(missing[0])
-        else:
-            new_trade_instructions = tx_route_handler._find_tradematches(
-                agg_trade_instructions
-            )
-        return new_trade_instructions
+    #     Returns
+    #     -------
+    #         ordered trade instructions
+    #     """
+    #     new_trade_instructions = []
+    #     if len(agg_trade_instructions) == 2:
+    #         for inst in agg_trade_instructions:
+    #             if inst.tknin == best_src_token:
+    #                 new_trade_instructions += [inst]
+    #         missing = [
+    #             inst
+    #             for inst in agg_trade_instructions
+    #             if inst not in new_trade_instructions
+    #         ]
+    #         new_trade_instructions.append(missing[0])
+    #     else:
+    #         new_trade_instructions = tx_route_handler._find_tradematches(
+    #             agg_trade_instructions
+    #         )
+    #     return new_trade_instructions
 
     RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
     RM_SINGLE = "single"
@@ -547,7 +561,7 @@ class CarbonBot(CarbonBotBase):
                 try:
                     tx_hash = self._execute_strategy(flashloan_tokens, CCm)
                     if tx_hash:
-                         c.logger.info(
+                        c.logger.info(
                             f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                         )
                     time.sleep(
@@ -563,6 +577,7 @@ class CarbonBot(CarbonBotBase):
                 c.logger.warning(e)
                 tx_hash = None
             if tx_hash:
-                 c.logger.info(
+                c.logger.info(
                     f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
                 )
+
