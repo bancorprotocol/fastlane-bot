@@ -772,7 +772,7 @@ class EventHandler:
             try:
                 self._handle_pool_update_from_event(exchange=exchange, event_log=event)
             except Exception as e:
-                c.logger.warning(
+                c.logger.error(
                     f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}"
                 )
 
@@ -849,7 +849,7 @@ class EventHandler:
                 try:
                     self._handle_pool_update_from_event(exchange=exchange, event_log=event)
                 except Exception as e:
-                    c.logger.warning(
+                    c.logger.error(
                         f"_log_loop: {exchange}, {_filter}, Failed to handle event: {e}"
                     )
             await asyncio.sleep(1)
