@@ -174,8 +174,10 @@ class PoolAndTokens:
             "descr": self.descr,
             "params":  self._params,
         }
-        return [ConstantProductCurve.from_univ2(**self._validate_float(typed_args))]
+        return [ConstantProductCurve.from_univ2(**self._convert_to_float(typed_args))]
 
+    class DoubleInvalidCurveError(ValueError): pass
+    
     def _carbon_to_cpc(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
@@ -201,6 +203,7 @@ class PoolAndTokens:
 
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
         lst = []
+        errors = []
         for i in [0, 1]:
             #pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
@@ -257,10 +260,16 @@ class PoolAndTokens:
                 "params": self._params
             }
             try:
-                lst.append(ConstantProductCurve.from_carbon(**self._validate_float(typed_args)))
+                lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
             except Exception as e:
-                c.logger.error(f"Error in curve {i} {typed_args}: [{e}]\n")
-                raise
+                errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
+                c.logger.debug(errmsg)
+                errors += [errmsg]
+        if not len(lst) > 0:
+            errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
+            c.logger.warning(errmsg)
+            raise self.DoubleInvalidCurveError(errmsg)
+            
         return lst
 
     def _univ3_to_cpc(self) -> List[Any]:
@@ -279,16 +288,18 @@ class PoolAndTokens:
             :params:   additional parameters (optional)
 
         """
-
+        float_MIKEMUSTCHANGE = lambda x: x
+        int_MIKEMUSTCHANGE = lambda x: x
+        
         univ3_helper = UniV3Helper(
             contract_initialized=True,
             fee=str(self.fee),
-            tick=float(self.tick),
-            tick_spacing=float(self.tick_spacing),
-            sqrt_price_q96=float(self.sqrt_price_q96),
-            liquidity=float(self.liquidity),
-            tkn0_decimal=int(self.tkn0_decimals),
-            tkn1_decimal=int(self.tkn1_decimals),
+            tick=float_MIKEMUSTCHANGE(self.tick),
+            tick_spacing=float_MIKEMUSTCHANGE(self.tick_spacing),
+            sqrt_price_q96=float_MIKEMUSTCHANGE(self.sqrt_price_q96),
+            liquidity=float_MIKEMUSTCHANGE(self.liquidity),
+            tkn0_decimal=int_MIKEMUSTCHANGE(self.tkn0_decimals),
+            tkn1_decimal=int_MIKEMUSTCHANGE(self.tkn1_decimals),
         )
 
         P_marg = univ3_helper.Pmarg
@@ -305,11 +316,11 @@ class PoolAndTokens:
             "uniPb": P_b,
             "pair": self.pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
             "params": {"exchange": self.exchange_name},
-            "fee": self.fee,
+            "fee": float(self.fee),
             "descr": self.descr,
             "params": self._params,
         }
-        return [ConstantProductCurve.from_univ3(**self._validate_float(typed_args))]
+        return [ConstantProductCurve.from_univ3(**self._convert_to_float(typed_args))]
 
     @staticmethod
     def convert_decimals(tkn_balance_wei: Decimal, tkn_decimals: int) -> Decimal:
@@ -320,7 +331,7 @@ class PoolAndTokens:
         return Decimal(str(tkn_balance_wei / (Decimal("10") ** Decimal(str(tkn_decimals)))))
 
     @staticmethod
-    def _validate_float(typed_args: Dict[str, Any]) -> Dict[str, Any]:
+    def _convert_to_float(typed_args: Dict[str, Any]) -> Dict[str, Any]:
         """
         converts Decimal to float
         """
