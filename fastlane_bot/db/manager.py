@@ -12,12 +12,13 @@ import pandas as pd
 import sqlalchemy
 from brownie import Contract
 from joblib import parallel_backend, Parallel, delayed
-from sqlalchemy import MetaData, func
+from sqlalchemy import MetaData, func, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI, BANCOR_V3_POOL_COLLECTION_ABI, UNISWAP_V2_POOL_ABI, \
     UNISWAP_V3_POOL_ABI, CARBON_CONTROLLER_ABI, ERC20_ABI
 import fastlane_bot.db.models as models
+from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.utils import initialize_contract
 import fastlane_bot.config as c
 
@@ -66,6 +67,52 @@ class DatabaseManager:
         sesh = sessionmaker(bind=engine)
         self.session = sesh()
         self.engine = engine
+
+    def get_nonzero_liquidity_pools_and_tokens(self) -> List[PoolAndTokens]:
+        """
+        Returns all pools in the database.
+
+        Returns
+        -------
+        List[PoolAndTokens]
+            A list of PoolAndTokens objects containing the pool and token information.
+        """
+        raw_sql_query = text('''
+                                WITH splits AS (
+                                    SELECT *,
+                                        split_part(pair_name, '/', 1) AS tkn0,
+                                        split_part(pair_name, '/', 2) AS tkn1
+                                    FROM pools
+                                )
+                                
+                                SELECT
+                                    splits.*,
+                                    token0.address AS tkn0_address,
+                                  token0.decimals AS tkn0_decimals,
+                                  token1.address AS tkn1_address,
+                                  token1.decimals AS tkn1_decimals
+                                
+                                FROM splits
+                                    LEFT JOIN tokens AS token0 ON splits.tkn0 = token0."key"
+                                    LEFT JOIN tokens AS token1 ON splits.tkn1 = token1."key";
+                                ''')
+        with self.session.connection() as connection:
+            result_proxy = connection.execute(raw_sql_query)
+
+        # Fetch the results from the executed query. Then add to a dictionary with the column names as keys.
+        result = result_proxy.fetchall()
+        columns = result_proxy.keys()
+        pools_and_tokens = [PoolAndTokens(**dic) for dic in pd.DataFrame(result, columns=columns).to_dict(orient="records")]
+
+        # Filter out pools with (tkn0_balance > 0 or tkn1_balance > 0 or liquidity > 0 or y_0 > 0)
+        # Handle the case where the attribute is None type.
+        pools_and_tokens = [pool for pool in pools_and_tokens if (
+                (pool.tkn0_balance is not None and pool.tkn0_balance > 0) or
+                (pool.tkn1_balance is not None and pool.tkn1_balance > 0) or
+                (pool.liquidity is not None and pool.liquidity > 0) or
+                (pool.y_0 is not None and pool.y_0 > 0)
+        )]
+        return pools_and_tokens
 
     def delete_all_carbon(self):
         """

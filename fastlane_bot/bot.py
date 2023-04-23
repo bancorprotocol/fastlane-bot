@@ -158,11 +158,11 @@ class CarbonBotBase():
         CPCContainer
             The container of curves.
         """
-        pools = self.db.get_nonzero_liquidity_pools()
+        pools_and_tokens = self.db.get_nonzero_liquidity_pools_and_tokens()
         curves = []
-        for p in pools:
+        for p in pools_and_tokens:
             try:
-                curves += p.to_cpc(numerical_type="float", db=self.db)
+                curves += p.to_cpc(numerical_type="float")
                 time.sleep(0.00000001)  # to avoid unstable results
             except:
                 pass
