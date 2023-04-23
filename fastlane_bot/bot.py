@@ -162,10 +162,10 @@ class CarbonBotBase():
         curves = []
         for p in pools_and_tokens:
             try:
-                curves += p.to_cpc(numerical_type="float")
-                time.sleep(0.00000001)  # to avoid unstable results
-            except:
-                pass
+                curves += p.to_cpc()
+                #time.sleep(0.00000001)  # to avoid unstable results
+            except Exception as e:
+                c.logger.error(f"Error converting pool {p} to curve [{e}]")
         return CPCContainer(curves)
 
     
