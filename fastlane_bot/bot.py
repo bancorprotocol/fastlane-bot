@@ -65,7 +65,8 @@ import fastlane_bot.db.models as models
 import fastlane_bot.config as c
 from . import __VERSION__, __DATE__
 
-
+errorlogger = c.logger.error
+errorlogger = c.logger.debug # TODO: REMOVE THIS
 
 @dataclass
 class CarbonBotBase():
@@ -166,8 +167,19 @@ class CarbonBotBase():
             try:
                 curves += p.to_cpc()
                 #time.sleep(0.00000001)  # to avoid unstable results
+            except ZeroDivisionError as e:
+                errorlogger(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                #raise
+            except CPC.CPCValidationError as e:
+                errorlogger(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                #raise   
+            except TypeError as e:
+                errorlogger(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
+                if not str(e).startswith("1unsupported operand type(s) for"):
+                    raise           
             except Exception as e:
-                c.logger.error(f"Error converting pool {p} to curve [{e}]")
+                errorlogger(f"[get_curves] error converting pool to curve {p} [{e}]\n")
+                raise
         return CPCContainer(curves)
 
 
