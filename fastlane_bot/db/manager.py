@@ -93,8 +93,8 @@ class DatabaseManager:
                                     LEFT JOIN tokens AS token0 ON splits.tkn0 = token0."key"
                                     LEFT JOIN tokens AS token1 ON splits.tkn1 = token1."key";
                                 ''')
-        with self.session.connection() as connection:
-            result_proxy = connection.execute(raw_sql_query)
+        
+        result_proxy= self.session.connection().execute(raw_sql_query)
 
         # Fetch the results from the executed query. Then add to a dictionary with the column names as keys.
         result = result_proxy.fetchall()
