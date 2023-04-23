@@ -115,36 +115,41 @@ class PoolAndTokens:
         self.tkn0_key = self.tkn0
         self.tkn1_key = self.tkn1
 
-
-    def to_cpc(
-            self, numerical_type: str = "float", db: Any = None
-    ) -> Union[ConstantProductCurve, List[Any]]:
+    
+    def to_cpc(self) -> Union[ConstantProductCurve, List[Any]]:
         """
-        Returns an instance of the ConstantProductCurve class.
-
-        :param numerical_type: The type of numerical values. Options are "decimal" or "float".
+        converts self into an instance of the ConstantProductCurve class.
         """
 
-        cpc = ConstantProductCurve
         self.fee = float(Decimal(self.fee))
         if self.exchange_name == UNISWAP_V3_NAME:
-            out = self._univ3_to_cpc(cpc)
+            out = self._univ3_to_cpc()
         elif self.exchange_name == CARBON_V1_NAME:
-            out = self._carbon_to_cpc(cpc)
+            out = self._carbon_to_cpc()
         elif self.exchange_name in SUPPORTED_EXCHANGES:
-            out = self._other_to_cpc(cpc)
+            out = self._other_to_cpc()
         else:
             raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
 
         return out
 
-    def _other_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
+    @property
+    def _params(self):
+        """
+        creates the parameter dict for the ConstantProductCurve class
+        """
+        return {
+                "exchange": str(self.exchange_name),
+                "tknx_dec": int(self.tkn0_decimals),
+                "tkny_dec": int(self.tkn1_decimals),
+                "tknx_addr": str(self.tkn0_address),
+                "tkny_addr": str(self.tkn1_address),
+                "blocklud": int(self.last_updated_block),
+        }
+        
+    def _other_to_cpc(self) -> List[Any]:
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
-
-        :param cpc: ConstantProductCurve class
-        :param tkn0: Token 0
-        :param tkn1: Token 1
 
         :x_tknb:    current pool liquidity in token x (base token of the pair)*
         :y_tknq:    current pool liquidity in token y (quote token of the pair)*
@@ -153,8 +158,7 @@ class PoolAndTokens:
         *exactly one of k,x,y must be None; all other parameters must not be None;
         a reminder that x is TKNB and y is TKNQ
         """
-        arg_type = Decimal
-
+        
         # convert tkn0_balance and tkn1_balance to Decimal from wei
         tkn0_balance = self.convert_decimals(self.tkn0_balance, self.tkn0_decimals)
         tkn1_balance = self.convert_decimals(self.tkn1_balance, self.tkn1_decimals)
@@ -167,15 +171,11 @@ class PoolAndTokens:
             "fee": self.fee,
             "cid": self.cid,
             "descr": self.descr,
-            "params": {
-                "exchange": self.exchange_name,
-            },
+            "params":  self._params,
         }
-        return [cpc.from_univ2(**self._validate_arg_types(typed_args))]
+        return [ConstantProductCurve.from_univ2(**self._validate_float(typed_args))]
 
-    def _carbon_to_cpc(
-            self, cpc: ConstantProductCurve
-    ) -> ConstantProductCurve:
+    def _carbon_to_cpc(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
 
@@ -199,10 +199,9 @@ class PoolAndTokens:
         """
 
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
-        arg_type = Decimal
         lst = []
         for i in [0, 1]:
-            pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
+            #pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
@@ -254,16 +253,14 @@ class PoolAndTokens:
                 "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,
+                "params": self._params
             }
-            lst.append(cpc.from_carbon(**self._validate_arg_types(typed_args)))
+            lst.append(ConstantProductCurve.from_carbon(**self._validate_float(typed_args)))
         return lst
 
-    def _univ3_to_cpc(self, cpc: ConstantProductCurve) -> List[Any]:
+    def _univ3_to_cpc(self) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.
-
-        :param arg_type: The type of numerical values. (Decimal or float)
-        :param cpc: The ConstantProductCurve class.
 
         :return: ConstantProductCurve
             :k:        pool constant k = xy [x=k/y, y=k/x]
@@ -305,25 +302,28 @@ class PoolAndTokens:
             "params": {"exchange": self.exchange_name},
             "fee": self.fee,
             "descr": self.descr,
+            "params": self._params,
         }
-        return [cpc.from_univ3(**self._validate_arg_types(typed_args))]
+        return [ConstantProductCurve.from_univ3(**self._validate_float(typed_args))]
 
     @staticmethod
-    def convert_decimals(tkn_balance: Decimal, tkn_decimals: int) -> Decimal:
+    def convert_decimals(tkn_balance_wei: Decimal, tkn_decimals: int) -> Decimal:
         """
-        Correct the decimals of the tokens in the pool.
+        Converts wei balance to token balance (returns a Decimal)
         """
-        return Decimal(str(tkn_balance / (Decimal("10") ** Decimal(str(tkn_decimals)))))
+        # TODO: why Decimal?!?
+        return Decimal(str(tkn_balance_wei / (Decimal("10") ** Decimal(str(tkn_decimals)))))
 
     @staticmethod
-    def _validate_arg_types(typed_args: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_float(typed_args: Dict[str, Any]) -> Dict[str, Any]:
         """
-        convert the arguments to the correct type if numeric values, else leave as is
-        :param typed_args: dictionary of arguments with types
-        :return:         dictionary of arguments with types converted to the correct type
+        converts Decimal to float
         """
-        arg_type = float
-        for key, value in typed_args.items():
-            if isinstance(value, (Decimal, float, int)):
-                typed_args[key] = arg_type(value)
-        return typed_args
+        convert = lambda x: float(x) if isinstance(x, Decimal) else x
+        return {k: convert(v) for k, v in typed_args.items()}
+        # MIKE: this code converted the dict in place AND returned it; 
+        # that may work but is ugly...
+        # for key, value in typed_args.items():
+        #     if isinstance(value, (Decimal, float)):
+        #         typed_args[key] = float(value)
+        # return typed_args
