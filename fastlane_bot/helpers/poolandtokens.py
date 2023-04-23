@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import UniV3Helper, EncodedOrder
+import fastlane_bot.config as c
 
 
 @dataclass
@@ -255,7 +256,11 @@ class PoolAndTokens:
                 "descr": self.descr,
                 "params": self._params
             }
-            lst.append(ConstantProductCurve.from_carbon(**self._validate_float(typed_args)))
+            try:
+                lst.append(ConstantProductCurve.from_carbon(**self._validate_float(typed_args)))
+            except Exception as e:
+                c.logger.error(f"Error in curve {i} {typed_args}: [{e}]\n")
+                raise
         return lst
 
     def _univ3_to_cpc(self) -> List[Any]:
@@ -278,12 +283,12 @@ class PoolAndTokens:
         univ3_helper = UniV3Helper(
             contract_initialized=True,
             fee=str(self.fee),
-            tick=self.tick,
-            tick_spacing=self.tick_spacing,
-            sqrt_price_q96=self.sqrt_price_q96,
-            liquidity=self.liquidity,
-            tkn0_decimal=self.tkn0_decimals,
-            tkn1_decimal=self.tkn1_decimals,
+            tick=float(self.tick),
+            tick_spacing=float(self.tick_spacing),
+            sqrt_price_q96=float(self.sqrt_price_q96),
+            liquidity=float(self.liquidity),
+            tkn0_decimal=int(self.tkn0_decimals),
+            tkn1_decimal=int(self.tkn1_decimals),
         )
 
         P_marg = univ3_helper.Pmarg
