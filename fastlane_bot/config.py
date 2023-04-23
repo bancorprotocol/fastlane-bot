@@ -26,9 +26,22 @@ DEFAULT_NETWORK = "mainnet"
 DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"
 DEFAULT_NETWORK_PROVIDER = "mainnet"
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
+if not POSTGRES_USER:
+    POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-HOST_ADDRESS = os.environ.get("HOST_ADDRESS")
-BACKEND = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{HOST_ADDRESS}/postgres"  # "sqlite" or "postgres" # or f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{HOST_ADDRESS}/postgres"
+if not POSTGRES_PASSWORD:
+    POSTGRES_PASSWORD = "postgres"
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+if not POSTGRES_HOST:
+    POSTGRES_HOST = "localhost"
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+if not POSTGRES_DB:
+    POSTGRES_DB = "postgres"
+if os.environ.get("HOST_ADDRESS"):
+    assert os.environ.get("HOST_ADDRESS") == "localhost", "HOST_ADDRESS deprecated; use POSTGRES_HOST"
+POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+SQLITE_URL = "sqlite:///fastlane_bot.db"
+DEFAULT_DB_BACKEND_URL = POSTGRES_URL
 DEFAULT_EXECUTE_MODE = "continuous"  # "continuous" or "single"
 PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
 DATABASE_SEED_FILE = os.path.normpath(
