@@ -1,2 +1,4 @@
-__VERSION__ = "2.0"
-__DATE__ = "21/Apr/2023"
+__VERSION__ = "2.0-BETA3"
+__DATE__ = "23/Apr/2023"
+
+from .bot import CarbonBot as Bot
