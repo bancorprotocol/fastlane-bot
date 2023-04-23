@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.3"
-__DATE__ = "22/Apr/2023"
+__VERSION__ = "2.6.4"
+__DATE__ = "23/Apr/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -272,10 +272,12 @@ class ConstantProductCurve:
         super().__setattr__("pairo", Pair(self.pair))
 
         if self.isbigger(big=self.x_act, small=self.x):
-            print("[ConstantProductCurve] x_act > x:", self.x_act, self.x)
-
+            print(f"[ConstantProductCurve] x_act > x in {self.cid}", self.x_act, self.x)
+            
         if self.isbigger(big=self.y_act, small=self.y):
-            print("[ConstantProductCurve] y_act > y:", self.y_act, self.y)
+            print(f"[ConstantProductCurve] y_act > y in {self.cid}", self.y_act, self.y)
+
+        
 
         self.set_tokenscale(self.TOKENSCALE)
 
@@ -338,6 +340,8 @@ class ConstantProductCurve:
         super().__setattr__("cid", cid)
         return self
 
+    class CPCValidationError(ValueError): pass
+    
     @classmethod
     def from_kx(
         cls,
@@ -717,7 +721,8 @@ class ConstantProductCurve:
                 pb /= 1.0000001
 
             # validation
-            assert pa > pb, f"pa > pb required ({pa}, {pb})"
+            if not pa > pb:
+                raise cls.CPCValidationError(f"pa > pb required ({pa}, {pb})")
 
             # finally set A, B
             A = sqrt(pa) - sqrt(pb)
@@ -734,10 +739,11 @@ class ConstantProductCurve:
             params = AttrDict({**params, **params0})
 
         # finally instantiate the pool
+
         return cls(
             k=kappa,
-            x=kappa / (y + yasym),
-            x_act=0,
+            x=0,
+            x_act=kappa / (y + yasym) if y + yasym != 0 else 0,
             y_act=y,
             pair=f"{tknx}/{tkny}",
             cid=cid,
@@ -747,6 +753,7 @@ class ConstantProductCurve:
             params=params,
         )
 
+    
     def execute(self, dx=None, dy=None, *, ignorebounds=False, verbose=False):
         """
         executes a transaction in the pool, returning a new curve object
@@ -848,6 +855,8 @@ class ConstantProductCurve:
     @property
     def y(self):
         "(virtual) pool state x (virtual number of base tokens for sale)"
+        if self.k == 0:
+            return 0
         return self.k / self.x
 
     @property
