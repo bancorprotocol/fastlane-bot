@@ -88,9 +88,9 @@ class DatabaseManager:
                                 SELECT
                                     splits.*,
                                     token0.address AS tkn0_address,
-                                  token0.decimals AS tkn0_decimals,
-                                  token1.address AS tkn1_address,
-                                  token1.decimals AS tkn1_decimals
+                                    token0.decimals AS tkn0_decimals,
+                                    token1.address AS tkn1_address,
+                                    token1.decimals AS tkn1_decimals
                                 
                                 FROM splits
                                     LEFT JOIN tokens AS token0 ON splits.tkn0 = token0."key"
@@ -1121,7 +1121,7 @@ class DatabaseManager:
             return self.session.query(models.Pool).filter(models.Pool.address == pool_identifier).first()
 
     def get_or_create_pool(self, exchange_name: str = None, pool_identifier: str = None,
-                           processed_event: Dict[str, Any] = None) -> models.Pool:
+                            processed_event: Dict[str, Any] = None) -> models.Pool:
         """
         Creates a pool in the database
 
