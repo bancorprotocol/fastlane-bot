@@ -111,7 +111,7 @@ class CarbonBotBase():
                 "WARNING: genesis_data is deprecated. This argument will be removed soon"
             )
             
-        assert polling_interval is None, "polling_interval is now a parameter to run"
+        assert self.polling_interval is None, "polling_interval is now a parameter to run"
 
         if self.TxSubmitHandlerClass is None:
             self.TxSubmitHandlerClass = TxSubmitHandler
@@ -315,7 +315,7 @@ class CarbonBot(CarbonBotBase):
                     best_trade_instructions_df = trade_instructions_df
                     best_trade_instructions_dic = trade_instructions_dic
             except Exception as e:
-                c.logger.error(e)
+                c.logger.error(f"[_find_arbitrage_opportunities] {e}")
         
         if result == self.AO_CANDIDATES:
             return candidates
@@ -556,7 +556,7 @@ class CarbonBot(CarbonBotBase):
         """
         if mode is None:
             mode = self.RUN_CONTINUOUS
-        assert mode in [self.RUN_SINGLE, self.RUN_CONTINUOUS], f"Unknown mode {mode}"
+        assert mode in [self.RUN_SINGLE, self.RUN_CONTINUOUS], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
         if polling_interval is None:
             polling_interval = self.RUN_POLLING_INTERVAL
         if flashloan_tokens is None:
@@ -572,13 +572,13 @@ class CarbonBot(CarbonBotBase):
                         c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
                     time.sleep(self.polling_interval)
                 except Exception as e:
-                    c.logger.error(e)
+                    c.logger.error(f"[bot:run:continuous] {e}")
                     time.sleep(self.polling_interval)
         else:
             try:
                 tx_hash = self._run(flashloan_tokens, CCm)
                 c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
             except Exception as e:
-                c.logger.error(e)
+                c.logger.error(f"[bot:run:single] {e}")
 
                 
