@@ -100,7 +100,7 @@ class CarbonBotBase():
     seed_pools: InitVar = False # anything else WILL raise
     update_pools: InitVar = False # anything else WILL raise
     
-    polling_interval: int = 60
+    polling_interval: any = None
     
     def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
         """
@@ -110,6 +110,8 @@ class CarbonBotBase():
             print(
                 "WARNING: genesis_data is deprecated. This argument will be removed soon"
             )
+            
+        assert polling_interval is None, "polling_interval is now a parameter to run"
 
         if self.TxSubmitHandlerClass is None:
             self.TxSubmitHandlerClass = TxSubmitHandler
@@ -167,8 +169,6 @@ class CarbonBotBase():
             except Exception as e:
                 c.logger.error(f"Error converting pool {p} to curve [{e}]")
         return CPCContainer(curves)
-
-    
 
 
 @dataclass
@@ -379,7 +379,7 @@ class CarbonBot(CarbonBotBase):
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
     # TODO: RENAME TO _RUN
-    def _execute_strategy(
+    def _run(
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
     ) -> Optional[Dict[str, Any]]:
         """
@@ -524,14 +524,15 @@ class CarbonBot(CarbonBotBase):
     #     return new_trade_instructions
 
     RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
-    RM_SINGLE = "single"
-    RM_CONTINUOUS = "continuous"
+    RUN_SINGLE = "single"
+    RUN_CONTINUOUS = "continuous"
+    RUN_POLLING_INTERVAL = 60 # default polling interval in seconds
     def run(
         self,
-        flashloan_tokens: List[str],
-        CCm: CPCContainer = None,
-        #update_pools: bool = False,
         *,
+        flashloan_tokens: List[str] = None,
+        CCm: CPCContainer = None,
+        polling_interval: int = None,
         mode: str = None,
     ) -> str:
         """
@@ -540,9 +541,13 @@ class CarbonBot(CarbonBotBase):
         Parameters
         ----------
         flashloan_tokens: List[str]
-            The flashloan tokens.
+            The flashloan tokens (optional; default: self.RUN_FLASHLOAN_TOKENS)
         CCm: CPCContainer
-            The CPCContainer object.
+            The complete market data container (optional; default: database via self.get_curves())
+        polling_interval: int
+            the polling interval in seconds (default: 60 via self.RUN_POLLING_INTERVAL)
+        mode: RN_SINGLE or RUN_CONTINUOUS
+            whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
 
         Returns
         -------
@@ -550,34 +555,30 @@ class CarbonBot(CarbonBotBase):
             The transaction hash.
         """
         if mode is None:
-            mode = self.RM_CONTINUOUS
-        assert mode in [self.RM_SINGLE, self.RM_CONTINUOUS], f"Unknown mode {mode}"
-        if not flashloan_tokens:
+            mode = self.RUN_CONTINUOUS
+        assert mode in [self.RUN_SINGLE, self.RUN_CONTINUOUS], f"Unknown mode {mode}"
+        if polling_interval is None:
+            polling_interval = self.RUN_POLLING_INTERVAL
+        if flashloan_tokens is None:
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
+        
         if mode == "continuous":
             while True:
                 try:
-                    tx_hash = self._execute_strategy(flashloan_tokens, CCm)
+                    tx_hash = self._run(flashloan_tokens, CCm)
                     if tx_hash:
-                        c.logger.info(
-                            f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
-                        )
-                    time.sleep(
-                        self.polling_interval
-                    )  # Sleep for 60 seconds before searching for opportunities again
+                        c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                    time.sleep(self.polling_interval)
                 except Exception as e:
-                    c.logger.debug(e)
+                    c.logger.error(e)
                     time.sleep(self.polling_interval)
         else:
             try:
-                tx_hash = self._execute_strategy(flashloan_tokens, CCm)
+                tx_hash = self._run(flashloan_tokens, CCm)
+                c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
             except Exception as e:
-                c.logger.warning(e)
-                tx_hash = None
-            if tx_hash:
-                c.logger.info(
-                    f"Flashloan arbitrage executed with transaction hash: {tx_hash}"
-                )
+                c.logger.error(e)
 
+                
