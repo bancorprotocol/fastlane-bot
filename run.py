@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Main logic for the Bancor Arbitrage Bot (FastLane) - run.py filescript
 
@@ -7,14 +8,14 @@ Note: You should configure the bot in config.py before running this script.
 Licensed under MIT
 """
 import click
-from fastlane_bot.tools.cpc import T
+#from fastlane_bot.tools.cpc import T
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.db.models import *
+#from fastlane_bot.db.models import *
 
 # session.rollback()
 
-flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
-
+#flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
+flashloan_tokens = None
 
 @click.command()
 @click.option("--mode", default="continuous", type=str)
@@ -43,16 +44,12 @@ def main(
     seed_pools: bool
         Whether the bot should seed the pools before running
 
-    """
-
-    # Initialize the bot
-    bot = CarbonBot(
-        polling_interval=polling_interval,
-    )
-
-    # Run the bot
-    bot.run(flashloan_tokens=flashloan_tokens, mode=mode)
-
+"""
+    print("Starting bot...")
+    bot = CarbonBot()
+    bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode)
+    
+    
 
 if __name__ == "__main__":
     main()
