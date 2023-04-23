@@ -24,8 +24,11 @@ load_dotenv()
 #######################################################################################
 DEFAULT_NETWORK = "mainnet"
 DEFAULT_NETWORK_NAME = "Mainnet (Tenderly)"
-DEFAULT_NETWORK_PROVIDER = "alchemy"
-BACKEND = "postgres"  # "sqlite" or "postgres"
+DEFAULT_NETWORK_PROVIDER = "mainnet"
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+HOST_ADDRESS = os.environ.get("HOST_ADDRESS")
+BACKEND = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{HOST_ADDRESS}/postgres"  # "sqlite" or "postgres" # or f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{HOST_ADDRESS}/postgres"
 DEFAULT_EXECUTE_MODE = "continuous"  # "continuous" or "single"
 PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
 DATABASE_SEED_FILE = os.path.normpath(
@@ -89,8 +92,6 @@ PRODUCTION_NETWORK = "mainnet"
 PRODUCTION_NETWORK_NAME = "Mainnet (Alchemy)"
 ETHERSCAN_TOKEN = os.environ.get("ETHERSCAN_TOKEN")
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
-POSTGRES_USER = os.environ.get("POSTGRES_USER")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 
 # URL SECTION

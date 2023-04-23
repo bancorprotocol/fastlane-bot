@@ -59,7 +59,7 @@ class DatabaseManager:
             engine = sqlalchemy.create_engine("sqlite:///fastlane.sqlite")
         else:
             engine = sqlalchemy.create_engine(
-                f"postgresql://{c.POSTGRES_USER}:{c.POSTGRES_PASSWORD}@localhost/postgres"
+                f"postgresql://{c.POSTGRES_USER}:{c.POSTGRES_PASSWORD}@{c.HOST_ADDRESS}/postgres"
             )
         engine.connect()
         models.mapper_registry.metadata.create_all(engine)
