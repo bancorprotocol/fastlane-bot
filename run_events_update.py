@@ -15,7 +15,7 @@ import fastlane_bot.config as c
 
 db = DatabaseManager()
 
-db.drop_all_tables()
+# db.drop_all_tables()
 
 bot = CarbonBot(
     db=db,

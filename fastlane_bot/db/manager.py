@@ -950,6 +950,7 @@ class DatabaseManager:
                 ]
         return strategies
 
+
     def update_raw_carbon_strategies(self, strategies: List[int], last_updated_block: int = None):
         """
         Takes a list of Carbon Strategies in the raw contract format, processes them, and inserts them into the database.
@@ -1132,7 +1133,7 @@ class DatabaseManager:
             The pool
         """
         return (
-            self.db.session.query(models.Pool)
+            self.session.query(models.Pool)
             .filter(
                 models.Pool.exchange_name == exchange_name,
                 models.Pool.tkn1_key == src_token,

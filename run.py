@@ -9,9 +9,9 @@ Licensed under MIT
 import click
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.models import *
+from fastlane_bot.db.models import *
 
-session.rollback()
+# session.rollback()
 
 flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 
