@@ -4,7 +4,7 @@ Database manager object for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import Tuple, List, Dict, Any, Optional
 
 import brownie
@@ -45,24 +45,21 @@ class DatabaseManager:
     engine: sqlalchemy.engine = field(init=False)
     metadata: MetaData = field(init=False)
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
+    backend_url: InitVar[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self, backend_url=None):
         self.data = pd.read_csv(c.DATABASE_SEED_FILE)
         self.data = self.data.sort_values("exchange", ascending=False)
-        self.connect_db()
+        self.connect_db(backend_url=backend_url)
 
-    def connect_db(self):
+    def connect_db(self, *, backend_url=None):
         """
         Connects to the database. If the database does not exist, it creates it.
         """
+        if backend_url is None:
+            backend_url = c.DEFAULT_DB_BACKEND_URL
         self.metadata = sqlalchemy.MetaData()
-        if c.BACKEND == "sqlite":
-            engine = sqlalchemy.create_engine("sqlite:///fastlane.sqlite")
-        else:
-            engine = sqlalchemy.create_engine(
-                f"postgresql://{c.POSTGRES_USER}:{c.POSTGRES_PASSWORD}@{c.HOST_ADDRESS}/postgres"
-            )
-        engine.connect()
+        engine = sqlalchemy.create_engine(backend_url)
         models.mapper_registry.metadata.create_all(engine)
         sesh = sessionmaker(bind=engine)
         self.session = sesh()
@@ -751,7 +748,7 @@ class DatabaseManager:
         try:
             return self.session.query(models.Blockchain).filter(models.Blockchain.name == name).last_block
         except AttributeError:
-            c.logger.warning(f"Could not find last block for {name}")
+            c.logger.error(f"Could not find last block for {name}")
             return None
 
     def get_latest_block_for_pair(self, pair_name: str, exchange_name: str) -> int or str:
@@ -1058,8 +1055,7 @@ class DatabaseManager:
                 }
                 self.commit_pool(common_data, other_params)
             except Exception as e:
-                c.logger.warning(f"Error updating Carbon strategy {strategy}")
-                c.logger.warning(e)
+                c.logger.error(f"Error updating Carbon strategy {strategy} [{e}]")
                 continue
 
     def get_latest_block_for_exchange(self, exchange_name: str) -> int or str:
@@ -1158,7 +1154,7 @@ class DatabaseManager:
             The exception
         """
         self.session.rollback()
-        c.logger.warning(e)
+        c.logger.warning("[_rollback_and_log] {e}")
 
 
     def get_pool_from_exchange_and_token_keys(self, other_token: str, src_token: str, exchange_name: str) -> Optional[models.Pool]:
