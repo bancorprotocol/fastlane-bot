@@ -7,7 +7,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.4"
+__VERSION__ = "2.6.4.1"
 __DATE__ = "23/Apr/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
@@ -716,6 +716,7 @@ class ConstantProductCurve:
                     pa, pb = 1 / pa, 1 / pb
 
             # zero-width ranges are somewhat extended for numerical stability
+            pa0, pb0 = pa, pb
             if pa == pb:
                 pa *= 1.0000001
                 pb /= 1.0000001
@@ -727,12 +728,19 @@ class ConstantProductCurve:
             # finally set A, B
             A = sqrt(pa) - sqrt(pb)
             B = sqrt(pb)
+            A0 = A if pa0 != pb0 else 0
+        else:
+            A0 = A
+            if A/B < 1e-7:
+                A = B*1e-7
 
         # set some intermediate parameters (see handwritten notes in repo)
-        yasym = yint * B / A
+        # yasym = yint * B / A
         kappa = yint**2 / A**2
+        yasym_times_A = yint * B
+        kappa_times_A = yint**2 / A
 
-        params0 = dict(y=y, yint=yint, A=A, B=B)
+        params0 = dict(y=y, yint=yint, A=A0, B=B, pa=pa0, pb=pb0)
         if params is None:
             params = AttrDict(params0)
         else:
@@ -742,8 +750,9 @@ class ConstantProductCurve:
 
         return cls(
             k=kappa,
-            x=0,
-            x_act=kappa / (y + yasym) if y + yasym != 0 else 0,
+            x=kappa_times_A / (y * A + yasym_times_A) if y * A + yasym_times_A != 0 else 1e99,
+            #x=kappa / (y + yasym) if y + yasym != 0 else 0,
+            x_act=0,
             y_act=y,
             pair=f"{tknx}/{tkny}",
             cid=cid,
