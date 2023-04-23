@@ -176,7 +176,10 @@ class CarbonBotBase():
             except TypeError as e:
                 errorlogger(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
                 if not str(e).startswith("1unsupported operand type(s) for"):
-                    raise           
+                    raise    
+            except p.DoubleInvalidCurveError as e:
+                errorlogger(f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n")
+                #raise   
             except Exception as e:
                 errorlogger(f"[get_curves] error converting pool to curve {p} [{e}]\n")
                 raise
