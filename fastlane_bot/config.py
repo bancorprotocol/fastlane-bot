@@ -57,7 +57,6 @@ DEFAULT_GAS_PRICE = 0
 DEFAULT_GAS_PRICE_OFFSET = 1.05
 DEFAULT_GAS_SAFETY_OFFSET = 25_000
 DEFAULT_POLL_INTERVAL = 12
-VERBOSE = "INFO"
 DEFAULT_BLOCKTIME_DEVIATION = 13 * 500  # 10 block time deviation
 DEFAULT_MIN_PROFIT = Decimal("1")
 DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
@@ -220,6 +219,8 @@ BANCOR_ARBITRAGE_CONTRACT = w3.eth.contract(
 
 # LOGGER SETUP SECTION
 #######################################################################################
+LOGLEVEL = "INFO"
+
 def get_logger(verbose: str = "INFO") -> logging.Logger:
     """
     Returns a logger with the specified logging level
@@ -243,4 +244,4 @@ def get_logger(verbose: str = "INFO") -> logging.Logger:
     return logger
 
 
-logger = get_logger(VERBOSE)
+logger = get_logger(LOGLEVEL)
