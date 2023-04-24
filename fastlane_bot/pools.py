@@ -898,8 +898,8 @@ class CarbonV1Order:
         param: B: position variable
         param: logger: the logger to log for loggers!
         """
-        self.tkn0 = tkn_out
-        self.tkn1 = tkn_in
+        self.tkn0 = tkn_in
+        self.tkn1 = tkn_out
         self.order_id = order_id
         self.pair_name = tkn_out.symbol + "_" + tkn_in.symbol
         self.fee = fee
@@ -917,11 +917,8 @@ class CarbonV1Order:
                     f"Invalid Carbon position, y is greater than z or less than 0: y={self.y}, z={self.z}"
                 )
 
-        # self.y = Decimal(y / 10**self.tkn_out.decimals)
-        # self.z = Decimal(z / 10**self.tkn_out.decimals)
         self.c = self.get_c
         self.d = self.get_d
-        self.marginal_price = self.get_marginal_price
         self.max_in = self.get_max_in
 
     @property
@@ -991,30 +988,10 @@ class CarbonV1Order:
             return False
         return True
 
-    def order_to_pandas(self, order: int) -> pd.DataFrame:
+    def order_to_pandas(self, order: int):
         """
         Exports values for inspection...
         """
-
-        if order == 0:
-            df = pd.DataFrame({
-            # String values
-            "id": self.order_id,
-            "exchange": self.exchange,
-            "pair_name": self.pair_name,
-            "tkn_out": self.tkn0.address,
-            "tkn_in": self.tkn1.address,
-            # Decimal values
-            "y": self.y,
-            "z": self.z,
-            "A": self.A,
-            "B": self.B,
-            "c": self.c,
-            "d": self.d,
-            "fee": self.fee,
-            "marg_price": self.marginal_price,
-            "max_in": self.max_in,
-        })
 
         return {
             # String values

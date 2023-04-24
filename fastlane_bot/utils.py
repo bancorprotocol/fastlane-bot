@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from fastlane_bot.constants import ec
+from fastlane_bot.token import ERC20Token
 
 logger = ec.DEFAULT_LOGGER
 
@@ -219,8 +220,8 @@ class EncodedOrder:
     :p_start:    start token wei price of the order (in dy/dx)
     :p_end:      end token wei price of the order (in dy/dx)
     """
-    token_in: str
-    token_out: str
+    token_in: ERC20Token
+    token_out: ERC20Token
     y: int
     z: int
     A: int
@@ -244,32 +245,35 @@ class EncodedOrder:
         a single curve with the values of A,B decoded and as floats
         """
 
-        y: int
-        z: int
-        A: float
-        B: float
+        y: Decimal
+        z: Decimal
+        A: Decimal
+        B: Decimal
+        token_in: ERC20Token
+        token_out: ERC20Token
 
     @property
     def decoded(self):
         """
         returns a the order with A, B decoded as floats
         """
-        return self.DecodedOrder(y=self.y_, z=self.z_, A=self.A_, B=self.B_)
+        return self.DecodedOrder(y=self.y_, z=self.z_, A=self.A_, B=self.B_, token_in=self.token_in, token_out=self.token_out)
 
     @property
     def A_(self):
-        return self.decode(self.A)
+        return Decimal(str(self.decode(self.A)))
 
     @property
     def B_(self):
-        return self.decode(self.B)
+        return Decimal(str(self.decode(self.B)))
 
     @property
     def z_(self):
-        return self.z / 10 ** self.tkn_in_decimals
+        return Decimal(str(self.z / 10 ** self.token_out.decimals))
+
     @property
     def y_(self):
-        return self.y / 10 ** self.tkn_in_decimals
+        return Decimal(str(self.y / 10 ** self.token_out.decimals))
 
 
 def _quantize(amount: Decimal, decimals: int) -> Decimal:

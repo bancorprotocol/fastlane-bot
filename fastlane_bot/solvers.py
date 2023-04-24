@@ -11,7 +11,8 @@ from typing import Dict, Any, List, Tuple
 
 from fastlane_bot.constants import ec
 from fastlane_bot.pools import LiquidityPool, CarbonV1Order, UniswapV3LiquidityPool
-from fastlane_bot.utils import swap_bancor_eth_to_weth, convert_to_correct_decimal
+from fastlane_bot.token import ERC20Token
+from fastlane_bot.utils import swap_bancor_eth_to_weth, convert_to_correct_decimal, _quantize
 
 # *******************************************************************************************
 # RouteSolver Base - Base Class for Route Solvers
@@ -1213,11 +1214,23 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             logger.debug("One of the pools was 'None'")
             return {"key": key, "results": 0}
 
+        if (
+            p1.tkn1 != p2.tkn0 or
+            p2.tkn1 != p3.tkn0
+        ):
+            logger.error("Carbon calculator error! Token misalignment")
+            return {"key": key, "results": 0}
+
         results = self.carbon_specific_methods()
 
 
         # return route key + TradeAmts
         return {"key": key, "results": results}
+
+
+    def optimal_arb_carbon_triangular_constant_product(self):
+        pass
+
 
     def carbon_specific_methods(self):
         """
@@ -1226,40 +1239,51 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         TODO: Add Carbon V1 Solver Logic here
         """
         pass
-    @staticmethod
-    def get_trade_amts_carbon(tkns_in, pools: [LiquidityPool]):
-    
 
 
-        pass
+    def get_trade_amts_carbon_triangular(self, tkns_in, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
+
+        #Hardcoded to p1.tkn0 / 1 order
+        result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in,token0=p1.tkn0.amt, token1=p1.tkn1.amt, pool_fee=p1.fee, token_in=p1.tkn0, token_out=p1.tkn1)
+        tkns_in_carbon, tkns_out_carbon = self.get_output_trade_by_source(tkns_in=result_trade_1, order=p2)
+
+        if result_trade_1 > p2.max_in:
+            # traded in more than max, recalculating
+            tkns_in = self.get_in_given_out_constant_product(tokens_out=tkns_in_carbon, token0_amt=p1.tkn0.amt, token1_amt=p1.tkn1.amt, pool_fee=p1.fee)
+            result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in, token0=p1.tkn0.amt,
+                                                                                token1=p1.tkn1.amt, pool_fee=p1.fee,
+                                                                                token_in=p1.tkn0, token_out=p1.tkn1)
+
+        result_trade_3 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_out_carbon,token0=p3.tkn0.amt, token1=p3.tkn1.amt, pool_fee=p3.fee, token_in=p2.tkn1, token_out=p3.tkn1)
+        return [tkns_in, result_trade_1, tkns_out_carbon, result_trade_3]
 
 
 
 
-    @staticmethod
-    def get_optimal_input_triangular_constant_product(p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
+    def get_optimal_input_triangular_constant_product(self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
         """
         Trade input solve equation for Constant Product -> Carbon -> Constant Product
         """
         assert type(p1) != UniswapV3LiquidityPool and type(p3) != UniswapV3LiquidityPool
 
         return (p2.B ** 2 * p1.tkn0.amt * p2.z ** 2 - p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.z + 2 * p2.B * p2.A * p1.tkn0.amt * p2.y * p2.z - p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y + p2.A ** 2 * p1.tkn0.amt * p2.y ** 2 - p3.tkn0.amt * p2.z ** 2 - Decimal.sqrt(
-                     p2.B ** 4 * p1.tkn0.amt ** 2 * p2.z ** 4 + 2 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.z ** 3 + 4 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p2.y * p2.z ** 3 + p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p2.y ** 2 * p2.z ** 2 - 4 * p2.B ** 2 * p2.A * p1.tkn0.amt * p2.z ** 3 * sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.z ** 4 + 2 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y * p2.z + 6 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 2 * p2.z + 4 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p2.y ** 3 * p2.z - 8 * p2.B * p2.A ** 2 * p1.tkn0.amt * p2.y * p2.z ** 2 * sqrt(
+                     p2.B ** 4 * p1.tkn0.amt ** 2 * p2.z ** 4 + 2 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.z ** 3 + 4 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p2.y * p2.z ** 3 + p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p2.y ** 2 * p2.z ** 2 - 4 * p2.B ** 2 * p2.A * p1.tkn0.amt * p2.z ** 3 * Decimal.sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.z ** 4 + 2 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y * p2.z + 6 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 2 * p2.z + 4 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p2.y ** 3 * p2.z - 8 * p2.B * p2.A ** 2 * p1.tkn0.amt * p2.y * p2.z ** 2 * Decimal.sqrt(
                          p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.z ** 3 + 4 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.y * p2.z ** 3 - 4 * p2.B * p2.z ** 4 * Decimal.sqrt(
                          p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y ** 2 + 2 * p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 3 + p2.A ** 4 * p1.tkn0.amt ** 2 * p2.y ** 4 - 4 * p2.A ** 3 * p1.tkn0.amt * p2.y ** 2 * p2.z * Decimal.sqrt(
                          p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.y * p2.z ** 2 + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y ** 2 * p2.z ** 2 - 4 * p2.A * p2.y * p2.z ** 3 * Decimal.sqrt(
                          p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p3.tkn0.amt ** 2 * p2.z ** 4)) / (
                          2 * p2.B * p2.A * p1.tkn0.amt * p2.z + 2 * p2.A ** 2 * p1.tkn0.amt * p2.y + 2 * p2.z ** 2)
 
-
-    @staticmethod
-    def get_output_trade_by_source(order, tkns_in: Decimal) -> Tuple[Decimal, Decimal]:
+    def get_output_trade_by_source(self, order: CarbonV1Order, tkns_in: Decimal) -> Tuple[Decimal, Decimal]:
         """
         This function calculates and returns the input and output for a trade, given the number of tkns_in and the order
         param: the number of tokens going into the trade
-        param: order: a Carbon order
+        param: order: a DECODED Carbon order
         """
+
+        tkns_in = _quantize(tkns_in, order.tkn1.decimals)
+
         y, z, A, B = order.y, order.z, order.A, order.B
         tkns_out = Decimal(
             (tkns_in * (B * z + A * y) ** 2)
@@ -1270,6 +1294,8 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             tkns_out = y
 
         tkns_out = tkns_out * order.fee
+        tkns_out = _quantize(amount=tkns_out, decimals=order.tkn0.decimals)
+
         return tkns_in, tkns_out
 
     @staticmethod
@@ -1289,3 +1315,102 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         ) * order.fee
 
         return tkns_in, tkns_out
+
+
+    def single_trade_result_constant_product(self,
+            tokens_in, token0_amt, token1_amt, pool_fee
+    ) -> Decimal:
+        """
+        This function returns the output of a trade (-Dy) given Dx in a constant product pool
+
+        """
+        return Decimal(
+            (tokens_in * token1_amt * (1 - Decimal(pool_fee)))
+            / (tokens_in + token0_amt)
+        )
+
+    def single_trade_result_constant_product_accurate(self,
+            tokens_in, token0: ERC20Token, token1: ERC20Token, pool_fee,  token_in: ERC20Token, token_out: ERC20Token
+    ) -> Decimal:
+
+
+        """
+        This function returns the output of a trade (-Dy) given Dx in a constant product pool.
+        It adjusts to the maximum number of decimals for the given token for improved accuracy.
+        :param tokens_in: the number of tokens being traded into the pool
+        :param token0: token0 in the pool - the token traded in
+        :param token1: token1 in the pool - the token being received
+        :param pool_fee: the pool's fee
+        :param token_in: the token being traded into the pool
+        :param token_out: the token recevied from the trade
+        """
+        token0_in = swap_bancor_eth_to_weth(token0.address) == swap_bancor_eth_to_weth(token_in.address)
+        tokens_in = _quantize(amount=tokens_in, decimals=token_in.decimals)
+        trade_result = self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token0.amt, token1_amt=token1.amt, pool_fee=pool_fee) if token0_in else self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token1.amt, token1_amt=token0.amt, pool_fee=pool_fee)
+        tokens_out = _quantize(amount=trade_result, decimals=token_out.decimals)
+
+        return tokens_out
+
+    @staticmethod
+    def get_in_given_out_constant_product(
+            tokens_out, token0_amt, token1_amt, pool_fee
+    ) -> Decimal:
+        """This function returns the input of a trade (Dx) given -Dy in a constant product pool"""
+        return Decimal(
+            abs(
+                (tokens_out * token0_amt)
+                / (-tokens_out + pool_fee * token1_amt - token1_amt)
+            )
+        )
+
+    @staticmethod
+    def get_new_tkn_values_given_out_constant_product(
+            tkns_out: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal
+    ) -> Tuple[Decimal, Decimal]:
+        pool_k = tkn0_amt * tkn1_amt
+        new_tkn1_amt = tkn1_amt - tkns_out
+        new_tkn0_amt = pool_k / new_tkn1_amt
+        return new_tkn0_amt, new_tkn1_amt
+
+    def get_liquidity_pool_after_trade_constant_product(
+            self, tokens_in, liquidity_pool: LiquidityPool, is_forwards: bool
+    ) -> LiquidityPool:
+        """This function calculates the state of a liquidity pool after a trade"""
+        trade_output = (
+            self.single_trade_result_constant_product(
+                tokens_in,
+                liquidity_pool.tkn0.amt,
+                liquidity_pool.tkn1.amt,
+                liquidity_pool.fee,
+            )
+            if is_forwards
+            else self.single_trade_result_constant_product(
+                tokens_in,
+                liquidity_pool.tkn1.amt,
+                liquidity_pool.tkn0.amt,
+                liquidity_pool.fee,
+            )
+        )
+
+        new_token1_balance = (
+            liquidity_pool.tkn1.amt - trade_output
+            if is_forwards
+            else liquidity_pool.tkn1.amt + tokens_in
+        )
+        new_token0_balance = (
+            liquidity_pool.tkn0.amt + tokens_in
+            if is_forwards
+            else liquidity_pool.tkn0.amt - trade_output
+        )
+
+        liquidity_pool.tkn0.amt = new_token0_balance
+        liquidity_pool.tkn1.amt = new_token1_balance
+
+        return LiquidityPool(
+            init_liquidity=False,
+            exchange=liquidity_pool.exchange,
+            tkn0=liquidity_pool.tkn0,
+            tkn1=liquidity_pool.tkn1,
+            address=liquidity_pool.address,
+            fee=liquidity_pool.fee,
+        )
