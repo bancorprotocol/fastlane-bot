@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.5-beta1"
-__DATE__ = "22/Apr/2023"
+__VERSION__ = "3.5.2"
+__DATE__ = "24/Apr/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -350,6 +350,12 @@ FORMATTER = lambda x: "" if ((abs(x) < 1e-10) or math.isnan(x)) else f"{x:,.2f}"
 
 F = OptimizerBase.F
 
+TIF_OBJECTS = "objects"
+TIF_DICTS = "dicts"
+TIF_DFP = "dfp"
+TIF_DFRAW = "dfraw"
+TIF_DFAGGR = "dfaggr"
+TIF_DF = "dfraw"
 
 class CPCArbOptimizer(OptimizerBase):
     """
@@ -1189,8 +1195,8 @@ class CPCArbOptimizer(OptimizerBase):
                             :debug2:           more debug output
                             :raiseonerror:     if True, raise an OptimizationError exception on error
                             :pstart:           starting price for optimization, either as dict {tkn:p, ...},
-                                               or as df as price estimate as returned by MO_PSTART;
-                                               excess tokens can be provided but all required tokens must be present
+                                                or as df as price estimate as returned by MO_PSTART;
+                                                excess tokens can be provided but all required tokens must be present
 
         :returns:           MargpOptimizerResult on the default path, others depending on the
                             chosen result
@@ -1482,6 +1488,193 @@ class CPCArbOptimizer(OptimizerBase):
             )
 
     @dataclass
+    class TradeInstruction(_DCBase):
+        """
+        encodes a trade
+
+        seen from the AMM; in numbers must be positive, out numbers negative
+        """
+
+        cid: any
+        tknin: str
+        amtin: float
+        tknout: str
+        amtout: float
+        error: str = field(repr=True, default=None)
+        curve: InitVar = None
+        raiseonerror: InitVar = False
+
+        POSNEGEPS = 1e-8
+
+        def __post_init__(self, curve=None, raiseonerror=False):
+            self.curve = curve
+            if curve is not None:
+                if self.cid != curve.cid:
+                    err = f"curve/cid mismatch [{self.cid} vs {curve.cid}]"
+                    self.error = err
+                    if raiseonerror:
+                        raise ValueError(err)
+            if self.tknin == self.tknout:
+                err = f"tknin and tknout must be different [{self.tknin} {self.tknout}]"
+                self.error = err
+                if raiseonerror:
+                    raise ValueError(err)
+            self.cid = str(self.cid)
+            self.tknin = str(self.tknin)
+            self.tknout = str(self.tknout)
+            self.amtin = float(self.amtin)
+            self.amtout = float(self.amtout)
+            if not self.amtin * self.amtout < 0:
+                if (
+                    abs(self.amtin) < self.POSNEGEPS
+                    and abs(self.amtout) < self.POSNEGEPS
+                ):
+                    self.amtin = 0
+                    self.amtout = 0
+                else:
+                    err = f"amtin and amtout must be of different sign [{self.amtin} {self.tknin}, {self.amtout} {self.tknout}]"
+                    self.error = err
+                    if raiseonerror:
+                        raise ValueError(err)
+
+            if not self.amtin >= 0:
+                err = f"amtin must be positive [{self.amtin}]"  # seen from AMM
+                self.error = err
+                if raiseonerror:
+                    raise ValueError(err)
+            
+            if not self.amtout <= 0:
+                err = f"amtout must be negative [{self.amtout}]"  # seen from AMM
+                self.error = err
+                if raiseonerror:
+                    raise ValueError(err)
+
+        TIEPS = 1e-10
+
+        @classmethod
+        def new(cls, curve_or_cid, tkn1, amt1, tkn2, amt2, *, eps=None):
+            """automatically determines which is in and which is out"""
+            try:
+                cid = curve_or_cid.cid
+                curve = curve_or_cid
+            except:
+                cid = curve_or_cid
+                curve = None
+            if eps is None:
+                eps = cls.TIEPS
+            if amt1 > 0:
+                newobj = cls(
+                    cid=cid,
+                    tknin=tkn1,
+                    amtin=amt1,
+                    tknout=tkn2,
+                    amtout=amt2,
+                    curve=curve,
+                )
+            else:
+                newobj = cls(
+                    cid=cid,
+                    tknin=tkn2,
+                    amtin=amt2,
+                    tknout=tkn1,
+                    amtout=amt1,
+                    curve=curve,
+                )
+
+            return newobj
+
+        @property
+        def is_empty(self):
+            """returns True if this is an empty trade instruction (too close to zero)"""
+            return self.amtin == 0 or self.amtout == 0
+
+        @classmethod
+        def to_dicts(cls, trade_instructions):
+            """converts iterable ot TradeInstruction objects to a list of dicts"""
+            return [ti.asdict() for ti in trade_instructions]
+
+        @classmethod
+        def to_df(cls, trade_instructions, ti_format=None):
+            """converts iterable ot TradeInstruction objects to a pandas dataframe"""
+            if ti_format is None:
+                ti_format = cls.TIF_DF
+            dicts = (
+                {
+                    "cid": ti.cid,
+                    "pair": ti.curve.pair if not ti.curve is None else "",
+                    "pairp": ti.curve.pairp if not ti.curve is None else "",
+                    "tknin": ti.tknin,
+                    "tknout": ti.tknout,
+                    ti.tknin: ti.amtin,
+                    ti.tknout: ti.amtout,
+                }
+                for ti in trade_instructions
+            )
+            df = pd.DataFrame.from_dict(list(dicts)).set_index("cid")
+            if ti_format == cls.TIF_DFRAW:
+                return df
+            if ti_format == cls.TIF_DFAGGR:
+                df1r = df[df.columns[4:]]
+                df1 = df1r.fillna(0)
+                dfa = df1.sum().to_frame(name="TOTAL NET").T
+                dfp = df1[df1 > 0].sum().to_frame(name="AMMIn").T
+                dfn = df1[df1 < 0].sum().to_frame(name="AMMOut").T
+                return pd.concat([df1r, dfp, dfn, dfa], axis=0)
+                return df1, dfa
+            if ti_format == cls.TIF_DFP:
+                return df.fillna("")
+            raise ValueError(f"unknown format {ti_format}")
+
+        TIF_OBJECTS = TIF_OBJECTS
+        TIF_DICTS = TIF_DICTS
+        TIF_DFP = TIF_DFP
+        TIF_DFRAW = TIF_DFRAW
+        TIF_DFAGGR = TIF_DFAGGR
+        TIF_DF = TIF_DF
+
+        @classmethod
+        def to_format(cls, trade_instructions, ti_format=None):
+            """converts iterable ot TradeInstruction objects to the given format (TIF_XXX)"""
+            if ti_format is None:
+                ti_format = cls.TIF_OBJECTS
+            if ti_format == cls.TIF_OBJECTS:
+                return tuple(trade_instructions)
+            elif ti_format == cls.TIF_DICTS:
+                return cls.to_dicts(trade_instructions)
+            elif ti_format[:2] == "df":
+                trade_instructions = tuple(trade_instructions)
+                if len(trade_instructions) == 0:
+                    return pd.DataFrame()
+                return cls.to_df(trade_instructions, ti_format=ti_format)
+            else:
+                raise ValueError(f"unknown format {ti_format}")
+
+        @property
+        def price_outperin(self):
+            return -self.amtout / self.amtin
+
+        p = price_outperin
+
+        @property
+        def price_inperout(self):
+            return -self.amtin / self.amtout
+
+        pr = price_inperout
+
+        @property
+        def prices(self):
+            return (self.price_outperin, self.price_inperout)
+
+        pp = prices
+
+    TIF_OBJECTS = TIF_OBJECTS
+    TIF_DICTS = TIF_DICTS
+    TIF_DFP = TIF_DFP
+    TIF_DFRAW = TIF_DFRAW
+    TIF_DFAGGR = TIF_DFAGGR
+    TIF_DF = TIF_DF
+    
+    @dataclass
     class MargpOptimizerResult(OptimizerBase.OptimizerResult):
         """
         results of the simple optimizer
@@ -1489,6 +1682,12 @@ class CPCArbOptimizer(OptimizerBase):
         :p_optimal:         optimal p values
 
         """
+        TIF_OBJECTS = TIF_OBJECTS
+        TIF_DICTS = TIF_DICTS
+        TIF_DFP = TIF_DFP
+        TIF_DFRAW = TIF_DFRAW
+        TIF_DFAGGR = TIF_DFAGGR
+        TIF_DF = TIF_DF
 
         curves: list = field(repr=False, default=None)
         targettkn: str = field(repr=True, default=None)
@@ -1616,172 +1815,3 @@ class CPCArbOptimizer(OptimizerBase):
         """
         return self.curve_container.format(*args, **kwargs)
 
-    @dataclass
-    class TradeInstruction(_DCBase):
-        """
-        encodes a trade
-
-        seen from the AMM; in numbers must be positive, out numbers negative
-        """
-
-        cid: any
-        tknin: str
-        amtin: float
-        tknout: str
-        amtout: float
-        curve: InitVar = None
-
-        POSNEGEPS = 1e-8
-
-        def __post_init__(self, curve=None):
-            self.curve = curve
-            if curve is not None:
-                assert (
-                    self.cid == curve.cid
-                ), f"curve/cid mismatch [{self.cid} vs {curve.cid}]"
-            self.cid = str(self.cid)
-            self.tknin = str(self.tknin)
-            self.tknout = str(self.tknout)
-            self.amtin = float(self.amtin)
-            self.amtout = float(self.amtout)
-            if not self.amtin * self.amtout < 0:
-                if (
-                    abs(self.amtin) < self.POSNEGEPS
-                    and abs(self.amtout) < self.POSNEGEPS
-                ):
-                    self.amtin = 0
-                    self.amtout = 0
-                else:
-                    raise ValueError(
-                        f"amtin and amtout must be of different sign [{self.amtin} {self.tknin}, {self.amtout} {self.tknout}]"
-                    )
-            assert (
-                self.amtin >= 0
-            ), f"amtin must be positive [{self.amtin}]"  # seen from AMM
-            assert self.amtout <= 0, f"amtout must be negative [{self.amtout}]"
-
-        TIEPS = 1e-10
-
-        @classmethod
-        def new(cls, curve_or_cid, tkn1, amt1, tkn2, amt2, *, eps=None):
-            """automatically determines which is in and which is out"""
-            try:
-                cid = curve_or_cid.cid
-                curve = curve_or_cid
-            except:
-                cid = curve_or_cid
-                curve = None
-            if eps is None:
-                eps = cls.TIEPS
-            assert tkn1 != tkn2, f"tkn1 and tkn2 must be different [{tkn1} {tkn2}]"
-            if amt1 > 0:
-                newobj = cls(
-                    cid=cid,
-                    tknin=tkn1,
-                    amtin=amt1,
-                    tknout=tkn2,
-                    amtout=amt2,
-                    curve=curve,
-                )
-            else:
-                newobj = cls(
-                    cid=cid,
-                    tknin=tkn2,
-                    amtin=amt2,
-                    tknout=tkn1,
-                    amtout=amt1,
-                    curve=curve,
-                )
-
-            return newobj
-
-        @property
-        def is_empty(self):
-            """returns True if this is an empty trade instruction (too close to zero)"""
-            return self.amtin == 0 or self.amtout == 0
-
-        @classmethod
-        def to_dicts(cls, trade_instructions):
-            """converts iterable ot TradeInstruction objects to a list of dicts"""
-            return [ti.asdict() for ti in trade_instructions]
-
-        @classmethod
-        def to_df(cls, trade_instructions, ti_format=None):
-            """converts iterable ot TradeInstruction objects to a pandas dataframe"""
-            if ti_format is None:
-                ti_format = cls.TIF_DF
-            dicts = (
-                {
-                    "cid": ti.cid,
-                    "pair": ti.curve.pair if not ti.curve is None else "",
-                    "pairp": ti.curve.pairp if not ti.curve is None else "",
-                    "tknin": ti.tknin,
-                    "tknout": ti.tknout,
-                    ti.tknin: ti.amtin,
-                    ti.tknout: ti.amtout,
-                }
-                for ti in trade_instructions
-            )
-            df = pd.DataFrame.from_dict(list(dicts)).set_index("cid")
-            if ti_format == cls.TIF_DFRAW:
-                return df
-            if ti_format == cls.TIF_DFAGGR:
-                df1r = df[df.columns[4:]]
-                df1 = df1r.fillna(0)
-                dfa = df1.sum().to_frame(name="TOTAL NET").T
-                dfp = df1[df1 > 0].sum().to_frame(name="AMMIn").T
-                dfn = df1[df1 < 0].sum().to_frame(name="AMMOut").T
-                return pd.concat([df1r, dfp, dfn, dfa], axis=0)
-                return df1, dfa
-            if ti_format == cls.TIF_DFP:
-                return df.fillna("")
-            raise ValueError(f"unknown format {ti_format}")
-
-        TIF_OBJECTS = "objects"
-        TIF_DICTS = "dicts"
-        TIF_DFP = "dfp"
-        TIF_DFRAW = "dfraw"
-        TIF_DFAGGR = "dfaggr"
-        TIF_DF = "dfraw"
-
-        @classmethod
-        def to_format(cls, trade_instructions, ti_format=None):
-            """converts iterable ot TradeInstruction objects to the given format (TIF_XXX)"""
-            if ti_format is None:
-                ti_format = cls.TIF_OBJECTS
-            if ti_format == cls.TIF_OBJECTS:
-                return tuple(trade_instructions)
-            elif ti_format == cls.TIF_DICTS:
-                return cls.to_dicts(trade_instructions)
-            elif ti_format[:2] == "df":
-                trade_instructions = tuple(trade_instructions)
-                if len(trade_instructions) == 0:
-                    return pd.DataFrame()
-                return cls.to_df(trade_instructions, ti_format=ti_format)
-            else:
-                raise ValueError(f"unknown format {ti_format}")
-
-        @property
-        def price_outperin(self):
-            return -self.amtout / self.amtin
-
-        p = price_outperin
-
-        @property
-        def price_inperout(self):
-            return -self.amtin / self.amtout
-
-        pr = price_inperout
-
-        @property
-        def prices(self):
-            return (self.price_outperin, self.price_inperout)
-
-        pp = prices
-
-    TIF_OBJECTS = TradeInstruction.TIF_OBJECTS
-    TIF_DICTS = TradeInstruction.TIF_DICTS
-    TIF_DFP = TradeInstruction.TIF_DFP
-    TIF_DFRAW = TradeInstruction.TIF_DFRAW
-    TIF_DFAGGR = TradeInstruction.TIF_DFAGGR
-    TIF_DF = TradeInstruction.TIF_DF
