@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Dict, Any, List, Tuple
 
 from fastlane_bot.constants import ec
-from fastlane_bot.pools import LiquidityPool
+from fastlane_bot.pools import LiquidityPool, CarbonV1Order, UniswapV3LiquidityPool
 from fastlane_bot.utils import swap_bancor_eth_to_weth, convert_to_correct_decimal
 
 # *******************************************************************************************
@@ -1196,7 +1196,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             self.route
         )  # Any is used to avoid circular imports. (`ConstantFunctionRoute` or `ConstantFunctionRoute`)
         p1: LiquidityPool = route.p1
-        p2: LiquidityPool = route.p2
+        p2: CarbonV1Order = route.p2
         p3: LiquidityPool = route.p3
 
         key: str = f"{p1.tkn0.symbol}_{p1.tkn1.symbol}->{p2.tkn0.symbol}_{p2.tkn1.symbol}->{p3.tkn0.symbol}_{p3.tkn1.symbol}"
@@ -1214,6 +1214,9 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             return {"key": key, "results": 0}
 
         results = self.carbon_specific_methods()
+
+
+        # return route key + TradeAmts
         return {"key": key, "results": results}
 
     def carbon_specific_methods(self):
@@ -1223,3 +1226,66 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         TODO: Add Carbon V1 Solver Logic here
         """
         pass
+    @staticmethod
+    def get_trade_amts_carbon(tkns_in, pools: [LiquidityPool]):
+    
+
+
+        pass
+
+
+
+
+    @staticmethod
+    def get_optimal_input_triangular_constant_product(p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
+        """
+        Trade input solve equation for Constant Product -> Carbon -> Constant Product
+        """
+        assert type(p1) != UniswapV3LiquidityPool and type(p3) != UniswapV3LiquidityPool
+
+        return (p2.B ** 2 * p1.tkn0.amt * p2.z ** 2 - p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.z + 2 * p2.B * p2.A * p1.tkn0.amt * p2.y * p2.z - p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y + p2.A ** 2 * p1.tkn0.amt * p2.y ** 2 - p3.tkn0.amt * p2.z ** 2 - Decimal.sqrt(
+                     p2.B ** 4 * p1.tkn0.amt ** 2 * p2.z ** 4 + 2 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.z ** 3 + 4 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p2.y * p2.z ** 3 + p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p2.y ** 2 * p2.z ** 2 - 4 * p2.B ** 2 * p2.A * p1.tkn0.amt * p2.z ** 3 * sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.z ** 4 + 2 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y * p2.z + 6 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 2 * p2.z + 4 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p2.y ** 3 * p2.z - 8 * p2.B * p2.A ** 2 * p1.tkn0.amt * p2.y * p2.z ** 2 * sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.z ** 3 + 4 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.y * p2.z ** 3 - 4 * p2.B * p2.z ** 4 * Decimal.sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y ** 2 + 2 * p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 3 + p2.A ** 4 * p1.tkn0.amt ** 2 * p2.y ** 4 - 4 * p2.A ** 3 * p1.tkn0.amt * p2.y ** 2 * p2.z * Decimal.sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.y * p2.z ** 2 + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y ** 2 * p2.z ** 2 - 4 * p2.A * p2.y * p2.z ** 3 * Decimal.sqrt(
+                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p3.tkn0.amt ** 2 * p2.z ** 4)) / (
+                         2 * p2.B * p2.A * p1.tkn0.amt * p2.z + 2 * p2.A ** 2 * p1.tkn0.amt * p2.y + 2 * p2.z ** 2)
+
+
+    @staticmethod
+    def get_output_trade_by_source(order, tkns_in: Decimal) -> Tuple[Decimal, Decimal]:
+        """
+        This function calculates and returns the input and output for a trade, given the number of tkns_in and the order
+        param: the number of tokens going into the trade
+        param: order: a Carbon order
+        """
+        y, z, A, B = order.y, order.z, order.A, order.B
+        tkns_out = Decimal(
+            (tkns_in * (B * z + A * y) ** 2)
+            / (tkns_in * (B * A * z + A**2 * y) + z**2)
+        )
+        if tkns_out > y:
+            tkns_in = CarbonV1RouteSolver.get_input_trade_by_target(order, y)
+            tkns_out = y
+
+        tkns_out = tkns_out * order.fee
+        return tkns_in, tkns_out
+
+    @staticmethod
+    def get_input_trade_by_target(order, tkns_out: Decimal) -> Tuple[Decimal, Decimal]:
+        """
+        This function calculates and returns the source amount and target amount for a trade, given a target amount input for a Carbon order.
+        If the order output would exceed the maximum number of tokens, it adjusts to the maximum output.
+        param tkns_out: the number of tokens to receive from the trade
+        param order: a Carbon order
+        """
+        y, z, A, B = order.y, order.z, order.A, order.B
+        if tkns_out > y:
+            tkns_out = y
+
+        tkns_in = (
+            (tkns_out * z**2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
+        ) * order.fee
+
+        return tkns_in, tkns_out

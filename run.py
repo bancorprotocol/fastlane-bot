@@ -27,7 +27,7 @@ all_tokens = all_tokens[:-1]
 @click.option("--n_jobs", default=ec.DEFAULT_N_JOBS, type=int)
 @click.option("--number_of_retries", default=ec.DEFAULT_NUM_RETRIES, type=int)
 @click.option("--execute_mode", default=ec.DEFAULT_EXECUTE_MODE, type=str)
-@click.option("--exchanges", default=f"{ec.BANCOR_V3_NAME}-{ec.UNISWAP_V3_NAME}-{ec.UNISWAP_V2_NAME}-{ec.SUSHISWAP_V2_NAME}", type=str)
+@click.option("--exchanges", default=f"{ec.BANCOR_V3_NAME}-{ec.CARBON_V1_NAME}", type=str)
 @click.option("--tokens", default=all_tokens, type=str)
 @click.option("--min_profit", default=ec.DEFAULT_MIN_PROFIT, type=Decimal)
 @click.option("--search_delay", default=ec.DEFAULT_SEARCH_DELAY, type=int)

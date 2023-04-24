@@ -21,7 +21,7 @@ from fastlane_bot.networks import *
 from fastlane_bot.token import ERC20Token
 from fastlane_bot.utils import (
     get_abi_and_router,
-    convert_decimals,
+    convert_decimals, EncodedOrder,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -222,6 +222,11 @@ class BaseLiquidityPool:
         self.tkn0.amt = convert_decimals(self.tkn0.amt, n=self.tkn0.decimals)
         self.tkn1.amt = convert_decimals(self.tkn1.amt, n=self.tkn1.decimals)
 
+    def swap_output(self, tkns_in, token_in, token_out):
+        """
+        Swap function for given Liquidity Pool type
+        """
+        pass
     def handle_tkn_set_order(self, is_reversed, tkn0, tkn1):
         """
         Handle resetting the order of the tokens in the pool after liquidity is updated.
@@ -397,7 +402,6 @@ class ConstantProductLiquidityPool(BaseLiquidityPool, ABC):
     """
     Represents a constant product liquidity pool. Used for typechecking via inheritance.
     """
-
 
 # *******************************************************************************************
 # Uniswap V2 Pool
@@ -862,6 +866,175 @@ class UniswapV3LiquidityPool(BaseLiquidityPool):
 # Carbon Pool
 # *******************************************************************************************
 
+@dataclass
+class CarbonV1Order:
+    """
+    The fee is a global variable on Carbon. At the smart-contract level, this is represented as a percentage in PPM (parts-per-million).
+    Here, for simplicity, we represent it as a value we can multiply by. For example a 1% fee would be: 0.99
+    """
+
+    order_id: str = None
+    exchange: str = ec.CARBON_V1_NAME
+    pair_name: str = None
+
+    def __init__(
+        self,
+        tkn_out: ERC20Token,
+        tkn_in: ERC20Token,
+        order_id: str,
+        block_updated: int,
+        y: Decimal = None,
+        z: Decimal = None,
+        A: Decimal = None,
+        B: Decimal = None,
+        fee: Decimal = ec.CARBON_FEE,
+        encoded_order: EncodedOrder = None,
+
+    ):
+        """
+        param: y: y in the contract
+        param: z: this is the label given to the y intercept in the contract.
+        param: A: position variable
+        param: B: position variable
+        param: logger: the logger to log for loggers!
+        """
+        self.tkn0 = tkn_out
+        self.tkn1 = tkn_in
+        self.order_id = order_id
+        self.pair_name = tkn_out.symbol + "_" + tkn_in.symbol
+        self.fee = fee
+
+        if encoded_order is not None:
+            decoded = encoded_order.decoded
+            self.y, self.z, self.A, self.B = decoded.y, decoded.z, decoded.A, decoded.B
+        else:
+            self.y = y
+            self.B = B
+            self.A = A
+            self.z = z
+            if not self.valid_position:
+                raise Exception(
+                    f"Invalid Carbon position, y is greater than z or less than 0: y={self.y}, z={self.z}"
+                )
+
+        # self.y = Decimal(y / 10**self.tkn_out.decimals)
+        # self.z = Decimal(z / 10**self.tkn_out.decimals)
+        self.c = self.get_c
+        self.d = self.get_d
+        self.marginal_price = self.get_marginal_price
+        self.max_in = self.get_max_in
+
+    @property
+    def get_c(self):
+        """
+        Returns the value of C for an order. C represents the following order parameters:
+        C = (B * y_int + A * y)^2
+        """
+        return Decimal((self.B * self.z + self.A * self.y) ** 2)
+
+    @property
+    def get_d(self) -> Decimal:
+        """
+        Returns the value of D for an order. D represents the following order parameters:
+        D = B * A * y_int + A^2 * y
+        """
+        return Decimal(self.B * self.A * self.z + self.A**2 * self.y)
+
+    @property
+    def is_active(self) -> bool:
+        """
+        Returns true if the order currently has liquidity that can be traded
+        """
+        return self.y > 0
+
+    def update_y(self, y_delta):
+        """
+        Updates the y (remaining liquidity) in the order.
+        When selling tokens, the y_delta should be negative, and when updating the linked order, it should be positive.
+        """
+        if self.y + y_delta < 0 or self.y + y_delta > self.z:
+            raise Exception("Invalid update! y cannot go below 0 or above y_int")
+
+        self.y = self.y + y_delta
+
+    def update_z(self, new_y_int):
+        """
+        Updates z, the y intercept for instances in which an order size is expanded due to trading.
+        """
+        self.z = new_y_int
+
+    @property
+    def get_marginal_price(self) -> Decimal:
+        """
+        Calculates the current marginal price (Dy/Dx) of the order.
+        """
+
+        return Decimal((self.B * self.z + self.A * self.y) ** 2 / (self.z**2))
+
+    @property
+    def get_max_in(self) -> Decimal:
+        """
+        This returns the maximum amount that can be traded into the order.
+        """
+        y, z, A, B = self.y, self.z, self.A, self.B
+        tkns_in = (
+            (y * z**2) / ((A * y + B * z) * (A * y + B * z - A * y))
+        ) * self.fee
+        return tkns_in
+
+    @property
+    def valid_position(self) -> bool:
+        """
+        Validates the position by checking if the value y is below 0 or above z.
+        """
+        if self.y < 0 or self.y > self.z:
+            return False
+        return True
+
+    def order_to_pandas(self, order: int) -> pd.DataFrame:
+        """
+        Exports values for inspection...
+        """
+
+        if order == 0:
+            df = pd.DataFrame({
+            # String values
+            "id": self.order_id,
+            "exchange": self.exchange,
+            "pair_name": self.pair_name,
+            "tkn_out": self.tkn0.address,
+            "tkn_in": self.tkn1.address,
+            # Decimal values
+            "y": self.y,
+            "z": self.z,
+            "A": self.A,
+            "B": self.B,
+            "c": self.c,
+            "d": self.d,
+            "fee": self.fee,
+            "marg_price": self.marginal_price,
+            "max_in": self.max_in,
+        })
+
+        return {
+            # String values
+            "id": self.order_id,
+            "exchange": self.exchange,
+            "pair_name": self.pair_name,
+            "tkn_out": self.tkn0.address,
+            "tkn_in": self.tkn1.address,
+            # Decimal values
+            "y": self.y,
+            "z": self.z,
+            "A": self.A,
+            "B": self.B,
+            "c": self.c,
+            "d": self.d,
+            "fee": self.fee,
+            "marg_price": self.marginal_price,
+            "max_in": self.max_in,
+        }
+
 
 @dataclass
 class OrderBookDexLiquidityPool(BaseLiquidityPool, ABC):
@@ -878,6 +1051,10 @@ class CarbonV1LiquidityPool(OrderBookDexLiquidityPool):
     Represents a Carbon V1 pool.
     """
 
+    """
+        Represents a Carbon V1 pool.
+        """
+
     # optional fields (automatically populated if not provided)
     address: str = None
     liquidity: Decimal = None
@@ -885,25 +1062,40 @@ class CarbonV1LiquidityPool(OrderBookDexLiquidityPool):
     contract: Contract = None
     exchange: str = ec.CARBON_V1_NAME
     exchange_id: int = ec.EXCHANGE_IDS[ec.CARBON_V1_NAME][0]
+    strategy_id: int = None
+    orders: [2] = None
+    strategy_owner: str = None
 
     # Carbon specific fields
     # ...
     # ...
 
-    def update_liquidity(
-        self,
-        contract: Contract = None,
-        tkn0: ERC20Token = None,
-        tkn1: ERC20Token = None,
-    ):
+    def update_liquidity(self, contract: Contract = None, strategy_id: int = None):
         """
         Update the liquidity of the pool.
         """
+        self.strategy_id = strategy_id
+        strategy = contract.strategy(self.strategy_id)
+        strategy_owner = strategy[1]
+        token_pair = strategy[2]
+        order0, order1 = strategy[3]
+        # TODO Need to validate if we should order tokens like this > > >
+        self.orders[0] = CarbonV1Order(
+            order_id=self.strategy_id,
+            tkn_in=self.tkn1,
+            tkn_out=self.tkn0,
+            encoded_order=order0,
+        )
+        self.orders[1] = CarbonV1Order(
+            order_id=self.strategy_id,
+            tkn_in=self.tkn0,
+            tkn_out=self.tkn1,
+            encoded_order=order1,
+        )
         return self
 
     def __post_init__(self):
         self.setup()
-
 
 # *******************************************************************************************
 # Liquidity Pool

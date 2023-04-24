@@ -9,6 +9,9 @@ import logging
 import os
 from decimal import *
 
+import web3
+from web3 import Web3
+
 getcontext().prec = 150
 from dataclasses import dataclass
 
@@ -158,7 +161,10 @@ class EthereumNetworkConstants:
 
     # Carbon
     CARBON_V1_NAME = "carbon_v1"
-
+    CARBON_FEE = Decimal("0.002")
+    CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
+    CARBON_CONTROLLER_ABI = CARBON_CONTROLLER_ABI
+    CARBON_STRATEGY_CHUNK_SIZE = 100
     # # Environment Variables
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
     ETH_PRIVATE_KEY = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
@@ -170,6 +176,11 @@ class EthereumNetworkConstants:
 
     VALID_TENDERLY_NETWORKS = ["tenderly", "tenderly_mainnet"]
     VALID_ETHEREUM_NETWORKS = ["mainnet", "ethereum"]
+
+    web3 = Web3(web3.HTTPProvider(ETHEREUM_MAINNET_PROVIDER))
+
+    CARBON_CONTROLLER_CONTRACT = web3.eth.contract(address=web3.toChecksumAddress(CARBON_CONTROLLER_ADDRESS), abi=CARBON_CONTROLLER_ABI)
+
 
     def __post_init__(self):
         """

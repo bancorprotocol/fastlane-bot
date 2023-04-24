@@ -7,7 +7,7 @@ Licensed under MIT
 import os
 from decimal import *
 from typing import Tuple, Sequence, Any, Generator
-
+from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
@@ -202,3 +202,99 @@ def format_amt(amt, C: int = 6) -> str:
     except Exception as e:
         logger.debug(f"error while formatting {amt}: {e}")
         return "0"
+
+@dataclass
+class EncodedOrder:
+    """
+    a single curve as encoded by the SDK
+
+    :token:      token address
+    :y:          number of token wei to sell on the curve
+    :z:          curve capacity in number of token wei
+    :A:          curve parameter A, multiplied by 2**48, encoded
+    :B:          curve parameter B, multiplied by 2**48, encoded
+    ----
+    :A_:         curve parameter A in proper units
+    :B_:         curve parameter B in proper units
+    :p_start:    start token wei price of the order (in dy/dx)
+    :p_end:      end token wei price of the order (in dy/dx)
+    """
+    token_in: str
+    token_out: str
+    y: int
+    z: int
+    A: int
+    B: int
+    tkn_in_decimals: int
+    ONE = 2**48
+
+    @classmethod
+    def decodeFloat(cls, value):
+        """undoes the mantisse/exponent encoding in A,B"""
+        return (value % cls.ONE) << (value // cls.ONE)
+
+    @classmethod
+    def decode(cls, value):
+        """decodes A,B to float"""
+        return cls.decodeFloat(int(value)) / cls.ONE
+
+    @dataclass
+    class DecodedOrder:
+        """
+        a single curve with the values of A,B decoded and as floats
+        """
+
+        y: int
+        z: int
+        A: float
+        B: float
+
+    @property
+    def decoded(self):
+        """
+        returns a the order with A, B decoded as floats
+        """
+        return self.DecodedOrder(y=self.y_, z=self.z_, A=self.A_, B=self.B_)
+
+    @property
+    def A_(self):
+        return self.decode(self.A)
+
+    @property
+    def B_(self):
+        return self.decode(self.B)
+
+    @property
+    def z_(self):
+        return self.z / 10 ** self.tkn_in_decimals
+    @property
+    def y_(self):
+        return self.y / 10 ** self.tkn_in_decimals
+
+
+def _quantize(amount: Decimal, decimals: int) -> Decimal:
+    """
+    Quantizes the amount based on the token decimals.
+
+    Parameters
+    ----------
+    amount: Decimal
+        The amount.
+    decimals: int
+        The token decimals.
+
+    Returns
+    -------
+    Decimal
+        The quantized amount.
+    """
+
+    if "." not in str(amount):
+        return Decimal(str(amount))
+    amount_num = str(amount).split(".")[0]
+    amount_dec = str(amount).split(".")[1]
+    amount_dec = str(amount_dec)[:decimals]
+    try:
+        return Decimal(f"{str(amount_num)}.{amount_dec}")
+    except Exception as e:
+        print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")

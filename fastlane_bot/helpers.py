@@ -17,7 +17,7 @@ from datetime import datetime
 from decimal import *
 from functools import reduce
 from typing import List, Any, Dict, Tuple, Union
-
+from fastlane_bot.data.token_lookup import get_token_decimals
 import brownie
 import numpy as np
 import pandas as pd
@@ -28,12 +28,12 @@ from web3.exceptions import TimeExhausted
 from alchemy import Alchemy, Network
 from fastlane_bot.exceptions import ResultLoggingException
 from fastlane_bot.networks import *
-from fastlane_bot.pools import LiquidityPool, UniswapV3LiquidityPool
-from fastlane_bot.routes import Route, ConstantProductRoute, ConstantFunctionRoute
+from fastlane_bot.pools import LiquidityPool, UniswapV3LiquidityPool, CarbonV1Order
+from fastlane_bot.routes import Route, ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute
 from fastlane_bot.utils import (
     format_amt,
     convert_decimals_to_wei_format,
-    convert_weth_to_eth,
+    convert_weth_to_eth, EncodedOrder,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -514,6 +514,8 @@ class Hexbytes:
         return self.value.hex()
 
 
+
+
 @dataclass
 class SearchHelpers(BaseHelper):
     """
@@ -531,7 +533,7 @@ class SearchHelpers(BaseHelper):
         """
         Searches for profitable arbitrage routes.
         """
-        logger.debug(
+        logger.info(
             f"Searching for profitable arbitrage routes... initial_search={initial_search}"
         )
         if not initial_search:
@@ -665,6 +667,7 @@ class SearchHelpers(BaseHelper):
         :return: List of pools (including Bancor V3 pools) combined
         """
         v3_pools_init = []
+        carbon_orders = []
         if v3_pools:
             # Initialize the Bancor Network Info contract only 1x
             contract = self.bancor_network_info
@@ -675,7 +678,11 @@ class SearchHelpers(BaseHelper):
                     pool.update_liquidity(contract, pool.tkn0, pool.tkn1)
                     for pool in v3_pools
                 )
-        return other_pools + v3_pools_init
+        if ec.CARBON_V1_NAME in ec.SUPPORTED_EXCHANGES:
+            carbon_orders = self.get_all_carbon_strategies()
+            print(carbon_orders)
+
+        return other_pools + v3_pools_init + carbon_orders
 
     def setup_pools_multiprocessing(
         self, non_bancor3_pools: List[LiquidityPool] = None
@@ -798,7 +805,7 @@ class SearchHelpers(BaseHelper):
         routes = [
             i
             for i in arb_ops
-            if type(i) in [ConstantProductRoute, ConstantFunctionRoute]
+            if type(i) in [ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute]
         ]
         candidate_routes = [
             r
@@ -955,6 +962,211 @@ class SearchHelpers(BaseHelper):
         self.trade_paths = trade_paths
         unique_pools = list(set(unique_pools))
         self.unique_pools_raw = unique_pools
+
+    def get_all_carbon_strategies(self):
+        """
+        Gets every Carbon Strategy
+        """
+        all_pairs = self.get_carbon_pairs()
+        with brownie.multicall(address=ec.MULTICALL_CONTRACT_ADDRESS):
+            strats = [strategy for pair in all_pairs for strategy in self.get_strategies(pair)]
+
+        return strats
+
+    @staticmethod
+    def get_carbon_pairs() -> List[Tuple[str, str]]:
+        """
+        Returns a list of all Carbon token pairs
+
+        Returns
+        -------
+        List[Tuple[str, str]]
+            A list of all Carbon token pairs
+
+        """
+        return ec.CARBON_CONTROLLER_CONTRACT.pairs()
+
+    @staticmethod
+    def get_carbon_strategy(strategy_id: int) -> Tuple[str, str, str, str, str, str, str]:
+        """
+        Returns a tuple of the strategy's data
+
+        Parameters
+        ----------
+        strategy_id : int
+            The id of the strategy
+
+        Returns
+        -------
+        Tuple[str, str, str, str, str, str, str]
+            A tuple of the strategy's data
+        """
+        return ec.CARBON_CONTROLLER_CONTRACT.strategy(strategy_id)
+
+    @staticmethod
+    def get_strategies_count_by_pair(token0: str, token1: str) -> int:
+        """
+        Returns the number of strategies in the specified token pair
+
+        Parameters
+        ----------
+        token0 : str
+            The token address of the first token
+        token1 : str
+            The token address of the second token
+
+        Returns
+        -------
+        int
+            The number of strategies in the specified token pair
+        """
+        return ec.CARBON_CONTROLLER_CONTRACT.strategiesByPairCount(token0, token1)
+
+    @staticmethod
+    def get_strategies_by_pair(
+            token0: str, token1: str, start_idx: int, end_idx: int
+    ) -> List[int]:
+        """
+        Returns a list of strategy ids for the specified pair, given a start and end index
+
+        Parameters
+        ----------
+        token0 : str
+            The token address of the first token
+        token1 : str
+            The token address of the second token
+        start_idx : int
+            The start index
+        end_idx : int
+            The end index
+
+        Returns
+        -------
+        List[int]
+            A list of strategy ids for the specified pair, given a start and end index
+        """
+        return ec.CARBON_CONTROLLER_CONTRACT.strategiesByPair(token0, token1, start_idx, end_idx)
+
+    def get_strategies(self, pair: Tuple[str, str]) -> List[int]:
+        """
+        Returns a list of strategy ids for the specified pair
+
+        Parameters
+        ----------
+        pair : Tuple[str, str]
+            The token pair
+
+        Returns
+        -------
+        List[int]
+            A list of strategy ids for the specified pair
+        """
+        num_strategies = self.get_strategies_count_by_pair(pair[0], pair[1])
+        return self.get_strategies_by_pair(pair[0], pair[1], 0, num_strategies)
+
+    def update_all_carbon_strategies(self):
+        """
+        Finds and updates all Carbon strategies
+        """
+        all_strategies = self.get_all_carbon_strategies()
+        block = self.web3.eth.block_number
+        return self.process_raw_carbon_strategies(strategies=all_strategies, block_updated=block)
+
+    @staticmethod
+    def chunker(seq: Any, size: int) -> Any:
+        """
+        Splits a list into chunks of a specified size
+
+        Parameters
+        ----------
+        seq : Any
+            The list to split
+        size : int
+            The size of each chunk
+
+        Returns
+        -------
+        Any
+            A generator of the chunks
+        """
+        return (seq[pos: pos + size] for pos in range(0, len(seq), size))
+
+    def get_carbon_strategies_multicall(self, strategy_ids: List[int]) -> List[Any]:
+        """
+        Returns raw Carbon strategies of the specified ids.
+
+        Parameters
+        ----------
+        strategy_ids : List[int]
+            A list of strategy ids
+
+        Returns
+        -------
+        List[Any]
+            A list of raw Carbon strategies
+        """
+        strategies = []
+        for group in self.chunker(strategy_ids, ec.CARBON_STRATEGY_CHUNK_SIZE):
+            with brownie.multicall(address=ec.MULTICALL_CONTRACT_ADDRESS):
+                strategies += [
+                    self.get_carbon_strategy(strat_id[0]) for strat_id in group
+                ]
+        return strategies
+
+    def process_raw_carbon_strategies(self, strategies: List[int], block_updated: int):
+        """
+        Takes a list of Carbon Strategies in the raw contract format, processes them, and inserts them into the database.
+
+        Parameters
+        ----------
+        strategies : List[Any]
+            A list of raw Carbon strategies
+        block_updated : int, optional
+            The last block that was updated, by default None
+
+        """
+
+        carbon_orders = []
+
+        for strategy in strategies:
+            try:
+                strategy_id = str(strategy[0])
+                tkn0_address, tkn1_address = strategy[2][0], strategy[2][1]
+                order0, order1 = strategy[3][0], strategy[3][1]
+                y_0, z_0, A_0, B_0 = (
+                    order0[0],
+                    order0[1],
+                    order0[2],
+                    order0[3],
+                )
+                y_1, z_1, A_1, B_1 = (
+                    order1[0],
+                    order1[1],
+                    order1[2],
+                    order1[3],
+                )
+                tkn0_address = self.web3.toChecksumAddress(tkn0_address)
+                tkn1_address = self.web3.toChecksumAddress(tkn1_address)
+                tkn0_decimals = get_token_decimals(tkn0_address)
+                tkn1_decimals = get_token_decimals(tkn1_address)
+
+                if y_0 and y_0 > 0:
+                    order0 = EncodedOrder(y=y_0, z=z_0, A=A_0, B=B_0, tkn_in_decimals=tkn0_decimals, token_in=tkn1_address, token_out=tkn0_address)
+                    order0 = CarbonV1Order(tkn_in=tkn1_address, tkn_out=tkn0_address, encoded_order=order0, order_id=strategy_id, block_updated=block_updated)
+                    carbon_orders.append(order0)
+
+
+
+                if y_1 and y_1 > 0:
+                    order1 = EncodedOrder(y=y_1, z=z_1, A=A_1, B=B_1, tkn_in_decimals=tkn1_decimals, token_in=tkn0_address, token_out=tkn1_address)
+                    order1 = CarbonV1Order(tkn_in=tkn0_address, tkn_out=tkn1_address, encoded_order=order1,
+                                           order_id=strategy_id, block_updated=block_updated)
+                    carbon_orders.append(order0)
+
+
+            except Exception as e:
+                ec.logger.error(f"Error updating Carbon strategy {strategy} [{e}]")
+                continue
 
 
 @dataclass
