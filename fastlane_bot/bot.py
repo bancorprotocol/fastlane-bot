@@ -263,6 +263,21 @@ class CarbonBot(CarbonBotBase):
 
 
 
+
+    @dataclass
+    class ArbCandidate:
+        """
+        The arbitrage candidates.
+        """
+        
+        result: any
+        constains_carbon: bool = None
+        profit_usd: float = None
+        
+        @property
+        def r(self):
+            return self.result
+
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
     def _find_arbitrage_opportunities(
@@ -417,6 +432,23 @@ class CarbonBot(CarbonBotBase):
                         c.logger.info("*************")
                         c.logger.info('\n')
 
+            cids = [ti['cid'] for ti in trade_instructions_dic]
+            if src_token == "WETH-6Cc2":
+                query_token = "ETH-EEeE"
+            else:
+                query_token = src_token
+            profit_usd = self.db._get_usd_price_from_key(profit_src, query_token, tkn0)
+            profit = profit_usd*2
+            #print(f"Profit in usd: {profit_usd} {cids}")
+            #print(f"Profit in bnt: {profit} {cids}")
+            contains_carbon = any(
+                self._check_if_carbon(ti['cid'])[0]
+                for ti in trade_instructions_dic
+            )
+            #print('contains_carbon', profit, contains_carbon, [self._check_if_carbon(ti['cid'])[0] for ti in trade_instructions_dic])
+            candidates += [self.ArbCandidate(r, contains_carbon, profit_usd)]
+            try:
+                netchange = trade_instructions_df.iloc[-1]
             except Exception as e:
                 c.logger.error(f"[_find_arbitrage_opportunities] {e}")
 
