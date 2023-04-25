@@ -204,6 +204,7 @@ def format_amt(amt, C: int = 6) -> str:
         logger.debug(f"error while formatting {amt}: {e}")
         return "0"
 
+
 @dataclass
 class EncodedOrder:
     """
@@ -220,6 +221,7 @@ class EncodedOrder:
     :p_start:    start token wei price of the order (in dy/dx)
     :p_end:      end token wei price of the order (in dy/dx)
     """
+
     token_in: ERC20Token
     token_out: ERC20Token
     y: int
@@ -256,7 +258,14 @@ class EncodedOrder:
         """
         returns a the order with A, B decoded as floats
         """
-        return self.DecodedOrder(y=self.y_, z=self.z_, A=self.A_, B=self.B_, token_in=self.token_in, token_out=self.token_out)
+        return self.DecodedOrder(
+            y=self.y_,
+            z=self.z_,
+            A=self.A_,
+            B=self.B_,
+            token_in=self.token_in,
+            token_out=self.token_out,
+        )
 
     @property
     def A_(self):
@@ -268,11 +277,11 @@ class EncodedOrder:
 
     @property
     def z_(self):
-        return Decimal(str(self.z / 10 ** self.token_out.decimals))
+        return Decimal(str(self.z / 10**self.token_out.decimals))
 
     @property
     def y_(self):
-        return Decimal(str(self.y / 10 ** self.token_out.decimals))
+        return Decimal(str(self.y / 10**self.token_out.decimals))
 
 
 def _quantize(amount: Decimal, decimals: int) -> Decimal:

@@ -20,9 +20,15 @@ from typing import List, Any, Dict, Tuple, Union
 
 import web3.exceptions
 
-from fastlane_bot.data.token_lookup import get_token_decimals_from_address, get_token_symbol_from_address, \
-    check_if_tkn_in_table_address, check_if_tkn_in_table_symbol, get_token_decimals_from_symbol, \
-    get_token_address_from_symbol, liquid_tkn_addresses_bancor_3
+from fastlane_bot.data.token_lookup import (
+    get_token_decimals_from_address,
+    get_token_symbol_from_address,
+    check_if_tkn_in_table_address,
+    check_if_tkn_in_table_symbol,
+    get_token_decimals_from_symbol,
+    get_token_address_from_symbol,
+    liquid_tkn_addresses_bancor_3,
+)
 import brownie
 import numpy as np
 import pandas as pd
@@ -34,12 +40,18 @@ from alchemy import Alchemy, Network
 from fastlane_bot.exceptions import ResultLoggingException
 from fastlane_bot.networks import *
 from fastlane_bot.pools import LiquidityPool, UniswapV3LiquidityPool, CarbonV1Order
-from fastlane_bot.routes import Route, ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute
+from fastlane_bot.routes import (
+    Route,
+    ConstantProductRoute,
+    ConstantFunctionRoute,
+    OrderBookDexRoute,
+)
 from fastlane_bot.token import ERC20Token
 from fastlane_bot.utils import (
     format_amt,
     convert_decimals_to_wei_format,
-    convert_weth_to_eth, EncodedOrder,
+    convert_weth_to_eth,
+    EncodedOrder,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -300,7 +312,7 @@ class TransactionHelpers(BaseHelper):
         gas_price: int,
         max_priority: int,
         nonce: int,
-        src_token = ec.BNT_ADDRESS
+        src_token=ec.BNT_ADDRESS,
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -325,14 +337,16 @@ class TransactionHelpers(BaseHelper):
                 split_fee = message[1].split(" (supplied gas ")
                 baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
                 transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_token, src_amt
-            ).build_transaction(
+                    routes, src_token, src_amt
+                ).build_transaction(
                     self.build_tx(
                         gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
                     )
                 )
             else:
-                logger.error(f"Contract logic error - likely an invalid transaction: {e}")
+                logger.error(
+                    f"Contract logic error - likely an invalid transaction: {e}"
+                )
                 return None
 
         try:
@@ -523,8 +537,6 @@ class Hexbytes:
 
     def hex(self):
         return self.value.hex()
-
-
 
 
 @dataclass
@@ -758,8 +770,9 @@ class SearchHelpers(BaseHelper):
 
         return trade_paths_new
 
-    def match_routes_carbon(self, carbon_pools: [CarbonV1Order], other_pools: [LiquidityPool]):
-
+    def match_routes_carbon(
+        self, carbon_pools: [CarbonV1Order], other_pools: [LiquidityPool]
+    ):
         triangular_carbon_routes = []
 
         for idx, pool in enumerate(carbon_pools):
@@ -771,7 +784,10 @@ class SearchHelpers(BaseHelper):
             pool2 = pool
             pool3 = None
             for _pool in other_pools:
-                if _pool.tkn0.symbol == pool2.tkn0.symbol or _pool.tkn1.symbol == pool2.tkn0.symbol:
+                if (
+                    _pool.tkn0.symbol == pool2.tkn0.symbol
+                    or _pool.tkn1.symbol == pool2.tkn0.symbol
+                ):
                     pool1 = _pool
                     first_tkn_match = pool2.tkn0.symbol
                     break
@@ -784,7 +800,13 @@ class SearchHelpers(BaseHelper):
                     # if (__pool.tkn0.symbol == pool2.tkn0.symbol and __pool.tkn0.symbol != first_tkn_match) or (__pool.tkn1.symbol == pool2.tkn0.symbol and __pool.tkn0.symbol != first_tkn_match):
                     #     pool3 = __pool
                     #     break
-                    if (__pool.tkn0.symbol == pool2.tkn1.symbol and __pool.tkn1.symbol != first_tkn_match) or (__pool.tkn1.symbol == pool2.tkn1.symbol and __pool.tkn1.symbol != first_tkn_match):
+                    if (
+                        __pool.tkn0.symbol == pool2.tkn1.symbol
+                        and __pool.tkn1.symbol != first_tkn_match
+                    ) or (
+                        __pool.tkn1.symbol == pool2.tkn1.symbol
+                        and __pool.tkn1.symbol != first_tkn_match
+                    ):
                         pool3 = __pool
                         break
             else:
@@ -804,19 +826,20 @@ class SearchHelpers(BaseHelper):
 
         return triangular_carbon_routes
 
-
     def create_routes_carbon(self):
-
-        self.unique_pools = self.get_bancor_v3_pools(tokens=liquid_tkn_addresses_bancor_3)
+        self.unique_pools = self.get_bancor_v3_pools(
+            tokens=liquid_tkn_addresses_bancor_3
+        )
         bancor_v3_pools = self.update_pool_liquidity()
         carbon_orders = self.get_all_carbon_strategies()
-        routes = self.match_routes_carbon(carbon_pools=carbon_orders, other_pools=bancor_v3_pools)
+        routes = self.match_routes_carbon(
+            carbon_pools=carbon_orders, other_pools=bancor_v3_pools
+        )
         routes = [route for route in routes if route is not None]
 
         with parallel_backend(backend=self.backend, n_jobs=self.n_jobs):
             results = Parallel(n_jobs=self.n_jobs)(
-                delayed(op.simulate)(**{"trade_path": op.trade_path})
-                for op in routes
+                delayed(op.simulate)(**{"trade_path": op.trade_path}) for op in routes
             )
 
         results = [result for result in results if result is not None]
@@ -883,7 +906,8 @@ class SearchHelpers(BaseHelper):
         routes = [
             i
             for i in arb_ops
-            if type(i) in [ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute]
+            if type(i)
+            in [ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute]
         ]
         candidate_routes = [
             r
@@ -1041,7 +1065,6 @@ class SearchHelpers(BaseHelper):
         unique_pools = list(set(unique_pools))
         self.unique_pools_raw = unique_pools
 
-
     def get_pair_from_symbols(self, tkn0, tkn1):
         return tkn0 + "_" + tkn1
 
@@ -1054,25 +1077,34 @@ class SearchHelpers(BaseHelper):
         if not check_if_tkn_in_table_address(tkn1):
             logger.error(f"Error looking up token: {tkn1}")
             return None
-        return get_token_symbol_from_address(tkn0) + "_" + get_token_symbol_from_address(tkn1)
+        return (
+            get_token_symbol_from_address(tkn0)
+            + "_"
+            + get_token_symbol_from_address(tkn1)
+        )
 
     def get_erc20_from_address(self, token_address):
-
         token_address = self.web3.toChecksumAddress(token_address)
         if not check_if_tkn_in_table_address(token_address):
             logger.error(f"Error looking up token: {token_address}")
             return None
-        return ERC20Token(address=token_address, symbol=get_token_symbol_from_address(token_address), decimals=get_token_decimals_from_address(token_address))
+        return ERC20Token(
+            address=token_address,
+            symbol=get_token_symbol_from_address(token_address),
+            decimals=get_token_decimals_from_address(token_address),
+        )
 
     def get_erc20_from_symbol(self, token_symbol):
-
         if not check_if_tkn_in_table_symbol(token_symbol):
             logger.error(f"Error looking up token: {token_symbol}")
             return None
-        return ERC20Token(address=get_token_address_from_symbol(token_symbol), symbol=token_symbol,
-                          decimals=get_token_decimals_from_symbol(token_symbol))
-    def get_bancor_v3_pools(self, tokens: [ERC20Token]):
+        return ERC20Token(
+            address=get_token_address_from_symbol(token_symbol),
+            symbol=token_symbol,
+            decimals=get_token_decimals_from_symbol(token_symbol),
+        )
 
+    def get_bancor_v3_pools(self, tokens: [ERC20Token]):
         pools = [
             LiquidityPool(
                 tkn0=self.get_erc20_from_address(ec.BNT_ADDRESS),
@@ -1083,12 +1115,13 @@ class SearchHelpers(BaseHelper):
                 pair_reverse=self.get_pair(token, ec.BNT_ADDRESS),
                 id=idx,
                 connection=self.web3,
-                #address=ec.BANCOR_V3_NETWORK_INFO_ADDRESS
-            ) for idx, token in enumerate(tokens) if token != ec.BNT_SYMBOL
+                # address=ec.BANCOR_V3_NETWORK_INFO_ADDRESS
+            )
+            for idx, token in enumerate(tokens)
+            if token != ec.BNT_SYMBOL
         ]
         pools = [pool for pool in pools if pool is not None]
         return pools
-
 
     def get_all_carbon_strategies(self):
         """
@@ -1097,11 +1130,14 @@ class SearchHelpers(BaseHelper):
         all_pairs = self.get_carbon_pairs()
 
         with brownie.multicall(address=ec.MULTICALL_CONTRACT_ADDRESS):
-            strats = [strategy for pair in all_pairs for strategy in self.get_strategies(pair)]
+            strats = [
+                strategy for pair in all_pairs for strategy in self.get_strategies(pair)
+            ]
             block_number = brownie.web3.eth.block_number
 
-        return self.process_raw_carbon_strategies(strategies=strats, block_updated=block_number)
-
+        return self.process_raw_carbon_strategies(
+            strategies=strats, block_updated=block_number
+        )
 
     @staticmethod
     def get_carbon_pairs() -> List[Tuple[str, str]]:
@@ -1117,7 +1153,9 @@ class SearchHelpers(BaseHelper):
         return ec.CARBON_CONTROLLER_CONTRACT.caller.pairs()
 
     @staticmethod
-    def get_carbon_strategy(strategy_id: int) -> Tuple[str, str, str, str, str, str, str]:
+    def get_carbon_strategy(
+        strategy_id: int,
+    ) -> Tuple[str, str, str, str, str, str, str]:
         """
         Returns a tuple of the strategy's data
 
@@ -1150,11 +1188,13 @@ class SearchHelpers(BaseHelper):
         int
             The number of strategies in the specified token pair
         """
-        return ec.CARBON_CONTROLLER_CONTRACT.caller.strategiesByPairCount(token0, token1)
+        return ec.CARBON_CONTROLLER_CONTRACT.caller.strategiesByPairCount(
+            token0, token1
+        )
 
     @staticmethod
     def get_strategies_by_pair(
-            token0: str, token1: str, start_idx: int, end_idx: int
+        token0: str, token1: str, start_idx: int, end_idx: int
     ) -> List[int]:
         """
         Returns a list of strategy ids for the specified pair, given a start and end index
@@ -1175,7 +1215,9 @@ class SearchHelpers(BaseHelper):
         List[int]
             A list of strategy ids for the specified pair, given a start and end index
         """
-        return ec.CARBON_CONTROLLER_CONTRACT.caller.strategiesByPair(token0, token1, start_idx, end_idx)
+        return ec.CARBON_CONTROLLER_CONTRACT.caller.strategiesByPair(
+            token0, token1, start_idx, end_idx
+        )
 
     def get_strategies(self, pair: Tuple[str, str]) -> List[int]:
         """
@@ -1200,7 +1242,9 @@ class SearchHelpers(BaseHelper):
         """
         all_strategies = self.get_all_carbon_strategies()
         block = self.web3.eth.block_number
-        return self.process_raw_carbon_strategies(strategies=all_strategies, block_updated=block)
+        return self.process_raw_carbon_strategies(
+            strategies=all_strategies, block_updated=block
+        )
 
     @staticmethod
     def chunker(seq: Any, size: int) -> Any:
@@ -1219,7 +1263,7 @@ class SearchHelpers(BaseHelper):
         Any
             A generator of the chunks
         """
-        return (seq[pos: pos + size] for pos in range(0, len(seq), size))
+        return (seq[pos : pos + size] for pos in range(0, len(seq), size))
 
     def get_carbon_strategies_multicall(self, strategy_ids: List[int]) -> List[Any]:
         """
@@ -1259,7 +1303,7 @@ class SearchHelpers(BaseHelper):
         carbon_orders = []
 
         for strategy in strategies:
-            #try:
+            # try:
             strategy_id = str(strategy[0])
             tkn0_address, tkn1_address = strategy[2][0], strategy[2][1]
             order0, order1 = strategy[3][0], strategy[3][1]
@@ -1290,24 +1334,44 @@ class SearchHelpers(BaseHelper):
             token0_symbol = get_token_symbol_from_address(tkn0_address)
             token1_symbol = get_token_symbol_from_address(tkn1_address)
 
-            tkn0 = ERC20Token(address=tkn0_address, symbol=token0_symbol, decimals=tkn0_decimals)
-            tkn1 = ERC20Token(address=tkn1_address, symbol=token1_symbol, decimals=tkn1_decimals)
+            tkn0 = ERC20Token(
+                address=tkn0_address, symbol=token0_symbol, decimals=tkn0_decimals
+            )
+            tkn1 = ERC20Token(
+                address=tkn1_address, symbol=token1_symbol, decimals=tkn1_decimals
+            )
 
             if y_0 and y_0 > 0 and B_0 > 0:
-                order0 = EncodedOrder(y=y_0, z=z_0, A=A_0, B=B_0, token_in=tkn1, token_out=tkn0)
-                order0 = CarbonV1Order(tkn_in=tkn1, tkn_out=tkn0, encoded_order=order0, order_id=strategy_id, block_updated=block_updated)
+                order0 = EncodedOrder(
+                    y=y_0, z=z_0, A=A_0, B=B_0, token_in=tkn1, token_out=tkn0
+                )
+                order0 = CarbonV1Order(
+                    tkn_in=tkn1,
+                    tkn_out=tkn0,
+                    encoded_order=order0,
+                    order_id=strategy_id,
+                    block_updated=block_updated,
+                )
                 carbon_orders.append(order0)
 
             if y_1 and y_1 > 0 and B_1 > 0:
-                order1 = EncodedOrder(y=y_1, z=z_1, A=A_1, B=B_1, token_in=tkn0, token_out=tkn1)
-                order1 = CarbonV1Order(tkn_in=tkn0, tkn_out=tkn1, encoded_order=order1,
-                                       order_id=strategy_id, block_updated=block_updated)
+                order1 = EncodedOrder(
+                    y=y_1, z=z_1, A=A_1, B=B_1, token_in=tkn0, token_out=tkn1
+                )
+                order1 = CarbonV1Order(
+                    tkn_in=tkn0,
+                    tkn_out=tkn1,
+                    encoded_order=order1,
+                    order_id=strategy_id,
+                    block_updated=block_updated,
+                )
                 carbon_orders.append(order1)
 
             # except Exception as e:
             #     logger.error(f"Error updating Carbon strategy {strategy} [{e}]")
             #     continue
         return carbon_orders
+
 
 @dataclass
 class ValidationHelpers(BaseHelper):
