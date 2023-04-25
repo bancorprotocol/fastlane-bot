@@ -269,11 +269,11 @@ class EncodedOrder:
 
     @property
     def A_(self):
-        return Decimal(str(self.decode(self.A)))
+        return Decimal(str(self.decode(self.A))) * Decimal("10") ** ((self.token_in.decimals - self.token_out.decimals) / Decimal("2"))
 
     @property
     def B_(self):
-        return Decimal(str(self.decode(self.B)))
+        return Decimal(str(self.decode(self.B))) * Decimal("10") ** ((self.token_in.decimals - self.token_out.decimals) / Decimal("2"))
 
     @property
     def z_(self):
