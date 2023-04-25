@@ -61,34 +61,25 @@ class FastLaneArbBotUI(
         deadline = self.web3
         for route in routes:
 
-            amts_in = [amt for amt in len(route.trade_path)]
+            amts_in = [amt for amt in route.trade_path]
 
-            amts_in = [amt_in_0, amt_in_1, amt_in_2]
-            amt_out_0 = df["0_amt_out"].values[0]
-            amt_out_1 = df["1_amt_out"].values[0]
-            amt_out_2 = df["2_amt_out"].values[0]
-            amt_out_0 = (
-                    Decimal(amt_out_0)
-                    * (Decimal("100") - Decimal(self.max_slippage))
-                    / Decimal("100")
-            )
-            amt_out_1 = (
-                    Decimal(amt_out_1)
-                    * (Decimal("100") - Decimal(self.max_slippage))
-                    / Decimal("100")
-            )
-            amt_out_2 = (
-                    Decimal(amt_out_2)
-                    * (Decimal("100") - Decimal(self.max_slippage))
-                    / Decimal("100")
-            )
+            amts_in_wei = []
+
+            # amts_slippage = []
+            # for amt in amts_in:
+            #     slippage_adjusted = Decimal(amt) * (Decimal("100") - Decimal(ec.DEFAULT_MAX_SLIPPAGE)) / Decimal("100")
+            #     amts_slippage.append(slippage_adjusted)
+
+
+
             min_return_amts = [amt_out_0, amt_out_1, amt_out_2]
-            profit = df["profit"].values[0]
+
+            profit = route.profit
 
             # Convert the trade path to a trade struct
             route_struct = [
                 route.to_trade_struct(
-                    i, min_return_amts[i], deadline, web3, self.max_slippage
+                    i, min_return_amts[i], deadline, self.web3, self.max_slippage
                 )
                 for i in range(len(route))
             ]
