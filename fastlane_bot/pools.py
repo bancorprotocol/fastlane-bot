@@ -980,7 +980,7 @@ class CarbonV1Order:
         y, z, A, B = self.y, self.z, self.A, self.B
         tkns_in = (
             (y * z**2) / ((A * y + B * z) * (A * y + B * z - A * y))
-        ) * self.fee
+        ) * (1 - self.fee)
         return tkns_in
 
     @property

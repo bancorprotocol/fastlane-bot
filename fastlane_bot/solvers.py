@@ -1324,7 +1324,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         if tkns_out > y:
             tkns_out = y
 
-        tkns_in = Decimal((tkns_out * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out)) * order.fee)
+        tkns_in = Decimal((tkns_out * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out)) * (Decimal("1") - order.fee))
 
         return tkns_in, tkns_out
 
