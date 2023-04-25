@@ -11,7 +11,10 @@ from dataclasses import dataclass, field
 from decimal import *
 from typing import List, Any, Dict
 
+import eth_abi
+
 from fastlane_bot.constants import ec
+from fastlane_bot.data.token_lookup import get_token_decimals_from_address
 from fastlane_bot.exceptions import (
     InvalidTokenIndexException,
     InvalidPoolIndexException,
@@ -149,8 +152,40 @@ class BaseRoute:
             f"Trade path amounts: {self.trade_path_amts} \n"
         )
 
+    def carbon_trade_to_bytes(self, strategy_ids: [], amts_in_wei: [int]):
+
+        if strategy_ids is None or amts_in_wei is None:
+            logger.error(f"Carbon trade to bytes - no input")
+            return None
+
+        assert len(strategy_ids) == len(amts_in_wei)
+        tradeActions = []
+        for idx in range(len(strategy_ids)):
+            tradeActions += [
+                {
+                    "strategyId": int(strategy_ids[idx]),
+                    "amount": amts_in_wei[idx],
+                }
+            ]
+        # Define the types of the keys in the dictionaries
+        types = ["uint256", "uint128"]
+
+        # Extract the values from each dictionary and append them to a list
+        values = [32, len(tradeActions)] + [
+            value
+            for data in tradeActions
+            for value in (data["strategyId"], data["amount"])
+        ]
+
+        # Create a list of ABI types based on the number of dictionaries
+        all_types = ["uint32", "uint32"] + types * len(tradeActions)
+
+        # Encode the extracted values using the ABI types
+        encoded_data = eth_abi.encode(all_types, values)
+        return str(encoded_data)
+
     def to_trade_struct(
-        self, idx: int, min_target_amount: Decimal, deadline: int, web3, max_slippage
+            self, idx: int, min_target_amount: Decimal, deadline: int, web3, max_slippage, amts_in_carbon: [int] = None, strategy_ids: [int] = None
     ) -> Dict[str, Any]:
         """
         Returns the transaction dict for the route.
@@ -158,6 +193,7 @@ class BaseRoute:
         from fastlane_bot.utils import convert_decimals_to_wei_format
 
         target_token = self.trade_path[idx].tkn1
+        source_token = self.trade_path[idx].tkn0
 
         if target_token.is_weth():
             target_token = target_token.to_eth()
@@ -174,6 +210,12 @@ class BaseRoute:
 
         exchange_id = self.trade_path[idx].exchange_id
 
+        if exchange_id == 6:
+            amts_in_carbon = [convert_decimals_to_wei_format(tkn_amt=amt, decimals=get_token_decimals_from_address(source_token)) for amt in amts_in_carbon]
+
+
+        custom_data = "" if exchange_id != 6 else self.carbon_trade_to_bytes(strategy_ids=strategy_ids, amts_in_wei=amts_in_carbon)
+
         return {
             "exchangeId": exchange_id,
             "targetToken": target_token,
@@ -187,7 +229,7 @@ class BaseRoute:
             "customInt": int(self.trade_path[idx].fee)
             if isinstance(self.trade_path[idx], UniswapV3LiquidityPool)
             else 0,
-            "customData": "",
+            "customData": custom_data,
         }
 
     def validate_pool_idx(self, idx: int):
@@ -296,7 +338,7 @@ class ConstantProductRoute(BaseRoute):
         if self.p3.tkn1.symbol != "BNT":
             self.p3.reverse_tokens()
         if convert_weth_to_eth_symbol(
-            self.p2.tkn0.symbol
+                self.p2.tkn0.symbol
         ) != convert_weth_to_eth_symbol(self.p1.tkn1.symbol) and not isinstance(
             self, ConstantFunctionRoute
         ):
@@ -314,7 +356,7 @@ class ConstantProductRoute(BaseRoute):
         return self
 
     def simulate(
-        self, trade_path: List[LiquidityPool or ConstantProductLiquidityPool] = None
+            self, trade_path: List[LiquidityPool or ConstantProductLiquidityPool] = None
     ) -> Dict[str, Any]:
         """
         Main trade function for routes
@@ -439,23 +481,23 @@ class Route(BaseRoute, ABC):
             other, Route or ConstantProductRoute or ConstantFunctionRoute
         ), "Equality can only be evaluated against another Erc20Token"
         return (
-            (self.id == other.id)
-            & all(
-                p1.tkn0.symbol == p2.tkn0.symbol
-                for p1, p2 in zip(self.trade_path, other.trade_path)
-            )
-            & all(
-                p1.tkn1.symbol == p2.tkn1.symbol
-                for p1, p2 in zip(self.trade_path, other.trade_path)
-            )
-            & all(
-                p1.tkn0.amt == p2.tkn0.amt
-                for p1, p2 in zip(self.trade_path, other.trade_path)
-            )
-            & all(
-                p1.tkn1.amt == p2.tkn1.amt
-                for p1, p2 in zip(self.trade_path, other.trade_path)
-            )
+                (self.id == other.id)
+                & all(
+            p1.tkn0.symbol == p2.tkn0.symbol
+            for p1, p2 in zip(self.trade_path, other.trade_path)
+        )
+                & all(
+            p1.tkn1.symbol == p2.tkn1.symbol
+            for p1, p2 in zip(self.trade_path, other.trade_path)
+        )
+                & all(
+            p1.tkn0.amt == p2.tkn0.amt
+            for p1, p2 in zip(self.trade_path, other.trade_path)
+        )
+                & all(
+            p1.tkn1.amt == p2.tkn1.amt
+            for p1, p2 in zip(self.trade_path, other.trade_path)
+        )
         )
 
     def __post_init__(self):
