@@ -59,10 +59,13 @@ class FastLaneArbBotUI(
     _ETH_PRIVATE_KEY: str = None
 
     def execute_carbon(self, routes: [Route]):
-        deadline = self.web3
+        deadline = (
+                self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
+                + self.blocktime_deviation
+        )
         for route in routes:
 
-            amts_in = [amt for amt in route.trade_path]
+            amts_in = [amt for amt in route.trade_path_amts]
 
             profit = route.profit
 
@@ -72,7 +75,7 @@ class FastLaneArbBotUI(
                     idx=i, min_target_amount=amts_in[i + 1], deadline=deadline, web3=self.web3,
                     max_slippage=self.max_slippage, amts_in_carbon=amts_in[i]
                 )
-                for i in range(len(route.trade_path - 1))
+                for i in range(len(route.trade_path))
             ]
             logger.info(f"Route struct created = {route_struct}")
             # Convert the src amount to wei format - need to change decimals if flash loaning something besides BNT/ETH
@@ -118,6 +121,7 @@ class FastLaneArbBotUI(
                             gas_price=current_gas_price,
                             max_priority=current_max_priority_gas,
                             nonce=nonce,
+                            src_token=flash_token
                         )
                         if arb_tx is None:
                             break

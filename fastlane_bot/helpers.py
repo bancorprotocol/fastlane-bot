@@ -297,6 +297,7 @@ class TransactionHelpers(BaseHelper):
         gas_price: int,
         max_priority: int,
         nonce: int,
+        src_token = ec.BNT_ADDRESS
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -309,7 +310,7 @@ class TransactionHelpers(BaseHelper):
         """
         try:
             transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, ec.BNT_ADDRESS, src_amt
+                routes, src_token, src_amt
             ).build_transaction(
                 self.build_tx(
                     gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
@@ -811,10 +812,8 @@ class SearchHelpers(BaseHelper):
                 for op in routes
             )
 
-        print(f"trade result = {results}")
         results = [result for result in results if result is not None]
 
-        print(f"trade result = {results}")
         return results
         # self.search_results = results
         # self.log_results()

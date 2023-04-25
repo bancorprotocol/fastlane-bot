@@ -155,7 +155,7 @@ class BaseRoute:
     def carbon_trade_to_bytes(self, strategy_ids: [], amts_in_wei: [int]):
 
         if strategy_ids is None or amts_in_wei is None:
-            logger.error(f"Carbon trade to bytes - no input")
+            logger.error(f"Carbon trade to bytes - missing input. strategy_ids = {strategy_ids}, amts_in_wei = {amts_in_wei}")
             return None
 
         assert len(strategy_ids) == len(amts_in_wei)
@@ -182,10 +182,10 @@ class BaseRoute:
 
         # Encode the extracted values using the ABI types
         encoded_data = eth_abi.encode(all_types, values)
-        return str(encoded_data)
+        return str(encoded_data.hex())
 
     def to_trade_struct(
-            self, idx: int, min_target_amount: Decimal, deadline: int, web3, max_slippage, amts_in_carbon: [int] = None, strategy_ids: [int] = None
+            self, idx: int, min_target_amount: Decimal, deadline: int, web3, max_slippage, amts_in_carbon: [] = None, strategy_ids: [int] = None
     ) -> Dict[str, Any]:
         """
         Returns the transaction dict for the route.
@@ -211,8 +211,10 @@ class BaseRoute:
         exchange_id = self.trade_path[idx].exchange_id
 
         if exchange_id == 6:
-            amts_in_carbon = [convert_decimals_to_wei_format(tkn_amt=amt, decimals=get_token_decimals_from_address(source_token)) for amt in amts_in_carbon]
-
+            if type(amts_in_carbon) == Decimal:
+                amts_in_carbon = [amts_in_carbon]
+            amts_in_carbon = [convert_decimals_to_wei_format(tkn_amt=amt, decimals=get_token_decimals_from_address(source_token.address)) for amt in amts_in_carbon]
+            strategy_ids = [self.p2.id]
 
         custom_data = "" if exchange_id != 6 else self.carbon_trade_to_bytes(strategy_ids=strategy_ids, amts_in_wei=amts_in_carbon)
 

@@ -278,9 +278,10 @@ class BaseLiquidityPool:
             ):
                 self._set_pool_attributes(_POOL_INFO_FOR_EXCHANGE)
             else:
-                logger.error(
-                    f"Pool {self.pair} not found in pool info for exchange {self.exchange}"
-                )
+                if self.exchange != ec.BANCOR_V3_NAME:
+                    logger.error(
+                        f"Pool {self.pair} not found in pool info for exchange {self.exchange}"
+                    )
                 return None
                 # raise InvalidPoolInitialization(
                 #     address=self.address,
@@ -877,6 +878,7 @@ class CarbonV1Order:
     order_id: str = None
     exchange: str = ec.CARBON_V1_NAME
     pair_name: str = None
+    exchange_id: int = 6
 
     def __init__(
         self,
@@ -902,6 +904,7 @@ class CarbonV1Order:
         self.tkn0 = tkn_in
         self.tkn1 = tkn_out
         self.order_id = order_id
+        self.id = order_id
         self.pair_name = tkn_out.symbol + "_" + tkn_in.symbol
         self.fee = fee
 
