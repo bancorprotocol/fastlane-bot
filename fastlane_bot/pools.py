@@ -21,7 +21,8 @@ from fastlane_bot.networks import *
 from fastlane_bot.token import ERC20Token
 from fastlane_bot.utils import (
     get_abi_and_router,
-    convert_decimals, EncodedOrder,
+    convert_decimals,
+    EncodedOrder,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -227,6 +228,7 @@ class BaseLiquidityPool:
         Swap function for given Liquidity Pool type
         """
         pass
+
     def handle_tkn_set_order(self, is_reversed, tkn0, tkn1):
         """
         Handle resetting the order of the tokens in the pool after liquidity is updated.
@@ -404,6 +406,7 @@ class ConstantProductLiquidityPool(BaseLiquidityPool, ABC):
     """
     Represents a constant product liquidity pool. Used for typechecking via inheritance.
     """
+
 
 # *******************************************************************************************
 # Uniswap V2 Pool
@@ -868,6 +871,7 @@ class UniswapV3LiquidityPool(BaseLiquidityPool):
 # Carbon Pool
 # *******************************************************************************************
 
+
 @dataclass
 class CarbonV1Order:
     """
@@ -892,7 +896,6 @@ class CarbonV1Order:
         B: Decimal = None,
         fee: Decimal = ec.CARBON_FEE,
         encoded_order: EncodedOrder = None,
-
     ):
         """
         param: y: y in the contract
@@ -1026,7 +1029,6 @@ class CarbonV1Order:
         return pd.DataFrame(dic, index=[0])
 
 
-
 @dataclass
 class OrderBookDexLiquidityPool(BaseLiquidityPool, ABC):
     """
@@ -1087,6 +1089,7 @@ class CarbonV1LiquidityPool(OrderBookDexLiquidityPool):
 
     def __post_init__(self):
         self.setup()
+
 
 # *******************************************************************************************
 # Liquidity Pool

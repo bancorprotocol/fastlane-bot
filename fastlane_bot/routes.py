@@ -26,7 +26,8 @@ from fastlane_bot.pools import (
     UniswapV3LiquidityPool,
     LiquidityPool,
     BancorV2LiquidityPool,
-    OrderBookDexLiquidityPool, CarbonV1Order,
+    OrderBookDexLiquidityPool,
+    CarbonV1Order,
 )
 from fastlane_bot.solvers import (
     ConstantProductRouteSolver,
@@ -153,9 +154,10 @@ class BaseRoute:
         )
 
     def carbon_trade_to_bytes(self, strategy_ids: [], amts_in_wei: [int]):
-
         if strategy_ids is None or amts_in_wei is None:
-            logger.error(f"Carbon trade to bytes - missing input. strategy_ids = {strategy_ids}, amts_in_wei = {amts_in_wei}")
+            logger.error(
+                f"Carbon trade to bytes - missing input. strategy_ids = {strategy_ids}, amts_in_wei = {amts_in_wei}"
+            )
             return None
 
         assert len(strategy_ids) == len(amts_in_wei)
@@ -185,7 +187,14 @@ class BaseRoute:
         return str(encoded_data.hex())
 
     def to_trade_struct(
-            self, idx: int, min_target_amount: Decimal, deadline: int, web3, max_slippage, amts_in_carbon: [] = None, strategy_ids: [int] = None
+        self,
+        idx: int,
+        min_target_amount: Decimal,
+        deadline: int,
+        web3,
+        max_slippage,
+        amts_in_carbon: [] = None,
+        strategy_ids: [int] = None,
     ) -> Dict[str, Any]:
         """
         Returns the transaction dict for the route.
@@ -213,10 +222,22 @@ class BaseRoute:
         if exchange_id == 6:
             if type(amts_in_carbon) == Decimal:
                 amts_in_carbon = [amts_in_carbon]
-            amts_in_carbon = [convert_decimals_to_wei_format(tkn_amt=amt, decimals=get_token_decimals_from_address(source_token.address)) for amt in amts_in_carbon]
+            amts_in_carbon = [
+                convert_decimals_to_wei_format(
+                    tkn_amt=amt,
+                    decimals=get_token_decimals_from_address(source_token.address),
+                )
+                for amt in amts_in_carbon
+            ]
             strategy_ids = [self.p2.id]
 
-        custom_data = "" if exchange_id != 6 else self.carbon_trade_to_bytes(strategy_ids=strategy_ids, amts_in_wei=amts_in_carbon)
+        custom_data = (
+            ""
+            if exchange_id != 6
+            else self.carbon_trade_to_bytes(
+                strategy_ids=strategy_ids, amts_in_wei=amts_in_carbon
+            )
+        )
 
         return {
             "exchangeId": exchange_id,
@@ -340,7 +361,7 @@ class ConstantProductRoute(BaseRoute):
         if self.p3.tkn1.symbol != "BNT":
             self.p3.reverse_tokens()
         if convert_weth_to_eth_symbol(
-                self.p2.tkn0.symbol
+            self.p2.tkn0.symbol
         ) != convert_weth_to_eth_symbol(self.p1.tkn1.symbol) and not isinstance(
             self, ConstantFunctionRoute
         ):
@@ -358,7 +379,7 @@ class ConstantProductRoute(BaseRoute):
         return self
 
     def simulate(
-            self, trade_path: List[LiquidityPool or ConstantProductLiquidityPool] = None
+        self, trade_path: List[LiquidityPool or ConstantProductLiquidityPool] = None
     ) -> Dict[str, Any]:
         """
         Main trade function for routes
@@ -483,23 +504,23 @@ class Route(BaseRoute, ABC):
             other, Route or ConstantProductRoute or ConstantFunctionRoute
         ), "Equality can only be evaluated against another Erc20Token"
         return (
-                (self.id == other.id)
-                & all(
-            p1.tkn0.symbol == p2.tkn0.symbol
-            for p1, p2 in zip(self.trade_path, other.trade_path)
-        )
-                & all(
-            p1.tkn1.symbol == p2.tkn1.symbol
-            for p1, p2 in zip(self.trade_path, other.trade_path)
-        )
-                & all(
-            p1.tkn0.amt == p2.tkn0.amt
-            for p1, p2 in zip(self.trade_path, other.trade_path)
-        )
-                & all(
-            p1.tkn1.amt == p2.tkn1.amt
-            for p1, p2 in zip(self.trade_path, other.trade_path)
-        )
+            (self.id == other.id)
+            & all(
+                p1.tkn0.symbol == p2.tkn0.symbol
+                for p1, p2 in zip(self.trade_path, other.trade_path)
+            )
+            & all(
+                p1.tkn1.symbol == p2.tkn1.symbol
+                for p1, p2 in zip(self.trade_path, other.trade_path)
+            )
+            & all(
+                p1.tkn0.amt == p2.tkn0.amt
+                for p1, p2 in zip(self.trade_path, other.trade_path)
+            )
+            & all(
+                p1.tkn1.amt == p2.tkn1.amt
+                for p1, p2 in zip(self.trade_path, other.trade_path)
+            )
         )
 
     def __post_init__(self):

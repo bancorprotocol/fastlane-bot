@@ -60,13 +60,12 @@ class FastLaneArbBotUI(
 
     def execute_carbon(self, routes: [Route]):
         deadline = (
-                self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
-                + self.blocktime_deviation
+            self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
+            + self.blocktime_deviation
         )
 
         routes.sort(key=lambda x: x.profit, reverse=True)
         for route in routes:
-
             amts_in = [amt for amt in route.trade_path_amts]
 
             profit = route.profit
@@ -74,8 +73,12 @@ class FastLaneArbBotUI(
             # Convert the trade path to a trade struct
             route_struct = [
                 route.to_trade_struct(
-                    idx=i, min_target_amount=amts_in[i + 1], deadline=deadline, web3=self.web3,
-                    max_slippage=self.max_slippage, amts_in_carbon=amts_in[i]
+                    idx=i,
+                    min_target_amount=amts_in[i + 1],
+                    deadline=deadline,
+                    web3=self.web3,
+                    max_slippage=self.max_slippage,
+                    amts_in_carbon=amts_in[i],
                 )
                 for i in range(len(route.trade_path))
             ]
@@ -99,7 +102,7 @@ class FastLaneArbBotUI(
 
             block_number = self.web3.eth.get_block("latest")["number"]
 
-            #try:
+            # try:
             if route_struct:
                 logger.info("Found a trade. Executing...")
                 logger.info(
@@ -123,14 +126,14 @@ class FastLaneArbBotUI(
                         gas_price=current_gas_price,
                         max_priority=current_max_priority_gas,
                         nonce=nonce,
-                        src_token=flash_token
+                        src_token=flash_token,
                     )
                     if arb_tx is None:
                         break
                     gas_estimate = arb_tx["gas"]
 
                     current_gas_price = (
-                            arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
+                        arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
                     )
                     gas_estimate = int(gas_estimate + ec.DEFAULT_GAS_SAFETY_OFFSET)
                     logger.info(f"gas estimate = {gas_estimate}")
@@ -162,7 +165,7 @@ class FastLaneArbBotUI(
 
                     # The 0.81 below can be modified to adjust for the actual expected gas consumption, which is overestimated. Increase this for safer execution and lower it to increase execution frequency.
                     if adjusted_reward > (
-                            gas_in_bnt * Decimal("0.81")
+                        gas_in_bnt * Decimal("0.81")
                     ) and gas_in_bnt < Decimal("100"):
                         logger.info(
                             f"Expected profit of {profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
@@ -217,7 +220,6 @@ class FastLaneArbBotUI(
 
             # except Exception as e:
             #     logger.error(f"Failed to submit trade due to exception: {e}")
-
 
     def execute(self):
         """
@@ -279,7 +281,7 @@ class FastLaneArbBotUI(
                         gas_estimate = arb_tx["gas"]
 
                         current_gas_price = (
-                                arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
+                            arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
                         )
                         gas_estimate = int(gas_estimate + ec.DEFAULT_GAS_SAFETY_OFFSET)
                         logger.info(f"gas estimate = {gas_estimate}")
@@ -311,7 +313,7 @@ class FastLaneArbBotUI(
 
                         # The 0.81 below can be modified to adjust for the actual expected gas consumption, which is overestimated. Increase this for safer execution and lower it to increase execution frequency.
                         if adjusted_reward > (
-                                gas_in_bnt * Decimal("0.81")
+                            gas_in_bnt * Decimal("0.81")
                         ) and gas_in_bnt < Decimal("100"):
                             logger.info(
                                 f"Expected profit of {bnt_profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
