@@ -320,17 +320,20 @@ class TransactionHelpers(BaseHelper):
                 )
             )
         except (ValueError, web3.exceptions.ContractLogicError) as e:
-            
-            message = str(e).split("baseFee: ")
-            split_fee = message[1].split(" (supplied gas ")
-            baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
-            transaction = self.arb_contract.functions.execute(
-                routes, src_amt
+            if e.__class__.__name__ == "ValueError":
+                message = str(e).split("baseFee: ")
+                split_fee = message[1].split(" (supplied gas ")
+                baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
+                transaction = self.arb_contract.functions.flashloanAndArb(
+                routes, src_token, src_amt
             ).build_transaction(
-                self.build_tx(
-                    gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+                    self.build_tx(
+                        gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+                    )
                 )
-            )
+            else:
+                logger.error(f"Contract logic error - likely an invalid transaction: {e}")
+                return None
 
         try:
             estimated_gas = (

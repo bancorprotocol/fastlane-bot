@@ -1233,6 +1233,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
 
         if max_triangular_arb_trade < 0:
             return None
+        logger.info(f"max arb in = {max_triangular_arb_trade}")
         return self.get_trade_amts_carbon_triangular(tkns_in=max_triangular_arb_trade, p1=p1, p2=p2, p3=p3)
 
     def carbon_specific_methods(self):
@@ -1253,8 +1254,12 @@ class CarbonV1RouteSolver(BaseRouteSolver):
 
         if result_trade_1 > p2.max_in:
             # traded in more than max, recalculating
-            tkns_in = self.get_in_given_out_constant_product(tokens_out=tkns_in_carbon, token0_amt=p1.tkn0.amt,
+
+            new_tkns_in = self.get_in_given_out_constant_product(tokens_out=tkns_in_carbon, token0_amt=p1.tkn0.amt,
                                                              token1_amt=p1.tkn1.amt, pool_fee=Decimal(p1.fee))
+            logger.info(f"More than max in, old in = {tkns_in}, new = {new_tkns_in} result trade 1 orig = {result_trade_1} but max in = {p2.max_in}, y = {p2.y}, tkn_in = {p2.tkn0}, tkn_out = {p2.tkn1}, id = {p2.id}, z = {p2.z}, A = {p2.A}, B={p2.B}")
+            tkns_in = new_tkns_in
+
             result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in, token0=p1.tkn0,
                                                                                 token1=p1.tkn1, pool_fee=Decimal(p1.fee),
                                                                                 token_in=p1.tkn0, token_out=p1.tkn1)
@@ -1263,6 +1268,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
                                                                             token0=p3.tkn0, token1=p3.tkn1,
                                                                             pool_fee=Decimal(p3.fee), token_in=p2.tkn1,
                                                                             token_out=p3.tkn1)
+        logger.info(f"tkns_in = {tkns_in}, r1 = {result_trade_1}, r2 = {tkns_out_carbon}, r3 = {result_trade_3}")
         return [tkns_in, result_trade_1, tkns_out_carbon, result_trade_3]
 
     def get_optimal_input_triangular_constant_product(self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
@@ -1300,7 +1306,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             tkns_in, tkns_out = CarbonV1RouteSolver.get_input_trade_by_target(order=order, tkns_out=y)
             tkns_out = y
 
-        tkns_out = tkns_out * order.fee
+        tkns_out = tkns_out * (Decimal(1) - order.fee)
         tkns_out = _quantize(amount=tkns_out, decimals=order.tkn0.decimals)
         assert type(tkns_in) == Decimal
         assert type(tkns_out) == Decimal
@@ -1350,6 +1356,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         :param token_in: the token being traded into the pool
         :param token_out: the token recevied from the trade
         """
+        # logger.info(f"single trade constant product: in = {tokens_in}, t0 = {token0.amt}, t1 = {token1.amt}, fee = {pool_fee}")
         token0_in = swap_bancor_eth_to_weth(token0.address) == swap_bancor_eth_to_weth(token_in.address)
         tokens_in = _quantize(amount=tokens_in, decimals=token_in.decimals)
         trade_result = self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token0.amt,
@@ -1357,7 +1364,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
                                                                  pool_fee=pool_fee) if token0_in else self.single_trade_result_constant_product(
             tokens_in=tokens_in, token0_amt=token1.amt, token1_amt=token0.amt, pool_fee=pool_fee)
         tokens_out = _quantize(amount=trade_result, decimals=token_out.decimals)
-
+        # logger.info(f"single trade constant product: in = {tokens_in}, t0 = {token0.amt}, t1 = {token1.amt}, fee = {pool_fee}, out = {tokens_out}")
         return tokens_out
 
     @staticmethod
