@@ -317,7 +317,7 @@ class TransactionHelpers(BaseHelper):
             split_fee = message[1].split(" (supplied gas ")
             baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
             transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_amt
+                routes, ec.BNT_ADDRESS, src_amt
             ).build_transaction(
                 self.build_tx(
                     gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
