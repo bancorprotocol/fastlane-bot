@@ -1245,7 +1245,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
 
         if max_triangular_arb_trade < 0:
             return None
-        #logger.info(f"max arb in = {max_triangular_arb_trade}")
+        # logger.info(f"max arb in = {max_triangular_arb_trade}")
         return self.get_trade_amts_carbon_triangular(
             tkns_in=max_triangular_arb_trade, p1=p1, p2=p2, p3=p3
         )
