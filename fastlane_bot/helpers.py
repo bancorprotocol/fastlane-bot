@@ -17,6 +17,9 @@ from datetime import datetime
 from decimal import *
 from functools import reduce
 from typing import List, Any, Dict, Tuple, Union
+
+import web3.exceptions
+
 from fastlane_bot.data.token_lookup import get_token_decimals_from_address, get_token_symbol_from_address, \
     check_if_tkn_in_table_address, check_if_tkn_in_table_symbol, get_token_decimals_from_symbol, \
     get_token_address_from_symbol, liquid_tkn_addresses_bancor_3
@@ -316,7 +319,8 @@ class TransactionHelpers(BaseHelper):
                     gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
                 )
             )
-        except ValueError as e:
+        except (ValueError, web3.exceptions.ContractLogicError) as e:
+            
             message = str(e).split("baseFee: ")
             split_fee = message[1].split(" (supplied gas ")
             baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
