@@ -18,6 +18,7 @@ from fastlane_bot.helpers import (
     TestingHelpers,
 )
 from fastlane_bot.networks import *
+from fastlane_bot.routes import Route
 
 logger = ec.DEFAULT_LOGGER
 
@@ -55,6 +56,52 @@ class FastLaneArbBotUI(
     web3: Any = None
     bancor_network_info: Any = None
     _ETH_PRIVATE_KEY: str = None
+
+    def execute_carbon(self, routes: [Route]):
+        deadline = self.web3
+        for route in routes:
+
+            amts_in = [amt for amt in len(route.trade_path)]
+
+            amts_in = [amt_in_0, amt_in_1, amt_in_2]
+            amt_out_0 = df["0_amt_out"].values[0]
+            amt_out_1 = df["1_amt_out"].values[0]
+            amt_out_2 = df["2_amt_out"].values[0]
+            amt_out_0 = (
+                    Decimal(amt_out_0)
+                    * (Decimal("100") - Decimal(self.max_slippage))
+                    / Decimal("100")
+            )
+            amt_out_1 = (
+                    Decimal(amt_out_1)
+                    * (Decimal("100") - Decimal(self.max_slippage))
+                    / Decimal("100")
+            )
+            amt_out_2 = (
+                    Decimal(amt_out_2)
+                    * (Decimal("100") - Decimal(self.max_slippage))
+                    / Decimal("100")
+            )
+            min_return_amts = [amt_out_0, amt_out_1, amt_out_2]
+            profit = df["profit"].values[0]
+
+            # Convert the trade path to a trade struct
+            route_struct = [
+                route.to_trade_struct(
+                    i, min_return_amts[i], deadline, web3, self.max_slippage
+                )
+                for i in range(len(route))
+            ]
+
+            # Convert the src amount to wei format
+            src_amt = convert_decimals_to_wei_format(amts_in[0], 18)
+
+            # Log the route struct
+            if route_struct[0]["targetToken"] == route_struct[1]["targetToken"]:
+                return None
+
+            # If all checks pass, return the trade route. Includes the src_amt, and trade path (solidity trade struct)
+            return src_amt, route_struct, profit
 
     def execute(self):
         """

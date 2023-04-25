@@ -281,14 +281,15 @@ class BaseLiquidityPool:
                 logger.error(
                     f"Pool {self.pair} not found in pool info for exchange {self.exchange}"
                 )
-                raise InvalidPoolInitialization(
-                    address=self.address,
-                    pair=self.pair,
-                    exchange=self.exchange,
-                    fee=self.fee,
-                    tkn0=self.tkn0,
-                    tkn1=self.tkn1,
-                )
+                return None
+                # raise InvalidPoolInitialization(
+                #     address=self.address,
+                #     pair=self.pair,
+                #     exchange=self.exchange,
+                #     fee=self.fee,
+                #     tkn0=self.tkn0,
+                #     tkn1=self.tkn1,
+                # )
 
         tkn0, tkn1 = self.tkn0, self.tkn1
 
@@ -988,19 +989,26 @@ class CarbonV1Order:
             return False
         return True
 
-    def order_to_pandas(self, order: int):
+    def to_pandas(
+        self, idx: int = 0, amt_in: Decimal = None, amt_out: Decimal = None
+    ) -> pd.DataFrame:
         """
         Exports values for inspection...
         """
 
-        return {
-            # String values
-            "id": self.order_id,
-            "exchange": self.exchange,
-            "pair_name": self.pair_name,
-            "tkn_out": self.tkn0.address,
-            "tkn_in": self.tkn1.address,
-            # Decimal values
+        dic = {
+            f"{idx}_id": self.order_id,
+            f"{idx}_exchange": self.exchange,
+            f"{idx}_pair_name": self.pair_name,
+            f"{idx}_tkn0_amt": str(0),
+            f"{idx}_tkn1_amt": str(0),
+            f"{idx}_tkn0_symbol": self.tkn0.symbol,
+            f"{idx}_tkn1_symbol": self.tkn1.symbol,
+            f"{idx}_fee": self.fee,
+            f"{idx}_liquidity": str(0),
+            f"{idx}_amt_in": str(amt_in),
+            f"{idx}_amt_out": str(amt_out),
+            f"{idx}_sqrt_price_q96": str(0) if idx == 1 else None,
             "y": self.y,
             "z": self.z,
             "A": self.A,
@@ -1008,9 +1016,12 @@ class CarbonV1Order:
             "c": self.c,
             "d": self.d,
             "fee": self.fee,
-            "marg_price": self.marginal_price,
+            "marg_price": self.get_marginal_price,
             "max_in": self.max_in,
         }
+
+        return pd.DataFrame(dic, index=[0])
+
 
 
 @dataclass

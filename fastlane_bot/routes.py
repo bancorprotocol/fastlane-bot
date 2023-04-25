@@ -23,7 +23,7 @@ from fastlane_bot.pools import (
     UniswapV3LiquidityPool,
     LiquidityPool,
     BancorV2LiquidityPool,
-    OrderBookDexLiquidityPool,
+    OrderBookDexLiquidityPool, CarbonV1Order,
 )
 from fastlane_bot.solvers import (
     ConstantProductRouteSolver,
@@ -47,7 +47,7 @@ class BaseRoute:
     id: int = None
 
     # The route solver to use for this route. This is (should be) set in the constructor of the child class.
-    solver: ConstantProductRouteSolver or UniswapV3RouteSolver = (
+    solver: ConstantProductRouteSolver or UniswapV3RouteSolver or CarbonV1RouteSolver = (
         None  # Any is used here to avoid circular imports.
     )
 
@@ -413,8 +413,10 @@ class OrderBookDexRoute(BaseRoute):
         Simulate the trade for route
         """
         self.trade_path = trade_path
+        self.solver = CarbonV1RouteSolver(route=trade_path)
+
         self.solver.route = self
-        self.solver.simulate(trade_path=trade_path)
+        return self.solver.simulate(trade_path=trade_path)
 
     def other_carbon_specific_methods(self):
         """
@@ -465,7 +467,7 @@ class Route(BaseRoute, ABC):
                 trade_path=self.trade_path,
                 solver=UniswapV3RouteSolver(route=self),
             )
-        elif isinstance(self.trade_path[1], OrderBookDexLiquidityPool):
+        elif isinstance(self.trade_path[1], CarbonV1Order):
             # Assign the correct route type if Carbon V1 is detected
             cls = OrderBookDexRoute(
                 id=self.id,

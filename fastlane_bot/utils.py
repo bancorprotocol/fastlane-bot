@@ -226,7 +226,6 @@ class EncodedOrder:
     z: int
     A: int
     B: int
-    tkn_in_decimals: int
     ONE = 2**48
 
     @classmethod

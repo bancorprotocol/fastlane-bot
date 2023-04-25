@@ -45,7 +45,7 @@ class BaseRouteSolver:
 
     @staticmethod
     def single_trade_result(
-        tkns_in: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal, fee: Decimal
+            tkns_in: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal, fee: Decimal
     ) -> Decimal:
         """
         Calculate the trade result for a single trade in a constant product pool
@@ -118,12 +118,12 @@ class ConstantProductRouteSolver(BaseRouteSolver, ABC):
         trade_result: Dict[str, Any]
 
         if (
-            p1 is None
-            or p3 is None
-            or p1.tkn0.amt == 0
-            or p1.tkn1.amt == 0
-            or p3.tkn0.amt == 0
-            or p3.tkn1.amt == 0
+                p1 is None
+                or p3 is None
+                or p1.tkn0.amt == 0
+                or p1.tkn1.amt == 0
+                or p3.tkn0.amt == 0
+                or p3.tkn1.amt == 0
         ):
             logger.debug("One of the pools was 'None'")
             return None
@@ -174,7 +174,7 @@ class ConstantProductRouteSolver(BaseRouteSolver, ABC):
 
     @staticmethod
     def calc_arb_trade_constant_product(
-        route: Any,  # Any is used to avoid circular imports. (`ConstantFunctionRoute` or `ConstantFunctionRoute`)
+            route: Any,  # Any is used to avoid circular imports. (`ConstantFunctionRoute` or `ConstantFunctionRoute`)
     ) -> Decimal:
         """
         Calculate the max arbitrage amount for a given route
@@ -184,80 +184,80 @@ class ConstantProductRouteSolver(BaseRouteSolver, ABC):
         r = route
         val = Decimal(
             (
-                -r.p2.tkn0.amt * r.p3.tkn0.amt * r.p1.tkn0.amt
-                + (
-                    Decimal("-1")
-                    * r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p2.fee)
-                    * Decimal(r.p3.fee)
-                    * Decimal(r.p1.fee)
-                    + r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p2.fee)
-                    * Decimal(r.p3.fee)
-                    + r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p2.fee)
-                    * Decimal(r.p1.fee)
-                    - r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p2.fee)
-                    + r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p3.fee)
-                    * Decimal(r.p1.fee)
-                    - r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p3.fee)
-                    - r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                    * Decimal(r.p1.fee)
-                    + r.p2.tkn0.amt
-                    * r.p3.tkn0.amt
-                    * r.p1.tkn0.amt
-                    * r.p2.tkn1.amt
-                    * r.p3.tkn1.amt
-                    * r.p1.tkn1.amt
-                )
-                ** Decimal("0.5")
+                    -r.p2.tkn0.amt * r.p3.tkn0.amt * r.p1.tkn0.amt
+                    + (
+                            Decimal("-1")
+                            * r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p2.fee)
+                            * Decimal(r.p3.fee)
+                            * Decimal(r.p1.fee)
+                            + r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p2.fee)
+                            * Decimal(r.p3.fee)
+                            + r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p2.fee)
+                            * Decimal(r.p1.fee)
+                            - r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p2.fee)
+                            + r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p3.fee)
+                            * Decimal(r.p1.fee)
+                            - r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p3.fee)
+                            - r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                            * Decimal(r.p1.fee)
+                            + r.p2.tkn0.amt
+                            * r.p3.tkn0.amt
+                            * r.p1.tkn0.amt
+                            * r.p2.tkn1.amt
+                            * r.p3.tkn1.amt
+                            * r.p1.tkn1.amt
+                    )
+                    ** Decimal("0.5")
             )
             / (
-                r.p2.tkn0.amt * r.p3.tkn0.amt
-                - r.p3.tkn0.amt * r.p1.tkn1.amt * Decimal(r.p1.fee)
-                + r.p3.tkn0.amt * r.p1.tkn1.amt
-                + r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p2.fee) * Decimal(r.p1.fee)
-                - r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p2.fee)
-                - r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p1.fee)
-                + r.p2.tkn1.amt * r.p1.tkn1.amt
+                    r.p2.tkn0.amt * r.p3.tkn0.amt
+                    - r.p3.tkn0.amt * r.p1.tkn1.amt * Decimal(r.p1.fee)
+                    + r.p3.tkn0.amt * r.p1.tkn1.amt
+                    + r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p2.fee) * Decimal(r.p1.fee)
+                    - r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p2.fee)
+                    - r.p2.tkn1.amt * r.p1.tkn1.amt * Decimal(r.p1.fee)
+                    + r.p2.tkn1.amt * r.p1.tkn1.amt
             )
         )
         return max(val, Decimal("0"))
@@ -308,14 +308,14 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         logger.debug(f"Begin: Constant Function Solver \n: {key}")
         self.log_route_summary(route)
         if (
-            p1 is None
-            or p3 is None
-            or p1.tkn0.amt == 0
-            or p1.tkn1.amt == 0
-            or p2.liquidity == 0
-            or p2.sqrt_price_q96 == 0
-            or p3.tkn0.amt == 0
-            or p3.tkn1.amt == 0
+                p1 is None
+                or p3 is None
+                or p1.tkn0.amt == 0
+                or p1.tkn1.amt == 0
+                or p2.liquidity == 0
+                or p2.sqrt_price_q96 == 0
+                or p3.tkn0.amt == 0
+                or p3.tkn1.amt == 0
         ):
             logger.debug("One of the pools was 'None'")
             return None
@@ -348,7 +348,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
     @staticmethod
     def multiply_by_decimals(number):
         """the adjusted amount - 10 to the power of the number of decimal places"""
-        return Decimal(10**number)
+        return Decimal(10 ** number)
 
     @staticmethod
     def convert_decimals(amt: Decimal, n: int) -> Decimal:
@@ -379,12 +379,12 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return self.route.p2.calc_amount0(liquidity, sqrt_p, price_next)
 
     def swap_token0_in(
-        self,
-        amount_in: Decimal,
-        liquidity: Decimal,
-        sqrt_p: Decimal,
-        decimal_tkn0_modifier: Decimal,
-        decimal_tkn1_modifier: Decimal,
+            self,
+            amount_in: Decimal,
+            liquidity: Decimal,
+            sqrt_p: Decimal,
+            decimal_tkn0_modifier: Decimal,
+            decimal_tkn1_modifier: Decimal,
     ) -> Decimal:
         """Returns amount out when swapping from Token 0 to Token 1, when you do not cross a tick"""
         amount_decimal_adjusted = amount_in * decimal_tkn0_modifier
@@ -398,12 +398,12 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return Decimal(amount_out / decimal_tkn1_modifier)
 
     def swap_token1_in(
-        self,
-        amount_in: Decimal,
-        liquidity: Decimal,
-        sqrt_price: Decimal,
-        decimal_tkn0_modifier: Decimal,
-        decimal_tkn1_modifier: Decimal,
+            self,
+            amount_in: Decimal,
+            liquidity: Decimal,
+            sqrt_price: Decimal,
+            decimal_tkn0_modifier: Decimal,
+            decimal_tkn1_modifier: Decimal,
     ) -> Decimal:
         """Returns amount out when swapping from Token 1 to Token 0, when you do not cross a tick"""
         amount = amount_in * decimal_tkn1_modifier
@@ -414,7 +414,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
 
     @staticmethod
     def get_net_liquidity_for_next_tick(
-        uni_v3_position: LiquidityPool, next_tick: Decimal
+            uni_v3_position: LiquidityPool, next_tick: Decimal
     ) -> Decimal:
         """This function gets the Liquidity Net value from the specified tick in a Uni V3 pool. This allows you to determine the Liquidity in the next range when crossing a tick boundary."""
         next_tick = int(next_tick)
@@ -423,11 +423,11 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return Decimal(liquidity_net)
 
     def get_next_liquidity_range(
-        self,
-        uni_v3_position: LiquidityPool,
-        current_max_tick: Decimal,
-        current_liquidity: Decimal,
-        is_token0: bool,
+            self,
+            uni_v3_position: LiquidityPool,
+            current_max_tick: Decimal,
+            current_liquidity: Decimal,
+            is_token0: bool,
     ) -> Tuple[Decimal, Decimal, Decimal, Decimal, Decimal, Decimal, bool]:
         """This calculates the details of the next tick range when crossing ticks"""
         tick_changes = 0
@@ -499,17 +499,17 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         )
 
     def calculate_swap_output_uni_v3(
-        self,
-        uni_v3_position: LiquidityPool,
-        amount_in: Decimal,
-        token_in: str,
-        liquidity: Decimal,
-        sqrt_price: Decimal,
-        max_in: Decimal,
-        max_out: Decimal,
-        current_max_tick,
-        is_first_entry: bool,
-        cross_tick_count: int,
+            self,
+            uni_v3_position: LiquidityPool,
+            amount_in: Decimal,
+            token_in: str,
+            liquidity: Decimal,
+            sqrt_price: Decimal,
+            max_in: Decimal,
+            max_out: Decimal,
+            current_max_tick,
+            is_first_entry: bool,
+            cross_tick_count: int,
     ) -> Decimal:
         """This calculates and returns the swap output from a Uniswap V3 pool. When crossing a tick range, it recursively calls itself while adding the max output for the given range until it reaches a range it cannot exhaust"""
         cross_tick_count += 1
@@ -581,16 +581,16 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return ttl_max_trade_1
 
     def recalculate_pools_for_cross_tick_trades(
-        self,
-        tokens_in: Decimal,
-        p1: LiquidityPool,
-        p2: LiquidityPool,
-        uni_liquidity: Decimal,
-        uni_max_tick: Decimal,
-        p3: LiquidityPool,
-        max_input_p2: Decimal,
-        max_output_p2: Decimal,
-        total_loops: int,
+            self,
+            tokens_in: Decimal,
+            p1: LiquidityPool,
+            p2: LiquidityPool,
+            uni_liquidity: Decimal,
+            uni_max_tick: Decimal,
+            p3: LiquidityPool,
+            max_input_p2: Decimal,
+            max_output_p2: Decimal,
+            total_loops: int,
     ) -> Decimal:
         """This Function recursively finds the maximum arbitrage trade by checking if a trade will cross a Uniswap pool's tick boundary and recalculates each pool given the new state."""
         total_max_trade_in = Decimal("0")
@@ -682,11 +682,11 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return total_max_trade_in
 
     def calc_trade_result(
-        self,
-        tokens_in: Decimal,
-        p1: LiquidityPool,
-        p2: LiquidityPool,
-        p3: LiquidityPool,
+            self,
+            tokens_in: Decimal,
+            p1: LiquidityPool,
+            p2: LiquidityPool,
+            p3: LiquidityPool,
     ) -> List[Decimal]:
         """This function returns TradeAmounts object containing trade results of each trade in a series of 3 trades"""
 
@@ -731,19 +731,19 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return trades
 
     def calculate_max_arb_cp_uni3_cp(
-        self,
-        p1t0a: Decimal,
-        p1t1a: Decimal,
-        p1fee: Decimal,
-        p2l: Decimal,
-        p2sqrt_price_xq96: Decimal,
-        p2t0decimal: Decimal,
-        p2t1decimal: Decimal,
-        p2fee: Decimal,
-        p3t0a: Decimal,
-        p3t1a: Decimal,
-        p3fee: Decimal,
-        is_swapping_token0: bool,
+            self,
+            p1t0a: Decimal,
+            p1t1a: Decimal,
+            p1fee: Decimal,
+            p2l: Decimal,
+            p2sqrt_price_xq96: Decimal,
+            p2t0decimal: Decimal,
+            p2t1decimal: Decimal,
+            p2fee: Decimal,
+            p3t0a: Decimal,
+            p3t1a: Decimal,
+            p3fee: Decimal,
+            is_swapping_token0: bool,
     ):
         return (
             self.calculate_max_arb_constant_product_uni_v3_token0_in(
@@ -777,17 +777,17 @@ class UniswapV3RouteSolver(BaseRouteSolver):
 
     @staticmethod
     def calculate_max_arb_constant_product_uni_v3_token1_in(
-        p1t0a: Decimal,
-        p1t1a: Decimal,
-        p1fee: Decimal,
-        p2l: Decimal,
-        p2sqrt_price_xq96: Decimal,
-        p2t0decimal: Decimal,
-        p2t1decimal: Decimal,
-        p2fee: Decimal,
-        p3t0a: Decimal,
-        p3t1a: Decimal,
-        p3fee: Decimal,
+            p1t0a: Decimal,
+            p1t1a: Decimal,
+            p1fee: Decimal,
+            p2l: Decimal,
+            p2sqrt_price_xq96: Decimal,
+            p2t0decimal: Decimal,
+            p2t1decimal: Decimal,
+            p2fee: Decimal,
+            p3t0a: Decimal,
+            p3t1a: Decimal,
+            p3fee: Decimal,
     ):
         """This returns the optimal amount to trade into the set of pools when the input going into the Uniswap pool is its Token0"""
         p1fee, p3fee = Decimal(str(p1fee)), Decimal(str(p3fee))
@@ -796,16 +796,16 @@ class UniswapV3RouteSolver(BaseRouteSolver):
             p2sqrt_price_xq96
             * p2l
             * (
-                -p3t0a * p1t0a * p2sqrt_price_xq96 * p2t0decimal
-                + ec.Q96
-                * Decimal.sqrt(
-                    p3t0a
-                    * p1t0a
-                    * p3t1a
-                    * p1t1a
-                    * p2t0decimal
-                    * p2t1decimal
-                    * (
+                    -p3t0a * p1t0a * p2sqrt_price_xq96 * p2t0decimal
+                    + ec.Q96
+                    * Decimal.sqrt(
+                p3t0a
+                * p1t0a
+                * p3t1a
+                * p1t1a
+                * p2t0decimal
+                * p2t1decimal
+                * (
                         -p2fee * p3fee * p1fee
                         + p2fee * p3fee
                         + p2fee * p1fee
@@ -814,66 +814,66 @@ class UniswapV3RouteSolver(BaseRouteSolver):
                         - p3fee
                         - p1fee
                         + 1
-                    )
                 )
             )
+            )
             / (
-                p3t0a * p2sqrt_price_xq96**2 * p2l * p2t0decimal
-                + p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p2fee
-                * p1fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                - p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p2fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                - p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p1fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                + p3t0a * p2sqrt_price_xq96 * p1t1a * ec.Q96 * p2t0decimal * p2t1decimal
-                + p1t1a * p2l * p2fee * p1fee * ec.Q96**2 * p2t1decimal
-                - p1t1a * p2l * p2fee * ec.Q96**2 * p2t1decimal
-                - p1t1a * p2l * p1fee * ec.Q96**2 * p2t1decimal
-                + p1t1a * p2l * ec.Q96**2 * p2t1decimal
+                    p3t0a * p2sqrt_price_xq96 ** 2 * p2l * p2t0decimal
+                    + p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p2fee
+                    * p1fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    - p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p2fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    - p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p1fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    + p3t0a * p2sqrt_price_xq96 * p1t1a * ec.Q96 * p2t0decimal * p2t1decimal
+                    + p1t1a * p2l * p2fee * p1fee * ec.Q96 ** 2 * p2t1decimal
+                    - p1t1a * p2l * p2fee * ec.Q96 ** 2 * p2t1decimal
+                    - p1t1a * p2l * p1fee * ec.Q96 ** 2 * p2t1decimal
+                    + p1t1a * p2l * ec.Q96 ** 2 * p2t1decimal
             )
         )
 
     @staticmethod
     def calculate_max_arb_constant_product_uni_v3_token0_in(
-        p1t0a: Decimal,
-        p1t1a: Decimal,
-        p1fee: Decimal,
-        p2l: Decimal,
-        p2sqrt_price_xq96: Decimal,
-        p2t0decimal: Decimal,
-        p2t1decimal: Decimal,
-        p2fee: Decimal,
-        p3t0a: Decimal,
-        p3t1a: Decimal,
-        p3fee: Decimal,
+            p1t0a: Decimal,
+            p1t1a: Decimal,
+            p1fee: Decimal,
+            p2l: Decimal,
+            p2sqrt_price_xq96: Decimal,
+            p2t0decimal: Decimal,
+            p2t1decimal: Decimal,
+            p2fee: Decimal,
+            p3t0a: Decimal,
+            p3t1a: Decimal,
+            p3fee: Decimal,
     ):
         """This returns the optimal amount to trade into the set of pools when the input going into the Uniswap pool is its Token1"""
         p1fee, p3fee = Decimal(str(p1fee)), Decimal(str(p3fee))
         p2fee = Decimal(str(int(p2fee) / 1000000))
         return Decimal(
             (
-                p2l
-                * ec.Q96
-                * (
-                    -p3t0a * p1t0a * ec.Q96 * p2t1decimal
-                    + p2sqrt_price_xq96
-                    * Decimal.sqrt(
+                    p2l
+                    * ec.Q96
+                    * (
+                            -p3t0a * p1t0a * ec.Q96 * p2t1decimal
+                            + p2sqrt_price_xq96
+                            * Decimal.sqrt(
                         p3t0a
                         * p1t0a
                         * p3t1a
@@ -881,53 +881,53 @@ class UniswapV3RouteSolver(BaseRouteSolver):
                         * p2t0decimal
                         * p2t1decimal
                         * (
-                            -p2fee * p3fee * p1fee
-                            + p2fee * p3fee
-                            + p2fee * p1fee
-                            - p2fee
-                            + p3fee * p1fee
-                            - p3fee
-                            - p1fee
-                            + 1
+                                -p2fee * p3fee * p1fee
+                                + p2fee * p3fee
+                                + p2fee * p1fee
+                                - p2fee
+                                + p3fee * p1fee
+                                - p3fee
+                                - p1fee
+                                + 1
                         )
                     )
-                )
+                    )
             )
             / (
-                p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p2fee
-                * p1fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                - p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p2fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                - p3t0a
-                * p2sqrt_price_xq96
-                * p1t1a
-                * p1fee
-                * ec.Q96
-                * p2t0decimal
-                * p2t1decimal
-                + p3t0a * p2sqrt_price_xq96 * p1t1a * ec.Q96 * p2t0decimal * p2t1decimal
-                + p3t0a * p2l * ec.Q96**2 * p2t1decimal
-                + p2sqrt_price_xq96**2 * p1t1a * p2l * p2fee * p1fee * p2t0decimal
-                - p2sqrt_price_xq96**2 * p1t1a * p2l * p2fee * p2t0decimal
-                - p2sqrt_price_xq96**2 * p1t1a * p2l * p1fee * p2t0decimal
-                + p2sqrt_price_xq96**2 * p1t1a * p2l * p2t0decimal
+                    p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p2fee
+                    * p1fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    - p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p2fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    - p3t0a
+                    * p2sqrt_price_xq96
+                    * p1t1a
+                    * p1fee
+                    * ec.Q96
+                    * p2t0decimal
+                    * p2t1decimal
+                    + p3t0a * p2sqrt_price_xq96 * p1t1a * ec.Q96 * p2t0decimal * p2t1decimal
+                    + p3t0a * p2l * ec.Q96 ** 2 * p2t1decimal
+                    + p2sqrt_price_xq96 ** 2 * p1t1a * p2l * p2fee * p1fee * p2t0decimal
+                    - p2sqrt_price_xq96 ** 2 * p1t1a * p2l * p2fee * p2t0decimal
+                    - p2sqrt_price_xq96 ** 2 * p1t1a * p2l * p1fee * p2t0decimal
+                    + p2sqrt_price_xq96 ** 2 * p1t1a * p2l * p2t0decimal
             )
         )
 
     @staticmethod
     def single_trade_result_constant_product(
-        tokens_in, token0_amt, token1_amt, pool_fee
+            tokens_in, token0_amt, token1_amt, pool_fee
     ) -> Decimal:
         """This function returns the output of a trade (-Dy) given Dx in a constant product pool"""
         return Decimal(
@@ -937,7 +937,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
 
     @staticmethod
     def get_in_given_out_constant_product(
-        tokens_out, token0_amt, token1_amt, pool_fee
+            tokens_out, token0_amt, token1_amt, pool_fee
     ) -> Decimal:
         """This function returns the input of a trade (Dx) given -Dy in a constant product pool"""
         return Decimal(
@@ -949,7 +949,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
 
     @staticmethod
     def get_new_tkn_values_given_out_constant_product(
-        tkns_out: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal
+            tkns_out: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal
     ) -> Tuple[Decimal, Decimal]:
         pool_k = tkn0_amt * tkn1_amt
         new_tkn1_amt = tkn1_amt - tkns_out
@@ -957,7 +957,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return new_tkn0_amt, new_tkn1_amt
 
     def get_liquidity_pool_after_trade_constant_product(
-        self, tokens_in, liquidity_pool: LiquidityPool, is_forwards: bool
+            self, tokens_in, liquidity_pool: LiquidityPool, is_forwards: bool
     ) -> LiquidityPool:
         """This function calculates the state of a liquidity pool after a trade"""
         trade_output = (
@@ -1004,7 +1004,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return self.route.p2.tick_to_sqrt_price_q96(next_starting_tick)
 
     def calculate_max_swap_token0(
-        self, next_sqrt_p, param, next_liquidity, t0decimal_mod, t1decimal_mod
+            self, next_sqrt_p, param, next_liquidity, t0decimal_mod, t1decimal_mod
     ):
         """
         This function calculates the maximum amount of token0 that can be swapped in a Uniswap pool
@@ -1014,7 +1014,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         )
 
     def calculate_max_swap_token1(
-        self, next_sqrt_p, param, next_liquidity, t0decimal_mod, t1decimal_mod
+            self, next_sqrt_p, param, next_liquidity, t0decimal_mod, t1decimal_mod
     ):
         """
         This function calculates the maximum amount of token1 that can be swapped in a Uniswap pool
@@ -1024,8 +1024,8 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         )
 
     def best_route_univ3(
-        self,
-        route: Any,
+            self,
+            route: Any,
     ) -> Any:
         """
         It first checks: p1 -> p2 -> p3
@@ -1037,7 +1037,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
 
         best_route: Route = None
         is_tkn0 = (
-            swap_bancor_eth_to_weth(route.p1.tkn1.address) == route.p2.tkn0.address
+                swap_bancor_eth_to_weth(route.p1.tkn1.address) == route.p2.tkn0.address
         )
         route0 = route.copy_route()
         route1 = route.copy_route()
@@ -1116,8 +1116,8 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         if max_arb_trade < 0:
             return None
         tkn0_in = (
-            swap_bancor_eth_to_weth(best_route.p1.tkn1.address)
-            == best_route.p2.tkn0.address
+                swap_bancor_eth_to_weth(best_route.p1.tkn1.address)
+                == best_route.p2.tkn0.address
         )
         max_arb_trade = self.cross_tick_adjusted_arb(
             route=best_route, max_arb_trade=max_arb_trade, tkn0_in=tkn0_in
@@ -1131,7 +1131,7 @@ class UniswapV3RouteSolver(BaseRouteSolver):
         return best_route
 
     def cross_tick_adjusted_arb(
-        self, route: Any, max_arb_trade: Decimal, tkn0_in: bool
+            self, route: Any, max_arb_trade: Decimal, tkn0_in: bool
     ):
         """
         Adjusts the max_arb_trade to account for the fact that the first trade may not be able to
@@ -1184,11 +1184,10 @@ class CarbonV1RouteSolver(BaseRouteSolver):
 
     def __post_init__(self):
         from fastlane_bot.routes import OrderBookDexRoute
-
         # Set the route type to the correct type for type hinting
         self.route: OrderBookDexRoute = self.route
 
-    def simulate(self, trade_path: List[LiquidityPool] = None) -> Dict[str, Any]:
+    def simulate(self, trade_path: List[LiquidityPool] = None) -> Dict[str, Any] or None:
         """
         Takes 3 liquidity pools with token balances already populated as args, the first and last being Bancor V3 pools,
         and calculates potential arbitrage
@@ -1204,33 +1203,37 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         logger.debug(f"key1: {key}")
 
         if (
-            p1 is None
-            or p3 is None
-            or p1.tkn0.amt == 0
-            or p1.tkn1.amt == 0
-            or p3.tkn0.amt == 0
-            or p3.tkn1.amt == 0
+                p1 is None
+                or p3 is None
+                or p1.tkn0.amt == 0
+                or p1.tkn1.amt == 0
+                or p2.y <= 0
+                or p3.tkn0.amt == 0
+                or p3.tkn1.amt == 0
         ):
             logger.debug("One of the pools was 'None'")
             return {"key": key, "results": 0}
 
         if (
-            p1.tkn1 != p2.tkn0 or
-            p2.tkn1 != p3.tkn0
+                p1.tkn1 != p2.tkn0 or
+                p2.tkn1 != p3.tkn0
         ):
-            logger.error("Carbon calculator error! Token misalignment")
+            logger.error(f"Carbon calculator error! Token misalignment, key = {key}")
             return {"key": key, "results": 0}
 
-        results = self.carbon_specific_methods()
+        trade_amts = self.optimal_arb_carbon_triangular_constant_product(p1=p1, p2=p2, p3=p3)
+        if trade_amts is None:
+            return None
+        route.trade_path_amts = trade_amts
+        logger.info(f"key = {key}, trade_amts = {trade_amts}profit = {route.profit}, exceeds min profit? {route.profit > ec.DEFAULT_MIN_PROFIT}")
+        return route if (route.profit > ec.DEFAULT_MIN_PROFIT) else None
 
+    def optimal_arb_carbon_triangular_constant_product(self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
+        max_triangular_arb_trade = self.get_optimal_input_triangular_constant_product(p1=p1, p2=p2, p3=p3)
 
-        # return route key + TradeAmts
-        return {"key": key, "results": results}
-
-
-    def optimal_arb_carbon_triangular_constant_product(self):
-        pass
-
+        if max_triangular_arb_trade < 0:
+            return None
+        return self.get_trade_amts_carbon_triangular(tkns_in=max_triangular_arb_trade, p1=p1, p2=p2, p3=p3)
 
     def carbon_specific_methods(self):
         """
@@ -1240,25 +1243,27 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         """
         pass
 
-
     def get_trade_amts_carbon_triangular(self, tkns_in, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
 
-        #Hardcoded to p1.tkn0 / 1 order
-        result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in,token0=p1.tkn0.amt, token1=p1.tkn1.amt, pool_fee=p1.fee, token_in=p1.tkn0, token_out=p1.tkn1)
+        # Hardcoded to p1.tkn0 / 1 order
+        result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in, token0=p1.tkn0,
+                                                                            token1=p1.tkn1, pool_fee=Decimal(p1.fee),
+                                                                            token_in=p1.tkn0, token_out=p1.tkn1)
         tkns_in_carbon, tkns_out_carbon = self.get_output_trade_by_source(tkns_in=result_trade_1, order=p2)
 
         if result_trade_1 > p2.max_in:
             # traded in more than max, recalculating
-            tkns_in = self.get_in_given_out_constant_product(tokens_out=tkns_in_carbon, token0_amt=p1.tkn0.amt, token1_amt=p1.tkn1.amt, pool_fee=p1.fee)
-            result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in, token0=p1.tkn0.amt,
-                                                                                token1=p1.tkn1.amt, pool_fee=p1.fee,
+            tkns_in = self.get_in_given_out_constant_product(tokens_out=tkns_in_carbon, token0_amt=p1.tkn0.amt,
+                                                             token1_amt=p1.tkn1.amt, pool_fee=Decimal(p1.fee))
+            result_trade_1 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_in, token0=p1.tkn0,
+                                                                                token1=p1.tkn1, pool_fee=Decimal(p1.fee),
                                                                                 token_in=p1.tkn0, token_out=p1.tkn1)
 
-        result_trade_3 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_out_carbon,token0=p3.tkn0.amt, token1=p3.tkn1.amt, pool_fee=p3.fee, token_in=p2.tkn1, token_out=p3.tkn1)
+        result_trade_3 = self.single_trade_result_constant_product_accurate(tokens_in=tkns_out_carbon,
+                                                                            token0=p3.tkn0, token1=p3.tkn1,
+                                                                            pool_fee=Decimal(p3.fee), token_in=p2.tkn1,
+                                                                            token_out=p3.tkn1)
         return [tkns_in, result_trade_1, tkns_out_carbon, result_trade_3]
-
-
-
 
     def get_optimal_input_triangular_constant_product(self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool):
         """
@@ -1266,14 +1271,17 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         """
         assert type(p1) != UniswapV3LiquidityPool and type(p3) != UniswapV3LiquidityPool
 
-        return (p2.B ** 2 * p1.tkn0.amt * p2.z ** 2 - p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.z + 2 * p2.B * p2.A * p1.tkn0.amt * p2.y * p2.z - p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y + p2.A ** 2 * p1.tkn0.amt * p2.y ** 2 - p3.tkn0.amt * p2.z ** 2 - Decimal.sqrt(
-                     p2.B ** 4 * p1.tkn0.amt ** 2 * p2.z ** 4 + 2 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.z ** 3 + 4 * p2.B ** 3 * p2.A * p1.tkn0.amt ** 2 * p2.y * p2.z ** 3 + p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y * p2.z ** 2 + 6 * p2.B ** 2 * p2.A ** 2 * p1.tkn0.amt ** 2 * p2.y ** 2 * p2.z ** 2 - 4 * p2.B ** 2 * p2.A * p1.tkn0.amt * p2.z ** 3 * Decimal.sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.z ** 4 + 2 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y * p2.z + 6 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 2 * p2.z + 4 * p2.B * p2.A ** 3 * p1.tkn0.amt ** 2 * p2.y ** 3 * p2.z - 8 * p2.B * p2.A ** 2 * p1.tkn0.amt * p2.y * p2.z ** 2 * Decimal.sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.z ** 3 + 4 * p2.B * p2.A * p1.tkn0.amt * p3.tkn0.amt * p2.y * p2.z ** 3 - 4 * p2.B * p2.z ** 4 * Decimal.sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt ** 2 * p2.y ** 2 + 2 * p2.A ** 4 * p1.tkn0.amt ** 2 * p3.tkn0.amt * p2.y ** 3 + p2.A ** 4 * p1.tkn0.amt ** 2 * p2.y ** 4 - 4 * p2.A ** 3 * p1.tkn0.amt * p2.y ** 2 * p2.z * Decimal.sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt ** 2 * p2.y * p2.z ** 2 + 2 * p2.A ** 2 * p1.tkn0.amt * p3.tkn0.amt * p2.y ** 2 * p2.z ** 2 - 4 * p2.A * p2.y * p2.z ** 3 * Decimal.sqrt(
-                         p1.tkn0.amt * p1.tkn1.amt * p3.tkn0.amt * p3.tkn1.amt) + p3.tkn0.amt ** 2 * p2.z ** 4)) / (
-                         2 * p2.B * p2.A * p1.tkn0.amt * p2.z + 2 * p2.A ** 2 * p1.tkn0.amt * p2.y + 2 * p2.z ** 2)
+        p1t0 = Decimal(str(p1.tkn0.amt))
+        p1t1 = Decimal(str(p1.tkn1.amt))
+        p3t0 = Decimal(str(p3.tkn0.amt))
+        p3t1 = Decimal(str(p3.tkn1.amt))
+        z = Decimal(str(p2.z))
+        C = p2.get_c
+        D = p2.get_d
+
+        trade_input = Decimal((z * (-p1t0 * p3t0 * z + Decimal.sqrt(C * p1t0 * p3t0 * p1t1 * p3t1))) / (
+                    p1t1 * C + p1t1 * D * p3t0 + z ** 2 * p3t0))
+        return trade_input
 
     def get_output_trade_by_source(self, order: CarbonV1Order, tkns_in: Decimal) -> Tuple[Decimal, Decimal]:
         """
@@ -1283,23 +1291,23 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         """
 
         tkns_in = _quantize(tkns_in, order.tkn1.decimals)
-
         y, z, A, B = order.y, order.z, order.A, order.B
         tkns_out = Decimal(
             (tkns_in * (B * z + A * y) ** 2)
-            / (tkns_in * (B * A * z + A**2 * y) + z**2)
+            / (tkns_in * (B * A * z + A ** 2 * y) + z ** 2)
         )
         if tkns_out > y:
-            tkns_in = CarbonV1RouteSolver.get_input_trade_by_target(order, y)
+            tkns_in, tkns_out = CarbonV1RouteSolver.get_input_trade_by_target(order=order, tkns_out=y)
             tkns_out = y
 
         tkns_out = tkns_out * order.fee
         tkns_out = _quantize(amount=tkns_out, decimals=order.tkn0.decimals)
-
+        assert type(tkns_in) == Decimal
+        assert type(tkns_out) == Decimal
         return tkns_in, tkns_out
 
     @staticmethod
-    def get_input_trade_by_target(order, tkns_out: Decimal) -> Tuple[Decimal, Decimal]:
+    def get_input_trade_by_target(order: CarbonV1Order, tkns_out: Decimal) -> Tuple[Decimal, Decimal]:
         """
         This function calculates and returns the source amount and target amount for a trade, given a target amount input for a Carbon order.
         If the order output would exceed the maximum number of tokens, it adjusts to the maximum output.
@@ -1310,16 +1318,13 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         if tkns_out > y:
             tkns_out = y
 
-        tkns_in = (
-            (tkns_out * z**2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
-        ) * order.fee
+        tkns_in = Decimal((tkns_out * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out)) * order.fee)
 
         return tkns_in, tkns_out
 
-
     def single_trade_result_constant_product(self,
-            tokens_in, token0_amt, token1_amt, pool_fee
-    ) -> Decimal:
+                                             tokens_in, token0_amt, token1_amt, pool_fee
+                                             ) -> Decimal:
         """
         This function returns the output of a trade (-Dy) given Dx in a constant product pool
 
@@ -1330,9 +1335,10 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         )
 
     def single_trade_result_constant_product_accurate(self,
-            tokens_in, token0: ERC20Token, token1: ERC20Token, pool_fee,  token_in: ERC20Token, token_out: ERC20Token
-    ) -> Decimal:
-
+                                                      tokens_in: Decimal, token0: ERC20Token, token1: ERC20Token,
+                                                      pool_fee: Decimal,
+                                                      token_in: ERC20Token, token_out: ERC20Token
+                                                      ) -> Decimal:
 
         """
         This function returns the output of a trade (-Dy) given Dx in a constant product pool.
@@ -1346,15 +1352,23 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         """
         token0_in = swap_bancor_eth_to_weth(token0.address) == swap_bancor_eth_to_weth(token_in.address)
         tokens_in = _quantize(amount=tokens_in, decimals=token_in.decimals)
-        trade_result = self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token0.amt, token1_amt=token1.amt, pool_fee=pool_fee) if token0_in else self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token1.amt, token1_amt=token0.amt, pool_fee=pool_fee)
+        trade_result = self.single_trade_result_constant_product(tokens_in=tokens_in, token0_amt=token0.amt,
+                                                                 token1_amt=token1.amt,
+                                                                 pool_fee=pool_fee) if token0_in else self.single_trade_result_constant_product(
+            tokens_in=tokens_in, token0_amt=token1.amt, token1_amt=token0.amt, pool_fee=pool_fee)
         tokens_out = _quantize(amount=trade_result, decimals=token_out.decimals)
 
         return tokens_out
 
     @staticmethod
     def get_in_given_out_constant_product(
-            tokens_out, token0_amt, token1_amt, pool_fee
+            tokens_out: Decimal, token0_amt: Decimal, token1_amt: Decimal, pool_fee: Decimal
     ) -> Decimal:
+        assert type(tokens_out) == Decimal
+        assert type(token0_amt) == Decimal
+        assert type(token1_amt) == Decimal
+        assert type(pool_fee) == Decimal
+
         """This function returns the input of a trade (Dx) given -Dy in a constant product pool"""
         return Decimal(
             abs(

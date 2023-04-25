@@ -136,12 +136,17 @@ def main(
         _ETH_PRIVATE_KEY=ETH_PRIVATE_KEY,
     )
 
-    bot.archive_trade_routes()
-    bot.build_candidate_routes(tokens=tokens, exchanges=exchanges)
+
 
     initial_search = True
-    while True:
+    bot.archive_trade_routes()
 
+    if ec.CARBON_V1_NAME in exchanges:
+        logger.info(ec.CARBON_MODE)
+    else:
+        bot.build_candidate_routes(tokens=tokens, exchanges=exchanges)
+
+    while True:
         if "tenderly" in network_name and not initial_search:
             try:
                 bot.execute_random_swaps(
@@ -157,8 +162,12 @@ def main(
             bot.search_candidate_routes(initial_search=initial_search)
 
         elif execute_mode == "search_and_execute":
-            bot.search_candidate_routes(initial_search=initial_search)
-            bot.execute()
+            if ec.CARBON_V1_NAME in exchanges:
+                routes = bot.create_routes_carbon()
+                bot.execute_carbon(routes)
+            else:
+                bot.search_candidate_routes(initial_search=initial_search)
+                bot.execute()
 
         else:
             raise ValueError(f"Invalid execute_mode: {execute_mode}")
