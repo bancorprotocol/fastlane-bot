@@ -981,9 +981,9 @@ class CarbonV1Order:
         This returns the maximum amount that can be traded into the order.
         """
         y, z, A, B = self.y, self.z, self.A, self.B
-        tkns_in = (
-            (y * z**2) / ((A * y + B * z) * (A * y + B * z - A * y))
-        ) * (1 - self.fee)
+        tkns_in = ((y * z**2) / ((A * y + B * z) * (A * y + B * z - A * y))) * (
+            1 - self.fee
+        )
         return tkns_in
 
     @property
