@@ -9,6 +9,7 @@ topaze
 *.gif
 
 .DS_Store
+.idea/*
 .idea/modules.xml
 .idea/v4-math-and-theory.iml
 *.xml
