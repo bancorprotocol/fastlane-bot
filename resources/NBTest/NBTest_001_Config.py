@@ -48,6 +48,7 @@ os.environ["POSTGRES_PASSWORD"] = "b2742bade1f3a271c55eef069e2f19903aa0740c"
 os.environ["POSTGRES_USER"] = "postgres"
 os.environ["POSTGRES_HOST"] = "localhost"
 
+
 # ## Demo [NOTEST]
 
 C = Config()
@@ -118,10 +119,10 @@ assert issubclass(CAP.__class__, ConfigDB)
 assert CAP.__class__.__name__ == '_ConfigDBPostgres'
 assert CAP.db == CAP.DATABASE_POSTGRES
 assert CAP.POSTGRES_USER == "postgres"
-assert CAP.POSTGRES_PASSWORD == "postgres"
+assert CAP.POSTGRES_PASSWORD == "b2742bade1f3a271c55eef069e2f19903aa0740c"
 assert CAP.POSTGRES_HOST == "localhost"
 assert CAP.POSTGRES_DB == "postgres"
-assert CAP.POSTGRES_URL == 'postgresql://postgres:postgres@localhost/postgres'
+assert CAP.POSTGRES_URL == 'postgresql://postgres:b2742bade1f3a271c55eef069e2f19903aa0740c@localhost/postgres'
 
 CAP = ConfigDB.new(ConfigDB.DATABASE_POSTGRES,
                     POSTGRES_USER = "user",
@@ -324,5 +325,42 @@ CAL.logger.info("info")
 CAL.logger.warning("warning")
 CAL.logger.error("error")
 
+# ## Cloaker
+
+# ### General
+
+Cloaker = cfg.cloaker.Cloaker
+CloakerL = cfg.cloaker.CloakerL
+from dataclasses import dataclass
+@dataclass
+class TestDC():
+    a: int = 1
+    b: int = 2
+    _c: int = 3
+o = TestDC()
+
+co = Cloaker(o)
+assert co.a == o.a
+assert co.b == o.b
+assert co._c == co._ShieldedAttribute(attr='_c', exists=True)
+assert raises(lambda x: x._d, co) == "Cloaked[TestDC] has no attribute '_d'"
+
+co = CloakerL(o, visible="b, _c")
+assert co.a == co._ShieldedAttribute(attr='a', exists=True)
+assert co.b == o.b
+assert co._c == o._c
+assert co._d == co._ShieldedAttribute(attr='_d', exists=False)
+
+# ### With config object
+
+C = Config().cloaked()
+assert C.NETWORK == C._ShieldedAttribute(attr='NETWORK', exists=True)
+assert C.NETWORK1 == C._ShieldedAttribute(attr='NETWORK1', exists=False)
+assert C.db.__class__.__name__ == "_ConfigDBPostgres"
+assert C.ZERO_ADDRESS == '0x0000000000000000000000000000000000000000'
+
+C = Config().cloaked(incl="NETWORK", excl="ZERO_ADDRESS")
+assert C.NETWORK == 'ethereum'
+assert C.ZERO_ADDRESS == C._ShieldedAttribute(attr='ZERO_ADDRESS', exists=True)
 
 
