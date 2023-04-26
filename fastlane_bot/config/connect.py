@@ -4,8 +4,8 @@ Networks module for fastlane - used to interact with the blockchain.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import logging
-import os
+
+
 import subprocess
 from abc import ABCMeta, ABC
 
@@ -15,6 +15,11 @@ from hexbytes import HexBytes
 from web3 import Web3
 from web3.types import TxReceipt
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+import logging
 logger = logging.getLogger(__name__)
 
 
