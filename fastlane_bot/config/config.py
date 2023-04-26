@@ -1,12 +1,13 @@
 """
 Fastlane bot configuration object -- main object
 """
-__VERSION__ = "1.0-BETA4"
+__VERSION__ = "1.0-BETA5"
 __DATE__ = "26/Apr 2023"
 
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
+from .cloaker import CloakerL
 
 @dataclass
 class Config():
@@ -77,3 +78,33 @@ class Config():
         assert issubclass(type(self.provider), provider_.ConfigProvider)
         
         assert self.network is self.provider.network, f"Network mismatch: {self.network} != {self.provider.network}"
+        
+    VISIBLE_FIELDS = "network, db, logger, provider, w3, ZERO_ADDRESS"    
+    def cloaked(self, incl=None, excl=None):
+        """
+        returns a cloaked version of the object
+        
+        :incl:  fields to _include_ in the cloaked version (plus those in VISIBLE_FIELDS)
+        :excl:  fields to _exclude_ from the cloaked version
+        """
+        visible = self.VISIBLE_FIELDS
+        if isinstance(visible, str):
+            visible = (x.strip() for x in visible.split(","))
+        visible = set(visible)
+        
+        if isinstance(incl, str):
+            incl = (x.strip() for x in incl.split(","))
+        elif incl is None:
+            incl = []
+        visible |= set(incl)
+        
+        if isinstance(excl, str):
+            excl = (x.strip() for x in excl.split(","))
+        elif excl is None:
+            excl = []
+        visible -= set(excl)
+        
+        return CloakerL(self, visible)
+    
+    
+        

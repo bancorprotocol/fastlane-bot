@@ -2,7 +2,7 @@
 Fastlane bot configuration object
 """
 #from .base import ConfigBase
-from . import network, base, config, db, selectors
+from . import network, base, config, db, selectors, cloaker
 
 from .network import ConfigNetwork
 from .db import ConfigDB
