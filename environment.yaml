@@ -1,8 +1,0 @@
-name: fastlane-sqlite-39
-channels:
-  - conda-forge
-  - defaults
-dependencies:
-  - python=3.9
-  - pip:
-      -r requirements.txt
