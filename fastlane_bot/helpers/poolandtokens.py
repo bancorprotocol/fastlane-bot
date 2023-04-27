@@ -4,6 +4,7 @@ from _decimal import Decimal
 from dataclasses import dataclass
 
 from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
+from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import UniV3Helper, EncodedOrder
 import fastlane_bot.config as c
@@ -111,6 +112,7 @@ class PoolAndTokens:
 
     tkn0_key: str = None
     tkn1_key: str = None
+    ADDRDEC = None
 
     def __post_init__(self):
         self.tkn0_key = self.tkn0
@@ -288,39 +290,12 @@ class PoolAndTokens:
             :params:   additional parameters (optional)
 
         """
-        float_MIKEMUSTCHANGE = lambda x: x
-        int_MIKEMUSTCHANGE = lambda x: x
-        
-        univ3_helper = UniV3Helper(
-            contract_initialized=True,
-            fee=str(self.fee),
-            tick=float_MIKEMUSTCHANGE(self.tick),
-            tick_spacing=float_MIKEMUSTCHANGE(self.tick_spacing),
-            sqrt_price_q96=float_MIKEMUSTCHANGE(self.sqrt_price_q96),
-            liquidity=float_MIKEMUSTCHANGE(self.liquidity),
-            tkn0_decimal=int_MIKEMUSTCHANGE(self.tkn0_decimals),
-            tkn1_decimal=int_MIKEMUSTCHANGE(self.tkn1_decimals),
-        )
-
-        P_marg = univ3_helper.Pmarg
-        P_a = univ3_helper.Pa
-        P_b = univ3_helper.Pb
-        L = univ3_helper.L
-
-        # create a typed-dictionary of the arguments
-        typed_args = {
-            "cid": self.cid,
-            "Pmarg": P_marg,
-            "uniL": L,
-            "uniPa": P_a,
-            "uniPb": P_b,
-            "pair": self.pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
-            "params": {"exchange": self.exchange_name},
-            "fee": float(self.fee),
-            "descr": self.descr,
-            "params": self._params,
-        }
-        return [ConstantProductCurve.from_univ3(**self._convert_to_float(typed_args))]
+        args = {"token0": self.tkn0_key, "token1": self.tkn1_key, "sqrt_price_q96": self.sqrt_price_q96, "tick": self.tick, "liquidity": self.liquidity}
+        uni3 = Univ3Calculator.from_dict(args, self.fee, self.ADDRDEC)
+        params = uni3.cpc_params()
+        params["cid"] = self.cid
+        params["descr"] = self.descr
+        return [ConstantProductCurve.from_univ3(**params)]
 
     @staticmethod
     def convert_decimals(tkn_balance_wei: Decimal, tkn_decimals: int) -> Decimal:
