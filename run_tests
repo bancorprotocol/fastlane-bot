@@ -1,0 +1,10 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+# Use `bash run_test.sh run_tests.py` to run all tests
+# Take the first argument with $1
+#pytest -Werror carbon/tests $1
+rm -rf carbon/tests/nbtest/*
+touch carbon/tests/nbtest/__init__.py
+python resources/NBTest/ConvertNBTest.py >/dev/null
+pytest carbon/tests $1

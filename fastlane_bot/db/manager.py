@@ -27,7 +27,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     __VERSION__ = "3.0.1"
     __DATE__ = "04-26-2023"
 
-    data: pd.DataFrame = field(default_factory=pd.DataFrame)
+    # data: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     def drop_all_tables(self):
         """
