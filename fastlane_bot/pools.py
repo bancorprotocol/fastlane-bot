@@ -22,7 +22,7 @@ from fastlane_bot.token import ERC20Token
 from fastlane_bot.utils import (
     get_abi_and_router,
     convert_decimals,
-    EncodedOrder,
+    EncodedOrder, _quantize,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -976,6 +976,13 @@ class CarbonV1Order:
         return Decimal((self.B * self.z + self.A * self.y) ** 2 / (self.z**2))
 
     @property
+    def get_marginal_price_inverted(self) -> Decimal:
+        """
+        Calculates the current marginal price inverted - 1 / (Dy/Dx) of the order. This is used to compare marginal prices of orders trading the opposite tokens, IE TKN0 -> TKN1 and TKN1 -> TKN0.
+        """
+
+        return Decimal("1") / self.get_marginal_price
+    @property
     def get_max_in(self) -> Decimal:
         """
         This returns the maximum amount that can be traded into the order.
@@ -984,6 +991,10 @@ class CarbonV1Order:
         tkns_in = ((y * z**2) / ((A * y + B * z) * (A * y + B * z - A * y))) * (
             1 - self.fee
         )
+
+        tkns_in = _quantize(tkns_in, self.tkn1.decimals)
+        assert type(tkns_in) == Decimal
+
         return tkns_in
 
     @property
@@ -991,7 +1002,7 @@ class CarbonV1Order:
         """
         Validates the position by checking if the value y is below 0 or above z.
         """
-        if self.y < 0 or self.y > self.z:
+        if self.y < 0 or self.y > self.z or self.B == 0:
             return False
         return True
 
@@ -1015,15 +1026,16 @@ class CarbonV1Order:
             f"{idx}_amt_in": str(amt_in),
             f"{idx}_amt_out": str(amt_out),
             f"{idx}_sqrt_price_q96": str(0) if idx == 1 else None,
-            "y": self.y,
-            "z": self.z,
-            "A": self.A,
-            "B": self.B,
-            "c": self.c,
-            "d": self.d,
-            "fee": self.fee,
-            "marg_price": self.get_marginal_price,
-            "max_in": self.max_in,
+            f"{idx}y": self.y,
+            f"{idx}z": self.z,
+            f"{idx}A": self.A,
+            f"{idx}B": self.B,
+            f"{idx}c": self.c,
+            f"{idx}d": self.d,
+            f"{idx}fee": self.fee,
+            f"{idx}marg_price": self.get_marginal_price,
+            f"{idx}marg_price_inverted": self.get_marginal_price_inverted,
+            f"{idx}max_in": self.max_in,
         }
 
         return pd.DataFrame(dic, index=[0])

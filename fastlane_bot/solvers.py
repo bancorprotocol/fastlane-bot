@@ -1239,6 +1239,12 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     def optimal_arb_carbon_triangular_constant_product(
         self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool
     ):
+        """
+        This function calculates the maximum amount of arbitrage possible from a triangular route of Constant Product -> Carbon -> Constant Product, and returns the amount traded into each liquidity pool.
+        :param p1: The first constant product liquidity pool.
+        :param p2: A single Carbon order.
+        :param p3: The last constant product liquidity pool.
+        """
         max_triangular_arb_trade = self.get_optimal_input_triangular_constant_product(
             p1=p1, p2=p2, p3=p3
         )
@@ -1250,17 +1256,17 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             tkns_in=max_triangular_arb_trade, p1=p1, p2=p2, p3=p3
         )
 
-    def carbon_specific_methods(self):
-        """
-        This method is used to add any Carbon specific methods that are needed for the solver
-
-        TODO: Add Carbon V1 Solver Logic here
-        """
-        pass
 
     def get_trade_amts_carbon_triangular(
         self, tkns_in, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool
     ):
+        """
+        This function returns the amount of each trade in a triangular route of Constant Product -> Carbon -> Constant Product.
+        :param tkns_in: The number of tokens traded into the first pool, in decimal format.
+        :param p1: The first constant product liquidity pool.
+        :param p2: A single Carbon order.
+        :param p3: The last constant product liquidity pool.
+        """
         # Hardcoded to p1.tkn0 / 1 order
         result_trade_1 = self.single_trade_result_constant_product_accurate(
             tokens_in=tkns_in,
@@ -1283,7 +1289,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
                 token1_amt=p1.tkn1.amt,
                 pool_fee=Decimal(p1.fee),
             )
-            logger.info(
+            logger.debug(
                 f"More than max in, old in = {tkns_in}, new = {new_tkns_in} result trade 1 orig = {result_trade_1} but max in = {p2.max_in}, y = {p2.y}, tkn_in = {p2.tkn0}, tkn_out = {p2.tkn1}, id = {p2.id}, z = {p2.z}, A = {p2.A}, B={p2.B}"
             )
             tkns_in = new_tkns_in
@@ -1305,7 +1311,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             token_in=p2.tkn1,
             token_out=p3.tkn1,
         )
-        logger.info(
+        logger.debug(
             f"tkns_in = {tkns_in}, r1 = {result_trade_1}, r2 = {tkns_out_carbon}, r3 = {result_trade_3}"
         )
         return [tkns_in, result_trade_1, tkns_out_carbon, result_trade_3]
@@ -1315,6 +1321,9 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     ):
         """
         Trade input solve equation for Constant Product -> Carbon -> Constant Product
+        :param p1: The first constant product liquidity pool.
+        :param p2: A single Carbon order.
+        :param p3: The last constant product liquidity pool.
         """
         assert type(p1) != UniswapV3LiquidityPool and type(p3) != UniswapV3LiquidityPool
 
@@ -1385,7 +1394,10 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     ) -> Decimal:
         """
         This function returns the output of a trade (-Dy) given Dx in a constant product pool
-
+        :param tokens_in: the number of token0 traded into the pool.
+        :param token0_amt: the number of the token received held by the pool.
+        :param token1_amt: the number of the output token held by the pool.
+        :param pool_fee: the trading fee taken by the pool.
         """
         return Decimal(
             (tokens_in * token1_amt * (1 - Decimal(pool_fee)))
@@ -1439,12 +1451,19 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     def get_in_given_out_constant_product(
         tokens_out: Decimal, token0_amt: Decimal, token1_amt: Decimal, pool_fee: Decimal
     ) -> Decimal:
+        """
+        This function returns the input of a trade (Dx) given -Dy in a constant product pool
+        :param tokens_out: the number of tokens
+        :param token0_amt: the number of tokens in the liquidity pool of token0 - token0 here is the token being traded into the pool.
+        :param token1_amt: the number of tokens in the liquidity pool of token1 - token1 here is the token being traded out of the pool - tokens_out.
+        :param pool_fee: the trading fee for the liquidity pool.
+        """
         assert type(tokens_out) == Decimal
         assert type(token0_amt) == Decimal
         assert type(token1_amt) == Decimal
         assert type(pool_fee) == Decimal
 
-        """This function returns the input of a trade (Dx) given -Dy in a constant product pool"""
+
         return Decimal(
             abs(
                 (tokens_out * token0_amt)
@@ -1456,6 +1475,12 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     def get_new_tkn_values_given_out_constant_product(
         tkns_out: Decimal, tkn0_amt: Decimal, tkn1_amt: Decimal
     ) -> Tuple[Decimal, Decimal]:
+        """
+        This function calculates the new token0/token1 values of a constant product liquidity pool, given a trade out amount.
+        :param tkns_out: the number of token1 sent out by the pool.
+        :param tkn0_amt: the number of token0 in the pool - the token recevied by the pool.
+        :param tkn1_amt: the number of token1 in the pool - the token being traded out.
+        """
         pool_k = tkn0_amt * tkn1_amt
         new_tkn1_amt = tkn1_amt - tkns_out
         new_tkn0_amt = pool_k / new_tkn1_amt
@@ -1464,7 +1489,13 @@ class CarbonV1RouteSolver(BaseRouteSolver):
     def get_liquidity_pool_after_trade_constant_product(
         self, tokens_in, liquidity_pool: LiquidityPool, is_forwards: bool
     ) -> LiquidityPool:
-        """This function calculates the state of a liquidity pool after a trade"""
+        """
+        This function calculates the state of a liquidity pool after a trade and generates a new pool to make calculations against the new state.
+        :param tokens_in: the number of tokens traded into the liquidity pool.
+        :param liquidity_pool: the original Liquidity pool object.
+        :param is_forwards: True if the trade into the pool is token0, or False if the token traded into the pool is token1.
+
+        """
         trade_output = (
             self.single_trade_result_constant_product(
                 tokens_in,
@@ -1494,8 +1525,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
 
         liquidity_pool.tkn0.amt = new_token0_balance
         liquidity_pool.tkn1.amt = new_token1_balance
-
-        return LiquidityPool(
+        pool = LiquidityPool(
             init_liquidity=False,
             exchange=liquidity_pool.exchange,
             tkn0=liquidity_pool.tkn0,
@@ -1503,3 +1533,5 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             address=liquidity_pool.address,
             fee=liquidity_pool.fee,
         )
+
+        return pool
