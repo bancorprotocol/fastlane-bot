@@ -7,9 +7,8 @@ Licensed under MIT
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Union, Any, Dict, List
+from typing import Optional
 
-from _decimal import Decimal
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -26,19 +25,13 @@ from sqlalchemy import (
 )
 
 from fastlane_bot.config import *
-from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import (
-    EncodedOrder,
-    UniV3Helper,
-)
-
-from sqlalchemy.orm import registry
 
 global contracts
 contracts = {}
 
+from sqlalchemy.orm import registry
+
 mapper_registry = registry()
-logged_keys = []
 
 
 @mapper_registry.mapped
@@ -100,7 +93,10 @@ class Exchange:
     blockchain_name: Optional[str] = None
 
     def __post_init__(self):
-        self.id = EXCHANGE_IDS[self.name]
+        if 'test' not in self.name.lower():
+            self.id = EXCHANGE_IDS[self.name]
+        else:
+            self.id = 10000
 
 
 @mapper_registry.mapped
@@ -109,10 +105,19 @@ class Token:
     """
     Represents a tkn_address on a blockchain.
 
-    symbol: The symbol of the tkn_address. (unique) (non-null)
-    name: The name of the tkn_address. (nullable)
-    address: The address of the tkn_address. (unique) (non-null)
-    :params decimals: The number of decimals the tkn_address has. (default: 18) (non-null)
+    Parameters
+    ----------
+    symbol : str
+        The symbol of the token
+    name : str
+        The name of the token
+    address : str
+        The address of the token
+    decimals : int
+        The number of decimals of the token
+    key : str
+        The key of the token
+
     """
 
     __table__ = Table(
@@ -133,19 +138,8 @@ class Token:
     name: str
     address: str
     decimals: int
-    key: str = field(init=False)
+    key: str
 
-    def is_eth(self) -> bool:
-        """
-        True if the tkn_address is ETH
-        """
-        return self.symbol == "ETH"
-
-    def is_weth(self) -> bool:
-        """
-        True if the tkn_address is WETH
-        """
-        return self.symbol == "WETH"
 
 
 @mapper_registry.mapped
@@ -154,7 +148,19 @@ class Pair:
     """
     Represents a pair of tokens on a blockchain.
 
-    name: The name of the pair. (unique) (non-null)
+    Parameters
+    ----------
+    name : str
+        The name of the pair
+    tkn0_address : str
+        The address of the first token
+    tkn1_address : str
+        The address of the second token
+    tkn0_key : str
+        The key of the first token
+    tkn1_key : str
+        The key of the second token
+
     """
 
     __table__ = Table(
@@ -203,45 +209,63 @@ class Pair:
     tkn0_key: Optional[str] = None
     tkn1_key: Optional[str] = None
 
-    def to_eth(self):
-        """
-        True if the pair is ETH/TKN
-        """
-        self.name = self.name.replace("WETH", "ETH")
-
-    def to_weth(self):
-        """
-        True if the pair is WETH/TKN
-        """
-        self.name = self.name.replace("ETH", "WETH")
 
 
 @mapper_registry.mapped
 @dataclass
 class Pool:
     """
-    Represents a liquidity pool on an exchange. The combination of the pair name and exchange name must be unique.
-    NOTE: foreign key relations must pre-exist in the database.
+    Represents a liquidity pool on an exchange.
 
-    System Generated (required):
-    id: The auto-incrementing id of the pool. (primary key) (non-null) (unique) (auto-increment)
-    last_updated (datetime): The last time the pool was updated. (default: now) (auto-update)
+    Parameters
+    ----------
+    cid : str
+        The cid of the pool
+    last_updated : datetime
+        The last time the pool was updated
+    last_updated_block : int
+        The last block the pool was updated
+    descr : str
+        The description of the pool
+    pair_name : str
+        The name of the pair
+    exchange_name : str
+        The name of the exchange
+    fee : float
+        The fee of the pool
+    tkn0_balance : float
+        The balance of the first token
+    tkn1_balance : float
+        The balance of the second token
+    z_0 : float
+        The z_0 of the pool
+    z_1 : float
+        The z_1 of the pool
+    y_0 : float
+        The y_0 of the pool
+    y_1 : float
+        The y_1 of the pool
+    A_0 : float
+        The A_0 of the pool
+    A_1 : float
+        The A_1 of the pool
+    B_0 : float
+        The B_0 of the pool
+    B_1 : float
+        The B_1 of the pool
+    sqrt_price_q96: float
+        The sqrt_price_q96 of the pool
+    tick: int
+        The tick of the pool
+    liquidity: float
+        The liquidity of the pool
+    tick_spacing: int
+        The tick_spacing of the pool
+    address: str
+        The address of the pool
+    anchor: str
+        The anchor of the pool
 
-    User Provided (required):
-    pair_name (str): The name of the pair of tokens in the pool. (foreign key to Pair)
-    exchange_name (str): The name of the exchange the pool is on. (foreign key to Exchange)
-
-    User Provided (optional):
-    cid (int): The id of the pool provided by the exchange / contract. (unique) (default: id)
-    descr (str): A description of the pool.
-    tkn0_symbol (str): The symbol of tkn_address 0 in the pool. (foreign key to Token)
-    tkn1_symbol (str): The symbol of tkn_address 1 in the pool. (foreign key to Token)
-    fee (str): The fee of the pool. (default: "0")
-    tkn0_balance (int): The balance of tkn_address 0 in the pool. (default: 0)
-    tkn1_balance (int): The balance of tkn_address 1 in the pool. (default: 0)
-    sqrt_price_q96 (int): The UniV3 sqrt price of the pool. (default: 0)
-    liquidity (int): The UniV3 liquidity of the pool. (default: 0)
-    tick (int): The UniV3 tick of the pool. (default: 0)
     """
 
     __table__ = Table(
@@ -356,6 +380,37 @@ class Pool:
 @mapper_registry.mapped
 @dataclass
 class Transaction:
+    """
+    A class used to represent a transaction
+
+    Parameters
+    ----------
+    id : int
+        The id of the transaction
+    last_updated : datetime
+        The last_updated of the transaction
+    trade_route_id : str
+        The trade_route_id of the transaction
+    token_in : str
+        The token_in of the transaction
+    amount_in : float
+        The amount_in of the transaction
+    token_out : str
+        The token_out of the transaction
+    amount_out : float
+        The amount_out of the transaction
+    succeeded : bool
+        The succeeded of the transaction
+    gas_price : int
+        The gas_price of the transaction
+    max_priority_fee : int
+        The max_priority_fee of the transaction
+    transaction_hash : str
+        The transaction_hash of the transaction
+    failure_reason : str
+        The failure_reason of the transaction
+
+    """
     __table__ = Table(
         "transactions",
         mapper_registry.metadata,
