@@ -874,15 +874,39 @@ class SearchHelpers(BaseHelper):
         for order in orders_forwards:
 
 
+            pass
+    def get_carbon_pairs_with_one_non_flash_tkn(self, pairs: List[Tuple[str, str]]):
+        """
+        Returns token pairs that have one token that can be flash loaned from Bancor V3, and one token that cannot.
+        """
+        pairs_with_one_flash_token = []
+        non_bancor_v3_tokens = []
+        for pair in pairs:
+            tkn0 = pair[0]
+            tkn1 = pair[1]
 
+            if tkn0 and tkn1 in liquid_tkn_addresses_bancor_3:
+                continue
+            elif tkn0 in liquid_tkn_addresses_bancor_3:
+                pairs_with_one_flash_token.append(pair)
+                non_bancor_v3_tokens.append(tkn1)
 
-        pass
+            elif tkn1 in liquid_tkn_addresses_bancor_3:
+                pairs_with_one_flash_token.append(pair)
+                non_bancor_v3_tokens.append(tkn0)
+            else:
+                # Neither token in Bancor V3
+                continue
+        print(pairs_with_one_flash_token)
+        return pairs_with_one_flash_token, non_bancor_v3_tokens
     def create_routes_carbon(self):
         """
         Generates arbitrage trade routes, focusing on Carbon Orders.
         """
         # returns a list of all Carbon Orders that are active and have liquidity.
         all_pairs = self.get_carbon_pairs()
+
+        pairs_with_one_bancor_v3_token, non_bancor_v3_tokens = self.get_carbon_pairs_with_one_non_flash_tkn(pairs=all_pairs)
 
         carbon_orders = self.get_all_carbon_strategies(carbon_pairs=all_pairs)
 
@@ -907,8 +931,6 @@ class SearchHelpers(BaseHelper):
         results = [result for result in results if result is not None]
 
         return results
-        # self.search_results = results
-        # self.log_results()
 
     def create_routes(self) -> List[Route]:
         """

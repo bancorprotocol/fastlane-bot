@@ -8,6 +8,7 @@ import os
 from decimal import *
 from typing import Tuple, Sequence, Any, Generator
 from dataclasses import dataclass, field
+from fastlane_bot.data.token_lookup import get_token_decimals_from_address, get_token_symbol_from_address
 import numpy as np
 import pandas as pd
 
@@ -114,6 +115,67 @@ def check_paths(base_path: str) -> Tuple[str, str, str]:
     if not os.path.exists(transactions_dir):
         os.makedirs(transactions_dir)
     return collection_dir, archive_dir, transactions_dir
+
+
+def get_pool_address_for_pair(factory_contract, tkn0, tkn1):
+    pool_address = factory_contract.caller.getPair(tkn0, tkn1)
+    if pool_address == '0x0000000000000000000000000000000000000000':
+        return None
+    else:
+        return pool_address
+
+def get_liquidity_pool_details(self, pool_address, exchange):
+
+
+
+    pass
+
+def add_pool_to_parquet(df: pd.DataFrame):
+    pass
+
+def get_exchange_details(exchange: str):
+    """
+    Return hardcoded details for the specified exchange
+    """
+    if exchange == 'sushiswap':
+        return 5, "v2", "Constant Product Pool", "sushiswap", "sushiswap_v2"
+    if exchange == 'bancor_v2':
+        return 1, "v2", "Constant Product Pool", "bancor", "bancor_v2"
+    if exchange == 'bancor_v3':
+        return 2, "v3", "Constant Product Pool", "bancor", "bancor_v3"
+    if exchange == 'uniswap_v2':
+        return 3, "v2", "Constant Product Pool", "uniswap", "uniswap_v2"
+    if exchange == 'uniswap_v3':
+        return 4, "v3", "Constant Function Pool", "uniswap", "uniswap_v3"
+
+
+def pool_to_pandas(liquidity_pool_addr, tkn0_addr, tkn1_addr, exchange, fee, anchor: str = None):
+    symbol0 = get_token_symbol_from_address(token_address=tkn0_addr)
+    symbol1 = get_token_symbol_from_address(token_address=tkn1_addr)
+    decimal0 = get_token_decimals_from_address(token_address=tkn0_addr)
+    decimal1 = get_token_decimals_from_address(token_address=tkn1_addr)
+    pair = (symbol0 + "_" + symbol1) if exchange != "uniswap_v3" else (symbol0 + "_" + symbol1 + "_" + fee)
+    pair_reverse = (symbol1 + "_" + symbol0) if exchange != "uniswap_v3" else (symbol1 + "_" + symbol0 + "_" + fee)
+
+    exchange_id, exchange_version, exchange_type, exchange_name, exchange = get_exchange_details(exchange)
+
+    return {"pair": pair,
+            "pair_reverse": pair_reverse,
+            "exchange_name": exchange_name,
+            "exchange": exchange,
+            "address": liquidity_pool_addr,
+            "address0": tkn0_addr,
+            "address1": tkn1_addr,
+            "symbol0": symbol0,
+            "symbol1": symbol1,
+            "fee": fee,
+            "decimal0": decimal0,
+            "decimal1": decimal1,
+            "exchange_version": exchange_version,
+            "exchange_id": exchange_id,
+            "exchange_type": exchange_type,
+            "anchor": anchor}
+
 
 
 def get_abi_and_router(exchange: str) -> Tuple[str, str]:

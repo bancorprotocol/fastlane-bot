@@ -1,4 +1,3 @@
-
 token_address_lookup = {
     '0x6c862f803fF42A97D4A483AB761256ad8c90f4F8': {'symbol': 'XLS', 'decimals': 18},
     '0xf8aD7dFe656188A23e89da09506Adf7ad9290D5d': {'symbol': 'BLY', 'decimals': 18},
@@ -8135,20 +8134,26 @@ liquid_tkn_addresses_bancor_3 = [
     '0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671'
 ]
 
+
 def get_token_decimals_from_address(token_address) -> int:
     return token_address_lookup[token_address]["decimals"]
+
 
 def get_token_symbol_from_address(token_address) -> str:
     return token_address_lookup[token_address]["symbol"]
 
+
 def check_if_tkn_in_table_address(token_address) -> bool:
     return token_address in token_address_lookup
+
 
 def get_token_decimals_from_symbol(token_symbol) -> int:
     return token_symbol_lookup[token_symbol]["decimals"]
 
+
 def get_token_address_from_symbol(token_symbol) -> str:
     return token_symbol_lookup[token_symbol]["address"]
+
 
 def check_if_tkn_in_table_symbol(token_address) -> bool:
     return token_address in token_symbol_lookup
