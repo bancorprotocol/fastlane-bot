@@ -9,7 +9,7 @@ import asyncio
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config import logger
 from fastlane_bot.db.manager import DatabaseManager
-import fastlane_bot.config as c
+#import fastlane_bot.config as c
 
 # TODO: Refactor this with click inputs like in the run.py file
 

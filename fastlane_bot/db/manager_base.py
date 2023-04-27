@@ -12,7 +12,7 @@ from sqlalchemy import MetaData, func
 from sqlalchemy.orm import Session, sessionmaker
 
 import fastlane_bot.db.models as models
-import fastlane_bot.config as c
+#import fastlane_bot.config as c
 
 
 @dataclass

@@ -15,7 +15,7 @@ from _decimal import Decimal
 from web3 import Web3
 
 from fastlane_bot.data.abi import *
-from fastlane_bot.config import *
+#from fastlane_bot.config import *
 
 
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:

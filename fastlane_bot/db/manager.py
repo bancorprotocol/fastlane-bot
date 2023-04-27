@@ -14,7 +14,7 @@ from brownie import Contract
 from fastlane_bot.db.model_managers import PoolManager, TokenManager, PairManager
 import fastlane_bot.db.models as models
 
-from fastlane_bot import config as c
+#from fastlane_bot import config as c
 import fastlane_bot.data.abi as _abi
 
 

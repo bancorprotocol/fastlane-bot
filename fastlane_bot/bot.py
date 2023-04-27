@@ -62,7 +62,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 import fastlane_bot.db.models as models
-import fastlane_bot.config as c
+#import fastlane_bot.config as c
 from . import __VERSION__, __DATE__
 from .helpers.txhelpers import TxHelper
 

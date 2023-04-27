@@ -24,7 +24,7 @@ from sqlalchemy import (
     Boolean,
 )
 
-from fastlane_bot.config import *
+#from fastlane_bot.config import *
 
 global contracts
 contracts = {}

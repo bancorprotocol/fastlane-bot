@@ -17,7 +17,7 @@ from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
 
-import fastlane_bot.config as c
+#import fastlane_bot.config as c
 from .routehandler import RouteStruct
 from ..data.abi import ERC20_ABI
 
