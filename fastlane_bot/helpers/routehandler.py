@@ -353,55 +353,105 @@ class TxRouteHandler(TxRouteHandlerBase):
         # src_amount = int(self.trade_instructions_dic[0].amtin_wei)
         return route_struct
 
-    @staticmethod
-    def _agg_carbon_independentIDs(trade_instructions):
-        listti = []
-        for instr in trade_instructions:
+    def _aggregate_carbon_trades(self, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+        """
+        Aggregate carbon independent IDs and create trade instructions.
 
-            listti += [
-                {
-                    "cid": instr.cid + "-" + str(instr.cid_tkn)
-                    if instr.cid_tkn
-                    else instr.cid,
-                    "tknin": instr.tknin,
-                    "amtin": instr.amtin,
-                    "tknout": instr.tknout,
-                    "amtout": instr.amtout,
-                }
-            ]
-        df = pd.DataFrame.from_dict(listti)
+        This function takes a list of dictionaries containing trade instructions,
+        aggregates the instructions with carbon independent IDs, and creates
+        a list of TradeInstruction objects.
+
+        Parameters
+        ----------
+        trade_instructions : List[TradeInstruction]
+            A list of trade instructions as TradeInstruction objects.
+
+        Returns
+        -------
+        List[TradeInstruction]
+            A list of aggregated trade instructions as TradeInstruction objects.
+
+        """
+        # Get the indices of the carbon trades
+        listti = self._get_trade_dicts_from_objects(trade_instructions)
+        df = pd.DataFrame(listti)
         carbons = df[df.cid.str.contains("-")].copy()
         nocarbons = df[~df.cid.str.contains("-")]
-        dropindexes = []
-        new_trade_instructions = []
         carbons["pair_sorting"] = carbons.tknin + carbons.tknout
-        for pair_sorting in carbons.pair_sorting.unique():
-            newdf = carbons[carbons.pair_sorting == pair_sorting]
-            newoutput = {
+
+        new_trade_instructions = [
+            {
                 "pair_sorting": pair_sorting,
                 "cid": newdf.cid.values[0],
                 "tknin": newdf.tknin.values[0],
-                "amtin": newdf.sum()["amtin"],
+                "amtin": newdf.amtin.sum(),
                 "tknout": newdf.tknout.values[0],
-                "amtout": newdf.sum()["amtout"],
+                "amtout": newdf.amtout.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
             }
-            new_trade_instructions.append(newoutput)
-
-        print("new_trade_instructions", new_trade_instructions)
-        nocarbons_instructions = []
-        dictnocarbons = nocarbons.to_dict(orient="records")
-        for dct in dictnocarbons:
-            dct["pair_sorting"] = dct["tknin"] + dct["tknout"]
-            dct["raw_txs"] = str([])
-            nocarbons_instructions += [dct]
-
-        new_trade_instructions += nocarbons_instructions
-        trade_instructions = [
-            TradeInstruction(**new_trade_instructions[i])
-            for i in range(len(new_trade_instructions))
+            for pair_sorting, newdf in carbons.groupby("pair_sorting")
         ]
+
+        nocarbons["pair_sorting"] = nocarbons.tknin + nocarbons.tknout
+        nocarbons["raw_txs"] = str([])
+        new_trade_instructions.extend(nocarbons.to_dict(orient="records"))
+
+        trade_instructions = [
+            TradeInstruction(**instruction)
+            for instruction in new_trade_instructions
+        ]
+
         return trade_instructions
+
+    # @staticmethod
+    # def _agg_carbon_independentIDs(trade_instructions):
+    #     listti = []
+    #     for instr in trade_instructions:
+    #
+    #         listti += [
+    #             {
+    #                 "cid": instr.cid + "-" + str(instr.cid_tkn)
+    #                 if instr.cid_tkn
+    #                 else instr.cid,
+    #                 "tknin": instr.tknin,
+    #                 "amtin": instr.amtin,
+    #                 "tknout": instr.tknout,
+    #                 "amtout": instr.amtout,
+    #             }
+    #         ]
+    #     df = pd.DataFrame.from_dict(listti)
+    #     carbons = df[df.cid.str.contains("-")].copy()
+    #     nocarbons = df[~df.cid.str.contains("-")]
+    #     dropindexes = []
+    #     new_trade_instructions = []
+    #     carbons["pair_sorting"] = carbons.tknin + carbons.tknout
+    #     for pair_sorting in carbons.pair_sorting.unique():
+    #         newdf = carbons[carbons.pair_sorting == pair_sorting]
+    #         newoutput = {
+    #             "pair_sorting": pair_sorting,
+    #             "cid": newdf.cid.values[0],
+    #             "tknin": newdf.tknin.values[0],
+    #             "amtin": newdf.sum()["amtin"],
+    #             "tknout": newdf.tknout.values[0],
+    #             "amtout": newdf.sum()["amtout"],
+    #             "raw_txs": str(newdf.to_dict(orient="records")),
+    #         }
+    #         new_trade_instructions.append(newoutput)
+    #
+    #     print("new_trade_instructions", new_trade_instructions)
+    #     nocarbons_instructions = []
+    #     dictnocarbons = nocarbons.to_dict(orient="records")
+    #     for dct in dictnocarbons:
+    #         dct["pair_sorting"] = dct["tknin"] + dct["tknout"]
+    #         dct["raw_txs"] = str([])
+    #         nocarbons_instructions += [dct]
+    #
+    #     new_trade_instructions += nocarbons_instructions
+    #     trade_instructions = [
+    #         TradeInstruction(**new_trade_instructions[i])
+    #         for i in range(len(new_trade_instructions))
+    #     ]
+    #     return trade_instructions
 
     @staticmethod
     def _find_tradematches(trade_instructions):

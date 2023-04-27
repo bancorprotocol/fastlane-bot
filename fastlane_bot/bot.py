@@ -44,7 +44,7 @@ Licensed under MIT
 
 import itertools
 import time
-from dataclasses import dataclass, InitVar
+from dataclasses import dataclass, InitVar, asdict
 from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
@@ -64,6 +64,7 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 import fastlane_bot.db.models as models
 import fastlane_bot.config as c
 from . import __VERSION__, __DATE__
+from .helpers.txhelpers import TxHelper
 
 errorlogger = c.logger.error
 errorlogger = c.logger.debug # TODO: REMOVE THIS
@@ -101,7 +102,9 @@ class CarbonBotBase():
     seed_pools: InitVar = False # anything else WILL raise
     update_pools: InitVar = False # anything else WILL raise
     
-    polling_interval: any = None
+    usd_gas_limit: int = 150
+    min_profit: int = 60
+    polling_interval: int = None
     
     def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
         """
@@ -198,26 +201,30 @@ class CarbonBot(CarbonBotBase):
     def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
         super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools, update_pools=update_pools)
 
-    def _order_and_scale_trade_instruction_dcts(self, r):
-        print("[_order_and_scale_trade_instruction_dcts] r", r)
+    def _order_and_scale_trade_instruction_dcts(self,
+                                                trade_instruction_df,
+                                                trade_instruction_dcts,
+                                                best_src_token
+                                                ):
+        # print("[_order_and_scale_trade_instruction_dcts] r", r)
         # note the dictionary values are changed in place
-        _, trade_instruction_df, trade_instruction_dcts, best_src_token = r
+        # trade_instruction_df, trade_instruction_dcts, best_src_token = r
         df = trade_instruction_df.iloc[:-3]
-        assert len(df.columns)==2, "Can only route pairs"
-        dfp = df[df[best_src_token]>0]
-        dfm = df[df[best_src_token]<0]
+        assert len(df.columns) == 2, "Can only route pairs"
+        dfp = df[df[best_src_token] > 0]
+        dfm = df[df[best_src_token] < 0]
         order = list(dfp.index.values) + list(dfm.index.values)
         # order here
-        trade_dicts = {d['cid'] :d for d in trade_instruction_dcts}
+        trade_dicts = {d['cid']: d for d in trade_instruction_dcts}
         ordered_trade_instructions = [trade_dicts[cid] for cid in order]
-        #scale here
+        # scale here
         data = ordered_trade_instructions
         for i in range(len(data)):
             if data[i]["tknin"] == best_src_token:
-                data[i]["amtin"] *= 0.9999
-            else:
+                #     data[i]["amtin"] *= 0.999
+                # else:
                 data[i]["amtin"] *= 0.99
-        return data, len(dfp) #ordered_scaled_dcts, tx_in_count
+        return data, len(dfp)  # ordered_scaled_dcts, tx_in_count
 
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
@@ -238,6 +245,21 @@ class CarbonBot(CarbonBotBase):
         result = ({**ti, "raw_txs": "[]", "pair_sorting": ""} for ti in trade_instructions_dic if ti is not None)
         result = [TradeInstruction(**ti) for ti in result]
         return result
+
+    def _check_if_carbon(self, cid: str) -> tuple[bool, str, str]:
+        """
+        Checks if the curve is a Carbon curve.
+
+        Returns
+        -------
+        bool
+            Whether the curve is a Carbon curve.
+        """
+        if "-" in cid:
+            _cid_tkn = cid.split("-")[1]
+            cid = cid.split("-")[0]
+            return True, _cid_tkn, cid
+        return False, "", cid
 
 
 
@@ -312,66 +334,93 @@ class CarbonBot(CarbonBotBase):
                     except Exception as e:
                         c.logger.info(e)
                         continue
-                        
-                profit_src = -r.result
 
+                profit_src = -r.result
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                trade_instructions = r.trade_instructions()
 
-                profit = self._get_profit_in_bnt(profit_src, src_token, tkn0)
-                    # TODO: THIS MAY OR MAY NOT GET A PROFIT NUMBER
-                    # WE NEED TO DEAL WITH THIS IF IT DOES NOT
-                c.logger.debug(f"Profit in {src_token}: {profit_src}")
-                c.logger.debug(f"Profit in BNT: {profit}")
-                candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token)]
-                if profit > best_profit:
-                    best_profit = profit
-                    best_src_token = src_token
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
+                cids = [ti['cid'] for ti in trade_instructions_dic]
+                profit = self.db._get_bnt_price_from_tokens(profit_src, src_token)
+
+                candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+                contains_carbon = sum(
+                    int(self._check_if_carbon(ti['cid'])[0])
+                    for ti in trade_instructions_dic
+                )
+                contains_other = sum(
+                    int(self._check_if_not_carbon(ti['cid']))
+                    for ti in trade_instructions_dic
+                )
+                try:
+                    netchange = trade_instructions_df[trade_instructions_df.index == 'TOTAL NET'].values[0]
+                except Exception as e:
+                    netchange = [0]
+
+                ops = (
+                    best_profit,
+                    best_trade_instructions_df,
+                    best_trade_instructions_dic,
+                    best_src_token,
+                    best_trade_instructions
+                )
+
+                if len(trade_instructions_df) > 0 and profit < 1500:
+                    ordered_scaled_dcts, tx_in_count = self._order_and_scale_trade_instruction_dcts(
+                        trade_instructions_df, trade_instructions_dic, src_token)
+
+                    condition_1 = (profit > best_profit)
+                    condition_3 = tx_in_count > 0
+                    condition_4 = False
+                    bnt_gas_limit = self.db._get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
+                    if profit > (self.min_profit + bnt_gas_limit):
+                        condition_4 = True
+
+                    condition_5 = 2 <= contains_carbon + contains_other <= 3
+                    contains_other_ct = contains_other
+                    contains_carbon_ct = contains_carbon
+                    contains_other = contains_other > 0
+                    contains_carbon = contains_carbon > 0
+                    condition_2 = True
+
+                    # print all conditions (profit > best_profit) and (contains_carbon > 0) and (tx_in_count > 0) and (profit > (self.min_profit + bnt_gas_limit)) and (2 <= contains_carbon + contains_other <= 3)
+                    c.logger.info('\n')
+                    c.logger.info("[_find_arbitrage_opportunities] *************")
+                    c.logger.info(f"profit = {round(profit, 4)}, tkn0 = {tkn0}, tkn1 = {tkn1}, cids = {cids}")
+                    c.logger.info(f"(self.min_profit + bnt_gas_limit) = {(self.min_profit + bnt_gas_limit)} {bnt_gas_limit}")
+                    c.logger.info(f"(profit > best_profit): {(profit > best_profit)}")
+                    c.logger.info(f"(contains_carbon > 0): {contains_carbon_ct} {contains_carbon}")
+                    c.logger.info(f"(contains_other > 0): {contains_other_ct} {contains_other}")
+                    c.logger.info(f"(tx_in_count > 0): {(tx_in_count > 0)}")
+                    c.logger.info(f"(profit > (self.min_profit + bnt_gas_limit)): {(profit > (self.min_profit + bnt_gas_limit))}")
+                    c.logger.info(f"(2 <= contains_carbon + contains_other <= 3): {condition_5}")
+                    c.logger.info('\n')
+
+                    if (profit > best_profit) and (contains_carbon > 0) and (tx_in_count > 0) and (profit > (self.min_profit + bnt_gas_limit)) and (2 <= contains_carbon + contains_other <= 3) and (max(netchange) < 1e-4):
+                        best_profit = profit
+                        best_src_token = src_token
+                        best_trade_instructions_df = trade_instructions_df
+                        best_trade_instructions_dic = trade_instructions_dic
+                        best_trade_instructions = trade_instructions
+
+                        c.logger.info('\n')
+                        c.logger.info("[_find_arbitrage_opportunities] *************")
+                        c.logger.info(f"New best profit: {profit}")
+                        c.logger.info(f"Profit in bnt: {profit} {cids}")
+                        c.logger.info(f"bnt_gas_limit: {bnt_gas_limit}")
+                        c.logger.info(f"tx_in_count > 0: {condition_3}")
+                        c.logger.info(f"2 <= contains_carbon + contains_other <= 3: {condition_5}")
+                        c.logger.info(f"contains_carbon: {contains_carbon}")
+                        c.logger.info(f"contains_other: {contains_other}")
+                        c.logger.info(f"profit > best_profit: {condition_1}")
+                        c.logger.info(f"best_trade_instructions_df: {best_trade_instructions_df}")
+                        c.logger.info("*************")
+                        c.logger.info('\n')
+
             except Exception as e:
                 c.logger.error(f"[_find_arbitrage_opportunities] {e}")
-        
-        if result == self.AO_CANDIDATES:
-            return candidates
-        return (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-        )
 
-    # TODO: MOVE THIS ONE TO THE MODEL / DB MANAGER
-    def _get_profit_in_bnt(self, profit_src: Decimal, src_token: str, other_token: str) -> Decimal:
-        """
-        Gets the profit in BNT.
-
-        Parameters
-        ----------
-        profit_src: Decimal
-            The profit in the source token.
-        src_token: str
-            The source token.
-
-        Returns
-        -------
-        Decimal
-            The profit in BNT.
-        """
-
-        if src_token == T.BNT:
-            return profit_src
-        # TODO: THIS SHOULD NOT BE IN THE BOT BUT IN THE MODEL
-        pool = (
-            # TODO: CLEANUP THE SESSION / EVENTMANAGER / DATABASEMANAGER ISSUE
-            session.query(Pool)
-            .filter(Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_key == src_token)
-            .first()
-        )
-        bnt = Decimal(pool.tkn0_balance) / 10**18
-        src = Decimal(src_token) / 10**pool.tkn1_decimals
-        bnt_per_src = bnt / src
-        return profit_src * bnt_per_src
+        return candidates if result == self.AO_CANDIDATES else ops
 
     def _get_deadline(self) -> int:
         """
@@ -396,7 +445,7 @@ class CarbonBot(CarbonBotBase):
     # TODO: RENAME TO _RUN
     def _run(
         self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Tuple[str, List[Any]]]:
         """
         Working-level entry point for run(), performing the actual execution.
 
@@ -424,8 +473,9 @@ class CarbonBot(CarbonBotBase):
         (
             best_profit,
             best_trade_instructions_df,
-            trade_instructions_dic,
+            best_trade_instructions_dic,
             best_src_token,
+            best_trade_instructions,
         ) = r
 
         # Order the trades instructions suitable for routing and scale the amounts
@@ -434,25 +484,30 @@ class CarbonBot(CarbonBotBase):
             return ordered_scaled_dcts
         
         ## Convert opportunities to trade instructions
-        trade_instructions = self._convert_trade_instructions(ordered_scaled_dcts)
+        ordered_trade_instructions_objects = self._convert_trade_instructions(ordered_scaled_dcts)
         if result == self.XS_TI:
-            return trade_instructions
+            return ordered_trade_instructions_objects
         
         ## Aggregate trade instructions
-        tx_route_handler = self.TxRouteHandlerClass(trade_instructions)
-        agg_trade_instructions = tx_route_handler._agg_carbon_independentIDs(
-            trade_instructions=trade_instructions
+        tx_route_handler = self.TxRouteHandlerClass(ordered_trade_instructions_objects)
+        agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
+            trade_instructions=ordered_trade_instructions_objects
         )
-        del trade_instructions # TODO: REMOVE THIS
+        del ordered_trade_instructions_objects # TODO: REMOVE THIS
         if result == self.XS_AGGTI:
             return agg_trade_instructions
 
-        src_amount = sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count))
-        c.logger.debug(f"src_amount: {src_amount}")
-        src_address = self.db.get_token_address_from_token_key(best_src_token)
-        src_address = c.w3.toChecksumAddress(src_address)
+        # Get the flashloan amount
+        flashloan_amount = int(agg_trade_instructions[0].amtin_wei) * self.flashloan_multiplier
+
+        # Get the flashloan token address
+        flashloan_token_address = c.w3.toChecksumAddress(
+            self.db.get_token_address_from_token_key(agg_trade_instructions[0].tknin_key)
+        )
+
+        c.logger.debug(f"flashloan_amount: {flashloan_amount}")
         if result == self.XS_ORDTI:
-            return agg_trade_instructions, src_amount, src_address
+            return agg_trade_instructions, flashloan_amount, flashloan_token_address
         
         ## Encode trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(agg_trade_instructions)
@@ -461,9 +516,13 @@ class CarbonBot(CarbonBotBase):
         
         ## Determine route
         deadline = self._get_deadline()
-        route_struct = tx_route_handler.get_arb_contract_args(
-            encoded_trade_instructions, deadline
-        )
+
+        # Get the route struct
+        route_struct = [
+            asdict(rs) for rs in tx_route_handler.get_route_structs(
+                encoded_trade_instructions, deadline
+            )
+        ]
         if result == self.XS_ROUTE:
             return route_struct
         
@@ -471,12 +530,35 @@ class CarbonBot(CarbonBotBase):
         assert result is None, f"Unknown result requested {result}"
         if network != "mainnet":
             return self._validate_and_submit_transaction_tenderly(
-                encoded_trade_instructions, src_address, route_struct, src_amount
+                encoded_trade_instructions, flashloan_token_address, route_struct, flashloan_amount
             )
-        tx_helper = self.TxHelpersClass()
-        return tx_helper.validate_and_submit_transaction(
-            encoded_trade_instructions, src_address, route_struct, src_amount
+
+        # log the flashloan arbitrage tx info
+        c.logger.info(f"Flashloan amount: {flashloan_amount}")
+        c.logger.info(f"Flashloan token address: {flashloan_token_address}")
+        c.logger.info(f"Route Struct: \n {route_struct}")
+        c.logger.info(f"Trade Instructions: \n {best_trade_instructions_dic}")
+        c.logger.info(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
+        c.logger.info(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
+
+        # Initialize tx helper
+        tx_helper = TxHelper(
+            usd_gas_limit=self.usd_gas_limit,
+            w3=c.w3,
+            gas_price_multiplier=self.gas_price_multiplier,
+            arb_contract=c.BANCOR_ARBITRAGE_CONTRACT
         )
+
+        # Get the cids of the trade instructions
+        cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
+
+        # Submit the transaction
+        return tx_helper.submit_flashloan_arb_tx(
+            arb_data=route_struct,
+            flashloan_token_address=flashloan_token_address,
+            flashloan_amount=flashloan_amount,
+            verbose=True,
+        ), cids
 
 
 
@@ -582,9 +664,12 @@ class CarbonBot(CarbonBotBase):
         if mode == "continuous":
             while True:
                 try:
-                    tx_hash = self._run(flashloan_tokens, CCm)
+                    CCm = self.get_curves()
+                    tx_hash, cids = self._run(flashloan_tokens, CCm)
                     if tx_hash:
                         c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                        self.db.update_recently_traded_pools(cids)
+
                     time.sleep(self.polling_interval)
                 except Exception as e:
                     c.logger.error(f"[bot:run:continuous] {e}")

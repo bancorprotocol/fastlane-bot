@@ -8,6 +8,7 @@ from dataclasses import field
 from typing import Any, Dict, Type, Optional, Tuple, List
 
 import pandas as pd
+from _decimal import Decimal
 from brownie import Contract
 
 from fastlane_bot.db.model_managers import PoolManager, TokenManager, PairManager
@@ -352,5 +353,50 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         }
         pool_params = params | other_params
         self.create_pool(**pool_params)
+
+    def update_recently_traded_pools(self, cids: List[int]):
+        """
+        Updates the recently traded pools
+
+        Parameters
+        ----------
+        cids : List[int]
+            The cids
+        """
+        self.recently_traded_pools = [self.get_pool(cid=cid) for cid in cids]
+
+        tuples = [(pool.exchange_name, pool.address) for pool in self.recently_traded_pools]
+        for exchange_name, pool_address in tuples:
+            pool_contract = self.contract_from_address(exchange_name, pool_address)
+            self.update_pool(exchange_name, pool_address, pool_contract)
+
+    def _get_bnt_price_from_tokens(self, price, tkn) -> Decimal:
+        """
+        Gets the price of a token
+
+        Parameters
+        ----------
+        tkn0 : str
+            The token address
+        tkn1 : str
+            The token address
+
+        Returns
+        -------
+        Optional[Decimal]
+            The price
+        """
+
+        if tkn == 'BNT-FF1C':
+            return Decimal(price)
+
+        bnt_price_map_symbols = {token.split('-')[0]: self.bnt_price_map[token] for token in self.bnt_price_map}
+
+        tkn_bnt_price = bnt_price_map_symbols.get(tkn.split('-')[0])
+
+        if tkn_bnt_price is None:
+            raise ValueError(f"Missing TKN/BNT price for {tkn}")
+
+        return Decimal(price) * Decimal(tkn_bnt_price)
 
 
