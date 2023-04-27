@@ -1355,8 +1355,6 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         top = Decimal(y_int_product * (-y_int_product + Decimal(c_product).sqrt()))
         return top / bottom
 
-
-
     def get_optimal_input_triangular_constant_product(
         self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool
     ):
