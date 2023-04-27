@@ -906,6 +906,7 @@ class SearchHelpers(BaseHelper):
         # returns a list of all Carbon Orders that are active and have liquidity.
         all_pairs = self.get_carbon_pairs()
 
+        # Get pairs & tokens that aren't on Bancor V3
         pairs_with_one_bancor_v3_token, non_bancor_v3_tokens = self.get_carbon_pairs_with_one_non_flash_tkn(pairs=all_pairs)
 
         carbon_orders = self.get_all_carbon_strategies(carbon_pairs=all_pairs)
@@ -916,6 +917,9 @@ class SearchHelpers(BaseHelper):
         self.unique_pools = self.get_bancor_v3_pools(
             tokens=liquid_tkn_addresses_bancor_3
         )
+        self.unique_pools += self.get_uni_v2_sushi_pools(pairs=pairs_with_one_bancor_v3_token, non_bancor_v3_tokens=non_bancor_v3_tokens)
+
+
         bancor_v3_pools = self.update_pool_liquidity()
 
         routes = self.match_routes_carbon(
@@ -1212,6 +1216,13 @@ class SearchHelpers(BaseHelper):
             symbol=token_symbol,
             decimals=get_token_decimals_from_symbol(token_symbol),
         )
+
+    def get_uni_v2_sushi_pools(self, pairs, non_bancor_v3_tokens):
+        pools = []
+
+
+
+        return pools
 
     def get_bancor_v3_pools(self, tokens: [ERC20Token]):
         """
