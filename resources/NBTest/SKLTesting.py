@@ -15,6 +15,11 @@
 
 import fastlane_bot as flb
 from fastlane_bot.bot import CarbonBot
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Config))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(cfg.ConfigDB))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(cfg.ConfigNetwork))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(cfg.ConfigProvider))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(cfg.ConfigLogger))
 
 # # SKL Testing
 
