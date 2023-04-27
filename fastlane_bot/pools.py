@@ -22,7 +22,8 @@ from fastlane_bot.token import ERC20Token
 from fastlane_bot.utils import (
     get_abi_and_router,
     convert_decimals,
-    EncodedOrder, _quantize,
+    EncodedOrder,
+    _quantize,
 )
 
 logger = ec.DEFAULT_LOGGER
@@ -985,6 +986,7 @@ class CarbonV1Order:
         """
 
         return Decimal("1") / self.get_marginal_price
+
     @property
     def get_max_in(self) -> Decimal:
         """

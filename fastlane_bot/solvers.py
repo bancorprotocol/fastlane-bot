@@ -1256,8 +1256,6 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             tkns_in=max_triangular_arb_trade, p1=p1, p2=p2, p3=p3
         )
 
-
-
     def get_trade_amts_carbon_triangular(
         self, tkns_in, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool
     ):
@@ -1505,7 +1503,6 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         assert type(token0_amt) == Decimal
         assert type(token1_amt) == Decimal
         assert type(pool_fee) == Decimal
-
 
         return Decimal(
             abs(
