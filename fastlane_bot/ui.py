@@ -59,6 +59,10 @@ class FastLaneArbBotUI(
     _ETH_PRIVATE_KEY: str = None
 
     def execute_carbon(self, routes: [Route]):
+        """
+        Executes arbitrage trades for given Carbon routes
+        :param routes: calculated trade routes for arbitrage on Carbon
+        """
         deadline = (
             self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
             + self.blocktime_deviation

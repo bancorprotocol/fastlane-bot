@@ -1257,6 +1257,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         )
 
 
+
     def get_trade_amts_carbon_triangular(
         self, tkns_in, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool
     ):
@@ -1315,6 +1316,48 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             f"tkns_in = {tkns_in}, r1 = {result_trade_1}, r2 = {tkns_out_carbon}, r3 = {result_trade_3}"
         )
         return [tkns_in, result_trade_1, tkns_out_carbon, result_trade_3]
+
+    def get_optimal_input_n_carbon_orders(self, orders: [CarbonV1Order]):
+        """
+        This function takes in a list of Carbon positions & determines the optimal input to receive the maximum arbitrage profit
+        """
+        top = 0
+        bottom = 0
+        y_ints = []
+        c_list = []
+        d_list = []
+
+        y_int_product = Decimal("1")
+        c_product = Decimal("1")
+        # Process data & build top of equation
+        for order in orders:
+            y_ints.append(order.y_int)
+            c_list.append(order.c)
+            # print(f'y = {x.y}, y_int = {x.y_int}, B = {x.B}, S = {x.S}')
+            # print(f'C = {x.get_C()}, D = {x.get_D()}')
+            d_list.append(order.d)
+            y_int_product = y_int_product * order.y_int
+            c_product = Decimal(c_product * order.c)
+
+        index = 0
+        # Create bottom of equation
+        for h in d_list:
+            D_product = h
+            subListIndex = 0
+            for x in y_ints:
+                if index < subListIndex:
+                    D_product = Decimal(D_product * y_ints[subListIndex] ** 2)
+                elif index > subListIndex:
+                    D_product = Decimal(D_product * c_list[subListIndex])
+                subListIndex += 1
+
+            bottom += D_product
+            index += 1
+
+        top = Decimal(y_int_product * (-y_int_product + Decimal(c_product).sqrt()))
+        return top / bottom
+
+
 
     def get_optimal_input_triangular_constant_product(
         self, p1: LiquidityPool, p2: CarbonV1Order, p3: LiquidityPool

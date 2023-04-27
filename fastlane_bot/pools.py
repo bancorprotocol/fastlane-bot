@@ -927,6 +927,8 @@ class CarbonV1Order:
         self.c = self.get_c
         self.d = self.get_d
         self.max_in = self.get_max_in
+        self.marg_price = self.get_marginal_price
+        self.marg_price_inverted = self.get_marginal_price_inverted
 
     @property
     def get_c(self):
@@ -1033,8 +1035,8 @@ class CarbonV1Order:
             f"{idx}c": self.c,
             f"{idx}d": self.d,
             f"{idx}fee": self.fee,
-            f"{idx}marg_price": self.get_marginal_price,
-            f"{idx}marg_price_inverted": self.get_marginal_price_inverted,
+            f"{idx}marg_price": self.marg_price,
+            f"{idx}marg_price_inverted": self.marg_price_inverted,
             f"{idx}max_in": self.max_in,
         }
 

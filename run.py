@@ -140,11 +140,7 @@ def main(
 
     initial_search = True
     bot.archive_trade_routes()
-
-    if ec.CARBON_V1_NAME in exchanges:
-        logger.info(ec.CARBON_MODE)
-    else:
-        bot.build_candidate_routes(tokens=tokens, exchanges=exchanges)
+    logger.info(ec.CARBON_MODE) if ec.CARBON_V1_NAME in exchanges else bot.build_candidate_routes(tokens=tokens, exchanges=exchanges)
 
     while True:
         if "tenderly" in network_name and not initial_search:
@@ -164,7 +160,8 @@ def main(
         elif execute_mode == "search_and_execute":
             if ec.CARBON_V1_NAME in exchanges:
                 routes = bot.create_routes_carbon()
-                bot.execute_carbon(routes)
+
+                bot.execute_carbon(routes) if routes else logger.info(f"No routes found that exceed minimum profit.\n\n")
             else:
                 bot.search_candidate_routes(initial_search=initial_search)
                 bot.execute()

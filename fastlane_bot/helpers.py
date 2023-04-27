@@ -773,6 +773,11 @@ class SearchHelpers(BaseHelper):
     def match_routes_carbon(
         self, carbon_pools: [CarbonV1Order], other_pools: [LiquidityPool]
     ):
+        """
+        This function builds triangular routes of Constant Product pool -> Carbon Order -> Constant Product pool.
+        :param carbon_pools: a list of carbon orders
+        :param other_pools: a list of constant product liquidity pools
+        """
         triangular_carbon_routes = []
 
         for idx, pool in enumerate(carbon_pools):
@@ -791,15 +796,8 @@ class SearchHelpers(BaseHelper):
                     pool1 = _pool
                     first_tkn_match = pool2.tkn0.symbol
                     break
-                # elif _pool.tkn1.symbol == pool2.tkn0.symbol or _pool.tkn1.symbol == pool2.tkn1.symbol:
-                #     pool1 = _pool
-                #     first_tkn_match = pool2.tkn1.symbol
-                #     break
             if pool1:
                 for __pool in other_pools:
-                    # if (__pool.tkn0.symbol == pool2.tkn0.symbol and __pool.tkn0.symbol != first_tkn_match) or (__pool.tkn1.symbol == pool2.tkn0.symbol and __pool.tkn0.symbol != first_tkn_match):
-                    #     pool3 = __pool
-                    #     break
                     if (
                         __pool.tkn0.symbol == pool2.tkn1.symbol
                         and __pool.tkn1.symbol != first_tkn_match
@@ -819,19 +817,83 @@ class SearchHelpers(BaseHelper):
                     t0, t1 = route_copy.p3.tkn0, route_copy.p3.tkn1
                     route_copy.p3.tkn0 = t1
                     route_copy.p3.tkn1 = t0
-
-                # print('route t0, t1 =', t0, t1)
-                # print('route t0, t1 =', t0, t1)
                 triangular_carbon_routes.append(route_copy)
 
         return triangular_carbon_routes
 
+    def generate_carbon_pair_dict(self, pairs: List[Tuple[str, str]], carbon_orders: [CarbonV1Order]) -> dict:
+        """
+        This function creates a dictionary of Carbon token pairs with their initialized Carbon Orders, divided into two arrays that contain directional orders. IE an array of TKN 0 -> TKN 1 and an array of TKN1 -> TKN 0.
+        :param pairs: a list of initialized Carbon pairs.
+        :param carbon_orders: a list of initialized Carbon Order objects.
+        """
+        forwards = "forwards"
+        inverted = "inverted"
+        pair_dict = {}
+
+        # Build a dict of all pairs
+        for pair in pairs:
+            pair_combined = pair[0] + "_" + pair[1]
+            pair_dict[pair_combined] = {forwards: [], inverted: []}
+
+        pair_keys = pair_dict.keys()
+        #validate that all pairs have been added to the dict
+        assert len(pair_keys) == len(pairs)
+
+        for order in carbon_orders:
+            tkn0_tkn1 = order.tkn0.address + "_" + order.tkn1.address
+            tkn1_tkn0 = order.tkn1.address + "_" + order.tkn0.address
+            key = ""
+            direction = ""
+            if tkn0_tkn1 in pair_keys:
+                direction = forwards
+                key = tkn0_tkn1
+            elif tkn1_tkn0 in pair_keys:
+                direction = inverted
+                key = tkn1_tkn0
+            else:
+                raise Exception("Key not found in token pairs. Something went wrong in generate_carbon_pair_dict function.")
+            pair_dict[key][direction] += [order]
+
+        # sort carbon order arrays by marginal price - the second one is inverted so that they use the same token as the numerator.
+        for key in pair_keys:
+            pair_dict[key][forwards].sort(key=lambda x: x.marg_price, reverse=True)
+            pair_dict[key][forwards].sort(key=lambda x: x.marg_price_inverted, reverse=True)
+
+        return pair_dict
+
+
+    def carbon_pair_route_generator(self, orders_forwards: [], orders_inverted: []):
+
+        if len(orders_forwards) == 0 or len(orders_inverted == 0):
+            return None
+
+
+        routes = []
+
+        for order in orders_forwards:
+
+
+
+
+        pass
     def create_routes_carbon(self):
+        """
+        Generates arbitrage trade routes, focusing on Carbon Orders.
+        """
+        # returns a list of all Carbon Orders that are active and have liquidity.
+        all_pairs = self.get_carbon_pairs()
+
+        carbon_orders = self.get_all_carbon_strategies(carbon_pairs=all_pairs)
+
+        carbon_pair_dict = self.generate_carbon_pair_dict(pairs=all_pairs, carbon_orders=carbon_orders)
+
+
         self.unique_pools = self.get_bancor_v3_pools(
             tokens=liquid_tkn_addresses_bancor_3
         )
         bancor_v3_pools = self.update_pool_liquidity()
-        carbon_orders = self.get_all_carbon_strategies()
+
         routes = self.match_routes_carbon(
             carbon_pools=carbon_orders, other_pools=bancor_v3_pools
         )
@@ -1065,8 +1127,27 @@ class SearchHelpers(BaseHelper):
         unique_pools = list(set(unique_pools))
         self.unique_pools_raw = unique_pools
 
-    def get_pair_from_symbols(self, tkn0, tkn1):
+    def get_pair_from_symbols(self, tkn0: str, tkn1: str) -> str:
+        """
+        Combines token symbols to form a pair string
+        """
+        assert type(tkn0) == str
+        assert type(tkn1) == str
+
         return tkn0 + "_" + tkn1
+
+    def get_pair_from_address(self, tkn0: str, tkn1: str) -> str:
+        """
+        Looks up token symbols from their address and combines token symbols to form a pair string
+        :param tkn0: the token address of token 0
+        :param tkn1: the token address of token 1
+        """
+
+        return (
+                get_token_symbol_from_address(tkn0)
+                + "_"
+                + get_token_symbol_from_address(tkn1)
+        )
 
     def get_pair(self, tkn0, tkn1):
         tkn0 = self.web3.toChecksumAddress(tkn0)
@@ -1077,13 +1158,15 @@ class SearchHelpers(BaseHelper):
         if not check_if_tkn_in_table_address(tkn1):
             logger.error(f"Error looking up token: {tkn1}")
             return None
-        return (
-            get_token_symbol_from_address(tkn0)
-            + "_"
-            + get_token_symbol_from_address(tkn1)
-        )
+        pair = self.get_pair_from_address(tkn0=tkn0, tkn1=tkn1)
+        assert type(pair) == str
+        return pair
 
     def get_erc20_from_address(self, token_address):
+        """
+        Returns and ERC20 object from a token address
+        :param token_address: the address of the token
+        """
         token_address = self.web3.toChecksumAddress(token_address)
         if not check_if_tkn_in_table_address(token_address):
             logger.error(f"Error looking up token: {token_address}")
@@ -1095,6 +1178,10 @@ class SearchHelpers(BaseHelper):
         )
 
     def get_erc20_from_symbol(self, token_symbol):
+        """
+        Returns and ERC20 token object from a token symbol
+        :param token_symbol: the symbol of the token, for example ETH, WBTC, BNT
+        """
         if not check_if_tkn_in_table_symbol(token_symbol):
             logger.error(f"Error looking up token: {token_symbol}")
             return None
@@ -1105,6 +1192,10 @@ class SearchHelpers(BaseHelper):
         )
 
     def get_bancor_v3_pools(self, tokens: [ERC20Token]):
+        """
+        Returns a list of initialized Bancor V3 liquidity pools
+        :param tokens: the tokens for which to get liquidity pools
+        """
         pools = [
             LiquidityPool(
                 tkn0=self.get_erc20_from_address(ec.BNT_ADDRESS),
@@ -1123,15 +1214,15 @@ class SearchHelpers(BaseHelper):
         pools = [pool for pool in pools if pool is not None]
         return pools
 
-    def get_all_carbon_strategies(self):
+    def get_all_carbon_strategies(self, carbon_pairs: List[Tuple[str, str]]) -> [CarbonV1Order]:
         """
-        Gets every Carbon Strategy
+        Gets every Carbon Strategy given a list of token pairs
         """
-        all_pairs = self.get_carbon_pairs()
+
 
         with brownie.multicall(address=ec.MULTICALL_CONTRACT_ADDRESS):
             strats = [
-                strategy for pair in all_pairs for strategy in self.get_strategies(pair)
+                strategy for pair in carbon_pairs for strategy in self.get_strategies(pair)
             ]
             block_number = brownie.web3.eth.block_number
 
@@ -1287,7 +1378,7 @@ class SearchHelpers(BaseHelper):
                 ]
         return strategies
 
-    def process_raw_carbon_strategies(self, strategies: List[int], block_updated: int):
+    def process_raw_carbon_strategies(self, strategies: List[int], block_updated: int) -> [CarbonV1Order]:
         """
         Takes a list of Carbon Strategies in the raw contract format, processes them, and inserts them into the database.
 
