@@ -145,8 +145,8 @@ assert CAP.DATABASE == CAP.DATABASE_POSTGRES
 assert CAP.POSTGRES_USER == "postgres"
 assert CAP.POSTGRES_PASSWORD == "b2742bade1f3a271c55eef069e2f19903aa0740c"
 assert CAP.POSTGRES_HOST == "localhost"
-assert CAP.POSTGRES_DB == "postgres"
-assert CAP.POSTGRES_URL == 'postgresql://postgres:b2742bade1f3a271c55eef069e2f19903aa0740c@localhost/postgres'
+assert CAP.POSTGRES_DB == "mainnet"
+assert CAP.POSTGRES_URL == 'postgresql://postgres:b2742bade1f3a271c55eef069e2f19903aa0740c@localhost/mainnet'
 
 CAP = ConfigDB.new(ConfigDB.DATABASE_POSTGRES,
                     POSTGRES_USER = "user",
