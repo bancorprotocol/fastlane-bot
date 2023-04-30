@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.4.1"
-__DATE__ = "23/Apr/2023"
+__VERSION__ = "2.6.4.2"
+__DATE__ = "30/Apr/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -610,7 +610,7 @@ class ConstantProductCurve:
         P = Pmarg
         assert uniPa < uniPb, f"uniPa < uniPb required ({uniPa}, {uniPb})"
         assert (
-            uniPa < P < uniPb
+            uniPa <= P <= uniPb
         ), f"uniPa < Pmarg < uniPb required ({uniPa}, {P}, {uniPb})"
         if params is None:
             params = AttrDict(L=uniL)
