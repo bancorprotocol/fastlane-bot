@@ -15,6 +15,8 @@ import fastlane_bot.db.models as models
 
 from fastlane_bot.config import Config
 
+from sqlalchemy_utils import database_exists, create_database
+
 @dataclass
 class DatabaseManagerBase:
     """
@@ -34,6 +36,10 @@ class DatabaseManagerBase:
         The backend url to connect to
 
     """
+
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
+
     ConfigObj: Config
 
     session: Session = field(init=False)
@@ -70,7 +76,13 @@ class DatabaseManagerBase:
         """
         if backend_url is None:
             backend_url = self.ConfigObj.DEFAULT_DB_BACKEND_URL
+
         self.metadata = sqlalchemy.MetaData()
+        
+        # Check if the database exists, and create it if it doesn't
+        if not database_exists(backend_url):
+            create_database(backend_url)
+
         engine = sqlalchemy.create_engine(backend_url)
         models.mapper_registry.metadata.create_all(engine)
         sesh = sessionmaker(bind=engine)
