@@ -250,7 +250,7 @@ class TransactionHelpers:
         # Set the public address
         self.wallet_address = str(self.local_account.address)
 
-        self.alchemy_api_url = self.ConfigObj.ALCHEMY_API_URL
+        self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
     def validate_and_submit_transaction(

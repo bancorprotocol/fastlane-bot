@@ -92,8 +92,8 @@ class TxRouteHandler(TxRouteHandlerBase):
     """
     ConfigObj: Config
     trade_instructions_dic: List[TradeInstruction]
-    trade_instructions_df: pd.DataFrame = None
-    trade_instructions: List[ConstantProductCurve] = None
+    trade_instructions_df: pd.DataFrame
+    trade_instructions: List[ConstantProductCurve]
 
     @property
     def exchange_ids(self) -> List[int]:

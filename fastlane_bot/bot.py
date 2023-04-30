@@ -121,23 +121,23 @@ class CarbonBotBase():
 
         if self.TxSubmitHandlerClass is None:
             self.TxSubmitHandlerClass = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
+        assert issubclass(self.TxSubmitHandlerClass.__class__, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass.__class__}"
 
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler
         assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
 
         if self.TxRouteHandlerClass is None:
-            self.TxRouteHandlerClass = TxRouteHandler(ConfigObj=self.ConfigObj)
+            self.TxRouteHandlerClass = TxRouteHandler # (ConfigObj=self.ConfigObj)
         assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
 
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
-        assert issubclass(self.TxHelpersClass, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
+        assert issubclass(self.TxHelpersClass.__class__, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         if self.db is None:
             self.db = DatabaseManager(
-                data=self.genesis_data
+                data=self.genesis_data, ConfigObj=self.ConfigObj
             )
             
 

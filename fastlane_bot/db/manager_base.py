@@ -34,13 +34,13 @@ class DatabaseManagerBase:
         The backend url to connect to
 
     """
+    ConfigObj: Config
 
     session: Session = field(init=False)
     engine: sqlalchemy.engine = field(init=False)
     metadata: MetaData = field(init=False)
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
     backend_url: InitVar[str] = None
-    ConfigObj: Config = None
 
     def __post_init__(self, backend_url=None):
         self.data = pd.read_csv(self.ConfigObj.DATABASE_SEED_FILE)

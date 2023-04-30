@@ -32,6 +32,7 @@ class ConfigProvider(ConfigBase):
     PROVIDER_INFURA = S.PROVIDER_INFURA
     PROVIDER_ALCHEMY = S.PROVIDER_ALCHEMY
     PROVIDER_TENDERLY = S.PROVIDER_TENDERLY
+    ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 
     @classmethod
     def new(cls, network: ConfigNetwork, provider=None, **kwargs):

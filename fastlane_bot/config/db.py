@@ -78,6 +78,7 @@ class _ConfigDBPostgres(ConfigDB):
         if not self.POSTGRES_DB:
             self.POSTGRES_DB = "postgres"
         self.POSTGRES_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
+        self.DEFAULT_DB_BACKEND_URL = self.POSTGRES_URL
             
 class _ConfigDBSqlite(ConfigDB):
     """
