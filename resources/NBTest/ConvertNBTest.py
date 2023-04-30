@@ -13,19 +13,13 @@
 #     name: python3
 # ---
 
-from carbon.helpers.fls import *
+from fls import *
 import sys
 import os
 import re
 from collections import namedtuple
-__VERSION__ = "1.3"
-__DATE__ = "26/Jan/2023"
-
-# VERSION HISTORY
-#
-# - v1.2.1: import fls from Carbon
-# - v1.2: [TEST] and [NOTEST]; defaults
-#
+__VERSION__ = "1.3.1 [fastlane]"
+__DATE__ = "30/Apr/2023"
 
 # # Convert NBTest
 #
@@ -34,6 +28,7 @@ __DATE__ = "26/Jan/2023"
 print(f"NBTestConvert v{__VERSION__} {__DATE__}")
 
 NOTEST_DEFAULT="TEST"
+LIBRARY = "fastlane_bot"
 
 # ## Get script path and set paths
 
@@ -49,7 +44,8 @@ else:
     SCRIPTPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 SRCPATH = os.path.join(SCRIPTPATH, "")
-TRGPATH = os.path.join(SCRIPTPATH, "../../Carbon/tests/nbtest")
+TRGPATH = os.path.join(SCRIPTPATH, f"../../{LIBRARY}/tests/nbtest")
+print(TRGPATH)
 
 print("JUPYTER", JUPYTER)
 print("SCRIPTPATH", SCRIPTPATH)

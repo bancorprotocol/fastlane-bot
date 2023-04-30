@@ -2,6 +2,8 @@
 import os
 import sys
 
+raise NotImplementedError("does not currently work; use run_tests instead")
+
 cwd = os.path.dirname(os.path.realpath(sys.argv[0]))
 dir_local = os.path.join(cwd, 'carbon')
 #os.system(f"python {dir_local}/resources/NBTest/ConvertNBTest.py")
