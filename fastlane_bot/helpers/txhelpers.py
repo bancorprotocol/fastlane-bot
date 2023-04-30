@@ -40,12 +40,8 @@ class TxHelper:
     ----------
     usd_gas_limit : float
         The USD gas limit.
-    w3 : Web3
-        The Web3 instance.
     gas_price_multiplier : float
         The gas price multiplier.
-    arb_contract : Any
-        The arbitrage contract.
     """
     ConfigObj: Config
     usd_gas_limit: float = 20
@@ -227,7 +223,7 @@ class TxHelper:
               f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether")
 
 @dataclass
-class TransactionHelpers:
+class TxHelpers:
     """
     This class is used to organize web3/brownie transaction tools.
     """
