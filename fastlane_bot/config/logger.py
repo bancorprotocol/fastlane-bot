@@ -1,7 +1,7 @@
 """
 Fastlane bot config -- logger
 """
-__VERSION__ = "0.9.1"
+__VERSION__ = "0.9.2"
 __DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
@@ -45,9 +45,26 @@ class ConfigLogger(ConfigBase):
         logger.addHandler(handler)
         return logger
     
-    def logger(self, *args, **kwargs):
+    @property
+    def logger(self):
         """placeholder; raise NotImplementedError"""
         raise NotImplementedError("logger() method not implemented")
+    
+    def debug(self, *args, **kwargs):
+        """calls logger.debug()"""
+        return self.logger.debug(*args, **kwargs)
+    
+    def info(self, *args, **kwargs):
+        """calls logger.info()"""
+        return self.logger.info(*args, **kwargs)
+    
+    def warning(self, *args, **kwargs):
+        """calls logger.warning()"""
+        return self.logger.warning(*args, **kwargs)
+    
+    def error(self, *args, **kwargs):
+        """calls logger.error()"""
+        return self.logger.error(*args, **kwargs)
     
     @classmethod
     def new(cls, logger=None, **kwargs):
@@ -75,5 +92,9 @@ class _ConfigLoggerDefault(ConfigLogger):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.logger = self.get_logger(self.LOGLEVEL)
+        self._logger = self.get_logger(self.LOGLEVEL)
+        
+    @property
+    def logger(self):
+        return self._logger
     
