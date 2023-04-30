@@ -1,7 +1,7 @@
 """
 Fastlane bot config -- database configuration
 """
-__VERSION__ = "1.0.1"
+__VERSION__ = "1.0.2"
 __DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
@@ -49,6 +49,8 @@ class ConfigDB(ConfigBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+
+
 class _ConfigDBPostgres(ConfigDB):
     """
     Fastlane bot config -- database [Postgres]
@@ -59,6 +61,11 @@ class _ConfigDBPostgres(ConfigDB):
     POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
     POSTGRES_DB = os.environ.get("POSTGRES_DB")
     POSTGRES_URL = None # set in init
+    
+    POSTGRES_USER_DEFAULT = "postgres"
+    POSTGRES_PASSWORD_DEFAULT = "postgres"
+    POSTGRES_HOST_DEFAULT = "localhost"
+    POSTGRES_DATABASE_DEFAULT = "mainnet"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -71,13 +78,13 @@ class _ConfigDBPostgres(ConfigDB):
             return
             
         if not self.POSTGRES_USER:
-            self.POSTGRES_USER = "postgres"
+            self.POSTGRES_USER = self.POSTGRES_USER_DEFAULT
         if not self.POSTGRES_PASSWORD:
-            self.POSTGRES_PASSWORD = "postgres"
+            self.POSTGRES_PASSWORD = self.POSTGRES_PASSWORD_DEFAULT
         if not self.POSTGRES_HOST:
-            self.POSTGRES_HOST = "localhost"
+            self.POSTGRES_HOST = self.POSTGRES_HOST_DEFAULT
         if not self.POSTGRES_DB:
-            self.POSTGRES_DB = "postgres"
+            self.POSTGRES_DB = self.POSTGRES_DATABASE_DEFAULT
         self.POSTGRES_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
         self.DEFAULT_DB_BACKEND_URL = self.POSTGRES_URL
             
