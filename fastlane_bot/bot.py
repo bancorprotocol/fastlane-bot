@@ -574,7 +574,7 @@ class CarbonBot(CarbonBotBase):
         
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
-        if network != "mainnet":
+        if network == self.ConfigObj.NETWORK_TENDERLY:
             return self._validate_and_submit_transaction_tenderly(
                 encoded_trade_instructions, flashloan_token_address, route_struct, flashloan_amount
             )
