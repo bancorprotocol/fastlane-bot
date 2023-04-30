@@ -25,10 +25,10 @@ from sqlalchemy import (
 )
 
 #from fastlane_bot.config import *
-
+from fastlane_bot import config as cfg
 global contracts
 contracts = {}
-
+from decimal import Decimal
 from sqlalchemy.orm import registry
 
 mapper_registry = registry()
@@ -94,7 +94,7 @@ class Exchange:
 
     def __post_init__(self):
         if 'test' not in self.name.lower():
-            self.id = EXCHANGE_IDS[self.name]
+            self.id = cfg.EXCHANGE_IDS[self.name]
         else:
             self.id = 10000
 

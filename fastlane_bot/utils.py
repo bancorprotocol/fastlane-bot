@@ -13,10 +13,11 @@ import pandas as pd
 import requests
 from _decimal import Decimal
 from web3 import Web3
+from web3.contract import Contract
 
 from fastlane_bot.data.abi import *
 #from fastlane_bot.config import *
-
+from fastlane_bot.config import config as cfg
 
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """
@@ -38,11 +39,11 @@ def get_coingecko_token_table() -> List[Dict[str, Any]]:
     Get the token table from coingecko
     :return:  list of tokens
     """
-    token_list = requests.get(url=COINGECKO_URL).json()["tokens"]
+    token_list = requests.get(url=cfg.COINGECKO_URL).json()["tokens"]
 
     tokens = [
         {
-            "address": w3.toChecksumAddress(token["address"]),
+            "address": cfg.w3.toChecksumAddress(token["address"]),
             "symbol": token["symbol"],
             "decimals": token["decimals"],
             "name": token["name"],
@@ -50,7 +51,7 @@ def get_coingecko_token_table() -> List[Dict[str, Any]]:
         for token in token_list
     ]
     tokens.append(
-        {"address": ETH_ADDRESS, "symbol": "ETH", "decimals": 18, "name": "ETH"}
+        {"address": cfg.ETH_ADDRESS, "symbol": "ETH", "decimals": 18, "name": "ETH"}
     )
 
     return tokens
@@ -69,7 +70,7 @@ def initialize_contract_with_abi(address: str, abi: List[Any], web3: Web3) -> Co
 
 
 def initialize_contract_without_abi(address: str, web3):
-    abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={ETHERSCAN_TOKEN}"
+    abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={cfg.ETHERSCAN_TOKEN}"
     abi = json.loads(requests.get(abi_endpoint).text)
     return web3.eth.contract(address=address, abi=abi["result"])
 
@@ -118,30 +119,30 @@ def get_abi_and_router(exchange: str) -> Tuple[list, str]:
     """
     base_path = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
     POOL_INFO_FOR_EXCHANGE = pd.read_csv(f"{base_path}/pairs.csv")
-    if exchange == BANCOR_V2_NAME:
+    if exchange == cfg.BANCOR_V2_NAME:
         POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == BANCOR_V2_NAME
+            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.BANCOR_V2_NAME
         ]
         ABI = BANCOR_V2_CONVERTER_ABI
-    elif exchange == BANCOR_V3_NAME:
+    elif exchange == cfg.BANCOR_V3_NAME:
         POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == BANCOR_V3_NAME
+            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.BANCOR_V3_NAME
         ]
         ABI = BANCOR_V3_NETWORK_INFO_ABI
-    elif exchange == SUSHISWAP_V2_NAME:
+    elif exchange == cfg.SUSHISWAP_V2_NAME:
         POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == SUSHISWAP_V2_NAME
+            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.SUSHISWAP_V2_NAME
         ]
         ABI = SUSHISWAP_POOLS_ABI
-    elif exchange == UNISWAP_V2_NAME:
+    elif exchange == cfg.UNISWAP_V2_NAME:
         POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == UNISWAP_V2_NAME
+            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.UNISWAP_V2_NAME
         ]
         ABI = UNISWAP_V2_POOL_ABI
-    elif exchange == UNISWAP_V3_NAME:
+    elif exchange == cfg.UNISWAP_V3_NAME:
         ABI = UNISWAP_V3_POOL_ABI
         POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == UNISWAP_V3_NAME
+            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.UNISWAP_V3_NAME
         ]
     return ABI, POOL_INFO_FOR_EXCHANGE
 

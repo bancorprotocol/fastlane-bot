@@ -29,7 +29,7 @@ from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. impo
 #from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 from fastlane_bot.db.models import Token, Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve
-
+from fastlane_bot import config as cfg
 from .tradeinstruction import TradeInstruction
 
 
@@ -155,7 +155,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         bool
             Whether the address is WETH.
         """
-        return address.lower() == WETH_ADDRESS.lower()
+        return address.lower() == cfg.WETH_ADDRESS.lower()
 
     @staticmethod
     def custom_data_encoder(
@@ -272,9 +272,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             The route struct.
         """
         if self.is_weth(target_address):
-            target_address = ETH_ADDRESS
+            target_address = cfg.ETH_ADDRESS
 
-        target_address = w3.toChecksumAddress(target_address)
+        target_address = cfg.w3.toChecksumAddress(target_address)
 
         if override_min_target_amount:
             min_target_amount = 1
@@ -687,7 +687,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         return Decimal(
             liquidity
-            * Q96
+            * cfg.Q96
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
             / sqrt_price_times_q96_upper_bound
             / sqrt_price_times_q96_lower_bound
@@ -723,7 +723,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         return Decimal(
             liquidity
-            * Q96
+            * cfg.Q96
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
             / sqrt_price_times_q96_upper_bound
             / sqrt_price_times_q96_lower_bound
@@ -765,7 +765,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             amount_in * decimal_tkn0_modifier * (Decimal(str(1)) - fee)
         )
 
-        liquidity_x96 = Decimal(liquidity * Q96)
+        liquidity_x96 = Decimal(liquidity * cfg.Q96)
         price_next = Decimal(
             (liquidity_x96 * sqrt_price)
             / (liquidity_x96 + amount_decimal_adjusted * sqrt_price)
@@ -806,7 +806,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             The amount out.
         """
         amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
-        price_diff = Decimal((amount * Q96) / liquidity)
+        price_diff = Decimal((amount * cfg.Q96) / liquidity)
         price_next = Decimal(sqrt_price + price_diff)
         amount_out = self._calc_amount0(liquidity, price_next, sqrt_price)
         return Decimal(amount_out / decimal_tkn0_modifier)
@@ -1018,7 +1018,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
-        if curve.exchange_name == UNISWAP_V3_NAME:
+        if curve.exchange_name == cfg.UNISWAP_V3_NAME:
             amount_out = self._calc_uniswap_v3_output(
                 tkn_in=trade.tknin_key,
                 amount_in=amount_in,
@@ -1029,7 +1029,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 decimal_tkn1_modifier=Decimal(10**curve.tkn1_decimals),
                 tkn_0_key=curve.tkn0_key,
             )
-        elif curve.exchange_name == CARBON_V1_NAME:
+        elif curve.exchange_name == cfg.CARBON_V1_NAME:
             amount_out = self._calc_carbon_output(
                 curve, trade, tkn_out_decimals, amount_in
             )

@@ -13,7 +13,7 @@ from fastlane_bot.db.models import Token, Pool
 
 
 # from fastlane_bot.tools.cpc import ConstantProductCurve
-
+from fastlane_bot import config as cfg
 
 @dataclass
 class TradeInstruction:
@@ -113,7 +113,7 @@ class TradeInstruction:
         if self.pair_sorting is None:
             self.pair_sorting = ""
         self._exchange_name = self._get_pool().exchange_name
-        self._exchange_id = c.EXCHANGE_IDS[self._exchange_name]
+        self._exchange_id = cfg.EXCHANGE_IDS[self._exchange_name]
 
     @property
     def exchange_id(self) -> int:

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 import fastlane_bot.db.models as models
 #import fastlane_bot.config as c
-
+from fastlane_bot import config as cfg
 
 @dataclass
 class DatabaseManagerBase:
@@ -42,7 +42,7 @@ class DatabaseManagerBase:
     backend_url: InitVar[str] = None
 
     def __post_init__(self, backend_url=None):
-        self.data = pd.read_csv(c.DATABASE_SEED_FILE)
+        self.data = pd.read_csv(cfg.DATABASE_SEED_FILE)
         self.data = self.data.sort_values("exchange", ascending=False)
         self.connect_db(backend_url=backend_url)
 
@@ -68,7 +68,7 @@ class DatabaseManagerBase:
         Connects to the database. If the database does not exist, it creates it.
         """
         if backend_url is None:
-            backend_url = c.DEFAULT_DB_BACKEND_URL
+            backend_url = cfg.DEFAULT_DB_BACKEND_URL
         self.metadata = sqlalchemy.MetaData()
         engine = sqlalchemy.create_engine(backend_url)
         models.mapper_registry.metadata.create_all(engine)

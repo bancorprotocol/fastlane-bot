@@ -8,7 +8,7 @@ from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import UniV3Helper, EncodedOrder
 #import fastlane_bot.config as c
-
+from fastlane_bot import config as cfg
 
 @dataclass
 class PoolAndTokens:
@@ -125,11 +125,11 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(self.fee))
-        if self.exchange_name == UNISWAP_V3_NAME:
+        if self.exchange_name == cfg.UNISWAP_V3_NAME:
             out = self._univ3_to_cpc()
-        elif self.exchange_name == CARBON_V1_NAME:
+        elif self.exchange_name == cfg.CARBON_V1_NAME:
             out = self._carbon_to_cpc()
-        elif self.exchange_name in SUPPORTED_EXCHANGES:
+        elif self.exchange_name in cfg.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
             raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
@@ -265,11 +265,11 @@ class PoolAndTokens:
                 lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
             except Exception as e:
                 errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
-                c.logger.debug(errmsg)
+                cfg.logger.debug(errmsg)
                 errors += [errmsg]
         if not len(lst) > 0:
             errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
-            c.logger.warning(errmsg)
+            cfg.logger.warning(errmsg)
             raise self.DoubleInvalidCurveError(errmsg)
             
         return lst
