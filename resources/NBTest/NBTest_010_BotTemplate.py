@@ -26,27 +26,47 @@ require("2.0", __VERSION__)
 
 # # BOT TEMPLATE [NBTest010]
 
-# ## Mainnet/Alchemy Configuration
-
-# +
-# C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_MAINNET)
-# C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
-# C_pr = ConfigProvider.new(network=C_nw, provider=ConfigProvider.PROVIDER_ALCHEMY)
-# C = Config(db = C_db, network = C_nw, provider = C_pr)
-# C
-# -
+# ## Mainnet Alchemy [NOTEST]
 
 C = Config.new(config=Config.CONFIG_MAINNET)
-
 assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.POSTGRES_DB == "mainnet"
 assert C.NETWORK == C.NETWORK_MAINNET
 assert C.PROVIDER == C.PROVIDER_ALCHEMY
+print("Web3 API:", C.w3.api)
+
+# ## Tenderly [NOTEST]
+
+# +
+# TODO
+# -
+
+# ## Mainnet Alchemy Configuration
+
+C = Config.new(config=Config.CONFIG_MAINNET)
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.POSTGRES_DB == "tenderly"
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
+assert C.w3.__class__.__name__ == "Web3"
+assert C.w3.isConnected()
+assert C.w3.provider.endpoint_uri.startswith("https://eth-mainnet.alchemyapi.io/v2")
 
 bot = Bot(ConfigObj=C)
+
+bot.update_pools()
+
+bot.drop_tables()
 
 # ## Tenderly Configuration
 
 C = Config.new(config=Config.CONFIG_TENDERLY)
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.POSTGRES_DB == "mainnet"
+assert C.NETWORK == C.NETWORK_TENDERLY
+assert C.PROVIDER == C.PROVIDER_TENDERLY
+assert C.w3.__class__.__name__ == "Web3"
+assert C.w3.isConnected()
 
 # +
 # C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
@@ -56,9 +76,7 @@ C = Config.new(config=Config.CONFIG_TENDERLY)
 # C
 # -
 
-assert C.DATABASE == C.DATABASE_POSTGRES
-assert C.NETWORK == C.NETWORK_TENDERLY
-assert C.PROVIDER == C.PROVIDER_TENDERLY
+
 
 bot = Bot(ConfigObj=C)
 
