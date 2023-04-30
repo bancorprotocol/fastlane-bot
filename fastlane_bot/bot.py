@@ -178,7 +178,7 @@ class CarbonBotBase():
         pools_and_tokens = self.db.get_pool_data_with_tokens(cnfg=self.ConfigObj)
         curves = []
         for p in pools_and_tokens:
-            print(p)
+            # print(p)
             try:
                 curves += p.to_cpc()
                 #time.sleep(0.00000001)  # to avoid unstable results
