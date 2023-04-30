@@ -26,16 +26,47 @@ require("2.0", __VERSION__)
 
 # # BOT TEMPLATE [NBTest010]
 
-import fastlane_bot
+# ## Mainnet/Alchemy Configuration
 
-help(fastlane_bot.config)
+# +
+# C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_MAINNET)
+# C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
+# C_pr = ConfigProvider.new(network=C_nw, provider=ConfigProvider.PROVIDER_ALCHEMY)
+# C = Config(db = C_db, network = C_nw, provider = C_pr)
+# C
+# -
 
-Cnw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_MAINNET)
-C = Config(
-    db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES),
-    network = Cnw,
-    provider = ConfigProvider.new(network=Cnw, provider=ConfigProvider.PROVIDER_ALCHEMY),
-)
-C
+C = Config.new(config=Config.CONFIG_MAINNET)
+
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
+
+bot = Bot(ConfigObj=C)
+
+# ## Tenderly Configuration
+
+C = Config.new(config=Config.CONFIG_TENDERLY)
+
+# +
+# C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
+# C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
+# C_pr = ConfigProvider.new(network=C_nw)
+# C = Config(db = C_db, network = C_nw, provider = C_pr)
+# C
+# -
+
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.NETWORK == C.NETWORK_TENDERLY
+assert C.PROVIDER == C.PROVIDER_TENDERLY
+
+bot = Bot(ConfigObj=C)
+
+# ## Unittest Configuration
+
+C = Config.new(config=Config.CONFIG_UNITTEST)
+assert C.DATABASE == C.DATABASE_UNITTEST
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.PROVIDER == C.PROVIDER_UNITTEST
 
 
