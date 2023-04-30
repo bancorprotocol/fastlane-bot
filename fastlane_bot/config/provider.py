@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- provider
 """
-__VERSION__ = "0.9"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "0.9.1"
+__DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
 from .network import ConfigNetwork
@@ -49,11 +49,11 @@ class ConfigProvider(ConfigBase):
             provider = network.DEFAULT_PROVIDER
         
         if provider == S.PROVIDER_ALCHEMY:
-            return _ConfigProviderAlchemy(network, **kwargs)
+            return _ConfigProviderAlchemy(network, _direct=False, **kwargs)
         elif provider == S.PROVIDER_TENDERLY:
-            return _ConfigProviderTenderly(network, **kwargs)
+            return _ConfigProviderTenderly(network, _direct=False, **kwargs)
         elif provider == S.PROVIDER_INFURA:
-            return _ConfigProviderInfura(network, **kwargs)
+            return _ConfigProviderInfura(network, _direct=False, **kwargs)
         else:
             raise ValueError(f"Unknown provider: {provider}")
         
@@ -109,6 +109,32 @@ class _ConfigProviderTenderly(ConfigProvider):
         super().__init__(network, **kwargs)
         assert self.network.NETWORK == ConfigNetwork.NETWORK_TENDERLY, f"Tenderly only supports Tenderly {self.network}"
         self.RPC_URL = f"https://rpc.tenderly.co/fork/{self.network.TENDERLY_FORK}"
+        
+        print("[_ConfigProviderTenderly] TODO: implement")
+        N = self.network
+        self.connection = EthereumNetwork(
+            network_id=N.NETWORK_ID,
+            network_name=f"{N.NETWORK_NAME} (Alchemy)",
+            provider_url=self.RPC_URL,
+            provider_name="alchemy",
+        )
+        self.connection.connect_network()
+        self.w3 = "TODO"
+        
+        self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
+            name=N.BANCOR_V3_NAME,
+            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
+            abi=BANCOR_V3_NETWORK_INFO_ABI,
+        )
+        self.CARBON_CONTROLLER_CONTRACT = Contract.from_abi(
+            name=N.CARBON_V1_NAME,
+            address=N.CARBON_CONTROLLER_ADDRESS,
+            abi=CARBON_CONTROLLER_ABI,
+        )
+        self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
+            address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
         
 
     

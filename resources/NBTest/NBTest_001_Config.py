@@ -15,11 +15,6 @@
 # ---
 
 # +
-# from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
-# from carbon.tools.optimizer import CPCArbOptimizer, F
-# import carbon.tools.tokenscale as ts
-# plt.style.use('seaborn-dark')
-# plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot.config import Config
 import fastlane_bot.config as cfg
 from decimal import Decimal
@@ -95,8 +90,8 @@ ConfigBase = cfg.base.ConfigBase
 class CTest(ConfigBase):
     ITEM1 = 1
     ITEM2 = 2
-C=CTest()
-CM = CTest(ITEM1=10, ITEM3=3)
+C=CTest(_direct=False)
+CM = CTest(ITEM1=10, ITEM3=3, _direct=False)
 assert str(C) == "CTest()"
 assert C.ITEM1 == 1
 assert C.ITEM2 == 2
@@ -109,6 +104,8 @@ assert CM.ITEM3 == 3
 
 ConfigDB = cfg.ConfigDB
 assert issubclass(ConfigDB, cfg.base.ConfigBase)
+assert raises(lambda: ConfigDB()) == 'Must instantiate a subclass of ConfigDB via new()'
+
 
 CAP = ConfigDB.new()
 assert issubclass(CAP.__class__, ConfigDB)
@@ -117,7 +114,7 @@ assert CAP.__class__.__name__ == '_ConfigDBPostgres'
 CAP = ConfigDB.new(ConfigDB.DATABASE_POSTGRES)
 assert issubclass(CAP.__class__, ConfigDB)
 assert CAP.__class__.__name__ == '_ConfigDBPostgres'
-assert CAP.db == CAP.DATABASE_POSTGRES
+assert CAP.DATABASE == CAP.DATABASE_POSTGRES
 assert CAP.POSTGRES_USER == "postgres"
 assert CAP.POSTGRES_PASSWORD == "b2742bade1f3a271c55eef069e2f19903aa0740c"
 assert CAP.POSTGRES_HOST == "localhost"
@@ -129,7 +126,7 @@ CAP = ConfigDB.new(ConfigDB.DATABASE_POSTGRES,
                     POSTGRES_PASSWORD = "password",
                     POSTGRES_HOST = "host",
                     POSTGRES_DB = "db")
-assert CAP.db == CAP.DATABASE_POSTGRES
+assert CAP.DATABASE == CAP.DATABASE_POSTGRES
 assert CAP.POSTGRES_USER == "user"
 assert CAP.POSTGRES_PASSWORD == "password"
 assert CAP.POSTGRES_HOST == "host"
@@ -137,7 +134,7 @@ assert CAP.POSTGRES_DB == "db"
 assert CAP.POSTGRES_URL == 'postgresql://user:password@host/db'
 
 CAP = ConfigDB.new(ConfigDB.DATABASE_POSTGRES, POSTGRES_URL='postgresql://user:password@host/db')
-assert CAP.db == CAP.DATABASE_POSTGRES
+assert CAP.DATABASE == CAP.DATABASE_POSTGRES
 assert CAP.POSTGRES_USER is None
 assert CAP.POSTGRES_PASSWORD is None
 assert CAP.POSTGRES_HOST is None
@@ -153,6 +150,8 @@ assert raises(ConfigDB.new, "meh") == 'Invalid db: meh'
 
 ConfigNetwork = cfg.ConfigNetwork
 assert issubclass(ConfigNetwork, cfg.base.ConfigBase)
+assert raises(lambda: ConfigNetwork()) == 'Must instantiate a subclass of ConfigNetwork via new()'
+
 
 # ### Common section
 
@@ -219,7 +218,7 @@ assert CAM.DEFAULT_MAX_SLIPPAGE == Decimal("1")  # 1%
 #assert CAM._PROJECT_PATH == os.path.normpath(f"{os.getcwd()}") # TODO: FIX THIS
 #assert CAM.DEFAULT_CURVES_DATAFILE == os.path.normpath(f"{_PROJECT_PATH}/carbon/data/curves.csv.gz")
 assert CAM.CARBON_STRATEGY_CHUNK_SIZE == 200
-assert CAM.Q96 == Decimal("2") ** Decimal("96")
+assert CAM.Q96 == Decimal("79228162514264337593543950336")
 assert CAM.DEFAULT_TIMEOUT == 60
 assert CAM.CARBON_FEE == Decimal("0.002")
 assert CAM.BANCOR_V3_FEE == Decimal("0.0")
@@ -235,7 +234,7 @@ assert CAM.COINGECKO_URL == "https://tokens.coingecko.com/uniswap/all.json"
 # +
 CAM = ConfigNetwork.new(ConfigNetwork.NETWORK_MAINNET)
 assert issubclass(CAM.__class__, ConfigNetwork)
-CAM.__class__.__name__ == '_ConfigNetworkMainnet'
+assert CAM.__class__.__name__ == '_ConfigNetworkMainnet'
 
 # from _ConfigNetworkMainnet object
 assert CAM.NETWORK == CAM.NETWORK_ETHEREUM
@@ -253,7 +252,28 @@ assert CAM.MULTICALL_CONTRACT_ADDRESS == "0x5BA1e12693Dc8F9c48aAD8770482f4739bEe
 # -
 # ### Tenderly section
 
-assert raises(ConfigNetwork.new, ConfigNetwork.NETWORK_TENDERLY) == 'Tenderly config not implemented'
+# +
+CAT = ConfigNetwork.new(ConfigNetwork.NETWORK_TENDERLY)
+assert issubclass(CAT.__class__, ConfigNetwork)
+assert CAT.__class__.__name__ == '_ConfigNetworkTenderly'
+
+# from _ConfigNetworkMainnet object
+assert CAT.NETWORK == CAT.NETWORK_TENDERLY
+assert CAT.BANCOR_V3_NETWORK_INFO_ADDRESS == "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
+assert CAT.UNISWAP_V2_FACTORY_ADDRESS == "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
+assert CAT.UNISWAP_V2_ROUTER_ADDRESS == "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+assert CAT.SUSHISWAP_FACTORY_ADDRESS == "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac"
+assert CAT.UNISWAP_V3_FACTORY_ADDRESS == "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+assert CAT.BANCOR_V3_POOL_COLLECTOR_ADDRESS == "0xB67d563287D12B1F41579cB687b04988Ad564C6C"
+assert CAT.BANCOR_V2_CONVERTER_REGISTRY_ADDRESS == "0xC0205e203F423Bcd8B2a4d6f8C8A154b0Aa60F19"
+assert CAT.FASTLANE_CONTRACT_ADDRESS == "0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB"
+assert CAT.CARBON_CONTROLLER_ADDRESS == "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
+assert CAT.CARBON_CONTROLLER_VOUCHER == "0x3660F04B79751e31128f6378eAC70807e38f554E"
+assert CAT.MULTICALL_CONTRACT_ADDRESS == "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+# -
+
+# ### Invalid network
+
 assert raises(ConfigNetwork.new, "meh") == 'Invalid network: meh'
 
 # ## Provider

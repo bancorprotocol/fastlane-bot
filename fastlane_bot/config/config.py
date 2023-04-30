@@ -1,8 +1,8 @@
 """
 Fastlane bot configuration object -- main object
 """
-__VERSION__ = "1.0-BETA5"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "1.0-BETA6"
+__DATE__ = "30/Apr 2023"
 
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
@@ -25,6 +25,7 @@ class Config():
     
     def is_config_item(self, item):
         """returns True if item is a (possible) configuration item [uppercase, numbers, underscore; len>2]"""
+        #print("[is_config_item]", item)
         if item in {"w3", "connection"}:
             return True
         if len(item)<3:

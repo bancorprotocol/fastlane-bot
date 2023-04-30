@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- network
 """
-__VERSION__ = "1.0"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "1.0.1"
+__DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
 
@@ -99,11 +99,14 @@ class ConfigNetwork(ConfigBase):
         if network is None:
             network = cls.NETWORK_ETHEREUM
         if network == cls.NETWORK_ETHEREUM:
-            return _ConfigNetworkMainnet()
+            return _ConfigNetworkMainnet(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
-            return _ConfigNetworkTenderly()
+            return _ConfigNetworkTenderly(_direct=False)
         else:
             raise ValueError(f"Invalid network: {network}")
+        
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
@@ -140,6 +143,7 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     DEFAULT_PROVIDER = S.PROVIDER_TENDERLY
     
     TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
+    
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
     BANCOR_V3_NETWORK_INFO_ADDRESS = "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
@@ -155,6 +159,5 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
 
 
-    def __init__(self):
-        raise NotImplementedError("Tenderly config not implemented")
-        pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

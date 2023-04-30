@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- database configuration
 """
-__VERSION__ = "1.0"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "1.0.1"
+__DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
 
@@ -23,6 +23,7 @@ class ConfigDB(ConfigBase):
         f"{_PROJECT_PATH}/fastlane_bot/data/seed_token_pairs.csv"
     )
     
+    
     DATABASE_SQLITE = S.DATABASE_SQLITE
     DATABASE_POSTGRES = S.DATABASE_POSTGRES
     DATABASE_MEMORY = S.DATABASE_MEMORY
@@ -35,24 +36,24 @@ class ConfigDB(ConfigBase):
         if db is None:
             db = cls.DATABASE_POSTGRES
         if db == cls.DATABASE_POSTGRES:
-            return _ConfigDBPostgres(**kwargs)
+            return _ConfigDBPostgres(_direct=False, **kwargs)
         elif db == cls.DATABASE_SQLITE:
-            return _ConfigDBSqlite(**kwargs)
+            return _ConfigDBSqlite(_direct=False, **kwargs)
         elif db == cls.DATABASE_MEMORY:
-            return _ConfigDBMemory(**kwargs)
+            return _ConfigDBMemory(_direct=False, **kwargs)
         elif db == cls.DATABASE_SDK:
-            return _ConfigDBSdk(**kwargs)
+            return _ConfigDBSdk(_direct=False, **kwargs)
         else:
             raise ValueError(f"Invalid db: {db}")
         
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class _ConfigDBPostgres(ConfigDB):
     """
     Fastlane bot config -- database [Postgres]
     """
-    db = S.DATABASE_POSTGRES    
+    DATABASE = S.DATABASE_POSTGRES    
     POSTGRES_USER = os.environ.get("POSTGRES_USER")
     POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
     POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
@@ -84,6 +85,7 @@ class _ConfigDBSqlite(ConfigDB):
     """
     Fastlane bot config -- database [Sqlite]
     """
+    DATABASE = S.DATABASE_SQLITE
     SQLITE_URL = "sqlite:///fastlane_bot.db"
     #DEFAULT_DB_BACKEND_URL = POSTGRES_URL
     def __init__(self, **kwargs):
@@ -93,6 +95,7 @@ class _ConfigDBMemory(ConfigDB):
     """
     Fastlane bot config -- database [Memory]
     """
+    DATABASE = S.DATABASE_MEMORY
     def __init__(self, **kwargs):
         raise NotImplementedError("Memory not implemented")
     
@@ -100,5 +103,6 @@ class _ConfigDBSdk(ConfigDB):
     """
     Fastlane bot config -- database [SDK]
     """
+    DATABASE = S.DATABASE_SDK
     def __init__(self, **kwargs):
         raise NotImplementedError("SDK not implemented")

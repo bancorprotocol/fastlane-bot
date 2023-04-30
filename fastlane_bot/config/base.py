@@ -1,8 +1,8 @@
 """
 Base configuration class for the fastlane_bot application.
 """
-__VERSION__ = "1.0"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "1.1"
+__DATE__ = "30/Apr 2023"
 
 class ConfigBase():
     """
@@ -13,7 +13,8 @@ class ConfigBase():
     __VERSION__=__VERSION__
     __DATE__=__DATE__
     
-    def __init__(self, **kwargs):
+    def __init__(self, _direct=True, **kwargs):
+        assert _direct==False, f"Must instantiate a subclass of {self.__class__.__name__} via new()"
         for k, v in kwargs.items():
             # if hasattr(self, k):
             #     print("[{0.__class__.__name__}:__init__] overriding {1}={2}".format(self, k, v))

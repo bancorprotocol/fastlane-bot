@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- logger
 """
-__VERSION__ = "0.9"
-__DATE__ = "26/Apr 2023"
+__VERSION__ = "0.9.1"
+__DATE__ = "30/Apr 2023"
 from .base import ConfigBase
 from . import selectors as S
 # import os
@@ -58,12 +58,12 @@ class ConfigLogger(ConfigBase):
             logger = S.LOGGER_DEFAULT
         
         if logger == S.LOGGER_DEFAULT:
-            return _ConfigLoggerDefault(**kwargs)
+            return _ConfigLoggerDefault(_direct=False, **kwargs)
         else:
             raise ValueError(f"Unknown logger: {logger}")
         
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
 class _ConfigLoggerDefault(ConfigLogger):
