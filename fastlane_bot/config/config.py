@@ -45,8 +45,9 @@ class Config():
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
             return cls(network=C_nw, **kwargs)
         elif config == cls.CONFIG_TENDERLY:
+            C_db = db_.ConfigDB.new(db=S.DATABASE_POSTGRES, POSTGRES_DB="tenderly")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
-            return cls(network=C_nw, **kwargs)
+            return cls(db=C_db, network=C_nw, **kwargs)
         elif config == cls.CONFIG_UNITTEST:
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST)
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
