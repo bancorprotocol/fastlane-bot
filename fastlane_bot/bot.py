@@ -143,7 +143,7 @@ class CarbonBotBase():
 
     
     @property
-    def C(self, key: str) -> Any:
+    def C(self) -> Any:
         """
         Convenience method self.ConfigObj
         """
@@ -371,7 +371,11 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions = r.trade_instructions()
 
                 cids = [ti['cid'] for ti in trade_instructions_dic]
-                profit = self.db._get_bnt_price_from_tokens(profit_src, src_token)
+                try:
+                    profit = self.db._get_bnt_price_from_tokens(profit_src, src_token)
+                except Exception as e:
+                    self.ConfigObj.logger.error("[TODO CLEAN UP]{e}")
+                    profit = profit_src
 
                 candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
                 contains_carbon = sum(
