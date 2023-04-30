@@ -30,7 +30,7 @@ from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. impo
 from fastlane_bot.db.models import Token, Pool
 #import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot import config as cfg
+from fastlane_bot.config import Config
 @dataclass
 class TxHelper:
     """
@@ -47,13 +47,14 @@ class TxHelper:
     arb_contract : Any
         The arbitrage contract.
     """
+    ConfigObj: Config = None
     usd_gas_limit: float = 20
     gas_price_multiplier: float = 1.2
-    arb_contract: Any = cfg.BANCOR_ARBITRAGE_CONTRACT
-    w3: Web3 = cfg.w3
+    arb_contract: Any = ConfigObj.BANCOR_ARBITRAGE_CONTRACT
+    w3: Web3 = ConfigObj.w3
 
     def __post_init__(self):
-        self.PRIVATE_KEY: str = cfg.ETH_PRIVATE_KEY_BE_CAREFUL
+        self.PRIVATE_KEY: str = self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         self.COINGECKO_URL: str = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true'
 
     @property
@@ -63,7 +64,7 @@ class TxHelper:
         Returns:
             str: The wallet address.
         """
-        return cfg.LOCAL_ACCOUNT.address
+        return self.ConfigObj.LOCAL_ACCOUNT.address
 
     @property
     def wallet_balance(self) -> Tuple[Any, int]:
@@ -95,7 +96,7 @@ class TxHelper:
 
     @property
     def nonce(self):
-        return cfg.w3.eth.getTransactionCount(cfg.LOCAL_ACCOUNT.address)
+        return self.ConfigObj.w3.eth.getTransactionCount(self.ConfigObj.LOCAL_ACCOUNT.address)
 
     @property
     def gas_limit(self):
@@ -106,7 +107,7 @@ class TxHelper:
         """
         Get the base gas price from the Web3 instance.
         """
-        return cfg.w3.eth.gasPrice
+        return self.ConfigObj.w3.eth.gasPrice
 
     @property
     def gas_price_gwei(self):
@@ -126,7 +127,7 @@ class TxHelper:
 
     @property
     def deadline(self):
-        return cfg.w3.eth.getBlock('latest')['timestamp'] + cfg.DEFAULT_BLOCKTIME_DEVIATION
+        return self.ConfigObj.w3.eth.getBlock('latest')['timestamp'] + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
 
     def get_gas_limit_from_usd(self, gas_cost_usd: float) -> int:
         """Calculate the gas limit based on the desired gas cost in USD.
@@ -168,8 +169,8 @@ class TxHelper:
         if not isinstance(flashloan_amount, int):
             flashloan_amount = int(flashloan_amount)
 
-        if flashloan_token_address == cfg.WETH_ADDRESS:
-            flashloan_token_address = cfg.ETH_ADDRESS
+        if flashloan_token_address == self.ConfigObj.WETH_ADDRESS:
+            flashloan_token_address = self.ConfigObj.ETH_ADDRESS
 
         assert flashloan_token_address != arb_data[0]['targetToken'], \
             "The flashloan token address must be different from the first targetToken address in the arb data."
@@ -193,12 +194,12 @@ class TxHelper:
         )
 
         # Sign the transaction
-        signed_txn = cfg.w3.eth.account.signTransaction(
-            transaction, cfg.ETH_PRIVATE_KEY_BE_CAREFUL
+        signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
+            transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         )
 
         # Send the transaction
-        tx_hash = cfg.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        tx_hash = self.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
         print(f"Transaction sent with hash: {tx_hash}")
         return tx_hash.hex()
 
@@ -220,28 +221,28 @@ class TxHelper:
         print(f"Gas limit in USD ${self.usd_gas_limit} "
               f"Gas limit: {self.gas_limit} ")
 
-        balance = cfg.w3.eth.getBalance(cfg.LOCAL_ACCOUNT.address)
+        balance = self.ConfigObj.w3.eth.getBalance(self.ConfigObj.LOCAL_ACCOUNT.address)
         print(f"Balance of the sender's account: \n"
               f"{balance} Wei \n"
-              f"{cfg.w3.fromWei(balance, 'ether')} Ether")
+              f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether")
 
 @dataclass
 class TransactionHelpers:
     """
     This class is used to organize web3/brownie transaction tools.
     """
-
-    alchemy_api_url = cfg.ALCHEMY_API_URL
+    ConfigObj: Config = None
+    alchemy_api_url = ConfigObj.ALCHEMY_API_URL
     transactions_submitted = []
     network = Network.ETH_MAINNET
-    alchemy = Alchemy(api_key=cfg.WEB3_ALCHEMY_PROJECT_ID, network=network, max_retries=3)
-    web3 = cfg.w3
-    arb_contract = cfg.BANCOR_ARBITRAGE_CONTRACT
+    alchemy = Alchemy(api_key=ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=network, max_retries=3)
+    web3 = ConfigObj.w3
+    arb_contract = ConfigObj.BANCOR_ARBITRAGE_CONTRACT
 
     def __post_init__(self):
 
         # Set the local account
-        self.local_account = self.web3.eth.account.from_key(cfg.ETH_PRIVATE_KEY_BE_CAREFUL)
+        self.local_account = self.web3.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
         # Set the public address
         self.wallet_address = str(self.local_account.address)
@@ -263,15 +264,15 @@ class TransactionHelpers:
 
         """
 
-        if expected_profit < cfg.DEFAULT_MIN_PROFIT:
-            cfg.logger.info(f"Transaction below minimum profit, reverting... /*_*\\")
+        if expected_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
+            self.ConfigObj.logger.info(f"Transaction below minimum profit, reverting... /*_*\\")
             return None
 
         current_gas_price = int(
-            self.get_eth_gas_price_alchemy() * cfg.DEFAULT_GAS_PRICE_OFFSET
+            self.get_eth_gas_price_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
         )
-        cfg.logger.info("Found a trade. Executing...")
-        cfg.logger.info(
+        self.ConfigObj.logger.info("Found a trade. Executing...")
+        self.ConfigObj.logger.info(
             f"\nRoute to execute: routes: {routes}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
         )
         current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy()
@@ -290,9 +291,9 @@ class TransactionHelpers:
             return None
         gas_estimate = arb_tx["gas"]
         current_gas_price = arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
-        gas_estimate = int(gas_estimate + cfg.DEFAULT_GAS_SAFETY_OFFSET)
-        cfg.logger.info(f"gas estimate = {gas_estimate}")
-        current_gas_price = int(current_gas_price * cfg.DEFAULT_GAS_PRICE_OFFSET)
+        gas_estimate = int(gas_estimate + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET)
+        self.ConfigObj.logger.info(f"gas estimate = {gas_estimate}")
+        current_gas_price = int(current_gas_price * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
         # Calculate the number of BNT paid in gas
         bnt, eth = self.get_bnt_tkn_liquidity()
@@ -303,10 +304,10 @@ class TransactionHelpers:
             eth=eth,
         )
 
-        adjusted_reward = Decimal(Decimal(expected_profit) * cfg.DEFAULT_REWARD_PERCENT)
+        adjusted_reward = Decimal(Decimal(expected_profit) * self.ConfigObj.DEFAULT_REWARD_PERCENT)
 
         if adjusted_reward > gas_in_src:
-            cfg.logger.info(
+            self.ConfigObj.logger.info(
                 f"Expected profit of {expected_profit} BNT vs cost of {gas_in_src} BNT in gas, executing"
             )
 
@@ -316,7 +317,7 @@ class TransactionHelpers:
             )
             return tx_receipt or None
         else:
-            cfg.logger.info(
+            self.ConfigObj.logger.info(
                 f"Gas price too expensive! profit of {adjusted_reward} BNT vs gas cost of {gas_in_src} BNT. Abort, abort!"
             )
             return None
@@ -325,7 +326,7 @@ class TransactionHelpers:
         """
         Returns the current gas price
         """
-        return cfg.w3.eth.gas_price
+        return self.ConfigObj.w3.eth.gas_price
 
     def get_bnt_tkn_liquidity(self) -> Tuple[int, int]:
         """
@@ -334,7 +335,7 @@ class TransactionHelpers:
         pool = (
             self.db.session.query(Pool)
             .filter(
-                Pool.exchange_name == cfg.BANCOR_V3_NAME, Pool.tkn1_address == cfg.ETH_ADDRESS
+                Pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME, Pool.tkn1_address == self.ConfigObj.ETH_ADDRESS
             )
             .first()
         )
@@ -397,12 +398,12 @@ class TransactionHelpers:
         src_amt: int,
         nonce: int,
     ):
-        cfg.logger.info(f"Attempting to submit trade on Tenderly")
+        self.ConfigObj.logger.info(f"Attempting to submit trade on Tenderly")
         return self.web3.eth.wait_for_transaction_receipt(
             self.arb_contract.functions.execute(routes, src_amt).transact(
                 {
                     "maxFeePerGas": 0,
-                    "gas": cfg.DEFAULT_GAS,
+                    "gas": self.ConfigObj.DEFAULT_GAS,
                     "from": self.wallet_address,
                     "nonce": nonce,
                 }
@@ -438,7 +439,7 @@ class TransactionHelpers:
         except ValueError as e:
             message = str(e).split("baseFee: ")
             split_fee = message[1].split(" (supplied gas ")
-            baseFee = int(int(split_fee[0]) * cfg.DEFAULT_GAS_PRICE_OFFSET)
+            baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
             transaction = self.arb_contract.functions.execute(
                 routes, src_amt
             ).build_transaction(
@@ -450,10 +451,10 @@ class TransactionHelpers:
         try:
             estimated_gas = (
                 self.web3.eth.estimate_gas(transaction=transaction)
-                + cfg.DEFAULT_GAS_SAFETY_OFFSET
+                + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
-            cfg.logger.info(
+            self.ConfigObj.logger.info(
                 f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
             )
             return None
@@ -496,9 +497,9 @@ class TransactionHelpers:
 
         returns: the transaction hash of the submitted transaction
         """
-        cfg.logger.info(f"Attempting to submit tx {arb_tx}")
+        self.ConfigObj.logger.info(f"Attempting to submit tx {arb_tx}")
         signed_arb_tx = self.sign_transaction(arb_tx)
-        cfg.logger.info(f"Attempting to submit tx {signed_arb_tx}")
+        self.ConfigObj.logger.info(f"Attempting to submit tx {signed_arb_tx}")
         tx = self.web3.eth.send_raw_transaction(signed_arb_tx.rawTransaction)
         tx_hash = self.web3.toHex(tx)
         self.transactions_submitted.append(tx_hash)
@@ -506,7 +507,7 @@ class TransactionHelpers:
             tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx)
             return tx_receipt
         except TimeExhausted as e:
-            cfg.logger.info(f"Transaction is stuck in mempool, exception: {e}")
+            self.ConfigObj.logger.info(f"Transaction is stuck in mempool, exception: {e}")
             return None
 
     def submit_private_transaction(self, arb_tx, block_number: int) -> Any:
@@ -518,7 +519,7 @@ class TransactionHelpers:
 
         returns: The transaction receipt, or None if the transaction failed
         """
-        cfg.logger.info(f"Attempting to submit private tx {arb_tx}")
+        self.ConfigObj.logger.info(f"Attempting to submit private tx {arb_tx}")
         signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
         signed_tx_string = signed_arb_tx.hex()
 
@@ -537,17 +538,17 @@ class TransactionHelpers:
             method_name="eth_sendPrivateTransaction",
             headers=self._get_headers,
         )
-        cfg.logger.info(f"Submitted to Flashbots RPC, response: {response}")
+        self.ConfigObj.logger.info(f"Submitted to Flashbots RPC, response: {response}")
         if response != 400:
             tx_hash = response.get("result")
             try:
                 tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
                 return tx_receipt
             except TimeExhausted as e:
-                cfg.logger.info(f"Transaction is stuck in mempool, exception: {e}")
+                self.ConfigObj.logger.info(f"Transaction is stuck in mempool, exception: {e}")
                 return None
         else:
-            cfg.logger.info(f"Failed to submit transaction to Flashbots RPC")
+            self.ConfigObj.logger.info(f"Failed to submit transaction to Flashbots RPC")
             return None
 
     def sign_transaction(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
@@ -559,7 +560,7 @@ class TransactionHelpers:
         returns: the signed transaction
         """
         return self.web3.eth.account.sign_transaction(
-            transaction, cfg.ETH_PRIVATE_KEY_BE_CAREFUL
+            transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         )
 
     @property

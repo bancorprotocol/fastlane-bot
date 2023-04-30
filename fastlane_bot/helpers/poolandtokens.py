@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import UniV3Helper, EncodedOrder
-#import fastlane_bot.config as c
-from fastlane_bot import config as cfg
+
+from fastlane_bot.config import Config
 
 @dataclass
 class PoolAndTokens:
@@ -113,7 +113,8 @@ class PoolAndTokens:
     tkn0_key: str = None
     tkn1_key: str = None
     ADDRDEC = None
-
+    ConfigObj: Config = None
+    
     def __post_init__(self):
         self.tkn0_key = self.tkn0
         self.tkn1_key = self.tkn1
@@ -125,11 +126,11 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(self.fee))
-        if self.exchange_name == cfg.UNISWAP_V3_NAME:
+        if self.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             out = self._univ3_to_cpc()
-        elif self.exchange_name == cfg.CARBON_V1_NAME:
+        elif self.exchange_name == self.ConfigObj.CARBON_V1_NAME:
             out = self._carbon_to_cpc()
-        elif self.exchange_name in cfg.SUPPORTED_EXCHANGES:
+        elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
             raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
@@ -265,11 +266,11 @@ class PoolAndTokens:
                 lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
             except Exception as e:
                 errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
-                cfg.logger.debug(errmsg)
+                self.ConfigObj.logger.debug(errmsg)
                 errors += [errmsg]
         if not len(lst) > 0:
             errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
-            cfg.logger.warning(errmsg)
+            self.ConfigObj.logger.warning(errmsg)
             raise self.DoubleInvalidCurveError(errmsg)
             
         return lst

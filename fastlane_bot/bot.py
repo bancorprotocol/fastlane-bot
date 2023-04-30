@@ -49,7 +49,6 @@ from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
 
-#from fastlane_bot import config as cfg
 from fastlane_bot.db.manager import DatabaseManager
 from fastlane_bot.db.models import Pool, Token
 from fastlane_bot.helpers import (
@@ -66,8 +65,8 @@ from fastlane_bot.config import Config
 from . import __VERSION__, __DATE__
 from .helpers.txhelpers import TxHelper
 
-# errorlogger = c.logger.error
-# errorlogger = c.logger.debug # TODO: REMOVE THIS
+# errorlogger = self.ConfigObj.logger.error
+# errorlogger = self.ConfigObj.logger.debug # TODO: REMOVE THIS
 
 @dataclass
 class CarbonBotBase():
@@ -115,11 +114,13 @@ class CarbonBotBase():
             print(
                 "WARNING: genesis_data is deprecated. This argument will be removed soon"
             )
-            
+        if self.ConfigObj is None:
+            self.ConfigObj = Config()
+
         assert self.polling_interval is None, "polling_interval is now a parameter to run"
 
         if self.TxSubmitHandlerClass is None:
-            self.TxSubmitHandlerClass = TxSubmitHandler
+            self.TxSubmitHandlerClass = TxSubmitHandler(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxSubmitHandlerClass, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass}"
 
         if self.TxReceiptHandlerClass is None:
@@ -139,8 +140,7 @@ class CarbonBotBase():
                 data=self.genesis_data
             )
             
-        if self.ConfigObj is None:
-            self.ConfigObj = Config()
+
     
     @property
     def C(self, key: str) -> Any:
@@ -182,20 +182,20 @@ class CarbonBotBase():
                 curves += p.to_cpc()
                 #time.sleep(0.00000001)  # to avoid unstable results
             except ZeroDivisionError as e:
-                errorlogger(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
                 #raise
             except CPC.CPCValidationError as e:
-                errorlogger(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
                 #raise   
             except TypeError as e:
-                errorlogger(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
                 if not str(e).startswith("1unsupported operand type(s) for"):
                     raise    
             except p.DoubleInvalidCurveError as e:
-                errorlogger(f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n")
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n")
                 #raise   
             except Exception as e:
-                errorlogger(f"[get_curves] error converting pool to curve {p} [{e}]\n")
+                self.ConfigObj.logger.error(f"[get_curves] error converting pool to curve {p} [{e}]\n")
                 raise
         return CPCContainer(curves)
 
@@ -316,7 +316,7 @@ class CarbonBot(CarbonBotBase):
             The best profit and the trade instructions.
         """
         assert mode == "bothin", "parameter not used"
-        c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
+        self.ConfigObj.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
         best_trade_instructions_df = None
@@ -336,7 +336,7 @@ class CarbonBot(CarbonBotBase):
         candidates = []
         for tkn0, tkn1 in combos:
             try:
-                c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+                self.ConfigObj.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
                 CC = CCm.bypairs(f"{tkn0}/{tkn1}")
                 if len(CC) < 2:
                     continue
@@ -353,12 +353,12 @@ class CarbonBot(CarbonBotBase):
                     r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
                     assert not r.is_error
                 except Exception as e:
-                    c.logger.debug(e, r)
+                    self.ConfigObj.logger.debug(e, r)
                     try:
                         r = O.margp_optimizer(src_token)
                         assert not r.is_error
                     except Exception as e:
-                        c.logger.info(e)
+                        self.ConfigObj.logger.info(e)
                         continue
 
                 profit_src = -r.result
@@ -410,17 +410,17 @@ class CarbonBot(CarbonBotBase):
                     condition_2 = True
 
                     # print all conditions (profit > best_profit) and (contains_carbon > 0) and (tx_in_count > 0) and (profit > (self.min_profit + bnt_gas_limit)) and (2 <= contains_carbon + contains_other <= 3)
-                    c.logger.info('\n')
-                    c.logger.info("[_find_arbitrage_opportunities] *************")
-                    c.logger.info(f"profit = {round(profit, 4)}, tkn0 = {tkn0}, tkn1 = {tkn1}, cids = {cids}")
-                    c.logger.info(f"(self.min_profit + bnt_gas_limit) = {(self.min_profit + bnt_gas_limit)} {bnt_gas_limit}")
-                    c.logger.info(f"(profit > best_profit): {(profit > best_profit)}")
-                    c.logger.info(f"(contains_carbon > 0): {contains_carbon_ct} {contains_carbon}")
-                    c.logger.info(f"(contains_other > 0): {contains_other_ct} {contains_other}")
-                    c.logger.info(f"(tx_in_count > 0): {(tx_in_count > 0)}")
-                    c.logger.info(f"(profit > (self.min_profit + bnt_gas_limit)): {(profit > (self.min_profit + bnt_gas_limit))}")
-                    c.logger.info(f"(2 <= contains_carbon + contains_other <= 3): {condition_5}")
-                    c.logger.info('\n')
+                    self.ConfigObj.logger.info('\n')
+                    self.ConfigObj.logger.info("[_find_arbitrage_opportunities] *************")
+                    self.ConfigObj.logger.info(f"profit = {round(profit, 4)}, tkn0 = {tkn0}, tkn1 = {tkn1}, cids = {cids}")
+                    self.ConfigObj.logger.info(f"(self.min_profit + bnt_gas_limit) = {(self.min_profit + bnt_gas_limit)} {bnt_gas_limit}")
+                    self.ConfigObj.logger.info(f"(profit > best_profit): {(profit > best_profit)}")
+                    self.ConfigObj.logger.info(f"(contains_carbon > 0): {contains_carbon_ct} {contains_carbon}")
+                    self.ConfigObj.logger.info(f"(contains_other > 0): {contains_other_ct} {contains_other}")
+                    self.ConfigObj.logger.info(f"(tx_in_count > 0): {(tx_in_count > 0)}")
+                    self.ConfigObj.logger.info(f"(profit > (self.min_profit + bnt_gas_limit)): {(profit > (self.min_profit + bnt_gas_limit))}")
+                    self.ConfigObj.logger.info(f"(2 <= contains_carbon + contains_other <= 3): {condition_5}")
+                    self.ConfigObj.logger.info('\n')
 
                     if (profit > best_profit) and (contains_carbon > 0) and (tx_in_count > 0) and (profit > (self.min_profit + bnt_gas_limit)) and (2 <= contains_carbon + contains_other <= 3) and (max(netchange) < 1e-4):
                         best_profit = profit
@@ -429,19 +429,19 @@ class CarbonBot(CarbonBotBase):
                         best_trade_instructions_dic = trade_instructions_dic
                         best_trade_instructions = trade_instructions
 
-                        c.logger.info('\n')
-                        c.logger.info("[_find_arbitrage_opportunities] *************")
-                        c.logger.info(f"New best profit: {profit}")
-                        c.logger.info(f"Profit in bnt: {profit} {cids}")
-                        c.logger.info(f"bnt_gas_limit: {bnt_gas_limit}")
-                        c.logger.info(f"tx_in_count > 0: {condition_3}")
-                        c.logger.info(f"2 <= contains_carbon + contains_other <= 3: {condition_5}")
-                        c.logger.info(f"contains_carbon: {contains_carbon}")
-                        c.logger.info(f"contains_other: {contains_other}")
-                        c.logger.info(f"profit > best_profit: {condition_1}")
-                        c.logger.info(f"best_trade_instructions_df: {best_trade_instructions_df}")
-                        c.logger.info("*************")
-                        c.logger.info('\n')
+                        self.ConfigObj.logger.info('\n')
+                        self.ConfigObj.logger.info("[_find_arbitrage_opportunities] *************")
+                        self.ConfigObj.logger.info(f"New best profit: {profit}")
+                        self.ConfigObj.logger.info(f"Profit in bnt: {profit} {cids}")
+                        self.ConfigObj.logger.info(f"bnt_gas_limit: {bnt_gas_limit}")
+                        self.ConfigObj.logger.info(f"tx_in_count > 0: {condition_3}")
+                        self.ConfigObj.logger.info(f"2 <= contains_carbon + contains_other <= 3: {condition_5}")
+                        self.ConfigObj.logger.info(f"contains_carbon: {contains_carbon}")
+                        self.ConfigObj.logger.info(f"contains_other: {contains_other}")
+                        self.ConfigObj.logger.info(f"profit > best_profit: {condition_1}")
+                        self.ConfigObj.logger.info(f"best_trade_instructions_df: {best_trade_instructions_df}")
+                        self.ConfigObj.logger.info("*************")
+                        self.ConfigObj.logger.info('\n')
             
             except Exception as e:
                 raise
@@ -464,7 +464,7 @@ class CarbonBot(CarbonBotBase):
             try:
                 netchange = trade_instructions_df.iloc[-1]
             except Exception as e:
-                c.logger.error(f"[_find_arbitrage_opportunities] {e}")
+                self.ConfigObj.logger.error(f"[_find_arbitrage_opportunities] {e}")
 
         return candidates if result == self.AO_CANDIDATES else ops
 
@@ -478,7 +478,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            c.w3.eth.getBlock(c.w3.eth.block_number).timestamp + c.DEFAULT_BLOCKTIME_DEVIATION
+            self.ConfigObj.w3.eth.getBlock(self.ConfigObj.w3.eth.block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     XS_ARBOPPS = "arbopps"
@@ -547,11 +547,11 @@ class CarbonBot(CarbonBotBase):
         flashloan_amount = int(agg_trade_instructions[0].amtin_wei) * self.flashloan_multiplier
 
         # Get the flashloan token address
-        flashloan_token_address = c.w3.toChecksumAddress(
+        flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
             self.db.get_token_address_from_token_key(agg_trade_instructions[0].tknin_key)
         )
 
-        c.logger.debug(f"flashloan_amount: {flashloan_amount}")
+        self.ConfigObj.logger.debug(f"flashloan_amount: {flashloan_amount}")
         if result == self.XS_ORDTI:
             return agg_trade_instructions, flashloan_amount, flashloan_token_address
         
@@ -580,19 +580,19 @@ class CarbonBot(CarbonBotBase):
             )
 
         # log the flashloan arbitrage tx info
-        c.logger.info(f"Flashloan amount: {flashloan_amount}")
-        c.logger.info(f"Flashloan token address: {flashloan_token_address}")
-        c.logger.info(f"Route Struct: \n {route_struct}")
-        c.logger.info(f"Trade Instructions: \n {best_trade_instructions_dic}")
-        c.logger.info(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
-        c.logger.info(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
+        self.ConfigObj.logger.info(f"Flashloan amount: {flashloan_amount}")
+        self.ConfigObj.logger.info(f"Flashloan token address: {flashloan_token_address}")
+        self.ConfigObj.logger.info(f"Route Struct: \n {route_struct}")
+        self.ConfigObj.logger.info(f"Trade Instructions: \n {best_trade_instructions_dic}")
+        self.ConfigObj.logger.info(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
+        self.ConfigObj.logger.info(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
 
         # Initialize tx helper
         tx_helper = TxHelper(
             usd_gas_limit=self.usd_gas_limit,
-            w3=c.w3,
+            w3=self.ConfigObj.w3,
             gas_price_multiplier=self.gas_price_multiplier,
-            arb_contract=c.BANCOR_ARBITRAGE_CONTRACT
+            arb_contract=self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
         )
 
         # Get the cids of the trade instructions
@@ -614,19 +614,19 @@ class CarbonBot(CarbonBotBase):
             src_address=src_address,
             src_amount=trade_instructions[0].amtin_wei,
         )
-        c.logger.debug(f"route_struct: {route_struct}")
+        self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
         tx_submit_handler.token_contract.functions.approve(
-            c.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS), 0
+            self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), 0
         ).transact(tx_details)
         tx_submit_handler.token_contract.functions.approve(
-            c.w3.toChecksumAddress(c.FASTLANE_CONTRACT_ADDRESS), src_amount
+            self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), src_amount
         ).transact(tx_details)
-        c.logger.debug("src_address", src_address)
+        self.ConfigObj.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct, src_address, src_amount
         )
-        return  c.w3.eth.wait_for_transaction_receipt(tx)
+        return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
 
     # def _handle_ordering(
     #     self, agg_trade_instructions, best_src_token, tx_route_handler
@@ -713,18 +713,18 @@ class CarbonBot(CarbonBotBase):
                     CCm = self.get_curves()
                     tx_hash, cids = self._run(flashloan_tokens, CCm)
                     if tx_hash:
-                        c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                        self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
                         self.db.update_recently_traded_pools(cids)
 
                     time.sleep(self.polling_interval)
                 except Exception as e:
-                    c.logger.error(f"[bot:run:continuous] {e}")
+                    self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
                     time.sleep(self.polling_interval)
         else:
             try:
                 tx_hash = self._run(flashloan_tokens, CCm)
-                c.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
             except Exception as e:
-                c.logger.error(f"[bot:run:single] {e}")
+                self.ConfigObj.logger.error(f"[bot:run:single] {e}")
 
                 

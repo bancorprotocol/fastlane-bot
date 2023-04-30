@@ -15,7 +15,7 @@ from brownie.network.web3 import Web3
 from fastlane_bot.data import abi
 #import fastlane_bot.config as c
 import fastlane_bot.data.abi as _abi
-from fastlane_bot import config as cfg
+from fastlane_bot.config import Config
 
 @dataclass
 class ContractHelper:
@@ -37,19 +37,20 @@ class ContractHelper:
 
     __VERSION__ = "3.0.1"
     __DATE__ = "04-26-2023"
-
+    
     w3: Web3
     contracts: Dict[str, Any] = field(default_factory=dict)
     filters: List[Any] = field(default_factory=list)
     exchange_list: List[str] = field(default_factory=list)
-    poll_interval: int = cfg.DEFAULT_POLL_INTERVAL
-
+    
+    ConfigObj: Config = None
+    poll_interval: int = ConfigObj.DEFAULT_POLL_INTERVAL
     def __post_init__(self):
-        if cfg.CARBON_V1_NAME not in self.contracts:
-            self.contracts[cfg.CARBON_V1_NAME] = {}
-        if "CARBON_CONTROLLER_CONTRACT" not in self.contracts[cfg.CARBON_V1_NAME]:
-            self.contracts[cfg.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"] = self.initialize_contract_with_abi(
-                cfg.CARBON_CONTROLLER_ADDRESS, abi.CARBON_CONTROLLER_ABI
+        if self.ConfigObj.CARBON_V1_NAME not in self.contracts:
+            self.contracts[self.ConfigObj.CARBON_V1_NAME] = {}
+        if "CARBON_CONTROLLER_CONTRACT" not in self.contracts[self.ConfigObj.CARBON_V1_NAME]:
+            self.contracts[self.ConfigObj.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"] = self.initialize_contract_with_abi(
+                self.ConfigObj.CARBON_CONTROLLER_ADDRESS, abi.CARBON_CONTROLLER_ABI
             )
         self.filters = self.get_event_filters(self.exchange_list)
 
@@ -58,10 +59,10 @@ class ContractHelper:
         """
         Returns the CarbonController contract
         """
-        return self.contracts[cfg.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"]
+        return self.contracts[self.ConfigObj.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"]
 
-    @staticmethod
-    def initialize_contract_with_abi(address: str, abi: List[Any]) -> Contract:
+    #@staticmethod
+    def initialize_contract_with_abi(self, address: str, abi: List[Any]) -> Contract:
         """
         Initialize a contract with an abi
 
@@ -75,7 +76,7 @@ class ContractHelper:
             abi of the contract
 
         """
-        return cfg.w3.eth.contract(address=address, abi=abi)
+        return self.ConfigObj.w3.eth.contract(address=address, abi=abi)
 
 
     @staticmethod
@@ -96,7 +97,7 @@ class ContractHelper:
             contract instance
 
         """
-        abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={cfg.ETHERSCAN_TOKEN}"
+        abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={self.ConfigObj.ETHERSCAN_TOKEN}"
         _abi = json.loads(requests.get(abi_endpoint).text)
         return w3.eth.contract(address=address, abi=_abi["result"])
 
@@ -121,8 +122,8 @@ class ContractHelper:
         else:
             return ContractHelper.initialize_contract_with_abi(address=address, abi=_abi, w3=w3)
 
-    @staticmethod
-    def contract_from_address(exchange_name: str, pool_address: str) -> Contract:
+    #@staticmethod
+    def contract_from_address(self, exchange_name: str, pool_address: str) -> Contract:
         """
         Returns the contract for a given exchange and pool address
 
@@ -140,30 +141,30 @@ class ContractHelper:
 
         """
 
-        if exchange_name == cfg.BANCOR_V2_NAME:
+        if exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             return ContractHelper.initialize_contract(
-                w3=cfg.w3,
-                address=cfg.w3.toChecksumAddress(pool_address),
+                w3=self.ConfigObj.w3,
+                address=self.ConfigObj.w3.toChecksumAddress(pool_address),
                 _abi=abi.BANCOR_V2_CONVERTER_ABI,
             )
-        elif exchange_name == cfg.BANCOR_V3_NAME:
-            return cfg.BANCOR_NETWORK_INFO_CONTRACT
-        elif exchange_name in cfg.UNIV2_FORKS:
+        elif exchange_name == self.ConfigObj.BANCOR_V3_NAME:
+            return self.ConfigObj.BANCOR_NETWORK_INFO_CONTRACT
+        elif exchange_name in self.ConfigObj.UNIV2_FORKS:
             return ContractHelper.initialize_contract(
-                w3=cfg.w3,
-                address=cfg.w3.toChecksumAddress(pool_address),
+                w3=self.ConfigObj.w3,
+                address=self.ConfigObj.w3.toChecksumAddress(pool_address),
                 _abi=abi.UNISWAP_V2_POOL_ABI,
             )
-        elif exchange_name == cfg.UNISWAP_V3_NAME:
+        elif exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             return ContractHelper.initialize_contract(
-                w3=cfg.w3,
-                address=cfg.w3.toChecksumAddress(pool_address),
+                w3=self.ConfigObj.w3,
+                address=self.ConfigObj.w3.toChecksumAddress(pool_address),
                 _abi=abi.UNISWAP_V3_POOL_ABI,
             )
-        elif cfg.CARBON_V1_NAME in exchange_name:
+        elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
             return ContractHelper.initialize_contract(
-                w3=cfg.w3,
-                address=cfg.w3.toChecksumAddress(pool_address),
+                w3=self.ConfigObj.w3,
+                address=self.ConfigObj.w3.toChecksumAddress(pool_address),
                 _abi=abi.CARBON_CONTROLLER_ABI,
             )
         else:
@@ -218,26 +219,26 @@ class ContractHelper:
             contract object
 
         """
-        if exchange == cfg.BANCOR_V2_NAME:
-            return cfg.w3.eth.contract(abi=_abi.BANCOR_V2_CONVERTER_ABI, address=pool_address)
+        if exchange == self.ConfigObj.BANCOR_V2_NAME:
+            return self.ConfigObj.w3.eth.contract(abi=_abi.BANCOR_V2_CONVERTER_ABI, address=pool_address)
 
-        elif exchange == cfg.BANCOR_V3_NAME:
+        elif exchange == self.ConfigObj.BANCOR_V3_NAME:
             if init_contract:
-                return cfg.w3.eth.contract(
+                return self.ConfigObj.w3.eth.contract(
                     abi=_abi.BANCOR_V3_POOL_COLLECTION_ABI,
-                    address=cfg.w3.toChecksumAddress(cfg.BANCOR_V3_POOL_COLLECTOR_ADDRESS),
+                    address=self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.BANCOR_V3_POOL_COLLECTOR_ADDRESS),
                 )
             else:
-                return cfg.BANCOR_NETWORK_INFO_CONTRACT
+                return self.ConfigObj.BANCOR_NETWORK_INFO_CONTRACT
 
-        elif exchange in cfg.UNIV2_FORKS:
-            return cfg.w3.eth.contract(abi=_abi.UNISWAP_V2_POOL_ABI, address=pool_address)
+        elif exchange in self.ConfigObj.UNIV2_FORKS:
+            return self.ConfigObj.w3.eth.contract(abi=_abi.UNISWAP_V2_POOL_ABI, address=pool_address)
 
-        elif exchange == cfg.UNISWAP_V3_NAME:
-            return cfg.w3.eth.contract(abi=_abi.UNISWAP_V3_POOL_ABI, address=pool_address)
+        elif exchange == self.ConfigObj.UNISWAP_V3_NAME:
+            return self.ConfigObj.w3.eth.contract(abi=_abi.UNISWAP_V3_POOL_ABI, address=pool_address)
 
-        elif cfg.CARBON_V1_NAME in exchange:
-            return cfg.CARBON_CONTROLLER_CONTRACT
+        elif self.ConfigObj.CARBON_V1_NAME in exchange:
+            return self.ConfigObj.CARBON_CONTROLLER_CONTRACT
 
     def get_filters_from_contract_and_exchange(self, exchange_name: str, contract: Contract) -> Any:
         """
@@ -256,17 +257,17 @@ class ContractHelper:
             The callable for the event filter
         """
         callables = []
-        if cfg.BANCOR_V2_NAME in exchange_name:
+        if self.ConfigObj.BANCOR_V2_NAME in exchange_name:
             callables.append(contract.events.TokenRateUpdate)
-        elif cfg.BANCOR_V3_NAME in exchange_name:
+        elif self.ConfigObj.BANCOR_V3_NAME in exchange_name:
             callables.append(contract.events.TradingLiquidityUpdated)
-        elif cfg.UNISWAP_V2_NAME in exchange_name:
+        elif self.ConfigObj.UNISWAP_V2_NAME in exchange_name:
             callables.append(contract.events.Sync)
-        elif cfg.UNISWAP_V3_NAME in exchange_name:
+        elif self.ConfigObj.UNISWAP_V3_NAME in exchange_name:
             callables.append(contract.events.Swap)
-        elif cfg.SUSHISWAP_V2_NAME in exchange_name:
+        elif self.ConfigObj.SUSHISWAP_V2_NAME in exchange_name:
             callables.append(contract.events.Sync)
-        elif cfg.CARBON_V1_NAME in exchange_name:
+        elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
             callables.extend(
                 (
                     contract.events.StrategyCreated,

@@ -16,7 +16,7 @@ import fastlane_bot.db.models as models
 
 #from fastlane_bot import config as c
 import fastlane_bot.data.abi as _abi
-from fastlane_bot import config as cfg
+from fastlane_bot.config import Config
 
 
 class DatabaseManager(PoolManager, TokenManager, PairManager):
@@ -29,7 +29,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     __DATE__ = "04-26-2023"
 
     # data: pd.DataFrame = field(default_factory=pd.DataFrame)
-
+    ConfigObj: Config = None
     def drop_all_tables(self):
         """
         Drops all tables in the database
@@ -62,8 +62,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         Creates the Ethereum chain in the database
         """
-        blockchain = models.Blockchain(name=cfg.ETHEREUM_BLOCKCHAIN_NAME)
-        blockchain.block_number = cfg.w3.eth.blockNumber
+        blockchain = models.Blockchain(name=self.ConfigObj.ETHEREUM_BLOCKCHAIN_NAME)
+        blockchain.block_number = self.ConfigObj.w3.eth.blockNumber
         self.session.add(blockchain)
         self.session.commit()
 
@@ -71,8 +71,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         Creates the supported exchanges in the database
         """
-        for exchange in cfg.SUPPORTED_EXCHANGES:
-            self.session.add(models.Exchange(name=exchange, blockchain_name=cfg.ETHEREUM_BLOCKCHAIN_NAME))
+        for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
+            self.session.add(models.Exchange(name=exchange, blockchain_name=self.ConfigObj.ETHEREUM_BLOCKCHAIN_NAME))
         self.session.commit()
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
@@ -86,17 +86,17 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         processed_event : Any
             The event to update from.
         """
-        if pool.exchange_name == cfg.BANCOR_V3_NAME:
+        if pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME:
             self.update_pool(**{
                 "id": pool.id,
                 "last_updated_block": processed_event["block_number"],
                 "tkn0_balance": processed_event["newLiquidity"]
-            } if processed_event["token"] == cfg.BNT_ADDRESS else {
+            } if processed_event["token"] == self.ConfigObj.BNT_ADDRESS else {
                 "id": pool.id,
                 "tkn1_balance": processed_event["newLiquidity"],
             })
 
-        elif pool.exchange_name == cfg.UNISWAP_V3_NAME:
+        elif pool.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             self.update_pool(**{
                 "id": pool.id,
                 "last_updated_block": processed_event["block_number"],
@@ -105,7 +105,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "tick": processed_event["tick"],
             })
 
-        elif pool.exchange_name in cfg.UNIV2_FORKS + [cfg.BANCOR_V2_NAME]:
+        elif pool.exchange_name in self.ConfigObj.UNIV2_FORKS + [self.ConfigObj.BANCOR_V2_NAME]:
             self.update_pool(**{
                 "id": pool.id,
                 "last_updated_block": processed_event["block_number"],
@@ -113,7 +113,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "tkn1_balance": processed_event["tkn1_balance"],
             })
 
-        elif cfg.CARBON_V1_NAME in pool.exchange_name:
+        elif self.ConfigObj.CARBON_V1_NAME in pool.exchange_name:
             self.update_pool(**{
                 "id": pool.id,
                 "last_updated_block": processed_event["block_number"],
@@ -149,7 +149,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         common_params = {
             "id": pool.id,
-            "last_updated_block": cfg.w3.eth.block_number,
+            "last_updated_block": self.ConfigObj.w3.eth.block_number,
         }
         liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
                                                             contract=contract,
@@ -177,21 +177,21 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         """
         params = {}
-        if exchange_name == cfg.BANCOR_V3_NAME:
+        if exchange_name == self.ConfigObj.BANCOR_V3_NAME:
             pool_balances = contract.tradingLiquidity(address)
             params = {
                 "fee": "0.000",
                 "tkn0_balance": pool_balances[0],
                 "tkn1_balance": pool_balances[1],
             }
-        elif exchange_name == cfg.BANCOR_V2_NAME:
+        elif exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             reserve0, reserve1 = contract.caller.reserveBalances()
             params = {
                 "fee": "0.003",
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
             }
-        elif exchange_name == cfg.UNISWAP_V3_NAME:
+        elif exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             slot0 = contract.caller.slot0()
             params = {
                 "tick": slot0[1],
@@ -201,14 +201,14 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "tick_spacing": contract.caller.tickSpacing(),
             }
 
-        elif exchange_name in cfg.UNIV2_FORKS:
+        elif exchange_name in self.ConfigObj.UNIV2_FORKS:
             reserve_balance = contract.caller.getReserves()
             params = {
                 "fee": "0.003",
                 "tkn0_balance": reserve_balance[0],
                 "tkn1_balance": reserve_balance[1],
             }
-        elif cfg.CARBON_V1_NAME in exchange_name:
+        elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
             order0, order1 = strategy[3][0], strategy[3][1]
             params = {
                 "fee": "0.000",
@@ -240,7 +240,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         token = self.get_token(address=address)
         if token is None:
-            contract = cfg.w3.eth.contract(address=address, abi=_abi.ERC20_ABI)
+            contract = self.ConfigObj.w3.eth.contract(address=address, abi=_abi.ERC20_ABI)
             symbol = contract.caller.symbol()
             tkn_key = f"{symbol}-{address[:-4]}"
             token = models.Token(address=address, name=contract.caller.name(), symbol=symbol, decimals=contract.caller.decimals(), key=tkn_key)
@@ -271,8 +271,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             self.create_pair(pair)
         return pair
 
-    @staticmethod
-    def get_token_addresses_for_pool(
+    #@staticmethod
+    def get_token_addresses_for_pool(self,
             exchange_name: str, pool_address: str, pool_contract: Contract
     ) -> Tuple[str, str]:
         """
@@ -292,16 +292,16 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         Tuple[str, str]
             The token addresses
         """
-        if exchange_name == cfg.BANCOR_V3_NAME:
-            tkn0_address = cfg.w3.toChecksumAddress(cfg.BNT_ADDRESS)
-            tkn1_address = cfg.w3.toChecksumAddress(pool_address)
-        elif exchange_name == cfg.BANCOR_V2_NAME:
+        if exchange_name == self.ConfigObj.BANCOR_V3_NAME:
+            tkn0_address = self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.BNT_ADDRESS)
+            tkn1_address = self.ConfigObj.w3.toChecksumAddress(pool_address)
+        elif exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             reserve_tokens = pool_contract.caller.reserveTokens()
-            tkn0_address = cfg.w3.toChecksumAddress(reserve_tokens[0])
-            tkn1_address = cfg.w3.toChecksumAddress(reserve_tokens[1])
+            tkn0_address = self.ConfigObj.w3.toChecksumAddress(reserve_tokens[0])
+            tkn1_address = self.ConfigObj.w3.toChecksumAddress(reserve_tokens[1])
         else:
-            tkn0_address = cfg.w3.toChecksumAddress(pool_contract.caller.token0())
-            tkn1_address = cfg.w3.toChecksumAddress(pool_contract.caller.token1())
+            tkn0_address = self.ConfigObj.w3.toChecksumAddress(pool_contract.caller.token0())
+            tkn1_address = self.ConfigObj.w3.toChecksumAddress(pool_contract.caller.token1())
         return tkn0_address, tkn1_address
 
     def create_pool_from_contract(self, exchange_name: str, pool_address: str, strategy: Tuple[str, str, str, Any]):
@@ -323,7 +323,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         common_params = {
             "id": self.next_id,
             "cid": cid,
-            "last_updated_block": cfg.w3.eth.block_number,
+            "last_updated_block": self.ConfigObj.w3.eth.block_number,
             "exchange_name": exchange_name,
             "address": pool_address,
         }

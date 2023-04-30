@@ -24,13 +24,12 @@ from sqlalchemy import (
     Boolean,
 )
 
-#from fastlane_bot.config import *
-from fastlane_bot import config as cfg
+
 global contracts
 contracts = {}
 from decimal import Decimal
 from sqlalchemy.orm import registry
-
+from fastlane_bot.config import Config
 mapper_registry = registry()
 
 
@@ -74,7 +73,7 @@ class Exchange:
     name: The name of the exchange. (unique) (non-null)
     blockchain_name: The name of the blockchain the exchange is on. (non-null)
     """
-
+    ConfigObj: Config = None
     __table__ = Table(
         "exchanges",
         mapper_registry.metadata,
@@ -94,7 +93,7 @@ class Exchange:
 
     def __post_init__(self):
         if 'test' not in self.name.lower():
-            self.id = cfg.EXCHANGE_IDS[self.name]
+            self.id = self.ConfigObj.EXCHANGE_IDS[self.name]
         else:
             self.id = 10000
 
