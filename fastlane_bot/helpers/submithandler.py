@@ -52,13 +52,13 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         Gets the transaction receipt for a given transaction with a timeout.
 
     """
+    ConfigObj: Config
+    route_struct: List[RouteStruct] = None
+    src_amount: int = None
+    src_address: str = None
 
-    route_struct: List[RouteStruct]
-    src_amount: int
-    src_address: str
-    ConfigObj: Config = None
 
-    DEFAULT_TIMEOUT = ConfigObj.DEFAULT_TIMEOUT
+
 
     def __post_init__(self):
         self.w3 = self.ConfigObj.w3
@@ -102,7 +102,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return fill_nonce(self.ConfigObj.w3, tx_details)
 
     def _get_transaction_receipt(
-        self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT
+        self, tx_hash: str, timeout: int
     ) -> TransactionReceipt:
         """
         Gets the transaction receipt for a given transaction hash.
@@ -122,7 +122,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
 
     def _get_transaction_receipt_with_timeout(
-        self, tx_hash: str, timeout: int = ConfigObj.DEFAULT_TIMEOUT, poll_latency: int = 0.1
+        self, tx_hash: str, timeout: int, poll_latency: int = 0.1
     ) -> TransactionReceipt:
         """
         Gets the transaction receipt for a given transaction hash.
@@ -151,7 +151,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
     def _get_transaction_receipt_with_timeout_and_retries(
         self,
         tx_hash: str,
-        timeout: int = ConfigObj.DEFAULT_TIMEOUT,
+        timeout: int,
         poll_latency: int = 0.1,
         retries: int = 5,
     ) -> TransactionReceipt:

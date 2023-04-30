@@ -60,7 +60,7 @@ class TradeInstruction:
         Whether the curve is a Carbon curve.
 
     """
-
+    ConfigObj: Config
     cid: str
     tknin: str
     amtin: Union[int, Decimal, float]
@@ -69,7 +69,7 @@ class TradeInstruction:
     pair_sorting: str = None
     raw_txs: str = None
     custom_data: any = None
-    ConfigObj: Config = None
+
 
     @property
     def tknin_key(self) -> str:

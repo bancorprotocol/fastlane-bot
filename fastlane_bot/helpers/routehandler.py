@@ -73,7 +73,7 @@ class RouteStruct:
     customAddress: str
     customInt: int
     customData: bytes
-    ConfigObj: Config = None
+    ConfigObj: Config
 @dataclass
 class TxRouteHandlerBase:
     pass
@@ -90,11 +90,11 @@ class TxRouteHandler(TxRouteHandlerBase):
     trade_instructions_df: pd.DataFrame
         The trade instructions as a dataframe. Formatted output from the `CPCOptimizer` class.
     """
-
+    ConfigObj: Config
     trade_instructions_dic: List[TradeInstruction]
     trade_instructions_df: pd.DataFrame = None
     trade_instructions: List[ConstantProductCurve] = None
-    ConfigObj: Config = None
+
     @property
     def exchange_ids(self) -> List[int]:
         """

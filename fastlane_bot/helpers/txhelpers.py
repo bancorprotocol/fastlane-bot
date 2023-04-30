@@ -47,16 +47,16 @@ class TxHelper:
     arb_contract : Any
         The arbitrage contract.
     """
-    ConfigObj: Config = None
+    ConfigObj: Config
     usd_gas_limit: float = 20
     gas_price_multiplier: float = 1.2
-    arb_contract: Any = ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-    w3: Web3 = ConfigObj.w3
+
 
     def __post_init__(self):
         self.PRIVATE_KEY: str = self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         self.COINGECKO_URL: str = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true'
-
+        self.arb_contract: Any = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
+        self.w3: Web3 = self.ConfigObj.w3
     @property
     def wallet_address(self) -> str:
         """Get the wallet address.
@@ -231,22 +231,26 @@ class TransactionHelpers:
     """
     This class is used to organize web3/brownie transaction tools.
     """
-    ConfigObj: Config = None
-    alchemy_api_url = ConfigObj.ALCHEMY_API_URL
+    ConfigObj: Config
+
     transactions_submitted = []
     network = Network.ETH_MAINNET
-    alchemy = Alchemy(api_key=ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=network, max_retries=3)
-    web3 = ConfigObj.w3
-    arb_contract = ConfigObj.BANCOR_ARBITRAGE_CONTRACT
+
+
+
 
     def __post_init__(self):
 
+        self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=self.network, max_retries=3)
+        self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
+        self.web3 = self.ConfigObj.w3
         # Set the local account
         self.local_account = self.web3.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
         # Set the public address
         self.wallet_address = str(self.local_account.address)
 
+        self.alchemy_api_url = self.ConfigObj.ALCHEMY_API_URL
         self.nonce = self.get_nonce()
 
     def validate_and_submit_transaction(

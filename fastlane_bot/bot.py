@@ -128,11 +128,11 @@ class CarbonBotBase():
         assert issubclass(self.TxReceiptHandlerClass, TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
 
         if self.TxRouteHandlerClass is None:
-            self.TxRouteHandlerClass = TxRouteHandler
+            self.TxRouteHandlerClass = TxRouteHandler(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxRouteHandlerClass, TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
 
         if self.TxHelpersClass is None:
-            self.TxHelpersClass = TxHelpers
+            self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxHelpersClass, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         if self.db is None:

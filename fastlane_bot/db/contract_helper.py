@@ -37,14 +37,14 @@ class ContractHelper:
 
     __VERSION__ = "3.0.1"
     __DATE__ = "04-26-2023"
-    
+    ConfigObj: Config
     w3: Web3
     contracts: Dict[str, Any] = field(default_factory=dict)
     filters: List[Any] = field(default_factory=list)
     exchange_list: List[str] = field(default_factory=list)
     
-    ConfigObj: Config = None
-    poll_interval: int = ConfigObj.DEFAULT_POLL_INTERVAL
+
+
     def __post_init__(self):
         if self.ConfigObj.CARBON_V1_NAME not in self.contracts:
             self.contracts[self.ConfigObj.CARBON_V1_NAME] = {}
@@ -53,6 +53,7 @@ class ContractHelper:
                 self.ConfigObj.CARBON_CONTROLLER_ADDRESS, abi.CARBON_CONTROLLER_ABI
             )
         self.filters = self.get_event_filters(self.exchange_list)
+        self.poll_interval: int = self.ConfigObj.DEFAULT_POLL_INTERVAL
 
     @property
     def carbon_controller(self) -> Contract:
@@ -79,8 +80,8 @@ class ContractHelper:
         return self.ConfigObj.w3.eth.contract(address=address, abi=abi)
 
 
-    @staticmethod
-    def initialize_contract_without_abi(address: str, w3: Web3) -> Contract:
+    #@staticmethod
+    def initialize_contract_without_abi(self, address: str, w3: Web3) -> Contract:
         """
         Initialize a contract without an abi
 

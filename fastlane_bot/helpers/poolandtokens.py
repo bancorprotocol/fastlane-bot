@@ -79,6 +79,7 @@ class PoolAndTokens:
         The decimals of token 1
 
     """
+    ConfigObj: Config
     id: int
     cid: str
     last_updated: str
@@ -109,11 +110,10 @@ class PoolAndTokens:
     tkn0_decimals: int
     tkn1_address: str
     tkn1_decimals: int
-
     tkn0_key: str = None
     tkn1_key: str = None
     ADDRDEC = None
-    ConfigObj: Config = None
+
     
     def __post_init__(self):
         self.tkn0_key = self.tkn0
