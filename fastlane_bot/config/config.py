@@ -1,13 +1,14 @@
 """
 Fastlane bot configuration object -- main object
 """
-__VERSION__ = "1.0-BETA6"
+__VERSION__ = "1.0-BETA7"
 __DATE__ = "30/Apr 2023"
 
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
+from . import selectors as S
 
 @dataclass
 class Config():
@@ -19,9 +20,39 @@ class Config():
     
     network: network_.ConfigNetwork = field(default=None)
     db: db_.ConfigDB = field(default=None)
-    #fastlane: fastlane_.ConfigFastlane = field(default=None)
     logger: logger_.ConfigLogger = field(default=None)
     provider: provider_.ConfigProvider = field(default=None)
+    
+    
+    # NETWORK_MAINNET = S.NETWORK_MAINNET
+    # NETWORK_TENDERLY = S.NETWORK_TENDERLY
+    # DATABASE_POSTGRES = S.DATABASE_POSTGRES
+    # DATABASE_TESTING = S.DATABASE_TESTING
+    CONFIG_UNITTEST = "unittest"
+    CONFIG_TENDERLY = "tenderly"
+    CONFIG_MAINNET = "mainnet"
+    @classmethod
+    def new(cls, *, config=None, **kwargs):
+        """
+        Alternative constructor: create and return new Config object
+        
+        :config:    CONFIG_MAINNET(default), CONFIG_TENDERLY, CONFIG_UNITTEST
+        """
+        if config is None:
+            config = cls.CONFIG_MAINNET
+            
+        if config == cls.CONFIG_MAINNET:
+            C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
+            return cls(network=C_nw, **kwargs)
+        elif config == cls.CONFIG_TENDERLY:
+            C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
+            return cls(network=C_nw, **kwargs)
+        elif config == cls.CONFIG_UNITTEST:
+            C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST)
+            C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
+            C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_UNITTEST)
+            return cls(db=C_db, network=C_nw, provider=C_pr, **kwargs)
+        raise ValueError(f"Invalid config: {config}")
     
     def is_config_item(self, item):
         """returns True if item is a (possible) configuration item [uppercase, numbers, underscore; len>2]"""

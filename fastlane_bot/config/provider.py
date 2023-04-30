@@ -32,6 +32,7 @@ class ConfigProvider(ConfigBase):
     PROVIDER_INFURA = S.PROVIDER_INFURA
     PROVIDER_ALCHEMY = S.PROVIDER_ALCHEMY
     PROVIDER_TENDERLY = S.PROVIDER_TENDERLY
+    PROVIDER_UNITTEST = S.PROVIDER_UNITTEST
     ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 
     @classmethod
@@ -54,6 +55,8 @@ class ConfigProvider(ConfigBase):
             return _ConfigProviderTenderly(network, _direct=False, **kwargs)
         elif provider == S.PROVIDER_INFURA:
             return _ConfigProviderInfura(network, _direct=False, **kwargs)
+        elif provider == S.PROVIDER_UNITTEST:
+            return _ConfigProviderUnitTest(network, _direct=False, **kwargs)
         else:
             raise ValueError(f"Unknown provider: {provider}")
         
@@ -149,5 +152,17 @@ class _ConfigProviderInfura(ConfigProvider):
         assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
         raise NotImplementedError("Infura not implemented")
 
+class _ConfigProviderUnitTest(ConfigProvider):
+    """
+    Fastlane bot config -- provider [UnitTest]
+    """
+    PROVIDER = S.PROVIDER_UNITTEST
+    
+    def __init__(self, network: ConfigNetwork, **kwargs):
+        super().__init__(network, **kwargs)
+        #assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        #raise NotImplementedError("Infura not implemented")
+        self.connection = None
+        self.w3 = None
 
     

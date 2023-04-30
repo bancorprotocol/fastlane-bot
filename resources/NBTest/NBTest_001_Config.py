@@ -100,6 +100,33 @@ assert CM.ITEM1 == 10
 assert CM.ITEM2 == 2
 assert CM.ITEM3 == 3
 
+# ### config_new
+
+C = Config.new()
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
+
+C = Config.new(config=Config.CONFIG_MAINNET)
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
+
+# +
+# C = Config.new(config=Config.CONFIG_UNITTEST)
+# assert C.NETWORK == C.NETWORK_MAINNET
+# assert C.DATABASE == C.DATABASE_UNITTEST
+# assert C.PROVIDER == C.PROVIDER_UNITTEST
+
+# +
+# C = Config.new(config=Config.CONFIG_TENDERLY)
+# assert C.NETWORK == C.NETWORK_TENDERYLY
+# assert C.DATABASE == C.DATABASE_POSTGRES
+# assert C.PROVIDER == C.PROVIDER_TENDERLY
+# -
+
+raise
+
 # ## Databases
 
 ConfigDB = cfg.ConfigDB
@@ -329,6 +356,12 @@ assert CAP.PROVIDER == CP.PROVIDER_ALCHEMY
 # +
 # not implemented yet
 # -
+
+# ### UnitTest
+
+CAP = CP.new(provider=CAP.PROVIDER_UNITTEST, network=CN.new(CN.NETWORK_ETHEREUM))
+assert CAP.network.NETWORK == CN.NETWORK_ETHEREUM
+assert CAP.PROVIDER == CP.PROVIDER_UNITTEST
 
 # ## Logger
 
