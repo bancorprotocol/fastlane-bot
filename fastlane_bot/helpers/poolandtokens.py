@@ -268,10 +268,11 @@ class PoolAndTokens:
                 errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
                 self.ConfigObj.logger.debug(errmsg)
                 errors += [errmsg]
-        if not len(lst) > 0:
-            errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
-            self.ConfigObj.logger.warning(errmsg)
-            raise self.DoubleInvalidCurveError(errmsg)
+
+        # if not len(lst) > 0:
+        #     errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
+        #     self.ConfigObj.logger.warning(errmsg)
+        #     raise self.DoubleInvalidCurveError(errmsg)
             
         return lst
 

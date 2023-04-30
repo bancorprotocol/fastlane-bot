@@ -73,7 +73,8 @@ class Exchange:
     name: The name of the exchange. (unique) (non-null)
     blockchain_name: The name of the blockchain the exchange is on. (non-null)
     """
-    ConfigObj: Config = None
+    ConfigObj: Config = field(init=False)
+
     __table__ = Table(
         "exchanges",
         mapper_registry.metadata,

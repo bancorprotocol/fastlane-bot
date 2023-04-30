@@ -29,7 +29,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     __DATE__ = "04-26-2023"
 
     # data: pd.DataFrame = field(default_factory=pd.DataFrame)
-    ConfigObj: Config
+    ConfigObj: Config = field(init=False)
+
     def drop_all_tables(self):
         """
         Drops all tables in the database
