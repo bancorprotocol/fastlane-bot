@@ -49,7 +49,7 @@ from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
 
-from fastlane_bot import config as cfg
+#from fastlane_bot import config as cfg
 from fastlane_bot.db.manager import DatabaseManager
 from fastlane_bot.db.models import Pool, Token
 from fastlane_bot.helpers import (
@@ -62,12 +62,12 @@ from fastlane_bot.helpers import (
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 import fastlane_bot.db.models as models
-#import fastlane_bot.config as c
+from fastlane_bot.config import Config
 from . import __VERSION__, __DATE__
 from .helpers.txhelpers import TxHelper
 
-errorlogger = c.logger.error
-errorlogger = c.logger.debug # TODO: REMOVE THIS
+# errorlogger = c.logger.error
+# errorlogger = c.logger.debug # TODO: REMOVE THIS
 
 @dataclass
 class CarbonBotBase():
@@ -96,6 +96,7 @@ class CarbonBotBase():
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
+    ConfigObj: Config = None
     
     genesis_data: InitVar = None # DEPRECATED; WILL BE REMOVED SOON
     drop_tables: InitVar = False # STAYS
@@ -137,7 +138,17 @@ class CarbonBotBase():
             self.db = DatabaseManager(
                 data=self.genesis_data
             )
-                    
+            
+        if self.ConfigObj is None:
+            self.ConfigObj = Config()
+    
+    @property
+    def C(self, key: str) -> Any:
+        """
+        Convenience method self.ConfigObj
+        """
+        return self.ConfigObj
+    
     def versions(self):
         """
         Returns the versions of the module and its Carbon dependencies.
@@ -431,7 +442,10 @@ class CarbonBot(CarbonBotBase):
                         c.logger.info(f"best_trade_instructions_df: {best_trade_instructions_df}")
                         c.logger.info("*************")
                         c.logger.info('\n')
-
+            
+            except Exception as e:
+                raise
+            
             cids = [ti['cid'] for ti in trade_instructions_dic]
             if src_token == "WETH-6Cc2":
                 query_token = "ETH-EEeE"
