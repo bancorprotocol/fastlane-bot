@@ -1,0 +1,150 @@
+# ------------------------------------------------------------
+# Auto generated test file `test_003_PoolManager.py`
+# ------------------------------------------------------------
+# source file   = NBTest_003_PoolManager.py
+# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
+# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
+# test id       = 003
+# test comment  = PoolManager
+# ------------------------------------------------------------
+
+
+
+
+
+import fastlane_bot.db.models as models
+from fastlane_bot.db.model_managers import PoolManager, PairManager, TokenManager
+from fastlane_bot.db.manager import DatabaseManager
+
+pool_manager = PoolManager()
+
+print(f"Version: {pool_manager.__VERSION__.format('0.0.0')}")
+print(f"Date: {pool_manager.__DATE__}")
+
+pair_manager = PairManager()
+
+print(f"Version: {pair_manager.__VERSION__.format('0.0.0')}")
+print(f"Date: {pair_manager.__DATE__.format('0.0.0')}")
+
+
+
+token_manager = TokenManager()
+
+print(f"Version: {token_manager.__VERSION__.format('0.0.0')}")
+print(f"Date: {token_manager.__DATE__.format('0.0.0')}")
+
+
+
+db_manager = DatabaseManager()
+
+print(f"Version: {db_manager.__VERSION__.format('0.0.0')}")
+print(f"Date: {db_manager.__DATE__.format('0.0.0')}")
+
+token_manager = TokenManager()
+token0 = models.Token(address="Test",
+                     symbol="Test",
+                     name="Test Token",
+                     key="Test",
+                     decimals=18)
+
+token_manager.create_token(token0)
+
+db_token = token_manager.session.query(models.Token).filter_by(
+    address=token0.address).first()
+
+assert db_token is not None
+assert db_token.symbol == "Test"
+assert db_token.name == "Test Token"
+assert db_token.decimals == 18
+
+token1 = models.Token(address="Pair",
+                      symbol="Pair",
+                      name="Test Token",
+                      decimals=18,
+                      key="Pair")
+
+token_manager.create_token(token1)
+
+db_token = token_manager.session.query(models.Token).filter_by(
+    address=token1.address).first()
+
+assert db_token is not None
+assert db_token.symbol == "Pair"
+assert db_token.name == "Test Token"
+assert db_token.decimals == 18
+
+
+from sqlalchemy.orm import Session
+
+pair_manager = PairManager()
+pool_manager = PoolManager()
+assert isinstance(pool_manager.session, Session)
+assert isinstance(pair_manager.session, Session)
+
+pair_manager = PairManager()
+pair = models.Pair(name="Test/Pair",
+                   tkn0_address="Test",
+                   tkn1_address="Pair",
+                   tkn1_key="Pair",
+                   tkn0_key="Test"
+                   )
+
+
+pair_manager.create_pair(pair)
+
+db_pair = pair_manager.session.query(models.Pair).filter_by(
+    name=pair.name).first()
+
+assert db_pair is not None
+assert db_pair.name == "Test/Pair"
+assert db_pair.tkn0_address == "Test"
+assert db_pair.tkn1_address == "Pair"
+
+
+db_manager = DatabaseManager()
+
+
+blockchain = models.Blockchain(name="TestBlockchain")
+
+db_manager.create(blockchain)
+
+exchange = models.Exchange(name="TestExchange",
+                           blockchain_name="TestBlockchain")
+
+db_manager.create(exchange)
+
+
+pool_manager = PoolManager()
+pool = models.Pool(id=10000000000,
+                   cid='1x',
+                   pair_name="Test/Pair",
+                   exchange_name="TestExchange",
+                   last_updated_block=10000000000,
+                   address="0x1234567890abcdef1234567890abcdef12345678",
+                   fee=str(0.003))
+pool_manager.create_pool(pool)
+
+db_pool = pool_manager.session.query(models.Pool).filter_by(
+    exchange_name=pool.exchange_name,
+    pair_name=pool.pair_name).first()
+assert db_pool is not None
+assert db_pool.pair_name == "Test/Pair"
+assert db_pool.exchange_name == "TestExchange"
+
+token = pool_manager.get_pool(address="0x1234567890abcdef1234567890abcdef12345678")
+assert pool is not None
+assert pool.pair_name == "Test/Pair"
+assert pool.exchange_name == "TestExchange"
+
+pool = pool_manager.get_pool(address="0x1234567890abcdef1234567890abcdef12345678")
+pool_manager.update_pool({"id":pool.id, "address":"Updated Test pool"})
+
+updated_pool = pool_manager.get_pool(id=pool.id)
+assert updated_pool is not None
+assert updated_pool.address == "Updated Test pool"
+
+pool = pool_manager.get_pool(address="0x1234567890abcdef1234567890abcdef12345678")
+pool_manager.delete_pool(pool)
+
+deleted_pool = pool_manager.get_pool(address="0x1234567890abcdef1234567890abcdef12345678")
+assert deleted_pool is None
