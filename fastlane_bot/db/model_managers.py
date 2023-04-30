@@ -326,7 +326,7 @@ class PoolManager(DatabaseManagerBase):
         """
         return self.session.query(models.Pool).filter_by(**kwargs).first()
 
-    def get_pools(self) -> list[Type[Pool]]:
+    def get_pools(self) -> List[Type[Pool]]:
         """
         Retrieve all pools from the database.
 

@@ -257,7 +257,7 @@ class CarbonBot(CarbonBotBase):
         result = [TradeInstruction(**ti) for ti in result]
         return result
 
-    def _check_if_carbon(self, cid: str) -> tuple[bool, str, str]:
+    def _check_if_carbon(self, cid: str): #-> tuple[bool, str, str]:
         """
         Checks if the curve is a Carbon curve.
 
