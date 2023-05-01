@@ -101,7 +101,7 @@ class TradeInstruction:
         self._is_carbon = self._check_if_carbon()
         TokenIn = self.db.get_token(key =self.tknin)
         self._tknin_address = TokenIn.address
-        self._tknin_decimals = TokenIn.decimals
+        self._tknin_decimals = int(TokenIn.decimals)
         self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
         self._amtin_decimals = self._convert_to_decimals(
             self.amtin, self._tknin_decimals
@@ -111,7 +111,7 @@ class TradeInstruction:
         )
         TokenOut = self.db.get_token(key =self.tknout)
         self._tknout_address = TokenOut.address
-        self._tknout_decimals = TokenOut.decimals
+        self._tknout_decimals = int(TokenOut.decimals)
         self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
         self._amtout_decimals = self._convert_to_decimals(
             self.amtout, self._tknout_decimals
@@ -123,7 +123,7 @@ class TradeInstruction:
             self.raw_txs = "[]"
         if self.pair_sorting is None:
             self.pair_sorting = ""
-        self._exchange_name = self.db.get_pool(cid=self.cid).exchange_name
+        self._exchange_name = self.db.get_pool(cid=self.cid.split('-')[0]).exchange_name
         self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
 
     @property

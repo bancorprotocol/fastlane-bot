@@ -7,17 +7,18 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
-from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider, Bot
+from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider
+from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
 from fastlane_bot.testing import *
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
@@ -30,25 +31,33 @@ require("2.0", __VERSION__)
 
 # ### Set up the bot
 
-C = Config.new(config=Config.CONFIG_MAINNET)
-assert C.DATABASE == C.DATABASE_POSTGRES
-assert C.POSTGRES_DB == "mainnet"
-assert C.NETWORK == C.NETWORK_MAINNET
-assert C.PROVIDER == C.PROVIDER_ALCHEMY
-bot = Bot(ConfigObj=C)
-assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
+C = Config.new(config=Config.CONFIG_UNITTEST)
+# assert C.DATABASE == C.DATABASE_POSTGRES
+# assert C.POSTGRES_DB == "mainnet"
+# assert C.NETWORK == C.NETWORK_MAINNET
+# assert C.PROVIDER == C.PROVIDER_ALCHEMY
+bot = CarbonBot(ConfigObj=C)
+# assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
+
+str(type(bot.db))
 
 # ### Set up the curves
 
-cc1 = CPC.from_carbon(pair="ETH-EEeE/USDC-eB48", tkny="ETH-EEeE", yint=10, y=10, pa=1/2000, pb=1/2010, cid="c-1")
+cid = '1701411834604692317316873037158841057285-1'
+bot.db.get_pool(cid=cid.split('-')[0]).exchange_name
+
+cc1 = CPC.from_carbon(pair="ETH-EEeE/USDC-eB48", tkny="ETH-EEeE", yint=10, y=10, pa=1/2000, pb=1/2010, cid="1701411834604692317316873037158841057285-1")
 assert iseq(1/2000, cc1.p, cc1.p_max)
 assert iseq(1/2010, cc1.p_min)
 assert cc1.p_convention() == 'ETH per USDC'
 assert cc1.p_min < cc1.p_max
 cc1
 
+cid = '9868188640707215440437863615521278132401'
+bot.db.get_pool(cid=cid.split('-')[0])
+
 cu1 = CPC.from_univ3(pair="ETH-EEeE/USDC-eB48", Pmarg=2100, uniPa=2000, uniPb=2200, 
-                     uniL=200*m.sqrt(2100*2100), fee=0, cid="uni1", descr="")
+                     uniL=200*m.sqrt(2100*2100), fee=0, cid="9868188640707215440437863615521278132401", descr="")
 assert iseq(cu1.p, 2100)
 assert iseq(cu1.p_min, 2000)
 assert iseq(cu1.p_max, 2200)
@@ -73,10 +82,6 @@ assert r[0] == {'ETH-EEeE', 'USDC-eB48'}
 assert r[1] == [('ETH-EEeE', 'USDC-eB48')]
 
 # #### AO_CANDIDATES [ETH]
-
-
-
-
 
 flt = ['ETH-EEeE']
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
