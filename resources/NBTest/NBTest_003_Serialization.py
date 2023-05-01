@@ -15,24 +15,6 @@
 # ---
 
 # +
-# from carbon.helpers.stdimports import *
-# from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-# from carbon.tools.optimizer import CPCArbOptimizer, cp, time
-
-# import json
-# import time
-# import pandas as pd
-# import numpy as np
-# from math import sqrt
-# from matplotlib import pyplot as plt
-# plt.style.use('seaborn-dark')
-# plt.rcParams['figure.figsize'] = [12,6]
-
-# print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
-# print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
-# print_version(require="2.4.2")
-
-# +
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, cp, time
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -211,10 +193,10 @@ assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, A=100, B=100, pair
 assert raises(CPC.from_carbon, yint=1, y=1, pb=1800, pa=2200, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
 
 assert not raises(CPC.from_carbon, yint=1, y=1, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
-assert raises(CPC.from_carbon, yint=1, y=1, A=1/10, B=sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=False)
+assert raises(CPC.from_carbon, yint=1, y=1, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=False)
 assert raises(CPC.from_carbon, yint=1, y=1, pa=1000, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 assert raises(CPC.from_carbon, yint=1, y=1, pb=1000, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
-assert raises(CPC.from_carbon, yint=1, y=1, A=-1/10, B=sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
+assert raises(CPC.from_carbon, yint=1, y=1, A=-1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 
 assert not raises(CPC.from_carbon, yint=1, y=1, pa=3100, pb=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 assert raises(CPC.from_carbon, yint=1, y=1, pb=3100, pa=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
