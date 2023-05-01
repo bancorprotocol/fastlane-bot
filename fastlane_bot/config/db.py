@@ -70,7 +70,7 @@ class _ConfigDBPostgres(ConfigDB):
     POSTGRES_USER_DEFAULT = "postgres"
     POSTGRES_PASSWORD_DEFAULT = "postgres"
     POSTGRES_HOST_DEFAULT = "localhost"
-    POSTGRES_DATABASE_DEFAULT = "mainnet"
+    POSTGRES_DATABASE_DEFAULT = "postgres"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
