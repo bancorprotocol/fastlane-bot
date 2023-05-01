@@ -162,10 +162,32 @@ class CarbonBotBase():
         s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
         return s
         
-    def update_pools(self, drop_tables: bool = False):
-        """convenience method for db.update_pools()"""
-        self.db.update_pools(drop_tables=drop_tables)
+    # def update_pools(self, drop_tables: bool = False):
+    #     """convenience method for db.update_pools()"""
+    #     self.db.update_pools(drop_tables=drop_tables)
 
+    UDTYPE_FROM_CONTRACTS = "from_contracts"
+    UDTYPE_FROM_EVENTS = "from_events"
+    def update(self, udtype=None, *, drop_tables=False):
+        """
+        convenience access to the db.update methods
+
+        :udtype:            UDTYPE_FROM_CONTRACTS or UDTYPE_FROM_EVENTS
+        :drop_tables:       if True, drops all tables before updating
+        """
+        if udtype is None:
+            udtype = self.UDTYPE_FROM_CONTRACTS
+        
+        if drop_tables:
+            self.db.drop_all_tables()
+            
+        if udtype == self.UDTYPE_FROM_CONTRACTS:
+            return self.db.update_pools_from_contracts()
+        elif udtype == self.UDTYPE_FROM_EVENTS:
+            return self.db.update_pools_from_events()
+        else:
+            raise ValueError(f"Invalid udtype {udtype}")
+        
     def drop_all_tables(self):
         """convenience method for db.drop_all_tables()"""
         self.db.drop_all_tables()
