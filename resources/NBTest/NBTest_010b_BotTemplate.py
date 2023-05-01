@@ -26,16 +26,14 @@ from fastlane_bot.testing import *
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
 # -
-
-
-
-# # BOT TEMPLATE [NBTest010]
-
-# ## Tenderly [NOTEST]
-
-pass
+# # BOT TEMPLATE Tenderly [NBTest010b]
 
 # ## Tenderly Configuration
+
+C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
+c1, c2 = C_nw.shellcommand().splitlines()
+assert c2 == 'brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/c0d1f990-c095-476f-80a9-72ac65092aae chainid=1'
+assert c1 == 'brownie networks delete tenderly'
 
 # +
 C = Config.new(config=Config.CONFIG_TENDERLY)
@@ -46,7 +44,6 @@ assert C.PROVIDER == C.PROVIDER_TENDERLY
 assert C.w3.__class__.__name__ == "Web3"
 assert C.w3.isConnected()
 assert C.w3.provider.endpoint_uri.startswith("https://rpc.tenderly.co/fork/")
-
 
 mainnet_w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"))
 assert mainnet_w3.eth.blockNumber != C.w3.eth.block_number
@@ -62,15 +59,6 @@ C_pr = ConfigProvider.new(network=C_nw)
 C = Config(db = C_db, network = C_nw, provider = C_pr)
 C
 
-
-
 bot = Bot(ConfigObj=C)
-
-# ## Unittest Configuration
-
-C = Config.new(config=Config.CONFIG_UNITTEST)
-assert C.DATABASE == C.DATABASE_UNITTEST
-assert C.NETWORK == C.NETWORK_MAINNET
-assert C.PROVIDER == C.PROVIDER_UNITTEST
 
 
