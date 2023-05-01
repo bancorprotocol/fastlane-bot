@@ -309,7 +309,7 @@ class CarbonBot(CarbonBotBase):
             return True, _cid_tkn, cid
         return False, "", cid
 
-    def _check_if_not_carbon(self, cid: str) -> tuple[bool, str, str]:
+    def _check_if_not_carbon(self, cid: str):# -> tuple[bool, str, str]:
         """
         Checks if the curve is a Carbon curve.
         Returns
@@ -338,8 +338,8 @@ class CarbonBot(CarbonBotBase):
     AO_CANDIDATES = "candidates"
     def _find_arbitrage_opportunities(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ) -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
-        Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
+    ):# -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
+        #Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
         """
         Finds the arbitrage opportunities.
 
