@@ -1,5 +1,7 @@
 # Repo Rules [whilst repo is private]
 
+## Core rules
+
 1. The main branch is `main`. This branch is _forward-only_, ie no merge-commits, and there is a strict no-rewrite rule enforced on the server. If you push code erroneously you must correct this using `git revert`.
 
 2. In order to be able to push to main, you need to `git rebase` your code on top of the latest main. The command for this is `git checkout main` then `git pull` to get the latest main, then `git checkout mybranch` and `git rebase <lastmain> --onto main`. Here `<lastmain>` is the last commit of main below your pre-rebase branch. **If you have conflicts you must resolve them before you can push. You must not delete anyone else's functional code in this process, and it is in your interest to push things to main early to avoid merge conflicts associated with long-running topic branches.**
@@ -22,11 +24,15 @@
     
     3. If you want you _can_ merge multiple version updates into one, effectively skipping version numbers. Of course this only works before you have pushed to main, as main cannot be rewritten.
 
-5. There will be **no use of Black or any other automated formatters on the repo level**. If you like to run Black locally you are free to do so on the modules that are your responsibility. However, **Black changes must be committed separately from functional changes**, clearly marked as such in the commit message, and Black changes must never be merged with functional changes.
+5. You **must not sit on private branches** and work should be merged back into main as soon as feasible, ideally after assuring that all tests pass (ie `run_tests` works). **You must never keep private branches when you are not reachable on Telegram** either because you have left for the day or because you are taking a break of more than a few hours. If you know you will be gone for a day or more **you must ensure that your code is merged into main before you leave and reasonably clean**. Plan accordingly.
 
-6. **Pull requests**: in my personal view, pull requests are over engineered for a small number of core contributors: you should just merge your own code into main and take responsibility for it. However -- if you prefer the github-enabled pull request process then I am not against it. **In any case it is up to the person making the pull request to ensure that it is being taken care of in a sufficiently timely manner.**
+## Other rules
 
-_Note: once the repo is published we may need to introduce and intermediate branch called `beta` or `devmain` to which the above rules will apply, and that is periodically merged into the actual `main`. Whether or not you want to allow rewrites before the merge is up to the consensus of the contributors, keeping in mind that rewritting devmain will require (slightly) more git skills as the two-argument form of `git rebase` will be required._ 
+1. There will be **no use of Black or any other automated formatters on the repo level**. If you like to run Black locally you are free to do so on the modules that are your responsibility. However, **Black changes must be committed separately from functional changes**, clearly marked as such in the commit message, and Black changes must never be merged with functional changes.
+
+2. **Pull requests**: in my personal view, pull requests are over engineered for a small number of core contributors: you should just merge your own code into main and take responsibility for it. However -- if you prefer the github-enabled pull request process then I am not against it. **In any case it is up to the person making the pull request to ensure that it is being taken care of in a sufficiently timely manner.**
+
+_Note: once the repo is published we may need to introduce and intermediate branch called `beta` or `devmain` to which the above rules will apply, and that is periodically merged into the actual `main`. Whether or not you want to allow rewrites before the merge is up to the consensus of the contributors, keeping in mind that rewriting devmain will require (slightly) more git skills as the two-argument form of `git rebase` will be required._ 
 
 [jt]:https://jupytext.readthedocs.io/en/latest/
 [nbt]:https://github.com/bancorprotocol/carbon-simulator/tree/main/resources/NBTest
