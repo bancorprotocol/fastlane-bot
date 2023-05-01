@@ -289,8 +289,9 @@ class CarbonBot(CarbonBotBase):
         List[Dict[str, Any]]
             The trade instructions.
         """
+        print("[bot, convert trade instrucitons]", trade_instructions_dic)
         errorless_trade_instructions_dic = self._drop_error(trade_instructions_dic)
-        result = ({**ti, "raw_txs": "[]", "pair_sorting": "", "ConfigObj" : Config} for ti in errorless_trade_instructions_dic if ti is not None)
+        result = ({**ti, "raw_txs": "[]", "pair_sorting": "", "ConfigObj" : self.ConfigObj, "db":self.db} for ti in errorless_trade_instructions_dic if ti is not None)
         result = [TradeInstruction(**ti) for ti in result]
         return result
 

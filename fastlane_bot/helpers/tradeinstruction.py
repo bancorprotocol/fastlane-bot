@@ -77,7 +77,7 @@ class TradeInstruction:
     pair_sorting: str = None
     raw_txs: str = None
     custom_data: any = None
-
+    db: any = None
 
     @property
     def tknin_key(self) -> str:
@@ -99,8 +99,11 @@ class TradeInstruction:
         """
         self._cid_tkn: str = None
         self._is_carbon = self._check_if_carbon()
-        self._tknin_address = self._get_token_address(self.tknin)
-        self._tknin_decimals = self._get_token_decimals(self.tknin)
+        print("tradeinstr, post_init, self.tknin", self.tknin)
+        TokenIn = self.db.get_token(kwargs = {"key":self.tknin})
+        print("tradeinstr, post_init, TokenIn", TokenIn)
+        self._tknin_address = TokenIn.address
+        self._tknin_decimals = TokenIn.decimals
         self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
         self._amtin_decimals = self._convert_to_decimals(
             self.amtin, self._tknin_decimals
@@ -108,7 +111,7 @@ class TradeInstruction:
         self._amtin_quantized = self._quantize(
             self._amtin_decimals, self._tknin_decimals
         )
-        self._tknout_address = self._get_token_address(self.tknout)
+        self._tknout_address = self.get_token(symbol=self.tknout)
         self._tknout_decimals = self._get_token_decimals(self.tknout)
         self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
         self._amtout_decimals = self._convert_to_decimals(
