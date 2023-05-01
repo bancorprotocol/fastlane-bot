@@ -112,14 +112,13 @@ class _ConfigProviderTenderly(ConfigProvider):
         super().__init__(network, **kwargs)
         assert self.network.NETWORK == ConfigNetwork.NETWORK_TENDERLY, f"Tenderly only supports Tenderly {self.network}"
         self.RPC_URL = f"https://rpc.tenderly.co/fork/{self.network.TENDERLY_FORK}"
-        
-        print("[_ConfigProviderTenderly] TODO: implement")
+
         N = self.network
         self.connection = EthereumNetwork(
             network_id=N.NETWORK_ID,
-            network_name=f"{N.NETWORK_NAME} (Alchemy)",
+            network_name=f"{N.NETWORK_NAME}",
             provider_url=self.RPC_URL,
-            provider_name="alchemy",
+            provider_name="tenderly",
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3

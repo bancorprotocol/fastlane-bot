@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -16,6 +16,9 @@
 
 # +
 from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider, Bot
+from web3 import Web3
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Config))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 from fastlane_bot.testing import *
@@ -23,6 +26,8 @@ from fastlane_bot.testing import *
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
 # -
+
+
 
 # # BOT TEMPLATE [NBTest010]
 
@@ -61,14 +66,23 @@ bot = Bot(ConfigObj=C)
 
 # ## Tenderly Configuration
 
-assert False, "This is still not running"
+# +
 C = Config.new(config=Config.CONFIG_TENDERLY)
 assert C.DATABASE == C.DATABASE_POSTGRES
-assert C.POSTGRES_DB == "mainnet"
+assert C.POSTGRES_DB == "tenderly"
 assert C.NETWORK == C.NETWORK_TENDERLY
 assert C.PROVIDER == C.PROVIDER_TENDERLY
 assert C.w3.__class__.__name__ == "Web3"
 assert C.w3.isConnected()
+assert C.w3.provider.endpoint_uri.startswith("https://rpc.tenderly.co/fork/")
+
+
+mainnet_w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"))
+assert mainnet_w3.eth.blockNumber != C.w3.eth.block_number
+print(f"Mainnet block = {mainnet_w3.eth.block_number}, Tenderly block = {C.w3.eth.block_number}")
+CARBON_CONTROLLER = C.w3.eth.contract(address="0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", abi=CARBON_CONTROLLER_ABI)
+fee = CARBON_CONTROLLER.caller.tradingFeePPM()
+assert type(fee) == int
 
 # +
 # C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
