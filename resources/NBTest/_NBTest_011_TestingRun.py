@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -39,14 +39,14 @@ bot = Bot(ConfigObj=C)
 
 # ### Set up the curves
 
-cc1 = CPC.from_carbon(pair="ETH/USDC", tkny="ETH", yint=10, y=10, pa=1/2000, pb=1/2010, cid="c-1")
+cc1 = CPC.from_carbon(pair="ETH-EEeE/USDC-eB48", tkny="ETH-EEeE", yint=10, y=10, pa=1/2000, pb=1/2010, cid="c-1")
 assert iseq(1/2000, cc1.p, cc1.p_max)
 assert iseq(1/2010, cc1.p_min)
 assert cc1.p_convention() == 'ETH per USDC'
 assert cc1.p_min < cc1.p_max
 cc1
 
-cu1 = CPC.from_univ3(pair="ETH/USDC", Pmarg=2100, uniPa=2000, uniPb=2200, 
+cu1 = CPC.from_univ3(pair="ETH-EEeE/USDC-eB48", Pmarg=2100, uniPa=2000, uniPb=2200, 
                      uniL=200*m.sqrt(2100*2100), fee=0, cid="uni1", descr="")
 assert iseq(cu1.p, 2100)
 assert iseq(cu1.p_min, 2000)
@@ -64,22 +64,23 @@ CCm = CPCContainer([cu1, cc1])
 
 # #### AO_TOKENS
 
+flt = ['USDC-eB48']
 r=bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_TOKENS)
 r
 
-assert r[0] == {'ETH', 'USDC'}
-assert r[1] == [('ETH', 'USDC')]
+assert r[0] == {'ETH-EEeE', 'USDC-eB48'}
+assert r[1] == [('ETH-EEeE', 'USDC-eB48')]
 
 # #### AO_CANDIDATES [ETH]
 
-flt=["ETH"]
+flt = ['ETH-EEeE']
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
 #assert len(r) == 1
 #r0, r1, r2, r3, r4 = r[0]
 
 # #### AO_CANDIDATES [USDC]
 
-flt=["USDC"]
+flt = ['USDC-eB48']
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
 assert len(r) == 1
 r0, r1, r2, r3, r4 = r[0]
@@ -87,8 +88,8 @@ r0, r1, r2, r3, r4 = r[0]
 assert r0 > 100
 r0
 
-assert r1.loc["TOTAL NET"]["ETH"] < 1e-5
-assert r1.loc["TOTAL NET"]["USDC"] < -100
+assert r1.loc["TOTAL NET"]["ETH-EEeE"] < 1e-5
+assert r1.loc["TOTAL NET"]["USDC-eB48"] < -100
 r1
 
 r2
