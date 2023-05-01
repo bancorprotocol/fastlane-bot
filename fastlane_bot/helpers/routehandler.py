@@ -352,8 +352,44 @@ class TxRouteHandler(TxRouteHandlerBase):
         )
         # src_amount = int(self.trade_instructions_dic[0].amtin_wei)
         return route_struct
+    
+    def _get_trade_dicts_from_objects(self, trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
+        return [
+            {
+                "cid": instr.cid + "-" + str(instr.cid_tkn)
+                if instr.cid_tkn
+                else instr.cid,
+                "tknin": instr.tknin,
+                "amtin": instr.amtin,
+                "tknout": instr.tknout,
+                "amtout": instr.amtout,
+            }
+            for instr in trade_instructions
+        ]
 
-    def _aggregate_carbon_trades(self, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+    def _slice_dataframe(self, df):
+        slices = []
+        current_pair_sorting = df.pair_sorting.values[0]
+        current_slice = []
+
+        for index, row in df.iterrows():
+            if row['pair_sorting'] == current_pair_sorting:
+                current_slice.append(index)
+            else:
+                slices.append(df.loc[current_slice])
+                current_pair_sorting = row['pair_sorting']
+                current_slice = [index]
+
+        slices.append(df.loc[current_slice])
+
+        min_index = []
+        for df in slices:
+            min_index += [min(df.index.values)]
+
+        
+        return list(zip(min_index, slices))
+ 
+    def _aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
         Aggregate carbon independent IDs and create trade instructions.
 
@@ -373,15 +409,24 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         """
         # Get the indices of the carbon trades
-        listti = self._get_trade_dicts_from_objects(trade_instructions)
+        listti = self._get_trade_dicts_from_objects(trade_instructions_objects)
         df = pd.DataFrame(listti)
-        carbons = df[df.cid.str.contains("-")].copy()
-        nocarbons = df[~df.cid.str.contains("-")]
-        carbons["pair_sorting"] = carbons.tknin + carbons.tknout
+        df["pair_sorting"] = df.tknin + df.tknout
+        df['carbon'] = [True if '-' in df.cid[i] else False for i in df.index]
 
-        new_trade_instructions = [
+        carbons = df[df['carbon']].copy()
+        nocarbons = df[~df['carbon']].copy()
+        nocarbons["raw_txs"] = str([])
+
+        carbons.drop(['carbon'], axis=1, inplace=True)
+        nocarbons.drop(['carbon'], axis=1, inplace=True)
+
+        new_trade_instructions_nocarbons = {i: nocarbons.loc[i].to_dict() for i in nocarbons.index}
+
+        result = self._slice_dataframe(carbons)
+        new_trade_instructions_carbons = {min_index:
             {
-                "pair_sorting": pair_sorting,
+                "pair_sorting": newdf.pair_sorting.values[0],
                 "cid": newdf.cid.values[0],
                 "tknin": newdf.tknin.values[0],
                 "amtin": newdf.amtin.sum(),
@@ -389,19 +434,63 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "amtout": newdf.amtout.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
             }
-            for pair_sorting, newdf in carbons.groupby("pair_sorting")
-        ]
+            for min_index, newdf in result}
 
-        nocarbons["pair_sorting"] = nocarbons.tknin + nocarbons.tknout
-        nocarbons["raw_txs"] = str([])
-        new_trade_instructions.extend(nocarbons.to_dict(orient="records"))
+        new_trade_instructions_carbons.update(new_trade_instructions_nocarbons)
+        agg_trade_instructions = []
+        for i in sorted(list(new_trade_instructions_carbons.keys())):
+            agg_trade_instructions += [TradeInstruction(**new_trade_instructions_carbons[i])]
+        return agg_trade_instructions
 
-        trade_instructions = [
-            TradeInstruction(**instruction)
-            for instruction in new_trade_instructions
-        ]
+    # def _aggregate_carbon_trades(self, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+    #     """
+    #     Aggregate carbon independent IDs and create trade instructions.
 
-        return trade_instructions
+    #     This function takes a list of dictionaries containing trade instructions,
+    #     aggregates the instructions with carbon independent IDs, and creates
+    #     a list of TradeInstruction objects.
+
+    #     Parameters
+    #     ----------
+    #     trade_instructions : List[TradeInstruction]
+    #         A list of trade instructions as TradeInstruction objects.
+
+    #     Returns
+    #     -------
+    #     List[TradeInstruction]
+    #         A list of aggregated trade instructions as TradeInstruction objects.
+
+    #     """
+    #     # Get the indices of the carbon trades
+    #     listti = self._get_trade_dicts_from_objects(trade_instructions)
+    #     df = pd.DataFrame(listti)
+    #     carbons = df[df.cid.str.contains("-")].copy()
+    #     nocarbons = df[~df.cid.str.contains("-")]
+    #     carbons["pair_sorting"] = carbons.tknin + carbons.tknout
+
+    #     new_trade_instructions = [
+    #         {
+    #             "pair_sorting": pair_sorting,
+    #             "cid": newdf.cid.values[0],
+    #             "tknin": newdf.tknin.values[0],
+    #             "amtin": newdf.amtin.sum(),
+    #             "tknout": newdf.tknout.values[0],
+    #             "amtout": newdf.amtout.sum(),
+    #             "raw_txs": str(newdf.to_dict(orient="records")),
+    #         }
+    #         for pair_sorting, newdf in carbons.groupby("pair_sorting")
+    #     ]
+
+    #     nocarbons["pair_sorting"] = nocarbons.tknin + nocarbons.tknout
+    #     nocarbons["raw_txs"] = str([])
+    #     new_trade_instructions.extend(nocarbons.to_dict(orient="records"))
+
+    #     trade_instructions = [
+    #         TradeInstruction(**instruction)
+    #         for instruction in new_trade_instructions
+    #     ]
+
+    #     return trade_instructions
 
     # @staticmethod
     # def _agg_carbon_independentIDs(trade_instructions):
