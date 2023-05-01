@@ -100,15 +100,15 @@ class MockDatabaseManager(MockTokenManager, MockPairManager, MockPoolManager, Da
     __VERSION__ = "3.0.2"
 
     
-    @property
-    def session(self):
-        """dummy property for compatibility"""
-        return False
+    # @property
+    # def session(self):
+    #     """dummy property for compatibility"""
+    #     return False
     
-    @property
-    def engine(self):
-        """dummy property for compatibility"""
-        return False
+    # @property
+    # def engine(self):
+    #     """dummy property for compatibility"""
+    #     return False
     
     # I BELIEVE MIKE DELETED THIS BUT JUST IN CASE [MERGE CONFLICT]
     # def _get_bnt_price_from_tokens(self, price, tkn) -> Decimal:
