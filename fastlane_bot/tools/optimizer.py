@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.5.2"
-__DATE__ = "24/Apr/2023"
+__VERSION__ = "3.5.3"
+__DATE__ = "01/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -1552,7 +1552,7 @@ class CPCArbOptimizer(OptimizerBase):
         TIEPS = 1e-10
 
         @classmethod
-        def new(cls, curve_or_cid, tkn1, amt1, tkn2, amt2, *, eps=None):
+        def new(cls, curve_or_cid, tkn1, amt1, tkn2, amt2, *, eps=None, raiseonerror=False):
             """automatically determines which is in and which is out"""
             try:
                 cid = curve_or_cid.cid
@@ -1570,6 +1570,7 @@ class CPCArbOptimizer(OptimizerBase):
                     tknout=tkn2,
                     amtout=amt2,
                     curve=curve,
+                    raiseonerror=raiseonerror,
                 )
             else:
                 newobj = cls(
@@ -1579,6 +1580,7 @@ class CPCArbOptimizer(OptimizerBase):
                     tknout=tkn1,
                     amtout=amt1,
                     curve=curve,
+                    raiseonerror=raiseonerror,
                 )
 
             return newobj
