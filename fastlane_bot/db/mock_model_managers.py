@@ -100,3 +100,43 @@ class MockDatabaseManager(MockTokenManager, MockPairManager, MockPoolManager, Da
     __VERSION__ = "3.0.2"
 
     
+    @property
+    def session(self):
+        """dummy property for compatibility"""
+        return False
+    
+    @property
+    def engine(self):
+        """dummy property for compatibility"""
+        return False
+    
+    # I BELIEVE MIKE DELETED THIS BUT JUST IN CASE [MERGE CONFLICT]
+    # def _get_bnt_price_from_tokens(self, price, tkn) -> Decimal:
+    #     """
+    #     Gets the price of a token
+
+    #     Parameters
+    #     ----------
+    #     tkn0 : str
+    #         The token address
+    #     tkn1 : str
+    #         The token address
+
+    #     Returns
+    #     -------
+    #     Optional[Decimal]
+    #         The price
+    #     """
+
+    #     if tkn == 'BNT-FF1C':
+    #         return Decimal(price)
+
+    #     bnt_price_map_symbols = {token.split('-')[0]: self.bnt_price_map[token] for token in self.bnt_price_map}
+
+    #     tkn_bnt_price = bnt_price_map_symbols.get(tkn.split('-')[0])
+
+    #     if tkn_bnt_price is None:
+    #         raise ValueError(f"Missing TKN/BNT price for {tkn}")
+
+    #     return Decimal(price) * Decimal(tkn_bnt_price)
+    
