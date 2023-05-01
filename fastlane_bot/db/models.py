@@ -24,12 +24,11 @@ from sqlalchemy import (
     Boolean,
 )
 
-
 global contracts
 contracts = {}
 from decimal import Decimal
 from sqlalchemy.orm import registry
-from fastlane_bot.config import Config
+
 mapper_registry = registry()
 
 
@@ -73,7 +72,20 @@ class Exchange:
     name: The name of the exchange. (unique) (non-null)
     blockchain_name: The name of the blockchain the exchange is on. (non-null)
     """
-    ConfigObj: Config = field(init=False)
+
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
+
+    # TODO: attach exchange ids to the config somehow
+
+    EXCHANGE_IDS = {
+        "bancor_v2": 1,
+        "bancor_v3": 2,
+        "uniswap_v2": 3,
+        "uniswap_v3": 4,
+        "sushiswap_v2": 5,
+        "carbon_v1": 6,
+    }
 
     __table__ = Table(
         "exchanges",
@@ -93,10 +105,7 @@ class Exchange:
     blockchain_name: Optional[str] = None
 
     def __post_init__(self):
-        if 'test' not in self.name.lower():
-            self.id = self.ConfigObj.EXCHANGE_IDS[self.name]
-        else:
-            self.id = 10000
+        self.id = self.EXCHANGE_IDS[self.name] if 'test' not in self.name.lower() else 10000
 
 
 @mapper_registry.mapped
@@ -162,6 +171,9 @@ class Pair:
         The key of the second token
 
     """
+
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
 
     __table__ = Table(
         "pairs",
@@ -296,10 +308,11 @@ class Pool:
             index=True,
             unique=False,
         ),
-        Column("descr", String(100), nullable=True),
-        Column("pair_name", String(100), ForeignKey("pairs.name")),
+        Column("descr", String(500), nullable=True),
+        Column("pair_name", String(500), ForeignKey("pairs.name")),
         Column("exchange_name", String(100), ForeignKey("exchanges.name")),
         Column("fee", String(20), nullable=False, default="0"),
+        Column("fee_float", Numeric(precision=10), nullable=False, default=0),
         Column("tkn0_balance", Numeric(precision=64), nullable=True),
         Column("tkn1_balance", Numeric(precision=64), nullable=True),
         Column("z_0", Numeric(precision=64), nullable=True),
@@ -335,12 +348,13 @@ class Pool:
         PrimaryKeyConstraint("pair_name", "fee", "exchange_name", name="pair_key"),
     )
 
-    id: int
+    id: int = field(init=False)
     cid: str
     last_updated: Optional[datetime] = None
     last_updated_block: Optional[int] = None
     contract_initialized: Optional[bool] = False
     fee: Optional[str] = None
+    fee_float: Optional[float] = None
     address: Optional[str] = None
     anchor: Optional[str] = None
     pair_name: Optional[str] = None
@@ -370,6 +384,11 @@ class Pool:
             if self.descr is not None
             else f"{self.exchange_name} {self.pair_name} {self.fee}"
         )
+
+        if self.exchange_name == 'uniswap_v3':  # TODO: name should be in config (how???)
+            self.fee_float = float(self.fee) / 1000000
+        else:
+            self.fee_float = float(self.fee)
 
     def update(self, new):
         for key, value in new.items():

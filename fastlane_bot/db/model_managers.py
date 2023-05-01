@@ -20,17 +20,19 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 @dataclass
 class TokenManager(DatabaseManagerBase):
-    __VERSION__ = "3.0.1"
-    __DATE__ = "04-26-2023"
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
 
     def create_token(self, token: models.Token) -> Optional[models.Token]:
 
         try:
             self.session.add(token)
             self.session.commit()
+            self.c.logger.info(f"[model_managers.Token] Created token: {token.key}")
             return token
-        except IntegrityError:
+        except IntegrityError as e:
             self.session.rollback()
+            self.c.logger.error(f"[model_managers.Token] Failed to create token: {e}")
             return None
 
     def get_token(self, **kwargs) -> Optional[models.Token]:
@@ -65,17 +67,22 @@ class TokenManager(DatabaseManagerBase):
 
 @dataclass
 class PairManager(DatabaseManagerBase):
-    __VERSION__ = "3.0.1"
-    __DATE__ = "04-26-2023"
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
 
-    def create_pair(self, pair: models.Pair) -> Optional[models.Pair]:
+    def create_pair(self, pair: models.Pair or Dict[str, Any]) -> Optional[models.Pair]:
+
+        if isinstance(pair, dict):
+            pair = models.Pair(**pair)
 
         try:
             self.session.add(pair)
             self.session.commit()
+            self.c.logger.info(f"[model_managers.Pair] Created pair: {pair.name}")
             return pair
-        except IntegrityError:
+        except IntegrityError as e:
             self.session.rollback()
+            self.c.logger.error(f"[model_managers.Pair] Failed to create pair: {e}")
             return None
 
     def get_pair(self, **kwargs) -> Optional[models.Pair]:
@@ -110,22 +117,25 @@ class PairManager(DatabaseManagerBase):
 
 @dataclass
 class PoolManager(DatabaseManagerBase):
-    __VERSION__ = "3.0.1"
-    __DATE__ = "04-26-2023"
+    __VERSION__ = "3.0.2"
+    __DATE__ = "05-01-2023"
 
-    def create_pool(self, pool: models.Pool) -> Optional[models.Pool]:
+    def create_pool(self, pool: models.Pool or Dict[str, Any]) -> Optional[models.Pool]:
+
+        if isinstance(pool, dict):
+            pool = models.Pool(**pool)
 
         try:
             self.session.add(pool)
             self.session.commit()
+            self.c.logger.info(f"[model_managers.Pool] Created pool: {pool.pair_name}")
             return pool
         except IntegrityError as e:
             self.session.rollback()
-            print(f"Error creating pool: {str(e)}")
+            self.c.logger.error(f"[model_managers.Pool] Error creating pool: {str(e)}")
             return None
 
     def get_pool(self, **kwargs) -> Optional[models.Pool]:
-
         return self.session.query(models.Pool).filter_by(**kwargs).first()
 
     def get_pools(self) -> List[Type[Pool]]:
@@ -134,7 +144,7 @@ class PoolManager(DatabaseManagerBase):
         """
         return self.session.query(models.Pool).all()
 
-    def update_pool(self, pool_data: dict, **kwargs) -> Optional[models.Pool]:
+    def update_pool(self, pool_data: Dict[str, Any], **kwargs) -> Optional[models.Pool]:
         """
         Update a pool in the database.
 
@@ -160,7 +170,7 @@ class PoolManager(DatabaseManagerBase):
                 return pool
             except IntegrityError as e:
                 self.session.rollback()
-                print(f"Error updating pool: {str(e)}")
+                self.c.logger.error(f"[model_managers.Pool] Error updating pool: {str(e)}")
                 return None
         return None
 
@@ -187,7 +197,7 @@ class PoolManager(DatabaseManagerBase):
                 return True
             except IntegrityError as e:
                 self.session.rollback()
-                print(f"Error deleting pool: {str(e)}")
+                self.c.logger.error(f"[model_managers.Pool] Error deleting pool: {str(e)}")
                 return False
         return False
 

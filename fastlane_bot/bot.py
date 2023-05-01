@@ -44,7 +44,7 @@ Licensed under MIT
 
 import itertools
 import time
-from dataclasses import dataclass, InitVar, asdict
+from dataclasses import dataclass, InitVar, asdict, field
 from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
@@ -63,6 +63,7 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 import fastlane_bot.db.models as models
 from fastlane_bot.config import Config
 from . import __VERSION__, __DATE__
+from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
 
 # errorlogger = self.ConfigObj.logger.error
@@ -90,7 +91,7 @@ class CarbonBotBase():
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
     
-    db: DatabaseManager = None
+    db: DatabaseManager = field(init=False)
     TxSubmitHandlerClass: any = None
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
@@ -135,10 +136,14 @@ class CarbonBotBase():
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxHelpersClass.__class__, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
-        if self.db is None:
-            self.db = DatabaseManager(
-                data=self.genesis_data, ConfigObj=self.ConfigObj
-            )
+        if self.ConfigObj.CONFIG_UNITTEST:
+            self.db = MockDatabaseManager(ConfigObj=self.ConfigObj)
+        else:
+            self.db = DatabaseManager(ConfigObj=self.ConfigObj)
+        # if self.db is None:
+        #     self.db = DatabaseManager(
+        #         data=self.genesis_data, ConfigObj=self.ConfigObj
+        #     )
             
 
     

@@ -18,13 +18,10 @@ db = DatabaseManager()
 # db.drop_all_tables()
 
 bot = CarbonBot(
-    db=db,
     polling_interval=c.DEFAULT_POLL_INTERVAL,
 )
 db.update_pools()
-updater = EventHandler(
-    db=db,
-)
+
 
 async def create_tasks_and_run(updater):
     tasks = []
