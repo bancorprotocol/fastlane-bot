@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -36,6 +36,7 @@ assert C.POSTGRES_DB == "mainnet"
 assert C.NETWORK == C.NETWORK_MAINNET
 assert C.PROVIDER == C.PROVIDER_ALCHEMY
 bot = Bot(ConfigObj=C)
+assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
 # ### Set up the curves
 
@@ -72,6 +73,10 @@ assert r[0] == {'ETH-EEeE', 'USDC-eB48'}
 assert r[1] == [('ETH-EEeE', 'USDC-eB48')]
 
 # #### AO_CANDIDATES [ETH]
+
+
+
+
 
 flt = ['ETH-EEeE']
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
