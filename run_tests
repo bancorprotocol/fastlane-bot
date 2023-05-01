@@ -2,6 +2,7 @@
 cd "$(dirname "$0")"
 
 rm -rf fastlane_bot/tests/nbtest/*
+cp resources/nbtest_data/* fastlane_bot/tests/nbtest_data/
 touch fastlane_bot/tests/nbtest/__init__.py
 python resources/NBTest/ConvertNBTest.py >/dev/null
 pytest fastlane_bot/tests $1
