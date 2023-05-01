@@ -55,7 +55,7 @@ class DatabaseManagerBase(ContractHelper):
         self.data = pd.read_csv(ConfigDB.DATABASE_SEED_FILE)
         self.data = self.data.sort_values("exchange", ascending=False)
         self.connect_db(backend_url=backend_url)
-        self.c.logger.info(f"Database Name: {self.engine.url}")
+        self.c.logger.info(f"Database: {self.engine}")
         self.bnt_price_map = {'UOS': 0.6256369626308176, 'GRT': 0.2833668586139438, 'EDEN': 0.13514190920020222,
                               'wNXM': 53.93005448231183, 'DIP': 0.03353407973355594, 'RARI': 3.1436321270707084,
                               'NMR': 34.79236097393122, 'MFG': 0.00431129075766619, 'INDEX': 4.52420449404313,
@@ -168,9 +168,13 @@ class DatabaseManagerBase(ContractHelper):
         """
         Connects to the database. If the database does not exist, it creates it.
         """
+        # if backend_url is None:
+        #     backend_url = self.ConfigObj.POSTGRES_URL
+        #     print(f"Using default database url: {backend_url}")
         if backend_url is None:
-            backend_url = self.ConfigObj.POSTGRES_URL
-            print(f"Using default database url: {backend_url}")
+            self.session = None
+            self.engine = None
+            return
 
         self.metadata = sqlalchemy.MetaData()
 
