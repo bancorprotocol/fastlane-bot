@@ -27,6 +27,7 @@ carbon/tools/*
 */.cover
 NBTest/carbon/*
 NBTest/carbon
+resources/NBTest/fastlane_bot
 
 /.env
 *.env
