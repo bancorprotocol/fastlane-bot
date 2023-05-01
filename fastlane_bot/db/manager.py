@@ -388,7 +388,9 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             "tkn0_address": tkn0_address,
             "tkn1_address": tkn1_address,
         }
-        pool_params = params | other_params
+        #pool_params = params | other_params
+        pool_params = {**params, **other_params}
+        
         self.create_pool(pool_params)
 
     def update_recently_traded_pools(self, cids: List[int]):
