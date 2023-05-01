@@ -11,12 +11,17 @@
 
 
 from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider, Bot
+from web3 import Web3
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Config))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 from fastlane_bot.testing import *
 
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
+
+
 
 
 
@@ -35,17 +40,6 @@ def notest_mainnet_alchemy():
     assert C.NETWORK == C.NETWORK_MAINNET
     assert C.PROVIDER == C.PROVIDER_ALCHEMY
     print("Web3 API:", C.w3.api)
-    
-
-# ------------------------------------------------------------
-# Test      010
-# File      test_010_BotTemplate.py
-# Segment   Tenderly [NOTEST]
-# ------------------------------------------------------------
-def notest_tenderly():
-# ------------------------------------------------------------
-    
-    pass
     
 
 # ------------------------------------------------------------
@@ -74,35 +68,8 @@ def test_mainnet_alchemy_configuration():
     # bot.drop_tables()
     # -
     
-
-# ------------------------------------------------------------
-# Test      010
-# File      test_010_BotTemplate.py
-# Segment   Tenderly Configuration
-# ------------------------------------------------------------
-def test_tenderly_configuration():
-# ------------------------------------------------------------
-    
-    assert False, "This is still not running"
-    C = Config.new(config=Config.CONFIG_TENDERLY)
-    assert C.DATABASE == C.DATABASE_POSTGRES
-    assert C.POSTGRES_DB == "mainnet"
-    assert C.NETWORK == C.NETWORK_TENDERLY
-    assert C.PROVIDER == C.PROVIDER_TENDERLY
-    assert C.w3.__class__.__name__ == "Web3"
-    assert C.w3.isConnected()
-    
-    # +
-    # C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
-    # C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
-    # C_pr = ConfigProvider.new(network=C_nw)
-    # C = Config(db = C_db, network = C_nw, provider = C_pr)
-    # C
-    # -
     
     
-    
-    bot = Bot(ConfigObj=C)
     
 
 # ------------------------------------------------------------

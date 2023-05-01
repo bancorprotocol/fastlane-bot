@@ -912,20 +912,32 @@ def test_tradeinstructions():
     assert ti.price_inperout == ti.pr
     assert ti.prices == ti.pp
     
-    # +
-    # assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1)
-    # assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1)
-    # assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1)
-    # assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1)
-    # assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0)
-    # assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1)
-    # assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1)
-    # assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1)
-    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1)
-    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1)
-    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1)
-    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0)
-    # -
+    assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1, raiseonerror=True)
+    assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1, raiseonerror=True)
+    assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1, raiseonerror=True)
+    assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1, raiseonerror=True)
+    assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0, raiseonerror=True)
+    assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1, raiseonerror=True)
+    assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1, raiseonerror=True)
+    assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1, raiseonerror=True)
+    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1, raiseonerror=True)
+    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1, raiseonerror=True)
+    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1, raiseonerror=True)
+    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0, raiseonerror=True)
+    
+    assert not TI(cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1, raiseonerror=False).error
+    assert     TI(cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1, raiseonerror=False).error
+    assert     TI(cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1, raiseonerror=False).error
+    assert     TI(cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1, raiseonerror=False).error
+    assert     TI(cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0, raiseonerror=False).error
+    assert     TI(cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1, raiseonerror=False).error
+    assert not TI.new(curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1, raiseonerror=False).error
+    assert not TI.new(curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1, raiseonerror=False).error
+    assert     TI.new(curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1, raiseonerror=False).error
+    assert     TI.new(curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1, raiseonerror=False).error
+    assert     TI.new(curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1, raiseonerror=False).error
+    assert     TI.new(curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0, raiseonerror=False).error
+    
     
     til = [
         TI.new(curve_or_cid=f"{i+1}", tkn1="ETH", amt1=1*(1+i/100), tkn2="USDC", amt2=-2000*(1+i/100)) 
@@ -954,10 +966,6 @@ def test_tradeinstructions():
     tild[0]
     
     tildf
-    
-    # #### TODO REVIEW
-    
-    assert False, "Review commented out code above"
     
 
 # ------------------------------------------------------------
