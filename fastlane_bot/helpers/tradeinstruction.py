@@ -4,6 +4,9 @@ Helpers for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__="01/May/2023"
+
 from dataclasses import dataclass
 from typing import Union
 from _decimal import Decimal
@@ -40,6 +43,8 @@ class TradeInstruction:
 
     Attributes
     ----------
+    
+    TODO -- DOCSTRING OUT OF DATE 
     _tknin_address: str
         The input token address.
     _tknin_decimals: int
@@ -60,6 +65,9 @@ class TradeInstruction:
         Whether the curve is a Carbon curve.
 
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
     cid: str
     tknin: str

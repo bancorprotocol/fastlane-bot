@@ -1,3 +1,6 @@
+__VERSION__ = "1.0"
+__DATE__="01/May/2023"
+
 from typing import Dict, Any, List, Union
 
 from _decimal import Decimal
@@ -79,6 +82,9 @@ class PoolAndTokens:
         The decimals of token 1
 
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
     id: int
     cid: str

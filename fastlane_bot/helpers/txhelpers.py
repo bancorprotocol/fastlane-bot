@@ -4,6 +4,9 @@ Brownie-related transaction handlers for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__="01/May/2023"
+
 # import itertools
 # import random
 # import time
@@ -43,6 +46,9 @@ class TxHelper:
     gas_price_multiplier : float
         The gas price multiplier.
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
     usd_gas_limit: float = 20
     gas_price_multiplier: float = 1.2
@@ -227,6 +233,9 @@ class TxHelpers:
     """
     This class is used to organize web3/brownie transaction tools.
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
 
     transactions_submitted = []

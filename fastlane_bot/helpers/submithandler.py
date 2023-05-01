@@ -4,6 +4,9 @@ Submit handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__="01/May/2023"
+
 import json
 from dataclasses import dataclass, asdict
 from typing import List, Any, Dict
@@ -24,7 +27,8 @@ from fastlane_bot.config import Config
 
 @dataclass
 class TxSubmitHandlerBase:
-    pass
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
     
 @dataclass
 class TxSubmitHandler(TxSubmitHandlerBase):
@@ -52,6 +56,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         Gets the transaction receipt for a given transaction with a timeout.
 
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
     route_struct: List[RouteStruct] = None
     src_amount: int = None

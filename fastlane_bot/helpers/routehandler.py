@@ -4,6 +4,9 @@ Route handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__="01/May/2023"
+
 # import itertools
 # import random
 # import time
@@ -76,7 +79,8 @@ class RouteStruct:
     ConfigObj: Config
 @dataclass
 class TxRouteHandlerBase:
-    pass
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
 
 @dataclass
 class TxRouteHandler(TxRouteHandlerBase):
@@ -90,6 +94,9 @@ class TxRouteHandler(TxRouteHandlerBase):
     trade_instructions_df: pd.DataFrame
         The trade instructions as a dataframe. Formatted output from the `CPCOptimizer` class.
     """
+    __VERSION__=__VERSION__
+    __DATE__=__DATE__
+    
     ConfigObj: Config
     trade_instructions_dic: List[TradeInstruction]
     trade_instructions_df: pd.DataFrame
