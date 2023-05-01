@@ -93,40 +93,17 @@ C
 
 bot = Bot(ConfigObj=C)
 
-# ## Tenderly Configuration
-#
-# _this does not work in the same notebook as the other stuff due to limitations of the provider_
+# ## Bot update on the mainnet [NOTEST]
+
+C = Config.new(config=Config.CONFIG_MAINNET)
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.POSTGRES_DB == "mainnet"
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
+assert C.w3.__class__.__name__ == "Web3"
+assert C.w3.isConnected()
+assert C.w3.provider.endpoint_uri.startswith("https://eth-mainnet.alchemyapi.io/v2")
+bot = Bot(ConfigObj=C)
 
 
-pass
-
-# +
-# C = Config.new(config=Config.CONFIG_TENDERLY)
-# assert C.DATABASE == C.DATABASE_POSTGRES
-# assert C.POSTGRES_DB == "tenderly"
-# assert C.NETWORK == C.NETWORK_TENDERLY
-# assert C.PROVIDER == C.PROVIDER_TENDERLY
-# assert C.w3.__class__.__name__ == "Web3"
-# assert C.w3.isConnected()
-# assert C.w3.provider.endpoint_uri.startswith("https://rpc.tenderly.co/fork/")
-
-# mainnet_w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"))
-# assert mainnet_w3.eth.blockNumber != C.w3.eth.block_number
-# print(f"Mainnet block = {mainnet_w3.eth.block_number}, Tenderly block = {C.w3.eth.block_number}")
-# CARBON_CONTROLLER = C.w3.eth.contract(address="0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", abi=CARBON_CONTROLLER_ABI)
-# fee = CARBON_CONTROLLER.caller.tradingFeePPM()
-# assert type(fee) == int
-
-# +
-# C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
-# C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
-# C_pr = ConfigProvider.new(network=C_nw)
-# C = Config(db = C_db, network = C_nw, provider = C_pr)
-# C
-# +
-# bot = Bot(ConfigObj=C)
-# -
-
-
-
-
+bot.update(drop_tables=False)

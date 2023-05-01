@@ -106,4 +106,17 @@ def notest_tests_that_can_fail():
     
     bot = Bot(ConfigObj=C)
     
+
+# ------------------------------------------------------------
+# Test      010b
+# File      test_010b_BotTemplate.py
+# Segment   Bot update [NOTEST]
+# ------------------------------------------------------------
+def notest_bot_update():
+# ------------------------------------------------------------
+    
+    help(bot.update)
+    
+    bot.update(drop_tables=False)
+    
     

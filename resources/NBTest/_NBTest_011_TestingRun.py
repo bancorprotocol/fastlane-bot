@@ -32,10 +32,10 @@ require("2.0", __VERSION__)
 # ### Set up the bot
 
 C = Config.new(config=Config.CONFIG_UNITTEST)
-# assert C.DATABASE == C.DATABASE_POSTGRES
-# assert C.POSTGRES_DB == "mainnet"
-# assert C.NETWORK == C.NETWORK_MAINNET
-# assert C.PROVIDER == C.PROVIDER_ALCHEMY
+assert C.DATABASE == C.DATABASE_UNITTEST
+assert C.POSTGRES_DB == "unittest"
+assert C.NETWORK == C.NETWORK_MAINNET
+assert C.PROVIDER == C.PROVIDER_ALCHEMY
 bot = CarbonBot(ConfigObj=C)
 # assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 

@@ -91,4 +91,10 @@ C
 
 bot = Bot(ConfigObj=C)
 
+# ## Bot update [NOTEST]
+
+help(bot.update)
+
+bot.update(drop_tables=False)
+
 
