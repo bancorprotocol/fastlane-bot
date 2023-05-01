@@ -36,6 +36,10 @@ C = Config()
 
 # ## TradeInstruction
 
+h = TradeInstruction(ConfigObj=C)
+assert type(h).__name__ == "TradeInstruction"
+
+
 # ## TxReceiptHandler
 #
 # Note: `TxReceiptHandler` is currently a dummy class. No tests to do.
