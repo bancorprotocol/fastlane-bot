@@ -37,15 +37,13 @@ print("Web3 API:", C.w3.api)
 
 # ## Tenderly [NOTEST]
 
-# +
-# TODO
-# -
+pass
 
 # ## Mainnet Alchemy Configuration
 
 C = Config.new(config=Config.CONFIG_MAINNET)
 assert C.DATABASE == C.DATABASE_POSTGRES
-assert C.POSTGRES_DB == "tenderly"
+assert C.POSTGRES_DB == "mainnet"
 assert C.NETWORK == C.NETWORK_MAINNET
 assert C.PROVIDER == C.PROVIDER_ALCHEMY
 assert C.w3.__class__.__name__ == "Web3"
@@ -54,12 +52,16 @@ assert C.w3.provider.endpoint_uri.startswith("https://eth-mainnet.alchemyapi.io/
 
 bot = Bot(ConfigObj=C)
 
-bot.update_pools()
+# +
+# bot.update_pools()
 
-bot.drop_tables()
+# +
+# bot.drop_tables()
+# -
 
 # ## Tenderly Configuration
 
+assert False, "This is still not running"
 C = Config.new(config=Config.CONFIG_TENDERLY)
 assert C.DATABASE == C.DATABASE_POSTGRES
 assert C.POSTGRES_DB == "mainnet"

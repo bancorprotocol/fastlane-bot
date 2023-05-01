@@ -1,39 +1,40 @@
 # ------------------------------------------------------------
-# Auto generated test file `test_063b_Optimizer.py`
+# Auto generated test file `test_002_Optimizer.py`
 # ------------------------------------------------------------
-# source file   = NBTest_063b_Optimizer.py
+# source file   = NBTest_002_Optimizer.py
 # source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# test id       = 063b
+# test id       = 002
 # test comment  = Optimizer
 # ------------------------------------------------------------
 
 
 
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
-from carbon.tools.optimizer import CPCArbOptimizer, F
-import carbon.tools.tokenscale as ts
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
+from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
+#import carbon.tools.tokenscale as ts
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
-try:
-    from carbon.helpers.stdimports import *
-    print_version(require="2.4.2")
-except:
-    print ("running from fastlane_bot")
+
+from fastlane_bot.testing import *
+plt.style.use('seaborn-dark')
+plt.rcParams['figure.figsize'] = [12,6]
+from fastlane_bot import __VERSION__
+require("2.0", __VERSION__)
 
 
 
 
 try:
-    df = pd.read_csv("NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
 
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   P
 # ------------------------------------------------------------
 def test_p():
@@ -50,8 +51,8 @@ def test_p():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   TVL
 # ------------------------------------------------------------
 def test_tvl():
@@ -70,8 +71,8 @@ def test_tvl():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   estimate prices
 # ------------------------------------------------------------
 def test_estimate_prices():
@@ -79,7 +80,7 @@ def test_estimate_prices():
     
     CC = CPCContainer()
     CC += [CPC.from_univ3(pair="WETH/USDC", cid="uv3", fee=0, descr="",
-                         uniPa=2000, uniPb=2010, Pmarg=2005, uniL=10*sqrt(2000))]
+                         uniPa=2000, uniPb=2010, Pmarg=2005, uniL=10*m.sqrt(2000))]
     CC += [CPC.from_pk(pair="WETH/USDC", cid="uv2", fee=0, descr="",
                          p=1950, k=5**2*2000)]
     CC += [CPC.from_pk(pair="USDC/WETH", cid="uv2r", fee=0, descr="",
@@ -146,8 +147,8 @@ def test_estimate_prices():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   price estimates in optimizer
 # ------------------------------------------------------------
 def test_price_estimates_in_optimizer():
@@ -181,8 +182,8 @@ def test_price_estimates_in_optimizer():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Assertions and testing
 # ------------------------------------------------------------
 def test_assertions_and_testing():
@@ -244,8 +245,8 @@ def test_assertions_and_testing():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   iseq
 # ------------------------------------------------------------
 def test_iseq():
@@ -264,67 +265,74 @@ def test_iseq():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   CarbonOrderUI integration
 # ------------------------------------------------------------
 def test_carbonorderui_integration():
 # ------------------------------------------------------------
     
-    o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
-    c = o.as_cpc
-    assert o.pair.slashpair == "ETH/USDC"
-    assert o.tkn == "ETH"
-    assert o.p_start == 2500
-    assert o.p_end == 3000
-    assert o.p_marg == 2500
-    assert o.y == 10
-    assert o.yint == 10
-    assert c.pair == o.pair.slashpair
-    assert c.tknb == o.pair.tknb
-    assert c.tknq == o.pair.tknq
-    assert c.x_act == o.y
-    assert c.y_act == 0
-    assert iseq(o.p_start, c.p, c.p_min)
-    assert iseq(o.p_end, c.p_max)
+    pass
     
-    o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
-    c = o.as_cpc
-    assert o.pair.slashpair == "ETH/USDC"
-    assert o.tkn == "USDC"
-    assert o.p_start == 1500
-    assert o.p_end == 1000
-    assert o.p_marg == 1500
-    assert o.y == 1000
-    assert o.yint == 1000
-    assert c.pair == o.pair.slashpair
-    assert c.tknb == o.pair.tknb
-    assert c.tknq == o.pair.tknq
-    assert c.x_act == 0
-    assert c.y_act == o.y
-    assert iseq(o.p_start, c.p, c.p_max)
-    assert iseq(o.p_end, c.p_min)
+    # +
+    # o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
+    # c = o.as_cpc
+    # assert o.pair.slashpair == "ETH/USDC"
+    # assert o.tkn == "ETH"
+    # assert o.p_start == 2500
+    # assert o.p_end == 3000
+    # assert o.p_marg == 2500
+    # assert o.y == 10
+    # assert o.yint == 10
+    # assert c.pair == o.pair.slashpair
+    # assert c.tknb == o.pair.tknb
+    # assert c.tknq == o.pair.tknq
+    # assert c.x_act == o.y
+    # assert c.y_act == 0
+    # assert iseq(o.p_start, c.p, c.p_min)
+    # assert iseq(o.p_end, c.p_max)
     
-    o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
-    c = o.as_cpc
-    assert o.y == 7
-    assert iseq(c.x_act, o.y)
-    assert iseq(c.y_act, 0)
-    assert iseq(o.p_marg, c.p, c.p_min)
-    assert iseq(o.p_end, c.p_max)
+    # +
+    # o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
+    # c = o.as_cpc
+    # assert o.pair.slashpair == "ETH/USDC"
+    # assert o.tkn == "USDC"
+    # assert o.p_start == 1500
+    # assert o.p_end == 1000
+    # assert o.p_marg == 1500
+    # assert o.y == 1000
+    # assert o.yint == 1000
+    # assert c.pair == o.pair.slashpair
+    # assert c.tknb == o.pair.tknb
+    # assert c.tknq == o.pair.tknq
+    # assert c.x_act == 0
+    # assert c.y_act == o.y
+    # assert iseq(o.p_start, c.p, c.p_max)
+    # assert iseq(o.p_end, c.p_min)
     
-    o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
-    c = o.as_cpc
-    assert o.y == 700
-    assert iseq(c.x_act, 0)
-    assert iseq(c.y_act, o.y)
-    assert iseq(o.p_marg, c.p, c.p_max)
-    assert iseq(o.p_end, c.p_min)
+    # +
+    # o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
+    # c = o.as_cpc
+    # assert o.y == 7
+    # assert iseq(c.x_act, o.y)
+    # assert iseq(c.y_act, 0)
+    # assert iseq(o.p_marg, c.p, c.p_min)
+    # assert iseq(o.p_end, c.p_max)
+    
+    # +
+    # o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
+    # c = o.as_cpc
+    # assert o.y == 700
+    # assert iseq(c.x_act, 0)
+    # assert iseq(c.y_act, o.y)
+    # assert iseq(o.p_marg, c.p, c.p_max)
+    # assert iseq(o.p_end, c.p_min)
+    # -
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   New CPC features in v2
 # ------------------------------------------------------------
 def test_new_cpc_features_in_v2():
@@ -392,17 +400,17 @@ def test_new_cpc_features_in_v2():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Real data and retrieval of curves
 # ------------------------------------------------------------
 def test_real_data_and_retrieval_of_curves():
 # ------------------------------------------------------------
     
     try:
-        df = pd.read_csv("NBTEST_063_Curves.csv.gz")
+        df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
     except:
-        df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
+        df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
     CC = CPCContainer.from_df(df)
     assert len(CC) == 459
     assert len(CC) == len(df)
@@ -454,62 +462,72 @@ def test_real_data_and_retrieval_of_curves():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   TokenScale tests
 # ------------------------------------------------------------
 def test_tokenscale_tests():
 # ------------------------------------------------------------
     
-    TSB = ts.TokenScaleBase()
-    assert raises (TSB.scale,"ETH")
-    assert TSB.DEFAULT_SCALE == 1e-2
+    pass
     
-    TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
-    TS
+    # +
+    # TSB = ts.TokenScaleBase()
+    # assert raises (TSB.scale,"ETH")
+    # assert TSB.DEFAULT_SCALE == 1e-2
     
-    assert TS("USDC") == 1
-    assert TS("ETH") == 1000
-    assert TS("BTC") == 10000
-    assert TS("MEH") == TS.DEFAULT_SCALE
+    # +
+    # TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
+    # TS
     
-    TSD = ts.TokenScaleData
+    # +
+    # assert TS("USDC") == 1
+    # assert TS("ETH") == 1000
+    # assert TS("BTC") == 10000
+    # assert TS("MEH") == TS.DEFAULT_SCALE
     
-    tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
-    assert tknset - set(TSD.scale_dct.keys()) == set()
+    # +
+    # TSD = ts.TokenScaleData
     
-    cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-    assert cc1.tokenscale is cc1.TOKENSCALE
-    assert cc1.tknx == "ETH"
-    assert cc1.tkny == "USDC"
-    assert cc1.scalex == 1
-    assert cc1.scaley == 1
-    cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-    assert cc2.tknx == "BTC"
-    assert cc2.tkny == "MEH"
-    assert cc2.scalex == 1
-    assert cc2.scaley == 1
-    assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+    # +
+    # tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
+    # assert tknset - set(TSD.scale_dct.keys()) == set()
     
-    cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-    cc1.set_tokenscale(TSD)
-    assert cc1.tokenscale != cc1.TOKENSCALE
-    assert cc1.tknx == "ETH"
-    assert cc1.tkny == "USDC"
-    assert cc1.scalex == 1e3
-    assert cc1.scaley == 1e0
-    cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-    cc2.set_tokenscale(TSD)
-    assert cc2.tknx == "BTC"
-    assert cc2.tkny == "MEH"
-    assert cc2.scalex == 1e4
-    assert cc2.scaley == 1e-2
-    assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+    # +
+    # cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+    # assert cc1.tokenscale is cc1.TOKENSCALE
+    # assert cc1.tknx == "ETH"
+    # assert cc1.tkny == "USDC"
+    # assert cc1.scalex == 1
+    # assert cc1.scaley == 1
+    # cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+    # assert cc2.tknx == "BTC"
+    # assert cc2.tkny == "MEH"
+    # assert cc2.scalex == 1
+    # assert cc2.scaley == 1
+    # assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+    
+    # +
+    # cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+    # cc1.set_tokenscale(TSD)
+    # assert cc1.tokenscale != cc1.TOKENSCALE
+    # assert cc1.tknx == "ETH"
+    # assert cc1.tkny == "USDC"
+    # assert cc1.scalex == 1e3
+    # assert cc1.scaley == 1e0
+    # cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+    # cc2.set_tokenscale(TSD)
+    # assert cc2.tknx == "BTC"
+    # assert cc2.tkny == "MEH"
+    # assert cc2.scalex == 1e4
+    # assert cc2.scaley == 1e-2
+    # assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+    # -
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   dx_min and dx_max etc
 # ------------------------------------------------------------
 def test_dx_min_and_dx_max_etc():
@@ -525,8 +543,8 @@ def test_dx_min_and_dx_max_etc():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   xyfromp_f and dxdyfromp_f
 # ------------------------------------------------------------
 def test_xyfromp_f_and_dxdyfromp_f():
@@ -620,8 +638,8 @@ def test_xyfromp_f_and_dxdyfromp_f():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   CPCInverter
 # ------------------------------------------------------------
 def test_cpcinverter():
@@ -726,8 +744,8 @@ def test_cpcinverter():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   simple_optimizer
 # ------------------------------------------------------------
 def test_simple_optimizer():
@@ -818,8 +836,8 @@ def test_simple_optimizer():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   optimizer plus inverted curves
 # ------------------------------------------------------------
 def test_optimizer_plus_inverted_curves():
@@ -850,8 +868,8 @@ def test_optimizer_plus_inverted_curves():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   posx and negx
 # ------------------------------------------------------------
 def test_posx_and_negx():
@@ -872,8 +890,8 @@ def test_posx_and_negx():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   TradeInstructions
 # ------------------------------------------------------------
 def test_tradeinstructions():
@@ -894,18 +912,20 @@ def test_tradeinstructions():
     assert ti.price_inperout == ti.pr
     assert ti.prices == ti.pp
     
-    assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1)
-    assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1)
-    assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1)
-    assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1)
-    assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0)
-    assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1)
-    assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1)
-    assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1)
-    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1)
-    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1)
-    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1)
-    assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0)
+    # +
+    # assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1)
+    # assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1)
+    # assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1)
+    # assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1)
+    # assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0)
+    # assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1)
+    # assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1)
+    # assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1)
+    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1)
+    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1)
+    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1)
+    # assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0)
+    # -
     
     til = [
         TI.new(curve_or_cid=f"{i+1}", tkn1="ETH", amt1=1*(1+i/100), tkn2="USDC", amt2=-2000*(1+i/100)) 
@@ -915,7 +935,13 @@ def test_tradeinstructions():
     tildf = TI.to_df(til)
     assert len(tild) == 10
     assert len(tildf) == 10
-    assert tild[0] == {'cid': '1', 'tknin': 'ETH', 'amtin': 1.0, 'tknout': 'USDC', 'amtout': -2000.0}
+    assert tild[0] == {
+        'cid': '1', 
+        'tknin': 'ETH', 
+        'amtin': 1.0, 
+        'tknout': 'USDC', 
+        'amtout': -2000.0,
+        'error': None,}
     assert dict(tildf.iloc[0]) == {
         'pair': '',
         'pairp': '',
@@ -925,12 +951,18 @@ def test_tradeinstructions():
         'USDC': -2000.0
     }
     
+    tild[0]
+    
     tildf
+    
+    # #### TODO REVIEW
+    
+    assert False, "Review commented out code above"
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   margp_optimizer
 # ------------------------------------------------------------
 def test_margp_optimizer():
@@ -1068,8 +1100,8 @@ def test_margp_optimizer():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   simple_optimizer demo [NOTEST]
 # ------------------------------------------------------------
 def notest_simple_optimizer_demo():
@@ -1110,8 +1142,8 @@ def notest_simple_optimizer_demo():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   MargP Optimizer Demo [NOTEST]
 # ------------------------------------------------------------
 def notest_margp_optimizer_demo():
@@ -1136,8 +1168,8 @@ def notest_margp_optimizer_demo():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Optimizer plus inverted curves [NOTEST]
 # ------------------------------------------------------------
 def notest_optimizer_plus_inverted_curves():
@@ -1163,8 +1195,8 @@ def notest_optimizer_plus_inverted_curves():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Operating on leverage ranges [NOTEST]
 # ------------------------------------------------------------
 def notest_operating_on_leverage_ranges():
@@ -1210,8 +1242,8 @@ def notest_operating_on_leverage_ranges():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Arbitrage testing [NOTEST]
 # ------------------------------------------------------------
 def notest_arbitrage_testing():
@@ -1291,8 +1323,8 @@ def notest_arbitrage_testing():
     
 
 # ------------------------------------------------------------
-# Test      063b
-# File      test_063b_Optimizer.py
+# Test      002
+# File      test_002_Optimizer.py
 # Segment   Charts [NOTEST]
 # ------------------------------------------------------------
 def notest_charts():

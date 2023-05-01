@@ -39,9 +39,7 @@ MYVAR0 = 0
 # - code producing charts or code reading data not available in the testing environment MUST go here
 # - any Heading 2 section can be market `[NOTEST]` regarding of location
 
-# +
-# demo code here...
-# -
+pass
 
 # ## Section 1
 #
@@ -83,8 +81,10 @@ myvar1 = lambda: MYVAR1
 
 assert MYVAR0 == 0
 
-myvar1() == 1 # ONLY True in the Notebook
+# +
+#myvar1() == 1 # ONLY True in the Notebook
+# -
 
-raises (myvar1) == "name 'MYVAR1' is not defined" # ONLY True in tests
+assert raises (myvar1) == "name 'MYVAR1' is not defined" # ONLY True in tests
 
 

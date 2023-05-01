@@ -33,9 +33,9 @@ require("2.0", __VERSION__)
 # # CPC and Optimizer in Fastlane [NBTest002]
 
 try:
-    df = pd.read_csv("NBTEST_002_Curves.csv.gz")
+    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
 
 # ## P
@@ -352,9 +352,9 @@ assert P("XYZ/USDT").isprimary
 # ## Real data and retrieval of curves
 
 try:
-    df = pd.read_csv("NBTEST_002_Curves.csv.gz")
+    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CC = CPCContainer.from_df(df)
 assert len(CC) == 459
 assert len(CC) == len(df)

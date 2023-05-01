@@ -125,8 +125,6 @@ assert C.PROVIDER == C.PROVIDER_ALCHEMY
 # assert C.PROVIDER == C.PROVIDER_TENDERLY
 # -
 
-raise
-
 # ## Databases
 
 ConfigDB = cfg.ConfigDB
