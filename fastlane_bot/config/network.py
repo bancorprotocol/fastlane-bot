@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- network
 """
-__VERSION__ = "1.0.1"
-__DATE__ = "30/Apr 2023"
+__VERSION__ = "1.0.2"
+__DATE__ = "01/May 2023"
 from .base import ConfigBase
 from . import selectors as S
 
@@ -159,6 +159,14 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
 
+    def shellcommand(self, chain_id=1):
+        """
+        the shell command to run to allow the bot to connect to tenderly
+        """
+        s  = f'brownie networks delete {self.NETWORK_NAME}\n'
+        s += f'brownie networks add "Ethereum" "{self.NETWORK_NAME}" ' 
+        s += f'host=https://rpc.tenderly.co/fork/{self.TENDERLY_FORK} chainid={chain_id}'
+        return s
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
