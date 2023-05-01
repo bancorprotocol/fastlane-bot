@@ -62,7 +62,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         Creates the Ethereum chain in the database
         """
-        blockchain = models.Blockchain(name="Ethereum") # TODO: blockchain_name="Ethereum" should be a config constant
+        blockchain = models.Blockchain(name="Ethereum")  # TODO: blockchain_name="Ethereum" should be a config constant
         blockchain.block_number = self.ConfigObj.w3.eth.blockNumber
         self.session.add(blockchain)
         self.session.commit()
@@ -72,7 +72,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         Creates the supported exchanges in the database
         """
         for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-            self.session.add(models.Exchange(name=exchange, blockchain_name="Ethereum")) # TODO: blockchain_name="Ethereum" should be a config constant
+            self.session.add(models.Exchange(name=exchange,
+                                             blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
         self.session.commit()
 
     def update_pools_from_contracts(self):
@@ -80,6 +81,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         For exchange in supported exchanges,
         get the available pool addresses and contracts
         then call update_pool_from_contract
+
+        TODO: Limit the number of pools to update per call by top_n argument.
         """
         pools = self.session.query(models.Pool).first()
 
@@ -106,10 +109,10 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         if pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME:
             self.update_pool({
-                "cid": pool.cid,
-                "last_updated_block": processed_event["block_number"],
-                "tkn0_balance": processed_event["newLiquidity"]
-            } if processed_event["token"] == self.ConfigObj.BNT_ADDRESS else {
+                                 "cid": pool.cid,
+                                 "last_updated_block": processed_event["block_number"],
+                                 "tkn0_balance": processed_event["newLiquidity"]
+                             } if processed_event["token"] == self.ConfigObj.BNT_ADDRESS else {
                 "cid": pool.cid,
                 "tkn1_balance": processed_event["newLiquidity"],
             })
@@ -297,7 +300,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 tkn0_key = tkn0.key
                 tkn1 = self.get_or_create_token(address=tkn1_address)
                 tkn1_key = tkn1.key
-                pair = models.Pair(tkn0_address=tkn0_address, tkn1_address=tkn1_address, name=f"{tkn0_key}/{tkn1_key}", tkn0_key=tkn0_key, tkn1_key=tkn1_key)
+                pair = models.Pair(tkn0_address=tkn0_address, tkn1_address=tkn1_address, name=f"{tkn0_key}/{tkn1_key}",
+                                   tkn0_key=tkn0_key, tkn1_key=tkn1_key)
                 self.create_pair(pair)
             except Exception as e:
                 self.c.logger.error(f"[DatabaseManager.get_or_create_pair] {e}")
@@ -337,7 +341,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             tkn1_address = self.ConfigObj.w3.toChecksumAddress(pool_contract.caller.token1())
         return tkn0_address, tkn1_address
 
-    def create_pool_from_contract(self, exchange_name: str, pool_address: str, strategy: Optional[Tuple[str, str, str, Any]] = None):
+    def create_pool_from_contract(self, exchange_name: str, pool_address: str,
+                                  strategy: Optional[Tuple[str, str, str, Any]] = None):
         """
         Creates a pool with the provided strategy.
 
@@ -481,10 +486,9 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                     self.create_pool_from_contract(exchange_name=exchange, pool_address=address)
 
             except Exception as e:
-                self.c.logger.error(f"[manager.create_pools_from_contracts] Error creating pool {exchange} {address} [{e}]")
+                self.c.logger.error(
+                    f"[manager.create_pools_from_contracts] Error creating pool {exchange} {address} [{e}]")
                 continue
-
-
 
     def create_or_update_carbon_pools(self, pools: List[Any] = None):
         """
@@ -513,7 +517,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 try:
                     self.create_carbon_pool(strategy, last_updated_block)
                 except Exception as e:
-                    self.c.logger.error(f"[manager.create_or_update_carbon_pools] Error creating Carbon strategy {strategy} [{e}]")
+                    self.c.logger.error(
+                        f"[manager.create_or_update_carbon_pools] Error creating Carbon strategy {strategy} [{e}]")
                     continue
 
     def update_carbon_pool(self, strategy: Any, last_updated_block: int):
@@ -557,7 +562,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         strategy_id = str(strategy[0])
         tkn0_address, tkn1_address = strategy[2][0], strategy[2][1]
-        tkn0_key, tkn1_key = self.get_or_create_token(address=tkn0_address).key, self.get_or_create_token(address=tkn1_address).key
+        tkn0_key, tkn1_key = self.get_or_create_token(address=tkn0_address).key, self.get_or_create_token(
+            address=tkn1_address).key
         order0, order1 = strategy[3][0], strategy[3][1]
         pair = self.get_or_create_pair(tkn0_address, tkn1_address)
         pool_params = {
@@ -581,8 +587,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             "last_updated_block": last_updated_block
         }
         self.create_pool(pool_params)
-
-
 
     def build_pool_params(
             self, exchange_name: str = None, pool_address: str = None, pool_contract: Contract = None
@@ -613,7 +617,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             tkn1 = self.get_or_create_token(tkn1_address)
             pair = self.get_or_create_pair(tkn0_address, tkn1_address)
             common_data = dict(
-                id=self.next_id,
+                # id=self.next_id,
                 cid=str(self.next_cid),
                 exchange_name=exchange_name,
                 pair_name=pair.name,
