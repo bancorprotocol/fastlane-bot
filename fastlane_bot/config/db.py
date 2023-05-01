@@ -10,6 +10,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+
+
 class ConfigDB(ConfigBase):
     """
     Fastlane bot config -- database
@@ -28,6 +30,7 @@ class ConfigDB(ConfigBase):
     DATABASE_POSTGRES = S.DATABASE_POSTGRES
     DATABASE_MEMORY = S.DATABASE_MEMORY
     DATABASE_SDK = S.DATABASE_SDK
+    DATABASE_UNITTEST = S.DATABASE_UNITTEST
     @classmethod
     def new(cls, db=None, **kwargs):
         """
@@ -43,6 +46,8 @@ class ConfigDB(ConfigBase):
             return _ConfigDBMemory(_direct=False, **kwargs)
         elif db == cls.DATABASE_SDK:
             return _ConfigDBSdk(_direct=False, **kwargs)
+        elif db == cls.DATABASE_UNITTEST:
+            return _ConfigDBUnittest(_direct=False, **kwargs)
         else:
             raise ValueError(f"Invalid db: {db}")
         
@@ -97,6 +102,16 @@ class _ConfigDBSqlite(ConfigDB):
     #DEFAULT_DB_BACKEND_URL = POSTGRES_URL
     def __init__(self, **kwargs):
         raise NotImplementedError("Sqlite not implemented")
+
+class _ConfigDBUnittest(ConfigDB):
+    """
+    Fastlane bot config -- database [Postgres]
+    """
+    DATABASE = S.DATABASE_UNITTEST
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     
 class _ConfigDBMemory(ConfigDB):
     """

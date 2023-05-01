@@ -120,9 +120,9 @@ class CarbonBotBase():
 
         assert self.polling_interval is None, "polling_interval is now a parameter to run"
 
-        if self.TxSubmitHandlerClass is None:
-            self.TxSubmitHandlerClass = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        assert issubclass(self.TxSubmitHandlerClass.__class__, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass.__class__}"
+        # if self.TxSubmitHandlerClass is None:
+        #     self.TxSubmitHandlerClass = TxSubmitHandler(ConfigObj=self.ConfigObj)
+        # assert issubclass(self.TxSubmitHandlerClass.__class__, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass.__class__}"
 
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler

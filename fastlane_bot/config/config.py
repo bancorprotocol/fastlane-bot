@@ -51,8 +51,8 @@ class Config():
         elif config == cls.CONFIG_UNITTEST:
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST)
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
-            C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_UNITTEST)
-            return cls(db=C_db, network=C_nw, provider=C_pr, **kwargs)
+            # C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_UNITTEST)
+            return cls(db=C_db, network=C_nw, **kwargs)
         raise ValueError(f"Invalid config: {config}")
     
     def is_config_item(self, item):
