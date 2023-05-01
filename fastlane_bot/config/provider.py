@@ -122,7 +122,7 @@ class _ConfigProviderTenderly(ConfigProvider):
             provider_name="alchemy",
         )
         self.connection.connect_network()
-        self.w3 = "TODO"
+        self.w3 = self.connection.web3
         
         self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
             name=N.BANCOR_V3_NAME,
