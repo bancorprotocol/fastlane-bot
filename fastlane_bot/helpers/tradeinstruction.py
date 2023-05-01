@@ -123,7 +123,7 @@ class TradeInstruction:
             self.raw_txs = "[]"
         if self.pair_sorting is None:
             self.pair_sorting = ""
-        self._exchange_name = self._get_pool().exchange_name
+        self._exchange_name = self.db.get_pool(cid=self.cid).exchange_name
         self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
 
     @property
