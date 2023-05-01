@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- database configuration
 """
-__VERSION__ = "1.0.2"
-__DATE__ = "30/Apr 2023"
+__VERSION__ = "1.0.3"
+__DATE__ = "01/May 2023"
 from .base import ConfigBase
 from . import selectors as S
 

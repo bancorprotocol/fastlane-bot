@@ -41,7 +41,6 @@ Licensed under MIT
     MB@RICHARDSON@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
-
 import itertools
 import time
 from dataclasses import dataclass, InitVar, asdict, field
@@ -136,7 +135,7 @@ class CarbonBotBase():
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxHelpersClass.__class__, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
-        if self.ConfigObj.CONFIG_UNITTEST:
+        if self.ConfigObj.DATABASE == self.ConfigObj.DATABASE_UNITTEST:
             self.db = MockDatabaseManager(ConfigObj=self.ConfigObj)
         else:
             self.db = DatabaseManager(ConfigObj=self.ConfigObj)
