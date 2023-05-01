@@ -168,9 +168,9 @@ class DatabaseManagerBase(ContractHelper):
         """
         Connects to the database. If the database does not exist, it creates it.
         """
-        # if backend_url is None:
-        #     backend_url = self.ConfigObj.POSTGRES_URL
-        #     print(f"Using default database url: {backend_url}")
+        if backend_url is None:
+            backend_url = self.ConfigObj.POSTGRES_URL
+            print(f"Using default database url: {backend_url}")
         if backend_url is None:
             self.session = None
             self.engine = None

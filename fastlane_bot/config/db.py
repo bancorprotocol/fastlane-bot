@@ -120,6 +120,7 @@ class _ConfigDBMemory(ConfigDB):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         raise NotImplementedError("Memory not implemented")
+
     
 class _ConfigDBSdk(ConfigDB):
     """
@@ -135,6 +136,35 @@ class _ConfigDBUnitTest(ConfigDB):
     Fastlane bot config -- database [UnitTest]
     """
     DATABASE = S.DATABASE_UNITTEST
+    POSTGRES_USER = os.environ.get("POSTGRES_USER")
+    POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+    POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+    POSTGRES_DB = os.environ.get("POSTGRES_DB")
+    POSTGRES_URL = None # set in init
+
+    POSTGRES_USER_DEFAULT = "postgres"
+    POSTGRES_PASSWORD_DEFAULT = "postgres"
+    POSTGRES_HOST_DEFAULT = "localhost"
+    POSTGRES_DATABASE_DEFAULT = "mainnet"
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        if not self.POSTGRES_URL is None:
+            # those are all set to None if URL is given
+            self.POSTGRES_USER = None
+            self.POSTGRES_PASSWORD = None
+            self.POSTGRES_HOST = None
+            self.POSTGRES_DB = None
+            return
+
+        if not self.POSTGRES_USER:
+            self.POSTGRES_USER = self.POSTGRES_USER_DEFAULT
+        if not self.POSTGRES_PASSWORD:
+            self.POSTGRES_PASSWORD = self.POSTGRES_PASSWORD_DEFAULT
+        if not self.POSTGRES_HOST:
+            self.POSTGRES_HOST = self.POSTGRES_HOST_DEFAULT
+        if not self.POSTGRES_DB:
+            self.POSTGRES_DB = self.POSTGRES_DATABASE_DEFAULT
+        self.POSTGRES_URL = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}/{self.POSTGRES_DB}"
+        self.DEFAULT_DB_BACKEND_URL = self.POSTGRES_URL
     

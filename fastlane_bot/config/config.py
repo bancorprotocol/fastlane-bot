@@ -49,9 +49,8 @@ class Config():
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
             return cls(db=C_db, network=C_nw, **kwargs)
         elif config == cls.CONFIG_UNITTEST:
-            C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST)
+            C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST, POSTGRES_DB="tenderly")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
-            #C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_UNITTEST)
             C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
             return cls(db=C_db, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")
