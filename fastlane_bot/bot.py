@@ -135,7 +135,7 @@ class CarbonBotBase():
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
         assert issubclass(self.TxHelpersClass.__class__, TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
-        if self.ConfigObj.DATABASE_UNITTEST:
+        if self.ConfigObj.DATABASE == self.ConfigObj.DATABASE_UNITTEST:
             self.db = MockDatabaseManager(ConfigObj=self.ConfigObj)
         else:
             self.db = DatabaseManager(ConfigObj=self.ConfigObj)
@@ -435,7 +435,7 @@ class CarbonBot(CarbonBotBase):
             quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
 
             try:
-                profit = self.db._get_bnt_price_from_tokens(profit_src, src_token)
+                profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
             except Exception as e:
                 self.ConfigObj.logger.error("[TODO CLEAN UP]{e}")
                 profit = profit_src
@@ -457,7 +457,7 @@ class CarbonBot(CarbonBotBase):
 
 
 
-            bnt_gas_limit = self.db._get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
+            bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
             print(f"bnt_gas_limit: {bnt_gas_limit}")
             condition_6 = False
             if profit > (self.min_profit + bnt_gas_limit):

@@ -407,7 +407,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             pool_contract = self.contract_from_address(exchange_name=exchange_name, pool_address=pool_address)
             self.update_pool(exchange_name, pool_address, pool_contract)
 
-    def _get_bnt_price_from_tokens(self, price, tkn) -> Decimal:
+    def get_bnt_price_from_tokens(self, price, tkn) -> Decimal:
         """
         Gets the price of a token
 
