@@ -14,25 +14,26 @@
 #     name: python3
 # ---
 
-from carbon.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
-from carbon.tools.optimizer import CPCArbOptimizer, F
-import carbon.tools.tokenscale as ts
-# plt.style.use('seaborn-dark')
-# plt.rcParams['figure.figsize'] = [12,6]
+# +
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
+from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
+#import carbon.tools.tokenscale as ts
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
-try:
-    from carbon.helpers.stdimports import *
-    print_version(require="2.4.2")
-except:
-    print ("running from fastlane_bot")
+
+from fastlane_bot.testing import *
+plt.style.use('seaborn-dark')
+plt.rcParams['figure.figsize'] = [12,6]
+from fastlane_bot import __VERSION__
+require("2.0", __VERSION__)
+# -
 
 # Note: for testing inside the fastlane bot, run `ln -s ../fastlane_bot carbon`
 
-# # CPC and Optimizer in Fastlane [NBTest063b]
+# # CPC and Optimizer in Fastlane [NBTest002]
 
 try:
-    df = pd.read_csv("NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("NBTEST_002_Curves.csv.gz")
 except:
     df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
@@ -65,7 +66,7 @@ assert c.tvl("WETH", mult=2000) == 4000
 
 CC = CPCContainer()
 CC += [CPC.from_univ3(pair="WETH/USDC", cid="uv3", fee=0, descr="",
-                     uniPa=2000, uniPb=2010, Pmarg=2005, uniL=10*sqrt(2000))]
+                     uniPa=2000, uniPb=2010, Pmarg=2005, uniL=10*m.sqrt(2000))]
 CC += [CPC.from_pk(pair="WETH/USDC", cid="uv2", fee=0, descr="",
                      p=1950, k=5**2*2000)]
 CC += [CPC.from_pk(pair="USDC/WETH", cid="uv2r", fee=0, descr="",
@@ -229,55 +230,62 @@ assert iseq("1", 1) == False
 
 # ## CarbonOrderUI integration
 
-o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
-c = o.as_cpc
-assert o.pair.slashpair == "ETH/USDC"
-assert o.tkn == "ETH"
-assert o.p_start == 2500
-assert o.p_end == 3000
-assert o.p_marg == 2500
-assert o.y == 10
-assert o.yint == 10
-assert c.pair == o.pair.slashpair
-assert c.tknb == o.pair.tknb
-assert c.tknq == o.pair.tknq
-assert c.x_act == o.y
-assert c.y_act == 0
-assert iseq(o.p_start, c.p, c.p_min)
-assert iseq(o.p_end, c.p_max)
+pass
 
-o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
-c = o.as_cpc
-assert o.pair.slashpair == "ETH/USDC"
-assert o.tkn == "USDC"
-assert o.p_start == 1500
-assert o.p_end == 1000
-assert o.p_marg == 1500
-assert o.y == 1000
-assert o.yint == 1000
-assert c.pair == o.pair.slashpair
-assert c.tknb == o.pair.tknb
-assert c.tknq == o.pair.tknq
-assert c.x_act == 0
-assert c.y_act == o.y
-assert iseq(o.p_start, c.p, c.p_max)
-assert iseq(o.p_end, c.p_min)
+# +
+# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
+# c = o.as_cpc
+# assert o.pair.slashpair == "ETH/USDC"
+# assert o.tkn == "ETH"
+# assert o.p_start == 2500
+# assert o.p_end == 3000
+# assert o.p_marg == 2500
+# assert o.y == 10
+# assert o.yint == 10
+# assert c.pair == o.pair.slashpair
+# assert c.tknb == o.pair.tknb
+# assert c.tknq == o.pair.tknq
+# assert c.x_act == o.y
+# assert c.y_act == 0
+# assert iseq(o.p_start, c.p, c.p_min)
+# assert iseq(o.p_end, c.p_max)
 
-o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
-c = o.as_cpc
-assert o.y == 7
-assert iseq(c.x_act, o.y)
-assert iseq(c.y_act, 0)
-assert iseq(o.p_marg, c.p, c.p_min)
-assert iseq(o.p_end, c.p_max)
+# +
+# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
+# c = o.as_cpc
+# assert o.pair.slashpair == "ETH/USDC"
+# assert o.tkn == "USDC"
+# assert o.p_start == 1500
+# assert o.p_end == 1000
+# assert o.p_marg == 1500
+# assert o.y == 1000
+# assert o.yint == 1000
+# assert c.pair == o.pair.slashpair
+# assert c.tknb == o.pair.tknb
+# assert c.tknq == o.pair.tknq
+# assert c.x_act == 0
+# assert c.y_act == o.y
+# assert iseq(o.p_start, c.p, c.p_max)
+# assert iseq(o.p_end, c.p_min)
 
-o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
-c = o.as_cpc
-assert o.y == 700
-assert iseq(c.x_act, 0)
-assert iseq(c.y_act, o.y)
-assert iseq(o.p_marg, c.p, c.p_max)
-assert iseq(o.p_end, c.p_min)
+# +
+# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
+# c = o.as_cpc
+# assert o.y == 7
+# assert iseq(c.x_act, o.y)
+# assert iseq(c.y_act, 0)
+# assert iseq(o.p_marg, c.p, c.p_min)
+# assert iseq(o.p_end, c.p_max)
+
+# +
+# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
+# c = o.as_cpc
+# assert o.y == 700
+# assert iseq(c.x_act, 0)
+# assert iseq(c.y_act, o.y)
+# assert iseq(o.p_marg, c.p, c.p_max)
+# assert iseq(o.p_end, c.p_min)
+# -
 
 # ## New CPC features in v2
 
@@ -344,7 +352,7 @@ assert P("XYZ/USDT").isprimary
 # ## Real data and retrieval of curves
 
 try:
-    df = pd.read_csv("NBTEST_063_Curves.csv.gz")
+    df = pd.read_csv("NBTEST_002_Curves.csv.gz")
 except:
     df = pd.read_csv("carbon/tests/nbtest_data/NBTEST_063_Curves.csv.gz")
 CC = CPCContainer.from_df(df)
@@ -398,50 +406,60 @@ assert len(CC2.tknxl()) == len(CC2)
 
 # ## TokenScale tests
 
-TSB = ts.TokenScaleBase()
-assert raises (TSB.scale,"ETH")
-assert TSB.DEFAULT_SCALE == 1e-2
+pass
 
-TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
-TS
+# +
+# TSB = ts.TokenScaleBase()
+# assert raises (TSB.scale,"ETH")
+# assert TSB.DEFAULT_SCALE == 1e-2
 
-assert TS("USDC") == 1
-assert TS("ETH") == 1000
-assert TS("BTC") == 10000
-assert TS("MEH") == TS.DEFAULT_SCALE
+# +
+# TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
+# TS
 
-TSD = ts.TokenScaleData
+# +
+# assert TS("USDC") == 1
+# assert TS("ETH") == 1000
+# assert TS("BTC") == 10000
+# assert TS("MEH") == TS.DEFAULT_SCALE
 
-tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
-assert tknset - set(TSD.scale_dct.keys()) == set()
+# +
+# TSD = ts.TokenScaleData
 
-cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-assert cc1.tokenscale is cc1.TOKENSCALE
-assert cc1.tknx == "ETH"
-assert cc1.tkny == "USDC"
-assert cc1.scalex == 1
-assert cc1.scaley == 1
-cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-assert cc2.tknx == "BTC"
-assert cc2.tkny == "MEH"
-assert cc2.scalex == 1
-assert cc2.scaley == 1
-assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# +
+# tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
+# assert tknset - set(TSD.scale_dct.keys()) == set()
 
-cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-cc1.set_tokenscale(TSD)
-assert cc1.tokenscale != cc1.TOKENSCALE
-assert cc1.tknx == "ETH"
-assert cc1.tkny == "USDC"
-assert cc1.scalex == 1e3
-assert cc1.scaley == 1e0
-cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-cc2.set_tokenscale(TSD)
-assert cc2.tknx == "BTC"
-assert cc2.tkny == "MEH"
-assert cc2.scalex == 1e4
-assert cc2.scaley == 1e-2
-assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# +
+# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+# assert cc1.tokenscale is cc1.TOKENSCALE
+# assert cc1.tknx == "ETH"
+# assert cc1.tkny == "USDC"
+# assert cc1.scalex == 1
+# assert cc1.scaley == 1
+# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+# assert cc2.tknx == "BTC"
+# assert cc2.tkny == "MEH"
+# assert cc2.scalex == 1
+# assert cc2.scaley == 1
+# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+
+# +
+# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+# cc1.set_tokenscale(TSD)
+# assert cc1.tokenscale != cc1.TOKENSCALE
+# assert cc1.tknx == "ETH"
+# assert cc1.tkny == "USDC"
+# assert cc1.scalex == 1e3
+# assert cc1.scaley == 1e0
+# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+# cc2.set_tokenscale(TSD)
+# assert cc2.tknx == "BTC"
+# assert cc2.tkny == "MEH"
+# assert cc2.scalex == 1e4
+# assert cc2.scaley == 1e-2
+# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# -
 
 # ## dx_min and dx_max etc
 
@@ -782,18 +800,20 @@ assert ti.price_outperin == ti.p
 assert ti.price_inperout == ti.pr
 assert ti.prices == ti.pp
 
-assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1)
-assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1)
-assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1)
-assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1)
-assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0)
-assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1)
-assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1)
-assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1)
-assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1)
-assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1)
-assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1)
-assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0)
+# +
+# assert not raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=-1)
+# assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=1)
+# assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=-1)
+# assert raises(TI, cid="1", tknin="USDC", amtin=-2000, tknout="ETH", amtout=1)
+# assert raises(TI, cid="1", tknin="USDC", amtin=2000, tknout="ETH", amtout=0)
+# assert raises(TI, cid="1", tknin="USDC", amtin=0, tknout="ETH", amtout=-1)
+# assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=-1)
+# assert not raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=1)
+# assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=2000, tkn2="ETH", amt2=1)
+# assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=-1)
+# assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=0, tkn2="ETH", amt2=1)
+# assert raises(TI.new, curve_or_cid="1", tkn1="USDC", amt1=-2000, tkn2="ETH", amt2=0)
+# -
 
 til = [
     TI.new(curve_or_cid=f"{i+1}", tkn1="ETH", amt1=1*(1+i/100), tkn2="USDC", amt2=-2000*(1+i/100)) 
@@ -803,7 +823,13 @@ tild = TI.to_dicts(til)
 tildf = TI.to_df(til)
 assert len(tild) == 10
 assert len(tildf) == 10
-assert tild[0] == {'cid': '1', 'tknin': 'ETH', 'amtin': 1.0, 'tknout': 'USDC', 'amtout': -2000.0}
+assert tild[0] == {
+    'cid': '1', 
+    'tknin': 'ETH', 
+    'amtin': 1.0, 
+    'tknout': 'USDC', 
+    'amtout': -2000.0,
+    'error': None,}
 assert dict(tildf.iloc[0]) == {
     'pair': '',
     'pairp': '',
@@ -813,7 +839,13 @@ assert dict(tildf.iloc[0]) == {
     'USDC': -2000.0
 }
 
+tild[0]
+
 tildf
+
+# #### TODO REVIEW
+
+assert False, "Review commented out code above"
 
 # ## margp_optimizer
 
