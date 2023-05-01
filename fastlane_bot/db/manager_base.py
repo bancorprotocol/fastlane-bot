@@ -161,7 +161,10 @@ class DatabaseManagerBase(ContractHelper):
         Returns the next cid. The cid is a string representation of the next id,
         where id is assumed to be unique with respect to the Carbon strategy_id values bc they are huge numbers.
         """
-        max_idx = self.session.query(func.max(getattr(models.Pool, 'id'))).first()[0]
+        max_idxs = self.session.query(models.Pool).all()
+        if not max_idxs:
+            return '0'
+        max_idx = max(int(x.cid) for x in max_idxs)
         return str(max_idx + 1 if max_idx is not None else 0)
 
     def connect_db(self, *, backend_url=None):

@@ -128,11 +128,11 @@ class PoolManager(DatabaseManagerBase):
         try:
             self.session.add(pool)
             self.session.commit()
-            self.c.logger.info(f"[model_managers.Pool] Created pool: {pool.pair_name}")
+            self.c.logger.info(f"[model_managers.Pool] Created pool on {pool.exchange_name}: {pool.pair_name}")
             return pool
         except IntegrityError as e:
             self.session.rollback()
-            self.c.logger.error(f"[model_managers.Pool] Error creating pool: {str(e)}")
+            self.c.logger.error(f"[model_managers.Pool] Error creating pool on {pool.exchange_name}: {str(e)}")
             return None
 
     def get_pool(self, **kwargs) -> Optional[models.Pool]:
@@ -165,12 +165,12 @@ class PoolManager(DatabaseManagerBase):
         pool = self.get_pool(**kwargs)
         if pool:
             try:
-                pool.update(pool_data)
+                for key, value in pool_data.items():
+                    setattr(pool, key, value)
                 self.session.commit()
                 return pool
-            except IntegrityError as e:
+            except IntegrityError:
                 self.session.rollback()
-                self.c.logger.error(f"[model_managers.Pool] Error updating pool: {str(e)}")
                 return None
         return None
 

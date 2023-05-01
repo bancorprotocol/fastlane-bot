@@ -388,7 +388,7 @@ class Pool:
         if self.exchange_name == 'uniswap_v3':  # TODO: name should be in config (how???)
             self.fee_float = float(self.fee) / 1000000
         else:
-            self.fee_float = float(self.fee)
+            self.fee_float = float(self.fee) if self.fee is not None else 0.0
 
     def update(self, new):
         for key, value in new.items():

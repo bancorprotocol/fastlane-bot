@@ -60,6 +60,15 @@ class ContractHelper:
         """
         Returns the CarbonController contract
         """
+        if self.ConfigObj.CARBON_V1_NAME not in self.contracts:
+            self.contracts[self.ConfigObj.CARBON_V1_NAME] = {}
+        if "CARBON_CONTROLLER_CONTRACT" not in self.contracts[self.ConfigObj.CARBON_V1_NAME]:
+            self.contracts[self.ConfigObj.CARBON_V1_NAME][
+                "CARBON_CONTROLLER_CONTRACT"] = Contract.from_abi(
+                name=self.ConfigObj.CARBON_V1_NAME,
+                address=self.ConfigObj.CARBON_CONTROLLER_ADDRESS,
+                abi=abi.CARBON_CONTROLLER_ABI,
+            )
         return self.contracts[self.ConfigObj.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"]
 
     # @staticmethod
@@ -307,7 +316,7 @@ class ContractHelper:
             A list of all Carbon token pairs
 
         """
-        return self.contracts[self.c.CARBON_V1_NAME]['CARBON_CONTROLLER_CONTRACT'].pairs()
+        return self.carbon_controller.pairs()
 
     def get_strategies(self, pair: Tuple[str, str]) -> List[int]:
         """
