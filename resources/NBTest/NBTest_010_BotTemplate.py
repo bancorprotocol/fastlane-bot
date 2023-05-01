@@ -98,6 +98,8 @@ bot = Bot(ConfigObj=C)
 # _this does not work in the same notebook as the other stuff due to limitations of the provider_
 
 
+pass
+
 # +
 # C = Config.new(config=Config.CONFIG_TENDERLY)
 # assert C.DATABASE == C.DATABASE_POSTGRES
@@ -121,8 +123,9 @@ bot = Bot(ConfigObj=C)
 # C_pr = ConfigProvider.new(network=C_nw)
 # C = Config(db = C_db, network = C_nw, provider = C_pr)
 # C
+# +
+# bot = Bot(ConfigObj=C)
 # -
-bot = Bot(ConfigObj=C)
 
 
 

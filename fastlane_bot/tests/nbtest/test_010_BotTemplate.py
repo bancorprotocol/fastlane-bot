@@ -24,8 +24,6 @@ require("2.0", __VERSION__)
 
 
 
-
-
 # ------------------------------------------------------------
 # Test      010
 # File      test_010_BotTemplate.py
@@ -40,6 +38,18 @@ def notest_mainnet_alchemy():
     assert C.NETWORK == C.NETWORK_MAINNET
     assert C.PROVIDER == C.PROVIDER_ALCHEMY
     print("Web3 API:", C.w3.api)
+    
+
+# ------------------------------------------------------------
+# Test      010
+# File      test_010_BotTemplate.py
+# Segment   Tenderly [NOTEST]
+# ------------------------------------------------------------
+def notest_tenderly():
+# ------------------------------------------------------------
+    
+    pass
+    
     
 
 # ------------------------------------------------------------
@@ -69,8 +79,6 @@ def test_mainnet_alchemy_configuration():
     # -
     
     
-    
-    
 
 # ------------------------------------------------------------
 # Test      010
@@ -83,6 +91,76 @@ def test_unittest_configuration():
     C = Config.new(config=Config.CONFIG_UNITTEST)
     assert C.DATABASE == C.DATABASE_UNITTEST
     assert C.NETWORK == C.NETWORK_MAINNET
-    assert C.PROVIDER == C.PROVIDER_UNITTEST
+    #assert C.PROVIDER == C.PROVIDER_UNITTEST
+    assert C.PROVIDER == C.PROVIDER_ALCHEMY
+    
+    
+    bot = Bot(ConfigObj=C)
+    
+
+# ------------------------------------------------------------
+# Test      010
+# File      test_010_BotTemplate.py
+# Segment   Mainnet Alchemy change DB
+# ------------------------------------------------------------
+def test_mainnet_alchemy_change_db():
+# ------------------------------------------------------------
+    
+    C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_MAINNET)
+    C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES, POSTGRES_DB="postgres")
+    C_pr = ConfigProvider.new(network=C_nw)
+    C = Config(db = C_db, network = C_nw, provider = C_pr)
+    assert C_db.POSTGRES_URL.endswith("/postgres")
+    assert C.DATABASE == C.DATABASE_POSTGRES
+    assert C.POSTGRES_DB == "postgres"
+    assert C.NETWORK == C.NETWORK_MAINNET
+    assert C.PROVIDER == C.PROVIDER_ALCHEMY
+    assert C.w3.__class__.__name__ == "Web3"
+    C
+    
+    bot = Bot(ConfigObj=C)
+    
+
+# ------------------------------------------------------------
+# Test      010
+# File      test_010_BotTemplate.py
+# Segment   Tenderly Configuration
+# ------------------------------------------------------------
+def test_tenderly_configuration():
+# ------------------------------------------------------------
+    #
+    # _this does not work in the same notebook as the other stuff due to limitations of the provider_
+    
+    
+    pass
+    
+    # +
+    # C = Config.new(config=Config.CONFIG_TENDERLY)
+    # assert C.DATABASE == C.DATABASE_POSTGRES
+    # assert C.POSTGRES_DB == "tenderly"
+    # assert C.NETWORK == C.NETWORK_TENDERLY
+    # assert C.PROVIDER == C.PROVIDER_TENDERLY
+    # assert C.w3.__class__.__name__ == "Web3"
+    # assert C.w3.isConnected()
+    # assert C.w3.provider.endpoint_uri.startswith("https://rpc.tenderly.co/fork/")
+    
+    # mainnet_w3 = Web3(Web3.HTTPProvider(f"https://eth-mainnet.alchemyapi.io/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"))
+    # assert mainnet_w3.eth.blockNumber != C.w3.eth.block_number
+    # print(f"Mainnet block = {mainnet_w3.eth.block_number}, Tenderly block = {C.w3.eth.block_number}")
+    # CARBON_CONTROLLER = C.w3.eth.contract(address="0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", abi=CARBON_CONTROLLER_ABI)
+    # fee = CARBON_CONTROLLER.caller.tradingFeePPM()
+    # assert type(fee) == int
+    
+    # +
+    # C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
+    # C_db = ConfigDB.new(db=ConfigDB.DATABASE_POSTGRES)
+    # C_pr = ConfigProvider.new(network=C_nw)
+    # C = Config(db = C_db, network = C_nw, provider = C_pr)
+    # C
+    # +
+    # bot = Bot(ConfigObj=C)
+    # -
+    
+    
     
     
