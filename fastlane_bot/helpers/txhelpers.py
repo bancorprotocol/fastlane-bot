@@ -246,7 +246,8 @@ class TxHelpers:
 
     def __post_init__(self):
 
-        self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=self.network, max_retries=3)
+        if self.ConfigObj.network.DEFAULT_PROVIDER != "tenderly":
+            self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=self.network, max_retries=3)
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
         self.web3 = self.ConfigObj.w3
         # Set the local account
