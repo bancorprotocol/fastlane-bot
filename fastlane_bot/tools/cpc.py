@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.4.2"
-__DATE__ = "30/Apr/2023"
+__VERSION__ = "2.6.4.3"
+__DATE__ = "01/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -730,6 +730,8 @@ class ConstantProductCurve:
             B = sqrt(pb)
             A0 = A if pa0 != pb0 else 0
         else:
+            pb0 = B * B             # B = sqrt(pb), A = sqrt(pa) - sqrt(pb)
+            pa0 = (A+B) * (A+B)     # A+B = sqrt(pa)
             A0 = A
             if A/B < 1e-7:
                 A = B*1e-7
