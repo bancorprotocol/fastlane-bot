@@ -95,5 +95,8 @@ class MockDatabaseManager(MockTokenManager, MockPairManager, MockPoolManager, Da
     A mock DatabaseManager class.
     """
     __name__ = "MockDatabaseManager"
-    __DATE__ = "04-30-2023"
-    __VERSION__ = "3.0.1"
+
+    __DATE__ = "05-01-2023"
+    __VERSION__ = "3.0.2"
+
+    
