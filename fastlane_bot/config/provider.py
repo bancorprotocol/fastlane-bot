@@ -163,5 +163,9 @@ class _ConfigProviderUnitTest(ConfigProvider):
         #raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
+        self.BANCOR_NETWORK_INFO_CONTRACT = None
+        self.CARBON_CONTROLLER_CONTRACT = None
+        self.BANCOR_ARBITRAGE_CONTRACT = None
+        
 
     
