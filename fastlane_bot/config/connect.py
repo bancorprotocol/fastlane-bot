@@ -168,24 +168,24 @@ class EthereumNetwork(NetworkBase):
         if self.is_connected:
             return
 
-        add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}"'
-        mod_tenderly = f'brownie networks modify "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
-        set_tenderly = f'brownie networks set_provider "{self.provider_name}"'
+        # add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}"'
+        # mod_tenderly = f'brownie networks modify "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
+        # set_tenderly = f'brownie networks set_provider "{self.provider_name}"'
 
-        cmds = [add_tenderly, mod_tenderly, set_tenderly]
-        for cmd in cmds:
-            p = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-                shell=True,
-            )
+        # cmds = [add_tenderly, mod_tenderly, set_tenderly]
+        # for cmd in cmds:
+        #     p = subprocess.Popen(
+        #         cmd,
+        #         stdout=subprocess.PIPE,
+        #         stderr=subprocess.PIPE,
+        #         stdin=subprocess.PIPE,
+        #         shell=True,
+        #     )
 
-            stdout, stderr = p.communicate()
+        #     stdout, stderr = p.communicate()
 
-            if "already exists" in stderr.decode("utf-8"):
-                logger.debug(f"network {self.network_id} already exists")
+        #     if "already exists" in stderr.decode("utf-8"):
+        #         logger.debug(f"network {self.network_id} already exists")
 
         self.network = network
         self.network.connect(self.network_id)
