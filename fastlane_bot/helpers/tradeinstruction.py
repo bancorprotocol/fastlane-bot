@@ -99,9 +99,7 @@ class TradeInstruction:
         """
         self._cid_tkn: str = None
         self._is_carbon = self._check_if_carbon()
-        print("tradeinstr, post_init, self.tknin", self.tknin)
-        TokenIn = self.db.get_token(kwargs = {"key":self.tknin})
-        print("tradeinstr, post_init, TokenIn", TokenIn)
+        TokenIn = self.db.get_token(key =self.tknin)
         self._tknin_address = TokenIn.address
         self._tknin_decimals = TokenIn.decimals
         self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
@@ -111,8 +109,9 @@ class TradeInstruction:
         self._amtin_quantized = self._quantize(
             self._amtin_decimals, self._tknin_decimals
         )
-        self._tknout_address = self.get_token(symbol=self.tknout)
-        self._tknout_decimals = self._get_token_decimals(self.tknout)
+        TokenOut = self.db.get_token(key =self.tknout)
+        self._tknout_address = TokenOut.address
+        self._tknout_decimals = TokenOut.decimals
         self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
         self._amtout_decimals = self._convert_to_decimals(
             self.amtout, self._tknout_decimals
