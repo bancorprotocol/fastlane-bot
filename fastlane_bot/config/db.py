@@ -1,7 +1,7 @@
 """
 Fastlane bot config -- database configuration
 """
-__VERSION__ = "1.0.3"
+__VERSION__ = "1.0.4"
 __DATE__ = "01/May 2023"
 from .base import ConfigBase
 from . import selectors as S
@@ -47,14 +47,12 @@ class ConfigDB(ConfigBase):
         elif db == cls.DATABASE_SDK:
             return _ConfigDBSdk(_direct=False, **kwargs)
         elif db == cls.DATABASE_UNITTEST:
-            return _ConfigDBUnittest(_direct=False, **kwargs)
+            return _ConfigDBUnitTest(_direct=False, **kwargs)
         else:
             raise ValueError(f"Invalid db: {db}")
         
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-
 
 class _ConfigDBPostgres(ConfigDB):
     """
@@ -101,6 +99,7 @@ class _ConfigDBSqlite(ConfigDB):
     SQLITE_URL = "sqlite:///fastlane_bot.db"
     #DEFAULT_DB_BACKEND_URL = POSTGRES_URL
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         raise NotImplementedError("Sqlite not implemented")
 
 class _ConfigDBUnittest(ConfigDB):
@@ -119,6 +118,7 @@ class _ConfigDBMemory(ConfigDB):
     """
     DATABASE = S.DATABASE_MEMORY
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         raise NotImplementedError("Memory not implemented")
     
 class _ConfigDBSdk(ConfigDB):
@@ -127,4 +127,14 @@ class _ConfigDBSdk(ConfigDB):
     """
     DATABASE = S.DATABASE_SDK
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         raise NotImplementedError("SDK not implemented")
+
+class _ConfigDBUnitTest(ConfigDB):
+    """
+    Fastlane bot config -- database [UnitTest]
+    """
+    DATABASE = S.DATABASE_UNITTEST
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
