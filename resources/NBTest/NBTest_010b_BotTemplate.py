@@ -28,12 +28,32 @@ require("2.0", __VERSION__)
 # -
 # # BOT TEMPLATE Tenderly [NBTest010b]
 
+# ## Tenderly shell commands [NOTEST]
+
+C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
+c1, c2 = C_nw.shellcommand().splitlines()
+
+print(c1)
+if 1:
+    !{c1}
+
+print(c2)
+if 1:
+    !{c2}
+
 # ## Tenderly Configuration
+
+# ### Shell commands
+#
+# Those shell commands need to be run before being able to connect to tenderly
 
 C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
 c1, c2 = C_nw.shellcommand().splitlines()
 assert c2 == 'brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/c0d1f990-c095-476f-80a9-72ac65092aae chainid=1'
 assert c1 == 'brownie networks delete tenderly'
+
+# +
+### Conncection proper
 
 # +
 C = Config.new(config=Config.CONFIG_TENDERLY)
