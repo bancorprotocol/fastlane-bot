@@ -9,6 +9,7 @@ from typing import Any, Dict, Type, Optional, Tuple, List
 import brownie
 from _decimal import Decimal
 from brownie import Contract
+from sqlalchemy import or_
 
 from fastlane_bot.db.model_managers import PoolManager, TokenManager, PairManager
 import fastlane_bot.db.models as models
@@ -76,20 +77,40 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                                              blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
         self.session.commit()
 
-    def update_pools_from_contracts(self, top_n: int = None):
+    def update_pools_from_contracts(self, only_carbon: bool = False, top_n: int = None):
         """
         For exchange in supported exchanges,
         get the available pool addresses and contracts
         then call update_pool_from_contract
 
+        Parameters
+        ----------
+        only_carbon : bool
+            Whether to only update carbon pools
+        top_n : int
+            The number of pools to update
+
+        Returns
+        -------
+        List[models.Pool]
+            The updated pools
+
+
         """
         pools = self.session.query(models.Pool).first()
 
+        if only_carbon:
+            carbon_tokens = self.get_carbon_pairs()
+
+            # Convert list of tuples to list of strings
+            carbon_tokens = [token[0] for token in carbon_tokens] + [token[1] for token in carbon_tokens]
+
         if not pools:
-            return self.create_pools_from_contracts(top_n=top_n)
+            return self.create_pools_from_contracts(only_carbon=only_carbon, top_n=top_n, carbon_tokens=carbon_tokens)
 
         for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-            pools = self.get_pools_from_exchange(exchange, top_n=top_n)
+            pools = self.get_pools_from_exchange(exchange, only_carbon=only_carbon, top_n=top_n,
+                                                 carbon_tokens=carbon_tokens)
             for pool in pools:
                 if pool.exchange_name == exchange:
                     contract = self.get_or_init_contract(exchange_name=exchange, pool_address=pool.address)
@@ -97,7 +118,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                         strategy = self.get_carbon_strategy(int(pool.cid))
                     else:
                         strategy = None
-                    self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address, strategy=strategy)
+                    self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address,
+                                                   strategy=strategy)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """
@@ -450,7 +472,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         return Decimal(price) * Decimal(tkn_bnt_price)
 
-    def get_genesis_pool_addresses_from_exchange(self, exchange: str, top_n: int = None) -> List[str]:
+    def get_genesis_pool_addresses_from_exchange(self, exchange: str, only_carbon: bool = False, top_n: int = None,
+                                                 carbon_tokens: List[str] = None) -> List[str]:
         """
         Gets the genesis pools for an exchange
 
@@ -460,18 +483,36 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The exchange name
         top_n : int
             The number of pools to return
+        only_carbon : bool
+            Whether to only return carbon pools and other exchange compatible pools
+        carbon_tokens : List[str]
+            The carbon tokens to use
 
         Returns
         -------
         List[models.Pool]
             The genesis pools
         """
+        if only_carbon:
+            token_symbols = []
+            for tkn in carbon_tokens:
+                print(f"Getting or creating carbon_tokens {tkn}")
+                tkn_obj = self.get_or_create_token(tkn)
+                print(f"Getting or creating carbon_tokens {tkn_obj.symbol}")
+                token_symbols.append(tkn_obj.symbol)
+
+            # Filter the df to only include carbon tokens on the given exchange
+            return self.data[(self.data['exchange'] == exchange) & (
+                        self.data['tkn0_symbol'].isin(token_symbols) | self.data['tkn1_symbol'].isin(token_symbols))][
+                'address'].unique().tolist()
+
         if top_n is None:
             return self.data[self.data['exchange'] == exchange]['address'].unique().tolist()
         else:
             return self.data[self.data['exchange'] == exchange]['address'].unique().tolist()[:top_n]
 
-    def get_pools_from_exchange(self, exchange: str, top_n: int = None) -> List[models.Pool]:
+    def get_pools_from_exchange(self, exchange: str, only_carbon: bool = False, top_n: int = None,
+                                carbon_tokens: List[str] = None) -> List[models.Pool]:
         """
         Gets the pools for an exchange
 
@@ -481,20 +522,46 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The exchange name
         top_n : int
             The number of pools to return
+        only_carbon : bool
+            Whether to only return carbon pools and other exchange compatible pools
 
         Returns
         -------
         List[models.Pool]
             The pools
         """
+        if only_carbon:
+            # Get all pools on the given exchange
+            exchange_pools = self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+            exchange_pairs = [pool.pair_name for pool in exchange_pools]
+            exchange_pairs = self.session.query(models.Pair).filter(models.Pair.name.in_(exchange_pairs)).all()
+
+            # Filter the pairs which contain carbon at least one carbon token
+            exchange_pairs = [pair for pair in exchange_pairs if
+                              pair.tkn0_address in carbon_tokens or pair.tkn1_address in carbon_tokens]
+
+            # Return the pools which contain at least one carbon token
+            return [pool for pool in exchange_pools if pool.pair_name in [pair.name for pair in exchange_pairs]]
+
         if top_n is None:
             return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
         else:
             return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
 
-    def create_pools_from_contracts(self, top_n: int = None):
+    def create_pools_from_contracts(self, only_carbon: bool = None, top_n: int = None, carbon_tokens: List[str] = None):
         """
         Creates pools from contracts
+
+        Parameters
+        ----------
+        only_carbon : bool
+            Whether to only create carbon pools and other exchange compatible pools
+        top_n : int
+            The number of pools to create
+        carbon_tokens : List[str]
+            The carbon tokens to create pools for
+
+
         """
         for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
             try:
@@ -502,7 +569,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                     self.create_or_update_carbon_pools()
                     continue
 
-                pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange, top_n=top_n)
+                pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange, only_carbon=only_carbon,
+                                                                               top_n=top_n, carbon_tokens=carbon_tokens)
                 assert type(pool_addresses[0]) == str, f"Pool addresses must be strings, not {type(pool_addresses[0])}"
 
                 if exchange == self.ConfigObj.BANCOR_V3_NAME:
