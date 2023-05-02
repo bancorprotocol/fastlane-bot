@@ -109,7 +109,13 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         if not pools:
             return self.create_pools_from_contracts(only_carbon=only_carbon, top_n=top_n, carbon_tokens=carbon_tokens)
 
-        for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
+        exchanges = [self.ConfigObj.CARBON_V1_NAME] + [exchange for exchange in self.ConfigObj.SUPPORTED_EXCHANGES if exchange != self.ConfigObj.CARBON_V1_NAME]
+        for exchange in exchanges:
+            self.c.logger.info(f"[update_pools_from_contracts] Updating {exchange} pools...")
+            if exchange == self.ConfigObj.CARBON_V1_NAME:
+                self.create_or_update_carbon_pools()
+                continue
+
             pools = self.get_pools_from_exchange(exchange, only_carbon=only_carbon, top_n=top_n,
                                                  carbon_tokens=carbon_tokens)
             for pool in pools:
@@ -519,6 +525,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         Parameters
         ----------
+        carbon_tokens
+
         exchange : str
             The exchange name
         top_n : int
@@ -608,12 +616,14 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             if pool:
                 try:
                     self.update_carbon_pool(strategy, last_updated_block)
+                    self.c.logger.info(f"[manager.create_or_update_carbon_pools] Updated Carbon strategy {strategy_id}")
                 except Exception as e:
                     self.c.logger.error(f"[manager.create_or_update_carbon_pools] Error updating Carbon strategy [{e}]")
                     continue
             else:
                 try:
                     self.create_carbon_pool(strategy, last_updated_block)
+                    self.c.logger.info(f"[manager.create_or_update_carbon_pools] Created Carbon strategy {strategy_id}")
                 except Exception as e:
                     self.c.logger.error(
                         f"[manager.create_or_update_carbon_pools] Error creating Carbon strategy {strategy} [{e}]")
