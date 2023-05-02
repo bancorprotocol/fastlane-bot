@@ -25,49 +25,26 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
 
-# # Testing the _run functions on MOCK [NBTest011]
+# # Testing the _run functions on TENDERLY [NBTest011b]
 
-# ## Unittest Alchemy Configuration
+# ## Tenderly Configuration
 
-# ### Set up the bot
+# ### Set up the bot and curves
 
-C = Config.new(config=Config.CONFIG_UNITTEST)
-assert C.DATABASE == C.DATABASE_UNITTEST
-assert C.POSTGRES_DB == "unittest"
-assert C.NETWORK == C.NETWORK_MAINNET
-assert C.PROVIDER == C.PROVIDER_ALCHEMY
+C = Config.new(config=Config.CONFIG_TENDERLY)
+assert C.DATABASE == C.DATABASE_POSTGRES
+assert C.POSTGRES_DB == "tenderly"
+assert C.NETWORK == C.NETWORK_TENDERLY
+assert C.PROVIDER == C.PROVIDER_TENDERLY
 bot = CarbonBot(ConfigObj=C)
-assert str(type(bot.db)) == "<class 'fastlane_bot.db.mock_model_managers.MockDatabaseManager'>"
-assert bot.db.get_pools()[0].fee_float is not None, "Incorrect pools.csv file see MockPoolManager data"
+assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
-# ### Set up the curves
+bot.update(drop_tables=True)
 
-cc1 = CPC.from_carbon(pair="WETH-6Cc2/USDC-eB48", tkny="WETH-6Cc2", yint=10, y=10, pa=1/2000, pb=1/2010, cid="1701411834604692317316873037158841057285-1")
-assert iseq(1/2000, cc1.p, cc1.p_max)
-assert iseq(1/2010, cc1.p_min)
-assert cc1.p_convention() == 'WETH per USDC'
-assert cc1.p_min < cc1.p_max
-cc1
-
-cid = cc1.cid
-assert bot.db.get_pool(cid=cid.split('-')[0]).exchange_name == 'carbon_v1', "The cids are chosen as they are the correct pools in the test data pools.csv"
-
-cu1 = CPC.from_univ3(pair="WETH-6Cc2/USDC-eB48", Pmarg=2100, uniPa=2000, uniPb=2200, 
-                     uniL=200*m.sqrt(2100*2100), fee=0, cid="10548753374549092367364612830384814555378", descr="")
-assert iseq(cu1.p, 2100)
-assert iseq(cu1.p_min, 2000)
-assert iseq(cu1.p_max, 2200)
-assert cu1.p_convention() == 'USDC per WETH'
-assert cu1.p_min < cu1.p_max
-cu1
-
-cid = cu1.cid
-assert bot.db.get_pool(cid=cid.split('-')[0]).exchange_name == 'uniswap_v3', "The cids are chosen as they are the correct pools in the test data pools.csv"
-
-cu1.p, cc1.p
-
-CCm = CPCContainer([cu1, cc1])
-#CCm.plot()
+CCm = bot.get_curves()
+print(CCm)
+assert len(CCm) > 100
+CCm.plot()
 
 # ### Run `_find_arbitrage_opportunities}`
 
