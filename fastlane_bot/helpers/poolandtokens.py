@@ -1,5 +1,5 @@
-__VERSION__ = "1.0"
-__DATE__="01/May/2023"
+__VERSION__ = "1.1"
+__DATE__="02/May/2023"
 
 from typing import Dict, Any, List, Union
 
@@ -299,10 +299,11 @@ class PoolAndTokens:
 
         """
         args = {"token0": self.tkn0_key, "token1": self.tkn1_key, "sqrt_price_q96": self.sqrt_price_q96, "tick": self.tick, "liquidity": self.liquidity}
-        uni3 = Univ3Calculator.from_dict(args, self.fee, self.ADDRDEC)
+        uni3 = Univ3Calculator.from_dict(args, self.fee, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()
         params["cid"] = self.cid
         params["descr"] = self.descr
+        params["params"] = self._params
         return [ConstantProductCurve.from_univ3(**params)]
 
     @staticmethod
