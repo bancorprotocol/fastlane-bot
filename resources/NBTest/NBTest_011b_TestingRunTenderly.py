@@ -102,7 +102,7 @@ r4
 
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm)
 
-assert r is not None, "This setup should find an arb"
+assert r[0] != 0, f"This setup should find an arb {r}"
 r
 
 # ### Run `_run`
