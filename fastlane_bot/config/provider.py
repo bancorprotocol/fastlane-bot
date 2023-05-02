@@ -35,6 +35,7 @@ class ConfigProvider(ConfigBase):
     PROVIDER_UNITTEST = S.PROVIDER_UNITTEST
     ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 
+
     @classmethod
     def new(cls, network: ConfigNetwork, provider=None, **kwargs):
         """
@@ -86,7 +87,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        
+        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(self.ETH_PRIVATE_KEY_BE_CAREFUL)
         self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
             name=N.BANCOR_V3_NAME,
             address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
@@ -122,7 +123,8 @@ class _ConfigProviderTenderly(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        
+        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(self.ETH_PRIVATE_KEY_BE_CAREFUL)
+
         self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
             name=N.BANCOR_V3_NAME,
             address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
