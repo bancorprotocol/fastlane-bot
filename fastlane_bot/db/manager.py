@@ -98,6 +98,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         """
         pools = self.session.query(models.Pool).first()
+        carbon_tokens = None
 
         if only_carbon:
             carbon_tokens = self.get_carbon_pairs()
@@ -564,28 +565,28 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         """
         for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-            try:
-                if exchange == self.ConfigObj.CARBON_V1_NAME:
-                    self.create_or_update_carbon_pools()
-                    continue
-
-                pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange, only_carbon=only_carbon,
-                                                                               top_n=top_n, carbon_tokens=carbon_tokens)
-                assert type(pool_addresses[0]) == str, f"Pool addresses must be strings, not {type(pool_addresses[0])}"
-
-                if exchange == self.ConfigObj.BANCOR_V3_NAME:
-                    contract = self.c.BANCOR_NETWORK_INFO_CONTRACT
-                    pools = [(exchange, address, contract) for address in pool_addresses]
-                    self.create_or_update_pool_with_multicall(pools=pools)
-                    continue
-
-                for address in pool_addresses:
-                    self.create_pool_from_contract(exchange_name=exchange, pool_address=address)
-
-            except Exception as e:
-                self.c.logger.error(
-                    f"[manager.create_pools_from_contracts] Error creating pool {exchange} {address} [{e}]")
+            # try:
+            if exchange == self.ConfigObj.CARBON_V1_NAME:
+                self.create_or_update_carbon_pools()
                 continue
+
+            pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange, only_carbon=only_carbon,
+                                                                           top_n=top_n, carbon_tokens=carbon_tokens)
+            assert type(pool_addresses[0]) == str, f"Pool addresses must be strings, not {type(pool_addresses[0])}"
+
+            if exchange == self.ConfigObj.BANCOR_V3_NAME:
+                contract = self.c.BANCOR_NETWORK_INFO_CONTRACT
+                pools = [(exchange, address, contract) for address in pool_addresses]
+                self.create_or_update_pool_with_multicall(pools=pools)
+                continue
+
+            for address in pool_addresses:
+                self.create_pool_from_contract(exchange_name=exchange, pool_address=address)
+
+            # except Exception as e:
+            #     self.c.logger.error(
+            #         f"[manager.create_pools_from_contracts] Error creating pool {exchange} {address} [{e}]")
+            #     continue
 
     def create_or_update_carbon_pools(self, pools: List[Any] = None):
         """
