@@ -4,8 +4,8 @@ Helpers for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-__VERSION__ = "1.0"
-__DATE__="01/May/2023"
+__VERSION__ = "1.1"
+__DATE__="02/May/2023"
 
 from dataclasses import dataclass
 from typing import Union
@@ -76,7 +76,7 @@ class TradeInstruction:
     amtout: Union[int, Decimal, float]
     pair_sorting: str = None
     raw_txs: str = None
-    custom_data: any = None
+    custom_data: str = ''
     db: any = None
 
     @property

@@ -38,7 +38,7 @@ Licensed under MIT
     &@@@@@@@@@@@@@@@@@@@@@@@@@@%((((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@&(((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     (@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-    MB@RICHARDSON@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+    @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
 import itertools
@@ -271,9 +271,12 @@ class CarbonBot(CarbonBotBase):
         '''
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
         '''
-        ordered_trade_instructions_dct = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token] + [x for x in best_trade_instructions_dic if x['tknin'] != best_src_token]
+        src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token]
+        non_src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] != best_src_token]
+        ordered_trade_instructions_dct = src_token_instr + non_src_token_instr
 
-        return ordered_trade_instructions_dct
+        tx_in_count = len(src_token_instr)
+        return ordered_trade_instructions_dct, tx_in_count
     
     def _basic_scaling_alternative_to_exact(self, best_trade_instructions_dic, best_src_token):
         '''
@@ -315,7 +318,6 @@ class CarbonBot(CarbonBotBase):
         List[Dict[str, Any]]
             The trade instructions.
         """
-        print("[bot, convert trade instrucitons]", trade_instructions_dic)
         errorless_trade_instructions_dic = self._drop_error(trade_instructions_dic)
         result = ({**ti, "raw_txs": "[]", "pair_sorting": "", "ConfigObj" : self.ConfigObj, "db":self.db} for ti in errorless_trade_instructions_dic if ti is not None)
         result = [TradeInstruction(**ti) for ti in result]
@@ -547,7 +549,7 @@ class CarbonBot(CarbonBotBase):
     XS_TI = "ti"
     XS_ORDSCAL = "ordscal"
     XS_AGGTI = "aggti"
-    XS_ORDTI = "ordti"
+    XS_ORDINFO = "ordinfo"
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
     # TODO: RENAME TO _RUN
@@ -587,7 +589,7 @@ class CarbonBot(CarbonBotBase):
         ) = r
 
         # Order the trades instructions suitable for routing and scale the amounts
-        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+        ordered_trade_instructions_dct, tx_in_count = self._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
         ordered_scaled_dcts = self._basic_scaling_alternative_to_exact(ordered_trade_instructions_dct, best_src_token)
         if result == self.XS_ORDSCAL:
             return ordered_scaled_dcts
@@ -598,24 +600,24 @@ class CarbonBot(CarbonBotBase):
             return ordered_trade_instructions_objects
         
         ## Aggregate trade instructions
-        tx_route_handler = self.TxRouteHandlerClass(ordered_trade_instructions_objects)
+        tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
-            trade_instructions=ordered_trade_instructions_objects
+            trade_instructions_objects=ordered_trade_instructions_objects
         )
         del ordered_trade_instructions_objects # TODO: REMOVE THIS
         if result == self.XS_AGGTI:
             return agg_trade_instructions
 
         # Get the flashloan amount
-        flashloan_amount = int(agg_trade_instructions[0].amtin_wei)
+        flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))
 
         # Get the flashloan token address
         flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
-            self.db.get_token_address_from_token_key(agg_trade_instructions[0].tknin_key)
+            self.db.get_token(key=agg_trade_instructions[0].tknin_key).address
         )
 
         self.ConfigObj.logger.debug(f"flashloan_amount: {flashloan_amount}")
-        if result == self.XS_ORDTI:
+        if result == self.XS_ORDINFO:
             return agg_trade_instructions, flashloan_amount, flashloan_token_address
         
         ## Encode trade instructions

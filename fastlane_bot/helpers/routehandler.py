@@ -4,8 +4,8 @@ Route handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-__VERSION__ = "1.0"
-__DATE__="01/May/2023"
+__VERSION__ = "1.1"
+__DATE__="02/May/2023"
 
 # import itertools
 # import random
@@ -76,7 +76,7 @@ class RouteStruct:
     customAddress: str
     customInt: int
     customData: bytes
-    ConfigObj: Config
+    # ConfigObj: Config
 @dataclass
 class TxRouteHandlerBase:
     __VERSION__=__VERSION__
@@ -97,10 +97,10 @@ class TxRouteHandler(TxRouteHandlerBase):
     __VERSION__=__VERSION__
     __DATE__=__DATE__
     
-    ConfigObj: Config
-    trade_instructions_dic: List[TradeInstruction]
-    trade_instructions_df: pd.DataFrame
-    trade_instructions: List[ConstantProductCurve]
+    # ConfigObj: Config
+    # trade_instructions_dic: List[TradeInstruction]
+    # trade_instructions_df: pd.DataFrame
+    trade_instructions: List[TradeInstruction]
 
     @property
     def exchange_ids(self) -> List[int]:
@@ -112,41 +112,42 @@ class TxRouteHandler(TxRouteHandlerBase):
     def __post_init__(self):
         self.contains_carbon = True
         self._validate_trade_instructions()
+        self.ConfigObj = self.trade_instructions[0].ConfigObj
 
     def _validate_trade_instructions(self):
         """
         Validates the trade instructions.
         """
-        if not self.trade_instructions_dic:
+        if not self.trade_instructions:
             raise ValueError("No trade instructions found.")
-        if len(self.trade_instructions_dic) < 2:
+        if len(self.trade_instructions) < 2:
             raise ValueError("Trade instructions must be greater than 1.")
-        if len(self._get_carbon_indexes(self.trade_instructions_dic)) == 0:
+        if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
 
-    @staticmethod
-    def _get_carbon_indexes(
-        trade_instructions_dic: List[Dict[str, Any] or TradeInstruction]
-    ) -> List[int]:
-        """
-        Gets the indexes of the trades that are on the Carbon exchange.
+    # @staticmethod
+    # def _get_carbon_indexes(
+    #     trade_instructions_dic: List[Dict[str, Any] or TradeInstruction]
+    # ) -> List[int]:
+    #     """
+    #     Gets the indexes of the trades that are on the Carbon exchange.
 
-        Returns
-        -------
-        List[int]
-            The indexes of the trades that are on the Carbon exchange.
-        """
-        if isinstance(trade_instructions_dic[0], TradeInstruction):
-            return [
-                idx
-                for idx in range(len(trade_instructions_dic))
-                if "-" in trade_instructions_dic[idx].cid
-            ]
-        return [
-            idx
-            for idx in range(len(trade_instructions_dic))
-            if "-" in trade_instructions_dic[idx]["cid"]
-        ]
+    #     Returns
+    #     -------
+    #     List[int]
+    #         The indexes of the trades that are on the Carbon exchange.
+    #     """
+    #     if isinstance(trade_instructions_dic[0], TradeInstruction):
+    #         return [
+    #             idx
+    #             for idx in range(len(trade_instructions_dic))
+    #             if "-" in trade_instructions_dic[idx].cid
+    #         ]
+    #     return [
+    #         idx
+    #         for idx in range(len(trade_instructions_dic))
+    #         if "-" in trade_instructions_dic[idx]["cid"]
+    #     ]
 
     def is_weth(self, address: str) -> bool:
         """
@@ -171,7 +172,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         for i in range(len(agg_trade_instructions)):
             instr = agg_trade_instructions[i]
             if instr.raw_txs == "[]":
-                instr.customData = ""
+                instr.custom_data = "0x"
                 agg_trade_instructions[i] = instr
             else:
                 tradeInfo = eval(instr.raw_txs)
@@ -201,8 +202,8 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 # Encode the extracted values using the ABI types
                 encoded_data = eth_abi.encode(all_types, values)
-                instr.custom_data = str(encoded_data)
-            agg_trade_instructions[i] = instr
+                instr.custom_data = '0x'+str(encoded_data.hex())
+                agg_trade_instructions[i] = instr
         return agg_trade_instructions
 
     def _abi_encode_data(
@@ -245,9 +246,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         target_address: str,
         exchange_id: int,
         custom_address: str = None,
-        fee: Any = None,
+        fee_float: Any = None,
         customData: Any = None,
         override_min_target_amount: bool = True,
+        # ConfigObj: Config = None
     ) -> RouteStruct:
         """
         Converts the trade instructions into the variables needed to instantiate the `TxSubmitHandler` class.
@@ -266,8 +268,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             The exchange id.
         custom_address: str
             The custom address.
-        fee: Any
-            The fee.
+        fee_float: Any
+            The fee_float.
         customData: Any
             The custom data.
         override_min_target_amount: bool
@@ -286,9 +288,11 @@ class TxRouteHandler(TxRouteHandlerBase):
         if override_min_target_amount:
             min_target_amount = 1
 
-        if exchange_id != 4:
-            fee = Decimal(fee)
-            fee *= Decimal(1000000)
+        # if exchange_id != 4:
+        #     fee = Decimal(fee)
+        #     fee *= Decimal(1000000)
+
+        fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
 
         return RouteStruct(
             exchangeId=exchange_id,
@@ -296,8 +300,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
             customAddress=custom_address,
-            customInt=int(fee),
+            customInt=fee_customInt_specifier,
             customData=customData,
+            # ConfigObj=ConfigObj,
+
         )
 
     def get_route_structs(
@@ -323,7 +329,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             print(f"trade_instruction.cid: {t.cid}")
 
         pools = [
-            self._cid_to_pool(trade_instruction.cid)
+            self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
             for trade_instruction in trade_instructions
         ]
 
@@ -336,9 +342,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 custom_address=trade_instructions[
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
-                fee=pools[idx].fee,
+                fee_float=pools[idx].fee_float,
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
+                # ConfigObj=trade_instructions[idx].ConfigObj,
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
@@ -415,7 +422,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             A list of aggregated trade instructions as TradeInstruction objects.
 
         """
-        # Get the indices of the carbon trades
+        config_object = trade_instructions_objects[0].ConfigObj
+        db = trade_instructions_objects[0].db
+
         listti = self._get_trade_dicts_from_objects(trade_instructions_objects)
         df = pd.DataFrame(listti)
         df["pair_sorting"] = df.tknin + df.tknout
@@ -424,6 +433,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         carbons = df[df['carbon']].copy()
         nocarbons = df[~df['carbon']].copy()
         nocarbons["raw_txs"] = str([])
+        nocarbons["ConfigObj"] = config_object
+        nocarbons["db"] = db
 
         carbons.drop(['carbon'], axis=1, inplace=True)
         nocarbons.drop(['carbon'], axis=1, inplace=True)
@@ -440,6 +451,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "tknout": newdf.tknout.values[0],
                 "amtout": newdf.amtout.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
+                "ConfigObj" : config_object,
+                "db" : db,
             }
             for min_index, newdf in result}
 
@@ -1222,5 +1235,5 @@ class TxRouteHandler(TxRouteHandlerBase):
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
         return tkn0_amt / Decimal("10") ** Decimal(str(tkn0_decimals))
 
-    def _cid_to_pool(self, cid: str) -> Pool:
-        return self.db.session.query(Pool).filter(Pool.cid == cid).first()
+    def _cid_to_pool(self, cid: str, db: any) -> Pool:
+        return db.get_pool(cid=cid)
