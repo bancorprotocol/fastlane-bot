@@ -38,8 +38,6 @@ db = bot.db
 deadline = bot._get_deadline()
 deadline
 
-
-
 # ## TradeInstruction to Route
 
 # ### TradeInstruction
