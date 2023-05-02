@@ -212,9 +212,11 @@ class CarbonBotBase():
         """
         pools_and_tokens = self.db.get_pool_data_with_tokens(cnfg=self.ConfigObj)
         curves = []
+        tokens = self.db.get_tokens()
+        ADDRDEC = {t.key: (t.address, t.decimals) for t in tokens}
         for p in pools_and_tokens:
-            # print(p)
             try:
+                p.ADDRDEC = ADDRDEC
                 curves += p.to_cpc()
                 # time.sleep(0.00000001)  # to avoid unstable results
             except ZeroDivisionError as e:
