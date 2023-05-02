@@ -7,7 +7,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.2" 
+__VERSION__ = "1.3" 
 __DATE__ = "02/May/2023"
 
 from math import sqrt
@@ -40,12 +40,22 @@ class Univ3Calculator():
     tkn1decv: InitVar[int] = None
     addrdec: InitVar[dict] = None
     ADDRDEC = dict(
+        # only for testing
         USDC = ("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 6),
         WETH = ("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 18),
     )
 
     @classmethod
-    def from_dict(cls, d, fee_const, addrdec=None):
+    def from_dict(cls, d, fee_const, *, addrdec=None, tkn0decv=None, tkn1decv=None):
+        """
+        alternative constructor from a dictionary
+        
+        :d:             dict with keys: token0 [address], token1 [address], sqrt_price_q96, tick, liquidity
+        :fee_const:     fee constant (FEE100, ...)
+        :tkn0decv:      optional token0 decimals value (eg 6, 18)
+        :tkn1decv:      optional token1 decimals value (eg 6, 18)
+        :addrdec:       optional dictionary of token address to decimals (eg {"0x123...": 18})
+        """
         return cls(
             tkn0 = d["token0"],
             tkn1 = d["token1"],
@@ -53,7 +63,9 @@ class Univ3Calculator():
             tick = d["tick"],
             liquidity = d["liquidity"],
             fee_const = fee_const,
-            addrdec = addrdec
+            addrdec = addrdec,
+            tkn0decv = tkn0decv,
+            tkn1decv = tkn1decv,
         )
 
 
@@ -62,6 +74,8 @@ class Univ3Calculator():
     class DecimalsMissingError(Exception): pass
     
     def __post_init__(self, tkn0decv=None, tkn1decv=None, addrdec=None):
+        
+        #print("[Univ3Calculator] post_init")
 
         if addrdec is not None:
             self.ADDRDEC.update(addrdec)
@@ -74,14 +88,18 @@ class Univ3Calculator():
             pass
 
         if tkn0decv is None:
-            raise self.DecimalsMissingError(f"must provide tkn0decv for {self.tkn0}")
-            super().__setattr__('_tkn0dec', self.ADDRDEC[self.tkn0][1]) 
+            try:
+                super().__setattr__('_tkn0dec', self.ADDRDEC[self.tkn0][1])
+            except KeyError:
+                raise self.DecimalsMissingError(f"must provide tkn0decv for {self.tkn0}")
         else:
             super().__setattr__('_tkn0dec', tkn0decv)
         
         if tkn1decv is None:
-            raise self.DecimalsMissingError(f"must provide tkn1decv for {self.tkn1}")
-            super().__setattr__('_tkn1dec', self.ADDRDEC[self.tkn1][1]) 
+            try:
+                super().__setattr__('_tkn1dec', self.ADDRDEC[self.tkn1][1])
+            except KeyError:
+                raise self.DecimalsMissingError(f"must provide tkn1decv for {self.tkn1}")
         else:
             super().__setattr__('_tkn1dec', tkn1decv)
         
@@ -253,5 +271,5 @@ class Univ3Calculator():
     
         s += f" full P = {p}, full 1/P = {1/p}\n"
         return s
-    
+
 U3 = Univ3Calculator

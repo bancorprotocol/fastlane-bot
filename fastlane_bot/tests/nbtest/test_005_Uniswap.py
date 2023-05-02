@@ -11,7 +11,7 @@
 
 
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-from fastlane_bot.tools.univ3calc import Univ3Calculator as U3
+from fastlane_bot.helpers.univ3calc import Univ3Calculator as U3
 from dataclasses import dataclass, asdict
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -41,6 +41,8 @@ def test_u3_standalone():
         "tick": "199782", 
         "liquidity": "36361853546581410773"
     }
+    
+    help(U3.from_dict)
     
     u1 = U3(
         tkn0="USDC", 
@@ -116,6 +118,18 @@ def test_u3_standalone():
     assert u.k == u.L2
     assert u.kbar == u.L
     u.tkn0reserve(incltoken=True), u.tkn1reserve(incltoken=True), u.tvl(incltoken=True)
+    
+    data1 = {**data}
+    data1["token0"] = data["token0"]+"_"
+    data1["token1"] = data["token1"]+"_"
+    data1
+    
+    assert raises (U3.from_dict, data1, U3.FEE500).startswith("must provide tkn0decv")
+    u3 = U3.from_dict(data1, U3.FEE500, tkn0decv=6, tkn1decv=18)
+    assert u3.liquidity == u2.liquidity
+    assert u3.tick == u2.tick
+    assert u3.sp96 == u2.sp96
+    assert u3.sp96 == u2.sp96
     
 
 # ------------------------------------------------------------

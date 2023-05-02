@@ -37,10 +37,9 @@ def notest_tenderly_shell_commands():
     c1, c2 = C_nw.shellcommand().splitlines()
     
     print(c1)
-    #!{c1}
-    
     print(c2)
-    #!{c2}
+    # !{c1}
+    # !{c2}
     
 
 # ------------------------------------------------------------
@@ -57,8 +56,16 @@ def test_tenderly_configuration():
     
     C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
     c1, c2 = C_nw.shellcommand().splitlines()
-    assert c2 == 'brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/c0d1f990-c095-476f-80a9-72ac65092aae chainid=1'
+    assert c2 == 'brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/058b12b9-c69e-4676-a7bd-2ba09c9b23c7 chainid=1'
     assert c1 == 'brownie networks delete tenderly'
+    
+    print(c1)
+    print(c2)
+    
+    # +
+    # !{c2}
+    # !{c1}
+    # -
     
     # ### Connection proper
     
@@ -117,6 +124,10 @@ def notest_bot_update():
     
     help(bot.update)
     
-    bot.update(drop_tables=False)
+    # +
+    #bot.update(drop_tables=True, only_carbon=False)
+    # -
+    
+    help(bot.update)
     
     
