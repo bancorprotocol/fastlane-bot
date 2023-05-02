@@ -300,7 +300,7 @@ class CarbonBot(CarbonBotBase):
 
         for i in range(len(scaled_best_trade_instructions_dic)):
             if scaled_best_trade_instructions_dic[i]["tknin"] == best_src_token:
-                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.999
+                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
             else:
                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
 
