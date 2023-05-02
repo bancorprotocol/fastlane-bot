@@ -4,7 +4,7 @@ Helpers for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-__VERSION__ = "1.1"
+__VERSION__ = "1.2"
 __DATE__="02/May/2023"
 
 from dataclasses import dataclass
@@ -78,6 +78,11 @@ class TradeInstruction:
     raw_txs: str = None
     custom_data: str = ''
     db: any = None
+    tknin_dec_override: int = None   # for testing to not go to the database
+    tknout_dec_override: int = None  # ditto
+    tknin_addr_override: str = None  # ditto
+    tknout_addr_override: str = None # ditto
+    exchange_override: str = None    # ditto
 
     @property
     def tknin_key(self) -> str:
@@ -99,9 +104,15 @@ class TradeInstruction:
         """
         self._cid_tkn: str = None
         self._is_carbon = self._check_if_carbon()
-        TokenIn = self.db.get_token(key =self.tknin)
-        self._tknin_address = TokenIn.address
-        self._tknin_decimals = int(TokenIn.decimals)
+        
+        if self.tknin_dec_override is None:
+            TokenIn = self.db.get_token(key =self.tknin)
+            self._tknin_address = TokenIn.address
+            self._tknin_decimals = int(TokenIn.decimals)
+        else:
+            self._tknin_address = self.tknin_addr_override
+            self._tknin_decimals = self.tknin_dec_override
+            
         self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
         self._amtin_decimals = self._convert_to_decimals(
             self.amtin, self._tknin_decimals
@@ -109,9 +120,15 @@ class TradeInstruction:
         self._amtin_quantized = self._quantize(
             self._amtin_decimals, self._tknin_decimals
         )
-        TokenOut = self.db.get_token(key =self.tknout)
-        self._tknout_address = TokenOut.address
-        self._tknout_decimals = int(TokenOut.decimals)
+        
+        if self.tknout_dec_override is None:
+            TokenOut = self.db.get_token(key =self.tknout)
+            self._tknout_address = TokenOut.address
+            self._tknout_decimals = int(TokenOut.decimals)
+        else:
+            self._tknout_address = self.tknout_addr_override
+            self._tknout_decimals = self.tknout_dec_override
+            
         self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
         self._amtout_decimals = self._convert_to_decimals(
             self.amtout, self._tknout_decimals
@@ -123,7 +140,10 @@ class TradeInstruction:
             self.raw_txs = "[]"
         if self.pair_sorting is None:
             self.pair_sorting = ""
-        self._exchange_name = self.db.get_pool(cid=self.cid.split('-')[0]).exchange_name
+        if self.exchange_override is None:
+            self._exchange_name = self.db.get_pool(cid=self.cid.split('-')[0]).exchange_name
+        else:
+            self._exchange_name = self.exchange_override
         self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
 
     @property
