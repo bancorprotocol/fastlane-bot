@@ -16,7 +16,7 @@
 
 from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
 from fastlane_bot.testing import *
@@ -53,47 +53,56 @@ assert len(CCm) > 100
 
 # #### AO_TOKENS
 
-flt = ['USDC-eB48']
+flt = [T.ETH]
 r=bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_TOKENS)
-r
+#r
+len(r[0]), len(r[1]), list(r[0])[0], list(r[1])[0]
 
-# +
-# assert r[0] == {'WETH-6Cc2', 'USDC-eB48'}
+assert len(r[0]) > 100
+assert len(r[1]) > 100
 # assert r[1] == [('WETH-6Cc2', 'USDC-eB48')]
-# -
-
-# #### AO_CANDIDATES [WETH]
-
-flt = ['WETH-6Cc2']
-r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
-# assert r == [], "The candidates in this direction should be empty"
 
 # #### AO_CANDIDATES [USDC]
 
-flt = ['USDC-eB48']
+flt = [T.USDC]
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
-# assert len(r) >= 1, "The candidates should be populated in this direction"
-r0, r1, r2, r3, r4 = r[0]
-# assert r0 > 0, "The profit should be positive"
+len(r)
 
+# #### AO_CANDIDATES [WETH]
+
+flt = [T.WETH]
+r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm, result=bot.AO_CANDIDATES)
+print("---\nlen(r)", len(r))
+assert len(r) >= 1, "The candidates should be populated in this direction"
+r0, r1, r2, r3, r4 = r[1]
+# assert r0 > 0, "The profit should be positive"
+r
+
+tntkn
+
+tn = r1.loc["TOTAL NET"].to_dict()
+tntkn = list(set(tn.keys()) - {flt[0]})
+print("TOTAL NET", tn)
+print("TOKENS", tntkn, flt[0])
 # assert r1.loc["TOTAL NET"]["WETH-6Cc2"] < 1e-5, "Net change for WETH should be approximately zero"
-# assert r1.loc["TOTAL NET"]["USDC-eB48"] < -100, "Arb value for USDC should be positive"
+assert abs(tn[tntkn[0]]) < 1e-6, f"{tntkn[0]} should be net zero"
+assert tn[flt[0]] < -0.001, f"Arb value for {flt[0]} should be positive"
 r1
 
-# assert len(r2) == 2, "There should be two items in the best_trade_instructions_dict"
+assert len(r2) == 2, "There should be two items in the best_trade_instructions_dict"
 r2
 
-# assert r3 == flt[0], "The best_src_token should be the flashloan token"
+assert r3 == flt[0], "The best_src_token should be the flashloan token"
 r3
 
-# assert len(r4) == 2, "There should be two items in the trade instructions"
+assert len(r4) == 2, "There should be two items in the trade instructions"
 r4
 
 # #### Full
 
 r = bot._find_arbitrage_opportunities(flashloan_tokens=flt, CCm=CCm)
 
-# assert r is not None, "This setup should find an arb"
+assert r is not None, "This setup should find an arb"
 r
 
 # ### Run `_run`
@@ -189,3 +198,10 @@ route
 # assert type(route[0]['customAddress']) == str, "customAddress should be str"
 # assert type(route[0]['customInt']) == int, "customInt should be ints"
 # assert type(route[0]['customData']) == str, "customData should be str"
+# -
+
+
+
+
+
+
