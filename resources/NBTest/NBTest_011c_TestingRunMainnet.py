@@ -16,7 +16,7 @@
 
 from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
 from fastlane_bot.testing import *
@@ -45,9 +45,20 @@ assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 # -
 
 CCm = bot.get_curves()
-print("Len CCm", len(CCm))
-assert len(CCm) > 100
+exch = {c.P("exchange") for c in CCm}
+print("Number of curvers:", len(CCm))
+print("Number of tokens:", len(CCm.tokens()))
+print("Exchanges:", exch)
+
+assert {T.ETH, T.USDC, T.WBTC, T.DAI, T.BNT} - CCm.tokens() == set(), "Key tokens missing"
+assert len(CCm) > 100, f"Not enough curves {len(CCm)}"
+assert 'uniswap_v3' in exch, f"uni v3 not in exchanges {exch}"
+assert 'carbon_v1' in exch, f"carbon not in exchanges {exch}"
+assert len(exch) == 6, f"exchanges missing {exch}"
+
+# +
 #CCm.plot()
+# -
 
 # ### Run `_find_arbitrage_opportunities}`
 

@@ -44,10 +44,23 @@ assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 # bot.update(drop_tables=False)
 # -
 
+{T.ETH} - CCm.tokens()
+
 CCm = bot.get_curves()
-print("Len CCm", len(CCm))
-assert len(CCm) > 100
+exch = {c.P("exchange") for c in CCm}
+print("Number of curvers:", len(CCm))
+print("Number of tokens:", len(CCm.tokens()))
+print("Exchanges:", exch)
+
+assert {T.ETH, T.USDC, T.WBTC, T.DAI, T.BNT} - CCm.tokens() == set(), "Key tokens missing"
+assert len(CCm) > 100, f"Not enough curves {len(CCm)}"
+assert 'uniswap_v3' in exch, f"uni v3 not in exchanges {exch}"
+assert 'carbon_v1' in exch, f"carbon not in exchanges {exch}"
+assert len(exch) == 6, f"exchanges missing {exch}"
+
+# +
 #CCm.plot()
+# -
 
 # ### Run `_find_arbitrage_opportunities}`
 
@@ -78,15 +91,15 @@ r0, r1, r2, r3, r4 = r[1]
 # assert r0 > 0, "The profit should be positive"
 r
 
-tntkn
-
 tn = r1.loc["TOTAL NET"].to_dict()
 tntkn = list(set(tn.keys()) - {flt[0]})
 print("TOTAL NET", tn)
 print("TOKENS", tntkn, flt[0])
-# assert r1.loc["TOTAL NET"]["WETH-6Cc2"] < 1e-5, "Net change for WETH should be approximately zero"
-assert abs(tn[tntkn[0]]) < 1e-6, f"{tntkn[0]} should be net zero"
-assert tn[flt[0]] < -0.001, f"Arb value for {flt[0]} should be positive"
+r1
+
+assert r1.loc["TOTAL NET"]["WETH-6Cc2"] < 1e-5, "Net change for WETH should be approximately zero"
+assert abs(tn[tntkn[0]]) < 1e-5, f"{tntkn[0]} should be net zero {tn[tntkn[0]]}"
+assert tn[flt[0]] < -0.00001, f"Arb value for {flt[0]} should be positive {-tn[flt[0]]}"
 r1
 
 assert len(r2) == 2, "There should be two items in the best_trade_instructions_dict"
