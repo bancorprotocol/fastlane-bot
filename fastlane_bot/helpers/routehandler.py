@@ -4,7 +4,7 @@ Route handler for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-__VERSION__ = "1.1"
+__VERSION__ = "1.1.1"
 __DATE__="02/May/2023"
 
 # import itertools
@@ -307,7 +307,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         )
 
     def get_route_structs(
-        self, trade_instructions: List[TradeInstruction], deadline: int
+        self, trade_instructions: List[TradeInstruction]=None, deadline: int=None
     ) -> List[RouteStruct]:
         """
         Gets the RouteStruct objects into a list.
@@ -325,6 +325,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         custom_address: str
 
         """
+        # TODO: MIKE/KEVIN - CONFIRM
+        if trade_instructions is None:
+            trade_instructions = self.trade_instructions
+        
+        assert not deadline is None, "deadline cannot be None"
+        
         for t in trade_instructions:
             print(f"trade_instruction.cid: {t.cid}")
 
@@ -332,6 +338,11 @@ class TxRouteHandler(TxRouteHandlerBase):
             self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
             for trade_instruction in trade_instructions
         ]
+        try:
+            fee_float = [pools[idx].fee_float for idx, _ in enumerate(trade_instructions)]
+        except:
+            print("[ERROR] error calculating fee_float")
+            fee_float = [0 for idx, _ in enumerate(trade_instructions)]
 
         return [
             self.to_route_struct(
@@ -342,7 +353,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 custom_address=trade_instructions[
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
-                fee_float=pools[idx].fee_float,
+                fee_float=fee_float[idx],
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
                 # ConfigObj=trade_instructions[idx].ConfigObj,
