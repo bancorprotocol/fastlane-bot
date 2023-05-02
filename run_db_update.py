@@ -6,6 +6,8 @@ Database event updater.
 Licensed under MIT
 """
 import asyncio
+
+from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config import logger
 from fastlane_bot.db.manager import DatabaseManager
@@ -15,26 +17,24 @@ from fastlane_bot.db.manager import DatabaseManager
 
 db = DatabaseManager()
 
-# db.drop_all_tables()
-
-bot = CarbonBot(
-    polling_interval=c.DEFAULT_POLL_INTERVAL,
-)
-db.update_pools()
+cfg = C = Config.new(config=Config.CONFIG_MAINNET)
+bot = CarbonBot(ConfigObj=cfg)
+# bot.db.drop_all_tables()  # uncomment as needed
+bot.db.update_pools_from_contracts(top_n=10)
 
 
-async def create_tasks_and_run(updater):
-    tasks = []
-    logger.info("Creating tasks")
-    for args in updater.filters:
-        exchange, _filter = args["exchange"], args["_filter"]
-        task = asyncio.create_task(updater._log_loop(exchange, _filter))
-        tasks.append(task)
-        logger.info(f"Created task for {exchange} {_filter}")
-
-    await asyncio.gather(*tasks)
-
-try:
-    asyncio.run(create_tasks_and_run(updater))
-except KeyboardInterrupt:
-    print("Stopped by user")
+# async def create_tasks_and_run(updater):
+#     tasks = []
+#     logger.info("Creating tasks")
+#     for args in updater.filters:
+#         exchange, _filter = args["exchange"], args["_filter"]
+#         task = asyncio.create_task(updater._log_loop(exchange, _filter))
+#         tasks.append(task)
+#         logger.info(f"Created task for {exchange} {_filter}")
+#
+#     await asyncio.gather(*tasks)
+#
+# try:
+#     asyncio.run(create_tasks_and_run(updater))
+# except KeyboardInterrupt:
+#     print("Stopped by user")
