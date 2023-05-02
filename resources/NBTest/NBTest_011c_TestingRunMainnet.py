@@ -39,10 +39,8 @@ assert C.PROVIDER == C.PROVIDER_ALCHEMY
 bot = CarbonBot(ConfigObj=C)
 assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
-# +
 # provided here for convenience; must be commented out for tests
-# bot.update(drop_tables=False)
-# -
+bot.update(drop_tables=True, only_carbon=False, top_n=10)
 
 CCm = bot.get_curves()
 exch = {c.P("exchange") for c in CCm}
