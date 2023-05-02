@@ -44,16 +44,29 @@ assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 # bot.update(drop_tables=False)
 # -
 
-{T.ETH} - CCm.tokens()
-
 CCm = bot.get_curves()
+CCb3 = CCm.byparams(exchange="bancor_v3")
 exch = {c.P("exchange") for c in CCm}
-print("Number of curvers:", len(CCm))
+b3_prices_l = [(c.pairo.tknq, c.p, c.p_convention()) for c in CCb3]
+b3_prices_l[:5]
+b3_prices = {r[0]:r[1] for r in b3_prices_l}
+price = lambda tknq, tknb: b3_prices[tknb]/b3_prices[tknq]
+print("Number of curves:", len(CCm), len(CCb3))
 print("Number of tokens:", len(CCm.tokens()))
+for pair in [(T.WBTC, T.USDC), (T.DAI, T.USDC)]:
+    print(f"Price {pair}:", price(*pair))
 print("Exchanges:", exch)
+
+
 
 assert {T.ETH, T.USDC, T.WBTC, T.DAI, T.BNT} - CCm.tokens() == set(), "Key tokens missing"
 assert len(CCm) > 100, f"Not enough curves {len(CCm)}"
+assert len(b3_prices_l) == len(CCb3)
+assert price(T.WBTC, T.WBTC) == 1
+assert price(T.USDC, T.USDC) == 1
+assert price(T.WBTC, T.USDC) > 10000
+assert price(T.USDC, T.WBTC) < 1/10000
+assert np.all(r[1]>0 for r in b3_prices_l)
 assert 'uniswap_v3' in exch, f"uni v3 not in exchanges {exch}"
 assert 'carbon_v1' in exch, f"carbon not in exchanges {exch}"
 assert len(exch) == 6, f"exchanges missing {exch}"

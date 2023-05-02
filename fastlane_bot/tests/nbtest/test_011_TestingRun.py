@@ -27,9 +27,9 @@ require("2.0", __VERSION__)
 # ------------------------------------------------------------
 # Test      011
 # File      test_011_TestingRun.py
-# Segment   Mainnet Alchemy Configuration
+# Segment   Unittest Alchemy Configuration
 # ------------------------------------------------------------
-def test_mainnet_alchemy_configuration():
+def test_unittest_alchemy_configuration():
 # ------------------------------------------------------------
     
     # ### Set up the bot
