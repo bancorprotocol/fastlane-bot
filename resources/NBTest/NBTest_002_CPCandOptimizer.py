@@ -28,8 +28,6 @@ from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
 # -
 
-# Note: for testing inside the fastlane bot, run `ln -s ../fastlane_bot carbon`
-
 # # CPC and Optimizer in Fastlane [NBTest002]
 
 try:
@@ -48,6 +46,29 @@ assert c.P("a:c") == 2
 assert c.P("a:d") is None
 assert c.P("b") is None
 assert c.P("b", "meh") == "meh"
+
+# ## byparams
+
+pair = "USDC/WETH"
+c  = [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="univ3", foo=1)) for _ in range(5)]
+c += [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="carbv1", foo=2)) for _ in range(15)]
+CC = CPCContainer(c)
+assert len(CC)==20
+
+
+assert type(CC.byparams(exchange="meh")) == CPCContainer
+assert type(CC.byparams(exchange="meh", _ascc=True)) == CPCContainer
+assert type(CC.byparams(exchange="meh", _ascc=False)) == tuple
+assert type(CC.byparams(exchange="meh", _asgenerator=True)).__name__ == "generator"
+assert type(CC.byparams(exchange="meh", _ascc=True,  _asgenerator=True)).__name__ == "generator"
+assert type(CC.byparams(exchange="meh", _ascc=False, _asgenerator=True)).__name__ == "generator"
+assert len(CC.byparams(exchange="univ3")) == 5
+assert len(CC.byparams(exchange="carbv1")) == 15
+assert len(CC.byparams(exchange="meh")) == 0
+assert len(CC.byparams(foo=1)) == 5
+assert len(CC.byparams(foo=2)) == 15
+assert len(CC.byparams(foo=3)) == 0
+assert raises (CC.byparams, foo=1, bar=2) == "currently only one param allowed {'foo': 1, 'bar': 2}"
 
 # ## TVL
 

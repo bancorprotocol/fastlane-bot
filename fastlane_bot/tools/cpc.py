@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.6.4.3"
-__DATE__ = "01/May/2023"
+__VERSION__ = "2.7"
+__DATE__ = "02/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -1737,6 +1737,24 @@ class CPCContainer:
                 pairs = pairs.union(rpairs)
             result = (c for c in self if c.pair in pairs)
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
+
+    def byparams(self, *, _asgenerator=None, _ascc=None, **params):
+        """
+        returns all curves by params (as tuple, generator or CC object)
+
+        :params:    keyword arguments in the form param=value
+        :returns:   tuple, generator or container object (default)
+        """
+        if not params:
+            raise ValueError(f"no params given {params}")
+        
+        params_t = tuple(params.items())
+        if len(params_t) > 1:
+            raise NotImplementedError(f"currently only one param allowed {params}")
+        
+        pname, pvalue = params_t[0]
+        result = (c for c in self if c.P(pname) == pvalue)
+        return self._convert(result, asgenerator=_asgenerator, ascc=_ascc)
 
     def copy(self):
         """returns a copy of the container"""

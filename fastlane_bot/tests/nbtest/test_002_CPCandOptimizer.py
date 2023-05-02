@@ -1,11 +1,11 @@
 # ------------------------------------------------------------
-# Auto generated test file `test_002_Optimizer.py`
+# Auto generated test file `test_002_CPCandOptimizer.py`
 # ------------------------------------------------------------
-# source file   = NBTest_002_Optimizer.py
+# source file   = NBTest_002_CPCandOptimizer.py
 # source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 002
-# test comment  = Optimizer
+# test comment  = CPCandOptimizer
 # ------------------------------------------------------------
 
 
@@ -24,7 +24,6 @@ require("2.0", __VERSION__)
 
 
 
-
 try:
     df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
 except:
@@ -34,7 +33,7 @@ CCmarket = CPCContainer.from_df(df)
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   P
 # ------------------------------------------------------------
 def test_p():
@@ -52,7 +51,37 @@ def test_p():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
+# Segment   byparams
+# ------------------------------------------------------------
+def test_byparams():
+# ------------------------------------------------------------
+    
+    pair = "USDC/WETH"
+    c  = [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="univ3", foo=1)) for _ in range(5)]
+    c += [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="carbv1", foo=2)) for _ in range(15)]
+    CC = CPCContainer(c)
+    assert len(CC)==20
+    
+    
+    assert type(CC.byparams(exchange="meh")) == CPCContainer
+    assert type(CC.byparams(exchange="meh", _ascc=True)) == CPCContainer
+    assert type(CC.byparams(exchange="meh", _ascc=False)) == tuple
+    assert type(CC.byparams(exchange="meh", _asgenerator=True)).__name__ == "generator"
+    assert type(CC.byparams(exchange="meh", _ascc=True,  _asgenerator=True)).__name__ == "generator"
+    assert type(CC.byparams(exchange="meh", _ascc=False, _asgenerator=True)).__name__ == "generator"
+    assert len(CC.byparams(exchange="univ3")) == 5
+    assert len(CC.byparams(exchange="carbv1")) == 15
+    assert len(CC.byparams(exchange="meh")) == 0
+    assert len(CC.byparams(foo=1)) == 5
+    assert len(CC.byparams(foo=2)) == 15
+    assert len(CC.byparams(foo=3)) == 0
+    assert raises (CC.byparams, foo=1, bar=2) == "currently only one param allowed {'foo': 1, 'bar': 2}"
+    
+
+# ------------------------------------------------------------
+# Test      002
+# File      test_002_CPCandOptimizer.py
 # Segment   TVL
 # ------------------------------------------------------------
 def test_tvl():
@@ -72,7 +101,7 @@ def test_tvl():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   estimate prices
 # ------------------------------------------------------------
 def test_estimate_prices():
@@ -148,7 +177,7 @@ def test_estimate_prices():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   price estimates in optimizer
 # ------------------------------------------------------------
 def test_price_estimates_in_optimizer():
@@ -183,7 +212,7 @@ def test_price_estimates_in_optimizer():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Assertions and testing
 # ------------------------------------------------------------
 def test_assertions_and_testing():
@@ -246,7 +275,7 @@ def test_assertions_and_testing():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   iseq
 # ------------------------------------------------------------
 def test_iseq():
@@ -266,7 +295,7 @@ def test_iseq():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   CarbonOrderUI integration
 # ------------------------------------------------------------
 def test_carbonorderui_integration():
@@ -332,7 +361,7 @@ def test_carbonorderui_integration():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   New CPC features in v2
 # ------------------------------------------------------------
 def test_new_cpc_features_in_v2():
@@ -401,7 +430,7 @@ def test_new_cpc_features_in_v2():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Real data and retrieval of curves
 # ------------------------------------------------------------
 def test_real_data_and_retrieval_of_curves():
@@ -463,7 +492,7 @@ def test_real_data_and_retrieval_of_curves():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   TokenScale tests
 # ------------------------------------------------------------
 def test_tokenscale_tests():
@@ -527,7 +556,7 @@ def test_tokenscale_tests():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   dx_min and dx_max etc
 # ------------------------------------------------------------
 def test_dx_min_and_dx_max_etc():
@@ -544,7 +573,7 @@ def test_dx_min_and_dx_max_etc():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   xyfromp_f and dxdyfromp_f
 # ------------------------------------------------------------
 def test_xyfromp_f_and_dxdyfromp_f():
@@ -639,7 +668,7 @@ def test_xyfromp_f_and_dxdyfromp_f():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   CPCInverter
 # ------------------------------------------------------------
 def test_cpcinverter():
@@ -745,7 +774,7 @@ def test_cpcinverter():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   simple_optimizer
 # ------------------------------------------------------------
 def test_simple_optimizer():
@@ -837,7 +866,7 @@ def test_simple_optimizer():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   optimizer plus inverted curves
 # ------------------------------------------------------------
 def test_optimizer_plus_inverted_curves():
@@ -869,7 +898,7 @@ def test_optimizer_plus_inverted_curves():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   posx and negx
 # ------------------------------------------------------------
 def test_posx_and_negx():
@@ -891,7 +920,7 @@ def test_posx_and_negx():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   TradeInstructions
 # ------------------------------------------------------------
 def test_tradeinstructions():
@@ -970,7 +999,7 @@ def test_tradeinstructions():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   margp_optimizer
 # ------------------------------------------------------------
 def test_margp_optimizer():
@@ -1109,7 +1138,7 @@ def test_margp_optimizer():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   simple_optimizer demo [NOTEST]
 # ------------------------------------------------------------
 def notest_simple_optimizer_demo():
@@ -1151,7 +1180,7 @@ def notest_simple_optimizer_demo():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   MargP Optimizer Demo [NOTEST]
 # ------------------------------------------------------------
 def notest_margp_optimizer_demo():
@@ -1177,7 +1206,7 @@ def notest_margp_optimizer_demo():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Optimizer plus inverted curves [NOTEST]
 # ------------------------------------------------------------
 def notest_optimizer_plus_inverted_curves():
@@ -1204,7 +1233,7 @@ def notest_optimizer_plus_inverted_curves():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Operating on leverage ranges [NOTEST]
 # ------------------------------------------------------------
 def notest_operating_on_leverage_ranges():
@@ -1251,7 +1280,7 @@ def notest_operating_on_leverage_ranges():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Arbitrage testing [NOTEST]
 # ------------------------------------------------------------
 def notest_arbitrage_testing():
@@ -1332,7 +1361,7 @@ def notest_arbitrage_testing():
 
 # ------------------------------------------------------------
 # Test      002
-# File      test_002_Optimizer.py
+# File      test_002_CPCandOptimizer.py
 # Segment   Charts [NOTEST]
 # ------------------------------------------------------------
 def notest_charts():
