@@ -27,7 +27,7 @@ require("2.0", __VERSION__)
 
 # # Testing the _run functions on TENDERLY [NBTest011b]
 
-# ## Tenderly Configuration
+# ## TENDERLY Configuration
 
 # ### Set up the bot and curves
 

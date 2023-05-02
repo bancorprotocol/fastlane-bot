@@ -27,7 +27,7 @@ require("2.0", __VERSION__)
 
 # # Testing the _run functions on MAINNET [NBTest011c]
 
-# ## Mainnet Alchemy Configuration
+# ## MAINET ALCHEMY Configuration
 
 # ### Set up the bot and curves
 
