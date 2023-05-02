@@ -46,18 +46,18 @@ assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
 CCm = bot.get_curves()
 CCb3 = CCm.byparams(exchange="bancor_v3")
+CCu2 = CCm.byparams(exchange="uniswap_v2")
 exch = {c.P("exchange") for c in CCm}
 b3_prices_l = [(c.pairo.tknq, c.p, c.p_convention()) for c in CCb3]
 b3_prices_l[:5]
 b3_prices = {r[0]:r[1] for r in b3_prices_l}
+u2_prices_l = [(c.pairo.pair, c.p, c.p_convention()) for c in CCu2]
 price = lambda tknq, tknb: b3_prices[tknb]/b3_prices[tknq]
-print("Number of curves:", len(CCm), len(CCb3))
+print("Number of curves:", len(CCm), len(CCb3), len(CCu2))
 print("Number of tokens:", len(CCm.tokens()))
 for pair in [(T.WBTC, T.USDC), (T.DAI, T.USDC)]:
     print(f"Price {pair}:", price(*pair))
 print("Exchanges:", exch)
-
-
 
 assert {T.ETH, T.USDC, T.WBTC, T.DAI, T.BNT} - CCm.tokens() == set(), "Key tokens missing"
 assert len(CCm) > 100, f"Not enough curves {len(CCm)}"
