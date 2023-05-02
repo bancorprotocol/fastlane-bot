@@ -23,8 +23,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     and provides methods to update the database from events.
     """
 
-    __VERSION__ = "3.0.2"
-    __DATE__ = "05-01-2023"
+    __VERSION__ = "3.0.3"
+    __DATE__ = "May-02-2023"
 
     ConfigObj: Config = None
 
@@ -632,7 +632,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             )
             liquidity_params = self.get_liquidity_from_contract(exchange_name=exchange_name,
                                                                 contract=pool_contract, address=tkn1_address)
-            return common_data | liquidity_params
+            return {**common_data, **liquidity_params}
         except Exception as e:
             self.c.logger.warning(
                 f"[create_pool] Failed to create pool for {exchange_name}, {pool_address}, {e}"
