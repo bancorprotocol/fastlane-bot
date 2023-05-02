@@ -55,7 +55,7 @@ from fastlane_bot.helpers import (
     TxReceiptHandler, TxReceiptHandlerBase,
     TxRouteHandler, TxRouteHandlerBase,
     TxHelpers, TxHelpersBase,
-    TradeInstruction
+    TradeInstruction, Univ3Calculator
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
@@ -217,25 +217,26 @@ class CarbonBotBase():
             try:
                 curves += p.to_cpc()
                 # time.sleep(0.00000001)  # to avoid unstable results
-            # except ZeroDivisionError as e:
-            #     self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
-            #     #raise
-            # except CPC.CPCValidationError as e:
-            #     self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
-            #     #raise
-            # except TypeError as e:
-            #     self.ConfigObj.logger.error(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
-            #     # if not str(e).startswith("1unsupported operand type(s) for"):
-            #         # raise
-            # except p.DoubleInvalidCurveError as e:
-            #     self.ConfigObj.logger.error(f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n")
-            #     #raise
-            # except Exception as e:
-            #     self.ConfigObj.logger.error(f"[get_curves] error converting pool to curve {p} [{e}]\n")
-            #     # raise
+            except ZeroDivisionError as e:
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                #raise
+            except CPC.CPCValidationError as e:
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n")
+                #raise
+            except TypeError as e:
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n")
+                # if not str(e).startswith("1unsupported operand type(s) for"):
+                    # raise
+            except p.DoubleInvalidCurveError as e:
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n")
+                #raise
+            except Univ3Calculator.DecimalsMissingError as e:
+                self.ConfigObj.logger.error(f"[get_curves] MUST FIX DECIMALS MISSING [{e}]\n")
+                #raise
             except Exception as e:
-                # TODO: fix this, it's a hack to test the MockDatabaseManager for now
-                pass
+                self.ConfigObj.logger.error(f"[get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n")
+                #raise
+
         return CPCContainer(curves)
 
 
