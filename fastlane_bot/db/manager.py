@@ -23,7 +23,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     and provides methods to update the database from events.
     """
 
-    __VERSION__ = "3.0.3"
+    __VERSION__ = "3.0.4"
     __DATE__ = "May-02-2023"
 
     ConfigObj: Config = None
@@ -76,25 +76,28 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                                              blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
         self.session.commit()
 
-    def update_pools_from_contracts(self):
+    def update_pools_from_contracts(self, top_n: int = None):
         """
         For exchange in supported exchanges,
         get the available pool addresses and contracts
         then call update_pool_from_contract
 
-        TODO: Limit the number of pools to update per call by top_n argument.
         """
         pools = self.session.query(models.Pool).first()
 
         if not pools:
-            self.create_pools_from_contracts()
+            return self.create_pools_from_contracts(top_n=top_n)
 
         for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-            pools = self.get_pools_from_exchange(exchange)
+            pools = self.get_pools_from_exchange(exchange, top_n=top_n)
             for pool in pools:
                 if pool.exchange_name == exchange:
                     contract = self.get_or_init_contract(exchange_name=exchange, pool_address=pool.address)
-                    self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address)
+                    if pool.exchange_name == self.ConfigObj.CARBON_V1_NAME:
+                        strategy = self.get_carbon_strategy(int(pool.cid))
+                    else:
+                        strategy = None
+                    self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address, strategy=strategy)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """
@@ -267,6 +270,17 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         token = self.get_token(address=address)
         if token is None:
             try:
+                known_tokens = {
+                    self.c.MKR_ADDRESS: {"symbol": "MKR", "decimals": 18, "name": "Maker"},
+                    self.c.ETH_ADDRESS: {"symbol": "ETH", "decimals": 18, "name": "Ethereum"},
+                }
+                if address in known_tokens:
+                    tkn = known_tokens[address]
+                    token = models.Token(address=address, name=tkn["name"], symbol=tkn["symbol"],
+                                         decimals=tkn["decimals"], key=f"{tkn['symbol']}-{address[-4:]}")
+                    self.create_token(token)
+                    return token
+
                 contract = self.ConfigObj.w3.eth.contract(address=address, abi=_abi.ERC20_ABI)
                 symbol = contract.caller.symbol()
                 tkn_key = f"{symbol}-{address[-4:]}"
@@ -388,9 +402,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             "tkn0_address": tkn0_address,
             "tkn1_address": tkn1_address,
         }
-        #pool_params = params | other_params
         pool_params = {**params, **other_params}
-        
         self.create_pool(pool_params)
 
     def update_recently_traded_pools(self, cids: List[int]):
@@ -438,7 +450,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         return Decimal(price) * Decimal(tkn_bnt_price)
 
-    def get_genesis_pool_addresses_from_exchange(self, exchange: str) -> List[str]:
+    def get_genesis_pool_addresses_from_exchange(self, exchange: str, top_n: int = None) -> List[str]:
         """
         Gets the genesis pools for an exchange
 
@@ -446,15 +458,20 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         ----------
         exchange : str
             The exchange name
+        top_n : int
+            The number of pools to return
 
         Returns
         -------
         List[models.Pool]
             The genesis pools
         """
-        return self.data[self.data['exchange'] == exchange]['address'].unique().tolist()
+        if top_n is None:
+            return self.data[self.data['exchange'] == exchange]['address'].unique().tolist()
+        else:
+            return self.data[self.data['exchange'] == exchange]['address'].unique().tolist()[:top_n]
 
-    def get_pools_from_exchange(self, exchange: str) -> List[models.Pool]:
+    def get_pools_from_exchange(self, exchange: str, top_n: int = None) -> List[models.Pool]:
         """
         Gets the pools for an exchange
 
@@ -462,15 +479,20 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         ----------
         exchange : str
             The exchange name
+        top_n : int
+            The number of pools to return
 
         Returns
         -------
         List[models.Pool]
             The pools
         """
-        return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+        if top_n is None:
+            return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+        else:
+            return self.session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
 
-    def create_pools_from_contracts(self):
+    def create_pools_from_contracts(self, top_n: int = None):
         """
         Creates pools from contracts
         """
@@ -478,12 +500,17 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             try:
                 if exchange == self.ConfigObj.CARBON_V1_NAME:
                     self.create_or_update_carbon_pools()
-                pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange)
+                    continue
+
+                pool_addresses = self.get_genesis_pool_addresses_from_exchange(exchange, top_n=top_n)
+                assert type(pool_addresses[0]) == str, f"Pool addresses must be strings, not {type(pool_addresses[0])}"
+
                 if exchange == self.ConfigObj.BANCOR_V3_NAME:
                     contract = self.c.BANCOR_NETWORK_INFO_CONTRACT
-                    self.create_or_update_pool_with_multicall(
-                        [(exchange, address, contract) for address in pool_addresses]
-                    )
+                    pools = [(exchange, address, contract) for address in pool_addresses]
+                    self.create_or_update_pool_with_multicall(pools=pools)
+                    continue
+
                 for address in pool_addresses:
                     self.create_pool_from_contract(exchange_name=exchange, pool_address=address)
 
@@ -507,7 +534,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         last_updated_block = self.c.w3.eth.blockNumber
         for strategy in pools:
-            strategy_id = strategy[0]
+            strategy_id = str(strategy[0])
             pool = self.get_pool(cid=strategy_id)
             if pool:
                 try:
@@ -619,7 +646,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             tkn1 = self.get_or_create_token(tkn1_address)
             pair = self.get_or_create_pair(tkn0_address, tkn1_address)
             common_data = dict(
-                # id=self.next_id,
                 cid=str(self.next_cid),
                 exchange_name=exchange_name,
                 pair_name=pair.name,
@@ -656,11 +682,12 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 try:
                     pool = self.get_pool(exchange_name=exchange_name, address=pool_address)
                     if not pool:
-                        params = self.build_pool_params(exchange_name=exchange_name, pool_address=pool_address)
+                        params = self.build_pool_params(exchange_name=exchange_name, pool_address=pool_address,
+                                                        pool_contract=contract)
                         self.create_pool(params)
                     else:
                         liquidity_params = self.get_liquidity_from_contract(exchange_name=exchange_name,
-                                                                            pool_contract=contract,
+                                                                            contract=contract,
                                                                             address=pool_address)
                         liquidity_params['last_updated_block'] = self.c.w3.eth.blockNumber
                         liquidity_params['cid'] = self.next_cid
