@@ -77,7 +77,7 @@ class CarbonBotBase():
     ----------
     db: DatabaseManager
         the database manager.
-    TxSubmitHandlerClass: class derived from TxSubmitHandlerBase
+    TxSubmitHandler: class derived from TxSubmitHandlerBase
         the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
     TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
         ditto (default: TxReceiptHandler).
@@ -91,7 +91,7 @@ class CarbonBotBase():
     __DATE__ = __DATE__
     
     db: DatabaseManager = field(init=False)
-    TxSubmitHandlerClass: any = None
+    TxSubmitHandler: any = None
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
@@ -119,9 +119,9 @@ class CarbonBotBase():
 
         assert self.polling_interval is None, "polling_interval is now a parameter to run"
 
-        # if self.TxSubmitHandlerClass is None:
-        #     self.TxSubmitHandlerClass = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        # assert issubclass(self.TxSubmitHandlerClass.__class__, TxSubmitHandlerBase), f"TxSubmitHandlerClass not derived from TxSubmitHandlerBase {self.TxSubmitHandlerClass.__class__}"
+        if self.TxSubmitHandler is None:
+            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
+        assert issubclass(self.TxSubmitHandler.__class__, TxSubmitHandlerBase), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
 
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler
@@ -641,7 +641,7 @@ class CarbonBot(CarbonBotBase):
         assert result is None, f"Unknown result requested {result}"
         if network == self.ConfigObj.NETWORK_TENDERLY:
             return self._validate_and_submit_transaction_tenderly(
-                encoded_trade_instructions, flashloan_token_address, route_struct, flashloan_amount
+                route_struct, flashloan_token_address, flashloan_amount
             )
 
         # log the flashloan arbitrage tx info
@@ -673,11 +673,12 @@ class CarbonBot(CarbonBotBase):
 
 
 
-    def _validate_and_submit_transaction_tenderly(self, trade_instructions, src_address, route_struct, src_amount):
-        tx_submit_handler = self.TxSubmitHandlerClass(
-            trade_instructions,
+    def _validate_and_submit_transaction_tenderly(self, ConfigObj, route_struct, src_address, src_amount):
+        tx_submit_handler = TxSubmitHandler(
+            ConfigObj=ConfigObj,
+            route_struct=route_struct,
             src_address=src_address,
-            src_amount=trade_instructions[0].amtin_wei,
+            src_amount=src_amount,
         )
         self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
@@ -689,7 +690,9 @@ class CarbonBot(CarbonBotBase):
         ).transact(tx_details)
         self.ConfigObj.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
-            route_struct, src_address, src_amount
+            route_struct=route_struct,
+            src_address=src_address,
+            src_amount=src_amount
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
 

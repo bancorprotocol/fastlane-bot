@@ -61,8 +61,8 @@ class TxSubmitHandler(TxSubmitHandlerBase):
     
     ConfigObj: Config
     route_struct: List[RouteStruct] = None
-    src_amount: int = None
     src_address: str = None
+    src_amount: int = None
 
 
 
@@ -278,7 +278,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         str
             The transaction hash.
         """
-        route_struct = [asdict(r) for r in route_struct]
+        # route_struct = [asdict(r) for r in route_struct]
         for r in route_struct:
             print(r)
             print("\n")
