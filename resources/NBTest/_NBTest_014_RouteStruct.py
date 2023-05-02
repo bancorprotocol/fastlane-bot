@@ -33,8 +33,12 @@ require("2.0", __VERSION__)
 # # Helpers [NBTest013b]
 
 C = Config()
-# bot = Bot(C)
-# db = bot.db
+bot = Bot(C)
+db = bot.db
+deadline = bot._get_deadline()
+deadline
+
+
 
 # ## TradeInstruction to Route
 
@@ -48,7 +52,7 @@ ti1 = TradeInstruction(
     tknout='WBTB-2c599',
     amtout=0,
     ConfigObj=C,
-    #db = db,
+    db = db,
     tknin_dec_override =  6,
     tknout_dec_override = 8,
     tknin_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -63,7 +67,7 @@ ti2 = TradeInstruction(
     tknin='WBTB-2c599',
     amtin=0,
     ConfigObj=C,
-    #db = db,
+    db = db,
     tknout_dec_override =  6,
     tknin_dec_override = 8,
     tknout_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -80,9 +84,7 @@ assert str(ti2).startswith("TradeInstruction(ConfigObj=Config(network=_ConfigNet
 
 route = TxRouteHandler([ti1, ti2])
 assert str(route).startswith("TxRouteHandler(trade_instructions=[")
-route
-
-
+route.get_route_structs(deadline=deadline+100)
 
 
 
