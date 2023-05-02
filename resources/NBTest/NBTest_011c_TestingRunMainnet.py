@@ -39,7 +39,10 @@ assert C.PROVIDER == C.PROVIDER_ALCHEMY
 bot = CarbonBot(ConfigObj=C)
 assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
-bot.update(drop_tables=True)
+# +
+# provided here for convenience; must be commented out for tests
+# bot.update(drop_tables=False)
+# -
 
 CCm = bot.get_curves()
 print(CCm)
