@@ -35,12 +35,10 @@ require("2.0", __VERSION__)
 C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
 c1, c2 = C_nw.shellcommand().splitlines()
 
-c2
-
 print(c1)
 print(c2)
-#!{c1}
-#!{c2}
+# !{c1}
+# !{c2}
 
 # ## Tenderly Configuration
 
@@ -52,6 +50,14 @@ C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
 c1, c2 = C_nw.shellcommand().splitlines()
 assert c2 == 'brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/058b12b9-c69e-4676-a7bd-2ba09c9b23c7 chainid=1'
 assert c1 == 'brownie networks delete tenderly'
+
+print(c1)
+print(c2)
+
+# +
+# !{c2}
+# !{c1}
+# -
 
 # ### Connection proper
 
