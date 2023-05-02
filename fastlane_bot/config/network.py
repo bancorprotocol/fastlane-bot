@@ -1,8 +1,8 @@
 """
 Fastlane bot config -- network
 """
-__VERSION__ = "1.0.2"
-__DATE__ = "01/May 2023"
+__VERSION__ = "1.0.3"
+__DATE__ = "02/May 2023"
 from .base import ConfigBase
 from . import selectors as S
 
@@ -143,7 +143,9 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     DEFAULT_PROVIDER = S.PROVIDER_TENDERLY
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
-    TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
+    #TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
+    TENDERLY_FORK = "058b12b9-c69e-4676-a7bd-2ba09c9b23c7"
+    
     
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
