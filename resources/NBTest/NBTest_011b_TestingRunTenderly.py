@@ -39,12 +39,15 @@ assert C.PROVIDER == C.PROVIDER_TENDERLY
 bot = CarbonBot(ConfigObj=C)
 assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
 
-bot.update(drop_tables=True)
+# +
+# provided here for convenience; must be commented out for tests
+# bot.update(drop_tables=False)
+# -
 
 CCm = bot.get_curves()
-print(CCm)
+print("Len CCm", len(CCm))
 assert len(CCm) > 100
-CCm.plot()
+#CCm.plot()
 
 # ### Run `_find_arbitrage_opportunities}`
 
