@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.1" 
-__DATE__ = "19/Apr/2023"
+__VERSION__ = "1.2" 
+__DATE__ = "02/May/2023"
 
 from math import sqrt
 from dataclasses import dataclass, InitVar, asdict
@@ -59,6 +59,8 @@ class Univ3Calculator():
 
     ADDRR = {v[0]:k for k,v in ADDRDEC.items()}
     
+    class DecimalsMissingError(Exception): pass
+    
     def __post_init__(self, tkn0decv=None, tkn1decv=None, addrdec=None):
 
         if addrdec is not None:
@@ -72,13 +74,17 @@ class Univ3Calculator():
             pass
 
         if tkn0decv is None:
+            raise self.DecimalsMissingError(f"must provide tkn0decv for {self.tkn0}")
             super().__setattr__('_tkn0dec', self.ADDRDEC[self.tkn0][1]) 
         else:
             super().__setattr__('_tkn0dec', tkn0decv)
+        
         if tkn1decv is None:
+            raise self.DecimalsMissingError(f"must provide tkn1decv for {self.tkn1}")
             super().__setattr__('_tkn1dec', self.ADDRDEC[self.tkn1][1]) 
         else:
             super().__setattr__('_tkn1dec', tkn1decv)
+        
         super().__setattr__('sp96', int(self.sp96)) 
         super().__setattr__('tick', int(self.tick)) 
         super().__setattr__('liquidity', int(self.liquidity)) 
