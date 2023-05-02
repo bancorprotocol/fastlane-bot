@@ -7,20 +7,21 @@ Licensed under MIT
 """
 import asyncio
 
-from fastlane_bot import Config
-from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config import logger
-from fastlane_bot.db.manager import DatabaseManager
+from fastlane_bot import Bot, Config
+# from fastlane_bot.bot import CarbonBot
+# from fastlane_bot.config import logger
+# from fastlane_bot.db.manager import DatabaseManager
 #import fastlane_bot.config as c
 
 # TODO: Refactor this with click inputs like in the run.py file
 
-db = DatabaseManager()
+#db = DatabaseManager()
+#cfg = C = Config.new(config=Config.CONFIG_MAINNET)
+bot = Bot(ConfigObj=Config.new(config=Config.CONFIG_MAINNET))
+bot.update(bot.UDTYPE_FROM_CONTRACTS, drop_tables=False)
 
-cfg = C = Config.new(config=Config.CONFIG_MAINNET)
-bot = CarbonBot(ConfigObj=cfg)
-# bot.db.drop_all_tables()  # uncomment as needed
-bot.db.update_pools_from_contracts(top_n=10)
+# # bot.db.drop_all_tables()  # uncomment as needed
+# bot.db.update_pools_from_contracts(top_n=10)
 
 
 # async def create_tasks_and_run(updater):
