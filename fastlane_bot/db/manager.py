@@ -119,6 +119,11 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "[update_pools_from_contracts] No pools found in database, creating pools from contracts...")
             return self.create_pools_from_contracts(only_carbon=only_carbon, top_n=top_n, carbon_tokens=carbon_tokens)
 
+        if len(pools) != top_n:
+            self.c.logger.warning(f"[update_pools_from_contracts] top_n {top_n} != len(pools) {len(pools)}..."
+                                  f"New Carbon pools will still be created, but other exchange pools will not be "
+                                  f"created, only the original top_n will be updated.")
+
         exchanges = [self.ConfigObj.CARBON_V1_NAME] + [exchange for exchange in self.ConfigObj.SUPPORTED_EXCHANGES if
                                                        exchange != self.ConfigObj.CARBON_V1_NAME]
         for exchange in exchanges:
@@ -569,8 +574,11 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 # Get all pools on the given exchange
 
                 exchange_pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+                session.expunge_all()
+
                 exchange_pairs = [pool.pair_name for pool in exchange_pools]
                 exchange_pairs = session.query(models.Pair).filter(models.Pair.name.in_(exchange_pairs)).all()
+                session.expunge_all()
 
                 # Filter the pairs which contain carbon at least one carbon token
                 exchange_pairs = [pair for pair in exchange_pairs if
@@ -580,9 +588,13 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 return [pool for pool in exchange_pools if pool.pair_name in [pair.name for pair in exchange_pairs]]
 
             if top_n is None:
-                return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+                pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+                session.expunge_all()
+                return pools
             else:
-                return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
+                pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
+                session.expunge_all()
+                return pools
 
     def create_pools_from_contracts(self, only_carbon: bool = None, top_n: int = None, carbon_tokens: List[str] = None):
         """

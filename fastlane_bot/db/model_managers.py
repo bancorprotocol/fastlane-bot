@@ -335,30 +335,31 @@ class PoolManager(DatabaseManagerBase):
             The updated pool.
 
         """
+        updated = False  # Flag to track if any value has been updated
 
         pool = self.get_pool(**kwargs)
-        if pool is not None:
-            updated = False  # Flag to track if any value has been updated
+        if not pool:
+            self.c.logger.error(f"[model_managers.Pool] Failed to update pool, pool not found: {kwargs}")
+            return None
 
-            with self.session_scope() as session:
-                try:
-                    for key, value in pool_data.items():
-                        if getattr(pool, key) != value:  # Check if the current value is different from the new value
-                            setattr(pool, key, value)
-                            updated = True
+        with self.session_scope() as session:
+            try:
+                for key, value in pool_data.items():
+                    if getattr(pool, key) != value:  # Check if the current value is different from the new value
+                        setattr(pool, key, value)
+                        updated = True
 
-                    if updated:  # Only commit and log the message if any value has been updated
-                        session.commit()
-                        session.expunge_all()
-                        self.c.logger.info(f"[model_managers.Pool] Successfully updated pool: {pool.id}")
-                    else:
-                        self.c.logger.info(f"[model_managers.Pool] No changes detected for pool: {pool.id}")
+                if updated:  # Only commit and log the message if any value has been updated
+                    session.commit()
+                    session.expunge_all()
+                    self.c.logger.info(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name}")
+                else:
+                    self.c.logger.info(f"[model_managers.Pool] No changes detected for pool: {pool.pair_name}")
 
-                    return pool
-                except Exception as e:
-                    self.c.logger.error(f"[model_managers.Pool] Error updating pool: {str(e)}")
-                    raise  # Allow the exception to propagate to the session_scope context manager
-        return pool
+                return pool
+            except Exception as e:
+                self.c.logger.error(f"[model_managers.Pool] Failed to update pair: {pool.pair_name}")
+                raise  # Allow the exception to propagate to the session_scope context manager
 
     def delete_pool(self, **kwargs) -> bool:
         """
