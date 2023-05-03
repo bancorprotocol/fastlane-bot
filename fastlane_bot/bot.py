@@ -219,7 +219,7 @@ class CarbonBotBase():
         curves = []
         tokens = self.db.get_tokens()
         ADDRDEC = {t.key: (t.address, t.decimals) for t in tokens}
-        print(f"ADDRDEC {ADDRDEC}")
+        #print(f"ADDRDEC {ADDRDEC}")
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
