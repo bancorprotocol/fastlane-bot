@@ -281,6 +281,7 @@ class TxHelpers:
         src_amt: int,
         src_address: str,
         expected_profit: Decimal,
+        bnt_eth: Tuple,
         result: str = None,
         verbose: bool = False,
         safety_override: bool = False
@@ -335,7 +336,8 @@ class TxHelpers:
         current_gas_price = int(current_gas_price * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
         # Calculate the number of BNT paid in gas
-        bnt, eth = self.get_bnt_tkn_liquidity()
+        bnt, eth = bnt_eth
+
         gas_in_src = self.estimate_gas_in_bnt(
             gas_price=current_gas_price,
             gas_estimate=gas_estimate,

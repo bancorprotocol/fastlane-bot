@@ -800,11 +800,16 @@ class CarbonBot(CarbonBotBase):
         # Get the cids of the trade instructions
         cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
 
+        pool = (
+            self.db.get_pool(exchange_name=self.ConfigObj.BANCOR_V3_NAME, pair_name='BNT-FF1C/ETH-EEeE')
+        )
+        bnt_eth = (int(pool.tkn0_balance), int(pool.tkn1_balance))
+
         # Init TxHelpers
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
         # Submit tx
         return tx_helpers.validate_and_submit_transaction(route_struct=route_struct, src_amt=flashloan_amount,
-                                                          src_address=flashloan_token_address,
+                                                          src_address=flashloan_token_address, bnt_eth=bnt_eth,
                                                           expected_profit=best_profit), cids
 
 
