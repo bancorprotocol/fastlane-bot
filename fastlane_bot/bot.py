@@ -705,7 +705,8 @@ class CarbonBot(CarbonBotBase):
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
 
-    # TODO: RENAME TO _RUN
+    AM_REGULAR = "regular"
+    AM_SINGLE = "single"
     def _run(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet", arb_mode:str = None
     ) -> Optional[Tuple[str, List[Any]]]:
@@ -731,13 +732,14 @@ class CarbonBot(CarbonBotBase):
         # TODO: REMOVE THIS PARAMETER; THE NETWORK MUST BE SET IN THE BOT ITSELF
 
         ## Find arbitrage opportunities
-        arb_mode = 'regular' if arb_mode is None else arb_mode
-        if arb_mode == 'regular':
+        arb_mode = self.AM_REGULAR if arb_mode is None else arb_mode
+        if arb_mode == self.AM_REGULAR:
             r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
-        elif arb_mode == 'single':
+        elif arb_mode == self.AM_SINGLE:
             r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm)
         else:
-            raise "arb_mode not recognised"  
+            raise ValueError(f"arb_mode not recognised {arb_mode}") 
+        
         if result == self.XS_ARBOPPS:
             return r
         (
