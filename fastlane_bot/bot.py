@@ -795,24 +795,33 @@ class CarbonBot(CarbonBotBase):
         # self.ConfigObj.logger.debug(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
         # self.ConfigObj.logger.debug(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
 
-        # Initialize tx helper
-        tx_helper = TxHelper(
-            usd_gas_limit=self.usd_gas_limit,
-            w3=self.ConfigObj.w3,
-            gas_price_multiplier=self.gas_price_multiplier,
-            arb_contract=self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        )
+
 
         # Get the cids of the trade instructions
         cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
 
-        # Submit the transaction
-        return tx_helper.submit_flashloan_arb_tx(
-            arb_data=route_struct,
-            flashloan_token_address=flashloan_token_address,
-            flashloan_amount=flashloan_amount,
-            verbose=True,
-        ), cids
+        # Init TxHelpers
+        tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
+        # Submit tx
+        return tx_helpers.validate_and_submit_transaction(route_struct=route_struct, src_amt=flashloan_amount,
+                                                          src_address=flashloan_token_address,
+                                                          expected_profit=best_profit), cids
+
+
+        # # Initialize tx helper
+        # tx_helper = TxHelper(
+        #     usd_gas_limit=self.usd_gas_limit,
+        #     w3=self.ConfigObj.w3,
+        #     gas_price_multiplier=self.gas_price_multiplier,
+        #     arb_contract=self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
+        # )
+        # # Submit the transaction
+        # return tx_helper.submit_flashloan_arb_tx(
+        #     arb_data=route_struct,
+        #     flashloan_token_address=flashloan_token_address,
+        #     flashloan_amount=flashloan_amount,
+        #     verbose=True,
+        # ), cids
 
     def _validate_and_submit_transaction_tenderly(self, ConfigObj, route_struct, src_address, src_amount):
         tx_submit_handler = TxSubmitHandler(
