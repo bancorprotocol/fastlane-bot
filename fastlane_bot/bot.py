@@ -776,18 +776,21 @@ class CarbonBot(CarbonBotBase):
 
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
-        if self.ConfigObj.network == self.ConfigObj.NETWORK_TENDERLY:
+        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             return self._validate_and_submit_transaction_tenderly(
-                route_struct, flashloan_token_address, flashloan_amount
-            )
+                        ConfigObj = self.ConfigObj,
+                        route_struct = route_struct,
+                        src_amount = flashloan_amount,
+                        src_address = flashloan_token_address,
+                            )
 
         # log the flashloan arbitrage tx info
         self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
         self.ConfigObj.logger.debug(f"Flashloan token address: {flashloan_token_address}")
         self.ConfigObj.logger.debug(f"Route Struct: \n {route_struct}")
         self.ConfigObj.logger.debug(f"Trade Instructions: \n {best_trade_instructions_dic}")
-        self.ConfigObj.logger.debug(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
-        self.ConfigObj.logger.debug(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
+        # self.ConfigObj.logger.debug(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
+        # self.ConfigObj.logger.debug(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
 
         # Initialize tx helper
         tx_helper = TxHelper(
