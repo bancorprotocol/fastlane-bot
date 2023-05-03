@@ -25,11 +25,13 @@ from fastlane_bot.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MockDatabaseManager))
 
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+require("3.0.2", MockDatabaseManager.__VERSION__)
 # -
 
 # # Testing Curve Creation functions [NBTest016]
