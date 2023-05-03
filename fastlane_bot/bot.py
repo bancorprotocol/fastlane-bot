@@ -41,7 +41,7 @@ Licensed under MIT
     @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
-__VERSION__ = "3-b1.1"
+__VERSION__ = "3-b2.0"
 __DATE__ = "03/May/2023"
 
 import itertools
