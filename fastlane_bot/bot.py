@@ -217,10 +217,10 @@ class CarbonBotBase():
         CPCContainer
             The container of curves.
         """
-        pools_and_tokens = self.db.get_pool_data_with_tokens(cnfg=self.ConfigObj)
+        pools_and_tokens = self.db.get_pool_data_with_tokens()
         curves = []
         tokens = self.db.get_tokens()
-        ADDRDEC = {t.key: (t.address, t.decimals) for t in tokens}
+        ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
         #print(f"ADDRDEC {ADDRDEC}")
         for p in pools_and_tokens:
             try:

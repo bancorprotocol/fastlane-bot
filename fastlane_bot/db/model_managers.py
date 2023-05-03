@@ -416,7 +416,7 @@ class PoolManager(DatabaseManagerBase):
             session.expunge_all()
             return pool.last_updated_block if pool else None
 
-    def get_pool_data_with_tokens(self, cnfg: Any) -> List[PoolAndTokens]:
+    def get_pool_data_with_tokens(self) -> List[PoolAndTokens]:
         """
         Get pool data with tokens.
 
@@ -455,7 +455,7 @@ class PoolManager(DatabaseManagerBase):
             session.expunge_all()
             return [
                 PoolAndTokens(
-                    ConfigObj=cnfg,
+                    ConfigObj=self.ConfigObj,
                     id=row[0].id,
                     cid=row[0].cid,
                     last_updated=row[0].last_updated,
