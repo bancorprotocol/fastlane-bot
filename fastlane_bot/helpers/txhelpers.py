@@ -250,11 +250,8 @@ class TxHelpers:
     __DATE__=__DATE__
     
     ConfigObj: Config
-
-    transactions_submitted = []
+    # This is used for the Alchemy SDK
     network = Network.ETH_MAINNET
-
-
 
 
     def __post_init__(self):
@@ -272,12 +269,19 @@ class TxHelpers:
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
+
+
+    XS_API_CALLS = "various_api_calls"
+    XS_TRANSACTION = "transaction_built"
+    XS_GAS_IN_BNT = "gas_in_bnt"
+    XS_MIN_PROFIT_CHECK = "min_profit_check"
     def validate_and_submit_transaction(
         self,
-        routes: List[Dict[str, Any]],
+        route_struct: List[Dict[str, Any]],
         src_amt: int,
         src_address: str,
         expected_profit: Decimal,
+        result: str = None
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -296,19 +300,28 @@ class TxHelpers:
         )
         self.ConfigObj.logger.info("Found a trade. Executing...")
         self.ConfigObj.logger.info(
-            f"\nRoute to execute: routes: {routes}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
+            f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
         )
         current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy()
+
         block_number = self.web3.eth.get_block("latest")["number"]
+
         nonce = self.get_nonce()
+
+        if result == self.XS_API_CALLS:
+            return current_gas_price, current_max_priority_gas, block_number, nonce
+            #return f"Result of API calls: current_gas_price={current_gas_price}, current_max_priority_gas={current_max_priority_gas}, block_number={block_number}, nonce={nonce}"
+
         arb_tx = self.build_transaction_with_gas(
-            routes=routes,
+            routes=route_struct,
             src_address=src_address,
             src_amt=src_amt,
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
         )
+        if result == self.XS_TRANSACTION:
+            return arb_tx
 
         if arb_tx is None:
             return None
@@ -329,6 +342,9 @@ class TxHelpers:
 
         adjusted_reward = Decimal(Decimal(expected_profit) * self.ConfigObj.DEFAULT_REWARD_PERCENT)
 
+        if result == self.XS_MIN_PROFIT_CHECK:
+            return adjusted_reward, gas_in_src
+
         if adjusted_reward > gas_in_src:
             self.ConfigObj.logger.info(
                 f"Expected profit of {expected_profit} BNT vs cost of {gas_in_src} BNT in gas, executing"
@@ -338,7 +354,7 @@ class TxHelpers:
             tx_receipt = self.submit_private_transaction(
                 arb_tx=arb_tx, block_number=block_number
             )
-            return tx_receipt or None
+            return tx_receipt.hex or None
         else:
             self.ConfigObj.logger.info(
                 f"Gas price too expensive! profit of {adjusted_reward} BNT vs gas cost of {gas_in_src} BNT. Abort, abort!"
@@ -356,11 +372,7 @@ class TxHelpers:
         Return the current liquidity of the Bancor V3 BNT + ETH pool
         """
         pool = (
-            self.db.session.query(Pool)
-            .filter(
-                Pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME, Pool.tkn1_address == self.ConfigObj.ETH_ADDRESS
-            )
-            .first()
+            self.ConfigObj.db.get_pool(Pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME, Pool.tkn1_address == self.ConfigObj.ETH_ADDRESS)
         )
         return pool.tkn0_balance, pool.tkn1_balance
 
