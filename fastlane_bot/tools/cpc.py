@@ -2357,6 +2357,8 @@ TOKENIDS = AttrDict(
     HDRN="HDRN-5e06",
     SHIB="SHIB-C4cE",
     ICHI="ICHI-C4d6",
+    OCTO="OCTO-2BA3",
+    ECO="ECO-5727",
 )
 T = TOKENIDS
 
