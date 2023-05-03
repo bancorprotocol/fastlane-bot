@@ -1,8 +1,8 @@
 """
 Fastlane bot configuration object -- main object
 """
-__VERSION__ = "1.0-BETA8"
-__DATE__ = "01/May 2023"
+__VERSION__ = "1.0"
+__DATE__ = "03/May 2023"
 
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
@@ -24,35 +24,48 @@ class Config():
     provider: provider_.ConfigProvider = field(default=None)
     
     
-    # NETWORK_MAINNET = S.NETWORK_MAINNET
-    # NETWORK_TENDERLY = S.NETWORK_TENDERLY
-    # DATABASE_POSTGRES = S.DATABASE_POSTGRES
-    # DATABASE_TESTING = S.DATABASE_TESTING
     CONFIG_UNITTEST = "unittest"
     CONFIG_TENDERLY = "tenderly"
     CONFIG_MAINNET = "mainnet"
+    
+    LOGLEVEL_DEBUG = S.LOGLEVEL_DEBUG
+    LOGLEVEL_INFO = S.LOGLEVEL_INFO
+    LOGLEVEL_WARNING = S.LOGLEVEL_WARNING
+    LOGLEVEL_ERROR = S.LOGLEVEL_ERROR
+    
+    LL_DEBUG = S.LOGLEVEL_DEBUG
+    LL_INFO = S.LOGLEVEL_INFO
+    LL_WARN = S.LOGLEVEL_WARNING
+    LL_ERR = S.LOGLEVEL_ERROR
+    
+    
     @classmethod
-    def new(cls, *, config=None, **kwargs):
+    def new(cls, *, config=None, loglevel=None, **kwargs):
         """
         Alternative constructor: create and return new Config object
         
         :config:    CONFIG_MAINNET(default), CONFIG_TENDERLY, CONFIG_UNITTEST
+        :loglevel:  LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
         """
         if config is None:
             config = cls.CONFIG_MAINNET
             
+        if loglevel is None:
+            loglevel = cls.LOGLEVEL_INFO
+        C_log = logger_.ConfigLogger.new(loglevel=loglevel)
+            
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
-            return cls(network=C_nw, **kwargs)
+            return cls(network=C_nw, logger=C_log, **kwargs)
         elif config == cls.CONFIG_TENDERLY:
             C_db = db_.ConfigDB.new(db=S.DATABASE_POSTGRES, POSTGRES_DB="tenderly")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
-            return cls(db=C_db, network=C_nw, **kwargs)
+            return cls(db=C_db, logger=C_log, network=C_nw, **kwargs)
         elif config == cls.CONFIG_UNITTEST:
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST, POSTGRES_DB="unittest")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
             C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
-            return cls(db=C_db, network=C_nw, provider=C_pr, **kwargs)
+            return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")
     
     def is_config_item(self, item):

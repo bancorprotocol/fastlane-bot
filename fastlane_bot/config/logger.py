@@ -1,19 +1,21 @@
 """
 Fastlane bot config -- logger
 """
-__VERSION__ = "0.9.2"
-__DATE__ = "30/Apr 2023"
+__VERSION__ = "1.0"
+__DATE__ = "03/May 2023"
+
 from .base import ConfigBase
 from . import selectors as S
-# import os
-# from dotenv import load_dotenv
-# load_dotenv()
-# from decimal import Decimal
 import logging
+
+# NOTE: THIS WHOLE LOGGING BUSINESS IS A BIT CONVOLUTED, SO AT ONE POINT
+# WE MAY CONSIDER CLEANING IT UP
 
 class ConfigLogger(ConfigBase):
     """
     Fastlane bot config -- logger
+    
+    :loglevel:    LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
     """
     __VERSION__=__VERSION__
     __DATE__=__DATE__
@@ -22,6 +24,7 @@ class ConfigLogger(ConfigBase):
     LOGLEVEL_INFO = S.LOGLEVEL_INFO
     LOGLEVEL_WARNING = S.LOGLEVEL_WARNING
     LOGLEVEL_ERROR = S.LOGLEVEL_ERROR
+    LOGLEVEL = S.LOGLEVEL_INFO
     
     def get_logger(self, loglevel: str) -> logging.Logger:
         """
@@ -36,6 +39,7 @@ class ConfigLogger(ConfigBase):
         log_level = getattr(logging, loglevel.upper())
         logger = logging.getLogger("fastlane")
         logger.setLevel(log_level)
+        #print(f"[get_logger] {loglevel} {log_level}")
         handler = logging.StreamHandler()
         handler.setLevel(log_level)
         formatter = logging.Formatter(
@@ -47,8 +51,7 @@ class ConfigLogger(ConfigBase):
     
     @property
     def logger(self):
-        """placeholder; raise NotImplementedError"""
-        raise NotImplementedError("logger() method not implemented")
+        return self._logger
     
     def debug(self, *args, **kwargs):
         """calls logger.debug()"""
@@ -67,7 +70,7 @@ class ConfigLogger(ConfigBase):
         return self.logger.error(*args, **kwargs)
     
     @classmethod
-    def new(cls, logger=None, **kwargs):
+    def new(cls, *, logger=None, loglevel=None, **kwargs):
         """
         Return a new ConfigLogger.
         """
@@ -75,26 +78,29 @@ class ConfigLogger(ConfigBase):
             logger = S.LOGGER_DEFAULT
         
         if logger == S.LOGGER_DEFAULT:
-            return _ConfigLoggerDefault(_direct=False, **kwargs)
+            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, **kwargs)
         else:
             raise ValueError(f"Unknown logger: {logger}")
         
-    def __init__(self, **kwargs):
+    def __init__(self, loglevel=None, **kwargs):
         super().__init__(**kwargs)
+        #print("[ConfigLogger]", loglevel, self.LOGLEVEL)
+        if not loglevel is None:
+            assert loglevel in {
+                self.LOGLEVEL_DEBUG, 
+                self.LOGLEVEL_INFO, 
+                self.LOGLEVEL_WARNING, 
+                self.LOGLEVEL_ERROR
+            }, f"unknown loglevel {loglevel}"
+            self.LOGLEVEL = loglevel
+        self._logger = self.get_logger(self.LOGLEVEL)
 
 
 class _ConfigLoggerDefault(ConfigLogger):
     """
     Fastlane bot config -- logger
     """
-
-    LOGLEVEL = "INFO"
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._logger = self.get_logger(self.LOGLEVEL)
+    pass
         
-    @property
-    def logger(self):
-        return self._logger
+
     

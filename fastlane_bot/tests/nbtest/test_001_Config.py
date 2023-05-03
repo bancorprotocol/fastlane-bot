@@ -118,18 +118,25 @@ def test_basic_structure():
     assert C.DATABASE == C.DATABASE_POSTGRES
     assert C.PROVIDER == C.PROVIDER_ALCHEMY
     
-    # +
-    # C = Config.new(config=Config.CONFIG_UNITTEST)
-    # assert C.NETWORK == C.NETWORK_MAINNET
-    # assert C.DATABASE == C.DATABASE_UNITTEST
-    # assert C.PROVIDER == C.PROVIDER_UNITTEST
+    C = Config.new(config=Config.CONFIG_UNITTEST)
+    assert C.NETWORK == C.NETWORK_MAINNET
+    assert C.DATABASE == C.DATABASE_UNITTEST
+    assert C.PROVIDER == C.PROVIDER_ALCHEMY
     
-    # +
-    # C = Config.new(config=Config.CONFIG_TENDERLY)
-    # assert C.NETWORK == C.NETWORK_TENDERYLY
-    # assert C.DATABASE == C.DATABASE_POSTGRES
-    # assert C.PROVIDER == C.PROVIDER_TENDERLY
-    # -
+    C = Config.new(config=Config.CONFIG_TENDERLY)
+    assert C.NETWORK == C.NETWORK_TENDERLY
+    assert C.DATABASE == C.DATABASE_POSTGRES
+    assert C.PROVIDER == C.PROVIDER_TENDERLY
+    
+    assert str(Config.new().logger.logger) == "<Logger fastlane (INFO)>"
+    assert str(Config.new(loglevel=Config.LL_DEBUG).logger.logger) == "<Logger fastlane (DEBUG)>"
+    assert str(Config.new(loglevel=Config.LL_INFO).logger.logger) == "<Logger fastlane (INFO)>"
+    assert str(Config.new(loglevel=Config.LL_WARN).logger.logger) == "<Logger fastlane (WARNING)>"
+    assert str(Config.new(loglevel=Config.LL_ERR).logger.logger) == "<Logger fastlane (ERROR)>"
+    assert str(Config.new(loglevel=Config.LOGLEVEL_DEBUG).logger.logger) == "<Logger fastlane (DEBUG)>"
+    assert str(Config.new(loglevel=Config.LOGLEVEL_INFO).logger.logger) == "<Logger fastlane (INFO)>"
+    assert str(Config.new(loglevel=Config.LOGLEVEL_WARNING).logger.logger) == "<Logger fastlane (WARNING)>"
+    assert str(Config.new(loglevel=Config.LOGLEVEL_ERROR).logger.logger) == "<Logger fastlane (ERROR)>"
     
 
 # ------------------------------------------------------------
@@ -404,7 +411,7 @@ def test_logger():
     assert issubclass(CAL.__class__, ConfigLogger)
     assert CAL.__class__.__name__ == '_ConfigLoggerDefault'
     
-    CAL = ConfigLogger.new(ConfigLogger.LOGGER_DEFAULT)
+    CAL = ConfigLogger.new(logger=ConfigLogger.LOGGER_DEFAULT)
     CAL.logger.debug("debug")
     CAL.logger.info("info")
     CAL.logger.warning("warning")
