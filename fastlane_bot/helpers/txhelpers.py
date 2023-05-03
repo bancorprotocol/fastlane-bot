@@ -281,7 +281,8 @@ class TxHelpers:
         src_amt: int,
         src_address: str,
         expected_profit: Decimal,
-        result: str = None
+        result: str = None,
+        verbose: bool = False
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -298,10 +299,11 @@ class TxHelpers:
         current_gas_price = int(
             self.get_eth_gas_price_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
         )
-        self.ConfigObj.logger.info("Found a trade. Executing...")
-        self.ConfigObj.logger.info(
-            f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
-        )
+        if verbose:
+            self.ConfigObj.logger.info("Found a trade. Executing...")
+            self.ConfigObj.logger.info(
+                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
+            )
         current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy()
 
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -310,7 +312,6 @@ class TxHelpers:
 
         if result == self.XS_API_CALLS:
             return current_gas_price, current_max_priority_gas, block_number, nonce
-            #return f"Result of API calls: current_gas_price={current_gas_price}, current_max_priority_gas={current_max_priority_gas}, block_number={block_number}, nonce={nonce}"
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
@@ -474,6 +475,7 @@ class TxHelpers:
                 )
             )
         except ValueError as e:
+            print(f'ValueError when building transaction: {e}')
             message = str(e).split("baseFee: ")
             split_fee = message[1].split(" (supplied gas ")
             baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
@@ -656,10 +658,10 @@ class TxHelpers:
         """
         return self._query_alchemy_api_gas_methods(method="eth_gasPrice")
 
-    def get_gas_estimate_alchemy(self, params: []):
-        """
-        :param params: The already-built TX, with the estimated gas price included
-        """
-        return self._query_alchemy_api_gas_methods(
-            method="eth_estimateGas", params=params
-        )
+    # def get_gas_estimate_alchemy(self, params: []):
+    #     """
+    #     :param params: The already-built TX, with the estimated gas price included
+    #     """
+    #     return self._query_alchemy_api_gas_methods(
+    #         method="eth_estimateGas", params=params
+    #     )
