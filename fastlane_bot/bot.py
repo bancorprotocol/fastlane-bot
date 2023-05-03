@@ -263,31 +263,6 @@ class CarbonBot(CarbonBotBase):
         super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools,
                               update_pools=update_pools)
 
-    # def _order_and_scale_trade_instruction_dcts(self,
-    #                                             trade_instruction_df,
-    #                                             trade_instruction_dcts,
-    #                                             best_src_token
-    #                                             ):
-    #     # self.ConfigObj.logger.debug("[_order_and_scale_trade_instruction_dcts] r", r)
-    #     # note the dictionary values are changed in place
-    #     # trade_instruction_df, trade_instruction_dcts, best_src_token = r
-    #     df = trade_instruction_df.iloc[:-3]
-    #     assert len(df.columns) == 2, "Can only route pairs"
-    #     dfp = df[df[best_src_token] > 0]
-    #     dfm = df[df[best_src_token] < 0]
-    #     order = list(dfp.index.values) + list(dfm.index.values)
-    #     # order here
-    #     trade_dicts = {d['cid']: d for d in trade_instruction_dcts}
-    #     ordered_trade_instructions = [trade_dicts[cid] for cid in order]
-    #     # scale here
-    #     data = ordered_trade_instructions
-    #     for i in range(len(data)):
-    #         if data[i]["tknin"] == best_src_token:
-    #             #     data[i]["amtin"] *= 0.999
-    #             # else:
-    #             data[i]["amtin"] *= 0.99
-    #     return data, len(dfp)  # ordered_scaled_dcts, tx_in_count
-
     def _simple_ordering_by_src_token(self, best_trade_instructions_dic, best_src_token):
         '''
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
@@ -855,44 +830,6 @@ class CarbonBot(CarbonBotBase):
             src_amount=src_amount
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
-
-    # def _handle_ordering(
-    #     self, agg_trade_instructions, best_src_token, tx_route_handler
-    # ):
-    #     """
-    #     Handles the ordering of the aggregated trade instructions.
-
-    #     Parameters
-    #     ----------
-    #     agg_trade_instructions:
-    #         aggregate trade instructions as returned by _agg_carbon_independentIDs
-
-    #     best_src_token: 
-    #         the best source (=flashloan) token as returned by _find_arbitrage_opportunities
-
-    #     tx_route_handler: TxRouteHandlerBase
-    #         the transaction route handler object
-
-    #     Returns
-    #     -------
-    #         ordered trade instructions
-    #     """
-    #     new_trade_instructions = []
-    #     if len(agg_trade_instructions) == 2:
-    #         for inst in agg_trade_instructions:
-    #             if inst.tknin == best_src_token:
-    #                 new_trade_instructions += [inst]
-    #         missing = [
-    #             inst
-    #             for inst in agg_trade_instructions
-    #             if inst not in new_trade_instructions
-    #         ]
-    #         new_trade_instructions.append(missing[0])
-    #     else:
-    #         new_trade_instructions = tx_route_handler._find_tradematches(
-    #             agg_trade_instructions
-    #         )
-    #     return new_trade_instructions
 
     RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
     RUN_SINGLE = "single"
