@@ -93,9 +93,13 @@ h = TxSubmitHandler(ConfigObj=C)
 assert type(h).__name__ == "TxSubmitHandler"
 assert type(h).__bases__[0].__name__ == "TxSubmitHandlerBase"
 
-help(h)
+# +
+#help(h)
+# -
 
 # ## TradeInstruction
+
+ti0.tknout_key
 
 # +
 ti0 = TradeInstruction(ConfigObj=C, cid='1701411834604692317316873037158841057285-1', tknin="USDC-eB48", amtin=20029.887718107937, tknout='WETH-6Cc2', amtout=-10.0, db=bot.db)
@@ -103,8 +107,8 @@ ti1 = TradeInstruction(ConfigObj=C, cid='105487533745490923673646128303848145553
 assert type(ti0).__name__ == "TradeInstruction"
 assert type(ti1).__name__ == "TradeInstruction"
 
-assert ti0.tknin_key
-assert ti0.tknout_key
+assert ti0.tknin_key == 'USDC-eB48'
+assert ti0.tknout_key == 'WETH-6Cc2'
 assert ti0.is_carbon == True, "The first order is a Carbon order"
 assert ti1.is_carbon == False, "The second order is not a Carbon order"
 assert type(ti0._amtin_wei) == int
@@ -118,20 +122,17 @@ assert ti1.exchange_id == 4
 assert ti0.exchange_name == C.CARBON_V1_NAME
 assert ti1.exchange_name == C.UNISWAP_V3_NAME
 
-
 assert str(ti0._tknin_address) == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 assert str(ti0._tknout_address) == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-
-
 
 assert ti0._tknin_decimals == 6
 assert ti0._tknout_decimals == 18
 assert ti0._tknin_address != ti1._tknin_address
 assert ti0._tknout_address != ti1._tknout_address
 
-
 assert ti0.raw_txs == "[]"
 assert ti1.raw_txs == "[]"
+
 
 
 # +
@@ -162,7 +163,7 @@ assert type(h).__name__ == "TxHelpers"
 
 # -
 
-help(h)
+h.ether_price_usd
 
 # ## TxHelper
 
@@ -171,16 +172,27 @@ h = TxHelper(ConfigObj=C)
 assert type(h).__name__ == "TxHelper"
 assert h.w3.__class__.__name__ == "Web3"
 assert h.w3.isConnected()
-assert h.PRIVATE_KEY
+assert h.PRIVATE_KEY.startswith("0x")
 assert type(h.COINGECKO_URL) == str
-# This indicates the arb contract is correctly instantiated. These values can change, but the default is 50% rewards for the caller, and 100 BNT max profit.
-assert h.arb_contract.caller.rewards() == (500000,100000000000000000000)
-assert (h.wallet_address), "Address not loading. Check that .env file has field ETH_PRIVATE_KEY_BE_CAREFUL"
-assert (h.wallet_balance)
+
+# This indicates the arb contract is correctly instantiated. T
+#T hese values can change, but the default is 50% rewards for the caller, and 100 BNT max profit.
+rw = h.arb_contract.caller.rewards()
+assert type(rw) == tuple
+assert len(rw) == 2
+assert rw[0] > 0
+assert rw[0]/rw[1] < 1e10
+#assert h.arb_contract.caller.rewards() == (500000,100000000000000000000)
+
+
+# +
+assert h.wallet_address.startswith("0x")
+assert len(h.wallet_balance) == 2 # it is a tuple
 assert type(h.wei_balance) == int
 # print(h.ether_balance, type(h.ether_balance))
 # assert type(h.ether_balance) == float #TODO currently returns Decimal, expected float
-assert h.nonce >= 0 and type(h.nonce) == int
+assert h.nonce >= 0 
+assert type(h.nonce) == int
 
 assert h.gas_limit >= 0 # this also tests the function get_gas_limit_from_usd
 assert h.base_gas_price >=0 # this includes 0 to account for the 0 gas price on Tenderly
@@ -189,8 +201,12 @@ assert type(h.gas_price_gwei) == float
 assert h.gas_price_gwei * 1000000000 == h.base_gas_price
 
 assert type(h.ether_price_usd) == float
+assert h.ether_price_usd > 100
+assert h.ether_price_usd < 1000000
 assert h.deadline > h.w3.eth.getBlock('latest')['timestamp'] + C.DEFAULT_BLOCKTIME_DEVIATION - 1
 
+
+# +
 flash_tkn_normal = h.submit_flashloan_arb_tx(arb_data=arb_data_struct, flashloan_token_address=flash_tkn, flashloan_amount=flash_amt, verbose=False, result=h.XS_WETH)
 flash_tkn_weth = h.submit_flashloan_arb_tx(arb_data=arb_data_struct_weth_test, flashloan_token_address=flash_tkn_weth_test, flashloan_amount=flash_amt_weth_test, verbose=False, result=h.XS_WETH)
 
@@ -214,5 +230,7 @@ assert signed_transaction
 # -
 
 help(h)
+
+signed_transaction
 
 
