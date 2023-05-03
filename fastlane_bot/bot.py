@@ -41,6 +41,9 @@ Licensed under MIT
     @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
+__VERSION__ = "3-b1.0"
+__DATE__ = "03/May/2023"
+
 import itertools
 import time
 from dataclasses import dataclass, InitVar, asdict, field
@@ -61,7 +64,6 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 import fastlane_bot.db.models as models
 from fastlane_bot.config import Config
-from . import __VERSION__, __DATE__
 from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
 
@@ -708,7 +710,7 @@ class CarbonBot(CarbonBotBase):
     AM_REGULAR = "regular"
     AM_SINGLE = "single"
     def _run(
-            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet", arb_mode:str = None
+            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode:str = None
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Working-level entry point for run(), performing the actual execution.
@@ -721,16 +723,13 @@ class CarbonBot(CarbonBotBase):
             The CPCContainer object containing all market curves.
         result: XS_XXX or None
             What intermediate result to return (default: None)
-        arb_mode: 'regular', 'single' (default: None = 'regular')
+        arb_mode: AM_REGULAR or AM_SINGLE
             What way to search arbs, 'single' is carbon single pair-wise
         Returns
         -------
         str
             The transaction hash.
         """
-        assert network == "mainnet", "Only mainnet"
-        # TODO: REMOVE THIS PARAMETER; THE NETWORK MUST BE SET IN THE BOT ITSELF
-
         ## Find arbitrage opportunities
         arb_mode = self.AM_REGULAR if arb_mode is None else arb_mode
         if arb_mode == self.AM_REGULAR:
