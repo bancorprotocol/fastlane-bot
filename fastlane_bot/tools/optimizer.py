@@ -1471,7 +1471,8 @@ class CPCArbOptimizer(OptimizerBase):
                 
             if P("raiseonerror"):
                 raise
-                
+            
+            NOMR = lambda f: f
             return self.MargpOptimizerResult(
                 optimizer=NOMR(self),
                 result=None,
