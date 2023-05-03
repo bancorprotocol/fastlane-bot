@@ -41,7 +41,7 @@ Licensed under MIT
     @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
-__VERSION__ = "3-b1.0"
+__VERSION__ = "3-b1.1"
 __DATE__ = "03/May/2023"
 
 import itertools
@@ -115,7 +115,7 @@ class CarbonBotBase():
         """
 
         if genesis_data is not None:
-            print(
+            self.ConfigObj.logger.warning(
                 "WARNING: genesis_data is deprecated. This argument will be removed soon"
             )
         if self.ConfigObj is None:
@@ -221,7 +221,7 @@ class CarbonBotBase():
         curves = []
         tokens = self.db.get_tokens()
         ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
-        #print(f"ADDRDEC {ADDRDEC}")
+        #self.ConfigObj.logger.debug(f"ADDRDEC {ADDRDEC}")
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
@@ -268,7 +268,7 @@ class CarbonBot(CarbonBotBase):
     #                                             trade_instruction_dcts,
     #                                             best_src_token
     #                                             ):
-    #     # print("[_order_and_scale_trade_instruction_dcts] r", r)
+    #     # self.ConfigObj.logger.debug("[_order_and_scale_trade_instruction_dcts] r", r)
     #     # note the dictionary values are changed in place
     #     # trade_instruction_df, trade_instruction_dcts, best_src_token = r
     #     df = trade_instruction_df.iloc[:-3]
@@ -486,7 +486,7 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.error("[TODO CLEAN UP]{e}")
                 profit = profit_src
 
-            print(f"Profit in bnt: {profit} {cids}")
+            self.ConfigObj.logger.info(f"Profit in bnt: {profit} {cids}")
             # candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
             contains_carbon = any(
                 self._check_if_carbon(ti['cid'])[0]
@@ -502,34 +502,34 @@ class CarbonBot(CarbonBotBase):
                 netchange = [500]
 
             bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-            print(f"bnt_gas_limit: {bnt_gas_limit}")
+            self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
             condition_6 = False
             if profit > (self.min_profit + bnt_gas_limit):
                 condition_6 = True
 
             if len(trade_instructions_df) > 0:
                 condition_1 = (profit > best_profit)
-                print(f"profit > best_profit: {condition_1}")
+                self.ConfigObj.logger.debug(f"profit > best_profit: {condition_1}")
                 # ordered_scaled_dcts, tx_in_count = self._order_and_scale_trade_instruction_dcts(
                 #     trade_instructions_df, trade_instructions_dic, src_token)
 
                 # condition_5 = tx_in_count > 0
 
-                print(f"profit > best_profit: {condition_1}")
+                self.ConfigObj.logger.debug(f"profit > best_profit: {condition_1}")
                 condition_2 = contains_carbon
-                print(f"contains_carbon: {condition_2}")
+                self.ConfigObj.logger.debug(f"contains_carbon: {condition_2}")
                 condition_3 = max(netchange) < 1e-4
 
-                print(f"max(netchange)<1e-4: {condition_3}")
-                # print(f"contains_other: {condition_4}")
-                # print(f"tx_in_count > 0: {condition_5}")
+                self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_3}")
+                # self.ConfigObj.logger.debug(f"contains_other: {condition_4}")
+                # self.ConfigObj.logger.debug(f"tx_in_count > 0: {condition_5}")
                 if condition_3:
                     candidates += [
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                 if condition_1 and condition_2 and condition_3 and condition_6:
-                    print("*************")
-                    print(f"New best profit: {profit}")
+                    self.ConfigObj.logger.debug("*************")
+                    self.ConfigObj.logger.debug(f"New best profit: {profit}")
 
                     best_profit = profit
                     best_src_token = src_token
@@ -537,7 +537,7 @@ class CarbonBot(CarbonBotBase):
                     best_trade_instructions_dic = trade_instructions_dic
                     best_trade_instructions = trade_instructions
 
-                    print(f"best_trade_instructions_df: {best_trade_instructions_df}")
+                    self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
 
                     ops = (
                         best_profit,
@@ -546,9 +546,9 @@ class CarbonBot(CarbonBotBase):
                         best_src_token,
                         best_trade_instructions
                     )
-                    print("*************")
+                    self.ConfigObj.logger.debug("*************")
             # except Exception as e:
-            #     print(f"Error in opt: {e}")
+            #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
             #     continue
 
         return candidates if result == self.AO_CANDIDATES else ops
@@ -637,31 +637,31 @@ class CarbonBot(CarbonBotBase):
                     self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
                     profit = profit_src
 
-                print(f"Profit in bnt: {profit} {cids}")
+                self.ConfigObj.logger.debug(f"Profit in bnt: {profit} {cids}")
                 try:
                     netchange = trade_instructions_df.iloc[-1]
                 except Exception as e:
                     netchange = [500]
 
                 bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-                print(f"bnt_gas_limit: {bnt_gas_limit}")
+                self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
                 condition_profit = False
                 if profit > (self.min_profit + bnt_gas_limit):
                     condition_profit = True
 
                 if len(trade_instructions_df) > 0:
                     condition_better_profit = (profit > best_profit)
-                    print(f"profit > best_profit: {condition_better_profit}")
+                    self.ConfigObj.logger.debug(f"profit > best_profit: {condition_better_profit}")
                     condition_zeros_one_token = max(netchange) < 1e-4
-                    print(f"max(netchange)<1e-4: {condition_zeros_one_token}")
+                    self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
                     if condition_zeros_one_token: #candidate regardless if profitable
                         candidates += [
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                     if condition_profit and condition_better_profit and condition_zeros_one_token:
-                        print("*************")
-                        print(f"New best profit: {profit}")
+                        self.ConfigObj.logger.debug("*************")
+                        self.ConfigObj.logger.debug(f"New best profit: {profit}")
 
                         best_profit = profit
                         best_src_token = src_token
@@ -669,7 +669,7 @@ class CarbonBot(CarbonBotBase):
                         best_trade_instructions_dic = trade_instructions_dic
                         best_trade_instructions = trade_instructions
 
-                        print(f"best_trade_instructions_df: {best_trade_instructions_df}")
+                        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
 
                         ops = (
                             best_profit,
@@ -678,9 +678,9 @@ class CarbonBot(CarbonBotBase):
                             best_src_token,
                             best_trade_instructions
                         )
-                        print("*************")
+                        self.ConfigObj.logger.debug("*************")
                 # except Exception as e:
-                #     print(f"Error in opt: {e}")
+                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
                 #     continue
 
         return candidates if result == self.AO_CANDIDATES else ops
@@ -807,12 +807,12 @@ class CarbonBot(CarbonBotBase):
             )
 
         # log the flashloan arbitrage tx info
-        self.ConfigObj.logger.info(f"Flashloan amount: {flashloan_amount}")
-        self.ConfigObj.logger.info(f"Flashloan token address: {flashloan_token_address}")
-        self.ConfigObj.logger.info(f"Route Struct: \n {route_struct}")
-        self.ConfigObj.logger.info(f"Trade Instructions: \n {best_trade_instructions_dic}")
-        self.ConfigObj.logger.info(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
-        self.ConfigObj.logger.info(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
+        self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
+        self.ConfigObj.logger.debug(f"Flashloan token address: {flashloan_token_address}")
+        self.ConfigObj.logger.debug(f"Route Struct: \n {route_struct}")
+        self.ConfigObj.logger.debug(f"Trade Instructions: \n {best_trade_instructions_dic}")
+        self.ConfigObj.logger.debug(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
+        self.ConfigObj.logger.debug(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
 
         # Initialize tx helper
         tx_helper = TxHelper(
