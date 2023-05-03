@@ -282,7 +282,8 @@ class TxHelpers:
         src_address: str,
         expected_profit: Decimal,
         result: str = None,
-        verbose: bool = False
+        verbose: bool = False,
+        safety_override: bool = False
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -347,7 +348,7 @@ class TxHelpers:
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
-        if adjusted_reward > gas_in_src:
+        if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
                 f"Expected profit of {expected_profit} BNT vs cost of {gas_in_src} BNT in gas, executing"
             )
@@ -374,7 +375,7 @@ class TxHelpers:
         Return the current liquidity of the Bancor V3 BNT + ETH pool
         """
         pool = (
-            self.ConfigObj.db.get_pool(Pool.exchange_name == self.ConfigObj.BANCOR_V3_NAME, Pool.tkn1_address == self.ConfigObj.ETH_ADDRESS)
+            self.ConfigObj.db.get_pool(exchange_name = self.ConfigObj.BANCOR_V3_NAME, tkn1_address = self.ConfigObj.ETH_ADDRESS)
         )
         return pool.tkn0_balance, pool.tkn1_balance
 
