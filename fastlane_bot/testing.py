@@ -5,8 +5,8 @@ USAGE
 
     from fastlane_bot.testing import *
 """
-__VERSION__ = "1.0"
-__DATE__ = "28/Apr/2023"
+__VERSION__ = "1.1"
+__DATE__ = "03/May/2023"
 
 import math as m
 import numpy as np
@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import os
 import sys
 from decimal import Decimal
+from itertools import zip_longest
 
 
 def iseq(arg0, *args, eps=1e-6):
@@ -103,13 +104,13 @@ def _require_version(rl, al):
     :al:        the actual version, eg (1,3)
     :returns:   True if requirements are met, False else*
     """
-    for r,a in zip(rl, al):
+    for r,a in zip_longest(rl, al, fillvalue=0):
         #print(f"r={r}, a={a}")
         if r > a:
             return False
         elif r < a:
             return True
-    return len(al) >= len(rl)
+    return True
     
     
 print("imported m, np, pd, plt, os, sys, decimal; defined iseq, raises, require")
