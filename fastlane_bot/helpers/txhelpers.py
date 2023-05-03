@@ -319,6 +319,7 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
+            test_fake_gas=True if result is not None else False
         )
         if result == self.XS_TRANSACTION:
             return arb_tx
@@ -453,6 +454,7 @@ class TxHelpers:
         gas_price: int,
         max_priority: int,
         nonce: int,
+        test_fake_gas: bool = False
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -482,6 +484,9 @@ class TxHelpers:
                     gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
                 )
             )
+        if test_fake_gas:
+            transaction["gas"] = self.ConfigObj.DEFAULT_GAS
+            return transaction
 
         try:
             estimated_gas = (
