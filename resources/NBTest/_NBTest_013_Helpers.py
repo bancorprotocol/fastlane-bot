@@ -28,7 +28,7 @@ from fastlane_bot.testing import *
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+require("3.0", __VERSION__)
 
 # # Helpers [NBTest013]
 
@@ -98,8 +98,6 @@ assert type(h).__bases__[0].__name__ == "TxSubmitHandlerBase"
 # -
 
 # ## TradeInstruction
-
-ti0.tknout_key
 
 # +
 ti0 = TradeInstruction(ConfigObj=C, cid='1701411834604692317316873037158841057285-1', tknin="USDC-eB48", amtin=20029.887718107937, tknout='WETH-6Cc2', amtout=-10.0, db=bot.db)
@@ -224,13 +222,10 @@ assert transaction['to'] == C.FASTLANE_CONTRACT_ADDRESS
 assert transaction['data'] is not None
 
 signed_transaction = h.submit_flashloan_arb_tx(arb_data=arb_data_struct, flashloan_token_address=flash_tkn, flashloan_amount=flash_amt, verbose=False, result=h.XS_SIGNED)
-assert signed_transaction
+assert str(signed_transaction).startswith("SignedTransaction(rawTransaction=HexBytes('0xf903cb")
+
 
 
 # -
-
-help(h)
-
-signed_transaction
 
 
