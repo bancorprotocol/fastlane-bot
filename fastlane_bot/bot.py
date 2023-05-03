@@ -111,12 +111,15 @@ class CarbonBotBase():
         """
         The post init method.
         """
+
         if genesis_data is not None:
             print(
                 "WARNING: genesis_data is deprecated. This argument will be removed soon"
             )
         if self.ConfigObj is None:
             self.ConfigObj = Config()
+
+        self.c = self.ConfigObj
 
         assert self.polling_interval is None, "polling_interval is now a parameter to run"
 
@@ -181,8 +184,10 @@ class CarbonBotBase():
         :top_n:             if not None, only updates the top n pools
         :only_carbon:       if True, only updates carbon pools and other exchanges that are carbon-pool compatible pairs
         """
-        if only_carbon and top_n is not None:
-            raise ValueError("only_carbon and top_n are mutually exclusive")
+        self.c.logger.info(f"starting update(udtype={udtype}, "
+                           f"drop_tables={drop_tables}, "
+                           f"top_n={top_n}, "
+                           f"only_carbon={only_carbon})")
 
         if udtype is None:
             udtype = self.UDTYPE_FROM_CONTRACTS
@@ -214,6 +219,7 @@ class CarbonBotBase():
         curves = []
         tokens = self.db.get_tokens()
         ADDRDEC = {t.key: (t.address, t.decimals) for t in tokens}
+        print(f"ADDRDEC {ADDRDEC}")
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
