@@ -4,6 +4,7 @@ Database manager object for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+from contextlib import contextmanager
 from dataclasses import dataclass, field, InitVar
 
 import pandas as pd
@@ -147,13 +148,27 @@ class DatabaseManagerBase(ContractHelper):
                               'DIVER': 0.0, 'QOM': 0.0, 'XLON': 0.0, 'SOV': 0.0, 'imgnAI': 0.0, 'CRV': 0.0,
                               'BITEYX': 0.0, 'CBBG': 0.0, 'DJT': 0.0, 'MASK': 0.0}
 
+    @contextmanager
+    def session_scope(self):
+        session = self.Session()
+        try:
+            yield session
+            session.commit()
+        except Exception as e:
+            self.c.logger.error(f'Error in session_scope: {e}')
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
     @property
     def next_id(self) -> int:
         """
         Returns the next id
         """
-        max_idx = self.session.query(func.max(getattr(models.Pool, 'id'))).first()[0]
-        return max_idx + 1 if max_idx is not None else 0
+        with self.session_scope() as session:
+            max_idx = session.query(func.max(getattr(models.Pool, 'id'))).first()[0]
+            return max_idx + 1 if max_idx is not None else 0
 
     @property
     def next_cid(self) -> str:
@@ -161,11 +176,12 @@ class DatabaseManagerBase(ContractHelper):
         Returns the next cid. The cid is a string representation of the next id,
         where id is assumed to be unique with respect to the Carbon strategy_id values bc they are huge numbers.
         """
-        max_idxs = self.session.query(models.Pool).all()
-        if not max_idxs:
-            return '0'
-        max_idx = max(int(x.cid) for x in max_idxs)
-        return str(max_idx + 1 if max_idx is not None else 0)
+        with self.session_scope() as session:
+            max_idxs = session.query(models.Pool).all()
+            if not max_idxs:
+                return '0'
+            max_idx = max(int(x.cid) for x in max_idxs)
+            return str(max_idx + 1 if max_idx is not None else 0)
 
     def connect_db(self, *, backend_url=None):
         """
@@ -175,7 +191,7 @@ class DatabaseManagerBase(ContractHelper):
             backend_url = self.ConfigObj.POSTGRES_URL
             print(f"Using default database url: {backend_url}")
         if backend_url is None:
-            self.session = None
+            self.Session = None
             self.engine = None
             return
 
@@ -187,8 +203,7 @@ class DatabaseManagerBase(ContractHelper):
 
         engine = sqlalchemy.create_engine(backend_url)
         models.mapper_registry.metadata.create_all(engine)
-        sesh = sessionmaker(bind=engine)
-        self.session = sesh()
+        self.Session = sessionmaker(bind=engine)
         self.engine = engine
 
     def token_key_from_symbol_and_address(self, tkn_address: str, tkn_symbol: str) -> str:
