@@ -603,38 +603,20 @@ class CarbonBot(CarbonBotBase):
 
         candidates = []
         for tkn0, tkn1 in combos:
-            # try:
             r = None
-            # c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+            self.C.logger.info(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            pstart = (
-                {
-                    tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p, #might be able to build p_start from all pair data
-                }
-                if len(CC) != 0
-                else None
-            )
-            not_carbon_curves = [x for x in CC.curves if x.params.exchange!='carbon_v1']
             carbon_curves = [x for x in CC.curves if x.params.exchange=='carbon_v1']
-            curve_combos = list(itertools.product(carbon_curves, not_carbon_curves)) #combos 1 carbon curve w non_carbon
+            not_carbon_curves = [x for x in CC.curves if x.params.exchange!='carbon_v1']
+            curve_combos = list(itertools.product(not_carbon_curves, carbon_curves)) #combos 1 carbon curve w non_carbon
             for curve_combo in curve_combos:
-                CC_cc = CPCContainer()
-                CC_cc.curves = curve_combo #builds the container correctly
+                CC_cc = CPCContainer(curve_combo)
                 O = CPCArbOptimizer(CC_cc)
                 src_token = tkn1
-                try:
-                    r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
-                    assert not r.is_error
-                except Exception as e:
-                    # c.logger.debug(e, r)
-                    try:
-                        r = O.margp_optimizer(src_token)
-                        assert not r.is_error
-                    except Exception as e:
-                        # c.logger.info(e)
-                        continue
+                pstart = ({tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}) #this intentially selects the non_carbon curve
+                r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
 
                 profit_src = -r.result
                 try:
