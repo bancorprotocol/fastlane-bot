@@ -1,7 +1,7 @@
 """
 Fastlane bot config -- network
 """
-__VERSION__ = "1.0.3"
+__VERSION__ = "1.0.3-RESTRICTED"
 __DATE__ = "02/May 2023"
 from .base import ConfigBase
 from . import selectors as S
@@ -45,12 +45,12 @@ class ConfigNetwork(ConfigBase):
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     CARBON_V1_NAME = "carbon_v1"
     EXCHANGE_IDS = {
-        BANCOR_V2_NAME: 1,
-        BANCOR_V3_NAME: 2,
-        UNISWAP_V2_NAME: 3,
-        UNISWAP_V3_NAME: 4,
-        SUSHISWAP_V2_NAME: 5,
         CARBON_V1_NAME: 6,
+        UNISWAP_V2_NAME: 3,
+        # UNISWAP_V3_NAME: 4,
+        # BANCOR_V2_NAME: 1,
+        # BANCOR_V3_NAME: 2,
+        # SUSHISWAP_V2_NAME: 5,
     }
     UNIV2_FORKS = [UNISWAP_V2_NAME, SUSHISWAP_V2_NAME]
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
