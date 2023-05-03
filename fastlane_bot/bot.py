@@ -731,7 +731,7 @@ class CarbonBot(CarbonBotBase):
             The transaction hash.
         """
         ## Find arbitrage opportunities
-        arb_mode = self.AM_REGULAR if arb_mode is None else arb_mode
+        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
         if arb_mode == self.AM_REGULAR:
             r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
         elif arb_mode == self.AM_SINGLE:
@@ -801,7 +801,7 @@ class CarbonBot(CarbonBotBase):
 
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
-        if network == self.ConfigObj.NETWORK_TENDERLY:
+        if self.ConfigObj.network == self.ConfigObj.NETWORK_TENDERLY:
             return self._validate_and_submit_transaction_tenderly(
                 route_struct, flashloan_token_address, flashloan_amount
             )
