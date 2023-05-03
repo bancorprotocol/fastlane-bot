@@ -27,7 +27,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+require("3.0", __VERSION__)
 
 # +
 
@@ -75,14 +75,13 @@ assert len(CCc1) + len(CCb2) + len(CCb3) + len(CCu2) + len(CCu3) + len(CCsu) == 
 
 
 def max_decimals(value: float, num_dec: int) -> bool:
-    """Fails with scientific notation"""
+    """Fails for floats that use scientific notation"""
     after_dec = str(value).split(".")[1]
 
     if num_dec == 0 and after_dec == "0":
         return True
     if len(after_dec) > num_dec:
         print("before", value, " after", after_dec, " len(after_dec) ", len(after_dec), "decimals", num_dec)
-        print('{:f}'.format(value))
     return False if len(after_dec) > num_dec else True
 
 
@@ -112,7 +111,7 @@ for curve in CCm:
     assert type(curve.params["tkny_dec"]) == int and curve.params["tkny_dec"] >= 0
     assert type(curve.params["blocklud"]) == int and curve.params["blocklud"] > 0
 
-    """The following is a decimal precision test that currently fails for floats with scientific notation."""
+    # The following is a decimal precision test that fails for floats with scientific notation.
     # tknx = curve.pair.split("/")[0]
     # tkny = curve.pair.split("/")[1]
     # assert max_decimals(value=curve.x_act, num_dec=curve.params["tknx_dec"]), f"Token decimals exceed maximum for token {tknx}"
@@ -204,7 +203,18 @@ for curve in CCp1:
 #### By Token
 
 # +
+CCt1 = CCm.bytknx(weth)
+CCt2 = CCm.bytknx(usdc)
+assert len(CCt1) == 40
+assert len(CCt2) == 19
 
+for curve in CCt1:
+    assert weth in curve.pair
+    assert curve.pair != f"{weth}/{weth}"
+
+for curve in CCt2:
+    assert usdc in curve.pair
+    assert curve.pair != f"{usdc}/{usdc}"
 
 
 
