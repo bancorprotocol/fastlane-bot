@@ -550,6 +550,156 @@ class CarbonBot(CarbonBotBase):
             #     continue
 
         return candidates if result == self.AO_CANDIDATES else ops
+    
+    def _find_arbitrage_opportunities_carbon_single_pairwise(
+            self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
+    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
+        # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
+        """
+        Finds the pair-wise arbitrage opportunities for individual carbon orders.
+
+        Parameters
+        ----------
+        flashloan_tokens: List[str]
+            The flashloan tokens.
+        CCm: CPCContainer
+            The CPCContainer object.
+        result: AO_XXX or None
+            What (intermediate) result to return.
+            mode: str
+            The mode.
+
+        Returns
+        -------
+        Tuple[Decimal, List[Dict[str, Any]]]
+            The best profit and the trade instructions.
+        """
+        assert mode == "bothin", "parameter not used"
+        # c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
+        best_profit = 0
+        best_src_token = None
+        best_trade_instructions = None
+        best_trade_instructions_df = None
+        best_trade_instructions_dic = None
+        ops = (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions
+        )
+
+        all_tokens = CCm.tokens()
+        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
+        combos = [
+            (tkn0, tkn1)
+            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
+            # tkn1 is always the token being flash loaned
+            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
+            if tkn0 != tkn1
+        ]
+        if result == self.AO_TOKENS:
+            return all_tokens, combos
+
+        candidates = []
+        for tkn0, tkn1 in combos:
+            # try:
+            r = None
+            # c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+            CC = CCm.bypairs(f"{tkn0}/{tkn1}")
+            if len(CC) < 2:
+                continue
+            pstart = (
+                {
+                    tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p, #might be able to build p_start from all pair data
+                }
+                if len(CC) != 0
+                else None
+            )
+            not_carbon_curves = [x for x in CC.curves if x.params.exchange!='carbon_v1']
+            carbon_curves = [x for x in CC.curves if x.params.exchange=='carbon_v1']
+            curve_combos = list(itertools.product(carbon_curves, not_carbon_curves)) #combos 1 carbon curve w non_carbon
+            for curve_combo in curve_combos:
+                CC_cc = CPCContainer()
+                CC_cc.curves = curve_combo #builds the container correctly
+                O = CPCArbOptimizer(CC_cc)
+                src_token = tkn1
+                try:
+                    r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
+                    assert not r.is_error
+                except Exception as e:
+                    # c.logger.debug(e, r)
+                    try:
+                        r = O.margp_optimizer(src_token)
+                        assert not r.is_error
+                    except Exception as e:
+                        # c.logger.info(e)
+                        continue
+
+                profit_src = -r.result
+                try:
+                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                    trade_instructions = r.trade_instructions()
+                except:
+                    continue
+
+                cids = [ti['cid'] for ti in trade_instructions_dic]
+                quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
+
+                try:
+                    profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
+                except Exception as e:
+                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+                    profit = profit_src
+
+                print(f"Profit in bnt: {profit} {cids}")
+                try:
+                    netchange = trade_instructions_df.iloc[-1]
+                except Exception as e:
+                    netchange = [500]
+
+                bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
+                print(f"bnt_gas_limit: {bnt_gas_limit}")
+                condition_profit = False
+                if profit > (self.min_profit + bnt_gas_limit):
+                    condition_profit = True
+
+                if len(trade_instructions_df) > 0:
+                    condition_better_profit = (profit > best_profit)
+                    print(f"profit > best_profit: {condition_better_profit}")
+                    condition_zeros_one_token = max(netchange) < 1e-4
+                    print(f"max(netchange)<1e-4: {condition_zeros_one_token}")
+
+                    if condition_zeros_one_token: #candidate regardless if profitable
+                        candidates += [
+                            (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+
+                    if condition_profit and condition_better_profit and condition_zeros_one_token:
+                        print("*************")
+                        print(f"New best profit: {profit}")
+
+                        best_profit = profit
+                        best_src_token = src_token
+                        best_trade_instructions_df = trade_instructions_df
+                        best_trade_instructions_dic = trade_instructions_dic
+                        best_trade_instructions = trade_instructions
+
+                        print(f"best_trade_instructions_df: {best_trade_instructions_df}")
+
+                        ops = (
+                            best_profit,
+                            best_trade_instructions_df,
+                            best_trade_instructions_dic,
+                            best_src_token,
+                            best_trade_instructions
+                        )
+                        print("*************")
+                # except Exception as e:
+                #     print(f"Error in opt: {e}")
+                #     continue
+
+        return candidates if result == self.AO_CANDIDATES else ops
 
     def _get_deadline(self) -> int:
         """
@@ -575,7 +725,7 @@ class CarbonBot(CarbonBotBase):
 
     # TODO: RENAME TO _RUN
     def _run(
-            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet"
+            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, network: str = "mainnet", arb_mode:str = None
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Working-level entry point for run(), performing the actual execution.
@@ -588,7 +738,8 @@ class CarbonBot(CarbonBotBase):
             The CPCContainer object containing all market curves.
         result: XS_XXX or None
             What intermediate result to return (default: None)
-
+        arb_mode: 'regular', 'single' (default: None = 'regular')
+            What way to search arbs, 'single' is carbon single pair-wise
         Returns
         -------
         str
@@ -598,7 +749,13 @@ class CarbonBot(CarbonBotBase):
         # TODO: REMOVE THIS PARAMETER; THE NETWORK MUST BE SET IN THE BOT ITSELF
 
         ## Find arbitrage opportunities
-        r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+        arb_mode = 'regular' if arb_mode is None else arb_mode
+        if arb_mode == 'regular':
+            r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+        elif arb_mode == 'single':
+            r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm)
+        else:
+            raise "arb_mode not recognised"  
         if result == self.XS_ARBOPPS:
             return r
         (
