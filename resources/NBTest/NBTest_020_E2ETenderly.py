@@ -41,10 +41,8 @@ bot = CarbonBot(ConfigObj=C)
 
 # ### Database update [Tenderly specific]
 
-# +
 # provided here for convenience; must be commented out for tests
-# bot.update(drop_tables=True, top_n=10, only_carbon=False)
-# -
+bot.update(drop_tables=True, top_n=10, only_carbon=False)
 
 # ### Execution
 
@@ -127,5 +125,7 @@ print(c1)
 print(c2)
 # !{c1}
 # !{c2}
+
+
 
 
