@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.5.3"
-__DATE__ = "01/May/2023"
+__VERSION__ = "3.5.4"
+__DATE__ = "03/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -366,7 +366,7 @@ class CPCArbOptimizer(OptimizerBase):
         if not isinstance(curve_container, CPCContainer):
             curve_container = CPCContainer(curve_container)
         self._curve_container = curve_container
-
+        
     @property
     def curve_container(self):
         """the curve container (CPCContainer)"""
@@ -1404,7 +1404,8 @@ class CPCArbOptimizer(OptimizerBase):
                 try:
                     dplog10 = np.linalg.solve(J, -dtkn)
                 except np.linalg.LinAlgError:
-                    print("[margp_optimizer] singular Jacobian, using lstsq instead")
+                    if P("verbose") or P("debug"):
+                        print("[margp_optimizer] singular Jacobian, using lstsq instead")
                     dplog10 = np.linalg.lstsq(J, -dtkn, rcond=None)[0]
                     # https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
                     # https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
