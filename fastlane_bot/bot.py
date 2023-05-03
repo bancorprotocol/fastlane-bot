@@ -41,7 +41,7 @@ Licensed under MIT
     @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
-__VERSION__ = "3-b2.0"
+__VERSION__ = "3-b2.1"
 __DATE__ = "03/May/2023"
 
 import itertools
@@ -263,10 +263,13 @@ class CarbonBot(CarbonBotBase):
         super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools,
                               update_pools=update_pools)
 
+    class NoArbAvailable(Exception): pass
     def _simple_ordering_by_src_token(self, best_trade_instructions_dic, best_src_token):
         '''
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
         '''
+        if best_trade_instructions_dic is None:
+            raise self.NoArbAvailable(f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}")
         src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token]
         non_src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] != best_src_token]
         ordered_trade_instructions_dct = src_token_instr + non_src_token_instr
@@ -417,7 +420,7 @@ class CarbonBot(CarbonBotBase):
         for tkn0, tkn1 in combos:
             # try:
             r = None
-            # c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+            #c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
@@ -581,7 +584,7 @@ class CarbonBot(CarbonBotBase):
         candidates = []
         for tkn0, tkn1 in combos:
             r = None
-            self.C.logger.info(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+            self.C.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
@@ -887,12 +890,17 @@ class CarbonBot(CarbonBotBase):
                         self.db.update_recently_traded_pools(cids)
 
                     time.sleep(self.polling_interval)
+                except self.NoArbAvailable as e:
+                    self.ConfigObj.logger.debug(f"[bot:run:single] {e}")
                 except Exception as e:
                     self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
                     time.sleep(self.polling_interval)
         else:
             try:
-                tx_hash = self._run(flashloan_tokens, CCm)
+                tx_hash = self._run(flashloan_tokens=flashloan_tokens, CCm=CCm)
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+            except self.NoArbAvailable as e:
+                self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
             except Exception as e:
                 self.ConfigObj.logger.error(f"[bot:run:single] {e}")
+                raise
