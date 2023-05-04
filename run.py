@@ -8,6 +8,8 @@ Note: You should configure the bot in config.py before running this script.
 Licensed under MIT
 """
 import click
+
+from fastlane_bot import Config
 #from fastlane_bot.tools.cpc import T
 from fastlane_bot.bot import CarbonBot
 #from fastlane_bot.db.models import *
@@ -46,7 +48,8 @@ def main(
 
 """
     print("Starting bot...")
-    bot = CarbonBot()
+    cfg = Config.new(config=Config.CONFIG_MAINNET)
+    bot = CarbonBot(ConfigObj=cfg)
     bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode)
     
     
