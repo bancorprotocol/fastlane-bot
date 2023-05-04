@@ -12,6 +12,15 @@
 
 # COMMAND ----------
 
+bypairs = dbutils.widgets.get("bypairs")
+
+if str(bypairs) == 'None':
+    bypairs = None
+    
+bypairs
+
+# COMMAND ----------
+
 bot_path = '/Workspace/Repos/mike@bancor.network/carbonbot'
 
 # COMMAND ----------
@@ -63,7 +72,10 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
 import subprocess
 
-cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
+if bypairs:
+    cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py --bypairs={bypairs}"
+else:
+    cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
 
 p = subprocess.Popen(
     cmd,
