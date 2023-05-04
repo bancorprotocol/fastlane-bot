@@ -4,11 +4,22 @@ Fastlane bot configuration object -- main object
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
 
+import os
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
 from . import selectors as S
+from dotenv import load_dotenv
+
+load_dotenv()
+
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
+
 
 @dataclass
 class Config():
@@ -17,28 +28,27 @@ class Config():
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
-    
+
     network: network_.ConfigNetwork = field(default=None)
     db: db_.ConfigDB = field(default=None)
     logger: logger_.ConfigLogger = field(default=None)
     provider: provider_.ConfigProvider = field(default=None)
-    
-    
+
     CONFIG_UNITTEST = "unittest"
     CONFIG_TENDERLY = "tenderly"
     CONFIG_MAINNET = "mainnet"
-    
+
     LOGLEVEL_DEBUG = S.LOGLEVEL_DEBUG
     LOGLEVEL_INFO = S.LOGLEVEL_INFO
     LOGLEVEL_WARNING = S.LOGLEVEL_WARNING
     LOGLEVEL_ERROR = S.LOGLEVEL_ERROR
-    
+
     LL_DEBUG = S.LOGLEVEL_DEBUG
     LL_INFO = S.LOGLEVEL_INFO
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
-    POSTGRES_URL = "postgresql://postgres:postgres@localhost/postgres"
+    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     
     
     @classmethod
