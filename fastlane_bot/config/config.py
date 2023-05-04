@@ -14,11 +14,12 @@ from . import selectors as S
 from dotenv import load_dotenv
 load_dotenv()
 
-ENV = os.environ.get("ENV")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
 POSTGRES_DB = os.environ.get("POSTGRES_DB")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
+
 
 @dataclass
 class Config():
@@ -48,9 +49,8 @@ class Config():
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
-    # POSTGRES_URL = "postgresql://postgres:postgres@localhost/postgres"
-    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
-    
+    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
     @classmethod
     def new(cls, *, config=None, loglevel=None, **kwargs):
         """

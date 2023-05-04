@@ -313,7 +313,7 @@ metadata = sqlalchemy.MetaData()
 # Check if the database exists, and create it if it doesn't
 # if not database_exists(backend_url):
 #     create_database(backend_url)
-
+print(backend_url)
 engine = sqlalchemy.create_engine(backend_url)
 models.mapper_registry.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
