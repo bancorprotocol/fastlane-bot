@@ -21,8 +21,6 @@ from brownie import Contract
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
-print('WEB3_ALCHEMY_PROJECT_ID', WEB3_ALCHEMY_PROJECT_ID)
-
 class ConfigProvider(ConfigBase):
     """
     Fastlane bot config -- provider
