@@ -29,7 +29,7 @@ def construct_file_path(data_dir, file_name):
 @click.option('--bypairs', default="BNT-FF1C/WETH-6Cc2,BNT-FF1C/ETH-EEeE", help='The pairs to update')
 @click.option('--update_interval_seconds', default=12, help='The update interval in seconds')
 def main(
-        bypairs: list[str] = None,
+        bypairs: any = None,
         update_interval_seconds: int = None
 ):
     """
