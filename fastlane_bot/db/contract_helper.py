@@ -13,10 +13,10 @@ import requests
 from brownie import Contract
 from brownie.network.web3 import Web3
 
-from fastlane_bot.data import abi
 # import fastlane_bot.config as c
 import fastlane_bot.data.abi as _abi
 from fastlane_bot.config import Config
+from fastlane_bot.data import abi
 
 
 @dataclass

@@ -4,20 +4,17 @@ Database manager object for the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from contextlib import contextmanager
 from dataclasses import dataclass, field, InitVar
+from typing import List
 
 import pandas as pd
 import sqlalchemy
 from sqlalchemy import MetaData, func
 from sqlalchemy.orm import Session, sessionmaker
-
-import fastlane_bot.db.models as models
-
-from fastlane_bot.config import Config, ConfigDB
-
 from sqlalchemy_utils import database_exists, create_database
 
+import fastlane_bot.db.models as models
+from fastlane_bot.config import Config, ConfigDB
 from fastlane_bot.db.contract_helper import ContractHelper
 
 
@@ -56,7 +53,6 @@ class DatabaseManagerBase(ContractHelper):
         self.data = pd.read_csv(ConfigDB.DATABASE_SEED_FILE)
         self.data = self.data.sort_values("exchange", ascending=False)
         self.connect_db(backend_url=backend_url)
-        self.c.logger.info(f"Database: {self.engine}")
         self.bnt_price_map = {'UOS': 0.6256369626308176, 'GRT': 0.2833668586139438, 'EDEN': 0.13514190920020222,
                               'wNXM': 53.93005448231183, 'DIP': 0.03353407973355594, 'RARI': 3.1436321270707084,
                               'NMR': 34.79236097393122, 'MFG': 0.00431129075766619, 'INDEX': 4.52420449404313,
@@ -148,27 +144,13 @@ class DatabaseManagerBase(ContractHelper):
                               'DIVER': 0.0, 'QOM': 0.0, 'XLON': 0.0, 'SOV': 0.0, 'imgnAI': 0.0, 'CRV': 0.0,
                               'BITEYX': 0.0, 'CBBG': 0.0, 'DJT': 0.0, 'MASK': 0.0}
 
-    @contextmanager
-    def session_scope(self):
-        session = self.Session()
-        try:
-            yield session
-            session.commit()
-        except Exception as e:
-            self.c.logger.error(f'Error in session_scope: {e}')
-            session.rollback()
-            raise
-        finally:
-            session.close()
-
     @property
     def next_id(self) -> int:
         """
         Returns the next id
         """
-        with self.session_scope() as session:
-            max_idx = session.query(func.max(getattr(models.Pool, 'id'))).first()[0]
-            return max_idx + 1 if max_idx is not None else 0
+        max_idx = session.query(func.max(getattr(models.Pool, 'id'))).first()[0]
+        return max_idx + 1 if max_idx is not None else 0
 
     @property
     def next_cid(self) -> str:
@@ -176,12 +158,11 @@ class DatabaseManagerBase(ContractHelper):
         Returns the next cid. The cid is a string representation of the next id,
         where id is assumed to be unique with respect to the Carbon strategy_id values bc they are huge numbers.
         """
-        with self.session_scope() as session:
-            max_idxs = session.query(models.Pool).all()
-            if not max_idxs:
-                return '0'
-            max_idx = max(int(x.cid) for x in max_idxs)
-            return str(max_idx + 1 if max_idx is not None else 0)
+        max_idxs = session.query(models.Pool).all()
+        if not max_idxs:
+            return '0'
+        max_idx = max(int(x.cid) for x in max_idxs)
+        return str(max_idx + 1 if max_idx is not None else 0)
 
     def connect_db(self, *, backend_url=None):
         """
@@ -190,12 +171,9 @@ class DatabaseManagerBase(ContractHelper):
         if backend_url is None:
             backend_url = self.ConfigObj.POSTGRES_URL
             print(f"Using default database url: {backend_url}")
-        if backend_url is None:
-            self.Session = None
-            self.engine = None
-            return
 
-        self.metadata = sqlalchemy.MetaData()
+        global Session, engine, session, metadata
+        metadata = sqlalchemy.MetaData()
 
         # Check if the database exists, and create it if it doesn't
         if not database_exists(backend_url):
@@ -203,8 +181,8 @@ class DatabaseManagerBase(ContractHelper):
 
         engine = sqlalchemy.create_engine(backend_url)
         models.mapper_registry.metadata.create_all(engine)
-        self.Session = sessionmaker(bind=engine)
-        self.engine = engine
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
     def token_key_from_symbol_and_address(self, tkn_address: str, tkn_symbol: str) -> str:
         """
@@ -242,3 +220,99 @@ class DatabaseManagerBase(ContractHelper):
 
         """
         return f"{tkn0_key}/{tkn1_key}"
+
+    def drop_all_tables(self):
+        """
+        Drops all tables in the database
+        """
+        metadata.reflect(bind=engine)
+        for table in reversed(metadata.sorted_tables):
+            table.drop(bind=engine, checkfirst=False)
+        self.create_tables()
+        self.create_ethereum_chain()
+        self.create_supported_exchanges()
+
+    def create_tables(self):
+        """
+        Creates all tables in the database
+        """
+        models.mapper_registry.metadata.create_all(engine)
+
+
+    def create_ethereum_chain(self):
+        """
+        Creates the Ethereum chain in the database
+        """
+        blockchain = models.Blockchain(name="Ethereum")  # TODO: blockchain_name="Ethereum" should be a config constant
+        blockchain.block_number = self.ConfigObj.w3.eth.blockNumber
+        session.add(blockchain)
+        session.commit()
+
+    def create_supported_exchanges(self):
+        """
+        Creates the supported exchanges in the database
+        """
+        for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
+            session.add(models.Exchange(name=exchange, blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
+            session.commit()
+    def get_pools_from_exchange(self, exchange: str, only_carbon: bool = False, top_n: int = None,
+                                carbon_tokens: List[str] = None) -> List[models.Pool]:
+        """
+        Gets the pools for an exchange
+
+        Parameters
+        ----------
+        carbon_tokens
+
+        exchange : str
+            The exchange name
+        top_n : int
+            The number of pools to return
+        only_carbon : bool
+            Whether to only return carbon pools and other exchange compatible pools
+
+        Returns
+        -------
+        List[models.Pool]
+            The pools
+        """
+        if only_carbon:
+            # Get all pools on the given exchange
+            exchange_pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+            session.expunge_all()
+
+            exchange_pairs = [pool.pair_name for pool in exchange_pools]
+            exchange_pairs = session.query(models.Pair).filter(models.Pair.name.in_(exchange_pairs)).all()
+            session.expunge_all()
+
+            # Filter the pairs which contain carbon at least one carbon token
+            exchange_pairs = [pair for pair in exchange_pairs if
+                              pair.tkn0_address in carbon_tokens or pair.tkn1_address in carbon_tokens]
+
+            # Return the pools which contain at least one carbon token
+            return [pool for pool in exchange_pools if pool.pair_name in [pair.name for pair in exchange_pairs]]
+
+        if top_n is None:
+            return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
+        else:
+            return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
+
+
+
+backend_url = None
+
+if backend_url is None:
+    backend_url = Config.POSTGRES_URL
+    print(f"Using default database url: {backend_url}, "
+          f"if you want to use a different database, set the backend_url found at the bottom of manager_base.py")
+
+metadata = sqlalchemy.MetaData()
+
+# Check if the database exists, and create it if it doesn't
+if not database_exists(backend_url):
+    create_database(backend_url)
+
+engine = sqlalchemy.create_engine(backend_url)
+models.mapper_registry.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()

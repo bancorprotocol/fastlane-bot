@@ -11,13 +11,11 @@ import brownie
 import pandas as pd
 from _decimal import Decimal
 from brownie import Contract
-from sqlalchemy import or_
-
-from fastlane_bot.db.model_managers import PoolManager, TokenManager, PairManager
-import fastlane_bot.db.models as models
 
 import fastlane_bot.data.abi as _abi
+import fastlane_bot.db.models as models
 from fastlane_bot.config import Config
+from fastlane_bot.db.model_managers import PoolManager, TokenManager, PairManager
 
 
 class DatabaseManager(PoolManager, TokenManager, PairManager):
@@ -54,9 +52,13 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         self.c.logger.info(f"[update_pools_from_contracts] Updating pools from contracts bypairs{bypairs}...")
 
-        for pair_name in bypairs:
-            assert pair_name in pools_and_token_table['pair_name'].unique().tolist(), \
-                f"Pair name {pair_name} not found in combined_tables.csv."
+        if bypairs:
+            for pair_name in bypairs:
+                assert pair_name in pools_and_token_table['pair_name'].unique().tolist(), \
+                    f"Pair name {pair_name} not found in combined_tables.csv."
+
+        else:
+            bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
 
@@ -90,7 +92,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                                                                     strategy=strategy)
                 pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
                 update_params = {**pool_data, **liquidity_params}
-                self.update_pool(update_params)
+                self.update_pool(update_params, params)
 
         time.sleep(update_interval_seconds)
 
@@ -99,113 +101,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         while True:
             self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table,
                                              update_interval_seconds=update_interval_seconds)
-
-    def drop_all_tables(self):
-        """
-        Drops all tables in the database
-        """
-        self.metadata.reflect(bind=self.engine)
-        for table in reversed(self.metadata.sorted_tables):
-            table.drop(bind=self.engine, checkfirst=False)
-        self.create_tables()
-        self.create_ethereum_chain()
-        self.create_supported_exchanges()
-
-    def create(self, obj: models.Exchange or models.Blockchain):
-        """
-        Creates an obj in the database
-
-        Parameters
-        ----------
-        obj : models.Exchange or models.Blockchain
-        """
-        with self.session_scope() as session:
-            session.add(obj)
-
-    def create_tables(self):
-        """
-        Creates all tables in the database
-        """
-        models.mapper_registry.metadata.create_all(self.engine)
-
-    def create_ethereum_chain(self):
-        """
-        Creates the Ethereum chain in the database
-        """
-        blockchain = models.Blockchain(name="Ethereum")  # TODO: blockchain_name="Ethereum" should be a config constant
-        blockchain.block_number = self.ConfigObj.w3.eth.blockNumber
-
-        with self.session_scope() as session:
-            session.add(blockchain)
-
-    def create_supported_exchanges(self):
-        """
-        Creates the supported exchanges in the database
-        """
-        for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-            with self.session_scope() as session:
-                session.add(models.Exchange(name=exchange,
-                                            blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
-
-    # def update_pools_from_contracts(self):
-    #     """
-    #     Update liquidity data for each pair, on every supported defi exchange, in a loop with a heartbeat below...
-    #
-    #     Parameters
-    #     ----------
-    #     bypairs : List[str]
-    #         List of pairs to update. If None, all pairs will be updated.
-    #
-    #     Returns
-    #     -------
-    #     List[models.Pool]
-    #         The updated pools
-    #
-    #
-    #     """
-    #     self.c.logger.debug("[update_pools_from_contracts] Updating pools from contracts...")
-    #
-    #     carbon_tokens = None
-    #
-    #     if bypairs:
-    #         self.c.logger.debug("[update_pools_from_contracts] Updating bypairs...")
-    #         carbon_tokens = self.get_carbon_pairs()
-    #
-    #         # Convert list of tuples to list of strings
-    #         carbon_tokens = [token[0] for token in carbon_tokens] + [token[1] for token in carbon_tokens]
-    #
-    #         self.c.logger.debug(f"[update_pools_from_contracts] Carbon tokens: {carbon_tokens}")
-    #
-    #     with self.session_scope() as session:
-    #         pools = session.query(models.Pool).first()
-    #
-    #     if not pools:
-    #         self.c.logger.debug(
-    #             "[update_pools_from_contracts] No pools found in database, creating pools from contracts...")
-    #         return self.create_pools_from_contracts()
-    #
-    #     exchanges = [self.ConfigObj.CARBON_V1_NAME] + [exchange for exchange in self.ConfigObj.SUPPORTED_EXCHANGES if
-    #                                                    exchange != self.ConfigObj.CARBON_V1_NAME]
-    #     for exchange in exchanges:
-    #         self.c.logger.info(f"[update_pools_from_contracts] Updating {exchange} pools...")
-    #
-    #         if exchange == self.ConfigObj.CARBON_V1_NAME:
-    #             self.create_or_update_carbon_pools()
-    #             continue
-    #
-    #         pools = self.get_pools_from_exchange(exchange=exchange,
-    #                                              carbon_tokens=carbon_tokens)
-    #         for pool in pools:
-    #             contract = self.get_or_init_contract(exchange_name=exchange, pool_address=pool.address)
-    #             if pool.exchange_name == self.ConfigObj.CARBON_V1_NAME:
-    #                 strategy = self.get_carbon_strategy(int(pool.cid))
-    #             else:
-    #                 strategy = None
-    #
-    #             self.c.logger.debug(
-    #                 f"[update_pools_from_contracts] Updating pool {pool.address} from contract {contract.address}...")
-    #             self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address,
-    #                                            strategy=strategy)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """
@@ -607,54 +502,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             except IndexError:
                 self.c.logger.error(f"Could not get {top_n} genesis pools for {exchange}")
                 return []
-
-    def get_pools_from_exchange(self, exchange: str, only_carbon: bool = False, top_n: int = None,
-                                carbon_tokens: List[str] = None) -> List[models.Pool]:
-        """
-        Gets the pools for an exchange
-
-        Parameters
-        ----------
-        carbon_tokens
-
-        exchange : str
-            The exchange name
-        top_n : int
-            The number of pools to return
-        only_carbon : bool
-            Whether to only return carbon pools and other exchange compatible pools
-
-        Returns
-        -------
-        List[models.Pool]
-            The pools
-        """
-        with self.session_scope() as session:
-            if only_carbon:
-                # Get all pools on the given exchange
-
-                exchange_pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
-                session.expunge_all()
-
-                exchange_pairs = [pool.pair_name for pool in exchange_pools]
-                exchange_pairs = session.query(models.Pair).filter(models.Pair.name.in_(exchange_pairs)).all()
-                session.expunge_all()
-
-                # Filter the pairs which contain carbon at least one carbon token
-                exchange_pairs = [pair for pair in exchange_pairs if
-                                  pair.tkn0_address in carbon_tokens or pair.tkn1_address in carbon_tokens]
-
-                # Return the pools which contain at least one carbon token
-                return [pool for pool in exchange_pools if pool.pair_name in [pair.name for pair in exchange_pairs]]
-
-            if top_n is None:
-                pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
-                session.expunge_all()
-                return pools
-            else:
-                pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
-                session.expunge_all()
-                return pools
 
     def create_pools_from_contracts(self, only_carbon: bool = None, top_n: int = None, carbon_tokens: List[str] = None):
         """

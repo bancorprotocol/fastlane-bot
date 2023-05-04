@@ -26,7 +26,7 @@ def construct_file_path(data_dir, file_name):
 
 
 @click.command()
-@click.option('--bypairs', default="BNT-FF1C/WETH-6Cc2,BNT-FF1C/ETH-EEeE", help='The pairs to update')
+@click.option('--bypairs', default=None, help='The pairs to update')
 @click.option('--update_interval_seconds', default=12, help='The update interval in seconds')
 def main(
         bypairs: any = None,
@@ -43,7 +43,8 @@ def main(
         The update interval in seconds.
 
     """
-    bypairs = bypairs.split(',') if bypairs else []
+    if bypairs:
+        bypairs = bypairs.split(',') if bypairs else []
 
     # Load data from CSV file
     pools_and_token_table_columns = ['cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name', 'exchange_name',
@@ -55,7 +56,7 @@ def main(
     pools_and_token_table = pd.read_csv(filepath, low_memory=False).drop('id', axis=1)
     pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
+    cfg = Config.new(config=Config.CONFIG_TENDERLY)
     bot = CarbonBot(ConfigObj=cfg)
     bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)

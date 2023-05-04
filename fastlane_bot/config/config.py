@@ -37,6 +37,8 @@ class Config():
     LL_INFO = S.LOGLEVEL_INFO
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
+
+    POSTGRES_URL = "postgresql://postgres:postgres@localhost/postgres"
     
     
     @classmethod

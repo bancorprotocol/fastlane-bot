@@ -1088,7 +1088,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     def _calc_carbon_output(
         self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
-    ) -> tuple[Decimal | Decimal, Decimal | Decimal]:
+    ) -> tuple[Decimal or Decimal, Decimal or Decimal]:
         """
         calc fastlane_bot output.
 

@@ -6,9 +6,8 @@ Licensed under MIT
 """
 import csv
 import os
-from _decimal import Decimal
-from typing import List, Optional
 from collections import namedtuple
+from typing import List, Optional
 
 from fastlane_bot.db.manager import DatabaseManager
 from fastlane_bot.db.model_managers import TokenManager, PairManager, PoolManager
