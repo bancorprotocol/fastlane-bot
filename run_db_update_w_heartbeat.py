@@ -52,13 +52,13 @@ def main(
                                      'tkn0_key', 'tkn1_key', 'tkn0_decimals', 'tkn1_decimals', 'exchange_id',
                                      'tkn0_symbol', 'tkn1_symbol']
 
-    filepath = construct_file_path('/Workspace/Repos/mike@bancor.network/carbonbot/fastlane_bot/data/combined_tables.csv')
+    filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
     pools_and_token_table = pd.read_csv(filepath, low_memory=False).drop('id', axis=1)
     pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
     cfg = Config.new(config=Config.CONFIG_MAINNET)
     bot = CarbonBot(ConfigObj=cfg)
-    bot.db.drop_all_tables()
+    # bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
 
 
