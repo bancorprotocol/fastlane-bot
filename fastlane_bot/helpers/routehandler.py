@@ -997,9 +997,14 @@ class TxRouteHandler(TxRouteHandlerBase):
     def decode(self, value):
         return self.decodeFloat(int(value)) / self.ONE
 
+    def decode_decimal_adjustment(self, value: Decimal, tkn_in_decimals: int, tkn_out_decimals: int):
+        return value * Decimal("10") ** (
+                (tkn_in_decimals - tkn_out_decimals) / Decimal("2")
+        )
+
     @staticmethod
     def _get_input_trade_by_target_carbon(
-        y, z, A, B, fee, tkns_out: Decimal
+        y, z, A, B, fee, tkns_out: Decimal, trade_by_source: bool = True
     ) -> Tuple[Decimal, Decimal]:
         """
         Refactored get input trade by target fastlane_bot.
@@ -1024,12 +1029,16 @@ class TxRouteHandler(TxRouteHandlerBase):
         Tuple[Decimal, Decimal]
             The tokens in and tokens out.
         """
-
+        # Fee set to 0 to avoid
         fee = Decimal(str(fee))
         tkns_out = min(tkns_out, y)
         tkns_in = (
             (tkns_out * z**2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
-        ) * Decimal(1 - fee)
+        )
+
+        if not trade_by_source:
+            # Only taking fee if calculating by trade by target. Otherwise fee will be calculated in trade by source function.
+            tkns_in = tkns_in * Decimal(1 - fee)
 
         return tkns_in, tkns_out
 
@@ -1066,16 +1075,15 @@ class TxRouteHandler(TxRouteHandlerBase):
             / (tkns_in * (B * A * z + A**2 * y) + z**2)
         )
         if tkns_out > y:
-            tkns_in = self._get_input_trade_by_target_carbon(
-                y=y, z=z, A=A, B=B, fee=fee, tkns_out=y
+            tkns_in, tkns_out = self._get_input_trade_by_target_carbon(
+                y=y, z=z, A=A, B=B, fee=fee, tkns_out=y, trade_by_source=True
             )
-            tkns_out = y
 
         tkns_out = tkns_out * (Decimal("1") - fee)
         return tkns_in, tkns_out
 
     def _calc_carbon_output(
-        self, curve: Pool, tkn_in: str, tkn_out_decimals: int, amount_in: Decimal
+        self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
     ) -> Decimal:
         """
         calc fastlane_bot output.
@@ -1094,19 +1102,26 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
+        tkn0_key = curve.pair_name.split("/")[0]
+        tkn1_key = curve.pair_name.split("/")[1]
+
+
+
+        assert tkn_in == tkn0_key or tkn_in == tkn1_key, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_key} & {tkn1_key}"
+
         y, z, A, B = (
             (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
-            if tkn_in == curve.tkn0_key
+            if tkn_in == tkn0_key
             else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
         )
 
-        A = Decimal(str(self.decode(A)))
-        B = Decimal(str(self.decode(B)))
+        A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
+        B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
 
         amt_in, result = self._get_output_trade_by_source_carbon(
-            y=y, z=z, A=A, B=B, fee=curve.fee, tkns_in=amount_in
+            y=y, z=z, A=A, B=B, fee=Decimal(curve.fee), tkns_in=amount_in
         )
         return result
 
@@ -1151,7 +1166,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME:
             amount_out = self._calc_carbon_output(
-                curve, trade, tkn_out_decimals, amount_in
+                curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals , tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
             )
         else:
             tkn0_amt, tkn1_amt = (
