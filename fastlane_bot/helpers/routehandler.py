@@ -940,7 +940,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         decimal_tkn0_modifier: Decimal,
         decimal_tkn1_modifier: Decimal,
         tkn_in: str,
+        tkn_out: str,
         tkn_0_key: str,
+        tkn_1_key: str
     ) -> Decimal:
         """
         Refactored calc uniswap v3 output.
@@ -969,6 +971,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
+        assert tkn_in == tkn_0_key or tkn_out == tkn_0_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
+        assert tkn_in == tkn_1_key or tkn_out == tkn_1_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
         return (
             self._swap_token0_in(
                 amount_in=amount_in,
@@ -1143,15 +1147,17 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         if not isinstance(trade, TradeInstruction):
             raise Exception("trade in must be a TradeInstruction object.")
+        tkn0_key = curve.pair_name.split("/")[0]
+        tkn1_key = curve.pair_name.split("/")[1]
 
         tkn_in_decimals = (
             curve.tkn0_decimals
-            if trade.tknin_key == curve.tkn0_key
+            if trade.tknin_key == tkn0_key
             else curve.tkn1_decimals
         )
         tkn_out_decimals = (
             curve.tkn1_decimals
-            if trade.tknin_key == curve.tkn0_key
+            if trade.tknin_key == tkn0_key
             else curve.tkn0_decimals
         )
 
@@ -1160,13 +1166,15 @@ class TxRouteHandler(TxRouteHandlerBase):
         if curve.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             amount_out = self._calc_uniswap_v3_output(
                 tkn_in=trade.tknin_key,
+                tkn_out=trade.tknout_key,
                 amount_in=amount_in,
                 fee=Decimal(curve.fee),
                 liquidity=curve.liquidity,
                 sqrt_price=curve.sqrt_price_q96,
                 decimal_tkn0_modifier=Decimal(10**curve.tkn0_decimals),
                 decimal_tkn1_modifier=Decimal(10**curve.tkn1_decimals),
-                tkn_0_key=curve.tkn0_key,
+                tkn_0_key=tkn0_key,
+                tkn_1_key=tkn1_key
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME:
             amount_in, amount_out = self._calc_carbon_output(
@@ -1175,7 +1183,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
-                if trade == curve.tkn0_key
+                if trade == tkn0_key
                 else (curve.tkn1_balance, curve.tkn0_balance)
             )
             tkn0_amt = self._from_wei_to_decimals(tkn0_amt, curve.tkn0_decimals)
