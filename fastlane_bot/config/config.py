@@ -1,14 +1,35 @@
 """
 Fastlane bot configuration object -- main object
 """
+
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
 
+import os
 from dataclasses import dataclass, field, InitVar, asdict
 #from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
 from . import selectors as S
+from dotenv import load_dotenv
+load_dotenv()
+
+dbutils = None
+
+ENV = os.environ.get("ENV")
+if 'prod' not in ENV.lower():
+    POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+    POSTGRES_USER = os.environ.get("POSTGRES_USER")
+    POSTGRES_DB = os.environ.get("POSTGRES_DB")
+    POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
+else:
+    POSTGRES_PASSWORD = dbutils.secrets.get(
+        scope="fastlane", key="POSTGRES_PASSWORD"
+    )
+    POSTGRES_USER = dbutils.secrets.get(scope="fastlane", key="POSTGRES_USER")
+    POSTGRES_DB = dbutils.secrets.get(scope="fastlane", key="POSTGRES_DB")
+    POSTGRES_HOST = dbutils.secrets.get(scope="fastlane", key="POSTGRES_HOST")
+
 
 @dataclass
 class Config():
@@ -38,8 +59,8 @@ class Config():
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
-    POSTGRES_URL = "postgresql://postgres:postgres@localhost/postgres"
-    
+    # POSTGRES_URL = "postgresql://postgres:postgres@localhost/postgres"
+    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
     
     @classmethod
     def new(cls, *, config=None, loglevel=None, **kwargs):
