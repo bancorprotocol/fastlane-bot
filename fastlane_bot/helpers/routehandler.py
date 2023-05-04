@@ -1084,7 +1084,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     def _calc_carbon_output(
         self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
-    ) -> Decimal:
+    ) -> tuple[Decimal | Decimal, Decimal | Decimal]:
         """
         calc fastlane_bot output.
 
@@ -1102,16 +1102,18 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
+        amount_in = Decimal(str(amount_in))
+
         tkn0_key = curve.pair_name.split("/")[0]
         tkn1_key = curve.pair_name.split("/")[1]
 
-
+        #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, ")
 
         assert tkn_in == tkn0_key or tkn_in == tkn1_key, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_key} & {tkn1_key}"
 
         y, z, A, B = (
             (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
-            if tkn_in == tkn0_key
+            if tkn_in == tkn1_key
             else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
         )
 
@@ -1120,10 +1122,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
 
+        # print(f"Carbon curve decoded: {y, z, A, B}")
+
         amt_in, result = self._get_output_trade_by_source_carbon(
             y=y, z=z, A=A, B=B, fee=Decimal(curve.fee), tkns_in=amount_in
         )
-        return result
+        return amt_in, result
 
     @staticmethod
     def single_trade_result_constant_product(
@@ -1165,7 +1169,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 tkn_0_key=curve.tkn0_key,
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME:
-            amount_out = self._calc_carbon_output(
+            amount_in, amount_out = self._calc_carbon_output(
                 curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals , tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
             )
         else:
