@@ -18,6 +18,10 @@ from ..data.abi import (
 )
 from brownie import Contract
 
+ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
+WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+
+print('WEB3_ALCHEMY_PROJECT_ID', WEB3_ALCHEMY_PROJECT_ID)
 
 class ConfigProvider(ConfigBase):
     """
@@ -33,7 +37,8 @@ class ConfigProvider(ConfigBase):
     PROVIDER_ALCHEMY = S.PROVIDER_ALCHEMY
     PROVIDER_TENDERLY = S.PROVIDER_TENDERLY
     PROVIDER_UNITTEST = S.PROVIDER_UNITTEST
-    ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
+    ETH_PRIVATE_KEY_BE_CAREFUL = ETH_PRIVATE_KEY_BE_CAREFUL
+    WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
 
 
     @classmethod
@@ -71,12 +76,12 @@ class _ConfigProviderAlchemy(ConfigProvider):
     Fastlane bot config -- provider [Alchemy]
     """
     PROVIDER = S.PROVIDER_ALCHEMY
-    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+    WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
     
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
         assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
-        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{self.WEB3_ALCHEMY_PROJECT_ID}"
+        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 
         N = self.network
         self.connection = EthereumNetwork(
@@ -87,7 +92,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(self.ETH_PRIVATE_KEY_BE_CAREFUL)
+        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
         self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
             name=N.BANCOR_V3_NAME,
             address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
@@ -123,7 +128,7 @@ class _ConfigProviderTenderly(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(self.ETH_PRIVATE_KEY_BE_CAREFUL)
+        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
         self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
             name=N.BANCOR_V3_NAME,

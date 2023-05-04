@@ -7,98 +7,74 @@
 
 # COMMAND ----------
 
-project_path = f'/dbfs/FileStore/tables/fastlane_bot/{exchanges.replace("-","_")}'
-
-bot_path = project_path + f'/{env}'
-
-base_path = f'/dbfs/FileStore/tables/fastlane_bot/{exchanges.replace("-","_")}/{env}/'
-
-
-# COMMAND ----------
-
 # MAGIC %load_ext autoreload
 # MAGIC %autoreload 2
 
 # COMMAND ----------
 
-import os
-cwd = os.getcwd()
-cwd
+bot_path = '/Workspace/Repos/mike@bancor.network/carbonbot'
 
 # COMMAND ----------
 
-from fastlane_bot import Config
+ETH_PRIVATE_KEY = dbutils.secrets.get(scope="fastlane", key=f"ETH_PRIVATE_KEY_BE_CAREFUL")
+WEB3_ALCHEMY_PROJECT_ID = dbutils.secrets.get(scope="fastlane", key=f"WEB3_ALCHEMY_PROJECT_ID")
+POSTGRES_PASSWORD = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_PASSWORD")
+POSTGRES_USER = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_USER")
+POSTGRES_HOST = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_HOST")
+POSTGRES_PORT = "27140"
+
+#!/bin/bash
+! export ETH_PRIVATE_KEY_BE_CAREFUL={ETH_PRIVATE_KEY}
+! export WEB3_ALCHEMY_PROJECT_ID={WEB3_ALCHEMY_PROJECT_ID}
+! export POSTGRES_PASSWORD={POSTGRES_PASSWORD}
+! export POSTGRES_USER={POSTGRES_USER}
+! export POSTGRES_HOST={POSTGRES_HOST}
+! export POSTGRES_PORT={POSTGRES_PORT}
+
+
+with open(f'{bot_path}/.env', 'w') as f:
+    f.write(f'ETH_PRIVATE_KEY_BE_CAREFUL={ETH_PRIVATE_KEY} \n')
+    f.write(f'WEB3_ALCHEMY_PROJECT_ID={WEB3_ALCHEMY_PROJECT_ID} \n')
+    f.write(f'POSTGRES_PASSWORD={POSTGRES_PASSWORD} \n')
+    f.write(f'POSTGRES_USER={POSTGRES_USER} \n')
+    f.write(f'POSTGRES_HOST={POSTGRES_HOST} \n')
+    f.write(f'POSTGRES_PORT={POSTGRES_PORT} \n')
+    f.close()
 
 # COMMAND ----------
 
-import os
-import platform
+RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 
-import click
-import pandas as pd
+# COMMAND ----------
 
-from fastlane_bot import Config
-from fastlane_bot.bot import CarbonBot
+del_network = f"cd {bot_path}; brownie networks delete alchemy"
 
-# Detect the current operating system
-current_os = platform.system()
-print(f"current_os: {current_os}")
+add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "alchemy" host="{RPC_URL}" chainid=1'
 
-# Define the project's root directory
-project_root = os.path.dirname(os.path.abspath(__file__))
-print(f"project_root: {project_root}")
+mod_network = f'cd {bot_path}; brownie networks modify "alchemy" host="{RPC_URL}" name="mainnet" chainid=1'
 
+set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
-def construct_file_path(data_dir, file_name):
-    """
-    Constructs a file path for the given data directory and file name, based on the current operating system.
-    """
-    if current_os == 'Windows':
-        file_path = os.path.join(project_root, data_dir, file_name).replace('/', '\\')
-    else:
-        file_path = os.path.join(project_root, data_dir, file_name).replace('\\', '/')
-    
-    print(f"file_path: {file_path}")
-    return file_path
+! {del_network}
+! {add_network}
+! {set_network}
 
+# COMMAND ----------
 
-@click.command()
-@click.option('--bypairs', default=None, help='The pairs to update')
-@click.option('--update_interval_seconds', default=12, help='The update interval in seconds')
-def main(
-        bypairs: any = None,
-        update_interval_seconds: int = None
-):
-    """
-    Main function for the update_pools_heartbeat.py script.
+import subprocess
 
-    Parameters
-    ----------
-    bypairs : list[str]
-        The pairs to update.
-    update_interval_seconds : int
-        The update interval in seconds.
+cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
 
-    """
-    if bypairs:
-        bypairs = bypairs.split(',') if bypairs else []
+p = subprocess.Popen(
+    cmd,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    stdin=subprocess.PIPE,
+    shell=True,
+)
 
-    # Load data from CSV file
-    pools_and_token_table_columns = ['cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name', 'exchange_name',
-                                     'fee', 'fee_float', 'address', 'anchor', 'tkn0_address', 'tkn1_address',
-                                     'tkn0_key', 'tkn1_key', 'tkn0_decimals', 'tkn1_decimals', 'exchange_id',
-                                     'tkn0_symbol', 'tkn1_symbol']
+stdout, stderr = p.communicate()
 
-    filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
-    pools_and_token_table = pd.read_csv(filepath, low_memory=False).drop('id', axis=1)
-    pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
+print((f'{stdout.decode("utf-8")}'))
 
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
-    bot = CarbonBot(ConfigObj=cfg)
-    bot.db.drop_all_tables()
-    bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
-
-
-# if __name__ == "__main__":
-main()
-
+raise Exception(f'{stderr.decode("utf-8")}')
