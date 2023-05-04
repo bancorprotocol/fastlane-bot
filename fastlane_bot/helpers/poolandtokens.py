@@ -124,7 +124,14 @@ class PoolAndTokens:
     def __post_init__(self):
         self.tkn0_key = self.tkn0
         self.tkn1_key = self.tkn1
-
+        self.A_1 = self.A_1 or 0
+        self.B_1 = self.B_1 or 0
+        self.A_0 = self.A_0 or 0
+        self.B_0 = self.B_0 or 0
+        self.z_0 = self.z_0 or 0
+        self.y_0 = self.y_0 or 0
+        self.z_1 = self.z_1 or 0
+        self.y_1 = self.y_1 or 0
     
     def to_cpc(self) -> Union[ConstantProductCurve, List[Any]]:
         """
