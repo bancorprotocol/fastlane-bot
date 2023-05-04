@@ -4,9 +4,11 @@ Main DB manager of the Fastlane project.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import time
 from typing import Any, Dict, Type, Optional, Tuple, List
 
 import brownie
+import pandas as pd
 from _decimal import Decimal
 from brownie import Contract
 from sqlalchemy import or_
@@ -24,12 +26,79 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     and provides methods to update the database from events.
     """
 
-    __VERSION__ = "3.0.4"
-    __DATE__ = "May-02-2023"
+    __VERSION__ = "3.0.5"
+    __DATE__ = "May-03-2023"
 
     ConfigObj: Config = None
 
     c = ConfigObj
+
+    update_interval_seconds = 12
+
+    def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None,
+                                    update_interval_seconds: int = 12):
+        """
+        Updates the pools_and_token_table with the latest liquidity data from the contracts.
+
+        Parameters
+        ----------
+        update_interval_seconds : int
+            The interval in seconds between each update.
+        pools_and_token_table : pd.DataFrame
+            The pools_and_token_table to update. If None, the default table will be used.
+
+        bypairs : List[str]
+            A list of pair names to update. If None, all pairs will be updated.
+
+
+        """
+        self.c.logger.info(f"[update_pools_from_contracts] Updating pools from contracts bypairs{bypairs}...")
+
+        for pair_name in bypairs:
+            assert pair_name in pools_and_token_table['pair_name'].unique().tolist(), \
+                f"Pair name {pair_name} not found in combined_tables.csv."
+
+        filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
+
+        for index, row in filtered_table.iterrows():
+            params = row.to_dict()
+            block_number = self.ConfigObj.w3.eth.block_number
+            params['last_updated_block'] = block_number
+
+            contract = self.get_or_init_contract(exchange_name=params['exchange_name'],
+                                                 pool_address=params['address'])
+
+            strategies = []
+            if params['exchange_name'] == 'carbon_v1':
+                end_idx = self.get_strategies_count_by_pair(params['tkn0_address'], params['tkn1_address'])
+                strategies = self.get_strategies_by_pair(params['tkn0_address'], params['tkn1_address'], 0, end_idx)
+            else:
+                strategies.append(None)
+
+            for strategy in strategies:
+                if strategy is not None:
+                    params['cid'] = str(strategy[0])
+
+                pool = self.get_pool(cid=str(params['cid']))
+                if pool is None:
+                    self.create_pool_pair_tokens(params)
+                    pool = self.get_pool(cid=str(params['cid']))
+
+                liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
+                                                                    contract=contract,
+                                                                    address=params['address'],
+                                                                    strategy=strategy)
+                pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
+                update_params = {**pool_data, **liquidity_params}
+                self.update_pool(update_params)
+
+        time.sleep(update_interval_seconds)
+
+    def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
+                               pools_and_token_table: pd.DataFrame = None):
+        while True:
+            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table,
+                                             update_interval_seconds=update_interval_seconds)
 
     def drop_all_tables(self):
         """
@@ -78,74 +147,65 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 session.add(models.Exchange(name=exchange,
                                             blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
 
-    def update_pools_from_contracts(self, only_carbon: bool = False, top_n: int = None):
-        """
-        For exchange in supported exchanges,
-        get the available pool addresses and contracts
-        then call update_pool_from_contract
-
-        Parameters
-        ----------
-        only_carbon : bool
-            Whether to only update carbon pools
-        top_n : int
-            The number of pools to update
-
-        Returns
-        -------
-        List[models.Pool]
-            The updated pools
-
-
-        """
-        self.c.logger.debug("[update_pools_from_contracts] Updating pools from contracts...")
-
-        carbon_tokens = None
-
-        if only_carbon:
-            self.c.logger.debug("[update_pools_from_contracts] Updating only carbon pools...")
-            carbon_tokens = self.get_carbon_pairs()
-
-            # Convert list of tuples to list of strings
-            carbon_tokens = [token[0] for token in carbon_tokens] + [token[1] for token in carbon_tokens]
-
-            self.c.logger.debug(f"[update_pools_from_contracts] Carbon tokens: {carbon_tokens}")
-
-        with self.session_scope() as session:
-            pools = session.query(models.Pool).first()
-
-        if not pools:
-            self.c.logger.debug(
-                "[update_pools_from_contracts] No pools found in database, creating pools from contracts...")
-            return self.create_pools_from_contracts(only_carbon=only_carbon, top_n=top_n, carbon_tokens=carbon_tokens)
-
-        # if len(pools) != top_n:
-        #     self.c.logger.warning(f"[update_pools_from_contracts] top_n {top_n} != len(pools) {len(pools)}..."
-        #                           f"New Carbon pools will still be created, but other exchange pools will not be "
-        #                           f"created, only the original top_n will be updated.")
-
-        exchanges = [self.ConfigObj.CARBON_V1_NAME] + [exchange for exchange in self.ConfigObj.SUPPORTED_EXCHANGES if
-                                                       exchange != self.ConfigObj.CARBON_V1_NAME]
-        for exchange in exchanges:
-            self.c.logger.info(f"[update_pools_from_contracts] Updating {exchange} pools...")
-
-            if exchange == self.ConfigObj.CARBON_V1_NAME:
-                self.create_or_update_carbon_pools()
-                continue
-
-            pools = self.get_pools_from_exchange(exchange=exchange, only_carbon=only_carbon, top_n=top_n,
-                                                 carbon_tokens=carbon_tokens)
-            for pool in pools:
-                contract = self.get_or_init_contract(exchange_name=exchange, pool_address=pool.address)
-                if pool.exchange_name == self.ConfigObj.CARBON_V1_NAME:
-                    strategy = self.get_carbon_strategy(int(pool.cid))
-                else:
-                    strategy = None
-
-                self.c.logger.debug(
-                    f"[update_pools_from_contracts] Updating pool {pool.address} from contract {contract.address}...")
-                self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address,
-                                               strategy=strategy)
+    # def update_pools_from_contracts(self):
+    #     """
+    #     Update liquidity data for each pair, on every supported defi exchange, in a loop with a heartbeat below...
+    #
+    #     Parameters
+    #     ----------
+    #     bypairs : List[str]
+    #         List of pairs to update. If None, all pairs will be updated.
+    #
+    #     Returns
+    #     -------
+    #     List[models.Pool]
+    #         The updated pools
+    #
+    #
+    #     """
+    #     self.c.logger.debug("[update_pools_from_contracts] Updating pools from contracts...")
+    #
+    #     carbon_tokens = None
+    #
+    #     if bypairs:
+    #         self.c.logger.debug("[update_pools_from_contracts] Updating bypairs...")
+    #         carbon_tokens = self.get_carbon_pairs()
+    #
+    #         # Convert list of tuples to list of strings
+    #         carbon_tokens = [token[0] for token in carbon_tokens] + [token[1] for token in carbon_tokens]
+    #
+    #         self.c.logger.debug(f"[update_pools_from_contracts] Carbon tokens: {carbon_tokens}")
+    #
+    #     with self.session_scope() as session:
+    #         pools = session.query(models.Pool).first()
+    #
+    #     if not pools:
+    #         self.c.logger.debug(
+    #             "[update_pools_from_contracts] No pools found in database, creating pools from contracts...")
+    #         return self.create_pools_from_contracts()
+    #
+    #     exchanges = [self.ConfigObj.CARBON_V1_NAME] + [exchange for exchange in self.ConfigObj.SUPPORTED_EXCHANGES if
+    #                                                    exchange != self.ConfigObj.CARBON_V1_NAME]
+    #     for exchange in exchanges:
+    #         self.c.logger.info(f"[update_pools_from_contracts] Updating {exchange} pools...")
+    #
+    #         if exchange == self.ConfigObj.CARBON_V1_NAME:
+    #             self.create_or_update_carbon_pools()
+    #             continue
+    #
+    #         pools = self.get_pools_from_exchange(exchange=exchange,
+    #                                              carbon_tokens=carbon_tokens)
+    #         for pool in pools:
+    #             contract = self.get_or_init_contract(exchange_name=exchange, pool_address=pool.address)
+    #             if pool.exchange_name == self.ConfigObj.CARBON_V1_NAME:
+    #                 strategy = self.get_carbon_strategy(int(pool.cid))
+    #             else:
+    #                 strategy = None
+    #
+    #             self.c.logger.debug(
+    #                 f"[update_pools_from_contracts] Updating pool {pool.address} from contract {contract.address}...")
+    #             self.update_pool_from_contract(pool=pool, contract=contract, address=pool.address,
+    #                                            strategy=strategy)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """

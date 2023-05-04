@@ -50,7 +50,6 @@ class TokenManager(DatabaseManagerBase):
                 self.c.logger.error(f"[model_managers.Token] Failed to create token: {e}")
                 raise
 
-
     def get_token(self, **kwargs) -> Optional[models.Token]:
         """
         Get a token from the database
@@ -183,7 +182,7 @@ class PairManager(DatabaseManagerBase):
                 return pair
             except Exception as e:
                 self.c.logger.error(f"[model_managers.Pair] Failed to create pair: {e}")
-                raise # Allow the exception to propagate to the session_scope context manager
+                raise  # Allow the exception to propagate to the session_scope context manager
 
     def get_pair(self, **kwargs) -> Optional[models.Pair]:
         """
@@ -335,8 +334,6 @@ class PoolManager(DatabaseManagerBase):
             The updated pool.
 
         """
-        updated = False  # Flag to track if any value has been updated
-
         pool = self.get_pool(**kwargs)
         if not pool:
             self.c.logger.error(f"[model_managers.Pool] Failed to update pool, pool not found: {kwargs}")
@@ -344,22 +341,22 @@ class PoolManager(DatabaseManagerBase):
 
         with self.session_scope() as session:
             try:
-                for key, value in pool_data.items():
-                    if getattr(pool, key) != value:  # Check if the current value is different from the new value
-                        setattr(pool, key, value)
-                        updated = True
-
-                if updated:  # Only commit and log the message if any value has been updated
-                    session.commit()
-                    session.expunge_all()
-                    self.c.logger.info(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name}")
+                existing_pool = session.query(models.Pool).filter(models.Pool.cid == pool_data['cid']).first()
+                if existing_pool:
+                    for key, value in pool_data.items():
+                        setattr(existing_pool, key, value)
                 else:
-                    self.c.logger.info(f"[model_managers.Pool] No changes detected for pool: {pool.pair_name}")
+                    pool = models.Pool(**pool_data)
+                    session.add(pool)
 
+                session.commit()
+                self.c.logger.info(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name} {pool.cid}")
                 return pool
             except Exception as e:
-                self.c.logger.error(f"[model_managers.Pool] Failed to update pair: {pool.pair_name}")
+                self.c.logger.error(f"[model_managers.Pool] Failed to update pair: {pool.pair_name} {pool.cid}")
                 raise  # Allow the exception to propagate to the session_scope context manager
+
+
 
     def delete_pool(self, **kwargs) -> bool:
         """
@@ -489,3 +486,70 @@ class PoolManager(DatabaseManagerBase):
                 )
                 for row in pool_and_tokens
             ]
+
+    def create_pool_pair_tokens(self, pool_pair_tokens: models.Pool or Dict[str, Any]):
+        if isinstance(pool_pair_tokens, dict):
+            pool_pair_tokens["cid"] = str(pool_pair_tokens["cid"])
+            exchange_name = pool_pair_tokens["exchange_name"]
+
+            with self.session_scope() as session:
+                exchange = session.query(models.Exchange).filter(models.Exchange.name == exchange_name).first()
+
+                if not exchange:
+                    exchange = models.Exchange(name=exchange_name)
+                    session.add(exchange)
+                    session.commit()
+
+                token0_params = {
+                    "address": pool_pair_tokens["tkn0_address"],
+                    "decimals": pool_pair_tokens["tkn0_decimals"],
+                    "symbol": pool_pair_tokens["tkn0_symbol"],
+                    "key": pool_pair_tokens["tkn0_key"],
+                    "name": pool_pair_tokens["tkn0_symbol"],
+                }
+                token0 = self.get_token(key=token0_params["key"])
+                if not token0:
+                    token0 = models.Token(**token0_params)
+                    session.add(token0)
+                    session.commit()
+
+                token1_params = {
+                    "address": pool_pair_tokens["tkn1_address"],
+                    "decimals": pool_pair_tokens["tkn1_decimals"],
+                    "symbol": pool_pair_tokens["tkn1_symbol"],
+                    "key": pool_pair_tokens["tkn1_key"],
+                    "name": pool_pair_tokens["tkn1_symbol"],
+                }
+                token1 = self.get_token(key=token1_params["key"])
+                if not token1:
+                    token1 = models.Token(**token1_params)
+                    session.add(token1)
+                    session.commit()
+
+                pair_params = {
+                    "name": pool_pair_tokens["pair_name"],
+                    "tkn0_address": pool_pair_tokens["tkn0_address"],
+                    "tkn1_address": pool_pair_tokens["tkn1_address"],
+                    "tkn0_key": pool_pair_tokens["tkn0_key"],
+                    "tkn1_key": pool_pair_tokens["tkn1_key"],
+                }
+                pair = self.get_pair(**pair_params)
+                if not pair:
+                    pair = models.Pair(**pair_params)
+                    session.add(pair)
+                    session.commit()
+
+                pool_params = {
+                    "cid": str(pool_pair_tokens["cid"]),
+                    "exchange_name": pool_pair_tokens["exchange_name"],
+                    "pair_name": pool_pair_tokens["pair_name"],
+                    "fee": pool_pair_tokens["fee"],
+                    "address": pool_pair_tokens["address"],
+                    "anchor": pool_pair_tokens["anchor"],
+                    "last_updated_block": pool_pair_tokens["last_updated_block"],
+                }
+                pool = self.get_pool(cid=pool_params["cid"])
+                if not pool:
+                    pool = models.Pool(**pool_params)
+                    session.add(pool)
+                    session.commit()

@@ -377,6 +377,7 @@ class Pool:
     y_1: Optional[Decimal] = None
     A_1: Optional[Decimal] = None
     B_1: Optional[Decimal] = None
+    descr: Optional[str] = None
 
     def __post_init__(self):
         self.descr = (
@@ -394,6 +395,7 @@ class Pool:
         for key, value in new.items():
             if hasattr(self, key):
                 setattr(self, key, value)
+
 
 
 @mapper_registry.mapped

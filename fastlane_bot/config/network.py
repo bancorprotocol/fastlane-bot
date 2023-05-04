@@ -47,10 +47,10 @@ class ConfigNetwork(ConfigBase):
     EXCHANGE_IDS = {
         CARBON_V1_NAME: 6,
         UNISWAP_V2_NAME: 3,
-        # UNISWAP_V3_NAME: 4,
-        # BANCOR_V2_NAME: 1,
-        # BANCOR_V3_NAME: 2,
-        # SUSHISWAP_V2_NAME: 5,
+        UNISWAP_V3_NAME: 4,
+        BANCOR_V2_NAME: 1,
+        BANCOR_V3_NAME: 2,
+        SUSHISWAP_V2_NAME: 5,
     }
     UNIV2_FORKS = [UNISWAP_V2_NAME, SUSHISWAP_V2_NAME]
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)

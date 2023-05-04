@@ -177,7 +177,7 @@ class CarbonBotBase():
     UDTYPE_FROM_CONTRACTS = "from_contracts"
     UDTYPE_FROM_EVENTS = "from_events"
 
-    def update(self, udtype=None, *, drop_tables=False, top_n: int = None, only_carbon: bool = True):
+    def update(self, udtype=None, *, drop_tables=False, top_n: int = None, only_carbon: bool = True, bypairs: List[str] = None):
         """
         convenience access to the db.update methods
 
@@ -186,23 +186,26 @@ class CarbonBotBase():
         :top_n:             if not None, only updates the top n pools
         :only_carbon:       if True, only updates carbon pools and other exchanges that are carbon-pool compatible pairs
         """
-        self.c.logger.info(f"starting update(udtype={udtype}, "
-                           f"drop_tables={drop_tables}, "
-                           f"top_n={top_n}, "
-                           f"only_carbon={only_carbon})")
+        raise NotImplementedError("update() is deprecated. Use `python run_db_update_w_heartbeat.py` instead")
+        # self.c.logger.info(f"starting update(udtype={udtype}, "
+        #                    f"drop_tables={drop_tables}, "
+        #                    f"top_n={top_n}, "
+        #                    f"only_carbon={only_carbon}"
+        #                    f"bypairs={bypairs})")
 
-        if udtype is None:
-            udtype = self.UDTYPE_FROM_CONTRACTS
-
-        if drop_tables:
-            self.db.drop_all_tables()
-
-        if udtype == self.UDTYPE_FROM_CONTRACTS:
-            return self.db.update_pools_from_contracts(only_carbon=only_carbon, top_n=top_n)
-        elif udtype == self.UDTYPE_FROM_EVENTS:
-            return self.db.update_pools_from_events()
-        else:
-            raise ValueError(f"Invalid udtype {udtype}")
+        # if udtype is None:
+        #     udtype = self.UDTYPE_FROM_CONTRACTS
+        #
+        # if drop_tables:
+        #     self.db.drop_all_tables()
+        #
+        # if udtype == self.UDTYPE_FROM_CONTRACTS:
+        #     # return self.db.update_pools_from_contracts(bypairs=bypairs)
+        #     pass
+        # elif udtype == self.UDTYPE_FROM_EVENTS:
+        #     return self.db.update_pools_from_events()
+        # else:
+        #     raise ValueError(f"Invalid udtype {udtype}")
 
     def drop_all_tables(self):
         """convenience method for db.drop_all_tables()"""
