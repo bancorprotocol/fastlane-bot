@@ -303,14 +303,16 @@ backend_url = None
 
 if backend_url is None:
     backend_url = Config.POSTGRES_URL
-    print(f"Using default database url: {backend_url}, "
-          f"if you want to use a different database, set the backend_url found at the bottom of manager_base.py")
+    print(
+        'Using default database url, if you want to use a different database, set the backend_url found at the bottom '
+        'of manager_base.py'
+    )
 
 metadata = sqlalchemy.MetaData()
 
 # Check if the database exists, and create it if it doesn't
-if not database_exists(backend_url):
-    create_database(backend_url)
+# if not database_exists(backend_url):
+#     create_database(backend_url)
 
 engine = sqlalchemy.create_engine(backend_url)
 models.mapper_registry.metadata.create_all(engine)

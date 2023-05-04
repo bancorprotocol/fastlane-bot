@@ -33,8 +33,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
     update_interval_seconds = 12
 
-    def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None,
-                                    update_interval_seconds: int = 12):
+    def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
         """
         Updates the pools_and_token_table with the latest liquidity data from the contracts.
 
@@ -61,8 +60,10 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
-
+        logged_strategies = []
+        last_updated_block = 0
         for index, row in filtered_table.iterrows():
+            self.c.logger.info(f"[update_pools_from_contracts] Updating index {index} of {len(filtered_table)}")
             params = row.to_dict()
             block_number = self.ConfigObj.w3.eth.block_number
             params['last_updated_block'] = block_number
@@ -72,14 +73,21 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
             strategies = []
             if params['exchange_name'] == 'carbon_v1':
+
                 end_idx = self.get_strategies_count_by_pair(params['tkn0_address'], params['tkn1_address'])
                 strategies = self.get_strategies_by_pair(params['tkn0_address'], params['tkn1_address'], 0, end_idx)
             else:
                 strategies.append(None)
 
             for strategy in strategies:
+
                 if strategy is not None:
                     params['cid'] = str(strategy[0])
+                    logged_strategies.append(params['cid'])
+
+                if strategy and str(strategy[0]) in logged_strategies:
+                    continue
+
 
                 pool = self.get_pool(cid=str(params['cid']))
                 if pool is None:
@@ -94,13 +102,16 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 update_params = {**pool_data, **liquidity_params}
                 self.update_pool(update_params, params)
 
-        time.sleep(update_interval_seconds)
+
 
     def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
         while True:
-            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table,
-                                             update_interval_seconds=update_interval_seconds)
+            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table)
+            self.c.logger.info(f"************************* \n"
+                               f"[update_pools_heartbeat] Sleeping for {update_interval_seconds} seconds..."
+                               f"\n*************************")
+            time.sleep(update_interval_seconds)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """
