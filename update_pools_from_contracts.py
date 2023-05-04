@@ -3,7 +3,31 @@
 
 # COMMAND ----------
 
-! pip install -r requirements.txt
+# MAGIC %pip install -r requirements.txt
+
+# COMMAND ----------
+
+project_path = f'/dbfs/FileStore/tables/fastlane_bot/{exchanges.replace("-","_")}'
+
+bot_path = project_path + f'/{env}'
+
+base_path = f'/dbfs/FileStore/tables/fastlane_bot/{exchanges.replace("-","_")}/{env}/'
+
+
+# COMMAND ----------
+
+# MAGIC %load_ext autoreload
+# MAGIC %autoreload 2
+
+# COMMAND ----------
+
+import os
+cwd = os.getcwd()
+cwd
+
+# COMMAND ----------
+
+from fastlane_bot import Config
 
 # COMMAND ----------
 

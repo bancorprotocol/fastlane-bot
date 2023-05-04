@@ -14,22 +14,11 @@ from . import selectors as S
 from dotenv import load_dotenv
 load_dotenv()
 
-dbutils = None
-
 ENV = os.environ.get("ENV")
-if 'prod' not in ENV.lower():
-    POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-    POSTGRES_USER = os.environ.get("POSTGRES_USER")
-    POSTGRES_DB = os.environ.get("POSTGRES_DB")
-    POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
-else:
-    POSTGRES_PASSWORD = dbutils.secrets.get(
-        scope="fastlane", key="POSTGRES_PASSWORD"
-    )
-    POSTGRES_USER = dbutils.secrets.get(scope="fastlane", key="POSTGRES_USER")
-    POSTGRES_DB = dbutils.secrets.get(scope="fastlane", key="POSTGRES_DB")
-    POSTGRES_HOST = dbutils.secrets.get(scope="fastlane", key="POSTGRES_HOST")
-
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+POSTGRES_USER = os.environ.get("POSTGRES_USER")
+POSTGRES_DB = os.environ.get("POSTGRES_DB")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
 
 @dataclass
 class Config():
