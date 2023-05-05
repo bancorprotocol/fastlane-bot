@@ -376,7 +376,11 @@ class ContractHelper:
         int
             The number of strategies in the specified token pair
         """
-        return self.carbon_controller.strategiesByPairCount(token0, token1)
+        try:
+            return self.carbon_controller.strategiesByPairCount(token0, token1)
+        except Exception as e:
+            self.c.logger.error(f"Error getting strategies count by pair:{token0}, {token1}, {e}, skipping...")
+            return 0
 
     def get_strategies_by_pair(
             self, token0: str, token1: str, start_idx: int, end_idx: int
