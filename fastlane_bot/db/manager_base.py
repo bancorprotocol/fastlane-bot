@@ -170,7 +170,7 @@ class DatabaseManagerBase(ContractHelper):
         """
         if backend_url is None:
             backend_url = self.ConfigObj.POSTGRES_URL
-            print(f"Using default database url: {backend_url}")
+            # print(f"Using default database url: {backend_url}")
 
         global Session, engine, session, metadata
         metadata = sqlalchemy.MetaData()
