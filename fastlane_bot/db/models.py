@@ -312,7 +312,7 @@ class Pool:
         Column("pair_name", String(500), ForeignKey("pairs.name")),
         Column("exchange_name", String(100), ForeignKey("exchanges.name")),
         Column("fee", String(20), nullable=False, default="0"),
-        Column("fee_float", Numeric(precision=10), nullable=False, default=0),
+        Column("fee_float", String(20), nullable=False, default="0"),
         Column("tkn0_balance", Numeric(precision=64), nullable=True),
         Column("tkn1_balance", Numeric(precision=64), nullable=True),
         Column("z_0", Numeric(precision=64), nullable=True),
@@ -354,7 +354,7 @@ class Pool:
     last_updated_block: Optional[int] = None
     contract_initialized: Optional[bool] = False
     fee: Optional[str] = None
-    fee_float: Optional[float] = None
+    fee_float: Optional[str] = None
     address: Optional[str] = None
     anchor: Optional[str] = None
     pair_name: Optional[str] = None
