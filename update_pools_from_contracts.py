@@ -14,10 +14,6 @@
 
 bypairs = dbutils.widgets.get("bypairs")
 TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
-cfg = dbutils.widgets.get("config")
-
-if str(cfg) == 'None':
-    cfg = None
 
 if str(TENDERLY_FORK) == 'None':
     TENDERLY_FORK = None
@@ -25,6 +21,7 @@ if str(TENDERLY_FORK) == 'None':
 if str(bypairs) == 'None':
     bypairs = None
     
+cfg = 'tenderly' if TENDERLY_FORK else None
 POSTGRES_DB = "defaultdb" if not TENDERLY_FORK else TENDERLY_FORK
 bypairs
 
