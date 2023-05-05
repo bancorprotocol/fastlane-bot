@@ -331,7 +331,7 @@ except Exception as e:
 
 
 # Create the supported exchanges if they don't exist
-for exchange in Config.SUPPORTED_EXCHANGES:
+for exchange in ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']:
     try:
         session.add(models.Exchange(name=exchange, blockchain_name=blockchain_name))
         session.commit()

@@ -12,6 +12,15 @@
 
 # COMMAND ----------
 
+# MAGIC %reload_ext autoreload
+
+# COMMAND ----------
+
+dbutils.widgets.text("bypairs", "None")
+dbutils.widgets.text("TENDERLY_FORK", "058b12b9-c69e-4676-a7bd-2ba09c9b23c7")
+
+# COMMAND ----------
+
 bypairs = dbutils.widgets.get("bypairs")
 TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
 
@@ -61,9 +70,15 @@ with open(f'{bot_path}/.env', 'w') as f:
 
 # COMMAND ----------
 
+# ! rm /root/.brownie/network-config.yaml
+
+# COMMAND ----------
+
 MAINNET_URL = 'https://eth-mainnet.alchemyapi.io/v2/'
 TENDERLY_URL = 'https://rpc.tenderly.co/fork/'
 RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" if not TENDERLY_FORK else f"{TENDERLY_URL}{WEB3_ALCHEMY_PROJECT_ID}"
+
+RPC_URL
 
 # COMMAND ----------
 
@@ -79,8 +94,6 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
 # COMMAND ----------
 
-import subprocess
-
 if bypairs:
     cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py --bypairs={bypairs}"
 else:
@@ -88,6 +101,12 @@ else:
 
 if cfg == 'tenderly':
     cmd += ' --config=tenderly'
+
+cmd
+
+# COMMAND ----------
+
+import subprocess
 
 p = subprocess.Popen(
     cmd,
