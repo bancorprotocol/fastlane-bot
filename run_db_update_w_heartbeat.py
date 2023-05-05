@@ -6,6 +6,7 @@ import pandas as pd
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.config.connect import EthereumNetwork
 
 # Detect the current operating system
 current_os = platform.system()
@@ -66,6 +67,7 @@ def main(
     pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
     bot = CarbonBot(ConfigObj=cfg)
+    print(f"endpoint_uri: {bot.c.w3.provider.endpoint_uri}")
     # bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
 

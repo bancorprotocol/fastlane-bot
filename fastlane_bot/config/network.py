@@ -15,6 +15,8 @@ load_dotenv()
 from decimal import Decimal
 
 
+TENDERLY_FORK = os.environ.get("POSTGRES_DB")
+
 class ConfigNetwork(ConfigBase):
     """
     Fastlane bot config -- network
@@ -146,7 +148,7 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     DEFAULT_PROVIDER = S.PROVIDER_TENDERLY
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
-    TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
+    TENDERLY_FORK = TENDERLY_FORK
     # TENDERLY_FORK = "058b12b9-c69e-4676-a7bd-2ba09c9b23c7"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
