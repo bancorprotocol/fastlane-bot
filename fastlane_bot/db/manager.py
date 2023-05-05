@@ -82,33 +82,36 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 strategies.append(None)
 
             for strategy in strategies:
+                try:
+                    if strategy is not None:
+                        params['cid'] = str(strategy[0])
+                        params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(strategy[2][0]), self.c.w3.toChecksumAddress(strategy[2][1])
+                        tkn0 = self.get_or_create_token(address=params['tkn0_address'])
+                        tkn1 = self.get_or_create_token(address=params['tkn1_address'])
+                        params['tkn0_symbol'], params['tkn1_symbol'] = tkn0.symbol, tkn1.symbol
+                        params['tkn0_decimals'], params['tkn1_decimals'] = tkn0.decimals, tkn1.decimals
+                        params['tkn0_key'], params['tkn1_key'] = tkn0.key, tkn1.key
+                        params['pair_name'] = f"{tkn0.key}/{tkn1.key}"
+                        params['desc'] = f"carbon_v1 {tkn0.key}/{tkn1.key} 0.002"
+                        params['fee'] = 0.002
 
-                if strategy is not None:
-                    params['cid'] = str(strategy[0])
-                    params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(strategy[2][0]), self.c.w3.toChecksumAddress(strategy[2][1])
-                    tkn0 = self.get_or_create_token(address=params['tkn0_address'])
-                    tkn1 = self.get_or_create_token(address=params['tkn1_address'])
-                    params['tkn0_symbol'], params['tkn1_symbol'] = tkn0.symbol, tkn1.symbol
-                    params['tkn0_decimals'], params['tkn1_decimals'] = tkn0.decimals, tkn1.decimals
-                    params['tkn0_key'], params['tkn1_key'] = tkn0.key, tkn1.key
-                    params['pair_name'] = f"{tkn0.key}/{tkn1.key}"
-                    params['desc'] = f"carbon_v1 {tkn0.key}/{tkn1.key} 0.002"
-                    params['fee'] = 0.002
+                    params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(params['fee'])
 
-                params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(params['fee'])
-
-                pool = self.get_pool(cid=str(params['cid']))
-                if pool is None:
-                    self.create_pool_pair_tokens(params)
                     pool = self.get_pool(cid=str(params['cid']))
+                    if pool is None:
+                        self.create_pool_pair_tokens(params)
+                        pool = self.get_pool(cid=str(params['cid']))
 
-                liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
-                                                                    contract=contract,
-                                                                    address=params['address'],
-                                                                    strategy=strategy)
-                pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
-                update_params = {**pool_data, **liquidity_params}
-                self.update_pool(update_params, params)
+                    liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
+                                                                        contract=contract,
+                                                                        address=params['address'],
+                                                                        strategy=strategy)
+                    pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
+                    update_params = {**pool_data, **liquidity_params}
+                    self.update_pool(update_params, params)
+                except Exception as e:
+                    self.c.logger.error(f"[update_pools_from_contracts] Error updating pool: {e}, skipping...")
+
 
     def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):

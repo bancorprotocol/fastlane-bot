@@ -70,7 +70,7 @@ with open(f'{bot_path}/.env', 'w') as f:
 
 # COMMAND ----------
 
-# ! rm /root/.brownie/network-config.yaml
+! rm /root/.brownie/network-config.yaml
 
 # COMMAND ----------
 
@@ -90,7 +90,7 @@ RPC_URL
 
 del_network = f"cd {bot_path}; brownie networks delete {cfg}"
 
-add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "{cfg}" host="{RPC_URL}" chainid=1'
+add_network = f'cd {bot_path}; brownie networks add "Ethereum" "{cfg}" host="{RPC_URL}" chainid=1'
 
 set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
@@ -109,6 +109,14 @@ if cfg == 'tenderly':
     cmd += ' --config=tenderly'
 
 cmd
+
+# COMMAND ----------
+
+from fastlane_bot import Config
+from fastlane_bot.bot import CarbonBot
+
+cfg = Config.new(config=Config.CONFIG_TENDERLY)
+cfg.w3.provider.endpoint_uri
 
 # COMMAND ----------
 
