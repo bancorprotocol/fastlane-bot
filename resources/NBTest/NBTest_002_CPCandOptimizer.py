@@ -16,10 +16,10 @@
 
 # +
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-from fastlane_bot.tools.simplepair import SimplePair
+#from fastlane_bot.tools.simplepair import SimplePair
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
 #import carbon.tools.tokenscale as ts
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimplePair))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
@@ -40,12 +40,13 @@ CCmarket = CPCContainer.from_df(df)
 
 # ## pairo and primary
 
-assert SimplePair.n("WETH-eeee") == "WETH"
-assert SimplePair.n("WETH") == "WETH"
-assert SimplePair.n("USDC-uuuu/WETH-eeee") == "USDC/WETH"
+assert Pair.n("WETH-eeee") == "WETH"
+assert Pair.n("WETH") == "WETH"
+assert Pair.n("USDC-uuuu/WETH-eeee") == "USDC/WETH"
 
-pairo = SimplePair("USDC-uuuu/WETH-eeee")
-assert raises (SimplePair, tknb='USDC-uuuu', tknq='WETH-eeee')
+pairo = Pair("USDC-uuuu/WETH-eeee")
+assert pairo.isprimary == False
+assert raises (Pair, tknb='USDC-uuuu', tknq='WETH-eeee')
 assert pairo.tknb == 'USDC-uuuu'
 assert pairo.tknq == 'WETH-eeee'
 assert pairo.tknb_n == 'USDC'
@@ -56,13 +57,15 @@ assert pairo.tknx_n == 'USDC'
 assert pairo.tkny_n == 'WETH'
 assert pairo.pair == 'USDC-uuuu/WETH-eeee'
 assert pairo.pair_n == 'USDC/WETH'
-assert pairo.isprimary == False
 assert pairo.primary == 'WETH-eeee/USDC-uuuu'
 assert pairo.primary_n == 'WETH/USDC'
 assert pairo.secondary == pairo.pair
 assert pairo.secondary_n == pairo.pair_n
+assert pairo.primary_tknb == "WETH"
+assert pairo.primary_tknq == "USDC"
 
-pairo = SimplePair("WETH-eeee/USDC-uuuu")
+pairo = Pair("WETH-eeee/USDC-uuuu")
+assert pairo.isprimary == True
 assert pairo.tknq == 'USDC-uuuu'
 assert pairo.tknb == 'WETH-eeee'
 assert pairo.tknq_n == 'USDC'
@@ -73,20 +76,117 @@ assert pairo.tkny_n == 'USDC'
 assert pairo.tknx_n == 'WETH'
 assert pairo.pair == 'WETH-eeee/USDC-uuuu'
 assert pairo.pair_n == 'WETH/USDC'
-assert pairo.isprimary == True
 assert pairo.primary == pairo.pair
 assert pairo.primary_n == pairo.pair_n
 assert pairo.secondary == 'USDC-uuuu/WETH-eeee'
 assert pairo.secondary_n == 'USDC/WETH'
+assert pairo.primary_tknb == "WETH"
+assert pairo.primary_tknq == "USDC"
 
 c1 = CPC.from_pk(pair="USDC-uuuu/WETH-eeee", p=1, k=100)
 c2 = CPC.from_pk(pair="WETH-eeee/USDC-uuuu", p=1, k=100)
 CC = CPCContainer([c1,c2])
 assert c1.pairo.primary == 'WETH-eeee/USDC-uuuu'
 assert c2.pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert c1.primary == c1.pairo.primary
 assert CC.pairs() == {'WETH-eeee/USDC-uuuu'}
 assert CC.pairs(standardize=True) == CC.pairs()
 assert CC.pairs(standardize=False) == {'USDC-uuuu/WETH-eeee', 'WETH-eeee/USDC-uuuu'}
+
+assert Pair("WETH/USDC").isprimary == True
+assert Pair("USDC/WETH").isprimary == False
+
+# ## buysell
+
+# selling ETH at 2000-2001 USDC per ETH
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=1/2000, pb=1/2001, isdydx=True)
+assert c1.pair == "USDC/WETH"
+assert c1.primary == "WETH/USDC"
+assert c1.pairo.isprimary == False
+assert c1.buysell(verbose=True, withprice=True) == 'sell-WETH @ 2000.00 USDC per WETH'
+assert c1.buysell(verbose=False) == "s"
+assert c1.buysell() == "s"
+
+# selling ETH at 2000-2001 USDC per ETH
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=2000, pb=2001, isdydx=False)
+assert c1.pair == "USDC/WETH"
+assert c1.primary == "WETH/USDC"
+assert c1.pairo.isprimary == False
+assert c1.buysell(verbose=True, withprice=True) == 'sell-WETH @ 2000.00 USDC per WETH'
+assert c1.buysell(verbose=False) == "s"
+assert c1.buysell() == "s"
+
+# buying ETH at 1500-1499 USDC per ETH
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=True)
+assert c2.pair == "WETH/USDC"
+assert c2.primary == "WETH/USDC"
+assert c2.pairo.isprimary == True
+assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
+assert c2.buysell(verbose=False) == "b"
+assert c2.buysell() == "b"
+
+# buying ETH at 1500-1499 USDC per ETH
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=False)
+assert c2.pair == "WETH/USDC"
+assert c2.primary == "WETH/USDC"
+assert c2.pairo.isprimary == True
+assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
+assert c2.buysell(verbose=False) == "b"
+assert c2.buysell() == "b"
+
+# univ3 1899-1901 @ 1900 USDC per WETH
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c3.pair == "WETH/USDC"
+assert c3.primary == "WETH/USDC"
+assert c3.pairo.isprimary == True
+assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
+assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell() == "bs"
+
+# univ3 1899-1901 @ 1900 USDC per WETH
+c3 = CPC.from_univ3(pair="USDC/WETH", Pmarg=1/1900, uniPb=1/1899, uniPa=1/1901, uniL=1000, cid="", fee=0, descr="")
+assert c3.pair == "USDC/WETH"
+assert c3.primary == "WETH/USDC"
+assert c3.pairo.isprimary == False
+assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
+assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell() == "bs"
+
+# univ3 1899-1901 @ 1899 USDC per WETH (WETH low, therefore 100% in WETH, therefore sell WETH)
+c4 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1899, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c4.pair == "WETH/USDC"
+assert c4.primary == "WETH/USDC"
+assert c4.pairo.isprimary == True
+assert c4.buysell(verbose=True, withprice=True) == 'sell-WETH @ 1899.00 USDC per WETH'
+assert c4.buysell(verbose=False) == "s"
+assert c4.buysell() == "s"
+
+# univ3 1899-1901 @ 1901 USDC per WETH (WETH high, therefore 100% in USDC, therefore buy WETH)
+c5 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1901, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c5.pair == "WETH/USDC"
+assert c5.primary == "WETH/USDC"
+assert c5.pairo.isprimary == True
+assert c5.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1901.00 USDC per WETH'
+assert c5.buysell(verbose=False) == "b"
+assert c5.buysell() == "b"
+
+# univ2 (tknb=2000 USDC, tknq=1 ETH)
+c6 = CPC.from_univ2(pair="USDC/WETH", x_tknb=2000, y_tknq=1, cid="", fee=0, descr="")
+assert c6.pair == "USDC/WETH"
+assert c6.primary == "WETH/USDC"
+assert c6.pairo.isprimary == False
+assert c6.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
+assert c6.buysell(verbose=False) == "bs"
+assert c6.buysell() == "bs"
+
+# univ2 (tknq=2000 USDC, tknb=1 ETH)
+c7 = CPC.from_univ2(pair="WETH/USDC", x_tknb=1, y_tknq=2000, cid="", fee=0, descr="")
+assert c7.pair == "WETH/USDC"
+assert c7.primary == "WETH/USDC"
+assert c7.pairo.isprimary == True
+assert c7.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
+assert c7.buysell(verbose=False) == "bs"
+assert c7.buysell() == "bs"
 
 # ## P
 

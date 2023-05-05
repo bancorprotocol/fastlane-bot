@@ -140,11 +140,19 @@ class SimplePair:
 
     def primary_price(self, p):
         """returns the primary price (p if primary, 1/p if secondary)"""
-        if p == 0:
-            return float("nan")
-        return p if self.isprimary else 1 / p
-
+        if self.isprimary:
+            return p
+        else:
+            if p == 0:
+                return float("nan")
+        return 1 / p
     pp = primary_price
+    
+    @property
+    def pp_convention(self):
+        """returns the primary price convention"""
+        tknb, tknq = self.primary_n.split("/")
+        return f"{tknq} per {tknb}"
 
     @property
     def primary(self):
@@ -157,7 +165,17 @@ class SimplePair:
         tokens = self.primary.split("/")
         tokens = [self.n(t) for t in tokens]
         return "/".join(tokens)
+    
+    @property
+    def primary_tknb(self):
+        """returns the primary normailised tknb"""
+        return self.tknb_n if self.isprimary else self.tknq_n
 
+    @property
+    def primary_tknq(self):
+        """returns the primary normailised tknq"""
+        return self.tknq_n if self.isprimary else self.tknb_n
+    
     @property
     def secondary(self):
         """returns the secondary pair"""

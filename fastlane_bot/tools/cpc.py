@@ -7,7 +7,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.8"
+__VERSION__ = "2.8.1"
 __DATE__ = "05/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
@@ -56,162 +56,162 @@ class DAttrDict:
 AD = DAttrDict
 
 
-@dataclass
-class Pair:
-    """
-    a pair in notation TKNB/TKNQ; can also be provided as list
-    """
+# @dataclass
+# class Pair:
+#     """
+#     a pair in notation TKNB/TKNQ; can also be provided as list
+#     """
 
-    tknb: str = field(init=False)
-    tknq: str = field(init=False)
-    pair: InitVar[str] = None
+#     tknb: str = field(init=False)
+#     tknq: str = field(init=False)
+#     pair: InitVar[str] = None
 
-    def __post_init__(self, pair):
-        if isinstance(pair, CPCContainer.Pair):
-            self.tknb = pair.tknb
-            self.tknq = pair.tknq
-        elif isinstance(pair, str):
-            self.tknb, self.tknq = pair.split("/")
-        elif pair is False:
-            # used in alternative constructors
-            pass
-        else:
-            try:
-                self.tknb, self.tknq = pair
-            except:
-                raise ValueError(f"pair must be a string or list of two strings {pair}")
+#     def __post_init__(self, pair):
+#         if isinstance(pair, CPCContainer.Pair):
+#             self.tknb = pair.tknb
+#             self.tknq = pair.tknq
+#         elif isinstance(pair, str):
+#             self.tknb, self.tknq = pair.split("/")
+#         elif pair is False:
+#             # used in alternative constructors
+#             pass
+#         else:
+#             try:
+#                 self.tknb, self.tknq = pair
+#             except:
+#                 raise ValueError(f"pair must be a string or list of two strings {pair}")
 
-    @classmethod
-    def from_tokens(cls, tknb, tknq):
-        pair = cls(False)
-        pair.tknb = tknb
-        pair.tknq = tknq
-        return pair
+#     @classmethod
+#     def from_tokens(cls, tknb, tknq):
+#         pair = cls(False)
+#         pair.tknb = tknb
+#         pair.tknq = tknq
+#         return pair
 
-    def __str__(self):
-        return f"{self.tknb}/{self.tknq}"
+#     def __str__(self):
+#         return f"{self.tknb}/{self.tknq}"
 
-    @property
-    def pair(self):
-        """string representation of the pair"""
-        return str(self)
+#     @property
+#     def pair(self):
+#         """string representation of the pair"""
+#         return str(self)
 
-    @property
-    def pairt(self):
-        """tuple representation of the pair"""
-        return (self.tknb, self.tknq)
+#     @property
+#     def pairt(self):
+#         """tuple representation of the pair"""
+#         return (self.tknb, self.tknq)
 
-    @property
-    def pairr(self):
-        """returns the reversed pair"""
-        return f"{self.tknq}/{self.tknb}"
+#     @property
+#     def pairr(self):
+#         """returns the reversed pair"""
+#         return f"{self.tknq}/{self.tknb}"
 
-    @property
-    def pairrt(self):
-        """tuple representation of the reverse pair"""
-        return (self.tknq, self.tknb)
+#     @property
+#     def pairrt(self):
+#         """tuple representation of the reverse pair"""
+#         return (self.tknq, self.tknb)
 
-    @staticmethod
-    def prettify_tkn(tkn):
-        """returns a prettified token name"""
-        return tkn.split("-")[0]
+#     @staticmethod
+#     def prettify_tkn(tkn):
+#         """returns a prettified token name"""
+#         return tkn.split("-")[0]
 
-    @staticmethod
-    def prettify_pair(pair):
-        """returns a prettified pair name"""
-        return "/".join(Pair.prettify_tkn(tkn) for tkn in pair.split("/"))
+#     @staticmethod
+#     def prettify_pair(pair):
+#         """returns a prettified pair name"""
+#         return "/".join(Pair.prettify_tkn(tkn) for tkn in pair.split("/"))
 
-    @property
-    def tknx(self):
-        return self.tknb
+#     @property
+#     def tknx(self):
+#         return self.tknb
 
-    @property
-    def tkny(self):
-        return self.tknq
+#     @property
+#     def tkny(self):
+#         return self.tknq
 
-    @property
-    def tknbp(self):
-        return self.prettify_tkn(self.tknb)
+#     @property
+#     def tknbp(self):
+#         return self.prettify_tkn(self.tknb)
 
-    @property
-    def tknqp(self):
-        return self.prettify_tkn(self.tknq)
+#     @property
+#     def tknqp(self):
+#         return self.prettify_tkn(self.tknq)
 
-    @property
-    def tknxp(self):
-        return self.prettify_tkn(self.tknx)
+#     @property
+#     def tknxp(self):
+#         return self.prettify_tkn(self.tknx)
 
-    @property
-    def tknyp(self):
-        return self.prettify_tkn(self.tkny)
+#     @property
+#     def tknyp(self):
+#         return self.prettify_tkn(self.tkny)
 
-    def other(self, tkn):
-        assert tkn in self.pairt, f"token not in pair{self.pair} {tkn}"
-        return self.tknq if tkn == self.tknb else self.tknb
+#     def other(self, tkn):
+#         assert tkn in self.pairt, f"token not in pair{self.pair} {tkn}"
+#         return self.tknq if tkn == self.tknb else self.tknb
 
-    def otherp(self, tkn):
-        return self.prettify_tkn(self.other(tkn))
+#     def otherp(self, tkn):
+#         return self.prettify_tkn(self.other(tkn))
 
-    NUMERAIRE_TOKENS = {
-        tkn: i
-        for i, tkn in enumerate(
-            [
-                "USDC",
-                "USDT",
-                "DAI",
-                "TUSD",
-                "BUSD",
-                "PAX",
-                "GUSD",
-                "USDS",
-                "sUSD",
-                "mUSD",
-                "HUSD",
-                "USDN",
-                "USDP",
-                "USDQ",
-                "ETH",
-                "WETH",
-                "WBTC",
-                "BTC",
-            ]
-        )
-    }
+#     NUMERAIRE_TOKENS = {
+#         tkn: i
+#         for i, tkn in enumerate(
+#             [
+#                 "USDC",
+#                 "USDT",
+#                 "DAI",
+#                 "TUSD",
+#                 "BUSD",
+#                 "PAX",
+#                 "GUSD",
+#                 "USDS",
+#                 "sUSD",
+#                 "mUSD",
+#                 "HUSD",
+#                 "USDN",
+#                 "USDP",
+#                 "USDQ",
+#                 "ETH",
+#                 "WETH",
+#                 "WBTC",
+#                 "BTC",
+#             ]
+#         )
+#     }
 
-    @property
-    def isprimary(self):
-        """whether the representation is primary or secondary"""
-        tknqix = self.NUMERAIRE_TOKENS.get(self.tknqp, 1e10)
-        tknbix = self.NUMERAIRE_TOKENS.get(self.tknbp, 1e10)
-        if tknqix == tknbix:
-            return self.tknb < self.tknq
-        return tknqix < tknbix
+#     @property
+#     def isprimary(self):
+#         """whether the representation is primary or secondary"""
+#         tknqix = self.NUMERAIRE_TOKENS.get(self.tknqp, 1e10)
+#         tknbix = self.NUMERAIRE_TOKENS.get(self.tknbp, 1e10)
+#         if tknqix == tknbix:
+#             return self.tknb < self.tknq
+#         return tknqix < tknbix
 
-    def primary_price(self, p):
-        """returns the primary price (p if primary, 1/p if secondary)"""
-        return p if self.isprimary else 1 / p
+#     def primary_price(self, p):
+#         """returns the primary price (p if primary, 1/p if secondary)"""
+#         return p if self.isprimary else 1 / p
 
-    pp = primary_price
+#     pp = primary_price
 
-    @property
-    def primary(self):
-        """returns the primary pair"""
-        return self.pair if self.isprimary else self.pairr
+#     @property
+#     def primary(self):
+#         """returns the primary pair"""
+#         return self.pair if self.isprimary else self.pairr
 
-    @property
-    def secondary(self):
-        """returns the secondary pair"""
-        return self.pairr if self.isprimary else self.pair
+#     @property
+#     def secondary(self):
+#         """returns the secondary pair"""
+#         return self.pairr if self.isprimary else self.pair
 
-    @classmethod
-    def wrap(cls, pairlist):
-        """wraps a list of strings into Pairs"""
-        return tuple(cls(p) for p in pairlist)
+#     @classmethod
+#     def wrap(cls, pairlist):
+#         """wraps a list of strings into Pairs"""
+#         return tuple(cls(p) for p in pairlist)
 
-    @classmethod
-    def unwrap(cls, pairlist):
-        """unwraps a list of Pairs into strings"""
-        return tuple(str(p) for p in pairlist)
+#     @classmethod
+#     def unwrap(cls, pairlist):
+#         """unwraps a list of Pairs into strings"""
+#         return tuple(str(p) for p in pairlist)
 
 
 @dataclass_
@@ -838,14 +838,14 @@ class ConstantProductCurve:
     @property
     def tknbp(self):
         """prettified base token"""
-        return Pair.prettify_tkn(self.tknb)
+        return Pair.n(self.tknb)
 
     tknxp = tknbp
 
     @property
     def tknqp(self):
         """prettified quote token"""
-        return Pair.prettify_tkn(self.tknq)
+        return Pair.n(self.tknq)
 
     tknyp = tknqp
 
@@ -875,6 +875,20 @@ class ConstantProductCurve:
         "pool price (in dy/dx)"
         return self.y / self.x
 
+    def buysell(self, *, verbose=False, withprice=False):
+        """
+        returns b (buy primary tknb), s (sells primary tknb) or bs (buys and sells)
+        """
+        b,s = ("b", "s") if not verbose else ("buy-", "sell-")
+        xa, ya = (self.x_act, self.y_act) if self.pairo.isprimary else (self.y_act, self.x_act)
+        result  = b if ya > 0 else ""
+        result += s if xa > 0 else ""
+        if verbose:
+            result += f"{self.pairo.primary_tknb}"
+            if withprice:
+                result += f" @ {self.primaryp(withconvention=True)}"
+        return result
+    
     def tvl(self, tkn=None, *, mult=1.0, incltkn=False, raiseonerror=True):
         """
         total value locked in the curve, expressed in the token tkn (default: tknq)
@@ -902,11 +916,23 @@ class ConstantProductCurve:
     def p_convention(self):
         """price convention for p (dy/dx)"""
         return f"{self.tknyp} per {self.tknxp}"
-
+    
+    @property
+    def primary(self):
+        "alias for self.pairo.primary [pair]"
+        return self.pairo.primary
+    
+    def primaryp(self, *, withconvention=False):
+        "pool price in the native quote of the curve Pair object"
+        price = self.pairo.pp(self.p)
+        if not withconvention:
+            return price
+        return f"{price:.2f} {self.pairo.pp_convention}"     
+    
     @property
     def pp(self):
-        "pool price in the native quote of the curve Pair object"
-        return self.pairo.pp(self.p)
+        """alias for self.primaryp()"""
+        return self.primaryp()
 
     @property
     def kbar(self):
