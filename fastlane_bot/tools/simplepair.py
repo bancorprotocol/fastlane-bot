@@ -4,8 +4,8 @@ simple representation of a pair of tokens, used by cpc and arbgraph
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__version__ = "1.1"
-__date__ = "09/Apr/2022"
+__VERSION__ = "2.0"
+__DATE__ = "5/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 
@@ -13,8 +13,10 @@ from dataclasses import dataclass, field, asdict, InitVar
 @dataclass
 class SimplePair:
     """
-    a pair in notation TKNB/TKNQ; can also be provided as list (but NOT: tkn=, tknq=)
+    a pair in notation TKNB/TKNQ; can also be provided as list (but NOT: tknb=, tknq=)
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
     tknb: str = field(init=False)
     tknq: str = field(init=False)
@@ -99,8 +101,11 @@ class SimplePair:
         )
     }
 
-    def n(self, tkn):
+    @classmethod
+    def n(cls, tkn):
         """normalize the token name (remove the id, if any)"""
+        if len(tkn.split("/")) > 1:
+            return "/".join([cls.n(t) for t in tkn.split("/")])
         return tkn.split("-")[0].split("(")[0]
 
     @property
@@ -110,6 +115,11 @@ class SimplePair:
     @property
     def tknq_n(self):
         return self.n(self.tknq)
+    
+    @property
+    def pair_n(self):
+        """normalized pair"""
+        return f"{self.tknb_n}/{self.tknq_n}"
 
     @property
     def tknx_n(self):
@@ -140,11 +150,25 @@ class SimplePair:
     def primary(self):
         """returns the primary pair"""
         return self.pair if self.isprimary else self.pairr
+    
+    @property
+    def primary_n(self):
+        """the primary pair, normalized"""
+        tokens = self.primary.split("/")
+        tokens = [self.n(t) for t in tokens]
+        return "/".join(tokens)
 
     @property
     def secondary(self):
         """returns the secondary pair"""
         return self.pairr if self.isprimary else self.pair
+    
+    @property
+    def secondary_n(self):
+        """the secondary pair, normalized"""
+        tokens = self.secondary.split("/")
+        tokens = [self.n(t) for t in tokens]
+        return "/".join(tokens)
 
     @classmethod
     def wrap(cls, pairlist):

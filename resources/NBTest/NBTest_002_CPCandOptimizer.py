@@ -15,9 +15,11 @@
 # ---
 
 # +
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+from fastlane_bot.tools.simplepair import SimplePair
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
 #import carbon.tools.tokenscale as ts
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimplePair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
@@ -25,7 +27,7 @@ from fastlane_bot.testing import *
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+require("3.0", __VERSION__)
 # -
 
 # # CPC and Optimizer in Fastlane [NBTest002]
@@ -35,6 +37,56 @@ try:
 except:
     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
+
+# ## pairo and primary
+
+assert SimplePair.n("WETH-eeee") == "WETH"
+assert SimplePair.n("WETH") == "WETH"
+assert SimplePair.n("USDC-uuuu/WETH-eeee") == "USDC/WETH"
+
+pairo = SimplePair("USDC-uuuu/WETH-eeee")
+assert raises (SimplePair, tknb='USDC-uuuu', tknq='WETH-eeee')
+assert pairo.tknb == 'USDC-uuuu'
+assert pairo.tknq == 'WETH-eeee'
+assert pairo.tknb_n == 'USDC'
+assert pairo.tknq_n == 'WETH'
+assert pairo.tknx == 'USDC-uuuu'
+assert pairo.tkny == 'WETH-eeee'
+assert pairo.tknx_n == 'USDC'
+assert pairo.tkny_n == 'WETH'
+assert pairo.pair == 'USDC-uuuu/WETH-eeee'
+assert pairo.pair_n == 'USDC/WETH'
+assert pairo.isprimary == False
+assert pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert pairo.primary_n == 'WETH/USDC'
+assert pairo.secondary == pairo.pair
+assert pairo.secondary_n == pairo.pair_n
+
+pairo = SimplePair("WETH-eeee/USDC-uuuu")
+assert pairo.tknq == 'USDC-uuuu'
+assert pairo.tknb == 'WETH-eeee'
+assert pairo.tknq_n == 'USDC'
+assert pairo.tknb_n == 'WETH'
+assert pairo.tkny == 'USDC-uuuu'
+assert pairo.tknx == 'WETH-eeee'
+assert pairo.tkny_n == 'USDC'
+assert pairo.tknx_n == 'WETH'
+assert pairo.pair == 'WETH-eeee/USDC-uuuu'
+assert pairo.pair_n == 'WETH/USDC'
+assert pairo.isprimary == True
+assert pairo.primary == pairo.pair
+assert pairo.primary_n == pairo.pair_n
+assert pairo.secondary == 'USDC-uuuu/WETH-eeee'
+assert pairo.secondary_n == 'USDC/WETH'
+
+c1 = CPC.from_pk(pair="USDC-uuuu/WETH-eeee", p=1, k=100)
+c2 = CPC.from_pk(pair="WETH-eeee/USDC-uuuu", p=1, k=100)
+CC = CPCContainer([c1,c2])
+assert c1.pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert c2.pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert CC.pairs() == {'WETH-eeee/USDC-uuuu'}
+assert CC.pairs(standardize=True) == CC.pairs()
+assert CC.pairs(standardize=False) == {'USDC-uuuu/WETH-eeee', 'WETH-eeee/USDC-uuuu'}
 
 # ## P
 

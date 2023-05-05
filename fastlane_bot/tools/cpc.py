@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.7"
-__DATE__ = "02/May/2023"
+__VERSION__ = "2.8"
+__DATE__ = "05/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -2248,11 +2248,24 @@ class CPCInverter:
     @property
     def pair(self):
         return f"{self.tknb}/{self.tknq}"
-
+    
+    @property
+    def primary(self):
+        "alias for self.pairo.primary [pair]"
+        return self.pairo.primary
+    
     @property
     def pairp(self):
+        "prety pair (without the -xxx part)"
         return f"{self.tknbp}/{self.tknqp}"
 
+    @property
+    def primaryp(self):
+        "pretty primary pair (without the -xxx part)"
+        tokens = self.primary.split("/")
+        tokens = [t.split("-")[0] for t in tokens]
+        return "/".join(tokens)
+    
     @property
     def x_min(self):
         return self.curve.y_min
