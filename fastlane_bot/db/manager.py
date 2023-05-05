@@ -64,7 +64,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         last_updated_block = 0
         for index, row in filtered_table.iterrows():
             params = row.to_dict()
-            self.c.logger.info(f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params['cid']}, pair_name={params['pair_name']}...")
+            self.c.logger.info(
+                f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params['cid']}, pair_name={params['pair_name']}...")
 
             block_number = self.ConfigObj.w3.eth.block_number
             params['last_updated_block'] = block_number
@@ -84,11 +85,17 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
                 if strategy is not None:
                     params['cid'] = str(strategy[0])
-                    logged_strategies.append(params['cid'])
+                    params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(strategy[2][0]), self.c.w3.toChecksumAddress(strategy[2][1])
+                    tkn0 = self.get_or_create_token(address=params['tkn0_address'])
+                    tkn1 = self.get_or_create_token(address=params['tkn1_address'])
+                    params['tkn0_symbol'], params['tkn1_symbol'] = tkn0.symbol, tkn1.symbol
+                    params['tkn0_decimals'], params['tkn1_decimals'] = tkn0.decimals, tkn1.decimals
+                    params['tkn0_key'], params['tkn1_key'] = tkn0.key, tkn1.key
+                    params['pair_name'] = f"{tkn0.key}/{tkn1.key}"
+                    params['desc'] = f"carbon_v1 {tkn0.key}/{tkn1.key} 0.002"
+                    params['fee'] = 0.002
 
-                # if strategy and str(strategy[0]) in logged_strategies:
-                #     continue
-
+                params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(params['fee'])
 
                 pool = self.get_pool(cid=str(params['cid']))
                 if pool is None:
@@ -102,8 +109,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
                 update_params = {**pool_data, **liquidity_params}
                 self.update_pool(update_params, params)
-
-
 
     def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
@@ -225,6 +230,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             pool_balances = contract.tradingLiquidity(address)
             params = {
                 "fee": "0.000",
+                "fee_float": 0.000,
                 "tkn0_balance": pool_balances[0],
                 "tkn1_balance": pool_balances[1],
             }
@@ -232,6 +238,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             reserve0, reserve1 = contract.caller.reserveBalances()
             params = {
                 "fee": "0.003",
+                "fee_float": 0.003,
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
             }
@@ -242,6 +249,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "sqrt_price_q96": slot0[0],
                 "liquidity": contract.caller.liquidity(),
                 "fee": contract.caller.fee(),
+                "fee_float": str(contract.caller.fee() / 1000000),
                 "tick_spacing": contract.caller.tickSpacing(),
             }
 
@@ -249,13 +257,15 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             reserve_balance = contract.caller.getReserves()
             params = {
                 "fee": "0.003",
+                "fee_float": 0.003,
                 "tkn0_balance": reserve_balance[0],
                 "tkn1_balance": reserve_balance[1],
             }
         elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
             order0, order1 = strategy[3][0], strategy[3][1]
             params = {
-                "fee": "0.000",
+                "fee": "0.002",
+                "fee_float": 0.002,
                 "y_0": order0[0],
                 "z_0": order0[1],
                 "A_0": order0[2],

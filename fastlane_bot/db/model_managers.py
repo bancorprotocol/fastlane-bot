@@ -465,7 +465,8 @@ class PoolManager(DatabaseManagerBase):
                 descr=row[0].descr,
                 pair_name=row[0].pair_name,
                 exchange_name=row[0].exchange_name,
-                fee=row[0].fee,
+                fee=row[0].fee_float,
+                fee_float=row[0].fee_float,
                 tkn0_balance=row[0].tkn0_balance,
                 tkn1_balance=row[0].tkn1_balance,
                 z_0=row[0].z_0,
@@ -502,7 +503,6 @@ class PoolManager(DatabaseManagerBase):
 
         if not exchange:
             exchange = models.Exchange(name=exchange_name)
-
             session.add(exchange)
             session.commit()
 
@@ -536,14 +536,19 @@ class PoolManager(DatabaseManagerBase):
         pair = self.get_pair(**pair_params)
         if not pair:
             pair = models.Pair(**pair_params)
-            session.add(pair)
-            session.commit()
+            try:
+                session.add(pair)
+                session.commit()
+            except Exception as e:
+                self.c.logger.error(f"Error creating pair: {e}, skipping")
+                session.rollback()
 
         pool_params = {
             "cid": str(pool_pair_tokens["cid"]),
             "exchange_name": pool_pair_tokens["exchange_name"],
             "pair_name": pool_pair_tokens["pair_name"],
             "fee": pool_pair_tokens["fee"],
+            "fee_float": str(pool_pair_tokens["fee_float"]),
             "address": pool_pair_tokens["address"],
             "anchor": pool_pair_tokens["anchor"],
             "last_updated_block": pool_pair_tokens["last_updated_block"],

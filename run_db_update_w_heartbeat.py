@@ -58,7 +58,7 @@ def main(
 
     cfg = Config.new(config=Config.CONFIG_MAINNET)
     bot = CarbonBot(ConfigObj=cfg)
-    # bot.db.drop_all_tables()
+    bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
 
 

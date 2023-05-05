@@ -150,7 +150,6 @@ class Token:
     key: str
 
 
-
 @mapper_registry.mapped
 @dataclass
 class Pair:
@@ -220,7 +219,6 @@ class Pair:
     tkn1_address: Optional[str] = None
     tkn0_key: Optional[str] = None
     tkn1_key: Optional[str] = None
-
 
 
 @mapper_registry.mapped
@@ -311,8 +309,8 @@ class Pool:
         Column("descr", String(500), nullable=True),
         Column("pair_name", String(500), ForeignKey("pairs.name")),
         Column("exchange_name", String(100), ForeignKey("exchanges.name")),
-        Column("fee", String(20), nullable=False, default="0"),
-        Column("fee_float", Numeric(precision=10), nullable=False, default=0),
+        Column("fee", String(20), nullable=False),
+        Column("fee_float", String(20), nullable=False),
         Column("tkn0_balance", Numeric(precision=64), nullable=True),
         Column("tkn1_balance", Numeric(precision=64), nullable=True),
         Column("z_0", Numeric(precision=64), nullable=True),
@@ -354,7 +352,7 @@ class Pool:
     last_updated_block: Optional[int] = None
     contract_initialized: Optional[bool] = False
     fee: Optional[str] = None
-    fee_float: Optional[float] = None
+    fee_float: Optional[str] = None
     address: Optional[str] = None
     anchor: Optional[str] = None
     pair_name: Optional[str] = None
@@ -386,16 +384,10 @@ class Pool:
             else f"{self.exchange_name} {self.pair_name} {self.fee}"
         )
 
-        if self.exchange_name == 'uniswap_v3':  # TODO: name should be in config (how???)
-            self.fee_float = float(self.fee) / 1000000
-        else:
-            self.fee_float = float(self.fee) if self.fee is not None else 0.0
-
     def update(self, new):
         for key, value in new.items():
             if hasattr(self, key):
                 setattr(self, key, value)
-
 
 
 @mapper_registry.mapped
@@ -471,6 +463,3 @@ class Transaction:
     max_priority_fee: int = field(default=None)
     transaction_hash: str = field(default=None)
     failure_reason: str = field(default=None)
-
-
-
