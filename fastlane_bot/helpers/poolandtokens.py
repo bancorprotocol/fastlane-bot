@@ -1,5 +1,5 @@
-__VERSION__ = "1.1"
-__DATE__="02/May/2023"
+__VERSION__ = "1.2"
+__DATE__="05/May/2023"
 
 from typing import Dict, Any, List, Union
 
@@ -276,7 +276,10 @@ class PoolAndTokens:
                 "params": self._params
             }
             try:
-                lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
+                if typed_args["y"] > 0:
+                    lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
+                else:
+                    self.ConfigObj.logger.debug(f"empty carbon pool [{typed_args['cid']}]")
             except Exception as e:
                 errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
                 self.ConfigObj.logger.debug(errmsg)
@@ -308,6 +311,10 @@ class PoolAndTokens:
         args = {"token0": self.tkn0_key, "token1": self.tkn1_key, "sqrt_price_q96": self.sqrt_price_q96, "tick": self.tick, "liquidity": self.liquidity}
         uni3 = Univ3Calculator.from_dict(args, self.fee, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()
+        #print("u3params", params)
+        if params["uniL"] == 0:
+            self.ConfigObj.logger.debug(f"empty univ3 pool [{self.cid}]")
+            return []
         params["cid"] = self.cid
         params["descr"] = self.descr
         params["params"] = self._params
