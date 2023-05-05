@@ -67,11 +67,16 @@ RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" if not TENDERLY_FORK else f"
 
 # COMMAND ----------
 
-del_network = f"cd {bot_path}; brownie networks delete alchemy"
+if config and config == 'tenderly':
+    network_name = 'tenderly'
+else:
+    network_name = 'mainnet'
 
-add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "alchemy" host="{RPC_URL}" chainid=1'
+# COMMAND ----------
 
-mod_network = f'cd {bot_path}; brownie networks modify "alchemy" host="{RPC_URL}" name="mainnet" chainid=1'
+del_network = f"cd {bot_path}; brownie networks delete {network_name}"
+
+add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "{network_name}" host="{RPC_URL}" chainid=1'
 
 set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
