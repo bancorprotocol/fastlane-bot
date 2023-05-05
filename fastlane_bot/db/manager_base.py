@@ -307,7 +307,6 @@ if backend_url is None:
         'of manager_base.py'
     )
 
-print(f'Using database url: {backend_url}')
 metadata = sqlalchemy.MetaData()
 
 # Check if the database exists, and create it if it doesn't
