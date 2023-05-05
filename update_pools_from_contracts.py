@@ -14,6 +14,10 @@
 
 bypairs = dbutils.widgets.get("bypairs")
 TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
+cfg = dbutils.widgets.get("config")
+
+if str(cfg) == 'None':
+    cfg = None
 
 if str(TENDERLY_FORK) == 'None':
     TENDERLY_FORK = None
@@ -86,6 +90,9 @@ if bypairs:
     cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py --bypairs={bypairs}"
 else:
     cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
+
+if cfg == 'tenderly':
+    cmd += ' --config=tenderly'
 
 p = subprocess.Popen(
     cmd,
