@@ -56,9 +56,9 @@ def main(
     pools_and_token_table = pd.read_csv(filepath, low_memory=False).drop('id', axis=1)
     pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
+    cfg = Config.new(config=Config.CONFIG_TENDERLY)
     bot = CarbonBot(ConfigObj=cfg)
-    bot.db.drop_all_tables()
+    # bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
 
 
