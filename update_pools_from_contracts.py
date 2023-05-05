@@ -13,10 +13,15 @@
 # COMMAND ----------
 
 bypairs = dbutils.widgets.get("bypairs")
+TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
+
+if str(TENDERLY_FORK) == 'None':
+    TENDERLY_FORK = None
 
 if str(bypairs) == 'None':
     bypairs = None
     
+POSTGRES_DB = "defaultdb" if not TENDERLY_FORK else TENDERLY_FORK
 bypairs
 
 # COMMAND ----------
@@ -32,6 +37,7 @@ POSTGRES_USER = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_USER")
 POSTGRES_HOST = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_HOST")
 POSTGRES_PORT = "27140"
 
+
 #!/bin/bash
 ! export ETH_PRIVATE_KEY_BE_CAREFUL={ETH_PRIVATE_KEY}
 ! export WEB3_ALCHEMY_PROJECT_ID={WEB3_ALCHEMY_PROJECT_ID}
@@ -39,6 +45,7 @@ POSTGRES_PORT = "27140"
 ! export POSTGRES_USER={POSTGRES_USER}
 ! export POSTGRES_HOST={POSTGRES_HOST}
 ! export POSTGRES_PORT={POSTGRES_PORT}
+! export POSTGRES_DB={POSTGRES_DB}
 
 
 with open(f'{bot_path}/.env', 'w') as f:
@@ -48,11 +55,14 @@ with open(f'{bot_path}/.env', 'w') as f:
     f.write(f'POSTGRES_USER={POSTGRES_USER} \n')
     f.write(f'POSTGRES_HOST={POSTGRES_HOST} \n')
     f.write(f'POSTGRES_PORT={POSTGRES_PORT} \n')
+    f.write(f'POSTGRES_DB={POSTGRES_DB} \n')
     f.close()
 
 # COMMAND ----------
 
-RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+MAINNET_URL = 'https://eth-mainnet.alchemyapi.io/v2/'
+TENDERLY_URL = 'https://rpc.tenderly.co/fork/'
+RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" if not TENDERLY_FORK else f"{TENDERLY_URL}{WEB3_ALCHEMY_PROJECT_ID}"
 
 # COMMAND ----------
 
