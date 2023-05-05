@@ -16,8 +16,8 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("bypairs", "None")
-dbutils.widgets.text("TENDERLY_FORK", "058b12b9-c69e-4676-a7bd-2ba09c9b23c7")
+# dbutils.widgets.text("bypairs", "None")
+# dbutils.widgets.text("TENDERLY_FORK", "058b12b9-c69e-4676-a7bd-2ba09c9b23c7")
 
 # COMMAND ----------
 
