@@ -21,7 +21,7 @@ if str(TENDERLY_FORK) == 'None':
 if str(bypairs) == 'None':
     bypairs = None
     
-cfg = 'tenderly' if TENDERLY_FORK else None
+cfg = 'tenderly' if TENDERLY_FORK else 'mainnet'
 POSTGRES_DB = "defaultdb" if not TENDERLY_FORK else TENDERLY_FORK
 bypairs
 
@@ -67,16 +67,9 @@ RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" if not TENDERLY_FORK else f"
 
 # COMMAND ----------
 
-if config and config == 'tenderly':
-    network_name = 'tenderly'
-else:
-    network_name = 'mainnet'
+del_network = f"cd {bot_path}; brownie networks delete {cfg}"
 
-# COMMAND ----------
-
-del_network = f"cd {bot_path}; brownie networks delete {network_name}"
-
-add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "{network_name}" host="{RPC_URL}" chainid=1'
+add_network = f'cd {bot_path}; brownie networks import ./brownie-config.yaml true; brownie networks add "Ethereum" "{cfg}" host="{RPC_URL}" chainid=1'
 
 set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
