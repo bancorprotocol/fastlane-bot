@@ -168,21 +168,20 @@ class DatabaseManagerBase(ContractHelper):
         """
         Connects to the database. If the database does not exist, it creates it.
         """
-        if backend_url is None:
-            backend_url = self.ConfigObj.POSTGRES_URL
-            print(f"Using default database url: {backend_url}")
-
-        global Session, engine, session, metadata
-        metadata = sqlalchemy.MetaData()
-
-        # Check if the database exists, and create it if it doesn't
-        if not database_exists(backend_url):
-            create_database(backend_url)
-
-        engine = sqlalchemy.create_engine(backend_url)
-        models.mapper_registry.metadata.create_all(engine)
-        Session = sessionmaker(bind=engine)
-        session = Session()
+        # if backend_url is None:
+        #     backend_url = self.ConfigObj.POSTGRES_URL
+        #
+        # global Session, engine, session, metadata
+        # metadata = sqlalchemy.MetaData()
+        #
+        # # Check if the database exists, and create it if it doesn't
+        # if not database_exists(backend_url):
+        #     create_database(backend_url)
+        #
+        # engine = sqlalchemy.create_engine(backend_url)
+        # models.mapper_registry.metadata.create_all(engine)
+        # Session = sessionmaker(bind=engine)
+        # session = Session()
 
     def token_key_from_symbol_and_address(self, tkn_address: str, tkn_symbol: str) -> str:
         """

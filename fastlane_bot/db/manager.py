@@ -63,8 +63,9 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         logged_strategies = []
         last_updated_block = 0
         for index, row in filtered_table.iterrows():
-            self.c.logger.info(f"[update_pools_from_contracts] Updating index {index} of {len(filtered_table)}")
             params = row.to_dict()
+            self.c.logger.info(f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params['cid']}, pair_name={params['pair_name']}...")
+
             block_number = self.ConfigObj.w3.eth.block_number
             params['last_updated_block'] = block_number
 
@@ -85,8 +86,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                     params['cid'] = str(strategy[0])
                     logged_strategies.append(params['cid'])
 
-                if strategy and str(strategy[0]) in logged_strategies:
-                    continue
+                # if strategy and str(strategy[0]) in logged_strategies:
+                #     continue
 
 
                 pool = self.get_pool(cid=str(params['cid']))
