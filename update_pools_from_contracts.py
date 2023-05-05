@@ -76,7 +76,13 @@ with open(f'{bot_path}/.env', 'w') as f:
 
 MAINNET_URL = 'https://eth-mainnet.alchemyapi.io/v2/'
 TENDERLY_URL = 'https://rpc.tenderly.co/fork/'
-RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" if not TENDERLY_FORK else f"{TENDERLY_URL}{WEB3_ALCHEMY_PROJECT_ID}"
+
+if not TENDERLY_FORK:
+    RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" 
+    
+else:
+    RPC_URL = f"{TENDERLY_URL}{TENDERLY_FORK}"
+
 
 RPC_URL
 
