@@ -292,7 +292,7 @@ class CarbonBot(CarbonBotBase):
 
         for i in range(len(scaled_best_trade_instructions_dic)):
             if scaled_best_trade_instructions_dic[i]["tknin"] == best_src_token:
-                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
+                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.999
             else:
                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
 
@@ -427,18 +427,10 @@ class CarbonBot(CarbonBotBase):
             CC = CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            if len(CC) > 5:
-                continue
-            pstart = (
-                {
-                    tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p,
-                }
-                if len(CC) != 0
-                else None
-            )
             O = CPCArbOptimizer(CC)
             src_token = tkn1
             try:
+                pstart = ({tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p})
                 r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
                 assert not r.is_error
             except Exception as e:
@@ -449,9 +441,8 @@ class CarbonBot(CarbonBotBase):
                 except Exception as e:
                     # c.logger.info(e)
                     continue
-
-            profit_src = -r.result
             try:
+                profit_src = -r.result
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
@@ -480,7 +471,7 @@ class CarbonBot(CarbonBotBase):
             try:
                 netchange = trade_instructions_df.iloc[-1]
             except Exception as e:
-                netchange = [500]
+                netchange = [500] #an arbitrary large number
 
             bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
             self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
@@ -598,11 +589,10 @@ class CarbonBot(CarbonBotBase):
                 CC_cc = CPCContainer(curve_combo)
                 O = CPCArbOptimizer(CC_cc)
                 src_token = tkn1
-                pstart = ({tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}) #this intentially selects the non_carbon curve
-                r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
-
-                profit_src = -r.result
                 try:
+                    pstart = ({tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}) #this intentially selects the non_carbon curve
+                    r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
+                    profit_src = -r.result
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
@@ -622,7 +612,7 @@ class CarbonBot(CarbonBotBase):
                 try:
                     netchange = trade_instructions_df.iloc[-1]
                 except Exception as e:
-                    netchange = [500]
+                    netchange = [500] #an arbitrary large number
 
                 bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
                 self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
