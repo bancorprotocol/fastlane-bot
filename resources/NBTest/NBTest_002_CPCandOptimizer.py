@@ -114,6 +114,7 @@ assert c1.primary == "WETH/USDC"
 assert c1.pairo.isprimary == False
 assert c1.buysell(verbose=True, withprice=True) == 'sell-WETH @ 2000.00 USDC per WETH'
 assert c1.buysell(verbose=False) == "s"
+assert c1.buysell(verbose=False, withprice=True) == ('s', 2000.0000000000005)
 assert c1.buysell() == "s"
 
 # buying ETH at 1500-1499 USDC per ETH
@@ -123,6 +124,7 @@ assert c2.primary == "WETH/USDC"
 assert c2.pairo.isprimary == True
 assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
 assert c2.buysell(verbose=False) == "b"
+assert c2.buysell(verbose=False, withprice=True) == ('b', 1500.0000000000002)
 assert c2.buysell() == "b"
 
 # buying ETH at 1500-1499 USDC per ETH
@@ -132,6 +134,7 @@ assert c2.primary == "WETH/USDC"
 assert c2.pairo.isprimary == True
 assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
 assert c2.buysell(verbose=False) == "b"
+assert c2.buysell(verbose=False, withprice=True) == ('b', 1500.0000000000002)
 assert c2.buysell() == "b"
 
 # univ3 1899-1901 @ 1900 USDC per WETH
@@ -141,6 +144,7 @@ assert c3.primary == "WETH/USDC"
 assert c3.pairo.isprimary == True
 assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
 assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell(verbose=False, withprice=True) == ('bs', 1900.0000000000007)
 assert c3.buysell() == "bs"
 
 # univ3 1899-1901 @ 1900 USDC per WETH
@@ -150,6 +154,7 @@ assert c3.primary == "WETH/USDC"
 assert c3.pairo.isprimary == False
 assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
 assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell(verbose=False, withprice=True) == ('bs', 1900.)
 assert c3.buysell() == "bs"
 
 # univ3 1899-1901 @ 1899 USDC per WETH (WETH low, therefore 100% in WETH, therefore sell WETH)
@@ -159,6 +164,7 @@ assert c4.primary == "WETH/USDC"
 assert c4.pairo.isprimary == True
 assert c4.buysell(verbose=True, withprice=True) == 'sell-WETH @ 1899.00 USDC per WETH'
 assert c4.buysell(verbose=False) == "s"
+assert c4.buysell(verbose=False, withprice=True) == ('s', 1899.0000000000002)
 assert c4.buysell() == "s"
 
 # univ3 1899-1901 @ 1901 USDC per WETH (WETH high, therefore 100% in USDC, therefore buy WETH)
@@ -168,6 +174,7 @@ assert c5.primary == "WETH/USDC"
 assert c5.pairo.isprimary == True
 assert c5.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1901.00 USDC per WETH'
 assert c5.buysell(verbose=False) == "b"
+assert c5.buysell(verbose=False, withprice=True) == ('b', 1900.9999999999998)
 assert c5.buysell() == "b"
 
 # univ2 (tknb=2000 USDC, tknq=1 ETH)
@@ -177,6 +184,7 @@ assert c6.primary == "WETH/USDC"
 assert c6.pairo.isprimary == False
 assert c6.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
 assert c6.buysell(verbose=False) == "bs"
+assert c6.buysell(verbose=False, withprice=True) == ('bs', 2000.)
 assert c6.buysell() == "bs"
 
 # univ2 (tknq=2000 USDC, tknb=1 ETH)
@@ -186,6 +194,7 @@ assert c7.primary == "WETH/USDC"
 assert c7.pairo.isprimary == True
 assert c7.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
 assert c7.buysell(verbose=False) == "bs"
+assert c7.buysell(verbose=False, withprice=True) == ('bs', 2000.)
 assert c7.buysell() == "bs"
 
 # ## P
@@ -221,6 +230,106 @@ assert len(CC.byparams(foo=1)) == 5
 assert len(CC.byparams(foo=2)) == 15
 assert len(CC.byparams(foo=3)) == 0
 assert raises (CC.byparams, foo=1, bar=2) == "currently only one param allowed {'foo': 1, 'bar': 2}"
+
+# ## itm
+
+# +
+itm0 = CPC.itm0
+assert CPC.ITM_THRESHOLDPC == 0.01
+
+assert itm0( ("bs", 1000), ("bs", 1000) ) == False
+assert itm0( ("bs", 1000), ("bs", 1009) ) == False
+assert itm0( ("bs", 1009), ("bs", 1000) ) == False
+assert itm0( ("bs", 1000), ("bs", 1011) ) == True
+assert itm0( ("bs", 1011), ("bs", 1000) ) == True
+assert itm0( ("bs", 1000), ("bs", 1011), thresholdpc=0.02 ) == False
+assert itm0( ("bs", 1011), ("bs", 1000), thresholdpc=0.02 ) == False
+assert itm0( ("bs", 1000), ("bs", 1021), thresholdpc=0.02 ) == True
+assert itm0( ("bs", 1021), ("bs", 1000), thresholdpc=0.02 ) == True
+
+assert itm0( ("b", 1000), ("s", 1100) ) == False
+assert itm0( ("b", 1000), ("b", 1100) ) == False
+assert itm0( ("b", 1000), ("bs", 1100) ) == False
+assert itm0( ("s", 1000), ("s", 1100) ) == False
+assert itm0( ("s", 1000), ("b", 1100) ) == True
+assert itm0( ("s", 1000), ("bs", 1100) ) == True
+assert itm0( ("bs", 1000), ("s", 1100) ) == False
+assert itm0( ("bs", 1000), ("b", 1100) ) == True
+assert itm0( ("bs", 1000), ("bs", 1100) ) == True
+
+assert itm0( ("s", 1000), ("b", 900) ) == False
+assert itm0( ("s", 1000), ("s", 900) ) == False
+assert itm0( ("s", 1000), ("bs", 900) ) == False
+assert itm0( ("b", 1000), ("b", 900) ) == False
+assert itm0( ("b", 1000), ("s", 900) ) == True
+assert itm0( ("b", 1000), ("bs", 900) ) == True
+assert itm0( ("bs", 1000), ("b", 900) ) == False
+assert itm0( ("bs", 1000), ("s", 900) ) == True
+assert itm0( ("bs", 1000), ("bs", 900) ) == True
+# -
+
+
+# c1: sell ETH @ 2000, c2: buy ETH @ 1500 --> no arb
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=2000, pb=2001, isdydx=False)
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=False)
+bs1 = c1.buysell(verbose=False, withprice=True)
+bs2 = c2.buysell(verbose=False, withprice=True)
+assert (bs1, bs2) == (('s', 2000.0000000000005), ('b', 1500.0000000000002))
+assert itm0(bs1, bs2) == False
+assert c1.itm(c2) == c2.itm(c1)
+assert c1.itm(c2) == itm0(bs1, bs2)
+assert c1.itm([c2,c2], aggr=False) == (itm0(bs1, bs2), itm0(bs1, bs2))
+
+# c1: buy ETH @ 2000, c2: sell ETH @ 1500 --> arb
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pb=2000, pa=2001, isdydx=False)
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=1500, pa=1499, isdydx=False)
+bs1 = c1.buysell(verbose=False, withprice=True)
+bs2 = c2.buysell(verbose=False, withprice=True)
+assert (bs1, bs2) == (('b', 2000.9999999999998), ('s', 1499.0000000000002))
+assert itm0(bs1, bs2) == True
+assert c1.itm(c2) == c2.itm(c1)
+assert c1.itm(c2) == itm0(bs1, bs2)
+assert c1.itm([c2,c2], aggr=False) == (itm0(bs1, bs2), itm0(bs1, bs2))
+
+# c1: buy ETH @ 2000, c2: sell ETH @ 1500, c2b: sell ETH @ 2500 --> arb, noarb
+c1  = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pb=2000, pa=2001, isdydx=False)
+c2  = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=1500, pa=1499, isdydx=False)
+c2b = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=2500, pa=2499, isdydx=False)
+CC = CPCContainer([c1,c2,c2b])
+assert c1.itm(c2) == True
+assert c1.itm(c2b) == False
+assert c1.itm([c2,c2b], aggr=False) == (True, False)
+assert c1.itm([c2b,c2], aggr=False) == (False, True)
+assert c1.itm([c2b,c2], aggr=True) == True
+assert c1.itm([c2,c2b], aggr=True) == True
+assert c1.itm([c2b,c2]) == True
+assert c1.itm([c2,c2b]) == True
+assert c1.itm(CC, aggr=True) == True
+assert c1.itm(CC, aggr=False) == (False, True, False)
+
+# c3: buy/sell @ 1900, c4: buy/sell @ 1899 --> arb depending on threshold
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+c4 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1899, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+bs3 = c3.buysell(verbose=False, withprice=True)
+bs4 = c4.buysell(verbose=False, withprice=True)
+assert (bs3, bs4) == (('bs', 1900.0000000000007), ('bs', 1899.0000000000002))
+assert itm0(bs3, bs4, thresholdpc=0.0001) == True
+assert itm0(bs3, bs4, thresholdpc=0.001) == False
+assert c3.itm(c4) == c4.itm(c3)
+assert c3.itm(c4) == itm0(bs3, bs4)
+assert c3.itm([c4,c4], aggr=False) == (itm0(bs3, bs4), itm0(bs3, bs4))
+
+# c3: buy/sell @ 1900, c4: buy/sell @ 1899 --> arb depending on threshold
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+c4 = CPC.from_univ3(pair="USDC/WETH", Pmarg=1/1899, uniPb=1/1898, uniPa=1/1902, uniL=1000, cid="", fee=0, descr="")
+bs3 = c3.buysell(verbose=False, withprice=True)
+bs4 = c4.buysell(verbose=False, withprice=True)
+assert (bs3, bs4) == (('bs', 1900.0000000000007), ('bs', 1899.0000000000002))
+assert itm0(bs3, bs4, thresholdpc=0.0001) == True
+assert itm0(bs3, bs4, thresholdpc=0.001) == False
+assert c3.itm(c4) == c4.itm(c3)
+assert c3.itm(c4) == itm0(bs3, bs4)
+assert c3.itm([c4,c4], aggr=False) == (itm0(bs3, bs4), itm0(bs3, bs4))
 
 # ## TVL
 

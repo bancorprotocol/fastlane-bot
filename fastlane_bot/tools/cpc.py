@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.8.1"
-__DATE__ = "05/May/2023"
+__VERSION__ = "2.9"
+__DATE__ = "06/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -887,7 +887,59 @@ class ConstantProductCurve:
             result += f"{self.pairo.primary_tknb}"
             if withprice:
                 result += f" @ {self.primaryp(withconvention=True)}"
-        return result
+            return result
+        if withprice:
+            return result, self.primaryp()
+        else:
+            return result
+    
+    ITM_THRESHOLDPC = 0.01
+    @classmethod
+    def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
+        """
+        whether or not two positions are in the money against each other
+
+        :bsp1:          first position ("bs", price) [from buysell]
+        :bsp2:          ditto second position
+        :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
+        """
+        if thresholdpc is None:
+            thresholdpc = cls.ITM_THRESHOLDPC
+        bs1, p1 = bsp1
+        bs2, p2 = bsp2
+        
+        # if  prices are equal (within threshold), positions are not in the money
+        if abs(p2/p1-1) < thresholdpc:
+            return False
+        if bs1 == "bs" and bs2 == "bs":
+            return True
+        
+        if p2 > p1:
+            # if p2 > p1: amm1 must sell and amm2 must buy
+            return "s" in bs1 and "b" in bs2
+        else:
+            # if p1 < p2: amm1 must buy and amm2 must sell
+            return "b" in bs1 and "s" in bs2
+    
+    def itm(self, other, *, thresholdpc=None, aggr=True):
+        """
+        like itm0, but self against another curve object
+
+        :other:         other curve object, or iterable thereof
+        :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
+        :aggr:          if True, and an iterable is passed, True iff one is in the money
+        """
+        try:
+            itm_t = tuple(self.itm(o) for o in other)
+            if not aggr:
+                return itm_t
+            return np.any(itm_t)
+        except:
+            pass
+        bss = self.buysell(verbose=False, withprice=True)
+        bso = other.buysell(verbose=False, withprice=True)
+        return self.itm0(bss, bso, thresholdpc=thresholdpc)
+    
     
     def tvl(self, tkn=None, *, mult=1.0, incltkn=False, raiseonerror=True):
         """
