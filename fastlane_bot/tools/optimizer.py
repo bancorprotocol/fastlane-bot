@@ -24,7 +24,7 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.5.5"
+__VERSION__ = "3.6"
 __DATE__ = "06/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
@@ -1398,6 +1398,9 @@ class CPCArbOptimizer(OptimizerBase):
                 J = self.J(dtknfromp_f, plog10)  
                     # ATTENTION: dtknfromp_f takes log10(p) as input
                 if P("debug"):
+                    print("==== J ====>")
+                    print(J)
+                    print("<=== J =====")
                     print("<<<============= JACOBIAN ============= [margp_optimizer]\n")
                 
                 # Update p, dtkn using the Newton-Raphson formula
@@ -1439,11 +1442,15 @@ class CPCArbOptimizer(OptimizerBase):
 
                 # ...and finally check the criterium (percentage changes this step) for convergence
                 if criterium < eps:
-                    if i == 0:
-                        # we break in the first loop, so we restore the initial price estimates
-                        # (if we do log10 / 10**p then we get results that are slightly off zero)
-                        p = np.array(price_estimates_t, dtype=float)
-                    break
+                    if i != 0:
+                        # we don't break in the first iteration because we need this first iteration
+                        # to establish a common baseline price, therefore d logp ~ 0 is not good
+                        # in the first step                      
+                        break
+                    # else:
+                    #     # we break in the first loop, so we restore the initial price estimates
+                    #     # (if we do log10 / 10**p then we get results that are slightly off zero)
+                    #     p = np.array(price_estimates_t, dtype=float)
             ## END MAIN OPTIMIZATION LOOP
             
             if i >= maxiter - 1:
