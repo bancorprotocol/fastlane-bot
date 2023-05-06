@@ -72,10 +72,14 @@ assert len(yis0) == 0
 # #### All
 
 prices_da = {pair: 
-             [(Pair.n(pair), c.primaryp(), c.cid, c.cid[-8:], c.P("exchange"), c.buysell(verbose=False), 
-               c.buysell(verbose=True, withprice=True)) 
-                    for c in cc] for pair, cc in cbp.items()}
-#prices_f
+             [(
+                Pair.n(pair), c.primaryp(), c.cid, c.cid[-8:], c.P("exchange"), c.tvl(tkn=pair.split("/")[0]),
+                "x" if c.itm(cc) else "", c.buysell(verbose=False), c.buysell(verbose=True, withprice=True)
+              ) for c in cc 
+             ] 
+             for pair, cc in cbp.items()
+            }
+#prices_da
 
 # #### Only for pairs that have at least on Carbon pair
 
@@ -93,8 +97,8 @@ curves_by_pair
 
 # #### Dataframe
 
-pricedf0 = pd.DataFrame(prices_l, columns="pair,price,cid,cid0,exchange,bs, bsv".split(","))
-pricedf = pricedf0.drop('cid', axis=1)
+pricedf0 = pd.DataFrame(prices_l, columns="pair,price,cid,cid0,exchange,vl,itm,bs,bsv".split(","))
+pricedf = pricedf0.drop('cid', axis=1).sort_values(by=["pair", "exchange", "cid0"])
 pricedf = pricedf.set_index(["pair", "exchange", "cid0"])
 pricedf
 
