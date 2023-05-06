@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.5.4"
-__DATE__ = "03/May/2023"
+__VERSION__ = "3.5.5"
+__DATE__ = "06/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -1711,6 +1711,7 @@ class CPCArbOptimizer(OptimizerBase):
             ), "p_optimal_t must be set unless errormsg is set"
             if self.method is None:
                 self.method = "margp"
+            self.raiseonerror = False
 
         @property
         def is_error(self):
@@ -1763,19 +1764,26 @@ class CPCArbOptimizer(OptimizerBase):
             return self.optimizer.adjust_curves(dxvals=self.dxvalues)
 
         def trade_instructions(self, ti_format=None):
-            """returns list of TradeInstruction objects"""
-            assert (
-                self.curves is not None
-            ), "curves must be set [do not use minimal results]"
-            assert self.is_error is False, "cannot get this data from an error result"
-            result = (
-                CPCArbOptimizer.TradeInstruction.new(
-                    curve_or_cid=c, tkn1=c.tknx, amt1=dx, tkn2=c.tkny, amt2=dy
+            """
+            returns list of TradeInstruction objects
+            
+            :ti_format:     TIF_OBJECTS, TIF_DICTS, TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF
+            """
+            try:
+                assert self.curves is not None, "curves must be set [do not use minimal results]"
+                assert self.is_error is False, "cannot get this data from an error result"
+                result = (
+                    CPCArbOptimizer.TradeInstruction.new(
+                        curve_or_cid=c, tkn1=c.tknx, amt1=dx, tkn2=c.tkny, amt2=dy
+                    )
+                    for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
+                    if dx != 0 or dy != 0
                 )
-                for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
-                if dx != 0 or dy != 0
-            )
-            return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format)
+                return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format)
+            except AssertionError:
+                if self.raiseonerror:
+                    raise
+                return None
 
     def adjust_curves(self, dxvals, *, verbose=False, raiseonerror=False):
         """
