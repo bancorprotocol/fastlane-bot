@@ -140,7 +140,7 @@ pricedf.loc[Pair.n(pair)]
 
 pi = CA.pair_data(pair)
 O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
+r = O.margp_optimizer(pair.split("/")[0], params=dict(verbose=False, debug=False))
 r.trade_instructions(ti_format=O.TIF_DFAGGR)
 
 r = O.margp_optimizer(pair.split("/")[1])
