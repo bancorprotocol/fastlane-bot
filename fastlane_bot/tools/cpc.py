@@ -7,7 +7,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.9"
+__VERSION__ = "2.9.1"
 __DATE__ = "06/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
@@ -1925,19 +1925,16 @@ class CPCContainer:
         :pair:          alternative to tknq, tknb: pair to calculate price for
         :raiseonerror:  if True, raise exception if no price can be calculated
         :result:        what to return
-                        :pair:      slashpair
-                        :curves:    curves
-                        :data:      prices, weights
+                        :PE_PAIR:      slashpair
+                        :PE_CURVES:    curves
+                        :PE_DATA:      prices, weights
         :returns:       price (quote per base)
         """
-        assert (
-            tknq is not None and tknb is not None
-        ) or pair is not None, (
+        assert tknq is not None and tknb is not None or pair is not None, (
             f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
         )
-        assert not (
-            not tknb is None and not pair is None
-        ), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+        assert not (not tknb is None and not pair is None), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+        
         if not pair is None:
             tknb, tknq = pair.split("/")
         if tknq == tknb:
