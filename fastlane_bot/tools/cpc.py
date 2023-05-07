@@ -7,7 +7,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.10"
+__VERSION__ = "2.10.1"
 __DATE__ = "07/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
@@ -2263,6 +2263,7 @@ class CPCContainer:
         unwrapsingle=True,
         pairs=False,
         raiseonerror=True,
+        verbose=False,
     ):
         """
         calculates prices estimates in the reference token as base token
@@ -2274,10 +2275,15 @@ class CPCContainer:
         :unwrapsingle:  if there is only one quote token, a 1-d array is returned
         :pairs:         if True, returns the slashpairs instead of the prices
         :raiseonerror:  if True, raise exception if no price can be calculated
+        :verbose:       if True, print some progress
         :return:        np.array of prices (quote outer, base inner; quote per base)
         """
         assert not tknqs is None, "tknqs must be set"
         assert not tknbs is None, "tknbs must be set"
+        if isinstance(tknqs, str):
+            tknqs = [t.strip() for t in tknqs.split(",")]
+        if isinstance(tknbs, str):
+            tknbs = [t.strip() for t in tknbs.split(",")]
         # print(f"[price_estimates] tknqs [{len(tknqs)}], tknbs [{len(tknbs)}]")
         # print(f"[price_estimates] tknqs [{len(tknqs)}] = {tknqs} , tknbs [{len(tknbs)}]] = {tknbs} ")
         result = np.array(
@@ -2294,14 +2300,23 @@ class CPCContainer:
                 for q in tknqs
             ]
         )
-        # print("[CPC:price_estimates] result", result)
-
-        if triangulate:
+        
+        flattened = result.flatten()
+        nmissing = len([r for r in flattened if r is None])
+        if verbose:
+            print(f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing")
+            if nmissing > 0 and not triangulate:
+                print(f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]")
+            if nmissing == 0 and triangulate:
+                print(f"[price_estimates] no missing pairs, triangulation not needed")
+        
+        if triangulate and nmissing > 0:
             if triangulate is True:
                 triangulate = self.TRIANGTOKENS
             if isinstance(triangulate, str):
                 triangulate = [t.strip() for t in triangulate.split(",")]
-            #print("[price_estimates] triangulation tokens", triangulate)
+            if verbose:
+                print("[price_estimates] triangulation tokens", triangulate)
             for ib, b in enumerate(tknbs):
                 for iq, q in enumerate(tknqs):
                     if result[iq][ib] is None:
@@ -2317,7 +2332,20 @@ class CPCContainer:
                         result1 = np.mean(result1) if len(result1) > 0 else None
                         #print(f"[price_estimates] final result {b}/{q} = {result1}")
                         result[iq][ib] = result1
-                
+        
+        flattened = result.flatten()
+        nmissing = len([r for r in flattened if r is None])
+        if verbose:
+            if nmissing > 0:
+                missing = {
+                    f"{b}/{q}"
+                    for ib, b in enumerate(tknbs)
+                    for iq, q in enumerate(tknqs)
+                    if result[iq][ib] is None
+                }
+                print(f"[price_estimates] after triangulation {nmissing} missing", missing)
+            else:
+                print("[price_estimates] no missing pairs after triangulation")  
         if raiseonerror:
             missing = {
                 f"{b}/{q}"
