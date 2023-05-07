@@ -350,7 +350,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
                 exchange_id=trade_instructions[idx].exchange_id,
-                custom_address=trade_instructions[
+                custom_address=pools[idx].anchor if trade_instructions[idx].exchange_id == 1 else trade_instructions[
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
                 fee_float=fee_float[idx],
