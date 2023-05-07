@@ -2,8 +2,6 @@
 # Auto generated test file `test_010_BotTemplate.py`
 # ------------------------------------------------------------
 # source file   = NBTest_010_BotTemplate.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 010
 # test comment  = BotTemplate
 # ------------------------------------------------------------

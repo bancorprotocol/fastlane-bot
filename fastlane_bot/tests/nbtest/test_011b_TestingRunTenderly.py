@@ -2,8 +2,6 @@
 # Auto generated test file `test_011b_TestingRunTenderly.py`
 # ------------------------------------------------------------
 # source file   = NBTest_011b_TestingRunTenderly.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 011b
 # test comment  = TestingRunTenderly
 # ------------------------------------------------------------
@@ -32,6 +30,13 @@ require("2.0", __VERSION__)
 def test_tenderly_configuration():
 # ------------------------------------------------------------
     
+    # + jupyter={"outputs_hidden": false}
+    ADDRDEC = dict(
+        USDC=("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 6),
+        WETH=("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 18),
+    )
+    # -
+    
     C_nw = ConfigNetwork.new(network=ConfigNetwork.NETWORK_TENDERLY)
     c1, c2 = C_nw.shellcommand().splitlines()
     print(c1)
@@ -52,10 +57,8 @@ def test_tenderly_configuration():
     assert bot.db.carbon_controller.address == '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1'
     assert str(type(bot.db)) == "<class 'fastlane_bot.db.manager.DatabaseManager'>"
     
-    # +
     #provided here for convenience; must be commented out for tests
-    #bot.update(drop_tables=False, only_carbon=False, top_n=10)
-    # -
+    bot.update(drop_tables=True, only_carbon=False, top_n=100)
     
     CCm = bot.get_curves()
     CCc1 = CCm.byparams(exchange="carbon_v1")
@@ -88,8 +91,6 @@ def test_tenderly_configuration():
     
     CCm = bot.get_curves()
     len(CCm)
-    
-    raise
     
     # +
     #CCm.plot()

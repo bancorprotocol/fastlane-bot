@@ -2,8 +2,6 @@
 # Auto generated test file `test_001_Config.py`
 # ------------------------------------------------------------
 # source file   = NBTest_001_Config.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 001
 # test comment  = Config
 # ------------------------------------------------------------

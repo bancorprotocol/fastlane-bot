@@ -2,8 +2,6 @@
 # Auto generated test file `test_011_TestingRun.py`
 # ------------------------------------------------------------
 # source file   = NBTest_011_TestingRun.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 011
 # test comment  = TestingRun
 # ------------------------------------------------------------
