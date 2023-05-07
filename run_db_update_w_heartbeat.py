@@ -2,6 +2,7 @@ import os
 import platform
 
 import click
+import numpy as np
 import pandas as pd
 
 from fastlane_bot import Config
@@ -64,8 +65,14 @@ def main(
                                      'tkn0_symbol', 'tkn1_symbol']
 
     filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
-    pools_and_token_table = pd.read_csv(filepath, low_memory=False)
-    pools_and_token_table = pools_and_token_table[[col for col in pools_and_token_table_columns if col in pools_and_token_table.columns]]
+    pools_and_token_table = pd.read_csv(filepath, low_memory=False).sample(10)
+    print(f"pools_and_token_table: {pools_and_token_table.columns}")
+    pools_and_token_table = pools_and_token_table.rename({'anchor_address': 'anchor'}, axis=1)
+    # for col in pools_and_token_table_columns:
+    #     if col not in pools_and_token_table.columns:
+    #         pools_and_token_table[col] = [np.NaN for _ in range(len(pools_and_token_table))]
+
+    pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
     bot = CarbonBot(ConfigObj=cfg)
     print(f"bot endpoint_uri: {bot.c.w3.provider.endpoint_uri}")

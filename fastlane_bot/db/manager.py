@@ -54,11 +54,12 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
         # Add Carbon_v1 pairs to the table if they do not already exist
-        self.add_missing_pairs_to_table(pools_and_token_table)
+        pools_and_token_table = self.add_missing_pairs_to_table(pools_and_token_table)
 
+        # Filter the table by the pairs to update
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
 
-        print(f"filtered_table: {filtered_table['pair_name'].unique().tolist()}")
+        print(f"filtered_table len {len(filtered_table)}")
 
         for index, row in filtered_table.iterrows():
             self.update_pool_from_row(row, index, filtered_table)
@@ -88,6 +89,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 'pair_name'].unique().tolist():
                 dbrow = self.create_dbrow(pair_name, pools_and_token_table)
                 pools_and_token_table = pools_and_token_table.append(dbrow, ignore_index=True)
+                self.c.logger.info(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
 
         return pools_and_token_table
 
@@ -195,8 +197,103 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             except Exception as e:
                 self.c.logger.error(f"[update_pools_from_contracts] Error updating pool: {e}, skipping...")
 
+    def get_strategies_for_row(self, params: Dict[str, Any]) -> List[Tuple[str, str]]:
+        """
+        Gets the strategies for a row in the pools_and_token_table.
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+
+        Returns
+        -------
+        strategies : List[Tuple[str, str]]
+            The strategies for the row.
+
+        """
+        if params['exchange_name'] == 'carbon_v1':
+            return self.get_strategies((params['tkn0_address'], params['tkn1_address']))
+        else:
+            return [None]
+
+    def update_pool_from_strategy(self, params: Dict[str, Any], strategy: Tuple[str, str], contract: Contract):
+        """
+        Updates a pool from a strategy. The params dictionary contains data from a specific row in the pools_and_token_table, and the strategy provides additional information needed to update the pool.
+
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+        strategy : Tuple[str, str]
+            The strategy tuple.
+        contract : Contract
+            The contract to update the pool from.
+
+        """
+        if strategy is not None:
+            params = self.update_params_from_strategy(params, strategy)
+
+        params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(
+            params['fee'])
+
+        pool = self.get_pool(cid=str(params['cid']))
+        if pool is None:
+            self.create_pool_pair_tokens(params)
+            pool = self.get_pool(cid=str(params['cid']))
+
+        liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
+                                                            contract=contract,
+                                                            address=params['address'],
+                                                            strategy=strategy)
+        pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
+        update_params = {**pool_data, **liquidity_params}
+        self.update_pool(update_params, params)
+
+    def update_params_from_strategy(self, params: Dict[str, Any], strategy: Tuple[int, str, Tuple[str, str]]) -> Dict[
+        str, Any]:
+        """
+        Updates the params dictionary from a strategy.
+
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+        strategy : Tuple[int, str, Tuple[str, str]]
+            The strategy tuple.
+
+        Returns
+        -------
+        params : Dict[str, Any]
+            The updated params dictionary.
+
+        """
+        params['cid'] = str(strategy[0])
+        params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(
+            strategy[2][0]), self.c.w3.toChecksumAddress(strategy[2][1])
+        tkn0 = self.get_or_create_token(address=params['tkn0_address'])
+        tkn1 = self.get_or_create_token(address=params['tkn1_address'])
+        params['tkn0_symbol'], params['tkn1_symbol'] = tkn0.symbol, tkn1.symbol
+        params['tkn0_decimals'], params['tkn1_decimals'] = tkn0.decimals, tkn1.decimals
+        params['tkn0_key'], params['tkn1_key'] = tkn0.key, tkn1.key
+        params['pair_name'] = f"{tkn0.key}/{tkn1.key}"
+        params['desc'] = f"carbon_v1 {tkn0.key}/{tkn1.key} 0.002"
+        params['fee'] = 0.002
+        return params
+
     def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
+        """
+        Updates pools in a loop. This is the main function that should be called to update pools.
+
+        Parameters
+        ----------
+        bypairs : List[str]
+            The list of pairs to update.
+        update_interval_seconds : int
+            The update interval in seconds.
+        pools_and_token_table : pd.DataFrame
+            The pools and token table to update from.
+        """
         while True:
             self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table)
             self.c.logger.info(f"************************* \n"
