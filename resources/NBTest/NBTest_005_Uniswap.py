@@ -130,6 +130,61 @@ assert u3.tick == u2.tick
 assert u3.sp96 == u2.sp96
 assert u3.sp96 == u2.sp96
 
+# ## rounding issue v1_4
+
+# ## Univ3 Issue
+
+# 2023-05-07 11:58:15,782 [fastlane:ERROR] - [get_curves] error converting pool to curve PoolAndTokens(ConfigObj=Config(network=_ConfigNetworkMainnet(), db=_ConfigDBPostgres(), logger=_ConfigLoggerDefault(), provider=_ConfigProviderAlchemy()), id=503, cid='566', last_updated=datetime.datetime(2023, 5, 3, 18, 12, 44, 553816), last_updated_block=17208126, descr='uniswap_v3 USDP-89E1/USDC-eB48 500', pair_name='USDP-89E1/USDC-eB48', exchange_name='uniswap_v3', fee=500.0, tkn0_balance=None, tkn1_balance=None, z_0=0, y_0=0, A_0=0, B_0=0, z_1=0, y_1=0, A_1=0, B_1=0, sqrt_price_q96=Decimal('79204503519896773685362'), tick=-276330, tick_spacing=10, liquidity=Decimal('420303555647537236581'), address='0x5720EB958685dEEEB5AA0b34F677861cE3a8c7F5', anchor='NaN', tkn0='USDP-89E1', tkn1='USDC-eB48', tkn0_address='0x8E870D67F660D95d5be530380D0eC0bd388289E1', tkn0_decimals=18, tkn1_address='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', tkn1_decimals=6, tkn0_key='USDP-89E1', tkn1_key='USDC-eB48')
+# [ERR=uniPa < Pmarg < uniPb required (0.9994028521922611, 0.9994028521901741, 1.000402704895686)]
+
+#     sqrt_price_q96=Decimal('79204503519896773685362'), 
+#     tick=-276330, 
+#     tick_spacing=10, 
+#     liquidity=Decimal('420303555647537236581'), 
+#     address='0x5720EB958685dEEEB5AA0b34F677861cE3a8c7F5', 
+#     anchor='NaN', tkn0='USDP-89E1', 
+#     tkn1='USDC-eB48', 
+#     tkn0_address='0x8E870D67F660D95d5be530380D0eC0bd388289E1', 
+#     tkn0_decimals=18, 
+#     tkn1_address='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
+#     tkn1_decimals=6, 
+#     tkn0_key='USDP-89E1', 
+#     tkn1_key='USDC-eB48')
+
+u3data = dict(
+    sqrt_price_q96=Decimal('79204503519896773685362'), 
+    tick=-276330, 
+    tick_spacing=10, 
+    liquidity=Decimal('420303555647537236581'), 
+    address='0x5720EB958685dEEEB5AA0b34F677861cE3a8c7F5', 
+    anchor='NaN', tkn0='USDP-89E1', 
+    tkn1='USDC-eB48', 
+    tkn0_address='0x8E870D67F660D95d5be530380D0eC0bd388289E1', 
+    tkn0_decimals=18, 
+    tkn1_address='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
+    tkn1_decimals=6, 
+    tkn0_key='USDP-89E1',
+    tkn1_key='USDC-eB48'
+)
+u3data["token0"] = u3data["tkn0_address"]
+u3data["token1"] = u3data["tkn1_address"]
+
+u3 = U3.from_dict(u3data, tkn0decv=u3data["tkn0_decimals"], 
+                  tkn1decv=u3data["tkn1_decimals"], fee_const=U3.FEE100)
+
+u3d = u3.cpc_params()
+u3d
+
+pa,pb = u3.papb
+pm = u3.p
+r = u3.cpc_params()
+assert r["uniPa"] == pa
+assert r["uniPb"] == pb
+assert r["uniPa"] <= r["Pmarg"]
+assert r["uniPb"] >= r["Pmarg"]
+print(r["Pmarg"]/pm-1)
+assert abs(r["Pmarg"]/pm-1)<1e-10
+
 # ## with cpc
 
 data = {
