@@ -18,9 +18,10 @@
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
 #from fastlane_bot.tools.simplepair import SimplePair
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
-#import carbon.tools.tokenscale as ts
+import carbon.tools.tokenscale as ts
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 from fastlane_bot.testing import *
@@ -413,6 +414,59 @@ r = Om.price_estimates(tknq="USDC", tknbs=["WETH", "WBTC"])
 assert iseq(r[0],  1820.89875275)
 assert iseq(r[1],  28351.08150121)
 
+# ## triangle estimates
+
+CC = CPCContainer()
+CC += [CPC.from_univ3(pair=f"{T.WETH}/{T.USDC}", cid="uv3-1", fee=0, descr="",
+                     uniPa=2000, uniPb=2002, Pmarg=2001, uniL=10*m.sqrt(2000))]
+CC += [CPC.from_univ3(pair=f"{T.WBTC}/{T.USDC}", cid="uv3-2", fee=0, descr="",
+                     uniPa=20000, uniPb=20020, Pmarg=20010, uniL=1*m.sqrt(20000))]
+#CC.plot()
+
+help(CC.price_estimate)
+
+assert iseq(CC.price_estimate(pair=f"{T.WETH}/{T.USDC}"), 2001)
+assert iseq(CC.price_estimate(pair=f"{T.WBTC}/{T.USDC}"), 20010)
+assert iseq(CC.price_estimate(pair=f"{T.USDC}/{T.WETH}"), 1/2001)
+assert iseq(CC.price_estimate(pair=f"{T.USDC}/{T.WBTC}"), 1/20010)
+
+assert CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_PAIR) == f"{T.WETH}/{T.USDC}"
+r = CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_CURVES)
+assert len(r) == 1
+assert r[0][0].cid=="uv3-1"
+assert iseq(r[0][1], 2001)
+assert iseq(r[0][2], 200000.0)
+r = CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_DATA)
+assert len(r) == 2
+assert r[0].shape == (1,)
+assert r[1].shape == (1,)
+assert iseq(r[0][0], 2001)
+
+help(CC.price_estimates)
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], unwrapsingle=True, pairs=True)
+assert r.shape == (1,)
+assert r[0] == f"{T.WBTC}/{T.WETH}"
+assert CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], pairs=True) == r
+r
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], unwrapsingle=False, pairs=True)
+assert r.shape == (1,1)
+assert r[0][0] == f"{T.WBTC}/{T.WETH}"
+r
+
+assert raises(CC.price_estimates, tknqs=[T.WETH], tknbs=[T.WBTC], 
+             triangulate=False).startswith("('no price found")
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], raiseonerror=False, triangulate=False)
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], raiseonerror=False, triangulate=False)
+assert r.shape == (1,)
+assert r[0] is None
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], triangulate=[T.USDC])
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], triangulate=True)
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC])
+assert iseq(r[0], 10)
+
 # ## price estimates in optimizer
 
 prices = {"USDC":1, "LINK": 5, "AAVE": 100, "MKR": 500, "WETH": 2000, "WBTC": 20000}
@@ -509,65 +563,6 @@ assert iseq(1, 1.00001) == False
 assert iseq(1, 1.000001)
 assert iseq(1, 1.000001, eps=1e-7) == False
 assert iseq("1", 1) == False
-
-# ## CarbonOrderUI integration
-
-pass
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
-# c = o.as_cpc
-# assert o.pair.slashpair == "ETH/USDC"
-# assert o.tkn == "ETH"
-# assert o.p_start == 2500
-# assert o.p_end == 3000
-# assert o.p_marg == 2500
-# assert o.y == 10
-# assert o.yint == 10
-# assert c.pair == o.pair.slashpair
-# assert c.tknb == o.pair.tknb
-# assert c.tknq == o.pair.tknq
-# assert c.x_act == o.y
-# assert c.y_act == 0
-# assert iseq(o.p_start, c.p, c.p_min)
-# assert iseq(o.p_end, c.p_max)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
-# c = o.as_cpc
-# assert o.pair.slashpair == "ETH/USDC"
-# assert o.tkn == "USDC"
-# assert o.p_start == 1500
-# assert o.p_end == 1000
-# assert o.p_marg == 1500
-# assert o.y == 1000
-# assert o.yint == 1000
-# assert c.pair == o.pair.slashpair
-# assert c.tknb == o.pair.tknb
-# assert c.tknq == o.pair.tknq
-# assert c.x_act == 0
-# assert c.y_act == o.y
-# assert iseq(o.p_start, c.p, c.p_max)
-# assert iseq(o.p_end, c.p_min)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
-# c = o.as_cpc
-# assert o.y == 7
-# assert iseq(c.x_act, o.y)
-# assert iseq(c.y_act, 0)
-# assert iseq(o.p_marg, c.p, c.p_min)
-# assert iseq(o.p_end, c.p_max)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
-# c = o.as_cpc
-# assert o.y == 700
-# assert iseq(c.x_act, 0)
-# assert iseq(c.y_act, o.y)
-# assert iseq(o.p_marg, c.p, c.p_max)
-# assert iseq(o.p_end, c.p_min)
-# -
 
 # ## New CPC features in v2
 
@@ -688,60 +683,50 @@ assert len(CC2.tknxl()) == len(CC2)
 
 # ## TokenScale tests
 
-pass
+TSB = ts.TokenScaleBase()
+assert raises (TSB.scale,"ETH")
+assert TSB.DEFAULT_SCALE == 1e-2
 
-# +
-# TSB = ts.TokenScaleBase()
-# assert raises (TSB.scale,"ETH")
-# assert TSB.DEFAULT_SCALE == 1e-2
+TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
+TS
 
-# +
-# TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
-# TS
+assert TS("USDC") == 1
+assert TS("ETH") == 1000
+assert TS("BTC") == 10000
+assert TS("MEH") == TS.DEFAULT_SCALE
 
-# +
-# assert TS("USDC") == 1
-# assert TS("ETH") == 1000
-# assert TS("BTC") == 10000
-# assert TS("MEH") == TS.DEFAULT_SCALE
+TSD = ts.TokenScaleData
 
-# +
-# TSD = ts.TokenScaleData
+tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
+assert tknset - set(TSD.scale_dct.keys()) == set()
 
-# +
-# tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
-# assert tknset - set(TSD.scale_dct.keys()) == set()
+cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+assert cc1.tokenscale is cc1.TOKENSCALE
+assert cc1.tknx == "ETH"
+assert cc1.tkny == "USDC"
+assert cc1.scalex == 1
+assert cc1.scaley == 1
+cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+assert cc2.tknx == "BTC"
+assert cc2.tkny == "MEH"
+assert cc2.scalex == 1
+assert cc2.scaley == 1
+assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
 
-# +
-# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-# assert cc1.tokenscale is cc1.TOKENSCALE
-# assert cc1.tknx == "ETH"
-# assert cc1.tkny == "USDC"
-# assert cc1.scalex == 1
-# assert cc1.scaley == 1
-# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-# assert cc2.tknx == "BTC"
-# assert cc2.tkny == "MEH"
-# assert cc2.scalex == 1
-# assert cc2.scaley == 1
-# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
-
-# +
-# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-# cc1.set_tokenscale(TSD)
-# assert cc1.tokenscale != cc1.TOKENSCALE
-# assert cc1.tknx == "ETH"
-# assert cc1.tkny == "USDC"
-# assert cc1.scalex == 1e3
-# assert cc1.scaley == 1e0
-# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-# cc2.set_tokenscale(TSD)
-# assert cc2.tknx == "BTC"
-# assert cc2.tkny == "MEH"
-# assert cc2.scalex == 1e4
-# assert cc2.scaley == 1e-2
-# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
-# -
+cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+cc1.set_tokenscale(TSD)
+assert cc1.tokenscale != cc1.TOKENSCALE
+assert cc1.tknx == "ETH"
+assert cc1.tkny == "USDC"
+assert cc1.scalex == 1e3
+assert cc1.scaley == 1e0
+cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+cc2.set_tokenscale(TSD)
+assert cc2.tknx == "BTC"
+assert cc2.tkny == "MEH"
+assert cc2.scalex == 1e4
+assert cc2.scaley == 1e-2
+assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
 
 # ## dx_min and dx_max etc
 
@@ -1369,17 +1354,18 @@ for i in range(N):
     
 CC = CCc.bycids().add(CCm)
 CC.plot()
-# -
 
-O = CPCArbOptimizer(CC)
-r = O.simple_optimizer()
-print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
-prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
-print("prices post arb:", prices_ex)
-print("stdev", np.std(prices_ex))
-#CC.plot()
-CC_ex.plot()
+# +
+# O = CPCArbOptimizer(CC)
+# r = O.simple_optimizer()
+# print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
+# CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+# prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
+# print("prices post arb:", prices_ex)
+# print("stdev", np.std(prices_ex))
+# #CC.plot()
+# CC_ex.plot()
+# -
 
 r.dxvalues
 
