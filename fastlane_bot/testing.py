@@ -5,8 +5,8 @@ USAGE
 
     from fastlane_bot.testing import *
 """
-__VERSION__ = "1.1"
-__DATE__ = "03/May/2023"
+__VERSION__ = "1.2"
+__DATE__ = "07/May/2023"
 
 import math as m
 import numpy as np
@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import os
 import sys
 from decimal import Decimal
+import time
 from itertools import zip_longest
 
 
