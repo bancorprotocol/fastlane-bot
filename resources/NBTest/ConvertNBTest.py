@@ -18,8 +18,8 @@ import sys
 import os
 import re
 from collections import namedtuple
-__VERSION__ = "1.3.1 [fastlane]"
-__DATE__ = "30/Apr/2023"
+__VERSION__ = "1.4 [fastlane]"
+__DATE__ = "07/May/2023"
 
 # # Convert NBTest
 #
@@ -156,14 +156,14 @@ def process_code(code, dr, srcpath=None, trgpath=None):
                  "# "+"-"*60,
                 f"# source file   = {dr.fn}"
     ]
-    if srcpath and srcpath != ".":
-        outlines += [
-                f"# source path   = {srcpath}"
-        ]
-    if trgpath and trgpath != ".":
-        outlines += [
-                f"# target path   = {srcpath}"
-        ]
+#     if srcpath and srcpath != ".":
+#         outlines += [
+#                 f"# source path   = {srcpath}"
+#         ]
+#     if trgpath and trgpath != ".":
+#         outlines += [
+#                 f"# target path   = {srcpath}"
+#         ]
     outlines += [
         
                 f"# test id       = {dr.tid}",
