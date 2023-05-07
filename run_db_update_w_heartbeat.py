@@ -5,6 +5,7 @@ import click
 import pandas as pd
 
 from fastlane_bot import Config
+from fastlane_bot.data import abi as abis
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.connect import EthereumNetwork
 
@@ -63,11 +64,17 @@ def main(
                                      'tkn0_symbol', 'tkn1_symbol']
 
     filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
-    pools_and_token_table = pd.read_csv(filepath, low_memory=False).drop('id', axis=1)
-    pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
+    pools_and_token_table = pd.read_csv(filepath, low_memory=False)
+    pools_and_token_table = pools_and_token_table[[col for col in pools_and_token_table_columns if col in pools_and_token_table.columns]]
 
     bot = CarbonBot(ConfigObj=cfg)
-    print(f"endpoint_uri: {bot.c.w3.provider.endpoint_uri}")
+    print(f"bot endpoint_uri: {bot.c.w3.provider.endpoint_uri}")
+    bot.db.c = bot.c
+    print(f"db endpoint_uri: {bot.db.c.w3.provider.endpoint_uri}")
+    #
+    # carbon_controller = bot.c.w3.eth.contract(address=bot.db.c.CARBON_CONTROLLER_ADDRESS, abi=abis.CARBON_CONTROLLER_ABI)
+    # bot.db.carbon_controller = carbon_controller
+
     # bot.db.drop_all_tables()
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
 
