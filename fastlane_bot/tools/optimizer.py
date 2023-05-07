@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.6"
-__DATE__ = "06/May/2023"
+__VERSION__ = "3.7"
+__DATE__ = "07/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -1605,8 +1605,14 @@ class CPCArbOptimizer(OptimizerBase):
             return [ti.asdict() for ti in trade_instructions]
 
         @classmethod
-        def to_df(cls, trade_instructions, ti_format=None):
-            """converts iterable ot TradeInstruction objects to a pandas dataframe"""
+        def to_df(cls, trade_instructions, robj, ti_format=None):
+            """
+            converts iterable ot TradeInstruction objects to a pandas dataframe
+            
+            :trade_instructions:    iterable of TradeInstruction objects
+            :robj:                  OptimizationResult object generating the trade instructions
+            :ti_format:             format to convert to TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF       
+            """
             if ti_format is None:
                 ti_format = cls.TIF_DF
             dicts = (
@@ -1626,11 +1632,15 @@ class CPCArbOptimizer(OptimizerBase):
                 return df
             if ti_format == cls.TIF_DFAGGR:
                 df1r = df[df.columns[4:]]
-                df1 = df1r.fillna(0)
-                dfa = df1.sum().to_frame(name="TOTAL NET").T
-                dfp = df1[df1 > 0].sum().to_frame(name="AMMIn").T
-                dfn = df1[df1 < 0].sum().to_frame(name="AMMOut").T
-                return pd.concat([df1r, dfp, dfn, dfa], axis=0)
+                df1  = df1r.fillna(0)
+                dfa  = df1.sum().to_frame(name="TOTAL NET").T
+                dfp  = df1[df1 > 0].sum().to_frame(name="AMMIn").T
+                dfn  = df1[df1 < 0].sum().to_frame(name="AMMOut").T
+                dfpr = pd.Series(robj.p_optimal).to_frame(name="PRICE").T
+                #dfpr = pd.Series(r.p_optimal).to_frame(name="PRICES POST").T
+                df = pd.concat([df1r, dfpr, dfp, dfn, dfa], axis=0)
+                df.loc["PRICE"].fillna(1, inplace=True)
+                return df
                 return df1, dfa
             if ti_format == cls.TIF_DFP:
                 return df.fillna("")
@@ -1644,8 +1654,15 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DF = TIF_DF
 
         @classmethod
-        def to_format(cls, trade_instructions, ti_format=None):
-            """converts iterable ot TradeInstruction objects to the given format (TIF_XXX)"""
+        def to_format(cls, trade_instructions, robj, ti_format=None):
+            """
+            converts iterable ot TradeInstruction objects to the given format
+            
+            :trade_instructions:    iterable of TradeInstruction objects
+            :robj:                  OptimizationResult object generating the trade instructions
+            :ti_format:             format to convert to TIF_OBJECTS, TIF_DICTS, TIF_DFP, 
+                                    TIF_DFRAW, TIF_DFAGGR, TIF_DF
+            """
             if ti_format is None:
                 ti_format = cls.TIF_OBJECTS
             if ti_format == cls.TIF_OBJECTS:
@@ -1656,7 +1673,7 @@ class CPCArbOptimizer(OptimizerBase):
                 trade_instructions = tuple(trade_instructions)
                 if len(trade_instructions) == 0:
                     return pd.DataFrame()
-                return cls.to_df(trade_instructions, ti_format=ti_format)
+                return cls.to_df(trade_instructions, robj=robj, ti_format=ti_format)
             else:
                 raise ValueError(f"unknown format {ti_format}")
 
@@ -1786,7 +1803,7 @@ class CPCArbOptimizer(OptimizerBase):
                     for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
                     if dx != 0 or dy != 0
                 )
-                return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format)
+                return CPCArbOptimizer.TradeInstruction.to_format(result, self, ti_format)
             except AssertionError:
                 if self.raiseonerror:
                     raise

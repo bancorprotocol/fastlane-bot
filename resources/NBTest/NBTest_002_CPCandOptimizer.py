@@ -1109,7 +1109,7 @@ til = [
     for i in range(10)
 ]
 tild = TI.to_dicts(til)
-tildf = TI.to_df(til)
+tildf = TI.to_df(til, robj=None)
 assert len(tild) == 10
 assert len(tildf) == 10
 assert tild[0] == {
@@ -1262,7 +1262,42 @@ assert r.time < 0.1
 
 abs(r.dtokens_t[0])
 
+ti = r.trade_instructions()
+assert len(ti) == 3
+dfa = r.trade_instructions(ti_format=O.TIF_DFAGGR)
+assert len(dfa)==7
+assert list(dfa.index) == ['c0', 'c1', 'c2', 'PRICE', 'AMMIn', 'AMMOut', 'TOTAL NET']
+assert list(dfa.columns) == ['WETH', 'USDC', 'USDT']
+assert dfa.loc["PRICE"][0] == 1
+assert iseq(dfa.loc["PRICE"][1], 0.0005421803152)
+assert iseq(dfa.loc["PRICE"][2], 0.0004557539403)
+dfa
 
+df = r.trade_instructions(ti_format=O.TIF_DF)
+assert len(df) == 3
+assert list(df.columns) == ['pair', 'pairp', 'tknin', 'tknout', 'WETH', 'USDC', 'USDT']
+df
+
+df = r.trade_instructions(ti_format=O.TIF_DFP)
+assert len(df) == 3
+assert list(df.columns) == ['pair', 'pairp', 'tknin', 'tknout', 'WETH', 'USDC', 'USDT']
+assert df["USDT"].loc["c0"] == ""
+df
+
+dcts = r.trade_instructions(ti_format=O.TIF_DICTS)
+assert len(dcts) == 3
+assert list(dcts[0].keys()) == ['cid', 'tknin', 'amtin', 'tknout', 'amtout', 'error']
+d0 = dcts[0]
+assert d0["cid"] == "c0"
+assert iseq(d0["amtin"], 0.41326380379418914)
+dcts
+
+objs = r.trade_instructions(ti_format=O.TIF_OBJECTS)
+assert len(objs) == 3
+assert type(objs[0]).__name__ == 'TradeInstruction'
+objs
+
+help(r.trade_instructions)
 
 # ## simple_optimizer demo [NOTEST]
 
