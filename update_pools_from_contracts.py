@@ -28,6 +28,9 @@ only_carbon = dbutils.widgets.get("only_carbon")
 
 if str(only_carbon) == 'True':
     only_carbon = True
+    
+elif str(only_carbon) = 'False'
+    only_carbon = False
 
 if str(TENDERLY_FORK) == 'None':
     TENDERLY_FORK = None
@@ -106,8 +109,12 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 # COMMAND ----------
 
 cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
-cmd += f" --bypairs={bypairs}"
-cmd += f" --only_carbon={only_carbon}"
+
+if bypairs:
+    cmd += f" --bypairs={bypairs}"
+
+if only_carbon:
+    cmd += f" --only_carbon={only_carbon}"
 
 if cfg == 'tenderly':
     cmd += ' --config=tenderly'
