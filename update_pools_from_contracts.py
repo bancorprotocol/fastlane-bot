@@ -19,10 +19,15 @@
 # dbutils.widgets.text("bypairs", "None")
 # dbutils.widgets.text("TENDERLY_FORK", "058b12b9-c69e-4676-a7bd-2ba09c9b23c7")
 
+
 # COMMAND ----------
 
 bypairs = dbutils.widgets.get("bypairs")
 TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
+only_carbon = dbutils.widgets.get("only_carbon")
+
+if str(only_carbon) == 'True':
+    only_carbon = True
 
 if str(TENDERLY_FORK) == 'None':
     TENDERLY_FORK = None
@@ -100,10 +105,9 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
 # COMMAND ----------
 
-if bypairs:
-    cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py --bypairs={bypairs}"
-else:
-    cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
+cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
+cmd += f" --bypairs={bypairs}"
+cmd += f" --only_carbon={only_carbon}"
 
 if cfg == 'tenderly':
     cmd += ' --config=tenderly'
