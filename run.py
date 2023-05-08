@@ -19,6 +19,7 @@ from fastlane_bot.bot import CarbonBot
 #flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 flashloan_tokens = None
 
+
 @click.command()
 @click.option("--mode", default="continuous", type=str)
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)

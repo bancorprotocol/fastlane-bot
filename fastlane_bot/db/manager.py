@@ -8,6 +8,7 @@ import time
 from typing import Any, Dict, Type, Optional, Tuple, List
 
 import brownie
+import numpy as np
 import pandas as pd
 from _decimal import Decimal
 from brownie import Contract
@@ -32,85 +33,280 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     c = ConfigObj
 
     update_interval_seconds = 12
+    pools_and_token_table = None
 
-    def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
+
+    def update_pools_from_contracts(self, only_carbon: bool, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
         """
         Updates the pools_and_token_table with the latest liquidity data from the contracts.
 
         Parameters
         ----------
-        update_interval_seconds : int
-            The interval in seconds between each update.
         pools_and_token_table : pd.DataFrame
             The pools_and_token_table to update. If None, the default table will be used.
-
         bypairs : List[str]
             A list of pair names to update. If None, all pairs will be updated.
-
-
+        only_carbon : bool
+            If True, only Carbon_v1 pairs will be updated.
         """
-        self.c.logger.info(f"[update_pools_from_contracts] Updating pools from contracts bypairs{bypairs}...")
 
-        if bypairs:
-            for pair_name in bypairs:
-                assert pair_name in pools_and_token_table['pair_name'].unique().tolist(), \
-                    f"Pair name {pair_name} not found in combined_tables.csv."
-
-        else:
+        if not bypairs:
             bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
+        # Add Carbon_v1 pairs to the table if they do not already exist
+        pools_and_token_table = self.add_missing_pairs_to_table(pools_and_token_table, only_carbon)
+
+        # Filter the table by the pairs to update
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
-        logged_strategies = []
-        last_updated_block = 0
+        filtered_table = filtered_table.sort_values(by=['exchange_name'])
+
+        if only_carbon:
+            filtered_table = filtered_table[filtered_table['exchange_name'] == 'carbon_v1']
+
         for index, row in filtered_table.iterrows():
-            self.c.logger.info(f"[update_pools_from_contracts] Updating index {index} of {len(filtered_table)}")
-            params = row.to_dict()
-            block_number = self.ConfigObj.w3.eth.block_number
-            params['last_updated_block'] = block_number
+            self.update_pool_from_row(row, index, filtered_table)
 
-            contract = self.get_or_init_contract(exchange_name=params['exchange_name'],
-                                                 pool_address=params['address'])
+    def add_missing_pairs_to_table(self, pools_and_token_table: pd.DataFrame, only_carbon: bool) -> pd.DataFrame:
+        """
+        Adds missing pairs to the pools_and_token_table.
 
-            strategies = []
-            if params['exchange_name'] == 'carbon_v1':
+        Parameters
+        ----------
+        pools_and_token_table : pd.DataFrame
+            The pools_and_token_table to add the missing pairs to.
+        only_carbon : bool
+            If True, only Carbon_v1 pairs will be added.
 
-                end_idx = self.get_strategies_count_by_pair(params['tkn0_address'], params['tkn1_address'])
-                strategies = self.get_strategies_by_pair(params['tkn0_address'], params['tkn1_address'], 0, end_idx)
-            else:
-                strategies.append(None)
+        Returns
+        -------
+        pools_and_token_table : pd.DataFrame
+            The pools_and_token_table with the missing pairs added.
 
-            for strategy in strategies:
+        """
+        carbon_pairs = missing_pairs = self.get_carbon_pairs()
+        if only_carbon:
+            pools_and_token_table = pools_and_token_table[pools_and_token_table['exchange_name'] != 'carbon_v1']
+        if not only_carbon:
+            noncarbon_pairs = self.get_noncarbon_pairs(pools_and_token_table)
+            all_pairs = carbon_pairs + noncarbon_pairs
+            missing_pairs = [pair for pair in all_pairs if pair not in noncarbon_pairs]
+        for pair in missing_pairs:
+            pair_name = self.get_pair_name(pair)
+            dbrow = self.create_dbrow(pair_name, pools_and_token_table)
+            pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
 
-                if strategy is not None:
-                    params['cid'] = str(strategy[0])
-                    logged_strategies.append(params['cid'])
+        return pools_and_token_table
 
-                if strategy and str(strategy[0]) in logged_strategies:
-                    continue
+    def get_noncarbon_pairs(self, pools_and_token_table: pd.DataFrame) -> List[Tuple[str, str]]:
+        """
+        Gets the non-carbon pairs from the pools_and_token_table.
 
+        Parameters
+        ----------
+        pools_and_token_table : pd.DataFrame
+            The pools_and_token_table to get the non-carbon pairs from.
 
-                pool = self.get_pool(cid=str(params['cid']))
-                if pool is None:
-                    self.create_pool_pair_tokens(params)
-                    pool = self.get_pool(cid=str(params['cid']))
+        Returns
+        -------
+        noncarbon_pairs : List[str]
+            The non-carbon pairs.
 
-                liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
-                                                                    contract=contract,
-                                                                    address=params['address'],
-                                                                    strategy=strategy)
-                pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
-                update_params = {**pool_data, **liquidity_params}
-                self.update_pool(update_params, params)
+        """
+        noncarbon = pools_and_token_table[pools_and_token_table['exchange_name'] != 'carbon_v1']
+        return (
+            noncarbon[['tkn0_address', 'tkn1_address']]
+            .drop_duplicates()
+            .values.tolist()
+        )
 
+    def get_pair_name(self, pair: Tuple[str, str]) -> str:
+        """
+        Gets the pair name from a pair.
 
+        Parameters
+        ----------
+        pair : Tuple[str, str]
+            The pair to get the pair name from.
 
-    def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
+        Returns
+        -------
+        pair_name : str
+            The pair name.
+
+        """
+
+        tkn0 = self.get_or_create_token(address=pair[0])
+        tkn1 = self.get_or_create_token(address=pair[1])
+        return f"{tkn0.key}/{tkn1.key}"
+
+    def create_dbrow(self, pair_name: str, pools_and_token_table: pd.DataFrame) -> pd.DataFrame:
+        """
+        Creates a dbrow for a pair that does not exist in the pools_and_token_table.
+
+        Parameters
+        ----------
+        pair_name : str
+            The pair name to create.
+        pools_and_token_table : pd.DataFrame
+            The pools_and_token_table to create the dbrow from.
+
+        Returns
+        -------
+        dbrow : pd.DataFrame
+            The dbrow to add to the pools_and_token_table.
+
+        """
+
+        tkn0, tkn1 = pair_name.split('/')
+        tkn0 = self.get_token(key=tkn0)
+        tkn1 = self.get_token(key=tkn1)
+        dbrow = pd.DataFrame({'pair_name': [pair_name], 'tkn0_address': [tkn0.address], 'tkn1_address': [tkn1.address],
+                              'exchange_name': ['carbon_v1'], 'address': self.carbon_controller.address})
+        missing_cols = [col for col in pools_and_token_table.columns if col not in dbrow.columns]
+        for col in missing_cols:
+            dbrow[col] = [np.NaN]
+        return dbrow
+
+    def update_pool_from_row(self, row: pd.Series, index: int = None, filtered_table: pd.DataFrame = None):
+        """
+        Updates a single pool from a row in the pools_and_token_table.
+
+        Parameters
+        ----------
+        row : pd.Series
+            The row to update.
+        index : int
+            The index of the row to update.
+        filtered_table : pd.DataFrame
+            The filtered table to update from.
+
+        """
+
+        params = row.to_dict()
+        params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(
+            params['tkn0_address']), self.c.w3.toChecksumAddress(params['tkn1_address'])
+
+        block_number = self.ConfigObj.w3.eth.block_number
+        params['last_updated_block'] = block_number
+
+        contract = self.get_or_init_contract(exchange_name=params['exchange_name'],
+                                             pool_address=params['address'])
+
+        strategies = self.get_strategies_for_row(params)
+
+        for strategy in strategies:
+            try:
+                self.update_pool_from_strategy(params, strategy, contract, filtered_table)
+            except Exception as e:
+                self.c.logger.error(f"[update_pools_from_contracts] Error updating pool: {e}, skipping...")
+
+    def get_strategies_for_row(self, params: Dict[str, Any]) -> List[Tuple[str, str]]:
+        """
+        Gets the strategies for a row in the pools_and_token_table.
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+
+        Returns
+        -------
+        strategies : List[Tuple[str, str]]
+            The strategies for the row.
+
+        """
+        if params['exchange_name'] == 'carbon_v1':
+            return self.get_strategies((params['tkn0_address'], params['tkn1_address']))
+        else:
+            return [None]
+
+    def update_pool_from_strategy(self, params: Dict[str, Any], strategy: Tuple[str, str], contract: Contract, filtered_table: pd.DataFrame = None):
+        """
+        Updates a pool from a strategy. The params dictionary contains data from a specific row in the pools_and_token_table, and the strategy provides additional information needed to update the pool.
+
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+        strategy : Tuple[str, str]
+            The strategy tuple.
+        contract : Contract
+            The contract to update the pool from.
+
+        """
+        if strategy is not None:
+            params = self.update_params_from_strategy(params, strategy)
+
+        params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(
+            params['fee'])
+
+        liquidity_params = self.get_liquidity_from_contract(exchange_name=params['exchange_name'],
+                                                            contract=contract,
+                                                            address=params['address'],
+                                                            strategy=strategy)
+        random_pool = self.get_pools()[0]
+        pool_data = {k: v for k, v in params.items() if k in random_pool.__getattribute__('__table__').columns.keys() and k not in ['last_updated']}
+        update_params = {**pool_data, **liquidity_params}
+
+        pool = self.get_pool(cid=str(params['cid']))
+        if pool is None:
+
+            update_params['descr'] = f"{update_params['exchange_name']} {update_params['pair_name']} {update_params['fee']}"
+            self.get_or_create_token(params['tkn0_address'])
+            self.get_or_create_token(params['tkn1_address'])
+            self.get_or_create_pair(params['tkn0_address'], params['tkn1_address'])
+            self.create_pool(update_params)
+        else:
+            self.update_pool(update_params, params)
+
+    def update_params_from_strategy(self, params: Dict[str, Any], strategy: Tuple[int, str, Tuple[str, str]]) -> Dict[
+        str, Any]:
+        """
+        Updates the params dictionary from a strategy.
+
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            The params dictionary.
+        strategy : Tuple[int, str, Tuple[str, str]]
+            The strategy tuple.
+
+        Returns
+        -------
+        params : Dict[str, Any]
+            The updated params dictionary.
+
+        """
+        params['cid'] = str(strategy[0])
+        params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(
+            strategy[2][0]), self.c.w3.toChecksumAddress(strategy[2][1])
+        tkn0 = self.get_or_create_token(address=params['tkn0_address'])
+        tkn1 = self.get_or_create_token(address=params['tkn1_address'])
+        params['tkn0_symbol'], params['tkn1_symbol'] = tkn0.symbol, tkn1.symbol
+        params['tkn0_decimals'], params['tkn1_decimals'] = tkn0.decimals, tkn1.decimals
+        params['tkn0_key'], params['tkn1_key'] = tkn0.key, tkn1.key
+        params['pair_name'] = f"{tkn0.key}/{tkn1.key}"
+        params['desc'] = f"carbon_v1 {tkn0.key}/{tkn1.key} 0.002"
+        params['fee'] = 0.002
+        return params
+
+    def update_pools_heartbeat(self, only_carbon: bool, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
+        """
+        Updates pools in a loop. This is the main function that should be called to update pools.
+
+        Parameters
+        ----------
+        bypairs : List[str]
+            The list of pairs to update.
+        update_interval_seconds : int
+            The update interval in seconds.
+        pools_and_token_table : pd.DataFrame
+            The pools and token table to update from.
+        only_carbon : bool
+            Whether to only update carbon pools.
+        """
         while True:
-            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table)
-            self.c.logger.info(f"************************* \n"
-                               f"[update_pools_heartbeat] Sleeping for {update_interval_seconds} seconds..."
-                               f"\n*************************")
+            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
             time.sleep(update_interval_seconds)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
@@ -224,6 +420,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             pool_balances = contract.tradingLiquidity(address)
             params = {
                 "fee": "0.000",
+                "fee_float": 0.000,
                 "tkn0_balance": pool_balances[0],
                 "tkn1_balance": pool_balances[1],
             }
@@ -231,6 +428,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             reserve0, reserve1 = contract.caller.reserveBalances()
             params = {
                 "fee": "0.003",
+                "fee_float": 0.003,
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
             }
@@ -241,6 +439,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "sqrt_price_q96": slot0[0],
                 "liquidity": contract.caller.liquidity(),
                 "fee": contract.caller.fee(),
+                "fee_float": str(contract.caller.fee() / 1000000),
                 "tick_spacing": contract.caller.tickSpacing(),
             }
 
@@ -248,13 +447,15 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             reserve_balance = contract.caller.getReserves()
             params = {
                 "fee": "0.003",
+                "fee_float": 0.003,
                 "tkn0_balance": reserve_balance[0],
                 "tkn1_balance": reserve_balance[1],
             }
         elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
             order0, order1 = strategy[3][0], strategy[3][1]
             params = {
-                "fee": "0.000",
+                "fee": "0.002",
+                "fee_float": 0.002,
                 "y_0": order0[0],
                 "z_0": order0[1],
                 "A_0": order0[2],

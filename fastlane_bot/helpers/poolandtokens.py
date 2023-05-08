@@ -94,6 +94,7 @@ class PoolAndTokens:
     pair_name: str
     exchange_name: str
     fee: Decimal
+    fee_float: float
     tkn0_balance: Decimal
     tkn1_balance: Decimal
     z_0: Decimal

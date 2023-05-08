@@ -3,22 +3,26 @@ Fastlane bot config -- network
 """
 __VERSION__ = "1.0.3-RESTRICTED"
 __DATE__ = "02/May 2023"
+
 from .base import ConfigBase
 from . import selectors as S
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from decimal import Decimal
 
 
+TENDERLY_FORK = os.environ.get("POSTGRES_DB")
+
 class ConfigNetwork(ConfigBase):
     """
     Fastlane bot config -- network
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
     # COMMONLY USED TOKEN ADDRESSES SECTION
     #######################################################################################
@@ -30,12 +34,12 @@ class ConfigNetwork(ConfigBase):
     ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    
+
     # ACCOUNTS SECTION
     #######################################################################################
     BINANCE8_WALLET_ADDRESS = "0xF977814e90dA44bFA03b6295A0616a897441aceC"
     BINANCE14_WALLET_ADDRESS = "0x28c6c06298d514db089934071355e5743bf21d60"
-    
+
     # EXCHANGE IDENTIFIERS SECTION
     #######################################################################################
     BANCOR_V2_NAME = "bancor_v2"
@@ -54,7 +58,7 @@ class ConfigNetwork(ConfigBase):
     }
     UNIV2_FORKS = [UNISWAP_V2_NAME, SUSHISWAP_V2_NAME]
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
-    
+
     # CARBON EVENTS
     #######################################################################################
     CARBON_POOL_CREATED = f"{CARBON_V1_NAME}_PoolCreated"
@@ -62,7 +66,7 @@ class ConfigNetwork(ConfigBase):
     CARBON_STRATEGY_DELETED = f"{CARBON_V1_NAME}_StrategyDeleted"
     CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
     CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
-    
+
     # DEFAULT VALUES SECTION
     #######################################################################################
     UNIV3_FEE_LIST = [100, 500, 3000, 10000]
@@ -75,7 +79,7 @@ class ConfigNetwork(ConfigBase):
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500  # 10 block time deviation
     DEFAULT_MIN_PROFIT = Decimal("1")
     DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
-    _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}") # TODO: FIX THIS
+    _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
     DEFAULT_CURVES_DATAFILE = os.path.normpath(f"{_PROJECT_PATH}/carbon/data/curves.csv.gz")
     CARBON_STRATEGY_CHUNK_SIZE = 200
     Q96 = Decimal("2") ** Decimal("96")
@@ -83,14 +87,15 @@ class ConfigNetwork(ConfigBase):
     CARBON_FEE = Decimal("0.002")
     BANCOR_V3_FEE = Decimal("0.0")
     DEFAULT_REWARD_PERCENT = Decimal("0.5")
-    
+
     # SUNDRY SECTION
     #######################################################################################
     COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
-    
+
     NETWORK_ETHEREUM = S.NETWORK_ETHEREUM
     NETWORK_MAINNET = S.NETWORK_MAINNET
     NETWORK_TENDERLY = S.NETWORK_TENDERLY
+
     @classmethod
     def new(cls, network=None):
         """
@@ -104,21 +109,21 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkTenderly(_direct=False)
         else:
             raise ValueError(f"Invalid network: {network}")
-        
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
     Fastlane bot config -- network [Ethereum Mainnet]
     """
 
-    
     NETWORK = S.NETWORK_ETHEREUM
     NETWORK_ID = "mainnet"
     NETWORK_NAME = "Ethereum Mainnet"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    
+
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
     BANCOR_V3_NETWORK_INFO_ADDRESS = "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
@@ -132,21 +137,20 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-    
+
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
     Fastlane bot config -- network [Ethereum Tenderly]
     """
-    
+
     NETWORK = S.NETWORK_TENDERLY
     DEFAULT_PROVIDER = S.PROVIDER_TENDERLY
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
-    #TENDERLY_FORK = "c0d1f990-c095-476f-80a9-72ac65092aae"
-    TENDERLY_FORK = "058b12b9-c69e-4676-a7bd-2ba09c9b23c7"
-    
-    
+    TENDERLY_FORK = TENDERLY_FORK
+    # TENDERLY_FORK = "058b12b9-c69e-4676-a7bd-2ba09c9b23c7"
+
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
     BANCOR_V3_NETWORK_INFO_ADDRESS = "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
@@ -165,8 +169,8 @@ class _ConfigNetworkTenderly(ConfigNetwork):
         """
         the shell command to run to allow the bot to connect to tenderly
         """
-        s  = f'brownie networks delete {self.NETWORK_NAME}\n'
-        s += f'brownie networks add "Ethereum" "{self.NETWORK_NAME}" ' 
+        s = f'brownie networks delete {self.NETWORK_NAME}\n'
+        s += f'brownie networks add "Ethereum" "{self.NETWORK_NAME}" '
         s += f'host=https://rpc.tenderly.co/fork/{self.TENDERLY_FORK} chainid={chain_id}'
         return s
 

@@ -41,11 +41,10 @@ class TokenManager(DatabaseManagerBase):
         try:
             session.add(token)
             session.commit()
-            self.c.logger.info(f"[model_managers.Token] Successfully created token: {token.key}")
-            # 
             return token
+
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Token] Failed to create token: {e}")
+            print(f"[model_managers.Token] Failed to create token: {e}")
             raise
 
     def get_token(self, **kwargs) -> Optional[models.Token]:
@@ -108,13 +107,12 @@ class TokenManager(DatabaseManagerBase):
             if updated:  # Only commit and log the message if any value has been updated
                 session.commit()
 
-                self.c.logger.info(f"[model_managers.Token] Successfully updated token: {token.key}")
             else:
-                self.c.logger.info(f"[model_managers.Token] No changes detected for token: {token.key}")
+                print(f"[model_managers.Token] No changes detected for token: {token.key}")
 
             return token
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Token] Failed to update token: {token.key}")
+            print(f"[model_managers.Token] Failed to update token: {token.key}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
     def delete_token(self, token: models.Token) -> bool:
@@ -135,11 +133,10 @@ class TokenManager(DatabaseManagerBase):
         try:
             session.delete(token)
             session.commit()
-            self.c.logger.info(f"[model_managers.Token] Successfully deleted token: {token.key}")
-
             return True
+
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Token] Failed to delete token: {token.key}")
+            print(f"[model_managers.Token] Failed to delete token: {token.key}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
 
@@ -170,11 +167,10 @@ class PairManager(DatabaseManagerBase):
         try:
             session.add(pair)
             session.commit()
-            self.c.logger.info(f"[model_managers.Pair] Successfully created pair: {pair.id}")
-
             return pair
+
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Pair] Failed to create pair: {e}")
+            print(f"[model_managers.Pair] Failed to create pair: {e}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
     def get_pair(self, **kwargs) -> Optional[models.Pair]:
@@ -217,13 +213,12 @@ class PairManager(DatabaseManagerBase):
             if updated:  # Only commit and log the message if any value has been updated
                 session.commit()
 
-                self.c.logger.info(f"[model_managers.Pair] Successfully updated pair: {pair.name}")
             else:
-                self.c.logger.info(f"[model_managers.Pair] No changes detected for pair: {pair.name}")
+                print(f"[model_managers.Pair] No changes detected for pair: {pair.name}")
 
             return pair
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Pair] Failed to update pair: {pair.name}")
+            print(f"[model_managers.Pair] Failed to update pair: {pair.name}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
     def delete_pair(self, pair: models.Pair) -> bool:
@@ -245,11 +240,10 @@ class PairManager(DatabaseManagerBase):
         try:
             session.delete(pair)
             session.commit()
-            self.c.logger.info(f"[model_managers.Pair] Successfully deleted pair: {pair.name}")
-
             return True
+
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Pair] Failed to delete pair: {pair.name}")
+            print(f"[model_managers.Pair] Failed to delete pair: {pair.name}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
 
@@ -279,11 +273,10 @@ class PoolManager(DatabaseManagerBase):
         try:
             session.add(pool)
             session.commit()
-            self.c.logger.info(f"[model_managers.Pool] Created pool on {pool.exchange_name}: {pool.pair_name}")
-
             return pool
+
         except Exception as e:
-            self.c.logger.error(f"[model_managers.Pool] Error creating pool on {pool.exchange_name}: {str(e)}")
+            print(f"[model_managers.Pool] Error creating pool on {pool.exchange_name}: {str(e)}")
             raise  # Allow the exception to propagate to the session_scope context manager
 
     def get_pool(self, **kwargs) -> Optional[models.Pool]:
@@ -312,14 +305,13 @@ class PoolManager(DatabaseManagerBase):
             The updated pool.
 
         """
-        pool = self.get_pool(**kwargs)
+        pool = self.get_pool(cid=pool_data['cid'])
         if not pool:
-            self.c.logger.error(f"[model_managers.Pool] Failed to update pool, pool not found: {kwargs}")
+            print(f"[model_managers.Pool] Failed to update pool, pool not found: {kwargs}")
             return None
 
         try:
-            pool = self.create_or_update_pool(pool, pool_data)
-            self.c.logger.info(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name} {pool.cid}")
+            pool = self.create_or_update_pool(pool_data)
             return pool
         except Exception as e:
             session.rollback()
@@ -336,9 +328,9 @@ class PoolManager(DatabaseManagerBase):
                     self.create_pair(pair_data)
                     self.create_or_update_pool(pool, pool_data)
             except Exception as e:
-                self.c.logger.error(f"[model_managers.Pool] Failed to update pair: {str(e)} - {pool}  skipping...")
+                print(f"[model_managers.Pool] Failed to update pair: {str(e)} - {pool}  skipping...")
 
-    def create_or_update_pool(self, pool: models.Pool, pool_data: Dict[str, Any]) -> models.Pool:
+    def create_or_update_pool(self, pool_data: Dict[str, Any]) -> models.Pool:
         """
         Create or update a pool in the database.
 
@@ -387,11 +379,10 @@ class PoolManager(DatabaseManagerBase):
             try:
                 session.delete(pool)
                 session.commit()
-                self.c.logger.info(f"[model_managers.Pool] Successfully deleted pool: {pool.id}")
 
                 return True
             except IntegrityError as e:
-                self.c.logger.error(f"[model_managers.Pool] Error deleting pool: {str(e)}")
+                print(f"[model_managers.Pool] Error deleting pool: {str(e)}")
                 raise  # Allow the exception to propagate to the session_scope context manager
         return False
 
@@ -465,7 +456,8 @@ class PoolManager(DatabaseManagerBase):
                 descr=row[0].descr,
                 pair_name=row[0].pair_name,
                 exchange_name=row[0].exchange_name,
-                fee=row[0].fee,
+                fee=row[0].fee_float,
+                fee_float=row[0].fee_float,
                 tkn0_balance=row[0].tkn0_balance,
                 tkn1_balance=row[0].tkn1_balance,
                 z_0=row[0].z_0,
@@ -502,7 +494,6 @@ class PoolManager(DatabaseManagerBase):
 
         if not exchange:
             exchange = models.Exchange(name=exchange_name)
-
             session.add(exchange)
             session.commit()
 
@@ -536,23 +527,12 @@ class PoolManager(DatabaseManagerBase):
         pair = self.get_pair(**pair_params)
         if not pair:
             pair = models.Pair(**pair_params)
-            session.add(pair)
-            session.commit()
-
-        pool_params = {
-            "cid": str(pool_pair_tokens["cid"]),
-            "exchange_name": pool_pair_tokens["exchange_name"],
-            "pair_name": pool_pair_tokens["pair_name"],
-            "fee": pool_pair_tokens["fee"],
-            "address": pool_pair_tokens["address"],
-            "anchor": pool_pair_tokens["anchor"],
-            "last_updated_block": pool_pair_tokens["last_updated_block"],
-        }
-        pool = self.get_pool(cid=pool_params["cid"])
-        if not pool:
-            pool = models.Pool(**pool_params)
-            session.add(pool)
-            session.commit()
+            try:
+                session.add(pair)
+                session.commit()
+            except Exception as e:
+                print(f"Error creating pair: {e}, skipping")
+                session.rollback()
 
     def _extracted_from_create_pool_pair_tokens(self, arg0: Dict[str, Any]) -> None:
 

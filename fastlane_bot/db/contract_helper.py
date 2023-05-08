@@ -64,11 +64,10 @@ class ContractHelper:
             self.contracts[self.ConfigObj.CARBON_V1_NAME] = {}
         if "CARBON_CONTROLLER_CONTRACT" not in self.contracts[self.ConfigObj.CARBON_V1_NAME]:
             self.contracts[self.ConfigObj.CARBON_V1_NAME][
-                "CARBON_CONTROLLER_CONTRACT"] = Contract.from_abi(
-                name=self.ConfigObj.CARBON_V1_NAME,
+                "CARBON_CONTROLLER_CONTRACT"] = self.c.w3.eth.contract(
                 address=self.ConfigObj.CARBON_CONTROLLER_ADDRESS,
                 abi=abi.CARBON_CONTROLLER_ABI,
-            )
+            ).functions
         return self.contracts[self.ConfigObj.CARBON_V1_NAME]["CARBON_CONTROLLER_CONTRACT"]
 
     # @staticmethod
@@ -164,6 +163,7 @@ class ContractHelper:
                 _abi=abi.UNISWAP_V3_POOL_ABI,
             )
         elif self.ConfigObj.CARBON_V1_NAME in exchange_name:
+
             return self.initialize_contract(
                 address=self.ConfigObj.w3.toChecksumAddress(pool_address),
                 _abi=abi.CARBON_CONTROLLER_ABI,
@@ -193,6 +193,7 @@ class ContractHelper:
             self.contracts[exchange_name] = {}
 
         if pool_address not in self.contracts[exchange_name]:
+            print(f"Initializing contract for {exchange_name} {pool_address}")
             self.contracts[exchange_name][pool_address] = self.contract_from_address(
                 exchange_name, pool_address
             )
@@ -316,7 +317,7 @@ class ContractHelper:
             A list of all Carbon token pairs
 
         """
-        return self.carbon_controller.pairs()
+        return self.carbon_controller.pairs().call()
 
     def get_strategies(self, pair: Tuple[str, str]) -> List[int]:
         """
@@ -333,6 +334,7 @@ class ContractHelper:
             A list of strategy ids for the specified pair
         """
         num_strategies = self.get_strategies_count_by_pair(pair[0], pair[1])
+        print(f"Number of strategies for {pair[0]}-{pair[1]}: {num_strategies}")
         return self.get_strategies_by_pair(pair[0], pair[1], 0, num_strategies)
 
     def get_carbon_strategies(self):
@@ -376,7 +378,11 @@ class ContractHelper:
         int
             The number of strategies in the specified token pair
         """
-        return self.carbon_controller.strategiesByPairCount(token0, token1)
+        try:
+            return self.carbon_controller.strategiesByPairCount(token0, token1).call()
+        except Exception as e:
+            self.c.logger.error(f"Error getting strategies count by pair:{token0}, {token1}, {e}, skipping...")
+            return 0
 
     def get_strategies_by_pair(
             self, token0: str, token1: str, start_idx: int, end_idx: int
@@ -400,4 +406,10 @@ class ContractHelper:
         List[int]
             A list of strategy ids for the specified pair, given a start and end index
         """
-        return self.carbon_controller.strategiesByPair(token0, token1, start_idx, end_idx)
+        if end_idx == 0:
+            end_idx = 5000
+        try:
+            return self.carbon_controller.strategiesByPair(token0, token1, start_idx, end_idx).call()
+        except Exception as e:
+            self.c.logger.error(f"[contract_helper] Error getting strategies by pair:{token0}, {token1}, {e}, skipping...")
+            return []

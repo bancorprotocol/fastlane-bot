@@ -1,16 +1,19 @@
 """
 Fastlane bot configuration object -- main object
 """
+
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
 
 import os
 from dataclasses import dataclass, field, InitVar, asdict
-#from .base import ConfigBase
+# from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
 from . import selectors as S
 from dotenv import load_dotenv
+
+from .connect import EthereumNetwork
 
 load_dotenv()
 
@@ -19,6 +22,10 @@ POSTGRES_USER = os.environ.get("POSTGRES_USER")
 POSTGRES_DB = os.environ.get("POSTGRES_DB")
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
+WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+PROVIDER_URL = f'https://rpc.tenderly.co/fork/{POSTGRES_DB}' if POSTGRES_DB != 'defaultdb' else f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+NETWORK_ID = 'mainnet' if POSTGRES_DB == 'defaultdb' else 'tenderly'
+NETWORK_NAME = "Ethereum Mainnet" if POSTGRES_DB == 'defaultdb' else 'Tenderly (Alchemy)'
 
 
 @dataclass
@@ -48,9 +55,17 @@ class Config():
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
+    SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']
     POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    
-    
+    connection = EthereumNetwork(
+        network_id=NETWORK_ID,
+        network_name=NETWORK_NAME,
+        provider_url=PROVIDER_URL,
+        provider_name="alchemy",
+    )
+    connection.connect_network()
+    w3 = connection.web3
+
     @classmethod
     def new(cls, *, config=None, loglevel=None, **kwargs):
         """
@@ -61,11 +76,11 @@ class Config():
         """
         if config is None:
             config = cls.CONFIG_MAINNET
-            
+
         if loglevel is None:
             loglevel = cls.LOGLEVEL_INFO
         C_log = logger_.ConfigLogger.new(loglevel=loglevel)
-            
+
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
             return cls(network=C_nw, logger=C_log, **kwargs)
@@ -79,13 +94,13 @@ class Config():
             C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
             return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")
-    
+
     def is_config_item(self, item):
         """returns True if item is a (possible) configuration item [uppercase, numbers, underscore; len>2]"""
-        #print("[is_config_item]", item)
+        # print("[is_config_item]", item)
         if item in {"w3", "connection"}:
             return True
-        if len(item)<3:
+        if len(item) < 3:
             return False
         if not item[0].isupper():
             return False
@@ -93,7 +108,7 @@ class Config():
             if not (item.isupper() or item.isnumeric() or item == "_"):
                 return False
         return True
-    
+
     def get_attribute_from_config(self, name: str):
         """
         gets the attribute from the constituent config objects, raises if not found
@@ -102,7 +117,7 @@ class Config():
             if hasattr(obj, name):
                 return getattr(obj, name)
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-        
+
     def __getattr__(self, name: str):
         """
         If of type attribute, return it.
@@ -110,7 +125,7 @@ class Config():
         if self.is_config_item(name):
             return self.get_attribute_from_config(name)
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-    
+
     def __post_init__(self):
         """
         Post-initialization initialization.
@@ -118,26 +133,27 @@ class Config():
         if self.network is None:
             self.network = network_.ConfigNetwork.new(network_.ConfigNetwork.NETWORK_ETHEREUM)
         assert issubclass(type(self.network), network_.ConfigNetwork)
-        
+
         if self.db is None:
             self.db = db_.ConfigDB.new(db_.ConfigDB.DATABASE_POSTGRES)
         assert issubclass(type(self.db), db_.ConfigDB)
-        
+
         # if self.fastlane is None:
         #     self.fastlane = fastlane_.ConfigFastlane.new()
         # assert issubclass(type(self.fastlane), fastlane_.ConfigFastlane)
-        
+
         if self.logger is None:
             self.logger = logger_.ConfigLogger.new()
         assert issubclass(type(self.logger), logger_.ConfigLogger)
-        
+
         if self.provider is None:
             self.provider = provider_.ConfigProvider.new(self.network)
         assert issubclass(type(self.provider), provider_.ConfigProvider)
-        
+
         assert self.network is self.provider.network, f"Network mismatch: {self.network} != {self.provider.network}"
-        
-    VISIBLE_FIELDS = "network, db, logger, provider, w3, ZERO_ADDRESS"    
+
+    VISIBLE_FIELDS = "network, db, logger, provider, w3, ZERO_ADDRESS"
+
     def cloaked(self, incl=None, excl=None):
         """
         returns a cloaked version of the object
@@ -149,20 +165,17 @@ class Config():
         if isinstance(visible, str):
             visible = (x.strip() for x in visible.split(","))
         visible = set(visible)
-        
+
         if isinstance(incl, str):
             incl = (x.strip() for x in incl.split(","))
         elif incl is None:
             incl = []
         visible |= set(incl)
-        
+
         if isinstance(excl, str):
             excl = (x.strip() for x in excl.split(","))
         elif excl is None:
             excl = []
         visible -= set(excl)
-        
+
         return CloakerL(self, visible)
-    
-    
-        
