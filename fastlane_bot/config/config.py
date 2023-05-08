@@ -56,7 +56,9 @@ class Config():
     LL_ERR = S.LOGLEVEL_ERROR
 
     SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']
-    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    # POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/293439f0-a76e-4cbf-a6cf-2a366132500b" #29e845d0-1daf-4631-a8c9-de32cb32d6ed
+    
     connection = EthereumNetwork(
         network_id=NETWORK_ID,
         network_name=NETWORK_NAME,

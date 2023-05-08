@@ -616,7 +616,7 @@ class CarbonBot(CarbonBotBase):
 
                 bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
                 self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
-                condition_profit = False
+                condition_profit = True
                 if profit > (self.min_profit + bnt_gas_limit):
                     condition_profit = True
 
@@ -626,9 +626,9 @@ class CarbonBot(CarbonBotBase):
                     condition_zeros_one_token = max(netchange) < 1e-4
                     self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                    if condition_zeros_one_token: #candidate regardless if profitable
-                        candidates += [
-                            (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+                    # if condition_zeros_one_token: #candidate regardless if profitable
+                    candidates += [
+                        (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                     if condition_profit and condition_better_profit and condition_zeros_one_token:
                         self.ConfigObj.logger.debug("*************")
@@ -768,7 +768,7 @@ class CarbonBot(CarbonBotBase):
             )
         ]
         if result == self.XS_ROUTE:
-            return route_struct
+            return route_struct, flashloan_amount, flashloan_token_address
 
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
