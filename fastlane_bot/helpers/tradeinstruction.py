@@ -177,12 +177,15 @@ class TradeInstruction:
         Decimal
             The quantized amount.
         """
+        # print(f"[_quantize], amount: {amount}, type = {type(amount)}, decimals: {decimals}, type {type(decimals)}")
 
         if "." not in str(amount):
             return Decimal(str(amount))
         amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
-        amount_dec = str(amount_dec)[:decimals]
+        # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
+        amount_dec = str(amount_dec)[:int(decimals)]
+        # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
         try:
             return Decimal(f"{str(amount_num)}.{amount_dec}")
         except Exception as e:
@@ -234,7 +237,8 @@ class TradeInstruction:
         Token
             The token object.
         """
-        return self.db.session.query(Token).filter(Token.key == token_key).first()
+
+        return self.db.get_token(key=token_key)
 
     def _get_pool(self) -> Pool:
         """
@@ -245,8 +249,7 @@ class TradeInstruction:
         Pool
             The pool object.
         """
-
-        return self.db.session.query(Pool).filter(Pool.cid == self.cid).first()
+        return self.db.get_pool(cid=self.cid)
 
     @staticmethod
     def _convert_to_wei(amount: Union[int, Decimal, float], decimals: int) -> int:

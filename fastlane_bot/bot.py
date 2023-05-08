@@ -672,6 +672,7 @@ class CarbonBot(CarbonBotBase):
 
     XS_ARBOPPS = "arbopps"
     XS_TI = "ti"
+    XS_EXACT = "exact"
     XS_ORDSCAL = "ordscal"
     XS_AGGTI = "aggti"
     XS_ORDINFO = "ordinfo"
@@ -734,6 +735,12 @@ class CarbonBot(CarbonBotBase):
 
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
+
+        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs()
+
+        if result == self.XS_EXACT:
+            return ordered_trade_instructions_objects
+
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
             trade_instructions_objects=ordered_trade_instructions_objects
         )
