@@ -253,10 +253,16 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         pool = self.get_pool(cid=str(params['cid']))
         if pool is None:
-            print(f"[update_pool_from_strategy] Creating pool for cid={params['cid']}, params={update_params}...")
-            update_params['descr'] = f"{params['exchange_name']} {params['pair_name']} {params['fee']}"
+            print('\n')
+            print(f"[update_pool_from_strategy] Creating pool for cid={update_params['cid']}, params={update_params}...")
+            update_params['descr'] = f"{update_params['exchange_name']} {update_params['pair_name']} {update_params['fee']}"
+            self.get_or_create_token(params['tkn0_address'])
+            self.get_or_create_token(params['tkn1_address'])
+            self.get_or_create_pair(params['tkn0_address'], params['tkn1_address'])
             self.create_pool(update_params)
         else:
+            print('\n')
+            print(f"[update_pool_from_strategy] Updating pool for cid={update_params['cid']}, params={update_params}...")
             self.update_pool(update_params, params)
 
     def update_params_from_strategy(self, params: Dict[str, Any], strategy: Tuple[int, str, Tuple[str, str]]) -> Dict[
