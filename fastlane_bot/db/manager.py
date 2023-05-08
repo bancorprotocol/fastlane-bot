@@ -49,7 +49,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         only_carbon : bool
             If True, only Carbon_v1 pairs will be updated.
         """
-        print(f"[update_pools_from_contracts] Updating pools from contracts bypairs {bypairs}, only_carbon={only_carbon}...")
+        # print(f"[update_pools_from_contracts] Updating pools from contracts bypairs {bypairs}, only_carbon={only_carbon}...")
 
         if not bypairs:
             bypairs = pools_and_token_table['pair_name'].unique().tolist()
@@ -63,7 +63,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         if only_carbon:
             filtered_table = filtered_table[filtered_table['exchange_name'] == 'carbon_v1']
-        print(f"[update_pools_from_contracts] Updating {len(filtered_table)} pairs ...")
+        # print(f"[update_pools_from_contracts] Updating {len(filtered_table)} pairs ...")
 
         for index, row in filtered_table.iterrows():
             self.update_pool_from_row(row, index, filtered_table)
@@ -96,7 +96,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             pair_name = self.get_pair_name(pair)
             dbrow = self.create_dbrow(pair_name, pools_and_token_table)
             pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
-            print(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
+            # print(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
 
         return pools_and_token_table
 
@@ -188,8 +188,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         params = row.to_dict()
         params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(
             params['tkn0_address']), self.c.w3.toChecksumAddress(params['tkn1_address'])
-        print(
-            f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params['cid']}, pair_name={params['pair_name']}...")
+        # print( f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params[
+        # 'cid']}, pair_name={params['pair_name']}...")
         block_number = self.ConfigObj.w3.eth.block_number
         params['last_updated_block'] = block_number
 
@@ -253,16 +253,16 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         pool = self.get_pool(cid=str(params['cid']))
         if pool is None:
-            print('\n')
-            print(f"[update_pool_from_strategy] Creating pool for cid={update_params['cid']}, params={update_params}...")
+            # print('\n') print(f"[update_pool_from_strategy] Creating pool for cid={update_params['cid']},
+            # params={update_params}...")
             update_params['descr'] = f"{update_params['exchange_name']} {update_params['pair_name']} {update_params['fee']}"
             self.get_or_create_token(params['tkn0_address'])
             self.get_or_create_token(params['tkn1_address'])
             self.get_or_create_pair(params['tkn0_address'], params['tkn1_address'])
             self.create_pool(update_params)
         else:
-            print('\n')
-            print(f"[update_pool_from_strategy] Updating pool for cid={update_params['cid']}, params={update_params}...")
+            # print('\n') print(f"[update_pool_from_strategy] Updating pool for cid={update_params['cid']},
+            # params={update_params}...")
             self.update_pool(update_params, params)
 
     def update_params_from_strategy(self, params: Dict[str, Any], strategy: Tuple[int, str, Tuple[str, str]]) -> Dict[
@@ -314,9 +314,9 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         """
         while True:
             self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
-            print(f"************************* \n"
-                               f"[update_pools_heartbeat] Sleeping for {update_interval_seconds} seconds..."
-                               f"\n*************************")
+            # print(f"************************* \n"
+            #                    f"[update_pools_heartbeat] Sleeping for {update_interval_seconds} seconds..."
+            #                    f"\n*************************")
             time.sleep(update_interval_seconds)
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):

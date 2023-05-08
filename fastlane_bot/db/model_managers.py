@@ -41,7 +41,7 @@ class TokenManager(DatabaseManagerBase):
         try:
             session.add(token)
             session.commit()
-            print(f"[model_managers.Token] Successfully created token: {token.key}")
+            # print(f"[model_managers.Token] Successfully created token: {token.key}")
             return token
         except Exception as e:
             print(f"[model_managers.Token] Failed to create token: {e}")
@@ -107,7 +107,7 @@ class TokenManager(DatabaseManagerBase):
             if updated:  # Only commit and log the message if any value has been updated
                 session.commit()
 
-                print(f"[model_managers.Token] Successfully updated token: {token.key}")
+                # print(f"[model_managers.Token] Successfully updated token: {token.key}")
             else:
                 print(f"[model_managers.Token] No changes detected for token: {token.key}")
 
@@ -134,7 +134,7 @@ class TokenManager(DatabaseManagerBase):
         try:
             session.delete(token)
             session.commit()
-            print(f"[model_managers.Token] Successfully deleted token: {token.key}")
+            # print(f"[model_managers.Token] Successfully deleted token: {token.key}")
 
             return True
         except Exception as e:
@@ -169,7 +169,7 @@ class PairManager(DatabaseManagerBase):
         try:
             session.add(pair)
             session.commit()
-            print(f"[model_managers.Pair] Successfully created pair: {pair.id}")
+            # print(f"[model_managers.Pair] Successfully created pair: {pair.id}")
 
             return pair
         except Exception as e:
@@ -216,7 +216,7 @@ class PairManager(DatabaseManagerBase):
             if updated:  # Only commit and log the message if any value has been updated
                 session.commit()
 
-                print(f"[model_managers.Pair] Successfully updated pair: {pair.name}")
+                # print(f"[model_managers.Pair] Successfully updated pair: {pair.name}")
             else:
                 print(f"[model_managers.Pair] No changes detected for pair: {pair.name}")
 
@@ -244,7 +244,7 @@ class PairManager(DatabaseManagerBase):
         try:
             session.delete(pair)
             session.commit()
-            print(f"[model_managers.Pair] Successfully deleted pair: {pair.name}")
+            # print(f"[model_managers.Pair] Successfully deleted pair: {pair.name}")
 
             return True
         except Exception as e:
@@ -278,7 +278,7 @@ class PoolManager(DatabaseManagerBase):
         try:
             session.add(pool)
             session.commit()
-            print(f"[model_managers.Pool] Created pool on {pool.exchange_name}: {pool.pair_name}")
+            # print(f"[model_managers.Pool] Created pool on {pool.exchange_name}: {pool.pair_name}")
 
             return pool
         except Exception as e:
@@ -318,7 +318,7 @@ class PoolManager(DatabaseManagerBase):
 
         try:
             pool = self.create_or_update_pool(pool_data)
-            print(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name} {pool.cid}")
+            # print(f"[model_managers.Pool] Successfully updated pool: {pool.pair_name} {pool.cid}")
             return pool
         except Exception as e:
             session.rollback()
@@ -386,7 +386,7 @@ class PoolManager(DatabaseManagerBase):
             try:
                 session.delete(pool)
                 session.commit()
-                print(f"[model_managers.Pool] Successfully deleted pool: {pool.id}")
+                # print(f"[model_managers.Pool] Successfully deleted pool: {pool.id}")
 
                 return True
             except IntegrityError as e:
