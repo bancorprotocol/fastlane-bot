@@ -69,11 +69,10 @@ def main(
     # Create a CarbonBot instance
     bot = CarbonBot(ConfigObj=cfg)
 
-    print(f"bot endpoint_uri: {bot.c.w3.provider.endpoint_uri}")
+    # Force set the DatabaseManager config
     bot.db.c = bot.c
-    print(f"db endpoint_uri: {bot.db.c.w3.provider.endpoint_uri}")
 
-    # bot.db.drop_all_tables()
+    # Run the update
     bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds, only_carbon=only_carbon)
 
 
