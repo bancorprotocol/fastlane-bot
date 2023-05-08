@@ -168,20 +168,6 @@ class DatabaseManagerBase(ContractHelper):
         """
         Connects to the database. If the database does not exist, it creates it.
         """
-        # if backend_url is None:
-        #     backend_url = self.ConfigObj.POSTGRES_URL
-        #
-        # global Session, engine, session, metadata
-        # metadata = sqlalchemy.MetaData()
-        #
-        # # Check if the database exists, and create it if it doesn't
-        # if not database_exists(backend_url):
-        #     create_database(backend_url)
-        #
-        # engine = sqlalchemy.create_engine(backend_url)
-        # models.mapper_registry.metadata.create_all(engine)
-        # Session = sessionmaker(bind=engine)
-        # session = Session()
 
     def token_key_from_symbol_and_address(self, tkn_address: str, tkn_symbol: str) -> str:
         """
@@ -220,40 +206,6 @@ class DatabaseManagerBase(ContractHelper):
         """
         return f"{tkn0_key}/{tkn1_key}"
 
-    # def drop_all_tables(self):
-    #     """
-    #     Drops all tables in the database
-    #     """
-    #     metadata.reflect(bind=engine)
-    #     for table in reversed(metadata.sorted_tables):
-    #         table.drop(bind=engine, checkfirst=False)
-    #     self.create_tables()
-    #     self.create_ethereum_chain()
-    #     self.create_supported_exchanges()
-
-    # def create_tables(self):
-    #     """
-    #     Creates all tables in the database
-    #     """
-    #     models.mapper_registry.metadata.create_all(engine)
-
-
-    # def create_ethereum_chain(self):
-    #     """
-    #     Creates the Ethereum chain in the database
-    #     """
-    #     blockchain = models.Blockchain(name="Ethereum")  # TODO: blockchain_name="Ethereum" should be a config constant
-    #     blockchain.block_number = self.ConfigObj.w3.eth.blockNumber
-    #     session.add(blockchain)
-    #     session.commit()
-
-    # def create_supported_exchanges(self):
-    #     """
-    #     Creates the supported exchanges in the database
-    #     """
-    #     for exchange in self.ConfigObj.SUPPORTED_EXCHANGES:
-    #         session.add(models.Exchange(name=exchange, blockchain_name="Ethereum"))  # TODO: blockchain_name="Ethereum" should be a config constant
-    #         session.commit()
     def get_pools_from_exchange(self, exchange: str, only_carbon: bool = False, top_n: int = None,
                                 carbon_tokens: List[str] = None) -> List[models.Pool]:
         """
@@ -278,11 +230,9 @@ class DatabaseManagerBase(ContractHelper):
         if only_carbon:
             # Get all pools on the given exchange
             exchange_pools = session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
-            # session.expunge_all()
 
             exchange_pairs = [pool.pair_name for pool in exchange_pools]
             exchange_pairs = session.query(models.Pair).filter(models.Pair.name.in_(exchange_pairs)).all()
-            # session.expunge_all()
 
             # Filter the pairs which contain carbon at least one carbon token
             exchange_pairs = [pair for pair in exchange_pairs if
@@ -295,7 +245,6 @@ class DatabaseManagerBase(ContractHelper):
             return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).all()
         else:
             return session.query(models.Pool).filter(models.Pool.exchange_name == exchange).limit(top_n).all()
-
 
 
 backend_url = None
@@ -317,7 +266,6 @@ models.mapper_registry.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
 # Create the Ethereum chain if it doesn't exist
 blockchain_name = "Ethereum"
 try:
@@ -329,7 +277,6 @@ except Exception as e:
     print(f"Error adding Ethereum blockchain to database {blockchain_name}, {e} skipping...")
     session.rollback()
 
-
 # Create the supported exchanges if they don't exist
 for exchange in ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']:
     try:
@@ -338,5 +285,3 @@ for exchange in ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v
     except Exception as e:
         print(f"Error adding exchange {exchange} to database, {e} skipping...")
         session.rollback()
-
-
