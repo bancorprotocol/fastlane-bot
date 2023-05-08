@@ -15,17 +15,20 @@
 # ---
 
 # +
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+#from fastlane_bot.tools.simplepair import SimplePair
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
-#import carbon.tools.tokenscale as ts
+import carbon.tools.tokenscale as ts
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 from fastlane_bot.testing import *
 plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+require("3.0", __VERSION__)
 # -
 
 # # CPC and Optimizer in Fastlane [NBTest002]
@@ -35,6 +38,165 @@ try:
 except:
     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
+
+# ## pairo and primary
+
+assert Pair.n("WETH-eeee") == "WETH"
+assert Pair.n("WETH") == "WETH"
+assert Pair.n("USDC-uuuu/WETH-eeee") == "USDC/WETH"
+
+pairo = Pair("USDC-uuuu/WETH-eeee")
+assert pairo.isprimary == False
+assert raises (Pair, tknb='USDC-uuuu', tknq='WETH-eeee')
+assert pairo.tknb == 'USDC-uuuu'
+assert pairo.tknq == 'WETH-eeee'
+assert pairo.tknb_n == 'USDC'
+assert pairo.tknq_n == 'WETH'
+assert pairo.tknx == 'USDC-uuuu'
+assert pairo.tkny == 'WETH-eeee'
+assert pairo.tknx_n == 'USDC'
+assert pairo.tkny_n == 'WETH'
+assert pairo.pair == 'USDC-uuuu/WETH-eeee'
+assert pairo.pair_n == 'USDC/WETH'
+assert pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert pairo.primary_n == 'WETH/USDC'
+assert pairo.secondary == pairo.pair
+assert pairo.secondary_n == pairo.pair_n
+assert pairo.primary_tknb == "WETH"
+assert pairo.primary_tknq == "USDC"
+
+pairo = Pair("WETH-eeee/USDC-uuuu")
+assert pairo.isprimary == True
+assert pairo.tknq == 'USDC-uuuu'
+assert pairo.tknb == 'WETH-eeee'
+assert pairo.tknq_n == 'USDC'
+assert pairo.tknb_n == 'WETH'
+assert pairo.tkny == 'USDC-uuuu'
+assert pairo.tknx == 'WETH-eeee'
+assert pairo.tkny_n == 'USDC'
+assert pairo.tknx_n == 'WETH'
+assert pairo.pair == 'WETH-eeee/USDC-uuuu'
+assert pairo.pair_n == 'WETH/USDC'
+assert pairo.primary == pairo.pair
+assert pairo.primary_n == pairo.pair_n
+assert pairo.secondary == 'USDC-uuuu/WETH-eeee'
+assert pairo.secondary_n == 'USDC/WETH'
+assert pairo.primary_tknb == "WETH"
+assert pairo.primary_tknq == "USDC"
+
+c1 = CPC.from_pk(pair="USDC-uuuu/WETH-eeee", p=1, k=100)
+c2 = CPC.from_pk(pair="WETH-eeee/USDC-uuuu", p=1, k=100)
+CC = CPCContainer([c1,c2])
+assert c1.pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert c2.pairo.primary == 'WETH-eeee/USDC-uuuu'
+assert c1.primary == c1.pairo.primary
+assert CC.pairs() == {'WETH-eeee/USDC-uuuu'}
+assert CC.pairs(standardize=True) == CC.pairs()
+assert CC.pairs(standardize=False) == {'USDC-uuuu/WETH-eeee', 'WETH-eeee/USDC-uuuu'}
+
+assert Pair("WETH/USDC").isprimary == True
+assert Pair("USDC/WETH").isprimary == False
+
+# ## buysell
+
+# selling ETH at 2000-2001 USDC per ETH
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=1/2000, pb=1/2001, isdydx=True)
+assert c1.pair == "USDC/WETH"
+assert c1.primary == "WETH/USDC"
+assert c1.pairo.isprimary == False
+assert c1.buysell(verbose=True, withprice=True) == 'sell-WETH @ 2000.00 USDC per WETH'
+assert c1.buysell(verbose=False) == "s"
+assert c1.buysell() == "s"
+
+# selling ETH at 2000-2001 USDC per ETH
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=2000, pb=2001, isdydx=False)
+assert c1.pair == "USDC/WETH"
+assert c1.primary == "WETH/USDC"
+assert c1.pairo.isprimary == False
+assert c1.buysell(verbose=True, withprice=True) == 'sell-WETH @ 2000.00 USDC per WETH'
+assert c1.buysell(verbose=False) == "s"
+assert c1.buysell(verbose=False, withprice=True) == ('s', 2000.0000000000005)
+assert c1.buysell() == "s"
+
+# buying ETH at 1500-1499 USDC per ETH
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=True)
+assert c2.pair == "WETH/USDC"
+assert c2.primary == "WETH/USDC"
+assert c2.pairo.isprimary == True
+assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
+assert c2.buysell(verbose=False) == "b"
+assert c2.buysell(verbose=False, withprice=True) == ('b', 1500.0000000000002)
+assert c2.buysell() == "b"
+
+# buying ETH at 1500-1499 USDC per ETH
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=False)
+assert c2.pair == "WETH/USDC"
+assert c2.primary == "WETH/USDC"
+assert c2.pairo.isprimary == True
+assert c2.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1500.00 USDC per WETH'
+assert c2.buysell(verbose=False) == "b"
+assert c2.buysell(verbose=False, withprice=True) == ('b', 1500.0000000000002)
+assert c2.buysell() == "b"
+
+# univ3 1899-1901 @ 1900 USDC per WETH
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c3.pair == "WETH/USDC"
+assert c3.primary == "WETH/USDC"
+assert c3.pairo.isprimary == True
+assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
+assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell(verbose=False, withprice=True) == ('bs', 1900.0000000000007)
+assert c3.buysell() == "bs"
+
+# univ3 1899-1901 @ 1900 USDC per WETH
+c3 = CPC.from_univ3(pair="USDC/WETH", Pmarg=1/1900, uniPb=1/1899, uniPa=1/1901, uniL=1000, cid="", fee=0, descr="")
+assert c3.pair == "USDC/WETH"
+assert c3.primary == "WETH/USDC"
+assert c3.pairo.isprimary == False
+assert c3.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 1900.00 USDC per WETH'
+assert c3.buysell(verbose=False) == "bs"
+assert c3.buysell(verbose=False, withprice=True) == ('bs', 1900.)
+assert c3.buysell() == "bs"
+
+# univ3 1899-1901 @ 1899 USDC per WETH (WETH low, therefore 100% in WETH, therefore sell WETH)
+c4 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1899, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c4.pair == "WETH/USDC"
+assert c4.primary == "WETH/USDC"
+assert c4.pairo.isprimary == True
+assert c4.buysell(verbose=True, withprice=True) == 'sell-WETH @ 1899.00 USDC per WETH'
+assert c4.buysell(verbose=False) == "s"
+assert c4.buysell(verbose=False, withprice=True) == ('s', 1899.0000000000002)
+assert c4.buysell() == "s"
+
+# univ3 1899-1901 @ 1901 USDC per WETH (WETH high, therefore 100% in USDC, therefore buy WETH)
+c5 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1901, uniPa=1899, uniPb=1901, uniL=1000, cid="", fee=0, descr="")
+assert c5.pair == "WETH/USDC"
+assert c5.primary == "WETH/USDC"
+assert c5.pairo.isprimary == True
+assert c5.buysell(verbose=True, withprice=True) == 'buy-WETH @ 1901.00 USDC per WETH'
+assert c5.buysell(verbose=False) == "b"
+assert c5.buysell(verbose=False, withprice=True) == ('b', 1900.9999999999998)
+assert c5.buysell() == "b"
+
+# univ2 (tknb=2000 USDC, tknq=1 ETH)
+c6 = CPC.from_univ2(pair="USDC/WETH", x_tknb=2000, y_tknq=1, cid="", fee=0, descr="")
+assert c6.pair == "USDC/WETH"
+assert c6.primary == "WETH/USDC"
+assert c6.pairo.isprimary == False
+assert c6.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
+assert c6.buysell(verbose=False) == "bs"
+assert c6.buysell(verbose=False, withprice=True) == ('bs', 2000.)
+assert c6.buysell() == "bs"
+
+# univ2 (tknq=2000 USDC, tknb=1 ETH)
+c7 = CPC.from_univ2(pair="WETH/USDC", x_tknb=1, y_tknq=2000, cid="", fee=0, descr="")
+assert c7.pair == "WETH/USDC"
+assert c7.primary == "WETH/USDC"
+assert c7.pairo.isprimary == True
+assert c7.buysell(verbose=True, withprice=True) == 'buy-sell-WETH @ 2000.00 USDC per WETH'
+assert c7.buysell(verbose=False) == "bs"
+assert c7.buysell(verbose=False, withprice=True) == ('bs', 2000.)
+assert c7.buysell() == "bs"
 
 # ## P
 
@@ -69,6 +231,106 @@ assert len(CC.byparams(foo=1)) == 5
 assert len(CC.byparams(foo=2)) == 15
 assert len(CC.byparams(foo=3)) == 0
 assert raises (CC.byparams, foo=1, bar=2) == "currently only one param allowed {'foo': 1, 'bar': 2}"
+
+# ## itm
+
+# +
+itm0 = CPC.itm0
+assert CPC.ITM_THRESHOLDPC == 0.01
+
+assert itm0( ("bs", 1000), ("bs", 1000) ) == False
+assert itm0( ("bs", 1000), ("bs", 1009) ) == False
+assert itm0( ("bs", 1009), ("bs", 1000) ) == False
+assert itm0( ("bs", 1000), ("bs", 1011) ) == True
+assert itm0( ("bs", 1011), ("bs", 1000) ) == True
+assert itm0( ("bs", 1000), ("bs", 1011), thresholdpc=0.02 ) == False
+assert itm0( ("bs", 1011), ("bs", 1000), thresholdpc=0.02 ) == False
+assert itm0( ("bs", 1000), ("bs", 1021), thresholdpc=0.02 ) == True
+assert itm0( ("bs", 1021), ("bs", 1000), thresholdpc=0.02 ) == True
+
+assert itm0( ("b", 1000), ("s", 1100) ) == False
+assert itm0( ("b", 1000), ("b", 1100) ) == False
+assert itm0( ("b", 1000), ("bs", 1100) ) == False
+assert itm0( ("s", 1000), ("s", 1100) ) == False
+assert itm0( ("s", 1000), ("b", 1100) ) == True
+assert itm0( ("s", 1000), ("bs", 1100) ) == True
+assert itm0( ("bs", 1000), ("s", 1100) ) == False
+assert itm0( ("bs", 1000), ("b", 1100) ) == True
+assert itm0( ("bs", 1000), ("bs", 1100) ) == True
+
+assert itm0( ("s", 1000), ("b", 900) ) == False
+assert itm0( ("s", 1000), ("s", 900) ) == False
+assert itm0( ("s", 1000), ("bs", 900) ) == False
+assert itm0( ("b", 1000), ("b", 900) ) == False
+assert itm0( ("b", 1000), ("s", 900) ) == True
+assert itm0( ("b", 1000), ("bs", 900) ) == True
+assert itm0( ("bs", 1000), ("b", 900) ) == False
+assert itm0( ("bs", 1000), ("s", 900) ) == True
+assert itm0( ("bs", 1000), ("bs", 900) ) == True
+# -
+
+
+# c1: sell ETH @ 2000, c2: buy ETH @ 1500 --> no arb
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pa=2000, pb=2001, isdydx=False)
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pa=1500, pb=1499, isdydx=False)
+bs1 = c1.buysell(verbose=False, withprice=True)
+bs2 = c2.buysell(verbose=False, withprice=True)
+assert (bs1, bs2) == (('s', 2000.0000000000005), ('b', 1500.0000000000002))
+assert itm0(bs1, bs2) == False
+assert c1.itm(c2) == c2.itm(c1)
+assert c1.itm(c2) == itm0(bs1, bs2)
+assert c1.itm([c2,c2], aggr=False) == (itm0(bs1, bs2), itm0(bs1, bs2))
+
+# c1: buy ETH @ 2000, c2: sell ETH @ 1500 --> arb
+c1 = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pb=2000, pa=2001, isdydx=False)
+c2 = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=1500, pa=1499, isdydx=False)
+bs1 = c1.buysell(verbose=False, withprice=True)
+bs2 = c2.buysell(verbose=False, withprice=True)
+assert (bs1, bs2) == (('b', 2000.9999999999998), ('s', 1499.0000000000002))
+assert itm0(bs1, bs2) == True
+assert c1.itm(c2) == c2.itm(c1)
+assert c1.itm(c2) == itm0(bs1, bs2)
+assert c1.itm([c2,c2], aggr=False) == (itm0(bs1, bs2), itm0(bs1, bs2))
+
+# c1: buy ETH @ 2000, c2: sell ETH @ 1500, c2b: sell ETH @ 2500 --> arb, noarb
+c1  = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pb=2000, pa=2001, isdydx=False)
+c2  = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=1500, pa=1499, isdydx=False)
+c2b = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=2500, pa=2499, isdydx=False)
+CC = CPCContainer([c1,c2,c2b])
+assert c1.itm(c2) == True
+assert c1.itm(c2b) == False
+assert c1.itm([c2,c2b], aggr=False) == (True, False)
+assert c1.itm([c2b,c2], aggr=False) == (False, True)
+assert c1.itm([c2b,c2], aggr=True) == True
+assert c1.itm([c2,c2b], aggr=True) == True
+assert c1.itm([c2b,c2]) == True
+assert c1.itm([c2,c2b]) == True
+assert c1.itm(CC, aggr=True) == True
+assert c1.itm(CC, aggr=False) == (False, True, False)
+
+# c3: buy/sell @ 1900, c4: buy/sell @ 1899 --> arb depending on threshold
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+c4 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1899, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+bs3 = c3.buysell(verbose=False, withprice=True)
+bs4 = c4.buysell(verbose=False, withprice=True)
+assert (bs3, bs4) == (('bs', 1900.0000000000007), ('bs', 1899.0000000000002))
+assert itm0(bs3, bs4, thresholdpc=0.0001) == True
+assert itm0(bs3, bs4, thresholdpc=0.001) == False
+assert c3.itm(c4) == c4.itm(c3)
+assert c3.itm(c4) == itm0(bs3, bs4)
+assert c3.itm([c4,c4], aggr=False) == (itm0(bs3, bs4), itm0(bs3, bs4))
+
+# c3: buy/sell @ 1900, c4: buy/sell @ 1899 --> arb depending on threshold
+c3 = CPC.from_univ3(pair="WETH/USDC", Pmarg=1900, uniPa=1898, uniPb=1902, uniL=1000, cid="", fee=0, descr="")
+c4 = CPC.from_univ3(pair="USDC/WETH", Pmarg=1/1899, uniPb=1/1898, uniPa=1/1902, uniL=1000, cid="", fee=0, descr="")
+bs3 = c3.buysell(verbose=False, withprice=True)
+bs4 = c4.buysell(verbose=False, withprice=True)
+assert (bs3, bs4) == (('bs', 1900.0000000000007), ('bs', 1899.0000000000002))
+assert itm0(bs3, bs4, thresholdpc=0.0001) == True
+assert itm0(bs3, bs4, thresholdpc=0.001) == False
+assert c3.itm(c4) == c4.itm(c3)
+assert c3.itm(c4) == itm0(bs3, bs4)
+assert c3.itm([c4,c4], aggr=False) == (itm0(bs3, bs4), itm0(bs3, bs4))
 
 # ## TVL
 
@@ -151,6 +413,59 @@ CCmarket.fp(onein="USDC")
 r = Om.price_estimates(tknq="USDC", tknbs=["WETH", "WBTC"])
 assert iseq(r[0],  1820.89875275)
 assert iseq(r[1],  28351.08150121)
+
+# ## triangle estimates
+
+CC = CPCContainer()
+CC += [CPC.from_univ3(pair=f"{T.WETH}/{T.USDC}", cid="uv3-1", fee=0, descr="",
+                     uniPa=2000, uniPb=2002, Pmarg=2001, uniL=10*m.sqrt(2000))]
+CC += [CPC.from_univ3(pair=f"{T.WBTC}/{T.USDC}", cid="uv3-2", fee=0, descr="",
+                     uniPa=20000, uniPb=20020, Pmarg=20010, uniL=1*m.sqrt(20000))]
+#CC.plot()
+
+help(CC.price_estimate)
+
+assert iseq(CC.price_estimate(pair=f"{T.WETH}/{T.USDC}"), 2001)
+assert iseq(CC.price_estimate(pair=f"{T.WBTC}/{T.USDC}"), 20010)
+assert iseq(CC.price_estimate(pair=f"{T.USDC}/{T.WETH}"), 1/2001)
+assert iseq(CC.price_estimate(pair=f"{T.USDC}/{T.WBTC}"), 1/20010)
+
+assert CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_PAIR) == f"{T.WETH}/{T.USDC}"
+r = CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_CURVES)
+assert len(r) == 1
+assert r[0][0].cid=="uv3-1"
+assert iseq(r[0][1], 2001)
+assert iseq(r[0][2], 200000.0)
+r = CC.price_estimate(tknb=T.WETH, tknq=T.USDC, result=CC.PE_DATA)
+assert len(r) == 2
+assert r[0].shape == (1,)
+assert r[1].shape == (1,)
+assert iseq(r[0][0], 2001)
+
+help(CC.price_estimates)
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], unwrapsingle=True, pairs=True)
+assert r.shape == (1,)
+assert r[0] == f"{T.WBTC}/{T.WETH}"
+assert CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], pairs=True) == r
+r
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], unwrapsingle=False, pairs=True)
+assert r.shape == (1,1)
+assert r[0][0] == f"{T.WBTC}/{T.WETH}"
+r
+
+assert raises(CC.price_estimates, tknqs=[T.WETH], tknbs=[T.WBTC], 
+             triangulate=False).startswith("('no price found")
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], raiseonerror=False, triangulate=False)
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], raiseonerror=False, triangulate=False)
+assert r.shape == (1,)
+assert r[0] is None
+
+r = CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], triangulate=[T.USDC])
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC], triangulate=True)
+assert r == CC.price_estimates(tknqs=[T.WETH], tknbs=[T.WBTC])
+assert iseq(r[0], 10)
 
 # ## price estimates in optimizer
 
@@ -248,65 +563,6 @@ assert iseq(1, 1.00001) == False
 assert iseq(1, 1.000001)
 assert iseq(1, 1.000001, eps=1e-7) == False
 assert iseq("1", 1) == False
-
-# ## CarbonOrderUI integration
-
-pass
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 10)
-# c = o.as_cpc
-# assert o.pair.slashpair == "ETH/USDC"
-# assert o.tkn == "ETH"
-# assert o.p_start == 2500
-# assert o.p_end == 3000
-# assert o.p_marg == 2500
-# assert o.y == 10
-# assert o.yint == 10
-# assert c.pair == o.pair.slashpair
-# assert c.tknb == o.pair.tknb
-# assert c.tknq == o.pair.tknq
-# assert c.x_act == o.y
-# assert c.y_act == 0
-# assert iseq(o.p_start, c.p, c.p_min)
-# assert iseq(o.p_end, c.p_max)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 1000)
-# c = o.as_cpc
-# assert o.pair.slashpair == "ETH/USDC"
-# assert o.tkn == "USDC"
-# assert o.p_start == 1500
-# assert o.p_end == 1000
-# assert o.p_marg == 1500
-# assert o.y == 1000
-# assert o.yint == 1000
-# assert c.pair == o.pair.slashpair
-# assert c.tknb == o.pair.tknb
-# assert c.tknq == o.pair.tknq
-# assert c.x_act == 0
-# assert c.y_act == o.y
-# assert iseq(o.p_start, c.p, c.p_max)
-# assert iseq(o.p_end, c.p_min)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "ETH", 2500, 3000, 10, 7)
-# c = o.as_cpc
-# assert o.y == 7
-# assert iseq(c.x_act, o.y)
-# assert iseq(c.y_act, 0)
-# assert iseq(o.p_marg, c.p, c.p_min)
-# assert iseq(o.p_end, c.p_max)
-
-# +
-# o = CarbonOrderUI.from_prices("ETH/USDC", "USDC", 1500, 1000, 1000, 700)
-# c = o.as_cpc
-# assert o.y == 700
-# assert iseq(c.x_act, 0)
-# assert iseq(c.y_act, o.y)
-# assert iseq(o.p_marg, c.p, c.p_max)
-# assert iseq(o.p_end, c.p_min)
-# -
 
 # ## New CPC features in v2
 
@@ -427,60 +683,50 @@ assert len(CC2.tknxl()) == len(CC2)
 
 # ## TokenScale tests
 
-pass
+TSB = ts.TokenScaleBase()
+assert raises (TSB.scale,"ETH")
+assert TSB.DEFAULT_SCALE == 1e-2
 
-# +
-# TSB = ts.TokenScaleBase()
-# assert raises (TSB.scale,"ETH")
-# assert TSB.DEFAULT_SCALE == 1e-2
+TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
+TS
 
-# +
-# TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
-# TS
+assert TS("USDC") == 1
+assert TS("ETH") == 1000
+assert TS("BTC") == 10000
+assert TS("MEH") == TS.DEFAULT_SCALE
 
-# +
-# assert TS("USDC") == 1
-# assert TS("ETH") == 1000
-# assert TS("BTC") == 10000
-# assert TS("MEH") == TS.DEFAULT_SCALE
+TSD = ts.TokenScaleData
 
-# +
-# TSD = ts.TokenScaleData
+tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
+assert tknset - set(TSD.scale_dct.keys()) == set()
 
-# +
-# tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
-# assert tknset - set(TSD.scale_dct.keys()) == set()
+cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+assert cc1.tokenscale is cc1.TOKENSCALE
+assert cc1.tknx == "ETH"
+assert cc1.tkny == "USDC"
+assert cc1.scalex == 1
+assert cc1.scaley == 1
+cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+assert cc2.tknx == "BTC"
+assert cc2.tkny == "MEH"
+assert cc2.scalex == 1
+assert cc2.scaley == 1
+assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
 
-# +
-# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-# assert cc1.tokenscale is cc1.TOKENSCALE
-# assert cc1.tknx == "ETH"
-# assert cc1.tkny == "USDC"
-# assert cc1.scalex == 1
-# assert cc1.scaley == 1
-# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-# assert cc2.tknx == "BTC"
-# assert cc2.tkny == "MEH"
-# assert cc2.scalex == 1
-# assert cc2.scaley == 1
-# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
-
-# +
-# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-# cc1.set_tokenscale(TSD)
-# assert cc1.tokenscale != cc1.TOKENSCALE
-# assert cc1.tknx == "ETH"
-# assert cc1.tkny == "USDC"
-# assert cc1.scalex == 1e3
-# assert cc1.scaley == 1e0
-# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-# cc2.set_tokenscale(TSD)
-# assert cc2.tknx == "BTC"
-# assert cc2.tkny == "MEH"
-# assert cc2.scalex == 1e4
-# assert cc2.scaley == 1e-2
-# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
-# -
+cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+cc1.set_tokenscale(TSD)
+assert cc1.tokenscale != cc1.TOKENSCALE
+assert cc1.tknx == "ETH"
+assert cc1.tkny == "USDC"
+assert cc1.scalex == 1e3
+assert cc1.scaley == 1e0
+cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+cc2.set_tokenscale(TSD)
+assert cc2.tknx == "BTC"
+assert cc2.tkny == "MEH"
+assert cc2.scalex == 1e4
+assert cc2.scaley == 1e-2
+assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
 
 # ## dx_min and dx_max etc
 
@@ -1108,17 +1354,18 @@ for i in range(N):
     
 CC = CCc.bycids().add(CCm)
 CC.plot()
-# -
 
-O = CPCArbOptimizer(CC)
-r = O.simple_optimizer()
-print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
-prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
-print("prices post arb:", prices_ex)
-print("stdev", np.std(prices_ex))
-#CC.plot()
-CC_ex.plot()
+# +
+# O = CPCArbOptimizer(CC)
+# r = O.simple_optimizer()
+# print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
+# CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+# prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
+# print("prices post arb:", prices_ex)
+# print("stdev", np.std(prices_ex))
+# #CC.plot()
+# CC_ex.plot()
+# -
 
 r.dxvalues
 

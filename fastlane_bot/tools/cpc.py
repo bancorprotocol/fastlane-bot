@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.7"
-__DATE__ = "02/May/2023"
+__VERSION__ = "2.10.1"
+__DATE__ = "07/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -56,162 +56,450 @@ class DAttrDict:
 AD = DAttrDict
 
 
-@dataclass
-class Pair:
-    """
-    a pair in notation TKNB/TKNQ; can also be provided as list
-    """
+# FN = "20230411-curves.csv"
+# df = pd.read_csv(FN)
+# CCm = CPCContainer.from_df(df, tokenscale=ts.TokenScale1Data)
+# tp = {t.split("-")[0]:t for t in CCm.tokens()}
+# {t:tp.get(t) for t in T}
+# for k,v in {t:tp.get(t) for t in T}.items():
+#     print(f"""{k} = "{v}",  """)
 
-    tknb: str = field(init=False)
-    tknq: str = field(init=False)
-    pair: InitVar[str] = None
+TOKENIDS = AttrDict(
+    AAVE="AAVE-DaE9",
+    WETH="WETH-6Cc2",
+    ETH="WETH-6Cc2",
+    WBTC="WBTC-C599",
+    BTC="WBTC-C599",
+    USDC="USDC-eB48",
+    USDT="USDT-1ec7",
+    DAI="DAI-1d0F",
+    LINK="LINK-86CA",
+    MKR="MKR-79A2",
+    BNT="BNT-FF1C",
+    UNI="UNI-F984",
+    SUSHI="SUSHI-0fE2",
+    CRV="CRV-cd52",
+    FRAX="FRAX-b99e",
+    HEX="HEX-eb39",
+    MATIC="MATIC-eBB0",
+    HDRN="HDRN-5e06",
+    SHIB="SHIB-C4cE",
+    ICHI="ICHI-C4d6",
+    OCTO="OCTO-2BA3",
+    ECO="ECO-5727",
+)
+T = TOKENIDS
 
-    def __post_init__(self, pair):
-        if isinstance(pair, CPCContainer.Pair):
-            self.tknb = pair.tknb
-            self.tknq = pair.tknq
-        elif isinstance(pair, str):
-            self.tknb, self.tknq = pair.split("/")
-        elif pair is False:
-            # used in alternative constructors
-            pass
-        else:
-            try:
-                self.tknb, self.tknq = pair
-            except:
-                raise ValueError(f"pair must be a string or list of two strings {pair}")
+TOKENS_NOETH = {
+    "$LSVR-c09B",
+    "3Crv-E490",
+    "ABR-8C7C",
+    "ACR-E3CF",
+    "ACRE-FC21",
+    "AGV-382B",
+    "APM-BA6c",
+    "ARPA-b71a",
+    "ASTO-4689",
+    "ASW-2a11",
+    "B2M-0a1f",
+    "BAC-A69a",
+    "BACON-38e7",
+    "BAG-14b0",
+    "BAMBOO-2e89",
+    "BASE-04e0",
+    "BASv2-5287",
+    "BBS-B430",
+    "BDT-d5Cf",
+    "BHNY-0844",
+    "BLID-56A5",
+    "BLU-1FfD",
+    "BORING-92CA",
+    "BRD-9aD6",
+    "BRKL-9ff8",
+    "BRZ-2e2B",
+    "BTTY-3D0A",
+    "CE-EecE",
+    "CHANGE-2754",
+    "CHEQ-4de7",
+    "CHO-3099",
+    "CIRUS-8756",
+    "CLB-3c84",
+    "CLS-de37",
+    "CMT-Dc18",
+    "COW-5Ea8",
+    "CP-CFCa",
+    "CPOOL-FaC5",
+    "CPRX-978f",
+    "CRF-219d",
+    "CROWN-E0fa",
+    "CRPT-6d8B",
+    "CTO-6C47",
+    "CTX-f98D",
+    "CWEB-Bf04",
+    "CoreDAO-Dd58",
+    "DAMM-16b8",
+    "DAPP-1649",
+    "DAWN-9aFa",
+    "DCHF-7A36",
+    "DEXG-436D",
+    "DHT-Fa84",
+    "DIGG-01C3",
+    "DIGITS-404F",
+    "DLTA-D823",
+    "DNXC-f03a",
+    "DOG-868D",
+    "DOGZ-33eF",
+    "DORA-c81d",
+    "DREP-b4c2",
+    "DSD-66e3",
+    "DSU-7109",
+    "DTX-3F75",
+    "DVF-1918",
+    "DXP-B745",
+    "Daruma-f704",
+    "EAG8-EeE4",
+    "ECO-5727",
+    "ECOx-736a",
+    "EGG-6a0c",
+    "ERC20-EPK-40c4",
+    "ERP-2267",
+    "ESD-d723",
+    "ETHV-aC76",
+    "EURe-273f",
+    "EVA-8707",
+    "EXD-6560",
+    "FANC-c045",
+    "FCC-e079",
+    "FEAR-1E83",
+    "FLX-0770",
+    "FLy-1472",
+    "FORM-FA2a",
+    "FORT-Ec29",
+    "FPI-E08E",
+    "FTG-7659",
+    "FWT-a295",
+    "GAME-1d1c",
+    "GBPT-bA98",
+    "GBYTE-cc2a",
+    "GEM-efcC",
+    "GENI-6a39",
+    "GOB-8A80",
+    "GODS-FD97",
+    "GPO-3aCE",
+    "GRO-74D7",
+    "GST-1404",
+    "GUILD-475A",
+    "GVT-2a0c",
+    "HAI-9a63",
+    "HAN-511F",
+    "HDAO-fF2D",
+    "HILO-5ff6",
+    "HOME-1F62",
+    "INSUR-7429",
+    "IOEN-893A",
+    "IOI-1d81",
+    "IPISTR-348e",
+    "IPT-FC3d",
+    "ISK-a75C",
+    "IZE-327B",
+    "JOY-1FB5",
+    "KOL-d414",
+    "KYOKO-BaC2",
+    "LBlock-D329",
+    "LEAN-99F8",
+    "LMT-c8AF",
+    "LUCKY-6140",
+    "LXF-772A",
+    "M2-D15C",
+    "MAXI-e84b",
+    "MDF-B411",
+    "MFI-355B",
+    "MGG-8740",
+    "MIDAS-66A5",
+    "MLP-1152",
+    "MPS-D47D",
+    "MYC-F5Ba",
+    "Mars-70B7",
+    "NAO-53dc",
+    "NBT-824c",
+    "NFTD-B379",
+    "NFTY-3208",
+    "NGL-66aE",
+    "NRFX-94a4",
+    "NUM-3079",
+    "NineFi-2f1d",
+    "O-c40f",
+    "O3-7d28",
+    "OBOT-0c32",
+    "OCT-c6DC",
+    "OIL-88a5",
+    "OK-4189",
+    "ONIGIRI-30D0",
+    "OPUL-6444",
+    "OTHR-C334",
+    "OUSD-5e86",
+    "OXAI-Fe9d",
+    "Okinami-4121",
+    "PAL-f4BF",
+    "PAR-4703",
+    "PEPEBET-0350",
+    "PINA-780D",
+    "PNL-B459",
+    "POLA-2CED",
+    "POLAR-075E",
+    "POLY-fdad",
+    "PP-CfD0",
+    "PROS-4B56",
+    "PULSE-97cE",
+    "QLT-c87c",
+    "RACA-9040",
+    "RPG-e251",
+    "RWS-7802",
+    "SAKURA-FeD6",
+    "SCOIN-0EB4",
+    "SD-D10f",
+    "SDEX-BEeF",
+    "SENT-556F",
+    "SEURO-9A00",
+    "SKEB-C810",
+    "SLD-a084",
+    "SMTX-419b",
+    "SNP-E873",
+    "SNP-FA9d",
+    "SOTU-9162",
+    "SPIRAL-1C3c",
+    "SPOOL-0976",
+    "SPOT-bafE",
+    "SPWN-1126",
+    "SST-9868",
+    "STABLZ-F7cd",
+    "SUM-40b1",
+    "SWASH-2F80",
+    "SWEAT-3A35",
+    "SWIV-6f2d",
+    "SYL-eb9C",
+    "SYNR-490a",
+    "Shird-695f",
+    "SpillWays-7b47",
+    "TCR-F050",
+    "TEAM-dE02",
+    "TEMP-1aB9",
+    "TGL-4e92",
+    "TOL-2cFA",
+    "TR3-5F98",
+    "TRIO-3308",
+    "TXA-A830",
+    "UBXN-1065",
+    "UCOIL-9a13",
+    "ULX-636F",
+    "UNIX-7aC8",
+    "UNKAI-B73D",
+    "USDC-1130",
+    "USDD-b5c6",
+    "USDP-89E1",
+    "UST-87a5",
+    "Umoon-C5da",
+    "UwU-5257",
+    "VENDETTA-53c3",
+    "VIS-E863",
+    "VLX-Edb9",
+    "VNDC-b5DE",
+    "VOW-46Fb",
+    "VPAD-4EDc",
+    "VR-8cdD",
+    "WAVES-f29a",
+    "WFAIR-8972",
+    "WMLX-1AAd",
+    "WOOFY-57f1",
+    "WXT-E915",
+    "XAI-bEAc",
+    "XAUt-2F38",
+    "XDAO-Ad28",
+    "XDEX-6c83",
+    "XETA-3550",
+    "XFIT-7441",
+    "Y2B-0650",
+    "Z3-61a6",
+    "ZEUM-8190",
+    "ZUSD-04fA",
+    "ankrMATIC-480C",
+    "bLUSD-79C3",
+    "bluSGD-db22",
+    "cvxCRV-0Aa7",
+    "eLunr-Aa5A",
+    "eMAID-a303",
+    "iAI-2122",
+    "ibETH-9c7A",
+    "icc-a177",
+    "one1INCH-3857",
+    "oneICHI-1e07",
+    "rETH2-86c5",
+    "rUSD-C8F6",
+    "sifu-C313",
+    "vBNT-7f94",
+    "wMEMO-af57",
+    "wOXEN-bcc5",
+    "wPPC-2958",
+}
 
-    @classmethod
-    def from_tokens(cls, tknb, tknq):
-        pair = cls(False)
-        pair.tknb = tknb
-        pair.tknq = tknq
-        return pair
 
-    def __str__(self):
-        return f"{self.tknb}/{self.tknq}"
 
-    @property
-    def pair(self):
-        """string representation of the pair"""
-        return str(self)
+# @dataclass
+# class Pair:
+#     """
+#     a pair in notation TKNB/TKNQ; can also be provided as list
+#     """
 
-    @property
-    def pairt(self):
-        """tuple representation of the pair"""
-        return (self.tknb, self.tknq)
+#     tknb: str = field(init=False)
+#     tknq: str = field(init=False)
+#     pair: InitVar[str] = None
 
-    @property
-    def pairr(self):
-        """returns the reversed pair"""
-        return f"{self.tknq}/{self.tknb}"
+#     def __post_init__(self, pair):
+#         if isinstance(pair, CPCContainer.Pair):
+#             self.tknb = pair.tknb
+#             self.tknq = pair.tknq
+#         elif isinstance(pair, str):
+#             self.tknb, self.tknq = pair.split("/")
+#         elif pair is False:
+#             # used in alternative constructors
+#             pass
+#         else:
+#             try:
+#                 self.tknb, self.tknq = pair
+#             except:
+#                 raise ValueError(f"pair must be a string or list of two strings {pair}")
 
-    @property
-    def pairrt(self):
-        """tuple representation of the reverse pair"""
-        return (self.tknq, self.tknb)
+#     @classmethod
+#     def from_tokens(cls, tknb, tknq):
+#         pair = cls(False)
+#         pair.tknb = tknb
+#         pair.tknq = tknq
+#         return pair
 
-    @staticmethod
-    def prettify_tkn(tkn):
-        """returns a prettified token name"""
-        return tkn.split("-")[0]
+#     def __str__(self):
+#         return f"{self.tknb}/{self.tknq}"
 
-    @staticmethod
-    def prettify_pair(pair):
-        """returns a prettified pair name"""
-        return "/".join(Pair.prettify_tkn(tkn) for tkn in pair.split("/"))
+#     @property
+#     def pair(self):
+#         """string representation of the pair"""
+#         return str(self)
 
-    @property
-    def tknx(self):
-        return self.tknb
+#     @property
+#     def pairt(self):
+#         """tuple representation of the pair"""
+#         return (self.tknb, self.tknq)
 
-    @property
-    def tkny(self):
-        return self.tknq
+#     @property
+#     def pairr(self):
+#         """returns the reversed pair"""
+#         return f"{self.tknq}/{self.tknb}"
 
-    @property
-    def tknbp(self):
-        return self.prettify_tkn(self.tknb)
+#     @property
+#     def pairrt(self):
+#         """tuple representation of the reverse pair"""
+#         return (self.tknq, self.tknb)
 
-    @property
-    def tknqp(self):
-        return self.prettify_tkn(self.tknq)
+#     @staticmethod
+#     def prettify_tkn(tkn):
+#         """returns a prettified token name"""
+#         return tkn.split("-")[0]
 
-    @property
-    def tknxp(self):
-        return self.prettify_tkn(self.tknx)
+#     @staticmethod
+#     def prettify_pair(pair):
+#         """returns a prettified pair name"""
+#         return "/".join(Pair.prettify_tkn(tkn) for tkn in pair.split("/"))
 
-    @property
-    def tknyp(self):
-        return self.prettify_tkn(self.tkny)
+#     @property
+#     def tknx(self):
+#         return self.tknb
 
-    def other(self, tkn):
-        assert tkn in self.pairt, f"token not in pair{self.pair} {tkn}"
-        return self.tknq if tkn == self.tknb else self.tknb
+#     @property
+#     def tkny(self):
+#         return self.tknq
 
-    def otherp(self, tkn):
-        return self.prettify_tkn(self.other(tkn))
+#     @property
+#     def tknbp(self):
+#         return self.prettify_tkn(self.tknb)
 
-    NUMERAIRE_TOKENS = {
-        tkn: i
-        for i, tkn in enumerate(
-            [
-                "USDC",
-                "USDT",
-                "DAI",
-                "TUSD",
-                "BUSD",
-                "PAX",
-                "GUSD",
-                "USDS",
-                "sUSD",
-                "mUSD",
-                "HUSD",
-                "USDN",
-                "USDP",
-                "USDQ",
-                "ETH",
-                "WETH",
-                "WBTC",
-                "BTC",
-            ]
-        )
-    }
+#     @property
+#     def tknqp(self):
+#         return self.prettify_tkn(self.tknq)
 
-    @property
-    def isprimary(self):
-        """whether the representation is primary or secondary"""
-        tknqix = self.NUMERAIRE_TOKENS.get(self.tknqp, 1e10)
-        tknbix = self.NUMERAIRE_TOKENS.get(self.tknbp, 1e10)
-        if tknqix == tknbix:
-            return self.tknb < self.tknq
-        return tknqix < tknbix
+#     @property
+#     def tknxp(self):
+#         return self.prettify_tkn(self.tknx)
 
-    def primary_price(self, p):
-        """returns the primary price (p if primary, 1/p if secondary)"""
-        return p if self.isprimary else 1 / p
+#     @property
+#     def tknyp(self):
+#         return self.prettify_tkn(self.tkny)
 
-    pp = primary_price
+#     def other(self, tkn):
+#         assert tkn in self.pairt, f"token not in pair{self.pair} {tkn}"
+#         return self.tknq if tkn == self.tknb else self.tknb
 
-    @property
-    def primary(self):
-        """returns the primary pair"""
-        return self.pair if self.isprimary else self.pairr
+#     def otherp(self, tkn):
+#         return self.prettify_tkn(self.other(tkn))
 
-    @property
-    def secondary(self):
-        """returns the secondary pair"""
-        return self.pairr if self.isprimary else self.pair
+#     NUMERAIRE_TOKENS = {
+#         tkn: i
+#         for i, tkn in enumerate(
+#             [
+#                 "USDC",
+#                 "USDT",
+#                 "DAI",
+#                 "TUSD",
+#                 "BUSD",
+#                 "PAX",
+#                 "GUSD",
+#                 "USDS",
+#                 "sUSD",
+#                 "mUSD",
+#                 "HUSD",
+#                 "USDN",
+#                 "USDP",
+#                 "USDQ",
+#                 "ETH",
+#                 "WETH",
+#                 "WBTC",
+#                 "BTC",
+#             ]
+#         )
+#     }
 
-    @classmethod
-    def wrap(cls, pairlist):
-        """wraps a list of strings into Pairs"""
-        return tuple(cls(p) for p in pairlist)
+#     @property
+#     def isprimary(self):
+#         """whether the representation is primary or secondary"""
+#         tknqix = self.NUMERAIRE_TOKENS.get(self.tknqp, 1e10)
+#         tknbix = self.NUMERAIRE_TOKENS.get(self.tknbp, 1e10)
+#         if tknqix == tknbix:
+#             return self.tknb < self.tknq
+#         return tknqix < tknbix
 
-    @classmethod
-    def unwrap(cls, pairlist):
-        """unwraps a list of Pairs into strings"""
-        return tuple(str(p) for p in pairlist)
+#     def primary_price(self, p):
+#         """returns the primary price (p if primary, 1/p if secondary)"""
+#         return p if self.isprimary else 1 / p
+
+#     pp = primary_price
+
+#     @property
+#     def primary(self):
+#         """returns the primary pair"""
+#         return self.pair if self.isprimary else self.pairr
+
+#     @property
+#     def secondary(self):
+#         """returns the secondary pair"""
+#         return self.pairr if self.isprimary else self.pair
+
+#     @classmethod
+#     def wrap(cls, pairlist):
+#         """wraps a list of strings into Pairs"""
+#         return tuple(cls(p) for p in pairlist)
+
+#     @classmethod
+#     def unwrap(cls, pairlist):
+#         """unwraps a list of Pairs into strings"""
+#         return tuple(str(p) for p in pairlist)
 
 
 @dataclass_
@@ -838,14 +1126,14 @@ class ConstantProductCurve:
     @property
     def tknbp(self):
         """prettified base token"""
-        return Pair.prettify_tkn(self.tknb)
+        return Pair.n(self.tknb)
 
     tknxp = tknbp
 
     @property
     def tknqp(self):
         """prettified quote token"""
-        return Pair.prettify_tkn(self.tknq)
+        return Pair.n(self.tknq)
 
     tknyp = tknqp
 
@@ -875,6 +1163,72 @@ class ConstantProductCurve:
         "pool price (in dy/dx)"
         return self.y / self.x
 
+    def buysell(self, *, verbose=False, withprice=False):
+        """
+        returns b (buy primary tknb), s (sells primary tknb) or bs (buys and sells)
+        """
+        b,s = ("b", "s") if not verbose else ("buy-", "sell-")
+        xa, ya = (self.x_act, self.y_act) if self.pairo.isprimary else (self.y_act, self.x_act)
+        result  = b if ya > 0 else ""
+        result += s if xa > 0 else ""
+        if verbose:
+            result += f"{self.pairo.primary_tknb}"
+            if withprice:
+                result += f" @ {self.primaryp(withconvention=True)}"
+            return result
+        if withprice:
+            return result, self.primaryp()
+        else:
+            return result
+    
+    ITM_THRESHOLDPC = 0.01
+    @classmethod
+    def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
+        """
+        whether or not two positions are in the money against each other
+
+        :bsp1:          first position ("bs", price) [from buysell]
+        :bsp2:          ditto second position
+        :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
+        """
+        if thresholdpc is None:
+            thresholdpc = cls.ITM_THRESHOLDPC
+        bs1, p1 = bsp1
+        bs2, p2 = bsp2
+        
+        # if  prices are equal (within threshold), positions are not in the money
+        if abs(p2/p1-1) < thresholdpc:
+            return False
+        if bs1 == "bs" and bs2 == "bs":
+            return True
+        
+        if p2 > p1:
+            # if p2 > p1: amm1 must sell and amm2 must buy
+            return "s" in bs1 and "b" in bs2
+        else:
+            # if p1 < p2: amm1 must buy and amm2 must sell
+            return "b" in bs1 and "s" in bs2
+    
+    def itm(self, other, *, thresholdpc=None, aggr=True):
+        """
+        like itm0, but self against another curve object
+
+        :other:         other curve object, or iterable thereof
+        :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
+        :aggr:          if True, and an iterable is passed, True iff one is in the money
+        """
+        try:
+            itm_t = tuple(self.itm(o) for o in other)
+            if not aggr:
+                return itm_t
+            return np.any(itm_t)
+        except:
+            pass
+        bss = self.buysell(verbose=False, withprice=True)
+        bso = other.buysell(verbose=False, withprice=True)
+        return self.itm0(bss, bso, thresholdpc=thresholdpc)
+    
+    
     def tvl(self, tkn=None, *, mult=1.0, incltkn=False, raiseonerror=True):
         """
         total value locked in the curve, expressed in the token tkn (default: tknq)
@@ -902,11 +1256,23 @@ class ConstantProductCurve:
     def p_convention(self):
         """price convention for p (dy/dx)"""
         return f"{self.tknyp} per {self.tknxp}"
-
+    
+    @property
+    def primary(self):
+        "alias for self.pairo.primary [pair]"
+        return self.pairo.primary
+    
+    def primaryp(self, *, withconvention=False):
+        "pool price in the native quote of the curve Pair object"
+        price = self.pairo.pp(self.p)
+        if not withconvention:
+            return price
+        return f"{price:.2f} {self.pairo.pp_convention}"     
+    
     @property
     def pp(self):
-        "pool price in the native quote of the curve Pair object"
-        return self.pairo.pp(self.p)
+        """alias for self.primaryp()"""
+        return self.primaryp()
 
     @property
     def kbar(self):
@@ -1847,19 +2213,16 @@ class CPCContainer:
         :pair:          alternative to tknq, tknb: pair to calculate price for
         :raiseonerror:  if True, raise exception if no price can be calculated
         :result:        what to return
-                        :pair:      slashpair
-                        :curves:    curves
-                        :data:      prices, weights
+                        :PE_PAIR:      slashpair
+                        :PE_CURVES:    curves
+                        :PE_DATA:      prices, weights
         :returns:       price (quote per base)
         """
-        assert (
-            tknq is not None and tknb is not None
-        ) or pair is not None, (
+        assert tknq is not None and tknb is not None or pair is not None, (
             f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
         )
-        assert not (
-            not tknb is None and not pair is None
-        ), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+        assert not (not tknb is None and not pair is None), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+        
         if not pair is None:
             tknb, tknq = pair.split("/")
         if tknq == tknb:
@@ -1889,32 +2252,38 @@ class CPCContainer:
             return prices, weights
         return float(np.average(prices, weights=weights))
 
-    TRIANGTOKENS = "USDC, USDT, DAI, WBTC"
+    TRIANGTOKENS = f"{T.USDC}, {T.USDT}, {T.DAI}, {T.WBTC}, {T.ETH}"
 
     def price_estimates(
         self,
         *,
         tknqs=None,
         tknbs=None,
-        triangulate=False,
+        triangulate=True,
         unwrapsingle=True,
         pairs=False,
         raiseonerror=True,
+        verbose=False,
     ):
         """
         calculates prices estimates in the reference token as base token
 
         :tknqs:         list of quote tokens to calculate prices for
         :tknbs:         list of base tokens to calculate prices for
-        :triangulate:   if not None, use those tokens as intermediate token for triangulation
-                        if True, a standard token list is used; if None or False, no triangulation
+        :triangulate:   tokens used as intermediate token for triangulation; if True, a standard 
+                        token list is used; if None or False, no triangulation
         :unwrapsingle:  if there is only one quote token, a 1-d array is returned
         :pairs:         if True, returns the slashpairs instead of the prices
-        :raisonerror:   if True, raise exception if no price can be calculated
+        :raiseonerror:  if True, raise exception if no price can be calculated
+        :verbose:       if True, print some progress
         :return:        np.array of prices (quote outer, base inner; quote per base)
         """
         assert not tknqs is None, "tknqs must be set"
         assert not tknbs is None, "tknbs must be set"
+        if isinstance(tknqs, str):
+            tknqs = [t.strip() for t in tknqs.split(",")]
+        if isinstance(tknbs, str):
+            tknbs = [t.strip() for t in tknbs.split(",")]
         # print(f"[price_estimates] tknqs [{len(tknqs)}], tknbs [{len(tknbs)}]")
         # print(f"[price_estimates] tknqs [{len(tknqs)}] = {tknqs} , tknbs [{len(tknbs)}]] = {tknbs} ")
         result = np.array(
@@ -1931,23 +2300,52 @@ class CPCContainer:
                 for q in tknqs
             ]
         )
-        # print("[CPC:price_estimates] result", result)
-
-        if triangulate:
-            raise NotImplementedError("triangulation not implemented yet")
+        
+        flattened = result.flatten()
+        nmissing = len([r for r in flattened if r is None])
+        if verbose:
+            print(f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing")
+            if nmissing > 0 and not triangulate:
+                print(f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]")
+            if nmissing == 0 and triangulate:
+                print(f"[price_estimates] no missing pairs, triangulation not needed")
+        
+        if triangulate and nmissing > 0:
             if triangulate is True:
                 triangulate = self.TRIANGTOKENS
-            triangulate = [t.strip() for t in triangulate.split(",")]
-            triangulate = [T.get(t, t) for t in triangulate]
-            print("[price_estimates] triangulation tokens", triangulate)
+            if isinstance(triangulate, str):
+                triangulate = [t.strip() for t in triangulate.split(",")]
+            if verbose:
+                print("[price_estimates] triangulation tokens", triangulate)
             for ib, b in enumerate(tknbs):
                 for iq, q in enumerate(tknqs):
                     if result[iq][ib] is None:
+                        result1 = []
                         for tkn in triangulate:
-                            print(
-                                f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}"
-                            )
-
+                            #print(f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}")
+                            b_tkn = self.price_estimate(tknb=b, tknq=tkn, raiseonerror=False)
+                            q_tkn = self.price_estimate(tknb=q, tknq=tkn, raiseonerror=False)
+                            #print(f"[price_estimates] triangulating {b}/{tkn} = {b_tkn}, {q}/{tkn} = {q_tkn}")
+                            if not b_tkn is None and not q_tkn is None:
+                                #print(f"[price_estimates] triangulating {b}/{q} = {b_tkn/q_tkn}")
+                                result1 += [b_tkn / q_tkn]
+                        result1 = np.mean(result1) if len(result1) > 0 else None
+                        #print(f"[price_estimates] final result {b}/{q} = {result1}")
+                        result[iq][ib] = result1
+        
+        flattened = result.flatten()
+        nmissing = len([r for r in flattened if r is None])
+        if verbose:
+            if nmissing > 0:
+                missing = {
+                    f"{b}/{q}"
+                    for ib, b in enumerate(tknbs)
+                    for iq, q in enumerate(tknqs)
+                    if result[iq][ib] is None
+                }
+                print(f"[price_estimates] after triangulation {nmissing} missing", missing)
+            else:
+                print("[price_estimates] no missing pairs after triangulation")  
         if raiseonerror:
             missing = {
                 f"{b}/{q}"
@@ -2248,11 +2646,24 @@ class CPCInverter:
     @property
     def pair(self):
         return f"{self.tknb}/{self.tknq}"
-
+    
+    @property
+    def primary(self):
+        "alias for self.pairo.primary [pair]"
+        return self.pairo.primary
+    
     @property
     def pairp(self):
+        "prety pair (without the -xxx part)"
         return f"{self.tknbp}/{self.tknqp}"
 
+    @property
+    def primaryp(self):
+        "pretty primary pair (without the -xxx part)"
+        tokens = self.primary.split("/")
+        tokens = [t.split("-")[0] for t in tokens]
+        return "/".join(tokens)
+    
     @property
     def x_min(self):
         return self.curve.y_min
@@ -2328,288 +2739,3 @@ class CPCInverter:
     # TOKENIDS=TOKENIDS
 
 
-# FN = "20230411-curves.csv"
-# df = pd.read_csv(FN)
-# CCm = CPCContainer.from_df(df, tokenscale=ts.TokenScale1Data)
-# tp = {t.split("-")[0]:t for t in CCm.tokens()}
-# {t:tp.get(t) for t in T}
-# for k,v in {t:tp.get(t) for t in T}.items():
-#     print(f"""{k} = "{v}",  """)
-
-TOKENIDS = AttrDict(
-    AAVE="AAVE-DaE9",
-    WETH="WETH-6Cc2",
-    ETH="WETH-6Cc2",
-    WBTC="WBTC-C599",
-    BTC="WBTC-C599",
-    USDC="USDC-eB48",
-    USDT="USDT-1ec7",
-    DAI="DAI-1d0F",
-    LINK="LINK-86CA",
-    MKR="MKR-79A2",
-    BNT="BNT-FF1C",
-    UNI="UNI-F984",
-    SUSHI="SUSHI-0fE2",
-    CRV="CRV-cd52",
-    FRAX="FRAX-b99e",
-    HEX="HEX-eb39",
-    MATIC="MATIC-eBB0",
-    HDRN="HDRN-5e06",
-    SHIB="SHIB-C4cE",
-    ICHI="ICHI-C4d6",
-    OCTO="OCTO-2BA3",
-    ECO="ECO-5727",
-)
-T = TOKENIDS
-
-TOKENS_NOETH = {
-    "$LSVR-c09B",
-    "3Crv-E490",
-    "ABR-8C7C",
-    "ACR-E3CF",
-    "ACRE-FC21",
-    "AGV-382B",
-    "APM-BA6c",
-    "ARPA-b71a",
-    "ASTO-4689",
-    "ASW-2a11",
-    "B2M-0a1f",
-    "BAC-A69a",
-    "BACON-38e7",
-    "BAG-14b0",
-    "BAMBOO-2e89",
-    "BASE-04e0",
-    "BASv2-5287",
-    "BBS-B430",
-    "BDT-d5Cf",
-    "BHNY-0844",
-    "BLID-56A5",
-    "BLU-1FfD",
-    "BORING-92CA",
-    "BRD-9aD6",
-    "BRKL-9ff8",
-    "BRZ-2e2B",
-    "BTTY-3D0A",
-    "CE-EecE",
-    "CHANGE-2754",
-    "CHEQ-4de7",
-    "CHO-3099",
-    "CIRUS-8756",
-    "CLB-3c84",
-    "CLS-de37",
-    "CMT-Dc18",
-    "COW-5Ea8",
-    "CP-CFCa",
-    "CPOOL-FaC5",
-    "CPRX-978f",
-    "CRF-219d",
-    "CROWN-E0fa",
-    "CRPT-6d8B",
-    "CTO-6C47",
-    "CTX-f98D",
-    "CWEB-Bf04",
-    "CoreDAO-Dd58",
-    "DAMM-16b8",
-    "DAPP-1649",
-    "DAWN-9aFa",
-    "DCHF-7A36",
-    "DEXG-436D",
-    "DHT-Fa84",
-    "DIGG-01C3",
-    "DIGITS-404F",
-    "DLTA-D823",
-    "DNXC-f03a",
-    "DOG-868D",
-    "DOGZ-33eF",
-    "DORA-c81d",
-    "DREP-b4c2",
-    "DSD-66e3",
-    "DSU-7109",
-    "DTX-3F75",
-    "DVF-1918",
-    "DXP-B745",
-    "Daruma-f704",
-    "EAG8-EeE4",
-    "ECO-5727",
-    "ECOx-736a",
-    "EGG-6a0c",
-    "ERC20-EPK-40c4",
-    "ERP-2267",
-    "ESD-d723",
-    "ETHV-aC76",
-    "EURe-273f",
-    "EVA-8707",
-    "EXD-6560",
-    "FANC-c045",
-    "FCC-e079",
-    "FEAR-1E83",
-    "FLX-0770",
-    "FLy-1472",
-    "FORM-FA2a",
-    "FORT-Ec29",
-    "FPI-E08E",
-    "FTG-7659",
-    "FWT-a295",
-    "GAME-1d1c",
-    "GBPT-bA98",
-    "GBYTE-cc2a",
-    "GEM-efcC",
-    "GENI-6a39",
-    "GOB-8A80",
-    "GODS-FD97",
-    "GPO-3aCE",
-    "GRO-74D7",
-    "GST-1404",
-    "GUILD-475A",
-    "GVT-2a0c",
-    "HAI-9a63",
-    "HAN-511F",
-    "HDAO-fF2D",
-    "HILO-5ff6",
-    "HOME-1F62",
-    "INSUR-7429",
-    "IOEN-893A",
-    "IOI-1d81",
-    "IPISTR-348e",
-    "IPT-FC3d",
-    "ISK-a75C",
-    "IZE-327B",
-    "JOY-1FB5",
-    "KOL-d414",
-    "KYOKO-BaC2",
-    "LBlock-D329",
-    "LEAN-99F8",
-    "LMT-c8AF",
-    "LUCKY-6140",
-    "LXF-772A",
-    "M2-D15C",
-    "MAXI-e84b",
-    "MDF-B411",
-    "MFI-355B",
-    "MGG-8740",
-    "MIDAS-66A5",
-    "MLP-1152",
-    "MPS-D47D",
-    "MYC-F5Ba",
-    "Mars-70B7",
-    "NAO-53dc",
-    "NBT-824c",
-    "NFTD-B379",
-    "NFTY-3208",
-    "NGL-66aE",
-    "NRFX-94a4",
-    "NUM-3079",
-    "NineFi-2f1d",
-    "O-c40f",
-    "O3-7d28",
-    "OBOT-0c32",
-    "OCT-c6DC",
-    "OIL-88a5",
-    "OK-4189",
-    "ONIGIRI-30D0",
-    "OPUL-6444",
-    "OTHR-C334",
-    "OUSD-5e86",
-    "OXAI-Fe9d",
-    "Okinami-4121",
-    "PAL-f4BF",
-    "PAR-4703",
-    "PEPEBET-0350",
-    "PINA-780D",
-    "PNL-B459",
-    "POLA-2CED",
-    "POLAR-075E",
-    "POLY-fdad",
-    "PP-CfD0",
-    "PROS-4B56",
-    "PULSE-97cE",
-    "QLT-c87c",
-    "RACA-9040",
-    "RPG-e251",
-    "RWS-7802",
-    "SAKURA-FeD6",
-    "SCOIN-0EB4",
-    "SD-D10f",
-    "SDEX-BEeF",
-    "SENT-556F",
-    "SEURO-9A00",
-    "SKEB-C810",
-    "SLD-a084",
-    "SMTX-419b",
-    "SNP-E873",
-    "SNP-FA9d",
-    "SOTU-9162",
-    "SPIRAL-1C3c",
-    "SPOOL-0976",
-    "SPOT-bafE",
-    "SPWN-1126",
-    "SST-9868",
-    "STABLZ-F7cd",
-    "SUM-40b1",
-    "SWASH-2F80",
-    "SWEAT-3A35",
-    "SWIV-6f2d",
-    "SYL-eb9C",
-    "SYNR-490a",
-    "Shird-695f",
-    "SpillWays-7b47",
-    "TCR-F050",
-    "TEAM-dE02",
-    "TEMP-1aB9",
-    "TGL-4e92",
-    "TOL-2cFA",
-    "TR3-5F98",
-    "TRIO-3308",
-    "TXA-A830",
-    "UBXN-1065",
-    "UCOIL-9a13",
-    "ULX-636F",
-    "UNIX-7aC8",
-    "UNKAI-B73D",
-    "USDC-1130",
-    "USDD-b5c6",
-    "USDP-89E1",
-    "UST-87a5",
-    "Umoon-C5da",
-    "UwU-5257",
-    "VENDETTA-53c3",
-    "VIS-E863",
-    "VLX-Edb9",
-    "VNDC-b5DE",
-    "VOW-46Fb",
-    "VPAD-4EDc",
-    "VR-8cdD",
-    "WAVES-f29a",
-    "WFAIR-8972",
-    "WMLX-1AAd",
-    "WOOFY-57f1",
-    "WXT-E915",
-    "XAI-bEAc",
-    "XAUt-2F38",
-    "XDAO-Ad28",
-    "XDEX-6c83",
-    "XETA-3550",
-    "XFIT-7441",
-    "Y2B-0650",
-    "Z3-61a6",
-    "ZEUM-8190",
-    "ZUSD-04fA",
-    "ankrMATIC-480C",
-    "bLUSD-79C3",
-    "bluSGD-db22",
-    "cvxCRV-0Aa7",
-    "eLunr-Aa5A",
-    "eMAID-a303",
-    "iAI-2122",
-    "ibETH-9c7A",
-    "icc-a177",
-    "one1INCH-3857",
-    "oneICHI-1e07",
-    "rETH2-86c5",
-    "rUSD-C8F6",
-    "sifu-C313",
-    "vBNT-7f94",
-    "wMEMO-af57",
-    "wOXEN-bcc5",
-    "wPPC-2958",
-}

@@ -2,8 +2,6 @@
 # Auto generated test file `test_004-GraphCode_.py`
 # ------------------------------------------------------------
 # source file   = NBTest_004-GraphCode.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 004-GraphCode
 # test comment  = 
 # ------------------------------------------------------------

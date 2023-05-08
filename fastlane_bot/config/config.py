@@ -27,6 +27,7 @@ PROVIDER_URL = f'https://rpc.tenderly.co/fork/{POSTGRES_DB}' if POSTGRES_DB != '
 NETWORK_ID = 'mainnet' if POSTGRES_DB == 'defaultdb' else 'tenderly'
 NETWORK_NAME = "Ethereum Mainnet" if POSTGRES_DB == 'defaultdb' else 'Tenderly (Alchemy)'
 
+
 @dataclass
 class Config():
     """

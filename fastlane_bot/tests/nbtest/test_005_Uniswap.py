@@ -2,8 +2,6 @@
 # Auto generated test file `test_005_Uniswap.py`
 # ------------------------------------------------------------
 # source file   = NBTest_005_Uniswap.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 005
 # test comment  = Uniswap
 # ------------------------------------------------------------

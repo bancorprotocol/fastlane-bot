@@ -2,8 +2,6 @@
 # Auto generated test file `test_003_Serialization.py`
 # ------------------------------------------------------------
 # source file   = NBTest_003_Serialization.py
-# source path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
-# target path   = /Users/skl/REPOES/Bancor/ArbBot/resources/NBTest/
 # test id       = 003
 # test comment  = Serialization
 # ------------------------------------------------------------
