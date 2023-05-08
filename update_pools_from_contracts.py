@@ -29,7 +29,7 @@ only_carbon = dbutils.widgets.get("only_carbon")
 if str(only_carbon) == 'True':
     only_carbon = True
 
-elif str(only_carbon) == 'False'
+elif str(only_carbon) == 'False':
     only_carbon = False
 
 if str(TENDERLY_FORK) == 'None':
