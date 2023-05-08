@@ -406,4 +406,10 @@ class ContractHelper:
         List[int]
             A list of strategy ids for the specified pair, given a start and end index
         """
-        return self.carbon_controller.strategiesByPair(token0, token1, start_idx, end_idx).call()
+        if end_idx == 0:
+            end_idx = 5000
+        try:
+            return self.carbon_controller.strategiesByPair(token0, token1, start_idx, end_idx).call()
+        except Exception as e:
+            self.c.logger.error(f"[contract_helper] Error getting strategies by pair:{token0}, {token1}, {e}, skipping...")
+            return []

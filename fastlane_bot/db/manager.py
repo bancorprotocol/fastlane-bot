@@ -59,7 +59,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         # Filter the table by the pairs to update
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
 
-        print(f"filtered_table len {len(filtered_table)}")
+        self.c.logger.info(f"[update_pools_from_contracts] Updating {len(filtered_table)} pairs ...")
 
         for index, row in filtered_table.iterrows():
             self.update_pool_from_row(row, index, filtered_table)
@@ -88,7 +88,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             if pair_name not in pools_and_token_table[pools_and_token_table['exchange_name'] == 'carbon_v1'][
                 'pair_name'].unique().tolist():
                 dbrow = self.create_dbrow(pair_name, pools_and_token_table)
-                pools_and_token_table = pools_and_token_table.append(dbrow, ignore_index=True)
+                pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
                 self.c.logger.info(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
 
         return pools_and_token_table
