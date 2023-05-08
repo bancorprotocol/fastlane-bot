@@ -32,10 +32,12 @@ def construct_file_path(data_dir, file_name):
 @click.option('--bypairs', default=None, help='The pairs to update')
 @click.option('--update_interval_seconds', default=12, help='The update interval in seconds')
 @click.option('--config', default=None, help='The config to use')
+@click.option('--only_carbon', default=False, help='Only update carbon pools')
 def main(
         bypairs: any = None,
         update_interval_seconds: int = None,
-        config: str = None
+        config: str = None,
+        only_carbon: bool = False
 ):
     """
     Main function for the update_pools_heartbeat.py script.
@@ -48,6 +50,8 @@ def main(
         The update interval in seconds.
     config : str
         The config to use.
+    only_carbon : bool
+        Only update carbon pools.
 
     """
     if bypairs:
@@ -59,25 +63,18 @@ def main(
         cfg = Config.new(config=Config.CONFIG_MAINNET)
 
     # Load data from CSV file
-    # pools_and_token_table_columns = ['cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name', 'exchange_name',
-    #                                  'fee', 'fee_float', 'address', 'anchor', 'tkn0_address', 'tkn1_address',
-    #                                  'tkn0_key', 'tkn1_key', 'tkn0_decimals', 'tkn1_decimals', 'exchange_id',
-    #                                  'tkn0_symbol', 'tkn1_symbol']
-
     filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
     pools_and_token_table = pd.read_csv(filepath, low_memory=False)
-    # pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
+    # Create a CarbonBot instance
     bot = CarbonBot(ConfigObj=cfg)
+
     print(f"bot endpoint_uri: {bot.c.w3.provider.endpoint_uri}")
     bot.db.c = bot.c
     print(f"db endpoint_uri: {bot.db.c.w3.provider.endpoint_uri}")
-    #
-    # carbon_controller = bot.c.w3.eth.contract(address=bot.db.c.CARBON_CONTROLLER_ADDRESS, abi=abis.CARBON_CONTROLLER_ABI)
-    # bot.db.carbon_controller = carbon_controller
 
     # bot.db.drop_all_tables()
-    bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds)
+    bot.db.update_pools_heartbeat(bypairs=bypairs, pools_and_token_table=pools_and_token_table, update_interval_seconds=update_interval_seconds, only_carbon=only_carbon)
 
 
 if __name__ == "__main__":

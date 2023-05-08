@@ -36,7 +36,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     pools_and_token_table = None
 
 
-    def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
+    def update_pools_from_contracts(self, only_carbon: bool, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
         """
         Updates the pools_and_token_table with the latest liquidity data from the contracts.
 
@@ -46,24 +46,29 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The pools_and_token_table to update. If None, the default table will be used.
         bypairs : List[str]
             A list of pair names to update. If None, all pairs will be updated.
+        only_carbon : bool
+            If True, only Carbon_v1 pairs will be updated.
         """
-        self.c.logger.info(f"[update_pools_from_contracts] Updating pools from contracts bypairs {bypairs} ...")
+        print(f"[update_pools_from_contracts] Updating pools from contracts bypairs {bypairs}, only_carbon={only_carbon}...")
 
         if not bypairs:
             bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
         # Add Carbon_v1 pairs to the table if they do not already exist
-        pools_and_token_table = self.add_missing_pairs_to_table(pools_and_token_table)
+        pools_and_token_table = self.add_missing_pairs_to_table(pools_and_token_table, only_carbon)
 
         # Filter the table by the pairs to update
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
+        filtered_table = filtered_table.sort_values(by=['exchange_name'])
 
-        self.c.logger.info(f"[update_pools_from_contracts] Updating {len(filtered_table)} pairs ...")
+        if only_carbon:
+            filtered_table = filtered_table[filtered_table['exchange_name'] == 'carbon_v1']
+        print(f"[update_pools_from_contracts] Updating {len(filtered_table)} pairs ...")
 
         for index, row in filtered_table.iterrows():
             self.update_pool_from_row(row, index, filtered_table)
 
-    def add_missing_pairs_to_table(self, pools_and_token_table: pd.DataFrame) -> pd.DataFrame:
+    def add_missing_pairs_to_table(self, pools_and_token_table: pd.DataFrame, only_carbon: bool) -> pd.DataFrame:
         """
         Adds missing pairs to the pools_and_token_table.
 
@@ -71,6 +76,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         ----------
         pools_and_token_table : pd.DataFrame
             The pools_and_token_table to add the missing pairs to.
+        only_carbon : bool
+            If True, only Carbon_v1 pairs will be added.
 
         Returns
         -------
@@ -78,16 +85,18 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The pools_and_token_table with the missing pairs added.
 
         """
-        carbon_pairs = self.get_carbon_pairs()
-        noncarbon_pairs = self.get_noncarbon_pairs(pools_and_token_table)
-        all_pairs = carbon_pairs + noncarbon_pairs
-
-        missing_pairs = [pair for pair in all_pairs if pair not in noncarbon_pairs]
+        carbon_pairs = missing_pairs = self.get_carbon_pairs()
+        if only_carbon:
+            pools_and_token_table = pools_and_token_table[pools_and_token_table['exchange_name'] != 'carbon_v1']
+        if not only_carbon:
+            noncarbon_pairs = self.get_noncarbon_pairs(pools_and_token_table)
+            all_pairs = carbon_pairs + noncarbon_pairs
+            missing_pairs = [pair for pair in all_pairs if pair not in noncarbon_pairs]
         for pair in missing_pairs:
             pair_name = self.get_pair_name(pair)
             dbrow = self.create_dbrow(pair_name, pools_and_token_table)
             pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
-            self.c.logger.info(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
+            print(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
 
         return pools_and_token_table
 
@@ -179,7 +188,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         params = row.to_dict()
         params['tkn0_address'], params['tkn1_address'] = self.c.w3.toChecksumAddress(
             params['tkn0_address']), self.c.w3.toChecksumAddress(params['tkn1_address'])
-        self.c.logger.info(
+        print(
             f"[update_pools_from_contracts] Updating index={index} of {len(filtered_table)}, cid={params['cid']}, pair_name={params['pair_name']}...")
         block_number = self.ConfigObj.w3.eth.block_number
         params['last_updated_block'] = block_number
@@ -191,7 +200,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
 
         for strategy in strategies:
             try:
-                self.update_pool_from_strategy(params, strategy, contract)
+                self.update_pool_from_strategy(params, strategy, contract, filtered_table)
             except Exception as e:
                 self.c.logger.error(f"[update_pools_from_contracts] Error updating pool: {e}, skipping...")
 
@@ -214,7 +223,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         else:
             return [None]
 
-    def update_pool_from_strategy(self, params: Dict[str, Any], strategy: Tuple[str, str], contract: Contract):
+    def update_pool_from_strategy(self, params: Dict[str, Any], strategy: Tuple[str, str], contract: Contract, filtered_table: pd.DataFrame = None):
         """
         Updates a pool from a strategy. The params dictionary contains data from a specific row in the pools_and_token_table, and the strategy provides additional information needed to update the pool.
 
@@ -234,18 +243,21 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(
             params['fee'])
 
-        pool = self.get_pool(cid=str(params['cid']))
-        if pool is None:
-            self.create_pool_pair_tokens(params)
-            pool = self.get_pool(cid=str(params['cid']))
-
-        liquidity_params = self.get_liquidity_from_contract(exchange_name=pool.exchange_name,
+        liquidity_params = self.get_liquidity_from_contract(exchange_name=params['exchange_name'],
                                                             contract=contract,
                                                             address=params['address'],
                                                             strategy=strategy)
-        pool_data = {k: v for k, v in params.items() if k in pool.__getattribute__('__table__').columns.keys()}
+        random_pool = self.get_pools()[0]
+        pool_data = {k: v for k, v in params.items() if k in random_pool.__getattribute__('__table__').columns.keys() and k not in ['last_updated']}
         update_params = {**pool_data, **liquidity_params}
-        self.update_pool(update_params, params)
+
+        pool = self.get_pool(cid=str(params['cid']))
+        if pool is None:
+            print(f"[update_pool_from_strategy] Creating pool for cid={params['cid']}, params={update_params}...")
+            update_params['descr'] = f"{params['exchange_name']} {params['pair_name']} {params['fee']}"
+            self.create_pool(update_params)
+        else:
+            self.update_pool(update_params, params)
 
     def update_params_from_strategy(self, params: Dict[str, Any], strategy: Tuple[int, str, Tuple[str, str]]) -> Dict[
         str, Any]:
@@ -278,7 +290,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         params['fee'] = 0.002
         return params
 
-    def update_pools_heartbeat(self, bypairs: List[str] = None, update_interval_seconds: int = 12,
+    def update_pools_heartbeat(self, only_carbon: bool, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
         """
         Updates pools in a loop. This is the main function that should be called to update pools.
@@ -291,10 +303,12 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The update interval in seconds.
         pools_and_token_table : pd.DataFrame
             The pools and token table to update from.
+        only_carbon : bool
+            Whether to only update carbon pools.
         """
         while True:
-            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table)
-            self.c.logger.info(f"************************* \n"
+            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
+            print(f"************************* \n"
                                f"[update_pools_heartbeat] Sleeping for {update_interval_seconds} seconds..."
                                f"\n*************************")
             time.sleep(update_interval_seconds)
