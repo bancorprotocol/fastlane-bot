@@ -59,14 +59,14 @@ def main(
         cfg = Config.new(config=Config.CONFIG_MAINNET)
 
     # Load data from CSV file
-    pools_and_token_table_columns = ['cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name', 'exchange_name',
-                                     'fee', 'fee_float', 'address', 'anchor', 'tkn0_address', 'tkn1_address',
-                                     'tkn0_key', 'tkn1_key', 'tkn0_decimals', 'tkn1_decimals', 'exchange_id',
-                                     'tkn0_symbol', 'tkn1_symbol']
+    # pools_and_token_table_columns = ['cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name', 'exchange_name',
+    #                                  'fee', 'fee_float', 'address', 'anchor', 'tkn0_address', 'tkn1_address',
+    #                                  'tkn0_key', 'tkn1_key', 'tkn0_decimals', 'tkn1_decimals', 'exchange_id',
+    #                                  'tkn0_symbol', 'tkn1_symbol']
 
     filepath = construct_file_path('fastlane_bot/data', 'combined_tables.csv')
-    pools_and_token_table = pd.read_csv(filepath, low_memory=False).sample(20)
-    pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
+    pools_and_token_table = pd.read_csv(filepath, low_memory=False)
+    # pools_and_token_table = pools_and_token_table[pools_and_token_table_columns]
 
     bot = CarbonBot(ConfigObj=cfg)
     print(f"bot endpoint_uri: {bot.c.w3.provider.endpoint_uri}")

@@ -35,7 +35,6 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
     update_interval_seconds = 12
     pools_and_token_table = None
 
-    # carbon_controller = None
 
     def update_pools_from_contracts(self, bypairs: List[str] = None, pools_and_token_table: pd.DataFrame = None):
         """
@@ -83,13 +82,12 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         noncarbon_pairs = self.get_noncarbon_pairs(pools_and_token_table)
         all_pairs = carbon_pairs + noncarbon_pairs
 
-        for pair in all_pairs:
+        missing_pairs = [pair for pair in all_pairs if pair not in noncarbon_pairs]
+        for pair in missing_pairs:
             pair_name = self.get_pair_name(pair)
-            if pair_name not in pools_and_token_table[pools_and_token_table['exchange_name'] == 'carbon_v1'][
-                'pair_name'].unique().tolist():
-                dbrow = self.create_dbrow(pair_name, pools_and_token_table)
-                pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
-                self.c.logger.info(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
+            dbrow = self.create_dbrow(pair_name, pools_and_token_table)
+            pools_and_token_table = pd.concat([pools_and_token_table, dbrow], ignore_index=True)
+            self.c.logger.info(f"[add_missing_pairs_to_table] Added pair {pair_name} to the table.")
 
         return pools_and_token_table
 

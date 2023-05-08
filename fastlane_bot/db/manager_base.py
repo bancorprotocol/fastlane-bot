@@ -51,7 +51,7 @@ class DatabaseManagerBase(ContractHelper):
     def __post_init__(self, backend_url=None):
         self.c = self.ConfigObj
         self.data = pd.read_csv(ConfigDB.DATABASE_SEED_FILE)
-        self.data = self.data.sort_values("exchange", ascending=False)
+        self.data = self.data.sort_values("exchange_name", ascending=False)
         self.connect_db(backend_url=backend_url)
         self.bnt_price_map = {'UOS': 0.6256369626308176, 'GRT': 0.2833668586139438, 'EDEN': 0.13514190920020222,
                               'wNXM': 53.93005448231183, 'DIP': 0.03353407973355594, 'RARI': 3.1436321270707084,
