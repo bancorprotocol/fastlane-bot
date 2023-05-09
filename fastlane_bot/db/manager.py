@@ -83,13 +83,14 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The pools_and_token_table with the missing pairs added.
 
         """
-        carbon_pairs = missing_pairs = self.get_carbon_pairs()
-        if only_carbon:
-            pools_and_token_table = pools_and_token_table[pools_and_token_table['exchange_name'] != 'carbon_v1']
-        if not only_carbon:
-            noncarbon_pairs = self.get_noncarbon_pairs(pools_and_token_table)
-            all_pairs = carbon_pairs + noncarbon_pairs
-            missing_pairs = [pair for pair in all_pairs if pair not in noncarbon_pairs]
+        carbon_pairs = self.get_carbon_pairs()
+
+        # Also add carbon pairs reversed
+        carbon_pairs_reversed = [(pair[1], pair[0]) for pair in carbon_pairs]
+        missing_pairs = carbon_pairs + carbon_pairs_reversed
+
+        pools_and_token_table = pools_and_token_table[pools_and_token_table['exchange_name'] != 'carbon_v1']
+
         for pair in missing_pairs:
             pair_name = self.get_pair_name(pair)
             dbrow = self.create_dbrow(pair_name, pools_and_token_table)
@@ -306,8 +307,14 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             Whether to only update carbon pools.
         """
         while True:
+            start_time = time.time()
             self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
             time.sleep(update_interval_seconds)
+            print('\n')
+            print('*************************************')
+            print(f"Updated pools in seconds: {time.time() - start_time}")
+            print('*************************************')
+            print('\n')
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """
