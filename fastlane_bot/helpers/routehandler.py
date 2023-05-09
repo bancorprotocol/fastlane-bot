@@ -347,7 +347,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return [
             self.to_route_struct(
-                min_target_amount=Decimal(trade_instructions[idx].amtout_wei),
+                min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
                 exchange_id=trade_instructions[idx].exchange_id,
