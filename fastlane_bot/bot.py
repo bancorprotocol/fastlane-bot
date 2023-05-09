@@ -736,13 +736,13 @@ class CarbonBot(CarbonBotBase):
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
 
-        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs()
+        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(ordered_trade_instructions_objects)
 
         if result == self.XS_EXACT:
-            return ordered_trade_instructions_objects
+            return calculated_trade_instructions
 
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
-            trade_instructions_objects=ordered_trade_instructions_objects
+            trade_instructions_objects=calculated_trade_instructions
         )
         del ordered_trade_instructions_objects  # TODO: REMOVE THIS
         if result == self.XS_AGGTI:

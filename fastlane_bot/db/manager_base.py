@@ -42,6 +42,9 @@ class DatabaseManagerBase(ContractHelper):
     __DATE__ = "05-01-2023"
 
     ConfigObj: Config
+    # session: Session = field(init=False)
+    # engine: sqlalchemy.engine = field(init=False)
+    # metadata: MetaData = field(init=False)
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
     backend_url: InitVar[str] = None
 

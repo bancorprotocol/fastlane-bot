@@ -83,6 +83,8 @@ class TradeInstruction:
     tknin_addr_override: str = None  # ditto
     tknout_addr_override: str = None # ditto
     exchange_override: str = None    # ditto
+    _amtin_wei: int = None
+    _amtout_wei: int = None
 
     @property
     def tknin_key(self) -> str:
@@ -112,8 +114,10 @@ class TradeInstruction:
         else:
             self._tknin_address = self.tknin_addr_override
             self._tknin_decimals = self.tknin_dec_override
-            
-        self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
+
+        if self._amtin_wei is None:
+            self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
+
         self._amtin_decimals = self._convert_to_decimals(
             self.amtin, self._tknin_decimals
         )
@@ -129,7 +133,9 @@ class TradeInstruction:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
             
-        self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
+        if self._amtout_wei is None:            
+            self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
+
         self._amtout_decimals = self._convert_to_decimals(
             self.amtout, self._tknout_decimals
         )

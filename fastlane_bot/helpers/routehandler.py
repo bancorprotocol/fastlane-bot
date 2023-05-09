@@ -386,8 +386,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 else instr.cid,
                 "tknin": instr.tknin,
                 "amtin": instr.amtin,
+                "_amtin_wei": instr.amtin_wei,
                 "tknout": instr.tknout,
                 "amtout": instr.amtout,
+                "_amtout_wei": instr.amtout_wei,
             }
             for instr in trade_instructions
         ]
@@ -459,8 +461,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "cid": newdf.cid.values[0],
                 "tknin": newdf.tknin.values[0],
                 "amtin": newdf.amtin.sum(),
+                "_amtin_wei": newdf._amtin_wei.sum(),
                 "tknout": newdf.tknout.values[0],
                 "amtout": newdf.amtout.sum(),
+                "_amtout_wei": newdf._amtout_wei.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
                 "ConfigObj" : config_object,
                 "db" : db,
@@ -1148,12 +1152,16 @@ class TxRouteHandler(TxRouteHandlerBase):
             if tkn_in == tkn1_key
             else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
         )
-        # print('[_calc_carbon_output] before decode: ', y, z, A, B)
+
+        if A is None:
+            A = 0
+
+        print('[_calc_carbon_output] before decode: ', y, z, A, B)
         A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
-        # print('[_calc_carbon_output] after decode: ', y, z, A, B)
+        print('[_calc_carbon_output] after decode: ', y, z, A, B)
         assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
         #print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
@@ -1267,52 +1275,54 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
-            raw_txs_lst = []
-            if trade.raw_txs != "[]":
-                data = eval(trade.raw_txs)
-                total_out = 0
-                for tx in data:
-                    cid = tx["cid"]
-                    cid = cid.split("-")[0]
-                    tknin_key = tx["tknin"]
-                    curve = trade_instructions[idx].db.get_pool(cid=cid)
-                    (
-                        amount_in,
-                        amount_out,
-                        amount_in_wei,
-                        amount_out_wei,
-                    ) = self._solve_trade_output(
-                        curve=curve, trade=trade, amount_in=next_amount_in
-                    )
+            # raw_txs_lst = []
+            # if trade.raw_txs != "[]":
+            #     data = eval(trade.raw_txs)
+            #     total_out = 0
+            #     for tx in data:
+            #         cid = tx["cid"]
+            #         cid = cid.split("-")[0]
+            #         tknin_key = tx["tknin"]
+            #         curve = trade_instructions[idx].db.get_pool(cid=cid)
+            #         (
+            #             amount_in,
+            #             amount_out,
+            #             amount_in_wei,
+            #             amount_out_wei,
+            #         ) = self._solve_trade_output(
+            #             curve=curve, trade=trade, amount_in=next_amount_in
+            #         )
 
-                    raw_txs = {
-                        "cid": cid,
-                        "amtin": amount_in_wei,
-                        "tknin": tknin_key,
-                        "amtout": amount_out_wei,
-                    }
-                    raw_txs_lst.append(raw_txs)
+            #         raw_txs = {
+            #             "cid": cid,
+            #             "amtin": amount_in_wei,
+            #             "tknin": tknin_key,
+            #             "amtout": amount_out_wei,
+            #         }
+            #         raw_txs_lst.append(raw_txs)
 
-                    total_out += amount_out
-                amount_out = total_out
+            #         total_out += amount_out
+            #     amount_out = total_out
 
-            else:
+            # else:
 
-                curve_cid = trade.cid
-                curve = trade_instructions[idx].db.get_pool(cid=curve_cid)
-                (
-                    amount_in,
-                    amount_out,
-                    amount_in_wei,
-                    amount_out_wei,
-                ) = self._solve_trade_output(
-                    curve=curve, trade=trade, amount_in=next_amount_in
-                )
-                trade_instructions[idx].amtin = amount_in_wei
-                trade_instructions[idx].amtout = amount_out_wei
+            curve_cid = trade.cid
+            curve = trade_instructions[idx].db.get_pool(cid=curve_cid)
+            (
+                amount_in,
+                amount_out,
+                amount_in_wei,
+                amount_out_wei,
+            ) = self._solve_trade_output(
+                curve=curve, trade=trade, amount_in=next_amount_in
+            )
+            trade_instructions[idx].amtin = amount_in
+            trade_instructions[idx].amtout = amount_out
+            trade_instructions[idx]._amtin_wei = amount_in_wei
+            trade_instructions[idx]._amtout_wei = amount_out_wei
 
-            next_amount_in = amount_out
-            trade_instructions[idx].raw_txs = str(raw_txs_lst)
+        next_amount_in = amount_out
+        # trade_instructions[idx].raw_txs = str(raw_txs_lst)
 
         return trade_instructions
 
