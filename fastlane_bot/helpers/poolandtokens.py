@@ -292,7 +292,13 @@ class PoolAndTokens:
         #     raise self.DoubleInvalidCurveError(errmsg)
             
         return lst
-
+    
+    FEE_LOOKUP = {
+        0.0001: Univ3Calculator.FEE100,
+        0.0005: Univ3Calculator.FEE500,
+        0.0030: Univ3Calculator.FEE3000,
+        0.01: Univ3Calculator.FEE10000,
+    }
     def _univ3_to_cpc(self) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.
@@ -307,10 +313,13 @@ class PoolAndTokens:
             :fee:      fee (optional); eg 0.01 for 1%
             :descr:    description (optional; eg. "UniV3 0.1%")
             :params:   additional parameters (optional)
-
+ 
         """
         args = {"token0": self.tkn0_key, "token1": self.tkn1_key, "sqrt_price_q96": self.sqrt_price_q96, "tick": self.tick, "liquidity": self.liquidity}
-        uni3 = Univ3Calculator.from_dict(args, self.fee, addrdec=self.ADDRDEC)
+        feeconst = self.FEE_LOOKUP.get(float(self.fee_float))
+        if feeconst is None:
+            raise ValueError(f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{self.FEE_LOOKUP}]]")
+        uni3 = Univ3Calculator.from_dict(args, feeconst, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()
         #print("u3params", params)
         if params["uniL"] == 0:
