@@ -1322,7 +1322,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             trade_instructions[idx]._amtin_wei = amount_in_wei
             trade_instructions[idx]._amtout_wei = amount_out_wei
 
-        next_amount_in = amount_out
+            next_amount_in = amount_out
         # trade_instructions[idx].raw_txs = str(raw_txs_lst)
 
         return trade_instructions
