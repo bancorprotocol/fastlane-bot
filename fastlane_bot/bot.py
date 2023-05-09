@@ -753,11 +753,11 @@ class CarbonBot(CarbonBotBase):
 
         # Get the flashloan token and verify
         fl_token = agg_trade_instructions[0].tknin_key
-        is_carbon = True if agg_trade_instructions[0].raw_txs != '[]' else False
-        if fl_token == 'WETH-6Cc2' and is_carbon:
+        is_carbon = True if agg_trade_instructions[0].raw_txs != [] else False
+        if (fl_token == 'WETH-6Cc2') and is_carbon:
             fl_token = "ETH-EEeE"
         else:
-            raise "Flashloan WETH not yet supported"
+            raise ValueError("Flashloan WETH not yet supported")
         flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
             self.db.get_token(key=fl_token).address
         )
