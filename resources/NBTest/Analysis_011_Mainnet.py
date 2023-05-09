@@ -14,13 +14,17 @@
 #     name: python3
 # ---
 
-from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
+from fastlane_bot import Bot#, Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
 from fastlane_bot.tools.analyzer import CPCAnalyzer
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools.optimizer import SimpleOptimizer, MargPOptimizer, ConvexOptimizer
+from fastlane_bot.tools.arbgraphs import ArbGraph
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimpleOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ConvexOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 from fastlane_bot.testing import *
 import itertools as it
@@ -30,412 +34,144 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Mainnet Server [A011]
+# # Mainnet Statistics [A011]
 
 bot     = Bot()
 CCm     = bot.get_curves()
-CA      = CPCAnalyzer(CCm)
+#CCm     = CPCContainer.from_df(pd.read_csv("A011.csv.gz"))
+#CCm.asdf().to_csv("A011-test.csv.gz", compression = "gzip")
+CCu3    = CCm.byparams(exchange="uniswap_v3")
+CCu2    = CCm.byparams(exchange="uniswap_v2")
+CCs2    = CCm.byparams(exchange="sushiswap_v2")
+CCc1    = CCm.byparams(exchange="carbon_v1")
+tc_u3   = CCu3.token_count(asdict=True)
+tc_u2   = CCu2.token_count(asdict=True)
+tc_s2   = CCs2.token_count(asdict=True)
+tc_c1   = CCc1.token_count(asdict=True)
+CAm     = CPCAnalyzer(CCm)
 
+
+# ## Market structure analysis [NOTEST]
+
+CA = CAm
 pairs0  = CA.CC.pairs(standardize=False)
 pairs   = CA.pairs()
 pairsc  = CA.pairsc()
 tokens  = CA.tokens()
 
-assert CA.pairs()  == CCm.pairs(standardize=True)
-assert CA.pairsc() == {c.pairo.primary for c in CCm if c.P("exchange")=="carbon_v1"}
-assert CA.tokens() == CCm.tokens()
-
-# ## Overall market
-
 print(f"Total pairs:    {len(pairs0):4}")
 print(f"Primary pairs:  {len(pairs):4}")
 print(f"...carbon:      {len(pairsc):4}")
-print(f"Tokens:         {len(CCm.tokens()):4}")
+print(f"Tokens:         {len(CA.tokens()):4}")
 print(f"Curves:         {len(CCm):4}")
 
-# ## By pair
+CA.count_by_pairs()
 
-# ### All pairs
+CA.count_by_pairs(minn=2)
 
-cbp0 = {pair: [c for c in CCm.bypairs(pair)] for pair in CCm.pairs()} # curves by (primary) pair
-nbp0 = {pair: len(cc) for pair,cc in cbp0.items()}
-assert len(cbp0) == len(CCm.pairs())
-assert set(cbp0) == CCm.pairs()
+# ### All crosses
 
-# ### Only those with >1 curves
+CCx = CCm.bypairs(
+    CCm.filter_pairs(notin=f"{T.ETH},{T.USDC},{T.USDT},{T.BNT},{T.DAI},{T.WBTC}")
+)
+len(CCx), CCx.token_count()[:10]
 
-cbp = {pair: cc for pair, cc in cbp0.items() if len(cc)>1}
-nbp = {pair: len(cc) for pair,cc in cbp.items()}
-print(f"Pairs with >1 curves:  {len(cbp)}")
-print(f"Curves in those:       {sum(nbp.values())}")
-print(f"Average curves/pair:   {sum(nbp.values())/len(cbp):.1f}")
+AGx=ArbGraph.from_cc(CCx)
+AGx.plot(labels=False, node_size=50, node_color="#fcc")._
 
-# ### x=0 or y=0
+# ### Biggest crosses (HEX, UNI, ICHI, FRAX)
 
-xis0 = {c.cid: (c.x, c.y) for c in CCm if c.x==0}
-yis0 = {c.cid: (c.x, c.y) for c in CCm if c.y==0}
-assert len(xis0) == 0 # set loglevel debug to see removal of curves
-assert len(yis0) == 0
+CCx2 = CCx.bypairs(
+    CCx.filter_pairs(onein=f"{T.HEX}, {T.UNI}, {T.ICHI}, {T.FRAX}")
+)
+ArbGraph.from_cc(CCx2).plot()
+len(CCx2)
 
-# ### Prices
+# ### Carbon
 
-# #### All
+ArbGraph.from_cc(CCc1).plot()._
 
-prices_da = {pair: 
-             [(
-                Pair.n(pair), pair, c.primaryp(), c.cid, c.cid[-8:], c.P("exchange"), c.tvl(tkn=pair.split("/")[0]),
-                "x" if c.itm(cc) else "", c.buysell(verbose=False), c.buysell(verbose=True, withprice=True)
-              ) for c in cc 
-             ] 
-             for pair, cc in cbp.items()
-            }
-#prices_da
+len(CCc1), len(CCc1.tokens())
 
-# #### Only for pairs that have at least on Carbon pair
+CCc1.token_count()
 
-prices_d = {pair: l for pair,l in prices_da.items() if pair in pairsc}
-prices_l = list(it.chain(*prices_d.values()))
 
-# +
-#prices_d
-# -
+len(CCc1.pairs()), CCc1.pairs()
 
-curves_by_pair = list(cl.Counter([r[1] for r in prices_l]).items())
-curves_by_pair = sorted(curves_by_pair, key=lambda x: x[1], reverse=True)
-curves_by_pair
+# ### Token subsets
 
-CODE = """
-# #### {pairn}
-
-pair = "{pair}"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
+O = MargPOptimizer(CCm.bypairs(
+    CCm.filter_pairs(bothin=f"{T.ETH},{T.USDC},{T.USDT},{T.BNT},{T.DAI},{T.WBTC}")
+))
+r = O.margp_optimizer(f"{T.USDC}", params=dict(verbose=False, debug=False))
 r.trade_instructions(ti_format=O.TIF_DFAGGR)
 
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-"""
+# +
+#r.trade_instructions(ti_format=O.TIF_DFAGGR).fillna("").to_excel("ti.xlsx")
 
 # +
-# for pair, _ in curves_by_pair:
-#     print(CODE.format(pairn=Pair.n(pair), pair=pair))
+#ArbGraph.from_r(r).plot()._
+
+# +
+#O.CC.plot()
 # -
 
-# #### Dataframe
+# ## All pairs
 
-pricedf0 = pd.DataFrame(prices_l, columns="pair,pairf,price,cid,cid0,exchange,vl,itm,bs,bsv".split(","))
-pricedf = pricedf0.drop(['cid', 'pairf'], axis=1).sort_values(by=["pair", "exchange", "cid0"])
-pricedf = pricedf.set_index(["pair", "exchange", "cid0"])
+for pair in CAm.pairsc():
+    pi = CA.pair_data(pair)
+    O = MargPOptimizer(pi.CC)
+    tkn0, tkn1 = pair.split("/")
+    
+    try:
+        r0 = O.margp_optimizer(tkn0, params=dict(verbose=False, debug=False))
+        r0.trade_instructions(ti_format=O.TIF_DFAGGR)
+        r00 = r0.result or 0
+
+        r1 = O.margp_optimizer(targettkn, params=dict(verbose=False, debug=False))
+        r11 = r1.result or 0
+        r1.trade_instructions(ti_format=O.TIF_DFAGGR)
+
+        print(f"{Pair.n(pair):12}- {-r00:12.4f} {tkn0:10} {-r11:12.4f} {tkn1:10}")
+    except Exception as e:
+        print(f"{Pair.n(pair):12}-")
+
+# ## Analysis by pair
+
+pricedf = CAm.pool_arbitrage_statistics()
 pricedf
 
-# ### Individual frames
-
-# #### WETH/USDC
+# ### WETH/USDC
 
 pair = "WETH-6Cc2/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
+print(f"Pair = {pair}")
+
+df = pricedf.loc[Pair.n(pair)]
+df
 
 pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0], params=dict(verbose=False, debug=False))
+O = MargPOptimizer(pi.CC)
+
+# #### Target token = base token
+
+targettkn = pair.split("/")[0]
+print(f"Target token = {targettkn}")
+r = O.margp_optimizer(targettkn, params=dict(verbose=False, debug=False))
 r.trade_instructions(ti_format=O.TIF_DFAGGR)
 
-r = O.margp_optimizer(pair.split("/")[1])
+dfti1 = r.trade_instructions(ti_format=O.TIF_DFPG8)
+print(f"Total gain: {sum(dfti1['gain_ttkn']):.4f} {targettkn}")
+dfti1
+
+# #### Target token = quote token
+
+targettkn = pair.split("/")[1]
+print(f"Target token = {targettkn}")
+r = O.margp_optimizer(targettkn, params=dict(verbose=False, debug=False))
 r.trade_instructions(ti_format=O.TIF_DFAGGR)
 
-
-# #### BNT/WETH
-
-pair = "BNT-FF1C/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### BNT/vBNT
-
-pair = "BNT-FF1C/vBNT-7f94"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### USDT/USDC
-
-pair = "USDT-1ec7/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### WBTC/WETH
-
-pair = "WBTC-C599/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### LINK/USDT
-
-pair = "LINK-86CA/USDT-1ec7"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### WBTC/USDT
-
-pair = "WBTC-C599/USDT-1ec7"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### BNT/USDC
-
-pair = "BNT-FF1C/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### WETH/DAI
-
-pair = "WETH-6Cc2/DAI-1d0F"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### DAI/USDT
-
-pair = "DAI-1d0F/USDT-1ec7"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### DAI/USDC
-
-pair = "DAI-1d0F/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### WETH/USDT
-
-pair = "WETH-6Cc2/USDT-1ec7"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### LINK/USDC
-
-pair = "LINK-86CA/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### PEPE/WETH
-
-pair = "PEPE-1933/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-# +
-# pi = CA.pair_data(pair)
-# O = CPCArbOptimizer(pi.CC)
-# r = O.margp_optimizer(pair.split("/")[0])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-# +
-# r = O.margp_optimizer(pair.split("/")[1])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-# -
-
-
-# #### stETH/WETH
-
-pair = "stETH-fE84/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-# +
-# pi = CA.pair_data(pair)
-# O = CPCArbOptimizer(pi.CC)
-# r = O.margp_optimizer(pair.split("/")[0])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-# +
-# r = O.margp_optimizer(pair.split("/")[1])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-# -
-
-
-# #### rETH/WETH
-
-pair = "rETH-6393/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### ARB/MATIC
-
-pair = "ARB-4ad1/MATIC-eBB0"
-pricedf.loc[Pair.n(pair)]
-
-# +
-# pi = CA.pair_data(pair)
-# O = CPCArbOptimizer(pi.CC)
-# r = O.margp_optimizer(pair.split("/")[0])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-# +
-# r = O.margp_optimizer(pair.split("/")[1])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-# -
-
-
-# #### 0x0/WETH
-
-pair = "0x0-1AD5/WETH-6Cc2"
-pricedf.loc[Pair.n(pair)]
-
-# +
-# pi = CA.pair_data(pair)
-# O = CPCArbOptimizer(pi.CC)
-# r = O.margp_optimizer(pair.split("/")[0])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-# +
-# r = O.margp_optimizer(pair.split("/")[1])
-# r.trade_instructions(ti_format=O.TIF_DFAGGR)
-# -
-
-
-# #### TSUKA/USDC
-
-pair = "TSUKA-69eD/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### WBTC/USDC
-
-pair = "WBTC-C599/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-
-# #### LYXe/USDC
-
-pair = "LYXe-be6D/USDC-eB48"
-pricedf.loc[Pair.n(pair)]
-
-pi = CA.pair_data(pair)
-O = CPCArbOptimizer(pi.CC)
-r = O.margp_optimizer(pair.split("/")[0])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
-
-r = O.margp_optimizer(pair.split("/")[1])
-r.trade_instructions(ti_format=O.TIF_DFAGGR)
+dfti2 = r.trade_instructions(ti_format=O.TIF_DFPG8)
+print(f"Total gain: {sum(dfti2['gain_ttkn']):.4f}", targettkn)
+dfti2
 
 
