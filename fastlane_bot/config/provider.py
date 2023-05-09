@@ -79,8 +79,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
         assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
-        # self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{self.WEB3_ALCHEMY_PROJECT_ID}"
-        self.RPC_URL = "https://rpc.tenderly.co/fork/293439f0-a76e-4cbf-a6cf-2a366132500b" #29e845d0-1daf-4631-a8c9-de32cb32d6ed
+        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{self.WEB3_ALCHEMY_PROJECT_ID}"
 
         N = self.network
         self.connection = EthereumNetwork(
