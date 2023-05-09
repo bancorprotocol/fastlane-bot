@@ -24,8 +24,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.7"
-__DATE__ = "07/May/2023"
+__VERSION__ = "3.8"
+__DATE__ = "10/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -172,12 +172,22 @@ class OptimizerBase:
 
     @dataclass
     class OptimizerResult(_DCBase):
+        """
+        base class for all optimizer results
+
+        :result:        actual optimization result
+        :time:          time taken to solve the optimization
+        :method:        method used to solve the optimization
+        :optimizer:     the optimizer object that created this result
+        """
         result: float
         time: float
         method: str = None
-        optimizer: InitVar
+        optimizer: InitVar = None
 
-        def __post_init__(self, optimizer):
+        def __post_init__(self, optimizer=None):
+            if not optimizer is None:
+                assert issubclass(type(optimizer), OptimizerBase), f"optimizer must be a subclass of OptimizerBase {optimizer}"
             self._optimizer = optimizer
             # print("[OptimizerResult] post_init", optimizer)
 
@@ -352,10 +362,10 @@ F = OptimizerBase.F
 
 TIF_OBJECTS = "objects"
 TIF_DICTS = "dicts"
-TIF_DFP = "dfp"
 TIF_DFRAW = "dfraw"
+TIF_DF = TIF_DFRAW
 TIF_DFAGGR = "dfaggr"
-TIF_DF = "dfraw"
+TIF_DFPG = "dfgain"
 
 class CPCArbOptimizer(OptimizerBase):
     """
@@ -465,9 +475,11 @@ class CPCArbOptimizer(OptimizerBase):
                             :TIF_OBJECTS:       a list of TradeInstruction objects (default)
                             :TIF_DICTS:         a list of TradeInstruction dictionaries
                             :TIF_DFRAW:         raw dataframe (holes are filled with NaN)
+                            :TIF_DF:            alias for :TIF_DFRAW:
                             :TIF_DFP:           returns a "pretty" dataframe (holes are spaces)
                             :TIF_DFAGRR:        aggregated dataframe
-                            :TIF_DF:            alias for :TIF_DFRAW:
+                            :TIF_DFPG:          prices-and-gains analyis dataframe
+
             """
             result = (
                 CPCArbOptimizer.TradeInstruction.new(
@@ -476,7 +488,10 @@ class CPCArbOptimizer(OptimizerBase):
                 for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
                 if dx != 0 or dy != 0
             )
-            return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format)
+            #print("[trade_instructions] ti_format", ti_format)
+            assert ti_format != TIF_DFAGGR, "TIF_DFAGGR not implemented for convex optimization"
+            assert ti_format != TIF_DFPG, "TIF_DFPG not implemented for convex optimization"
+            return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format=ti_format)
 
         @property
         def dxvalues(self):
@@ -694,7 +709,7 @@ class CPCArbOptimizer(OptimizerBase):
         "SCIP": cp.SCIP,
     }
 
-    def nofees_optimizer(self, sfc, **params):
+    def convex_optimizer(self, sfc, **params):
         """
         convex optimization for determining the arbitrage opportunities
 
@@ -882,7 +897,8 @@ class CPCArbOptimizer(OptimizerBase):
             # curves_new=self.adjust_curves(dxvals = dx_.value),
             optimizer=self,
         )
-
+    nofees_optimizer = convex_optimizer
+    
     SO_DXDYVECFUNC = "dxdyvecfunc"
     SO_DXDYSUMFUNC = "dxdysumfunc"
     SO_DXDYVALXFUNC = "dxdyvalxfunc"
@@ -1012,7 +1028,9 @@ class CPCArbOptimizer(OptimizerBase):
                 for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
                 if dx != 0 or dy != 0
             )
-            return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format)
+            assert ti_format != TIF_DFAGGR, "TIF_DFAGGR not implemented for convex optimization"
+            assert ti_format != TIF_DFPG, "TIF_DFPG not implemented for convex optimization"
+            return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format=ti_format)
 
     def simple_optimizer(self, targettkn=None, result=None, *, params=None):
         """
@@ -1037,15 +1055,9 @@ class CPCArbOptimizer(OptimizerBase):
         c0 = curves_t[0]
         pairs = set(c.pair for c in curves_t)
         assert len(pairs) != 0, f"no pairs found, probably empty curves [{curves_t}]"
-        assert (
-            len(pairs) == 1
-        ), f"simple_optimizer only works on curves of one pair [{pairs}]"
-        assert not (
-            targettkn is None and result == self.SO_TARGETTKN
-        ), "targettkn must be set if result==SO_TARGETTKN"
-        assert not (
-            targettkn is not None and result == self.SO_GLOBALMAX
-        ), f"targettkn must be None if result==SO_GLOBALMAX {targettkn}"
+        assert (len(pairs) == 1), f"simple_optimizer only works on curves of one pair [{pairs}]"
+        assert not (targettkn is None and result == self.SO_TARGETTKN), "targettkn must be set if result==SO_TARGETTKN"
+        assert not (targettkn is not None and result == self.SO_GLOBALMAX), f"targettkn must be None if result==SO_GLOBALMAX {targettkn}"
 
         dxdy = lambda r: (np.array(r[0:2]))
 
@@ -1125,16 +1137,16 @@ class CPCArbOptimizer(OptimizerBase):
             optimizer=self,
         )
 
-    def price_estimates(self, *, tknq, tknbs):
+    def price_estimates(self, *, tknq, tknbs, **kwargs):
         """
-        convenience function to access CPCContainer.price_estimate
+        convenience function to access CPCContainer.price_estimates
 
         :tknq:      can only be a single token
         :tknbs:     list of tokens
 
         see help(CPCContainer.price_estimate) for details
         """
-        return self.curve_container.price_estimates(tknqs=[tknq], tknbs=tknbs)
+        return self.curve_container.price_estimates(tknqs=[tknq], tknbs=tknbs, **kwargs)
 
     JACEPS = 1e-5
 
@@ -1266,12 +1278,15 @@ class CPCArbOptimizer(OptimizerBase):
                 if P("verbose") or P("debug"):
                     print("[margp_optimizer] calculating price estimates")
                 try:
-                    price_estimates_t = self.price_estimates(tknq=targettkn, tknbs=tokens_t)
+                    price_estimates_t = self.price_estimates(
+                        tknq=targettkn, 
+                        tknbs=tokens_t, 
+                        verbose=True,
+                        triangulate=True,
+                    )
                 except Exception as e:
                     if P("verbose") or P("debug"):
-                        print(
-                            "[margp_optimizer] error while calculating price estimates:", e
-                        )
+                        print(f"[margp_optimizer] error while calculating price estimates: [{e}]")
                     price_estimates_t = None
             if P("debug"):
                 print("[margp_optimizer] pstart:", price_estimates_t)
@@ -1297,9 +1312,7 @@ class CPCArbOptimizer(OptimizerBase):
                 p = np.array(p, dtype=np.float64)
                 if islog10:
                     p = np.exp(p * np.log(10))
-                assert len(p) == len(
-                    tokens_t
-                ), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
+                assert len(p) == len(tokens_t), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
                 if P("debug"):
                     print(f"\n[dtknfromp_f] =====================>>>")
                     print(f"prices={p}")
@@ -1327,9 +1340,7 @@ class CPCArbOptimizer(OptimizerBase):
                     sum_by_tkn[tknb] += sumdx
 
                     if P("debug"):
-                        print(
-                            f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]"
-                        )
+                        print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
 
                 result = tuple(sum_by_tkn[t] for t in tokens_t)
                 if P("debug"):
@@ -1362,7 +1373,6 @@ class CPCArbOptimizer(OptimizerBase):
                     dtknfromp_f=dtknfromp_f,
                     optimizer=self,
                 )
-
 
             # setting up the optimization variables (note: we optimize in log space)
             if price_estimates_t is None:
@@ -1447,10 +1457,6 @@ class CPCArbOptimizer(OptimizerBase):
                         # to establish a common baseline price, therefore d logp ~ 0 is not good
                         # in the first step                      
                         break
-                    # else:
-                    #     # we break in the first loop, so we restore the initial price estimates
-                    #     # (if we do log10 / 10**p then we get results that are slightly off zero)
-                    #     p = np.array(price_estimates_t, dtype=float)
             ## END MAIN OPTIMIZATION LOOP
             
             if i >= maxiter - 1:
@@ -1465,7 +1471,7 @@ class CPCArbOptimizer(OptimizerBase):
                 time=time.time() - start_time,
                 targettkn=targettkn,
                 curves=NOMR(curves_t),
-                p_optimal=NOMR({tkn: p_ for tkn, p_ in zip(tokens_t, p)}),
+                #p_optimal=NOMR({tkn: p_ for tkn, p_ in zip(tokens_t, p)}),
                 p_optimal_t=tuple(p),
                 dtokens=NOMR(dtokens_d),
                 dtokens_t=tuple(dtokens_t),
@@ -1480,14 +1486,14 @@ class CPCArbOptimizer(OptimizerBase):
             if P("raiseonerror"):
                 raise
             
-            NOMR = lambda f: f
+            NOMR = lambda f: f if not result == self.MO_MINIMAL else None
             return self.MargpOptimizerResult(
                 optimizer=NOMR(self),
                 result=None,
                 time=time.time() - start_time,
                 targettkn=targettkn,
                 curves=NOMR(curves_t),
-                p_optimal=None,
+                #p_optimal=None,
                 p_optimal_t=None,
                 dtokens=None,
                 dtokens_t=None,
@@ -1499,9 +1505,21 @@ class CPCArbOptimizer(OptimizerBase):
     @dataclass
     class TradeInstruction(_DCBase):
         """
-        encodes a trade
+        encodes a specific trade one a specific curve
 
         seen from the AMM; in numbers must be positive, out numbers negative
+        
+        :cid:               the curve id
+        :tknin:             token in
+        :amtin:             amount in (>0)
+        :tknout:            token out
+        :amtout:            amount out (<0)
+        :error:             error message (if any; None means no error)
+        :curve:             the curve object (optional); note: users of this object need
+                            to decide whether they trust the preparing code to set curve
+                            or whether they fetch it via the cid themselves
+        :raiseonerror:      if True, raise an error if the trade instruction is invalid
+                            otherwise just set the error message
         """
 
         cid: any
@@ -1601,8 +1619,9 @@ class CPCArbOptimizer(OptimizerBase):
 
         @classmethod
         def to_dicts(cls, trade_instructions):
-            """converts iterable ot TradeInstruction objects to a list of dicts"""
-            return [ti.asdict() for ti in trade_instructions]
+            """converts iterable ot TradeInstruction objects to a tuple of dicts"""
+            print("[TradeInstruction.to_dicts]")
+            return tuple(ti.asdict() for ti in trade_instructions)
 
         @classmethod
         def to_df(cls, trade_instructions, robj, ti_format=None):
@@ -1611,7 +1630,7 @@ class CPCArbOptimizer(OptimizerBase):
             
             :trade_instructions:    iterable of TradeInstruction objects
             :robj:                  OptimizationResult object generating the trade instructions
-            :ti_format:             format to convert to TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF       
+            :ti_format:             format (TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF, TIF_DFPG)     
             """
             if ti_format is None:
                 ti_format = cls.TIF_DF
@@ -1641,20 +1660,40 @@ class CPCArbOptimizer(OptimizerBase):
                 df = pd.concat([df1r, dfpr, dfp, dfn, dfa], axis=0)
                 df.loc["PRICE"].fillna(1, inplace=True)
                 return df
-                return df1, dfa
-            if ti_format == cls.TIF_DFP:
-                return df.fillna("")
+            if ti_format == cls.TIF_DFPG:
+                ti = trade_instructions
+                r = robj
+                eff_p_out_per_in = [-ti_.amtout/ti_.amtin for ti_ in ti]
+                data = dict(
+                    cid = [ti_.cid for ti_ in ti],
+                    pair = [f"{ti_.curve.pair}" for ti_ in ti],
+                    amt_tknq = [ti_.amtin if ti_.tknin == ti_.curve.tknq else ti_.amtout for ti_ in ti],
+                    tknq = [f"{ti_.curve.tknq}" for ti_ in ti],
+                    margp0 = [ti_.curve.p for ti_ in ti],
+                    effp = [p if ti_.tknout==ti_.curve.tknq else 1/p for p,ti_ in zip(eff_p_out_per_in, ti)],
+                    margp = [r.price(tknb=ti_.curve.tknb, tknq=ti_.curve.tknq) for ti_ in ti],
+                )
+                df = pd.DataFrame(data).set_index("cid")
+                df["gain_r"] = np.abs(df["effp"]/df["margp"] - 1)
+                df["gain_tknq"] = -df["amt_tknq"] * (df["effp"]/df["margp"] - 1)
+                
+                cgt_l = ((cid, gain, tkn) for cid, gain, tkn in zip(df.index, df["gain_tknq"], df["tknq"]))
+                cgtp_l = ((cid, gain, tkn, r.price(tknb=tkn, tknq=r.targettkn)) for cid, gain, tkn in cgt_l)
+                cg_l = ((cid, gain*price) for cid, gain, tkn, price in cgtp_l)
+                df["gain_ttkn"] = tuple(gain for cid, gain in cg_l)
+                return df
+            
             raise ValueError(f"unknown format {ti_format}")
 
         TIF_OBJECTS = TIF_OBJECTS
         TIF_DICTS = TIF_DICTS
-        TIF_DFP = TIF_DFP
         TIF_DFRAW = TIF_DFRAW
         TIF_DFAGGR = TIF_DFAGGR
         TIF_DF = TIF_DF
-
+        TIF_DFPG = TIF_DFPG
+        
         @classmethod
-        def to_format(cls, trade_instructions, robj, ti_format=None):
+        def to_format(cls, trade_instructions, robj=None, *, ti_format=None):
             """
             converts iterable ot TradeInstruction objects to the given format
             
@@ -1663,6 +1702,7 @@ class CPCArbOptimizer(OptimizerBase):
             :ti_format:             format to convert to TIF_OBJECTS, TIF_DICTS, TIF_DFP, 
                                     TIF_DFRAW, TIF_DFAGGR, TIF_DF
             """
+            #print("[TradeInstruction] to_format", ti_format)
             if ti_format is None:
                 ti_format = cls.TIF_OBJECTS
             if ti_format == cls.TIF_OBJECTS:
@@ -1697,29 +1737,38 @@ class CPCArbOptimizer(OptimizerBase):
 
     TIF_OBJECTS = TIF_OBJECTS
     TIF_DICTS = TIF_DICTS
-    TIF_DFP = TIF_DFP
     TIF_DFRAW = TIF_DFRAW
     TIF_DFAGGR = TIF_DFAGGR
     TIF_DF = TIF_DF
-    
+    TIF_DFPG = TIF_DFPG
+    METHOD_MARGP = "margp"
     @dataclass
     class MargpOptimizerResult(OptimizerBase.OptimizerResult):
         """
-        results of the simple optimizer
+        results of the marginal price optimizer
 
-        :p_optimal:         optimal p values
-
+        :curves:        curve objects underlying the optimization (as CPCContainer)
+        :targetkn:      target token (=profit token) of the optimization
+        :p_optimal_t:   optimal price vector (as tuple)
+        :dtokens:       change in token amounts (as dict)
+        :dtokens_t:     change in token amounts (as tuple)
+        :tokens_t:      list of tokens
+        :errormsg:      error message if an error occured (None=no error)
+        
+        PROPERTIES
+        :p_optimal:     optimal price vector (as dict)
+        
         """
         TIF_OBJECTS = TIF_OBJECTS
         TIF_DICTS = TIF_DICTS
-        TIF_DFP = TIF_DFP
         TIF_DFRAW = TIF_DFRAW
         TIF_DFAGGR = TIF_DFAGGR
         TIF_DF = TIF_DF
-
-        curves: list = field(repr=False, default=None)
+        TIF_DFPG = TIF_DFPG
+        
+        curves: any = field(repr=False, default=None)
         targettkn: str = field(repr=True, default=None)
-        p_optimal: dict = field(repr=False, default=None)
+        #p_optimal: dict = field(repr=False, default=None)
         p_optimal_t: tuple = field(repr=True, default=None)
         n_iterations: int = field(repr=False, default=None)
         dtokens: dict = field(repr=False, default=None)
@@ -1733,10 +1782,22 @@ class CPCArbOptimizer(OptimizerBase):
             assert (
                 self.p_optimal_t is not None or self.errormsg is not None
             ), "p_optimal_t must be set unless errormsg is set"
+            if not self.p_optimal_t is None:
+                self.p_optimal_t = tuple(self.p_optimal_t)
+                self._p_optimal_d = {
+                    **{tkn: p for tkn, p in zip(self.tokens_t, self.p_optimal_t)},
+                    self.targettkn: 1.0,
+                }
+                    
             if self.method is None:
-                self.method = "margp"
+                self.method = CPCArbOptimizer.METHOD_MARGP
             self.raiseonerror = False
 
+        @property
+        def p_optimal(self):
+            """the optimal price vector as dict (last entry is target token)"""
+            return self._p_optimal_d
+        
         @property
         def is_error(self):
             return self.errormsg is not None
@@ -1803,7 +1864,7 @@ class CPCArbOptimizer(OptimizerBase):
                     for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
                     if dx != 0 or dy != 0
                 )
-                return CPCArbOptimizer.TradeInstruction.to_format(result, self, ti_format)
+                return CPCArbOptimizer.TradeInstruction.to_format(result, robj=self, ti_format=ti_format)
             except AssertionError:
                 if self.raiseonerror:
                     raise
