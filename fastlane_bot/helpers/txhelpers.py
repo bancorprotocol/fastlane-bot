@@ -469,8 +469,19 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
+        from ..data.abi import (
+            FAST_LANE_CONTRACT_ABI,
+        )
+        print("build_tx=",self.build_tx(
+                    gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                ))
+
+        web3 = Web3(Web3.HTTPProvider("https://eth-mainnet.alchemyapi.io/v2/0-R5velBm8shxaZfUraYwa8kCaBesQVH"))
+
+        arb_contract = web3.eth.contract(address=web3.toChecksumAddress("0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB"), abi=FAST_LANE_CONTRACT_ABI)
+
         try:
-            transaction = self.arb_contract.functions.flashloanAndArb(
+            transaction = arb_contract.functions.flashloanAndArb(
                 routes, src_address, src_amt
             ).build_transaction(
                 self.build_tx(
@@ -478,17 +489,24 @@ class TxHelpers:
                 )
             )
         except ValueError as e:
-            print(f'ValueError when building transaction: {e}')
-            message = str(e).split("baseFee: ")
-            split_fee = message[1].split(" (supplied gas ")
-            baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-            transaction = self.arb_contract.functions.execute(
-                routes, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+            self.ConfigObj.logger.error(f'{e.__class__} Error when building transaction: {e}')
+            if e.__class__ == "ContractLogicError":
+                self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
+                return None
+
+            if "max fee per gas less than block base fee" in str(e):
+                message = str(e).split("baseFee: ")
+                split_fee = message[1].split(" (supplied gas ")
+                baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                transaction = arb_contract.functions.flashloanAndArb(
+                    routes, src_address, src_amt
+                ).build_transaction(
+                    self.build_tx(
+                        gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+                    )
                 )
-            )
+            else:
+                return None
         if test_fake_gas:
             transaction["gas"] = self.ConfigObj.DEFAULT_GAS
             return transaction
