@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.3" 
-__DATE__ = "02/May/2023"
+__VERSION__ = "1.4" 
+__DATE__ = "07/May/2023"
 
 from math import sqrt
 from dataclasses import dataclass, InitVar, asdict
@@ -75,7 +75,7 @@ class Univ3Calculator():
     
     def __post_init__(self, tkn0decv=None, tkn1decv=None, addrdec=None):
         
-        #print("[Univ3Calculator] post_init")
+        #print("[Univ3Calculator] post_init", tkn0decv, tkn0decv)
 
         if addrdec is not None:
             self.ADDRDEC.update(addrdec)
@@ -251,8 +251,26 @@ class Univ3Calculator():
         :kwargs:        additional kwargs to return
         """
         pa,pb = self.papb
+        pm = self.p
+        pmar = pm/pa - 1
+        pmbr = pm/pb - 1
+        #print("[cpc_params]", pa, pm, pb, pmar, pmbr)
+        if pmar < 0:
+            #print("[cpc_params] pmar<0; asserting just rounding", pa, pm, pmar)
+            assert pmar > -1e-10, f"pm below pa beyond rounding error [{pm}, {pa}, {pmar}]"
+        if abs(pmar)<1e-10:
+            #print("[cpc_params] setting pm to pa", pa, pm, pmar)
+            pm = pa
+        
+        if pmbr < 0:
+            #print("[cpc_params] pmbr>0; asserting just rounding", pm, pb, pmbr)
+            assert pmbr < 1e-10, f"pm abve pb beyond rounding error [{pm}, {pb}, {pmbr}]"
+        if abs(pmbr)<1e-10:
+            #print("[cpc_params] setting pm to pb", pm, pb, pmbr)
+            pm = pb
+            
         result = dict(
-            Pmarg = self.p,
+            Pmarg = pm,
             uniL = self.L,
             uniPa = pa,
             uniPb = pb,
