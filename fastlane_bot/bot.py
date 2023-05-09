@@ -626,9 +626,9 @@ class CarbonBot(CarbonBotBase):
                     condition_zeros_one_token = max(netchange) < 1e-4
                     self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                    # if condition_zeros_one_token: #candidate regardless if profitable
-                    candidates += [
-                        (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+                    if condition_zeros_one_token: #candidate regardless if profitable
+                        candidates += [
+                            (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                     if condition_profit and condition_better_profit and condition_zeros_one_token:
                         self.ConfigObj.logger.debug("*************")
@@ -754,10 +754,12 @@ class CarbonBot(CarbonBotBase):
         # Get the flashloan token and verify
         fl_token = agg_trade_instructions[0].tknin_key
         is_carbon = True if agg_trade_instructions[0].raw_txs != [] else False
-        if (fl_token == 'WETH-6Cc2') and is_carbon:
+        print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
+        if (fl_token == 'WETH-6Cc2'):
             fl_token = "ETH-EEeE"
-        else:
-            raise ValueError("Flashloan WETH not yet supported")
+        # elif (fl_token == 'WETH-6Cc2') and not is_carbon:
+        # else:
+        #     raise ValueError("Flashloan WETH not yet supported")
         flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
             self.db.get_token(key=fl_token).address
         )
