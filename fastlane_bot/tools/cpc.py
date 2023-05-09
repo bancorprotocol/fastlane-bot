@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.10.3"
-__DATE__ = "07/May/2023"
+__VERSION__ = "2.11.2"
+__DATE__ = "10/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -20,7 +20,8 @@ import pandas as pd
 import json
 from matplotlib import pyplot as plt
 from .params import Params
-import itertools
+import itertools as it
+import collections as cl
 from sys import float_info
 from hashlib import md5 as digest
 import time
@@ -1471,6 +1472,45 @@ class CPCContainer:
             return None
         pp = sum(c.pp for c in curves) / len(curves)
         return pp if pairo.isprimary else 1 / pp
+    
+    PR_TUPLE = "tuple"
+    PR_DICT = "dict"
+    PR_DF = "df"
+    def prices(self, result=None, *, inclpair=None, primary=None):
+        """
+        returns tuple or dictionary of the prices of all curves in the container
+
+        :primary:       if True (default), returns the price quoted in the convention of the primary pair
+        :inclpair:      if True, includes the pair in the dictionary
+        :result:        what result to return (PR_TUPLE, PR_DICT, PR_DF)
+        """
+        if primary is None: primary = True
+        if inclpair is None: inclpair = True
+        if result is None: result = self.PR_DICT
+        price_g = ((
+                c.cid,
+                c.primaryp() if primary else c.p, 
+                c.pairo.primary if primary else c.pair
+            ) for c in self.curves
+        )
+        
+        if result == self.PR_TUPLE:
+            if inclpair:
+                return tuple(price_g)
+            else:
+                return tuple(r[1] for r in price_g)
+        
+        if result == self.PR_DICT:
+            if inclpair:
+                return {r[0]: (r[1], r[2]) for r in price_g}
+            else:
+                return {r[0]: r[1] for r in price_g}
+        
+        if result == self.PR_DF:
+            df = pd.DataFrame.from_records(price_g, columns=["cid", "price", "pair"])
+            df = df.set_index("cid")
+            return df
+        raise ValueError(f"unknown result type {result}")
 
     def __iadd__(self, other):
         """alias for  self.add"""
@@ -1522,6 +1562,19 @@ class CPCContainer:
         """returns set of all tokens used by the curves as a string"""
         return ",".join(sorted(self.tokens(curves)))
 
+    def token_count(self, asdict=False):
+        """
+        counts the number of times each token appears in the curves
+        """
+        tokens_l = (c.pair for c in self)
+        tokens_l = (t.split("/") for t in tokens_l)
+        tokens_l = (t for t in it.chain.from_iterable(tokens_l))
+        tokens_l = list(cl.Counter([t for t in tokens_l]).items())
+        tokens_l = sorted(tokens_l, key=lambda x: x[1], reverse=True)
+        if not asdict:
+            return tokens_l
+        return dict(tokens_l)
+    
     def pairs(self, *, standardize=True):
         """
         returns set of all pairs used by the curves
@@ -1918,7 +1971,7 @@ class CPCContainer:
         result = (c for c in self if c.pair == pair)
         if not directed:
             pairr = "/".join(pair.split("/")[::-1])
-            result = itertools.chain(result, (c for c in self if c.pair == pairr))
+            result = it.chain(result, (c for c in self if c.pair == pairr))
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
 
     def bp(self, pair, *, directed=False, asgenerator=None, ascc=None):
@@ -2084,7 +2137,7 @@ class CPCContainer:
         )
         crvs = ((c, c.p, c.k) for c in crvs)
         rcrvs = ((c, 1 / c.p, c.k) for c in rcrvs)
-        acurves = itertools.chain(crvs, rcrvs)
+        acurves = it.chain(crvs, rcrvs)
         if result == self.PE_CURVES:
             # return dict(curves=tuple(crvs), rcurves=tuple(rcrvs))
             return tuple(acurves)
