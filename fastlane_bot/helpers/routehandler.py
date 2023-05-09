@@ -182,7 +182,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                         {
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
-                                Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
+                                trade["_amtin_wei"]
+                                # Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
                             ),
                         }
                     ]
