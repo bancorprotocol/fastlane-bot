@@ -24,7 +24,7 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 *routing is not implemented yet, but it is a trivial extension of the arbitrage methods that
 only needs to be connected and properly parameterized
 """
-__VERSION__ = "3.8"
+__VERSION__ = "4.0-beta0"
 __DATE__ = "10/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
