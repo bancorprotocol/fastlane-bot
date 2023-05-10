@@ -845,12 +845,12 @@ class CarbonBot(CarbonBotBase):
         )
         self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         tx_details = tx_submit_handler._get_tx_details()
-        tx_submit_handler.token_contract.functions.approve(
-            self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), 0
-        ).transact(tx_details)
-        tx_submit_handler.token_contract.functions.approve(
-            self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), src_amount
-        ).transact(tx_details)
+        # tx_submit_handler.token_contract.functions.approve(
+        #     self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), 0
+        # ).transact(tx_details)
+        # tx_submit_handler.token_contract.functions.approve(
+        #     self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS), src_amount
+        # ).transact(tx_details)
         self.ConfigObj.logger.debug("src_address", src_address)
         tx = tx_submit_handler._submit_transaction_tenderly(
             route_struct=route_struct,
