@@ -280,11 +280,9 @@ class CarbonBot(CarbonBotBase):
         tx_in_count = len(src_token_instr)
         return ordered_trade_instructions_dct, tx_in_count
 
-    def _basic_scaling_alternative_to_exact(self, best_trade_instructions_dic, best_src_token):
+    def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         '''
-        For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token, else by 0.99
-
-        NOTE: Since we update the info in the DICTIONARY, this actually voids the info in the DATAFRAME
+        For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
         '''
         scaled_best_trade_instructions_dic = []
         for x in best_trade_instructions_dic:
@@ -293,8 +291,8 @@ class CarbonBot(CarbonBotBase):
         for i in range(len(scaled_best_trade_instructions_dic)):
             if scaled_best_trade_instructions_dic[i]["tknin"] == best_src_token:
                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.999
-            else:
-                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
+#             else:
+#                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
 
         return scaled_best_trade_instructions_dic
 
@@ -724,7 +722,7 @@ class CarbonBot(CarbonBotBase):
         # Order the trades instructions suitable for routing and scale the amounts
         ordered_trade_instructions_dct, tx_in_count = self._simple_ordering_by_src_token(best_trade_instructions_dic,
                                                                                          best_src_token)
-        ordered_scaled_dcts = self._basic_scaling_alternative_to_exact(ordered_trade_instructions_dct, best_src_token)
+        ordered_scaled_dcts = self._basic_scaling(ordered_trade_instructions_dct, best_src_token)
         if result == self.XS_ORDSCAL:
             return ordered_scaled_dcts
 
