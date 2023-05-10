@@ -359,7 +359,7 @@ class TxHelpers:
             tx_receipt = self.submit_private_transaction(
                 arb_tx=arb_tx, block_number=block_number
             )
-            return tx_receipt.hex or None
+            return hex(tx_receipt) or None
         else:
             self.ConfigObj.logger.info(
                 f"Gas price too expensive! profit of {adjusted_reward} BNT vs gas cost of {gas_in_src} BNT. Abort, abort!"
@@ -495,14 +495,17 @@ class TxHelpers:
                 return None
 
             if "max fee per gas less than block base fee" in str(e):
-                message = str(e).split("baseFee: ")
-                split_fee = message[1].split(" (supplied gas ")
-                baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                message = str(e)
+                split1 = message.split('maxFeePerGas: ')[1]
+                split2 = split1.split(' baseFee: ')
+                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                print("[tx_helpers 505]", split_baseFee, split_maxPriorityFeePerGas, nonce)
                 transaction = arb_contract.functions.flashloanAndArb(
                     routes, src_address, src_amt
                 ).build_transaction(
                     self.build_tx(
-                        gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+                        gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
                     )
                 )
             else:
