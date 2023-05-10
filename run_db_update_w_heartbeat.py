@@ -63,7 +63,7 @@ def main(
         cfg = Config.new(config=Config.CONFIG_MAINNET)
 
     # Load data from CSV file
-    filepath = construct_file_path('fastlane_bot/data', 'pairs_list.csv')
+    filepath = construct_file_path('fastlane_bot/data', 'pairs_list3.csv')
     pools_and_token_table = pd.read_csv(filepath, low_memory=False)
 
     # Create a CarbonBot instance
