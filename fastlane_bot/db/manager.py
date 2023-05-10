@@ -50,11 +50,11 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             If True, only Carbon_v1 pairs will be updated.
         """
 
-        if not bypairs:
-            bypairs = pools_and_token_table['pair_name'].unique().tolist()
-
         # Add Carbon_v1 pairs to the table if they do not already exist
         pools_and_token_table = self.add_missing_pairs_to_table(pools_and_token_table, only_carbon)
+
+        if not bypairs:
+            bypairs = pools_and_token_table['pair_name'].unique().tolist()
 
         # Filter the table by the pairs to update
         filtered_table = pools_and_token_table[pools_and_token_table['pair_name'].isin(bypairs)]
