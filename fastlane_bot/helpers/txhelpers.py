@@ -481,8 +481,8 @@ class TxHelpers:
                 )
             )
         except ValueError as e:
-            self.ConfigObj.logger.error(f'{e.class.name} Error when building transaction: {e}')
-            if e.class.name == "ContractLogicError":
+            self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
+            if e.__class__.__name__ == "ContractLogicError":
                 self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
                 return None
 
