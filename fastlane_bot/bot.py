@@ -754,7 +754,7 @@ class CarbonBot(CarbonBotBase):
         # Get the flashloan token and verify
         fl_token = agg_trade_instructions[0].tknin_key
         is_carbon = True if agg_trade_instructions[0].raw_txs != [] else False
-        print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
+        # print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
         if (fl_token == 'WETH-6Cc2'):
             fl_token = "ETH-EEeE"
         # elif (fl_token == 'WETH-6Cc2') and not is_carbon:
@@ -787,13 +787,17 @@ class CarbonBot(CarbonBotBase):
 
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
+
+        # Get the cids of the trade instructions
+        cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
+
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            return self._validate_and_submit_transaction_tenderly(
+            return (self._validate_and_submit_transaction_tenderly(
                         ConfigObj = self.ConfigObj,
                         route_struct = route_struct,
                         src_amount = flashloan_amount,
                         src_address = flashloan_token_address,
-                            )
+                            ), cids)
 
         # log the flashloan arbitrage tx info
         self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
@@ -805,8 +809,7 @@ class CarbonBot(CarbonBotBase):
 
 
 
-        # Get the cids of the trade instructions
-        cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
+
 
         pool = (
             self.db.get_pool(exchange_name=self.ConfigObj.BANCOR_V3_NAME, pair_name='BNT-FF1C/ETH-EEeE')
@@ -816,9 +819,9 @@ class CarbonBot(CarbonBotBase):
         # Init TxHelpers
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
         # Submit tx
-        return tx_helpers.validate_and_submit_transaction(route_struct=route_struct, src_amt=flashloan_amount,
+        return (tx_helpers.validate_and_submit_transaction(route_struct=route_struct, src_amt=flashloan_amount,
                                                           src_address=flashloan_token_address, bnt_eth=bnt_eth,
-                                                          expected_profit=best_profit, safety_override=False, verbose=True), cids
+                                                          expected_profit=best_profit, safety_override=False, verbose=True), cids)
 
 
         # # Initialize tx helper
@@ -895,8 +898,9 @@ class CarbonBot(CarbonBotBase):
             mode = self.RUN_CONTINUOUS
         assert mode in [self.RUN_SINGLE,
                         self.RUN_CONTINUOUS], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
-        if polling_interval is None:
-            polling_interval = self.RUN_POLLING_INTERVAL
+        if self.polling_interval is None:
+            self.polling_interval = polling_interval if polling_interval is not None else self.RUN_POLLING_INTERVAL
+
         if flashloan_tokens is None:
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:

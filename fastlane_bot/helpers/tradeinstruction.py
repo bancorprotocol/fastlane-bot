@@ -195,7 +195,10 @@ class TradeInstruction:
         try:
             return Decimal(f"{str(amount_num)}.{amount_dec}")
         except Exception as e:
-            print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
+            #print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
+            pass
+
+
 
     def _get_token_address(self, token_key: str) -> str:
         """

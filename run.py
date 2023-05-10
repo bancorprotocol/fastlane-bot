@@ -49,7 +49,8 @@ def main(
 
 """
     print("Starting bot...")
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
+    #cfg = Config.new(config=Config.CONFIG_MAINNET)
+    cfg = Config.new(config=Config.CONFIG_TENDERLY)
     bot = CarbonBot(ConfigObj=cfg)
     bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode)
     

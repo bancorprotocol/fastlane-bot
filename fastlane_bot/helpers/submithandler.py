@@ -279,12 +279,12 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             The transaction hash.
         """
         # route_struct = [asdict(r) for r in route_struct]
-        for r in route_struct:
-            print(r)
-            print("\n")
-        print(
-            f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
-        )
+        #for r in route_struct:
+            #print(r)
+        #     print("\n")
+        # print(
+        #     f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
+        #)
         address = self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.BINANCE14_WALLET_ADDRESS)
         return self.arb_contract.functions.flashloanAndArb(
             route_struct, src_address, src_amount

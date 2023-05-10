@@ -332,8 +332,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         
         assert not deadline is None, "deadline cannot be None"
         
-        for t in trade_instructions:
-            print(f"trade_instruction.cid: {t.cid}")
+        # for t in trade_instructions:
+        #     print(f"trade_instruction.cid: {t.cid}")
 
         pools = [
             self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
@@ -342,7 +342,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         try:
             fee_float = [pools[idx].fee_float for idx, _ in enumerate(trade_instructions)]
         except:
-            print("[ERROR] error calculating fee_float")
+            # print("[ERROR] error calculating fee_float")
             fee_float = [0 for idx, _ in enumerate(trade_instructions)]
 
         return [
@@ -1163,12 +1163,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         if A is None:
             A = 0
 
-        print('[_calc_carbon_output] before decode: ', y, z, A, B)
+        #print('[_calc_carbon_output] before decode: ', y, z, A, B)
         A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
-        print('[_calc_carbon_output] after decode: ', y, z, A, B)
+        #print('[_calc_carbon_output] after decode: ', y, z, A, B)
         assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
         #print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
