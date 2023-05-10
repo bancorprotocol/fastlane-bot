@@ -247,7 +247,7 @@ class PoolAndTokens:
                 else:
                     dec0 = self.tkn1_decimals
                     dec1 = self.tkn0_decimals
-                return Decimal(10 ** (dec0 - dec1))
+                return Decimal(str(10 ** (dec0 - dec1)))
 
             decimal_converter = decimal_converter(i)
 
@@ -336,7 +336,7 @@ class PoolAndTokens:
         Converts wei balance to token balance (returns a Decimal)
         """
         # TODO: why Decimal?!?
-        return Decimal(str(tkn_balance_wei / (Decimal("10") ** Decimal(str(tkn_decimals)))))
+        return Decimal(str(Decimal(str(tkn_balance_wei)) / (Decimal("10") ** Decimal(str(tkn_decimals)))))
 
     @staticmethod
     def _convert_to_float(typed_args: Dict[str, Any]) -> Dict[str, Any]:

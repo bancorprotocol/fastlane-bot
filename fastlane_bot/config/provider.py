@@ -79,7 +79,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
         assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
-        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{self.WEB3_ALCHEMY_PROJECT_ID}"
 
         N = self.network
         self.connection = EthereumNetwork(
@@ -105,6 +105,11 @@ class _ConfigProviderAlchemy(ConfigProvider):
             address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
+        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
+
 
 class _ConfigProviderTenderly(ConfigProvider):
     """
@@ -142,7 +147,10 @@ class _ConfigProviderTenderly(ConfigProvider):
             address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
-        
+        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
 
     
 class _ConfigProviderInfura(ConfigProvider):

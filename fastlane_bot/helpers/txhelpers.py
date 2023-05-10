@@ -345,10 +345,12 @@ class TxHelpers:
             eth=eth,
         )
 
-        adjusted_reward = Decimal(Decimal(expected_profit) * self.ConfigObj.DEFAULT_REWARD_PERCENT)
-
+        adjusted_reward = Decimal(Decimal(expected_profit) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        max_profit = Decimal(self.ConfigObj.ARB_MAX_PROFIT)
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
+
+        adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
@@ -359,7 +361,7 @@ class TxHelpers:
             tx_receipt = self.submit_private_transaction(
                 arb_tx=arb_tx, block_number=block_number
             )
-            return tx_receipt.hex or None
+            return hex(tx_receipt) or None
         else:
             self.ConfigObj.logger.info(
                 f"Gas price too expensive! profit of {adjusted_reward} BNT vs gas cost of {gas_in_src} BNT. Abort, abort!"
@@ -469,6 +471,7 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
+
         try:
             transaction = self.arb_contract.functions.flashloanAndArb(
                 routes, src_address, src_amt
@@ -478,17 +481,27 @@ class TxHelpers:
                 )
             )
         except ValueError as e:
-            print(f'ValueError when building transaction: {e}')
-            message = str(e).split("baseFee: ")
-            split_fee = message[1].split(" (supplied gas ")
-            baseFee = int(int(split_fee[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-            transaction = self.arb_contract.functions.execute(
-                routes, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+            self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
+            if e.__class__.__name__ == "ContractLogicError":
+                self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
+                return None
+
+            if "max fee per gas less than block base fee" in str(e):
+                message = str(e)
+                split1 = message.split('maxFeePerGas: ')[1]
+                split2 = split1.split(' baseFee: ')
+                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                self.ConfigObj.logger.info("[tx_helpers 505]", split_baseFee, split_maxPriorityFeePerGas, nonce)
+                transaction = self.arb_contract.functions.flashloanAndArb(
+                    routes, src_address, src_amt
+                ).build_transaction(
+                    self.build_tx(
+                        gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                    )
                 )
-            )
+            else:
+                return None
         if test_fake_gas:
             transaction["gas"] = self.ConfigObj.DEFAULT_GAS
             return transaction

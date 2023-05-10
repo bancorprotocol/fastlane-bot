@@ -182,7 +182,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                         {
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
-                                Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
+                                trade["_amtin_wei"]
+                                # Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
                             ),
                         }
                     ]
@@ -331,8 +332,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         
         assert not deadline is None, "deadline cannot be None"
         
-        for t in trade_instructions:
-            print(f"trade_instruction.cid: {t.cid}")
+        # for t in trade_instructions:
+        #     print(f"trade_instruction.cid: {t.cid}")
 
         pools = [
             self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
@@ -341,12 +342,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         try:
             fee_float = [pools[idx].fee_float for idx, _ in enumerate(trade_instructions)]
         except:
-            print("[ERROR] error calculating fee_float")
+            # print("[ERROR] error calculating fee_float")
             fee_float = [0 for idx, _ in enumerate(trade_instructions)]
 
         return [
             self.to_route_struct(
-                min_target_amount=Decimal(trade_instructions[idx].amtout_wei),
+                min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
                 exchange_id=trade_instructions[idx].exchange_id,
@@ -386,8 +387,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 else instr.cid,
                 "tknin": instr.tknin,
                 "amtin": instr.amtin,
+                "_amtin_wei": instr.amtin_wei,
                 "tknout": instr.tknout,
                 "amtout": instr.amtout,
+                "_amtout_wei": instr.amtout_wei,
             }
             for instr in trade_instructions
         ]
@@ -459,8 +462,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "cid": newdf.cid.values[0],
                 "tknin": newdf.tknin.values[0],
                 "amtin": newdf.amtin.sum(),
+                "_amtin_wei": newdf._amtin_wei.sum(),
                 "tknout": newdf.tknout.values[0],
                 "amtout": newdf.amtout.sum(),
+                "_amtout_wei": newdf._amtout_wei.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
                 "ConfigObj" : config_object,
                 "db" : db,
@@ -805,15 +810,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 sqrt_price_times_q96_upper_bound,
                 sqrt_price_times_q96_lower_bound,
              )
-        # return Decimal(
-        #     liquidity
-        #     * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
-        #     / sqrt_price_times_q96_upper_bound
-        #     / sqrt_price_times_q96_lower_bound
-        # )
         return Decimal(
             liquidity
-            * self.ConfigObj.Q96
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
             / sqrt_price_times_q96_upper_bound
             / sqrt_price_times_q96_lower_bound
@@ -849,7 +847,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         return Decimal(
             liquidity
-            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound) / self.ConfigObj.Q96
+            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
         )
 
 
@@ -885,21 +883,27 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        amount_in = amount_in * (Decimal(str(1)) - fee)
-        result = ((liquidity * (sqrt_price - ((liquidity*self.ConfigObj.Q96*sqrt_price) / (liquidity * self.ConfigObj.Q96 + (
-                    amount_in * decimal_tkn0_modifier) * sqrt_price))) / self.ConfigObj.Q96) / decimal_tkn1_modifier)
-        return result
+        # amount_in = amount_in * (Decimal(str(1)) - fee)
+        # result = ((liquidity * (sqrt_price - ((liquidity*self.ConfigObj.Q96*sqrt_price) / (liquidity * self.ConfigObj.Q96 + (
+        #             amount_in * decimal_tkn0_modifier) * sqrt_price))) / self.ConfigObj.Q96) / decimal_tkn1_modifier)
+
+        #return result
+
         # amount_decimal_adjusted = (
         #     amount_in * decimal_tkn0_modifier * (Decimal(str(1)) - fee)
         # )
-        #
+
         # liquidity_x96 = Decimal(liquidity * self.ConfigObj.Q96)
-        # price_next = Decimal(
-        #     (liquidity_x96 * sqrt_price)
-        #     / (liquidity_x96 + amount_decimal_adjusted * sqrt_price)
-        # )
-        # amount_out = self._calc_amount1(liquidity, sqrt_price, price_next)
-        # return Decimal(amount_out / decimal_tkn1_modifier)
+        price_next = Decimal(str(math.floor((
+            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+            / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
+        ))
+        #print(f"p_next: {price_next}")
+        amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
+
+        #print(f"Equation result = {result}, calc0 result={amount_out/decimal_tkn1_modifier}")
+
+        return Decimal(amount_out / decimal_tkn1_modifier)
 
     def _swap_token1_in(
         self,
@@ -938,11 +942,18 @@ class TxRouteHandler(TxRouteHandlerBase):
         result = (((liquidity * self.ConfigObj.Q96 * ((((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
            (((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price)) / (
                sqrt_price)) / decimal_tkn0_modifier))
+
         return result
-        # amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
-        # price_diff = Decimal((amount * self.ConfigObj.Q96) / liquidity)
+        #amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
+        #
+        # price_diff = Decimal((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity)
         # price_next = Decimal(sqrt_price + price_diff)
-        # amount_out = self._calc_amount0(liquidity, price_next, sqrt_price)
+        #
+        # print(f"p_next: {price_next}")
+        # amount_out = self._calc_amount0(liquidity, price_next, sqrt_price) / self.ConfigObj.Q96
+        #
+        # print(f"Equation result = {result}, calc0 result={amount_out / decimal_tkn0_modifier}")
+        #
         # return Decimal(amount_out / decimal_tkn0_modifier)
 
     def _calc_uniswap_v3_output(
@@ -987,6 +998,15 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         assert tkn_in == tkn_0_key or tkn_out == tkn_0_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
         assert tkn_in == tkn_1_key or tkn_out == tkn_1_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
+
+        liquidity = Decimal(str(liquidity))
+        fee = Decimal(str(fee))
+        sqrt_price = Decimal(str(sqrt_price))
+        decimal_tkn0_modifier = Decimal(str(decimal_tkn0_modifier))
+        decimal_tkn1_modifier = Decimal(str(decimal_tkn1_modifier))
+
+        #print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_key={tkn_0_key}, tkn_1_key={tkn_1_key}, tkn0_in={tkn_in == tkn_0_key}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
+
         return (
             self._swap_token0_in(
                 amount_in=amount_in,
@@ -1015,7 +1035,9 @@ class TxRouteHandler(TxRouteHandlerBase):
     def decode(self, value):
         return self.decodeFloat(int(value)) / self.ONE
 
-    def decode_decimal_adjustment(self, value: Decimal, tkn_in_decimals: int, tkn_out_decimals: int):
+    def decode_decimal_adjustment(self, value: Decimal, tkn_in_decimals: int or str, tkn_out_decimals: int or str):
+        tkn_in_decimals = int(tkn_in_decimals)
+        tkn_out_decimals = int(tkn_out_decimals)
         return value * Decimal("10") ** (
                 (tkn_in_decimals - tkn_out_decimals) / Decimal("2")
         )
@@ -1125,30 +1147,39 @@ class TxRouteHandler(TxRouteHandlerBase):
         tkn0_key = curve.pair_name.split("/")[0]
         tkn1_key = curve.pair_name.split("/")[1]
 
+        tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn0_key
+        tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn1_key
         #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, ")
 
         assert tkn_in == tkn0_key or tkn_in == tkn1_key, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_key} & {tkn1_key}"
 
+        #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_key}")
         y, z, A, B = (
             (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
             if tkn_in == tkn1_key
             else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
         )
 
+        if A is None:
+            A = 0
+
+        #print('[_calc_carbon_output] before decode: ', y, z, A, B)
         A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
+        #print('[_calc_carbon_output] after decode: ', y, z, A, B)
+        assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
-        # print(f"Carbon curve decoded: {y, z, A, B}")
+        #print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
 
         amt_in, result = self._get_output_trade_by_source_carbon(
-            y=y, z=z, A=A, B=B, fee=Decimal(curve.fee), tkns_in=amount_in
+            y=y, z=z, A=A, B=B, fee=Decimal(curve.fee_float), tkns_in=amount_in
         )
         return amt_in, result
 
     @staticmethod
-    def single_trade_result_constant_product(
+    def _single_trade_result_constant_product(
         tokens_in, token0_amt, token1_amt, fee
     ) -> Decimal:
         return Decimal(
@@ -1163,17 +1194,29 @@ class TxRouteHandler(TxRouteHandlerBase):
             raise Exception("trade in must be a TradeInstruction object.")
         tkn0_key = curve.pair_name.split("/")[0]
         tkn1_key = curve.pair_name.split("/")[1]
+        tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
+        tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
+        tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
+        tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (
+                    trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
+        #if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2"):
 
-        tkn_in_decimals = (
-            curve.tkn0_decimals
+
+        assert tkn0_key == trade.tknin_key or tkn0_key == trade.tknout_key, f"[_solve_trade_output] tkn0_key {tkn0_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
+        assert tkn1_key == trade.tknin_key or tkn1_key == trade.tknout_key, f"[_solve_trade_output] tkn1_key {tkn1_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
+        assert tkn0_key != tkn1_key, f"[_solve_trade_output] tkn0_key == tkn_1_key {tkn0_key}, {tkn1_key}"
+
+        tkn_in_decimals = int(
+            tkn0_decimals
             if trade.tknin_key == tkn0_key
-            else curve.tkn1_decimals
+            else tkn1_decimals
         )
-        tkn_out_decimals = (
-            curve.tkn1_decimals
-            if trade.tknin_key == tkn0_key
-            else curve.tkn0_decimals
+        tkn_out_decimals = int(
+            tkn1_decimals
+            if trade.tknout_key == tkn1_key
+            else tkn0_decimals
         )
+
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
@@ -1182,40 +1225,45 @@ class TxRouteHandler(TxRouteHandlerBase):
                 tkn_in=trade.tknin_key,
                 tkn_out=trade.tknout_key,
                 amount_in=amount_in,
-                fee=Decimal(curve.fee),
+                fee=Decimal(curve.fee_float),
                 liquidity=curve.liquidity,
                 sqrt_price=curve.sqrt_price_q96,
-                decimal_tkn0_modifier=Decimal(10**curve.tkn0_decimals),
-                decimal_tkn1_modifier=Decimal(10**curve.tkn1_decimals),
+                decimal_tkn0_modifier=Decimal(10**tkn0_decimals),
+                decimal_tkn1_modifier=Decimal(10**tkn1_decimals),
                 tkn_0_key=tkn0_key,
                 tkn_1_key=tkn1_key
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME:
             amount_in, amount_out = self._calc_carbon_output(
-                curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals , tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
+                curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
             )
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
-                if trade == tkn0_key
+                if trade.tknin_key == tkn0_key
                 else (curve.tkn1_balance, curve.tkn0_balance)
             )
-            tkn0_amt = self._from_wei_to_decimals(tkn0_amt, curve.tkn0_decimals)
-            tkn1_amt = self._from_wei_to_decimals(tkn1_amt, curve.tkn1_decimals)
-            amount_out = self.single_trade_result_constant_product(
+            tkn0_dec = tkn0_decimals if trade.tknin_key == tkn0_key else tkn1_decimals
+            tkn1_dec = tkn1_decimals if trade.tknout_key == tkn1_key else tkn0_decimals
+
+            tkn0_amt = self._from_wei_to_decimals(tkn0_amt, tkn0_dec)
+            tkn1_amt = self._from_wei_to_decimals(tkn1_amt, tkn1_dec)
+            #print(f"[_solve_trade_output] constant product solve: tkn0_amt={tkn0_amt}, tkn1_amt={tkn1_amt}, tkn0_dec={tkn0_dec}, tkn1_dec={tkn1_dec}, tkn_in={trade.tknin_key}, tkn_out={trade.tknout_key} ,tkn0_key={tkn0_key}, tkn1_key={tkn1_key}")
+
+            amount_out = self._single_trade_result_constant_product(
                 tokens_in=amount_in,
                 token0_amt=tkn0_amt,
                 token1_amt=tkn1_amt,
-                fee=curve.fee,
+                fee=curve.fee_float,
             )
 
-        amount_out = amount_out * Decimal("0.999")
+        amount_out = amount_out * Decimal("0.9999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
 
-    def _calculate_trade_outputs(
+    def calculate_trade_outputs(
         self, trade_instructions: List[TradeInstruction]
     ) -> List[TradeInstruction]:
         """
@@ -1234,58 +1282,59 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
-            raw_txs_lst = []
-            if trade.raw_txs != "[]":
-                data = eval(trade.raw_txs)
-                total_out = 0
-                for tx in data:
-                    cid = tx["cid"]
-                    cid = cid.split("-")[0]
-                    tknin_key = tx["tknin"]
-                    curve = self.db.session.query(Pool).filter(Pool.cid == cid).first()
-                    (
-                        amount_in,
-                        amount_out,
-                        amount_in_wei,
-                        amount_out_wei,
-                    ) = self._solve_trade_output(
-                        curve=curve, trade=trade, amount_in=next_amount_in
-                    )
+            # raw_txs_lst = []
+            # if trade.raw_txs != "[]":
+            #     data = eval(trade.raw_txs)
+            #     total_out = 0
+            #     for tx in data:
+            #         cid = tx["cid"]
+            #         cid = cid.split("-")[0]
+            #         tknin_key = tx["tknin"]
+            #         curve = trade_instructions[idx].db.get_pool(cid=cid)
+            #         (
+            #             amount_in,
+            #             amount_out,
+            #             amount_in_wei,
+            #             amount_out_wei,
+            #         ) = self._solve_trade_output(
+            #             curve=curve, trade=trade, amount_in=next_amount_in
+            #         )
 
-                    raw_txs = {
-                        "cid": cid,
-                        "amtin": amount_in_wei,
-                        "tknin": tknin_key,
-                        "amtout": amount_out_wei,
-                    }
-                    raw_txs_lst.append(raw_txs)
+            #         raw_txs = {
+            #             "cid": cid,
+            #             "amtin": amount_in_wei,
+            #             "tknin": tknin_key,
+            #             "amtout": amount_out_wei,
+            #         }
+            #         raw_txs_lst.append(raw_txs)
 
-                    total_out += amount_out
-                amount_out = total_out
+            #         total_out += amount_out
+            #     amount_out = total_out
 
-            else:
+            # else:
 
-                curve_cid = trade.cid
-                curve = self.db.session.query(Pool).filter(Pool.cid == curve_cid).first()
-                (
-                    amount_in,
-                    amount_out,
-                    amount_in_wei,
-                    amount_out_wei,
-                ) = self._solve_trade_output(
-                    curve=curve, trade=trade, amount_in=next_amount_in
-                )
-                trade_instructions[idx].amtin = amount_in_wei
-                trade_instructions[idx].amtout = amount_out_wei
+            curve_cid = trade.cid
+            curve = trade_instructions[idx].db.get_pool(cid=curve_cid)
+            (
+                amount_in,
+                amount_out,
+                amount_in_wei,
+                amount_out_wei,
+            ) = self._solve_trade_output(
+                curve=curve, trade=trade, amount_in=next_amount_in
+            )
+            trade_instructions[idx].amtin = amount_in
+            trade_instructions[idx].amtout = amount_out
+            trade_instructions[idx]._amtin_wei = amount_in_wei
+            trade_instructions[idx]._amtout_wei = amount_out_wei
 
-                next_amount_in = amount_out
-
-            trade_instructions[idx].raw_txs = str(raw_txs_lst)
+            next_amount_in = amount_out
+        # trade_instructions[idx].raw_txs = str(raw_txs_lst)
 
         return trade_instructions
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
-        return tkn0_amt / Decimal("10") ** Decimal(str(tkn0_decimals))
+        return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
 
     def _cid_to_pool(self, cid: str, db: any) -> Pool:
         return db.get_pool(cid=cid)

@@ -83,6 +83,8 @@ class TradeInstruction:
     tknin_addr_override: str = None  # ditto
     tknout_addr_override: str = None # ditto
     exchange_override: str = None    # ditto
+    _amtin_wei: int = None
+    _amtout_wei: int = None
 
     @property
     def tknin_key(self) -> str:
@@ -112,8 +114,10 @@ class TradeInstruction:
         else:
             self._tknin_address = self.tknin_addr_override
             self._tknin_decimals = self.tknin_dec_override
-            
-        self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
+
+        if self._amtin_wei is None:
+            self._amtin_wei = self._convert_to_wei(self.amtin, self._tknin_decimals)
+
         self._amtin_decimals = self._convert_to_decimals(
             self.amtin, self._tknin_decimals
         )
@@ -129,7 +133,9 @@ class TradeInstruction:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
             
-        self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
+        if self._amtout_wei is None:            
+            self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
+
         self._amtout_decimals = self._convert_to_decimals(
             self.amtout, self._tknout_decimals
         )
@@ -177,16 +183,22 @@ class TradeInstruction:
         Decimal
             The quantized amount.
         """
+        # print(f"[_quantize], amount: {amount}, type = {type(amount)}, decimals: {decimals}, type {type(decimals)}")
 
         if "." not in str(amount):
             return Decimal(str(amount))
         amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
-        amount_dec = str(amount_dec)[:decimals]
+        # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
+        amount_dec = str(amount_dec)[:int(decimals)]
+        # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
         try:
             return Decimal(f"{str(amount_num)}.{amount_dec}")
         except Exception as e:
-            print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
+            #print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
+            pass
+
+
 
     def _get_token_address(self, token_key: str) -> str:
         """
@@ -234,7 +246,8 @@ class TradeInstruction:
         Token
             The token object.
         """
-        return self.db.session.query(Token).filter(Token.key == token_key).first()
+
+        return self.db.get_token(key=token_key)
 
     def _get_pool(self) -> Pool:
         """
@@ -245,8 +258,7 @@ class TradeInstruction:
         Pool
             The pool object.
         """
-
-        return self.db.session.query(Pool).filter(Pool.cid == self.cid).first()
+        return self.db.get_pool(cid=self.cid)
 
     @staticmethod
     def _convert_to_wei(amount: Union[int, Decimal, float], decimals: int) -> int:
