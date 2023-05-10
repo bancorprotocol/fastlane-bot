@@ -345,10 +345,12 @@ class TxHelpers:
             eth=eth,
         )
 
-        adjusted_reward = Decimal(Decimal(expected_profit) * self.ConfigObj.DEFAULT_REWARD_PERCENT)
-
+        adjusted_reward = Decimal(Decimal(expected_profit) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        max_profit = Decimal(self.ConfigObj.ARB_MAX_PROFIT)
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
+
+        adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
@@ -476,12 +478,8 @@ class TxHelpers:
                     gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
                 ))
 
-        web3 = Web3(Web3.HTTPProvider("https://eth-mainnet.alchemyapi.io/v2/0-R5velBm8shxaZfUraYwa8kCaBesQVH"))
-
-        arb_contract = web3.eth.contract(address=web3.toChecksumAddress("0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB"), abi=FAST_LANE_CONTRACT_ABI)
-
         try:
-            transaction = arb_contract.functions.flashloanAndArb(
+            transaction = self.arb_contract.functions.flashloanAndArb(
                 routes, src_address, src_amt
             ).build_transaction(
                 self.build_tx(
@@ -501,7 +499,7 @@ class TxHelpers:
                 split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
                 split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
                 print("[tx_helpers 505]", split_baseFee, split_maxPriorityFeePerGas, nonce)
-                transaction = arb_contract.functions.flashloanAndArb(
+                transaction = self.arb_contract.functions.flashloanAndArb(
                     routes, src_address, src_amt
                 ).build_transaction(
                     self.build_tx(

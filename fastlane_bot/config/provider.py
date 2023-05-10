@@ -105,6 +105,11 @@ class _ConfigProviderAlchemy(ConfigProvider):
             address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
+        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
+
 
 class _ConfigProviderTenderly(ConfigProvider):
     """
@@ -142,7 +147,10 @@ class _ConfigProviderTenderly(ConfigProvider):
             address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
-        
+        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
 
     
 class _ConfigProviderInfura(ConfigProvider):
