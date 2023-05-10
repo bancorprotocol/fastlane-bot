@@ -614,11 +614,11 @@ class CarbonBot(CarbonBotBase):
                 except Exception as e:
                     netchange = [500] #an arbitrary large number
 
-                bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-                self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
-                condition_profit = True
-                if profit > (self.min_profit + bnt_gas_limit):
-                    condition_profit = True
+                # bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
+                # self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
+                # condition_profit = False
+                # if profit > (self.min_profit + bnt_gas_limit):
+                #     condition_profit = True
 
                 if len(trade_instructions_df) > 0:
                     condition_better_profit = (profit > best_profit)
@@ -630,7 +630,7 @@ class CarbonBot(CarbonBotBase):
                         candidates += [
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
-                    if condition_profit and condition_better_profit and condition_zeros_one_token:
+                    if condition_better_profit and condition_zeros_one_token:
                         self.ConfigObj.logger.debug("*************")
                         self.ConfigObj.logger.debug(f"New best profit: {profit}")
 
@@ -818,7 +818,7 @@ class CarbonBot(CarbonBotBase):
         # Submit tx
         return tx_helpers.validate_and_submit_transaction(route_struct=route_struct, src_amt=flashloan_amount,
                                                           src_address=flashloan_token_address, bnt_eth=bnt_eth,
-                                                          expected_profit=best_profit), cids
+                                                          expected_profit=best_profit, safety_override=False, verbose=True), cids
 
 
         # # Initialize tx helper

@@ -810,15 +810,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 sqrt_price_times_q96_upper_bound,
                 sqrt_price_times_q96_lower_bound,
              )
-        # return Decimal(
-        #     liquidity
-        #     * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
-        #     / sqrt_price_times_q96_upper_bound
-        #     / sqrt_price_times_q96_lower_bound
-        # )
         return Decimal(
             liquidity
-            * self.ConfigObj.Q96
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
             / sqrt_price_times_q96_upper_bound
             / sqrt_price_times_q96_lower_bound
@@ -854,7 +847,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         return Decimal(
             liquidity
-            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound) / self.ConfigObj.Q96
+            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
         )
 
 
@@ -890,21 +883,27 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        amount_in = amount_in * (Decimal(str(1)) - fee)
-        result = ((liquidity * (sqrt_price - ((liquidity*self.ConfigObj.Q96*sqrt_price) / (liquidity * self.ConfigObj.Q96 + (
-                    amount_in * decimal_tkn0_modifier) * sqrt_price))) / self.ConfigObj.Q96) / decimal_tkn1_modifier)
-        return result
+        # amount_in = amount_in * (Decimal(str(1)) - fee)
+        # result = ((liquidity * (sqrt_price - ((liquidity*self.ConfigObj.Q96*sqrt_price) / (liquidity * self.ConfigObj.Q96 + (
+        #             amount_in * decimal_tkn0_modifier) * sqrt_price))) / self.ConfigObj.Q96) / decimal_tkn1_modifier)
+
+        #return result
+
         # amount_decimal_adjusted = (
         #     amount_in * decimal_tkn0_modifier * (Decimal(str(1)) - fee)
         # )
-        #
+
         # liquidity_x96 = Decimal(liquidity * self.ConfigObj.Q96)
-        # price_next = Decimal(
-        #     (liquidity_x96 * sqrt_price)
-        #     / (liquidity_x96 + amount_decimal_adjusted * sqrt_price)
-        # )
-        # amount_out = self._calc_amount1(liquidity, sqrt_price, price_next)
-        # return Decimal(amount_out / decimal_tkn1_modifier)
+        price_next = Decimal(str(math.floor((
+            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+            / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
+        ))
+        #print(f"p_next: {price_next}")
+        amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
+
+        #print(f"Equation result = {result}, calc0 result={amount_out/decimal_tkn1_modifier}")
+
+        return Decimal(amount_out / decimal_tkn1_modifier)
 
     def _swap_token1_in(
         self,
@@ -943,11 +942,18 @@ class TxRouteHandler(TxRouteHandlerBase):
         result = (((liquidity * self.ConfigObj.Q96 * ((((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
            (((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price)) / (
                sqrt_price)) / decimal_tkn0_modifier))
+
         return result
-        # amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
-        # price_diff = Decimal((amount * self.ConfigObj.Q96) / liquidity)
+        #amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
+        #
+        # price_diff = Decimal((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity)
         # price_next = Decimal(sqrt_price + price_diff)
-        # amount_out = self._calc_amount0(liquidity, price_next, sqrt_price)
+        #
+        # print(f"p_next: {price_next}")
+        # amount_out = self._calc_amount0(liquidity, price_next, sqrt_price) / self.ConfigObj.Q96
+        #
+        # print(f"Equation result = {result}, calc0 result={amount_out / decimal_tkn0_modifier}")
+        #
         # return Decimal(amount_out / decimal_tkn0_modifier)
 
     def _calc_uniswap_v3_output(
@@ -1251,7 +1257,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 fee=curve.fee_float,
             )
 
-        # amount_out = amount_out * Decimal("0.999")
+        amount_out = amount_out * Decimal("0.9999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
