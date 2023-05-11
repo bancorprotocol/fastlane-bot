@@ -16,6 +16,8 @@ from decimal import Decimal
 
 
 TENDERLY_FORK = os.environ.get("POSTGRES_DB")
+DEFAULT_MIN_PROFIT_BNT = os.environ.get("DEFAULT_MIN_PROFIT_BNT")
+
 
 class ConfigNetwork(ConfigBase):
     """
@@ -77,7 +79,8 @@ class ConfigNetwork(ConfigBase):
     DEFAULT_GAS_SAFETY_OFFSET = 25_000
     DEFAULT_POLL_INTERVAL = 12
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500  # 10 block time deviation
-    DEFAULT_MIN_PROFIT = Decimal("1")
+    DEFAULT_MIN_PROFIT = DEFAULT_MIN_PROFIT_BNT
+    DEFAULT_MIN_PROFIT_BNT = DEFAULT_MIN_PROFIT_BNT
     DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
     _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
     DEFAULT_CURVES_DATAFILE = os.path.normpath(f"{_PROJECT_PATH}/carbon/data/curves.csv.gz")

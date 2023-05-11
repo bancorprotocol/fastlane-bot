@@ -10,13 +10,8 @@ Licensed under MIT
 import click
 
 from fastlane_bot import Config
-#from fastlane_bot.tools.cpc import T
 from fastlane_bot.bot import CarbonBot
-#from fastlane_bot.db.models import *
 
-# session.rollback()
-
-#flashloan_tokens = [T.BNT, T.WETH, T.WBTC, T.USDT, T.USDC, T.DAI]
 flashloan_tokens = None
 
 
@@ -24,10 +19,13 @@ flashloan_tokens = None
 @click.option("--mode", default="continuous", type=str)
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--polling_interval", default=12, type=int)
+@click.option("--config", default=None, type=str)
 def main(
-    mode,
-    flashloan_tokens,
-    polling_interval,
+        mode: str = "continuous",
+        flashloan_tokens: list = None,
+        polling_interval: int = 12,
+        config: str = None,
+
 ):
     """
     Main logic for the Bancor Arbitrage Bot (FastLane) - run.py filescript
@@ -44,17 +42,22 @@ def main(
         Whether the bot should update the pools before running
     polling_interval: int
         The interval (in seconds) at which the bot will poll for new blocks
-    seed_pools: bool
-        Whether the bot should seed the pools before running
+    config: str
+        The config to use. Options are:
+            - None: use the default config (Mainnet)
+            - tenderly: use the tenderly config
 
-"""
+    """
     print("Starting bot...")
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
-    # cfg = Config.new(config=Config.CONFIG_TENDERLY)
+
+    if config and config == 'tenderly':
+        cfg = Config.new(config=Config.CONFIG_TENDERLY)
+    else:
+        cfg = Config.new(config=Config.CONFIG_MAINNET)
+
     bot = CarbonBot(ConfigObj=cfg)
     bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode)
-    
-    
+
 
 if __name__ == "__main__":
     main()
