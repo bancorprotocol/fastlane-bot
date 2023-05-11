@@ -16,7 +16,7 @@ from decimal import Decimal
 
 
 TENDERLY_FORK = os.environ.get("POSTGRES_DB")
-DEFAULT_MIN_PROFIT_BNT = os.environ.get("DEFAULT_MIN_PROFIT_BNT")
+DEFAULT_MIN_PROFIT_BNT = Decimal(os.environ.get("DEFAULT_MIN_PROFIT_BNT"))
 
 
 class ConfigNetwork(ConfigBase):

@@ -1,5 +1,4 @@
 # Databricks notebook source
-# ! python /Workspace/Repos/carbonbot/carbonbot/run_db_update.py
 import sys
 
 # COMMAND ----------
@@ -112,6 +111,13 @@ RPC_URL
 
 # COMMAND ----------
 
+del_network = f"cd {bot_path}; brownie networks delete tenderly"
+
+add_network = f'cd {bot_path}; brownie networks add "Ethereum" "tenderly" host="{RPC_URL}" chainid=1'
+
+! {del_network}
+! {add_network}
+
 del_network = f"cd {bot_path}; brownie networks delete {cfg}"
 
 add_network = f'cd {bot_path}; brownie networks add "Ethereum" "{cfg}" host="{RPC_URL}" chainid=1'
@@ -124,19 +130,10 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
 # COMMAND ----------
 
-cmd = f"cd {bot_path}; python run_db_update.py"
-
-if bypairs:
-    cmd += f" --bypairs={bypairs}"
-
-if only_carbon:
-    cmd += f" --only_carbon={only_carbon}"
+cmd = f"cd {bot_path}; python run_bot.py"
 
 if cfg == 'tenderly':
     cmd += ' --config=tenderly'
-
-cmd += f' --mode={mode}'
-cmd += f' --pairs_list_filepath={pairs_list_filepath}'
 
 cmd
 
