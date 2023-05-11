@@ -739,6 +739,20 @@ class CarbonBot(CarbonBotBase):
         if result == self.XS_EXACT:
             return calculated_trade_instructions
 
+        fl_token = calculated_trade_instructions[0].tknin_key
+        if (fl_token == 'WETH-6Cc2'):
+            fl_token = "ETH-EEeE"
+        try:
+            best_profit = calculated_trade_instructions[-1].amtout - calculated_trade_instructions[0].amtin
+            best_profit = self.db.get_bnt_price_from_tokens(best_profit, tkn=fl_token)
+            self.ConfigObj.logger.debug(f"updated best_profit after calculating exact trade numbers: {best_profit}")
+        except Exception as e:
+            self.ConfigObj.logger.error(f"[Failed to update profit in BNT for price of token: {fl_token}] error:{e}")
+
+        if best_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
+            self.ConfigObj.logger.info(f"Opportunity with profit: {best_profit} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding.")
+            return (None, None)
+
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
             trade_instructions_objects=calculated_trade_instructions
         )
@@ -750,11 +764,10 @@ class CarbonBot(CarbonBotBase):
         flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))
 
         # Get the flashloan token and verify
-        fl_token = agg_trade_instructions[0].tknin_key
+        # fl_token = agg_trade_instructions[0].tknin_key
         is_carbon = True if agg_trade_instructions[0].raw_txs != [] else False
         # print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
-        if (fl_token == 'WETH-6Cc2'):
-            fl_token = "ETH-EEeE"
+
         # elif (fl_token == 'WETH-6Cc2') and not is_carbon:
         # else:
         #     raise ValueError("Flashloan WETH not yet supported")
