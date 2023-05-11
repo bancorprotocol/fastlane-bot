@@ -14,8 +14,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0"
-__DATE__ = "10/May/2023"
+__VERSION__ = "4.0.1"
+__DATE__ = "11/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -169,7 +169,7 @@ class MargPOptimizer(CPCArbOptimizer):
                     price_estimates_t = self.price_estimates(
                         tknq=targettkn, 
                         tknbs=tokens_t, 
-                        verbose=True,
+                        verbose=False,
                         triangulate=True,
                     )
                 except Exception as e:
@@ -386,6 +386,6 @@ class MargPOptimizer(CPCArbOptimizer):
                 dtokens=None,
                 dtokens_t=None,
                 tokens_t=tokens_t,
-                n_iterations=i,
+                n_iterations=None,
                 errormsg=e,
             )
