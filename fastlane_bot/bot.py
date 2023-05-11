@@ -66,6 +66,7 @@ import fastlane_bot.db.models as models
 from fastlane_bot.config import Config
 from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
+from .utils import num_format
 
 
 # errorlogger = self.ConfigObj.logger.error
@@ -606,7 +607,7 @@ class CarbonBot(CarbonBotBase):
                     self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
                     profit = profit_src
 
-                self.ConfigObj.logger.debug(f"Profit in bnt: {profit} {cids}")
+                self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
                 try:
                     netchange = trade_instructions_df.iloc[-1]
                 except Exception as e:
@@ -745,12 +746,12 @@ class CarbonBot(CarbonBotBase):
         try:
             best_profit = calculated_trade_instructions[-1].amtout - calculated_trade_instructions[0].amtin
             best_profit = self.db.get_bnt_price_from_tokens(best_profit, tkn=fl_token)
-            self.ConfigObj.logger.debug(f"updated best_profit after calculating exact trade numbers: {best_profit}")
+            self.ConfigObj.logger.debug(f"updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
         except Exception as e:
             self.ConfigObj.logger.error(f"[Failed to update profit in BNT for price of token: {fl_token}] error:{e}")
 
         if best_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
-            self.ConfigObj.logger.info(f"Opportunity with profit: {best_profit} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding.")
+            self.ConfigObj.logger.info(f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding.")
             return (None, None)
 
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
