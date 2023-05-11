@@ -290,7 +290,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         params['fee'] = 0.002
         return params
 
-    def update_pools_heartbeat(self, only_carbon: bool, bypairs: List[str] = None, update_interval_seconds: int = 12,
+    def update_pools_heartbeat(self, mode: str, only_carbon: bool, bypairs: List[str] = None, update_interval_seconds: int = 12,
                                pools_and_token_table: pd.DataFrame = None):
         """
         Updates pools in a loop. This is the main function that should be called to update pools.
@@ -305,16 +305,28 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             The pools and token table to update from.
         only_carbon : bool
             Whether to only update carbon pools.
+        mode : str
+            The mode to run in. Can be 'continuous' or 'single'.
         """
+        if mode != 'continuous':
+            start_time = time.time()
+            self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
+            time.sleep(update_interval_seconds)
+            self.print_update_time(start_time)
+            return
+
         while True:
             start_time = time.time()
             self.update_pools_from_contracts(bypairs=bypairs, pools_and_token_table=pools_and_token_table, only_carbon=only_carbon)
             time.sleep(update_interval_seconds)
-            print('\n')
-            print('*************************************')
-            print(f"Updated pools in seconds: {time.time() - start_time}")
-            print('*************************************')
-            print('\n')
+            self.print_update_time(start_time)
+
+    def print_update_time(self, start_time):
+        print('\n')
+        print('*************************************')
+        print(f"Updated pools in seconds: {time.time() - start_time}")
+        print('*************************************')
+        print('\n')
 
     def update_pool_from_event(self, pool: models.Pool, processed_event: Any):
         """

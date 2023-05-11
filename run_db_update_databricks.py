@@ -1,5 +1,5 @@
 # Databricks notebook source
-# ! python /Workspace/Repos/carbonbot/carbonbot/run_db_update_w_heartbeat.py
+# ! python /Workspace/Repos/carbonbot/carbonbot/run_db_update.py
 
 # COMMAND ----------
 
@@ -51,6 +51,7 @@ bot_path = '/Workspace/Repos/mike@bancor.network/carbonbot'
 import os
 ETH_PRIVATE_KEY = dbutils.secrets.get(scope="fastlane", key=f"ETH_PRIVATE_KEY_BE_CAREFUL")
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get('WEB3_ALCHEMY_PROJECT_ID')
+DEFAULT_MIN_PROFIT = os.environ.get('DEFAULT_MIN_PROFIT')
 POSTGRES_PASSWORD = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_PASSWORD")
 POSTGRES_USER = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_USER")
 POSTGRES_HOST = dbutils.secrets.get(scope="fastlane", key=f"POSTGRES_HOST")
@@ -65,6 +66,7 @@ POSTGRES_PORT = "27140"
 ! export POSTGRES_HOST={POSTGRES_HOST}
 ! export POSTGRES_PORT={POSTGRES_PORT}
 ! export POSTGRES_DB={POSTGRES_DB}
+! export DEFAULT_MIN_PROFIT={DEFAULT_MIN_PROFIT}
 
 
 with open(f'{bot_path}/.env', 'w') as f:
@@ -75,6 +77,7 @@ with open(f'{bot_path}/.env', 'w') as f:
     f.write(f'POSTGRES_HOST={POSTGRES_HOST} \n')
     f.write(f'POSTGRES_PORT={POSTGRES_PORT} \n')
     f.write(f'POSTGRES_DB={POSTGRES_DB} \n')
+    f.write(f'DEFAULT_MIN_PROFIT={DEFAULT_MIN_PROFIT} \n')
     f.close()
 
 # COMMAND ----------
@@ -87,7 +90,7 @@ MAINNET_URL = 'https://eth-mainnet.alchemyapi.io/v2/'
 TENDERLY_URL = 'https://rpc.tenderly.co/fork/'
 
 if not TENDERLY_FORK:
-    RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}" 
+    RPC_URL = f"{MAINNET_URL}{WEB3_ALCHEMY_PROJECT_ID}"
     
 else:
     RPC_URL = f"{TENDERLY_URL}{TENDERLY_FORK}"
@@ -109,7 +112,7 @@ set_network = f'cd {bot_path}; brownie networks set_provider alchemy'
 
 # COMMAND ----------
 
-cmd = f"cd {bot_path}; python run_db_update_w_heartbeat.py"
+cmd = f"cd {bot_path}; python run_db_update.py"
 
 if bypairs:
     cmd += f" --bypairs={bypairs}"
@@ -123,11 +126,15 @@ if cfg == 'tenderly':
 cmd
 
 # COMMAND ----------
-
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 
-cfg = Config.new(config=Config.CONFIG_TENDERLY)
+if not TENDERLY_FORK:
+    cfg = Config.new(config=Config.CONFIG_MAINNET)
+
+else:
+    cfg = Config.new(config=Config.CONFIG_TENDERLY)
+
 cfg.w3.provider.endpoint_uri
 
 # COMMAND ----------
