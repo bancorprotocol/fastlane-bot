@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.2"
-__DATE__ = "10/May/2023"
+__VERSION__ = "1.3"
+__DATE__ = "11/May/2023"
 
 from typing import Any
 from .cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
@@ -405,5 +405,51 @@ class CPCAnalyzer(_DCBase):
         
         return s
         
+    POS_DICT = "dict"
+    POS_LIST = "list"
+    POS_DF = "df"
+    def pool_arbitrage_statistics(self, result = None, *, sort_price=True):
+        """
+        returns arbirage statistics on all Carbon pairs
+        
+        :result:    POS_DICT, POS_LIST, POS_DF (default)
+        :returns:   the statistics data in the requested format
+        """
+        # select all curves that have at least one Carbon pair...
+        curves_by_carbon_pair = {pair: self.CC.bypairs([pair]) for pair in self.pairsc()}
+
+        # ...calculate some statistics...
+        prices_d = {pair: 
+                    [(
+                        Pair.n(pair), pair, c.primaryp(), c.cid, c.cid[-8:], c.P("exchange"), c.tvl(tkn=pair.split("/")[0]),
+                        "x" if c.itm(cc) else "", c.buysell(verbose=False), c.buysell(verbose=True, withprice=True)
+                    ) for c in cc 
+                    ] 
+                    for pair, cc in curves_by_carbon_pair.items()
+                    }
+
+        # ...and return them in the desired format
+        if result is None:
+            result = self.POS_DF
+            
+        if result == self.POS_DICT:
+            #print("returning dict")
+            return prices_d
+        
+        prices_l = tuple(it.chain(*prices_d.values()))
+        if result == self.POS_LIST:
+            #print("returning list")
+            return prices_l
+        
+        pricedf0 = pd.DataFrame(prices_l, columns="pair,pairf,price,cid,cid0,exchange,vl,itm,bs,bsv".split(","))
+        if sort_price:
+            pricedf = pricedf0.drop(['cid', 'pairf'], axis=1).sort_values(by=["pair", "price", "exchange", "cid0"])
+        else:
+            pricedf = pricedf0.drop(['cid', 'pairf'], axis=1).sort_values(by=["pair", "exchange", "cid0"])
+        pricedf = pricedf.set_index(["pair", "exchange", "cid0"])
+        if result == self.POS_DF:
+            return pricedf
+        
+        raise ValueError(f"invalid result type {result}")
         
         
