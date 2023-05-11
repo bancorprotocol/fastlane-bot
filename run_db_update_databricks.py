@@ -1,5 +1,6 @@
 # Databricks notebook source
 # ! python /Workspace/Repos/carbonbot/carbonbot/run_db_update.py
+import sys
 
 # COMMAND ----------
 
@@ -139,17 +140,21 @@ cfg.w3.provider.endpoint_uri
 
 # COMMAND ----------
 
-import subprocess
+import subprocess, sys
 
-p = subprocess.Popen(
-    cmd,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    stdin=subprocess.PIPE,
-    shell=True,
+process = subprocess.Popen(
+    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True
 )
 
-stdout, stderr = p.communicate()
+while True:
+    out = process.stdout.read(1)
+    if out == '' and process.poll() != None:
+        break
+    if out != '':
+        sys.stdout.write(out)
+        sys.stdout.flush()
+
+stdout, stderr = process.communicate()
 
 print((f'{stdout.decode("utf-8")}'))
 
