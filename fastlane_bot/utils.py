@@ -33,6 +33,12 @@ def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
         decimals = Decimal("1")
     return int(Decimal(tkn_amt * 10**decimals))
 
+def num_format(number):
+    try:
+        return '{0:.4f}'.format(number)
+    except Exception as e:
+        return number
+
 
 def get_coingecko_token_table() -> List[Dict[str, Any]]:
     """

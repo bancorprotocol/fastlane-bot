@@ -34,6 +34,9 @@ from fastlane_bot.db.models import Token, Pool
 #import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
+from fastlane_bot.utils import num_format
+
+
 @dataclass
 class TxHelper:
     """
@@ -304,8 +307,7 @@ class TxHelpers:
         if verbose:
             self.ConfigObj.logger.info("Found a trade. Executing...")
             self.ConfigObj.logger.info(
-                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {expected_profit} \n\n"
-            )
+                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {num_format(expected_profit)} \n\n")
         current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy()
 
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -354,7 +356,7 @@ class TxHelpers:
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
-                f"Expected profit of {expected_profit} BNT vs cost of {gas_in_src} BNT in gas, executing"
+                f"Expected profit of {num_format(expected_profit)} BNT vs cost of {num_format(gas_in_src)} BNT in gas, executing"
             )
 
             # Submit the transaction
@@ -364,7 +366,7 @@ class TxHelpers:
             return hex(tx_receipt) or None
         else:
             self.ConfigObj.logger.info(
-                f"Gas price too expensive! profit of {adjusted_reward} BNT vs gas cost of {gas_in_src} BNT. Abort, abort!"
+                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!"
             )
             return None
 
