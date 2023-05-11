@@ -311,6 +311,8 @@ class PoolManager(DatabaseManagerBase):
             return None
 
         try:
+            # remove "id" from pool_data
+            pool_data.pop('id', None)
             pool = self.create_or_update_pool(pool_data)
             return pool
         except Exception as e:
@@ -352,6 +354,7 @@ class PoolManager(DatabaseManagerBase):
         if existing_pool:
             for key, value in pool_data.items():
                 setattr(existing_pool, key, value)
+            pool = existing_pool
         else:
             pool = models.Pool(**pool_data)
             session.add(pool)
