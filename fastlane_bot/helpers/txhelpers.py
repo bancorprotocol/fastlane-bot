@@ -492,7 +492,6 @@ class TxHelpers:
                 split2 = split1.split(' baseFee: ')
                 split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
                 split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                self.ConfigObj.logger.info("[tx_helpers 505]", split_baseFee, split_maxPriorityFeePerGas, nonce)
                 transaction = self.arb_contract.functions.flashloanAndArb(
                     routes, src_address, src_amt
                 ).build_transaction(
