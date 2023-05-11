@@ -7,8 +7,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0"
-__DATE__ = "10/May/2023"
+__VERSION__ = "4.1"
+__DATE__ = "11/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -26,7 +26,7 @@ import time
 import math
 import numbers
 import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
+from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer, Pair
 from sys import float_info
 
 from .dcbase import DCBase
@@ -42,8 +42,11 @@ TIF_OBJECTS = "objects"
 TIF_DICTS = "dicts"
 TIF_DFRAW = "dfraw"
 TIF_DF = TIF_DFRAW
+TIFDF8 = "df8"
 TIF_DFAGGR = "dfaggr"
+TIF_DFAGGR8 = "dfaggr8"
 TIF_DFPG = "dfgain"
+TIF_DFPG8 = "dfgain8"
 
 class CPCArbOptimizer(OptimizerBase):
     """
@@ -343,9 +346,10 @@ class CPCArbOptimizer(OptimizerBase):
             """
             if ti_format is None:
                 ti_format = cls.TIF_DF
+            cid8 = ti_format in set([cls.TIF_DF8, cls.TIF_DFAGGR8, cls.TIF_DFPG8])
             dicts = (
                 {
-                    "cid": ti.cid,
+                    "cid": ti.cid if not cid8 else ti.cid[-10:],
                     "pair": ti.curve.pair if not ti.curve is None else "",
                     "pairp": ti.curve.pairp if not ti.curve is None else "",
                     "tknin": ti.tknin,
@@ -356,9 +360,9 @@ class CPCArbOptimizer(OptimizerBase):
                 for ti in trade_instructions
             )
             df = pd.DataFrame.from_dict(list(dicts)).set_index("cid")
-            if ti_format == cls.TIF_DFRAW:
+            if ti_format in set([cls.TIF_DF, cls.TIF_DF8]):
                 return df
-            if ti_format == cls.TIF_DFAGGR:
+            if ti_format in set([cls.TIF_DFAGGR, cls.TIF_DFAGGR8]):
                 df1r = df[df.columns[4:]]
                 df1  = df1r.fillna(0)
                 dfa  = df1.sum().to_frame(name="TOTAL NET").T
@@ -369,20 +373,22 @@ class CPCArbOptimizer(OptimizerBase):
                 df = pd.concat([df1r, dfpr, dfp, dfn, dfa], axis=0)
                 df.loc["PRICE"].fillna(1, inplace=True)
                 return df
-            if ti_format == cls.TIF_DFPG:
+            if ti_format in set([cls.TIF_DFPG, cls.TIF_DFPG8]):
                 ti = trade_instructions
                 r = robj
                 eff_p_out_per_in = [-ti_.amtout/ti_.amtin for ti_ in ti]
                 data = dict(
-                    cid = [ti_.cid for ti_ in ti],
-                    pair = [f"{ti_.curve.pair}" for ti_ in ti],
+                    exch = [ti_.curve.P("exchange") for ti_ in ti],
+                    cid = [ti_.cid if ti_format == cls.TIF_DFPG else ti_.cid[-10:] for ti_ in ti],
+                    fee = [ti_.curve.fee for ti_ in ti], # if split here must change conversion below
+                    pair = [ti_.curve.pair if ti_format == cls.TIF_DFPG else Pair.n(ti_.curve.pair) for ti_ in ti],
                     amt_tknq = [ti_.amtin if ti_.tknin == ti_.curve.tknq else ti_.amtout for ti_ in ti],
-                    tknq = [f"{ti_.curve.tknq}" for ti_ in ti],
+                    tknq = [ti_.curve.tknq for ti_ in ti],
                     margp0 = [ti_.curve.p for ti_ in ti],
                     effp = [p if ti_.tknout==ti_.curve.tknq else 1/p for p,ti_ in zip(eff_p_out_per_in, ti)],
                     margp = [r.price(tknb=ti_.curve.tknb, tknq=ti_.curve.tknq) for ti_ in ti],
                 )
-                df = pd.DataFrame(data).set_index("cid")
+                df = pd.DataFrame(data)
                 df["gain_r"] = np.abs(df["effp"]/df["margp"] - 1)
                 df["gain_tknq"] = -df["amt_tknq"] * (df["effp"]/df["margp"] - 1)
                 
@@ -390,6 +396,8 @@ class CPCArbOptimizer(OptimizerBase):
                 cgtp_l = ((cid, gain, tkn, r.price(tknb=tkn, tknq=r.targettkn)) for cid, gain, tkn in cgt_l)
                 cg_l = ((cid, gain*price) for cid, gain, tkn, price in cgtp_l)
                 df["gain_ttkn"] = tuple(gain for cid, gain in cg_l)
+                df = df.sort_values(["exch", "gain_ttkn"], ascending=False)
+                df = df.set_index(["exch", "cid"])
                 return df
             
             raise ValueError(f"unknown format {ti_format}")
@@ -398,8 +406,11 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DICTS = TIF_DICTS
         TIF_DFRAW = TIF_DFRAW
         TIF_DFAGGR = TIF_DFAGGR
+        TIF_DFAGGR8 = TIF_DFAGGR8
         TIF_DF = TIF_DF
+        TIF_DF8 = TIFDF8
         TIF_DFPG = TIF_DFPG
+        TIF_DFPG8 = TIF_DFPG8
         
         @classmethod
         def to_format(cls, trade_instructions, robj=None, *, ti_format=None):
@@ -448,8 +459,11 @@ class CPCArbOptimizer(OptimizerBase):
     TIF_DICTS = TIF_DICTS
     TIF_DFRAW = TIF_DFRAW
     TIF_DFAGGR = TIF_DFAGGR
+    TIF_DFAGGR8 = TIF_DFAGGR8
     TIF_DF = TIF_DF
+    TIF_DF8 = TIFDF8
     TIF_DFPG = TIF_DFPG
+    TIF_DFPG8 = TIF_DFPG8
     
     METHOD_MARGP = "margp"
     @dataclass
@@ -473,8 +487,11 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DICTS = TIF_DICTS
         TIF_DFRAW = TIF_DFRAW
         TIF_DFAGGR = TIF_DFAGGR
+        TIF_DFAGGR8 = TIF_DFAGGR8
         TIF_DF = TIF_DF
+        TIF_DF8 = TIFDF8
         TIF_DFPG = TIF_DFPG
+        TIF_DFPG8 = TIF_DFPG8
         
         curves: any = field(repr=False, default=None)
         targettkn: str = field(repr=True, default=None)
