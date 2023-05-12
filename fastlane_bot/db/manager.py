@@ -449,7 +449,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             fee_float = str(int(fee) / 1000000)
             anchor = contract.caller.anchor()
             params = {
-                "fee": fee,
+                "fee": str(fee),
                 "fee_float": fee_float,
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
