@@ -311,8 +311,6 @@ class PoolManager(DatabaseManagerBase):
             return None
 
         try:
-            # remove "id" from pool_data
-            pool_data.pop('id', None)
             pool = self.create_or_update_pool(pool_data)
             return pool
         except Exception as e:

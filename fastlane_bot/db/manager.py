@@ -245,12 +245,11 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                                                             address=params['address'],
                                                             strategy=strategy)
         random_pool = self.get_pools()[0]
-        pool_data = {k: v for k, v in params.items() if k in random_pool.__getattribute__('__table__').columns.keys() and k not in ['last_updated']}
+        pool_data = {k: v for k, v in params.items() if k in random_pool.__getattribute__('__table__').columns.keys() and k not in ['last_updated', 'id']}
         update_params = {**pool_data, **liquidity_params}
 
         pool = self.get_pool(cid=str(params['cid']))
         if pool is None:
-
             update_params['descr'] = f"{update_params['exchange_name']} {update_params['pair_name']} {update_params['fee']}"
             self.get_or_create_token(params['tkn0_address'])
             self.get_or_create_token(params['tkn1_address'])
