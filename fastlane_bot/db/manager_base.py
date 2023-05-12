@@ -265,20 +265,25 @@ session = Session()
 
 # Create the Ethereum chain if it doesn't exist
 blockchain_name = "Ethereum"
-try:
-    blockchain = models.Blockchain(name=blockchain_name)
-    blockchain.block_number = 0
-    session.add(blockchain)
-    session.commit()
-except Exception as e:
-    print(f"Error adding Ethereum blockchain to database {blockchain_name}, {e} skipping...")
-    session.rollback()
+check_blockchain = session.query(models.Blockchain).filter(models.Blockchain.name == blockchain_name).first()
+if not check_blockchain:
+    try:
+        blockchain = models.Blockchain(name=blockchain_name)
+        blockchain.block_number = 0
+        session.add(blockchain)
+        session.commit()
+    except Exception as e:
+        print(f"Error adding Ethereum blockchain to database {blockchain_name}, {e} skipping...")
+        session.rollback()
+
 
 # Create the supported exchanges if they don't exist
 for exchange in ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']:
-    try:
-        session.add(models.Exchange(name=exchange, blockchain_name=blockchain_name))
-        session.commit()
-    except Exception as e:
-        print(f"Error adding exchange {exchange} to database, {e} skipping...")
-        session.rollback()
+    check_exchange = session.query(models.Exchange).filter(models.Exchange.name == exchange).first()
+    if not check_exchange:
+        try:
+            session.add(models.Exchange(name=exchange, blockchain_name=blockchain_name))
+            session.commit()
+        except Exception as e:
+            print(f"Error adding exchange {exchange} to database, {e} skipping...")
+            session.rollback()
