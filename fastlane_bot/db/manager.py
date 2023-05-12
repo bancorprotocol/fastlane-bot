@@ -445,11 +445,15 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
             }
         elif exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             reserve0, reserve1 = contract.caller.reserveBalances()
+            fee = contract.caller.conversionFee()
+            fee_float = str(int(fee) / 1000000)
+            anchor = contract.caller.anchor()
             params = {
-                "fee": "0.003",
-                "fee_float": 0.003,
+                "fee": fee,
+                "fee_float": fee_float,
                 "tkn0_balance": reserve0,
                 "tkn1_balance": reserve1,
+                "anchor": anchor,
             }
         elif exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             slot0 = contract.caller.slot0()
