@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.3"
-__DATE__ = "11/May/2023"
+__VERSION__ = "1.4"
+__DATE__ = "13/May/2023"
 
 from typing import Any
 from .cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
@@ -422,7 +422,7 @@ class CPCAnalyzer(_DCBase):
         prices_d = {pair: 
                     [(
                         Pair.n(pair), pair, c.primaryp(), c.cid, c.cid[-8:], c.P("exchange"), c.tvl(tkn=pair.split("/")[0]),
-                        "x" if c.itm(cc) else "", c.buysell(verbose=False), c.buysell(verbose=True, withprice=True)
+                        "x" if c.itm(cc) else "", c.buy(), c.sell(), c.buysell(verbose=True, withprice=True)
                     ) for c in cc 
                     ] 
                     for pair, cc in curves_by_carbon_pair.items()
@@ -441,7 +441,7 @@ class CPCAnalyzer(_DCBase):
             #print("returning list")
             return prices_l
         
-        pricedf0 = pd.DataFrame(prices_l, columns="pair,pairf,price,cid,cid0,exchange,vl,itm,bs,bsv".split(","))
+        pricedf0 = pd.DataFrame(prices_l, columns="pair,pairf,price,cid,cid0,exchange,vl,itm,b,s,bsv".split(","))
         if sort_price:
             pricedf = pricedf0.drop(['cid', 'pairf'], axis=1).sort_values(by=["pair", "price", "exchange", "cid0"])
         else:
@@ -451,5 +451,36 @@ class CPCAnalyzer(_DCBase):
             return pricedf
         
         raise ValueError(f"invalid result type {result}")
-        
+
+    PR_TUPLE = "tuple"
+    PR_DICT = "dict"
+    PR_DF = "df"
+    def price_ranges(self, result=None, *, short=True):
+            """
+            returns dataframe with price information of all curves
+            
+            :result:    PR_TUPLE, PR_DICT, PR_DF (default)
+            :short:     shorten cid and pair
+            """
+            if result is None: result = self.PR_DF
+            price_l = ((
+                c.primary if not short else Pair.n(c.primary), 
+                c.cid if not short else c.cid[-10:], 
+                c.P("exchange"), 
+                c.buy(),
+                c.sell(), 
+                c.p_min_primary(), 
+                c.p_max_primary(),
+                c.pp,
+            ) for c in self.CC)
+            if result == self.PR_TUPLE:
+                return tuple(price_l)
+            if result == self.PR_DICT:
+                return {c.cid: r for c, r in zip(self.CC, price_l)}
+            df = pd.DataFrame(price_l, columns="pair,cid,exch,b,s,p_min,p_max,p_marg".split(","))
+            df = df.sort_values(["pair", "p_marg", "exch", "cid"])
+            df = df.set_index(["pair", "exch", "cid"])
+            if result == self.PR_DF:
+                return df
+            raise ValueError(f"unknown result type {result}")
         
