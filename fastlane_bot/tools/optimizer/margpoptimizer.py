@@ -14,8 +14,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0.1"
-__DATE__ = "11/May/2023"
+__VERSION__ = "4.1"
+__DATE__ = "13/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -43,17 +43,18 @@ class MargPOptimizer(CPCArbOptimizer):
         computes the Jacobian of func at point x
 
         :func:    a callable x=(x1..xn) -> (y1..ym), taking and returning np.arrays
+                  must also take a quiet parameter, which if True suppresses output
         :x:       a vector x=(x1..xn) as np.array
         """
         if eps is None:
             eps = cls.JACEPS
         n = len(x)
-        y = func(x)
+        y = func(x, quiet=True)
         jac = np.zeros((n, n))
         for j in range(n):  # through columns to allow for vector addition
             Dxj = abs(x[j]) * eps if x[j] != 0 else eps
             x_plus = [(xi if k != j else xi + Dxj) for k, xi in enumerate(x)]
-            jac[:, j] = (func(x_plus) - y) / Dxj
+            jac[:, j] = (func(x_plus, quiet=True) - y) / Dxj
         return jac
     J = jacobian
     JACEPS = 1e-5
@@ -184,7 +185,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 return df
             
             ## INNER FUNCTION: CALCULATE THE TARGET FUNCTION
-            def dtknfromp_f(p, *, islog10=True, asdct=False):
+            def dtknfromp_f(p, *, islog10=True, asdct=False, quiet=False):
                 """
                 calculates the aggregate change in token amounts for a given price vector
 
@@ -192,6 +193,7 @@ class MargPOptimizer(CPCArbOptimizer):
                             this vector is an np.array, and the token order is the same as in tokens_t
                 :islog10:   if True, p is interpreted as log10(p)
                 :asdct:     if True, the result is returned as dict AND tuple, otherwise as np.array
+                :quiet:     if overrides P("debug") etc, eg for calc of Jacobian
                 :returns:   if asdct is False, a tuple of the same length as tokens_t detailing the
                             change in token amounts for each token except for the target token (ie the
                             quantity with target zero; if asdct is True, that same information is
@@ -201,7 +203,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 if islog10:
                     p = np.exp(p * np.log(10))
                 assert len(p) == len(tokens_t), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
-                if P("debug"):
+                if P("debug") and not quiet:
                     print(f"\n[dtknfromp_f] =====================>>>")
                     print(f"prices={p}")
                     print(f"tokens={tokens_t}")
@@ -212,7 +214,7 @@ class MargPOptimizer(CPCArbOptimizer):
                     curves = curves_by_pair[pair]
                     c0 = curves[0]
                     dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
-                    if P("debug2"):
+                    if P("debug2") and not quiet:
                         print(f"\n{c0.pairp} --->>")
                         print(f"  price={price:,.4f}, 1/price={1/price:,.4f}")
                         for r, c in zip(dxdy, curves):
@@ -227,11 +229,11 @@ class MargPOptimizer(CPCArbOptimizer):
                     sum_by_tkn[tknq] += sumdy
                     sum_by_tkn[tknb] += sumdx
 
-                    if P("debug"):
+                    if P("debug") and not quiet:
                         print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
 
                 result = tuple(sum_by_tkn[t] for t in tokens_t)
-                if P("debug"):
+                if P("debug") and not quiet:
                     print(f"sum_by_tkn={sum_by_tkn}")
                     print(f"result={result}")
                     print(f"<<<===================== [dtknfromp_f]")
@@ -291,15 +293,16 @@ class MargPOptimizer(CPCArbOptimizer):
                     dtkn = dtknfromp_f(plog10, islog10=True, asdct=False)
 
                 # calculate the Jacobian
-                if P("debug"):
-                    print("\n[margp_optimizer] ============= JACOBIAN =============>>>")
+                # if P("debug"):
+                #     print("\n[margp_optimizer] ============= JACOBIAN =============>>>")
                 J = self.J(dtknfromp_f, plog10)  
                     # ATTENTION: dtknfromp_f takes log10(p) as input
                 if P("debug"):
-                    print("==== J ====>")
+                    # print("==== J ====>")
+                    print("\n============= JACOBIAN =============>>>")
                     print(J)
-                    print("<=== J =====")
-                    print("<<<============= JACOBIAN ============= [margp_optimizer]\n")
+                    # print("<=== J =====")
+                    print("<<<============= JACOBIAN =============\n")
                 
                 # Update p, dtkn using the Newton-Raphson formula
                 try:
