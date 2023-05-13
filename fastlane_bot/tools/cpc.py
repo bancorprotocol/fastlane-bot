@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.11.2"
-__DATE__ = "10/May/2023"
+__VERSION__ = "2.12"
+__DATE__ = "13/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -1025,6 +1025,14 @@ class ConstantProductCurve:
         else:
             return result
     
+    def buy(self):
+        """returns 'b' if the curve buys the primary token, '' otherwise"""
+        return self.buysell(verbose=False, withprice=False).replace("s", "")
+    
+    def sell(self):
+        """returns 's' if the curve sells the primary token, '' otherwise"""
+        return self.buysell(verbose=False, withprice=False).replace("b", "")
+        
     ITM_THRESHOLDPC = 0.01
     @classmethod
     def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
@@ -1103,8 +1111,13 @@ class ConstantProductCurve:
     
     @property
     def primary(self):
-        "alias for self.pairo.primary [pair]"
+        "alias for self.pairo.primary"
         return self.pairo.primary
+    
+    @property
+    def isprimary(self):
+        "alias for self.pairo.isprimary"
+        return self.pairo.isprimary
     
     def primaryp(self, *, withconvention=False):
         "pool price in the native quote of the curve Pair object"
@@ -1179,7 +1192,13 @@ class ConstantProductCurve:
             return self.y_max / self.x_min
         else:
             return None
-
+        
+    def p_max_primary(self, swap=True):
+        "p_max in the native quote of the curve Pair object (swap=True: p_min)"
+        p = self.p_max if not (swap and not self.isprimary) else self.p_min
+        if p is None: return None
+        return p if self.isprimary else 1/p
+    
     @property
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
@@ -1187,7 +1206,13 @@ class ConstantProductCurve:
             return self.y_min / self.x_max
         else:
             return None
-
+    
+    def p_min_primary(self, swap=True):
+        "p_min in the native quote of the curve Pair object (swap=True: p_max)"
+        p = self.p_min if not (swap and not self.isprimary) else self.p_max
+        if p is None: return None
+        return p if self.isprimary else 1/p
+    
     def format(self, *, heading=False, formatid=None):
         """returns info about the curve as a formatted string"""
         if formatid is None:
