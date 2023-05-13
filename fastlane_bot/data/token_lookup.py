@@ -4042,6 +4042,8 @@ token_address_lookup = {
 }
 
 token_symbol_lookup = {
+    'LBR': {'address': '0xC98835e792553e505AE46e73a6fD27a23985aCcA', 'decimals': 18},
+    'ETH': {'address': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'decimals': 18},
     'XLS': {'address': '0x6c862f803fF42A97D4A483AB761256ad8c90f4F8', 'decimals': 18},
     'BLY': {'address': '0xf8aD7dFe656188A23e89da09506Adf7ad9290D5d', 'decimals': 18},
     'AAMMUNIMKRWETH': {'address': '0x370adc71f67f581158Dc56f539dF5F399128Ddf9', 'decimals': 18},
@@ -8157,3 +8159,40 @@ def get_token_address_from_symbol(token_symbol) -> str:
 
 def check_if_tkn_in_table_symbol(token_address) -> bool:
     return token_address in token_symbol_lookup
+
+pair_pools = {
+    "0x67CeA36eEB36Ace126A3Ca6E21405258130CF33C": {"pair": "USDC_TSUKA",
+            "pair_reverse": "TSUKA_USDC",
+            "exchange_name": "uniswap",
+            "exchange": "uniswap",
+            "address": "0x67CeA36eEB36Ace126A3Ca6E21405258130CF33C",
+            "address0": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "address1": "0xc5fB36dd2fb59d3B98dEfF88425a3F425Ee469eD",
+            "symbol0": "USDC",
+            "symbol1": "TSUKA",
+            "fee": 0.003,
+            "decimal0": 6,
+            "decimal1": 9,
+            "exchange_version": "v2",
+            "exchange_id": 3,
+            "exchange_type": "Constant Product Pool"},
+
+    "0xEb7b5294c79b0369315Ed7fE76b52d3108B0A62D": {
+            "pair": "USDC_JAY",
+            "pair_reverse": "JAY_USDC",
+            "exchange_name": "uniswap",
+            "exchange": "uniswap",
+            "address": "0x67CeA36eEB36Ace126A3Ca6E21405258130CF33C",
+            "address0": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "address1": "0xDA7C0810cE6F8329786160bb3d1734cf6661CA6E",
+            "symbol0": "USDC",
+            "symbol1": "JAY",
+            "fee": 0.003,
+            "decimal0": 6,
+            "decimal1": 18,
+            "exchange_version": "v2",
+            "exchange_id": 3,
+            "exchange_type": "Constant Product Pool"},
+
+}
+

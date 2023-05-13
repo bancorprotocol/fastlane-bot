@@ -924,7 +924,7 @@ class CarbonV1Order:
                 raise Exception(
                     f"Invalid Carbon position, y is greater than z or less than 0: y={self.y}, z={self.z}"
                 )
-
+        # print(f'Carbon order: y={self.y}, z={self.z}, A={self.A}, B={self.B}')
         self.c = self.get_c
         self.d = self.get_d
         self.max_in = self.get_max_in

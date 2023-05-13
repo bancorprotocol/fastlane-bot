@@ -1232,7 +1232,7 @@ class CarbonV1RouteSolver(BaseRouteSolver):
             return None
         route.trade_path_amts = trade_amts
         logger.info(
-            f"key = {key}, trade_amts = {trade_amts}profit = {route.profit}, exceeds min profit? {route.profit > ec.DEFAULT_MIN_PROFIT}"
+            f"key = {key}, trade_amts = {trade_amts}profit = {route.profit}, exceeds min profit? {route.profit > ec.DEFAULT_MIN_PROFIT}\ncarbon: {p2.y}, {p2.tkn1.symbol}\n\n"
         )
         return route if (route.profit > ec.DEFAULT_MIN_PROFIT) else None
 
@@ -1248,6 +1248,9 @@ class CarbonV1RouteSolver(BaseRouteSolver):
         max_triangular_arb_trade = self.get_optimal_input_triangular_constant_product(
             p1=p1, p2=p2, p3=p3
         )
+        # key: str = f"{p1.tkn0.symbol}_{p1.tkn1.symbol}->{p2.tkn0.symbol}_{p2.tkn1.symbol}->{p3.tkn0.symbol}_{p3.tkn1.symbol}"
+        #
+        # print(f"key: {key}\nCarbon y:{p2.y}\nmax trade:{max_triangular_arb_trade}")
 
         if max_triangular_arb_trade < 0:
             return None

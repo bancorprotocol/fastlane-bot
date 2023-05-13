@@ -74,7 +74,7 @@ class EthereumNetworkConstants:
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 35  # 10 block time deviation
     DEFAULT_EXECUTE_MODE = "search_and_execute"
     DEFAULT_RAISEONERROR = False  # TODO: Ensure all errors are caught and handled properly to respect this setting
-    DEFAULT_MIN_PROFIT = Decimal("60")
+    DEFAULT_MIN_PROFIT = Decimal("1")
     DEFAULT_MAX_SLIPPAGE = Decimal('1')  # 1%
 
     DEFAULT_N_JOBS = -1
@@ -140,6 +140,8 @@ class EthereumNetworkConstants:
     UNISWAP_V2_NAME = "uniswap_v2"
     UNISWAP_V3_NAME = "uniswap_v3"
 
+
+
     # Bancor
     BANCOR_NETWORK_ABI = BANCOR_NETWORK_ABI
     BANCOR_V3_NETWORK_INFO_ABI = BANCOR_V3_NETWORK_INFO_ABI
@@ -184,6 +186,8 @@ class EthereumNetworkConstants:
     web3 = Web3(web3.HTTPProvider(ETHEREUM_MAINNET_PROVIDER))
 
     CARBON_CONTROLLER_CONTRACT = web3.eth.contract(address=web3.toChecksumAddress(CARBON_CONTROLLER_ADDRESS), abi=CARBON_CONTROLLER_ABI)
+    UNISWAP_V2_FACTORY_CONTRACT = web3.eth.contract(address=web3.toChecksumAddress(UNISWAP_V2_FACTORY_ADDRESS), abi=UNISWAP_V2_FACTORY_ABI)
+    SUSHISWAP_FACTORY_CONTRACT = web3.eth.contract(address=web3.toChecksumAddress(SUSHISWAP_FACTORY_ADDRESS), abi=SUSHISWAP_FACTORY_ABI)
 
     CARBON_MODE = """\n\n-Carbon mode activated-\n\n                  
                     ,(&@(,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
