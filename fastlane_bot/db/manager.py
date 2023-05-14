@@ -237,7 +237,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         if strategy is not None:
             params = self.update_params_from_strategy(params, strategy)
 
-        params['fee_float'] = float(params['fee']) / 1000000.0 if params['exchange_name'] == 'uniswap_v3' else float(
+        params['fee_float'] = float(params['fee']) / 1e6 if params['exchange_name'] == 'uniswap_v3' else float(
             params['fee'])
 
         liquidity_params = self.get_liquidity_from_contract(exchange_name=params['exchange_name'],
@@ -446,7 +446,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
         elif exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             reserve0, reserve1 = contract.caller.reserveBalances()
             fee = contract.caller.conversionFee()
-            fee_float = str(int(fee) / 1000000)
+            fee_float = int(fee) / 1e6
             anchor = contract.caller.anchor()
             params = {
                 "fee": str(fee),
@@ -462,7 +462,7 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                 "sqrt_price_q96": slot0[0],
                 "liquidity": contract.caller.liquidity(),
                 "fee": contract.caller.fee(),
-                "fee_float": str(contract.caller.fee() / 1000000),
+                "fee_float": contract.caller.fee() / 1e6,
                 "tick_spacing": contract.caller.tickSpacing(),
             }
 
