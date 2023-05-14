@@ -171,13 +171,13 @@ class CacheHelpers(BaseHelper):
         [shutil.move(file, ec.ARCHIVE_PATH) for file in files]
 
     def trade_to_pandas(
-            self,
-            tx_hash,
-            transaction_success: bool,
-            block_number: int,
-            flash_loan_amt: int,
-            profit: int,
-            routes: Dict[str, Any],
+        self,
+        tx_hash,
+        transaction_success: bool,
+        block_number: int,
+        flash_loan_amt: int,
+        profit: int,
+        routes: Dict[str, Any],
     ):
         """
         Exports values for inspection...
@@ -256,12 +256,12 @@ class TransactionHelpers(BaseHelper):
 
         returns: the maximum gas price which can be used without causing a fiscal loss
         """
-        profit_wei = int(bnt_profit * 10 ** 18)
+        profit_wei = int(bnt_profit * 10**18)
         return profit_wei * eth // (gas_estimate * bnt)
 
     @staticmethod
     def estimate_gas_in_bnt(
-            gas_price: int, gas_estimate: int, bnt: int, eth: int
+        gas_price: int, gas_estimate: int, bnt: int, eth: int
     ) -> Decimal:
         """
         Converts the expected cost of the transaction into BNT.
@@ -276,7 +276,7 @@ class TransactionHelpers(BaseHelper):
         returns: the expected cost of the transaction in BNT
         """
         eth_cost = gas_price * gas_estimate
-        return Decimal(eth_cost * bnt) / (eth * 10 ** 18)
+        return Decimal(eth_cost * bnt) / (eth * 10**18)
 
     def get_gas_estimate(self, transaction: TxReceipt) -> int:
         """
@@ -289,10 +289,10 @@ class TransactionHelpers(BaseHelper):
         return self.web3.eth.estimate_gas(transaction=transaction)
 
     def build_transaction_tenderly(
-            self,
-            routes: List[Dict[str, Any]],
-            src_amt: int,
-            nonce: int,
+        self,
+        routes: List[Dict[str, Any]],
+        src_amt: int,
+        nonce: int,
     ):
         logger.info(f"Attempting to submit trade on Tenderly")
         return self.web3.eth.wait_for_transaction_receipt(
@@ -307,13 +307,13 @@ class TransactionHelpers(BaseHelper):
         )
 
     def build_transaction_with_gas(
-            self,
-            routes: List[Dict[str, Any]],
-            src_amt: int,
-            gas_price: int,
-            max_priority: int,
-            nonce: int,
-            src_token=ec.BNT_ADDRESS,
+        self,
+        routes: List[Dict[str, Any]],
+        src_amt: int,
+        gas_price: int,
+        max_priority: int,
+        nonce: int,
+        src_token=ec.BNT_ADDRESS,
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -324,9 +324,11 @@ class TransactionHelpers(BaseHelper):
 
         returns: the transaction to be submitted to the blockchain
         """
-        print(self.build_tx(
-            gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-        ))
+        print(
+            self.build_tx(
+                gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+            )
+        )
         try:
             transaction = self.arb_contract.functions.flashloanAndArb(
                 routes, src_token, src_amt
@@ -355,8 +357,8 @@ class TransactionHelpers(BaseHelper):
 
         try:
             estimated_gas = (
-                    self.web3.eth.estimate_gas(transaction=transaction)
-                    + ec.DEFAULT_GAS_SAFETY_OFFSET
+                self.web3.eth.estimate_gas(transaction=transaction)
+                + ec.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
             logger.info(
@@ -373,10 +375,10 @@ class TransactionHelpers(BaseHelper):
         return self.web3.eth.get_transaction_count(self.wallet_address)
 
     def build_tx(
-            self,
-            nonce: int,
-            gas_price: int = 0,
-            max_priority_fee: int = None,
+        self,
+        nonce: int,
+        gas_price: int = 0,
+        max_priority_fee: int = None,
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -599,7 +601,7 @@ class SearchHelpers(BaseHelper):
 
     @staticmethod
     def handle_log_for_filetype(
-            filetype: str, output: pd.DataFrame, results_path: str, ts: str
+        filetype: str, output: pd.DataFrame, results_path: str, ts: str
     ) -> None:
         """
         Handles the logging for the filetype provided
@@ -672,7 +674,6 @@ class SearchHelpers(BaseHelper):
         self.unique_pools = unique_pools
 
     def get_pool_from_address(self, pool_address):
-
         pass
 
     def update_pool_liquidity(self):
@@ -687,7 +688,7 @@ class SearchHelpers(BaseHelper):
         return self.setup_pools_multicall(non_v3_pools, v3_pools)
 
     def setup_pools_multicall(
-            self, other_pools: List[LiquidityPool], v3_pools: List[LiquidityPool]
+        self, other_pools: List[LiquidityPool], v3_pools: List[LiquidityPool]
     ) -> List[LiquidityPool]:
         """
         Setup Bancor V3 pools with multicall to improve efficiency
@@ -713,7 +714,7 @@ class SearchHelpers(BaseHelper):
         return other_pools + v3_pools_init
 
     def setup_pools_multiprocessing(
-            self, non_bancor3_pools: List[LiquidityPool] = None
+        self, non_bancor3_pools: List[LiquidityPool] = None
     ):
         """
         Setup the pools in parallel using the specified backend for all pools except Bancor V3
@@ -739,7 +740,7 @@ class SearchHelpers(BaseHelper):
 
     @staticmethod
     def map_pools_to_paths(
-            trade_paths: List[List], pools: List[LiquidityPool]
+        trade_paths: List[List], pools: List[LiquidityPool]
     ) -> List[List[LiquidityPool]]:
         """
         This function returns a list of valid paths for the token pairs / exchanges
@@ -756,18 +757,18 @@ class SearchHelpers(BaseHelper):
 
             for pool in pools:
                 if (
-                        path[0][4] in [pool.pair, pool.pair_reverse]
-                        and path[0][2] == pool.exchange
+                    path[0][4] in [pool.pair, pool.pair_reverse]
+                    and path[0][2] == pool.exchange
                 ):
                     p1 = copy.deepcopy(pool)
                 if (
-                        path[1][4] in [pool.pair, pool.pair_reverse]
-                        and path[1][2] == pool.exchange
+                    path[1][4] in [pool.pair, pool.pair_reverse]
+                    and path[1][2] == pool.exchange
                 ):
                     p2 = copy.deepcopy(pool)
                 if (
-                        path[2][4] in [pool.pair, pool.pair_reverse]
-                        and path[2][2] == pool.exchange
+                    path[2][4] in [pool.pair, pool.pair_reverse]
+                    and path[2][2] == pool.exchange
                 ):
                     p3 = copy.deepcopy(pool)
             if p1 and p2 and p3:
@@ -779,7 +780,7 @@ class SearchHelpers(BaseHelper):
         return trade_paths_new
 
     def match_routes_carbon(
-            self, carbon_pools: [CarbonV1Order], other_pools: [LiquidityPool]
+        self, carbon_pools: [CarbonV1Order], other_pools: [LiquidityPool]
     ):
         """
         This function builds triangular routes of Constant Product pool -> Carbon Order -> Constant Product pool.
@@ -798,8 +799,8 @@ class SearchHelpers(BaseHelper):
             pool3 = None
             for _pool in other_pools:
                 if (
-                        _pool.tkn0.symbol == pool2.tkn0.symbol
-                        or _pool.tkn1.symbol == pool2.tkn0.symbol
+                    _pool.tkn0.symbol == pool2.tkn0.symbol
+                    or _pool.tkn1.symbol == pool2.tkn0.symbol
                 ):
                     pool1 = _pool
                     first_tkn_match = pool2.tkn0.symbol
@@ -807,11 +808,11 @@ class SearchHelpers(BaseHelper):
             if pool1:
                 for __pool in other_pools:
                     if (
-                            __pool.tkn0.symbol == pool2.tkn1.symbol
-                            and __pool.tkn1.symbol != first_tkn_match
+                        __pool.tkn0.symbol == pool2.tkn1.symbol
+                        and __pool.tkn1.symbol != first_tkn_match
                     ) or (
-                            __pool.tkn1.symbol == pool2.tkn1.symbol
-                            and __pool.tkn1.symbol != first_tkn_match
+                        __pool.tkn1.symbol == pool2.tkn1.symbol
+                        and __pool.tkn1.symbol != first_tkn_match
                     ):
                         pool3 = __pool
                         break
@@ -830,7 +831,7 @@ class SearchHelpers(BaseHelper):
         return triangular_carbon_routes
 
     def generate_carbon_pair_dict(
-            self, pairs: List[Tuple[str, str]], carbon_orders: [CarbonV1Order]
+        self, pairs: List[Tuple[str, str]], carbon_orders: [CarbonV1Order]
     ) -> dict:
         """
         This function creates a dictionary of Carbon token pairs with their initialized Carbon Orders, divided into two arrays that contain directional orders. IE an array of TKN 0 -> TKN 1 and an array of TKN1 -> TKN 0.
@@ -877,8 +878,11 @@ class SearchHelpers(BaseHelper):
         return pair_dict
 
     def request_coingecko_price(self, token_address: str):
-
-        token_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" if token_address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else token_address
+        token_address = (
+            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+            if token_address == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+            else token_address
+        )
         token_address = str(token_address)
         url = f"https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses={token_address}&vs_currencies=USD&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false"
 
@@ -899,7 +903,7 @@ class SearchHelpers(BaseHelper):
             return ("TKN", 1)
 
     def generate_carbon_tvl_dict(
-            self, pairs: List[Tuple[str, str]], carbon_orders: [CarbonV1Order]
+        self, pairs: List[Tuple[str, str]], carbon_orders: [CarbonV1Order]
     ) -> dict:
         """
         This function creates a dictionary of Carbon token pairs with their initialized Carbon Orders, divided into two arrays that contain directional orders. IE an array of TKN 0 -> TKN 1 and an array of TKN1 -> TKN 0.
@@ -918,16 +922,20 @@ class SearchHelpers(BaseHelper):
         for pair in pairs:
             pair_combined = pair[0] + "_" + pair[1]
 
-            if not check_if_tkn_in_table_address(pair[0]) or not check_if_tkn_in_table_address(pair[1]):
+            if not check_if_tkn_in_table_address(
+                pair[0]
+            ) or not check_if_tkn_in_table_address(pair[1]):
                 unknown_pairs.append(pair_combined)
                 continue
 
             tokens.append(pair[0])
             tokens.append(pair[1])
-            pair_dict[pair_combined] = {get_token_symbol_from_address(pair[0]): 0,
-                                        get_token_symbol_from_address(pair[1]): 0, "total": 0}
+            pair_dict[pair_combined] = {
+                get_token_symbol_from_address(pair[0]): 0,
+                get_token_symbol_from_address(pair[1]): 0,
+                "total": 0,
+            }
             # pair_dict[pair_combined] = {forwards: 0, inverted: 0}
-
 
         # print(f"Number of unkown pairs: {len(unknown_pairs)}")
         #
@@ -935,15 +943,15 @@ class SearchHelpers(BaseHelper):
         # for p in unknown_pairs:
         #     print(p)
 
-
-
         unique_tokens = set(tokens)
 
         price_list = {}
 
         for token in unique_tokens:
-            price_list[token.lower()] = self.request_coingecko_price(token_address=token)
-            #time.sleep(1)
+            price_list[token.lower()] = self.request_coingecko_price(
+                token_address=token
+            )
+            # time.sleep(1)
 
         pair_keys = pair_dict.keys()
         # validate that all pairs have been added to the dict
@@ -952,8 +960,9 @@ class SearchHelpers(BaseHelper):
         unknown_strategies = []
 
         for order in carbon_orders:
-            if not check_if_tkn_in_table_address(order.tkn0.address) or not check_if_tkn_in_table_address(
-                    order.tkn1.address):
+            if not check_if_tkn_in_table_address(
+                order.tkn0.address
+            ) or not check_if_tkn_in_table_address(order.tkn1.address):
                 unknown_strategies.append(order)
                 continue
 
@@ -981,24 +990,21 @@ class SearchHelpers(BaseHelper):
             pair_dict[key][f"_{order.tkn1.symbol}"] = denomination
 
             new_total = pair_dict.get(key).get(order.tkn1.symbol) + int(
-                order.y * price_list.get(str(order.tkn1.address).lower())[1])
+                order.y * price_list.get(str(order.tkn1.address).lower())[1]
+            )
             pair_dict[key]["total"] = pair_dict.get(key).get("total") + 1
             pair_dict[key][order.tkn1.symbol] = new_total
-
 
         print(f"Number of unknown strategies: {len(unknown_strategies)}")
         for p in unknown_strategies:
             print(p)
 
-
         organized_list = []
 
         for pair in pair_keys:
-
             p_k = list(pair_dict.get(pair).keys())
             tkn0 = p_k[0]
             tkn1 = p_k[1]
-
 
             denom0 = pair_dict.get(pair).get(f"_{tkn0}")
             denom1 = pair_dict.get(pair).get(f"_{tkn1}")
@@ -1007,13 +1013,20 @@ class SearchHelpers(BaseHelper):
             # denom1 = price_list.get(str(get_token_address_from_symbol(tkn1)).lower())
 
             organized_list.append(
-                {"token0": tkn0, "amt0": pair_dict.get(pair).get(tkn0), "type0": denom0, "token1": tkn1,
-                 "amt1": pair_dict.get(pair).get(tkn1), "type1": denom1, "total": pair_dict.get(pair).get("total")})
-
+                {
+                    "token0": tkn0,
+                    "amt0": pair_dict.get(pair).get(tkn0),
+                    "type0": denom0,
+                    "token1": tkn1,
+                    "amt1": pair_dict.get(pair).get(tkn1),
+                    "type1": denom1,
+                    "total": pair_dict.get(pair).get("total"),
+                }
+            )
 
         df = pd.DataFrame(organized_list)
 
-        #df = pd.DataFrame(pair_dict.items())
+        # df = pd.DataFrame(pair_dict.items())
 
         df.to_csv(f"{os.path.normpath(ec.DATA_PATH + '/')}tvl.csv")
 
@@ -1124,9 +1137,9 @@ class SearchHelpers(BaseHelper):
         pass
 
     def build_candidate_routes(
-            self,
-            exchanges: List[str] = ec.SUPPORTED_EXCHANGE_VERSIONS,
-            tokens: List[str] = ec.SUPPORTED_TOKENS,
+        self,
+        exchanges: List[str] = ec.SUPPORTED_EXCHANGE_VERSIONS,
+        tokens: List[str] = ec.SUPPORTED_TOKENS,
     ):
         """
         Builds the candidate routes for the bot to search through
@@ -1165,7 +1178,7 @@ class SearchHelpers(BaseHelper):
             i
             for i in arb_ops
             if type(i)
-               in [ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute]
+            in [ConstantProductRoute, ConstantFunctionRoute, OrderBookDexRoute]
         ]
         candidate_routes = [
             r
@@ -1180,7 +1193,7 @@ class SearchHelpers(BaseHelper):
 
     @staticmethod
     def build_route_from_path(
-            idx: int, p1: LiquidityPool, p2: LiquidityPool, p3: LiquidityPool
+        idx: int, p1: LiquidityPool, p2: LiquidityPool, p3: LiquidityPool
     ) -> Union[Route, None]:
         """
         Initializes and fetches the liquidity for each pool in a route. This function is intended to run in a joblib loop asynchronously.
@@ -1208,10 +1221,10 @@ class SearchHelpers(BaseHelper):
         return route
 
     def find_trade_paths(
-            self,
-            pdf: pd.DataFrame,
-            exchanges: List[str] = ec.SUPPORTED_EXCHANGE_VERSIONS,
-            tokens: List[str] = ec.SUPPORTED_TOKENS,
+        self,
+        pdf: pd.DataFrame,
+        exchanges: List[str] = ec.SUPPORTED_EXCHANGE_VERSIONS,
+        tokens: List[str] = ec.SUPPORTED_TOKENS,
     ):
         """
         This function returns a list of valid paths for the token pairs / exchanges
@@ -1233,7 +1246,7 @@ class SearchHelpers(BaseHelper):
             & ((pdf["symbol0"] == "BNT") | (pdf["symbol1"] == "BNT"))
             & (pdf["symbol0"].isin(tokens))
             & (pdf["symbol1"].isin(tokens))
-            ]
+        ]
         p1_paths1 = [
             (s1, s2, exchange, fee, pair, pair_reverse)
             for s1, s2, exchange, fee, pair, pair_reverse in df1[
@@ -1257,7 +1270,7 @@ class SearchHelpers(BaseHelper):
             & ((pdf["symbol0"] != "BNT") & (pdf["symbol1"] != "BNT"))
             & (pdf["symbol0"].isin(tokens))
             & (pdf["symbol1"].isin(tokens))
-            ]
+        ]
         p2_paths1 = [
             tuple(convert_weth_to_eth(p))
             for p in df2[
@@ -1280,7 +1293,7 @@ class SearchHelpers(BaseHelper):
             & ((pdf["symbol0"] == "BNT") | (pdf["symbol1"] == "BNT"))
             & (pdf["symbol0"].isin(tokens))
             & (pdf["symbol1"].isin(tokens))
-            ]
+        ]
         p3_paths1 = [
             (s1, s2, exchange, fee, pair, pair_reverse)
             for s1, s2, exchange, fee, pair, pair_reverse in df3[
@@ -1340,9 +1353,9 @@ class SearchHelpers(BaseHelper):
         """
 
         return (
-                get_token_symbol_from_address(tkn0)
-                + "_"
-                + get_token_symbol_from_address(tkn1)
+            get_token_symbol_from_address(tkn0)
+            + "_"
+            + get_token_symbol_from_address(tkn1)
         )
 
     def get_pair(self, tkn0, tkn1):
@@ -1416,7 +1429,7 @@ class SearchHelpers(BaseHelper):
         return pools
 
     def get_all_carbon_strategies(
-            self, carbon_pairs: List[Tuple[str, str]]
+        self, carbon_pairs: List[Tuple[str, str]]
     ) -> [CarbonV1Order]:
         """
         Gets every Carbon Strategy given a list of token pairs
@@ -1449,7 +1462,7 @@ class SearchHelpers(BaseHelper):
 
     @staticmethod
     def get_carbon_strategy(
-            strategy_id: int,
+        strategy_id: int,
     ) -> Tuple[str, str, str, str, str, str, str]:
         """
         Returns a tuple of the strategy's data
@@ -1489,7 +1502,7 @@ class SearchHelpers(BaseHelper):
 
     @staticmethod
     def get_strategies_by_pair(
-            token0: str, token1: str, start_idx: int, end_idx: int
+        token0: str, token1: str, start_idx: int, end_idx: int
     ) -> List[int]:
         """
         Returns a list of strategy ids for the specified pair, given a start and end index
@@ -1558,7 +1571,7 @@ class SearchHelpers(BaseHelper):
         Any
             A generator of the chunks
         """
-        return (seq[pos: pos + size] for pos in range(0, len(seq), size))
+        return (seq[pos : pos + size] for pos in range(0, len(seq), size))
 
     def get_carbon_strategies_multicall(self, strategy_ids: List[int]) -> List[Any]:
         """
@@ -1583,7 +1596,7 @@ class SearchHelpers(BaseHelper):
         return strategies
 
     def process_raw_carbon_strategies(
-            self, strategies: List[int], block_updated: int
+        self, strategies: List[int], block_updated: int
     ) -> [CarbonV1Order]:
         """
         Takes a list of Carbon Strategies in the raw contract format, processes them, and inserts them into the database.
@@ -1650,10 +1663,7 @@ class SearchHelpers(BaseHelper):
                     block_updated=block_updated,
                 )
                 carbon_orders.append(order0)
-                #print(f"Carbon order0: tknin:{tkn1.symbol}, tknout{tkn0.symbol}, amt{(y_0) / 10 ** tkn0.decimals}")
-
-
-
+                # print(f"Carbon order0: tknin:{tkn1.symbol}, tknout{tkn0.symbol}, amt{(y_0) / 10 ** tkn0.decimals}")
 
             if y_1 > 0 and B_1 > 0:
                 order1 = EncodedOrder(
@@ -1667,7 +1677,7 @@ class SearchHelpers(BaseHelper):
                     block_updated=block_updated,
                 )
                 carbon_orders.append(order1)
-                #print(f"Carbon order1: tknin:{tkn0.symbol}, tknout{tkn1.symbol}, amt{(y_1) / 10 ** tkn1.decimals}")
+                # print(f"Carbon order1: tknin:{tkn0.symbol}, tknout{tkn1.symbol}, amt{(y_1) / 10 ** tkn1.decimals}")
 
             # except Exception as e:
             #     logger.error(f"Error updating Carbon strategy {strategy} [{e}]")
@@ -1687,7 +1697,7 @@ class ValidationHelpers(BaseHelper):
     blocktime_deviation: int = field(default=ec.DEFAULT_BLOCKTIME_DEVIATION)
 
     def get_and_validate_trade_routes(
-            self, df: pd.DataFrame
+        self, df: pd.DataFrame
     ) -> Tuple[int, int, int, List[LiquidityPool]] or None:
         """
         Validate the cached arbitrage routes. Returns the amount in, expected profit, and deadline, and the trade path.
@@ -1753,10 +1763,10 @@ class ValidationHelpers(BaseHelper):
         ), logger.error("Invalid exchange(s)")
 
     def build_or_validate_route(
-            self,
-            idx: int,
-            df: pd.DataFrame,
-            is_validated: bool = False,
+        self,
+        idx: int,
+        df: pd.DataFrame,
+        is_validated: bool = False,
     ) -> Tuple[int, List[Dict[str, Any]]] or None:
         """
         Builds or validates a route. If `is_validated` is `True`, then the route is validated. Otherwise, the route is
@@ -1817,8 +1827,8 @@ class ValidationHelpers(BaseHelper):
 
             # Calculate the deadline
             deadline = (
-                    self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
-                    + self.blocktime_deviation
+                self.web3.eth.getBlock(self.web3.eth.block_number).timestamp
+                + self.blocktime_deviation
             )
 
             # Define the trade path
@@ -1850,8 +1860,8 @@ class ValidationHelpers(BaseHelper):
             return None
 
     def df_to_pool_attributes(
-            self,
-            df: pd.DataFrame,
+        self,
+        df: pd.DataFrame,
     ) -> Tuple[
         Decimal,
         List[Decimal],
@@ -1887,19 +1897,19 @@ class ValidationHelpers(BaseHelper):
         amt_out_1 = df["1_amt_out"].values[0]
         amt_out_2 = df["2_amt_out"].values[0]
         amt_out_0 = (
-                Decimal(amt_out_0)
-                * (Decimal("100") - Decimal(self.max_slippage))
-                / Decimal("100")
+            Decimal(amt_out_0)
+            * (Decimal("100") - Decimal(self.max_slippage))
+            / Decimal("100")
         )
         amt_out_1 = (
-                Decimal(amt_out_1)
-                * (Decimal("100") - Decimal(self.max_slippage))
-                / Decimal("100")
+            Decimal(amt_out_1)
+            * (Decimal("100") - Decimal(self.max_slippage))
+            / Decimal("100")
         )
         amt_out_2 = (
-                Decimal(amt_out_2)
-                * (Decimal("100") - Decimal(self.max_slippage))
-                / Decimal("100")
+            Decimal(amt_out_2)
+            * (Decimal("100") - Decimal(self.max_slippage))
+            / Decimal("100")
         )
         min_return_amts = [amt_out_0, amt_out_1, amt_out_2]
         profit = df["profit"].values[0]
@@ -1959,7 +1969,7 @@ class ValidationHelpers(BaseHelper):
 
     @staticmethod
     def _split_valid_from_invalid(
-            current_block_number: int, df: pd.DataFrame
+        current_block_number: int, df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df["current_block_number"] = [current_block_number for _ in range(len(df))]
         df["requires_validation"] = np.where(
@@ -1971,21 +1981,21 @@ class ValidationHelpers(BaseHelper):
 
     @staticmethod
     def handle_assertions(
-            df: pd.DataFrame,
-            liquidity0: int,
-            liquidity1: int,
-            liquidity2: int,
-            min_profit: int or Decimal,
-            p1: LiquidityPool,
-            p2: LiquidityPool,
-            p3: LiquidityPool,
-            profit: int or Decimal,
-            tkn0_0_amt: int,
-            tkn0_1_amt: int,
-            tkn1_0_amt: int,
-            tkn1_1_amt: int,
-            tkn2_0_amt: int,
-            tkn2_1_amt: int,
+        df: pd.DataFrame,
+        liquidity0: int,
+        liquidity1: int,
+        liquidity2: int,
+        min_profit: int or Decimal,
+        p1: LiquidityPool,
+        p2: LiquidityPool,
+        p3: LiquidityPool,
+        profit: int or Decimal,
+        tkn0_0_amt: int,
+        tkn0_1_amt: int,
+        tkn1_0_amt: int,
+        tkn1_1_amt: int,
+        tkn2_0_amt: int,
+        tkn2_1_amt: int,
     ) -> None:
         """
         Handles the assertions for the trade route
@@ -2037,24 +2047,24 @@ class ValidationHelpers(BaseHelper):
             tkn2_0_amt,
         ]
         for val1, val2, val3, val4 in zip(
-                [
-                    p1.tkn0.amt,
-                    p1.tkn1.amt,
-                    p2.tkn0.amt,
-                    p2.tkn1.amt,
-                    p3.tkn0.amt,
-                    p3.tkn1.amt,
-                ],
-                cached_amounts,
-                cached_amounts_reverse,
-                [
-                    "p1.tkn0.amt",
-                    "p1.tkn1.amt",
-                    "p2.tkn0.amt",
-                    "p2.tkn1.amt",
-                    "p3.tkn0.amt",
-                    "p3.tkn1.amt",
-                ],
+            [
+                p1.tkn0.amt,
+                p1.tkn1.amt,
+                p2.tkn0.amt,
+                p2.tkn1.amt,
+                p3.tkn0.amt,
+                p3.tkn1.amt,
+            ],
+            cached_amounts,
+            cached_amounts_reverse,
+            [
+                "p1.tkn0.amt",
+                "p1.tkn1.amt",
+                "p2.tkn0.amt",
+                "p2.tkn1.amt",
+                "p3.tkn0.amt",
+                "p3.tkn1.amt",
+            ],
         ):
             val1 = format_amt(val1)
             val2 = format_amt(val2)
@@ -2067,10 +2077,10 @@ class ValidationHelpers(BaseHelper):
         cached_aamounts = [liquidity0, liquidity1, liquidity2]
         cached_amounts_reverse = [liquidity2, liquidity1, liquidity0]
         for val1, val2, val3, val4 in zip(
-                [p1.liquidity, p2.liquidity, p3.liquidity],
-                cached_aamounts,
-                cached_amounts_reverse,
-                ["p1.liquidity", "p2.liquidity", "p3.liquidity"],
+            [p1.liquidity, p2.liquidity, p3.liquidity],
+            cached_aamounts,
+            cached_amounts_reverse,
+            ["p1.liquidity", "p2.liquidity", "p3.liquidity"],
         ):
             test_1 = format_amt(val1) == format_amt(val2)
             test_2 = format_amt(val1) == format_amt(val3)
@@ -2085,7 +2095,7 @@ class TestingHelpers(BaseHelper):
 
     @staticmethod
     def get_random_pool_for_testing(
-            unique_pools: List[LiquidityPool] = None,
+        unique_pools: List[LiquidityPool] = None,
     ) -> Tuple[Any, int]:
         """
         Gets a random pool from the list of exchanges.
@@ -2107,7 +2117,7 @@ class TestingHelpers(BaseHelper):
         return pool, decimal_adjusted_amount
 
     def execute_random_swaps(
-            self, num: int, web3: Web3, unique_pools: List[LiquidityPool] = None
+        self, num: int, web3: Web3, unique_pools: List[LiquidityPool] = None
     ):
         """
         Executes a random number of swaps.
@@ -2161,8 +2171,8 @@ class TestingHelpers(BaseHelper):
             }
 
             deadline = (
-                    web3.eth.getBlock(web3.eth.block_number).timestamp
-                    + ec.DEFAULT_BLOCKTIME_DEVIATION
+                web3.eth.getBlock(web3.eth.block_number).timestamp
+                + ec.DEFAULT_BLOCKTIME_DEVIATION
             )
             router_address = web3.toChecksumAddress(
                 ec.__getattribute__(f"{pool.exchange.upper()}_ROUTER_ADDRESS")

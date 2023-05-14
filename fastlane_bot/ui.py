@@ -70,7 +70,7 @@ class FastLaneArbBotUI(
 
         routes.sort(key=lambda x: x.profit, reverse=True)
         route = routes[0]
-        #for route in routes:
+        # for route in routes:
         amts_in = [amt for amt in route.trade_path_amts]
 
         profit = route.profit
@@ -124,9 +124,9 @@ class FastLaneArbBotUI(
 
                 # get estimate of gas used for transaction
                 if self.network_name == ec.PRODUCTION_NETWORK_NAME:
-
                     print(
-                        f"going into [build_transaction_with_gas]: routes={route_struct}, src_amt={src_amt}, gas_price={current_gas_price}, max_priority={current_max_priority_gas}, nonce={nonce}, src_token={flash_token}")
+                        f"going into [build_transaction_with_gas]: routes={route_struct}, src_amt={src_amt}, gas_price={current_gas_price}, max_priority={current_max_priority_gas}, nonce={nonce}, src_token={flash_token}"
+                    )
 
                     # Build the transaction
                     arb_tx = self.build_transaction_with_gas(
