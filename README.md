@@ -13,7 +13,7 @@ _The Fast Lane is in beta.  We cannot be held responsible for any losses caused 
 
 The Fast Lane is a tool developed to find and close arbitrage opportunities that occur on Bancor exchanges. This serves to increase market efficiency by ensuring Bancor liquidity is trading at rates similar to the rest of the market.
 
-The permament URL for this repo is [https://github.com/bancorprotocol/fastlane-bot](https://github.com/bancorprotocol/fastlane-bot).
+The permanent URL for this repo is [https://github.com/bancorprotocol/fastlane-bot](https://github.com/bancorprotocol/fastlane-bot).
 
 ## Getting started
 
