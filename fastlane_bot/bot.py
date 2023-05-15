@@ -1042,7 +1042,16 @@ class CarbonBot(CarbonBotBase):
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
 
-        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(ordered_trade_instructions_objects)
+
+
+        agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
+            trade_instructions_objects=ordered_trade_instructions_objects
+        )
+        del ordered_trade_instructions_objects  # TODO: REMOVE THIS
+        if result == self.XS_AGGTI:
+            return agg_trade_instructions
+
+        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
 
         if result == self.XS_EXACT:
             return calculated_trade_instructions
@@ -1061,12 +1070,13 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.info(f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding.")
             return (None, None)
 
-        agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
-            trade_instructions_objects=calculated_trade_instructions
-        )
-        del ordered_trade_instructions_objects  # TODO: REMOVE THIS
-        if result == self.XS_AGGTI:
-            return agg_trade_instructions
+        # Saved previous agg trade instructions location
+        # agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
+        #     trade_instructions_objects=calculated_trade_instructions
+        # )
+        # del ordered_trade_instructions_objects  # TODO: REMOVE THIS
+        # if result == self.XS_AGGTI:
+        #     return agg_trade_instructions
 
         # Get the flashloan amount
         flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))

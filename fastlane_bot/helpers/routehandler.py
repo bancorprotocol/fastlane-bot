@@ -1280,13 +1280,23 @@ class TxRouteHandler(TxRouteHandlerBase):
             The trade outputs.
         """
 
+        print(f"Going into calculate trade outputs:")
+        for idx, trade in enumerate(trade_instructions):
+            print(f"amtin:{trade_instructions[idx].amtin} tkn{trade_instructions[idx].tknin}, amtout:{trade_instructions[idx].amtout} tkn{trade_instructions[idx].tknout}")
+
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
             raw_txs_lst = []
+
+            print(f"raw txs: {trade.raw_txs}")
+
             if trade.raw_txs != "[]":
                 data = eval(trade.raw_txs)
                 total_out = 0
                 expected_in = trade_instructions[idx].amtin
+
+                print(f"Length of data: {len(data)}")
+
                 for tx in data:
                     tx["percent_in"] = tx["amtin"]/expected_in
 
