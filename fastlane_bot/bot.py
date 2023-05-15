@@ -693,8 +693,8 @@ class CarbonBot(CarbonBotBase):
                 # except Exception as e:
                 #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
                 #     continue
-        self.ConfigObj.logger.info(
-            f"\n\n***BEST Multi***\ntrade_instructions_df={best_trade_instructions_df}\ntrade_instructions_dic={best_trade_instructions_dic}\ntrade_instructions={best_trade_instructions}\nsrc={best_src_token}\n")
+        # self.ConfigObj.logger.info(
+        #     f"\n\n***BEST Multi***\ntrade_instructions_df={best_trade_instructions_df}\ntrade_instructions_dic={best_trade_instructions_dic}\ntrade_instructions={best_trade_instructions}\nsrc={best_src_token}\n")
         return candidates if result == self.AO_CANDIDATES else ops
     def _find_arbitrage_opportunities_carbon_single_pairwise(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
