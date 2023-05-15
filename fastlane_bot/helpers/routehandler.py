@@ -1280,26 +1280,23 @@ class TxRouteHandler(TxRouteHandlerBase):
             The trade outputs.
         """
 
-        print(f"Going into calculate trade outputs:")
-        for idx, trade in enumerate(trade_instructions):
-            print(f"amtin:{trade_instructions[idx].amtin} tkn{trade_instructions[idx].tknin}, amtout:{trade_instructions[idx].amtout} tkn{trade_instructions[idx].tknout}")
-
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
             raw_txs_lst = []
-
-            print(f"raw txs: {trade.raw_txs}")
+            # total_percent = 0
 
             if trade.raw_txs != "[]":
                 data = eval(trade.raw_txs)
                 total_out = 0
+                total_in = 0
+                total_in_wei = 0
+                total_out_wei = 0
                 expected_in = trade_instructions[idx].amtin
 
-                print(f"Length of data: {len(data)}")
 
                 for tx in data:
                     tx["percent_in"] = tx["amtin"]/expected_in
-
+                    # total_percent += tx["amtin"]/expected_in
 
                 for tx in data:
                     cid = tx["cid"]
@@ -1322,9 +1319,15 @@ class TxRouteHandler(TxRouteHandlerBase):
                         "amtout": amount_out_wei,
                     }
                     raw_txs_lst.append(raw_txs)
-
+                    total_in += amount_in
                     total_out += amount_out
+                    total_in_wei += amount_in_wei
+                    total_out_wei += amount_out_wei
                 amount_out = total_out
+                trade_instructions[idx].amtin = total_in
+                trade_instructions[idx].amtout = amount_out
+                trade_instructions[idx]._amtin_wei = total_in_wei
+                trade_instructions[idx]._amtout_wei = total_out_wei
 
             else:
 

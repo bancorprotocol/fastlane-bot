@@ -1079,7 +1079,8 @@ class CarbonBot(CarbonBotBase):
         #     return agg_trade_instructions
 
         # Get the flashloan amount
-        flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))
+        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
+        # flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))
 
         # Get the flashloan token and verify
         # fl_token = agg_trade_instructions[0].tknin_key
