@@ -14,11 +14,11 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.1"
-__DATE__ = "13/May/2023"
+__VERSION__ = "4.1.1"
+__DATE__ = "15/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
-#import pandas as pd
+import pandas as pd
 import numpy as np
 
 import time
