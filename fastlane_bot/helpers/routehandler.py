@@ -1282,51 +1282,56 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
-            # raw_txs_lst = []
-            # if trade.raw_txs != "[]":
-            #     data = eval(trade.raw_txs)
-            #     total_out = 0
-            #     for tx in data:
-            #         cid = tx["cid"]
-            #         cid = cid.split("-")[0]
-            #         tknin_key = tx["tknin"]
-            #         curve = trade_instructions[idx].db.get_pool(cid=cid)
-            #         (
-            #             amount_in,
-            #             amount_out,
-            #             amount_in_wei,
-            #             amount_out_wei,
-            #         ) = self._solve_trade_output(
-            #             curve=curve, trade=trade, amount_in=next_amount_in
-            #         )
+            raw_txs_lst = []
+            if trade.raw_txs != "[]":
+                data = eval(trade.raw_txs)
+                total_out = 0
+                expected_in = trade_instructions[idx].amtin
+                for tx in data:
+                    tx["percent_in"] = tx["amtin"]/expected_in
 
-            #         raw_txs = {
-            #             "cid": cid,
-            #             "amtin": amount_in_wei,
-            #             "tknin": tknin_key,
-            #             "amtout": amount_out_wei,
-            #         }
-            #         raw_txs_lst.append(raw_txs)
 
-            #         total_out += amount_out
-            #     amount_out = total_out
+                for tx in data:
+                    cid = tx["cid"]
+                    cid = cid.split("-")[0]
+                    tknin_key = tx["tknin"]
+                    curve = trade_instructions[idx].db.get_pool(cid=cid)
+                    (
+                        amount_in,
+                        amount_out,
+                        amount_in_wei,
+                        amount_out_wei,
+                    ) = self._solve_trade_output(
+                        curve=curve, trade=trade, amount_in=next_amount_in * tx["percent_in"]
+                    )
 
-            # else:
+                    raw_txs = {
+                        "cid": cid,
+                        "amtin": amount_in_wei,
+                        "tknin": tknin_key,
+                        "amtout": amount_out_wei,
+                    }
+                    raw_txs_lst.append(raw_txs)
 
-            curve_cid = trade.cid
-            curve = trade_instructions[idx].db.get_pool(cid=curve_cid)
-            (
-                amount_in,
-                amount_out,
-                amount_in_wei,
-                amount_out_wei,
-            ) = self._solve_trade_output(
-                curve=curve, trade=trade, amount_in=next_amount_in
-            )
-            trade_instructions[idx].amtin = amount_in
-            trade_instructions[idx].amtout = amount_out
-            trade_instructions[idx]._amtin_wei = amount_in_wei
-            trade_instructions[idx]._amtout_wei = amount_out_wei
+                    total_out += amount_out
+                amount_out = total_out
+
+            else:
+
+                curve_cid = trade.cid
+                curve = trade_instructions[idx].db.get_pool(cid=curve_cid)
+                (
+                    amount_in,
+                    amount_out,
+                    amount_in_wei,
+                    amount_out_wei,
+                ) = self._solve_trade_output(
+                    curve=curve, trade=trade, amount_in=next_amount_in
+                )
+                trade_instructions[idx].amtin = amount_in
+                trade_instructions[idx].amtout = amount_out
+                trade_instructions[idx]._amtin_wei = amount_in_wei
+                trade_instructions[idx]._amtout_wei = amount_out_wei
 
             next_amount_in = amount_out
         # trade_instructions[idx].raw_txs = str(raw_txs_lst)
