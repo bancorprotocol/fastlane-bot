@@ -13,8 +13,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0"
-__DATE__ = "10/May/2023"
+__VERSION__ = "4.0.1"
+__DATE__ = "15/May/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -193,7 +193,6 @@ class ConvexOptimizer(CPCArbOptimizer):
                             :TIF_DICTS:         a list of TradeInstruction dictionaries
                             :TIF_DFRAW:         raw dataframe (holes are filled with NaN)
                             :TIF_DF:            alias for :TIF_DFRAW:
-                            :TIF_DFP:           returns a "pretty" dataframe (holes are spaces)
                             :TIF_DFAGRR:        aggregated dataframe
                             :TIF_DFPG:          prices-and-gains analyis dataframe
 
