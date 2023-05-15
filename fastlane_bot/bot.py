@@ -583,13 +583,7 @@ class CarbonBot(CarbonBotBase):
                 continue
             carbon_curves = [x for x in CC.curves if x.params.exchange=='carbon_v1']
             not_carbon_curves = [x for x in CC.curves if x.params.exchange!='carbon_v1']
-            #curve_combos = list(itertools.product(not_carbon_curves, carbon_curves)) #combos 1 carbon curve w non_carbon
             curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
-            # for curve in not_carbon_curves:
-            #     combo = [curve] + carbon_curves
-            #     curve_combos.append(combo)
-
-            # self.ConfigObj.logger.info(f"\n\ncurve combos: type={type(curve_combos)}, \nprint:{curve_combos}")
 
             for curve_combo in curve_combos:
                 CC_cc = CPCContainer(curve_combo)
@@ -602,31 +596,15 @@ class CarbonBot(CarbonBotBase):
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
 
                     """
+                    The following handles an edge case until parallel execution is available:
                     1 Determine correct direction - opposite of non-Carbon pool
                     2 Get cids of wrong-direction Carbon pools
                     3 Create new CPCContainer with correct pools
                     4 Rerun optimizer
                     5 Resume normal flow
                     """
-
-                    curve0 = curve_combo[0]
-                    self.ConfigObj.logger.info(f"\ntrade_instructions_df: {trade_instructions_df.to_string()}")
-                    # with trade_instructions_df.option_context('display.max_rows', None, 'display.max_columns',
-                    #                        None):  # more options can be specified also
-                    #     print(trade_instructions_df)
-
-                    cids = [curve.cid for curve in curve_combo]
-
-
                     non_carbon_cids = [curve.cid for curve in curve_combo if curve.params.get('exchange') != "carbon_v1"]
-
-                    tkn0_in: bool
-                    #self.ConfigObj.logger.info(f"\nnon_carbon_cid: {non_carbon_cids[0]} - index {trade_instructions_df.loc[non_carbon_cids[0]]}")
-
                     non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                    # self.ConfigObj.logger.info(
-                    #     f"analysis of row: type: {type(non_carbon_row)}, length:{len(non_carbon_row)}, row0:{non_carbon_row[0]}, row1:{non_carbon_row[1]}")
-
                     tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
                     wrong_direction_cids = []
 
@@ -635,38 +613,18 @@ class CarbonBot(CarbonBotBase):
                             if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
                                 wrong_direction_cids.append(idx)
 
-                        # self.ConfigObj.logger.info(
-                        #     f"analysis in iterrows: idx: {idx}, length:{len(row)}, row0:{row[0]}, row1:{row[1]}")
-                    self.ConfigObj.logger.info(f"wrong direction cids: {wrong_direction_cids}")
-                    # self.ConfigObj.logger.info(
-                    #     f"index of non carbon: {trade_instructions_df.loc[non_carbon_cids[0]]}")
-
                     if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
-                        self.ConfigObj.logger.info(f"Removing wrong direction pools & rerunning optimizer")
-
+                        self.ConfigObj.logger.debug(f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
                         new_curves = [curve for curve in curve_combo if curve.cid not in wrong_direction_cids]
-
+                        # Rerun main flow with the new set of curves
                         CC_cc = CPCContainer(new_curves)
                         O = CPCArbOptimizer(CC_cc)
                         pstart = ({tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}) #this intentionally selects the non_carbon curve
                         r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
                         profit_src = -r.result
                         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                        self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
 
-
-                    # self.ConfigObj.logger.info(f"Non Carbon cids: {non_carbon_cids}")
-
-
-
-                    # for idx, row in trade_instructions_df.iterrows():
-
-
-
-
-                    # self.ConfigObj.logger.info(f"dataframe cids: {trade_instructions_df}")
-
-
-                    # tkn0_into_carbon: bool =
 
                     ## If 1+ Carbon curve in wrong direction, need to drop it and resolve /w optimizer##
 
