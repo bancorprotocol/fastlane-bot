@@ -1,0 +1,8 @@
+carbon
+carbon/*
+fastlane_bot
+fastlane_bot/*
+delme*
+*.out
+*.latest.*
+*.heartbeat
