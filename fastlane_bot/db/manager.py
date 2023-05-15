@@ -244,8 +244,8 @@ class DatabaseManager(PoolManager, TokenManager, PairManager):
                                                             contract=contract,
                                                             address=params['address'],
                                                             strategy=strategy)
-        random_pool = self.get_pools()[0]
-        pool_data = {k: v for k, v in params.items() if k in random_pool.__getattribute__('__table__').columns.keys() and k not in ['last_updated', 'id']}
+        columns = ['cid','last_updated_block','descr','pair_name','exchange_name','fee','fee_float','tkn0_balance','tkn1_balance','z_0','y_0','A_0','B_0','z_1','y_1','A_1','B_1','sqrt_price_q96','tick','tick_spacing','liquidity','address','anchor',]
+        pool_data = {k: v for k, v in params.items() if k in columns}
         update_params = {**pool_data, **liquidity_params}
 
         pool = self.get_pool(cid=str(params['cid']))
