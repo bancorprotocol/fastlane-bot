@@ -710,13 +710,13 @@ class CarbonBot(CarbonBotBase):
                 x_match_curves_not_carbon = [x for x in x_match_curves if x.params.exchange!='carbon_v1']
                 miniverses = list(itertools.product(y_match_curves_not_carbon, carbon_curves, x_match_curves_not_carbon))
                 if len(miniverses) > 0:
-                    all_miniverses += [(flt, miniverses)]
+                    all_miniverses += list(zip([flt] * len(miniverses), miniverses))
                     # print(flt, target_tkny, target_tknx, len(miniverses))
                     
         for src_token, miniverse in all_miniverses:
             r = None
             self.C.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {miniverse}")
-            CC_cc = CPCContainer(miniverse[0])
+            CC_cc = CPCContainer(miniverse)
             O = CPCArbOptimizer(CC_cc)
             try:
                 r = O.margp_optimizer(src_token)
