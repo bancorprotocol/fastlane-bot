@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.12"
-__DATE__ = "13/May/2023"
+__VERSION__ = "2.13"
+__DATE__ = "15/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -373,7 +373,7 @@ class ConstantProductCurve:
     x_act: float = None
     y_act: float = None
     pair: str = None
-    cid: any = None
+    cid: str = None
     fee: float = None
     descr: str = None
     constr: str = field(default=None, repr=True, compare=False, hash=False)
@@ -383,6 +383,8 @@ class ConstantProductCurve:
 
         if self.constr is None:
             super().__setattr__("constr", "default")
+            
+        super().__setattr__("cid", str(self.cid))   
 
         if self.params is None:
             super().__setattr__("params", AttrDict())
@@ -433,6 +435,11 @@ class ConstantProductCurve:
                 return defaultval
         return val
 
+    @property
+    def cid0(self):
+        "short cid [last 8 characters]"
+        return self.cid[-8:]
+    
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
     # change this to a different scale object be creating a derived class
@@ -986,14 +993,19 @@ class ConstantProductCurve:
         """prettified pair"""
         return f"{self.tknbp}/{self.tknqp}"
 
-    @property
     def description(self):
         "description of the pool"
-        s1 = f"tknx = {self.x_act} [virtual: {self.x}] {self.tknx}"
-        s2 = f"tkny = {self.y_act} [virtual: {self.y}] {self.tkny}"
-        s3 = f"p    = {self.p} [min={self.p_min}, max={self.p_max}] {self.tknq} per {self.tknb}"
-        s4 = f"fee  = {self.fee}, cid = {self.cid}, descr = {self.descr}"
-        return "\n".join([s1, s2, s3, s4])
+        s = ""
+        s += f"cid      = {self.cid0} [{self.cid}]\n"
+        s += f"primary  = {Pair.n(self.pairo.primary)} [{self.pairo.primary}]\n"
+        s += f"pp       = {self.pp:,.6f} {self.pairo.pp_convention}\n"
+        s += f"pair     = {Pair.n(self.pair)} [{self.pair}]\n"
+        s += f"tknx     = {self.x_act:20,.6f} {self.tknx:10} [virtual: {self.x:20,.3f}]\n"
+        s += f"tkny     = {self.y_act:20,.6f} {self.tkny:10} [virtual: {self.y:20,.3f}]\n"
+        s += f"p        = {self.p} [min={self.p_min}, max={self.p_max}] {self.tknq} per {self.tknb}\n"
+        s += f"fee      = {self.fee}\n"
+        s += f"descr    = {self.descr}\n"
+        return s
 
     @property
     def y(self):
@@ -1973,22 +1985,28 @@ class CPCContainer:
     def bycid(self, cid):
         """returns curve by cid"""
         return self.curves_by_cid.get(cid, None)
-
-    def bycids(self, include=None, *, exclude=None, asgenerator=None, ascc=None):
+    
+    def bycids(self, include=None, *, endswith=None, exclude=None, asgenerator=None, ascc=None):
         """
         returns curves by cids (as tuple, generator or CC object)
 
         :include:   list of cids to include, if None all cids are included
+        :endswith:  alternative to include, include all cids that end with this string
         :exclude:   list of cids to exclude, if None no cids are excluded
                     exclude beats include
         :returns:   tuple, generator or container object (default)
         """
+        if not include is None and not endswith is None:
+            raise ValueError(f"include and endswith cannot be used together")
         if exclude is None:
             exclude = set()
-        if include is None:
+        if include is None and endswith is None:
             result = (c for c in self if not c.cid in exclude)
         else:
-            result = (self.curves_by_cid[cid] for cid in include if not cid in exclude)
+            if not include is None:
+                result = (self.curves_by_cid[cid] for cid in include if not cid in exclude)
+            else:
+                result = (c for c in self if c.cid.endswith(endswith) and not c.cid in exclude)
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
 
     def bypair(self, pair, *, directed=False, asgenerator=None, ascc=None):
