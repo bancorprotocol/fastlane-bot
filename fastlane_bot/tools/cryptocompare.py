@@ -1,8 +1,8 @@
 """
 Carbon helper module - retrieve data from CryptoCompare
 """
-__VERSION__ = "2.0"
-__DATE__ = "15/May/2023"
+__VERSION__ = "2.1"
+__DATE__ = "16/May/2023"
 
 import os as _os
 import pandas as _pd
@@ -35,7 +35,7 @@ class CryptoCompare():
     DEFAULT_TSYM = "usd"
     DEFAULT_LIMIT = 2000
     
-    def __init__(self, apikeyname=None, apikey=None, raiseonerror=None):
+    def __init__(self, *, apikeyname=None, apikey=None, raiseonerror=None, verbose=False):
         if raiseonerror is None:
             raiseonerror = self.RAISEONERROR
         self.raiseonerror = raiseonerror  
@@ -50,6 +50,7 @@ class CryptoCompare():
                 print(f"Use `export {apikeyname}=<value>` to set it BEFORE you launch Jupyter")
                 raise RuntimeError(f"API key not present. Use `export {apikeyname}=<value>` to set it before launching Jupyter.")
         self.apikey = apikey
+        self.verbose = verbose
     
     def url(self, endpoint):
         """
@@ -112,7 +113,8 @@ class CryptoCompare():
             params = dict()
         url = self.url(endpoint)
         paramsq = {k:v for k,v in params.items() if not v is None}
-        print("[query]", url, paramsq, f"[{str(self.keydigest)[:4]}]")
+        if self.verbose:
+            print("[query]", url, paramsq, f"[{str(self.keydigest)[:4]}]")
         if not self.apikey is True:
             paramsq["api_key"] = self.apikey
         
