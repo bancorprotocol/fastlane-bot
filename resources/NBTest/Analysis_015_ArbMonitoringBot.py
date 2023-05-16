@@ -84,6 +84,8 @@ pairs  = CAc1.pairsc()
 
 # ### Read prices and create proxy curves
 
+# #### Preparations
+
 tokens0 = CAc1.tokens()
 tokens0
 
@@ -105,6 +107,48 @@ for k,v in tokens_addr.items():
     print(f"{k:20} {v}")
 tokens_addr, tokens_addrr
 
+
+# #### CryptoCompare
+
+tokens_cc = [Pair.n(x) for x in tokens]
+tokens_cc
+
+token_prices_usd_cc = CryptoCompare(apikey=True, verbose=False).query_tokens(tokens_cc)
+token_prices_usd_cc
+
+missing_cc = set(tokens_cc) - set(token_prices_usd_cc)
+missing_cc
+
+# +
+token_prices_usd = token_prices_usd_cc
+P0 = lambda tknb,tknq: token_prices_usd[tknb.upper()]/token_prices_usd[tknq.upper()]
+def P(pair):
+    try: 
+        return P0(*Pair.n(pair).split("/"))
+    except KeyError:
+        return None
+
+prices_by_pair = {pair: P(pair) for pair in pairs}
+prices_n_by_pair = {Pair.n(pair): p for pair, p in prices_by_pair.items()}
+print("\n\n"+"="*100)
+print("PRICES BY PAIR (CRYPTOCOMPARE)")
+print("="*100)
+for k,v in prices_n_by_pair.items():
+    if not v is None:
+        print(f"{k:20} {v:20,.6f}")
+    else:
+        print(f"{k:20}                  ---")
+# -
+
+proxy_curves_cc = [
+    CPC.from_pk(p=price, pair=pair, k=1000, cid=cid(pair+"CG"), params=dict(exchange="ccomp")) 
+    for pair, price in prices_by_pair.items() if not price is None
+]
+#proxy_curves_cc
+
+
+# #### CoinGecko
+
 addr_s = ",".join(x for x in tokens_addr.values())
 url = "https://api.coingecko.com/api/v3/simple/token_price/ethereum"
 params = dict(contract_addresses=addr_s, vs_currencies="usd")
@@ -116,59 +160,44 @@ token_prices_usd_cg_raw
 missing_cg = set(tokens_addr) - set(token_prices_usd_cg_raw)
 missing_cg
 
-tokens_cc = [Pair.n(x) for x in tokens]
-tokens_cc
-
 # +
-# token_prices_usd_cc = CryptoCompare(apikey=True).query_tokens(tokens_cc)
-# token_prices_usd_cc
-
-# +
-# missing_cc = set(tokens_cc) - set(token_prices_usd_cc)
-# missing_cc
-# -
-
 token_prices_usd = token_prices_usd_cg
-
 P0 = lambda tknb,tknq: token_prices_usd[tknb.upper()]/token_prices_usd[tknq.upper()]
 def P(pair):
     try: 
         return P0(*Pair.n(pair).split("/"))
     except KeyError:
         return None
-P("WBTC-xxx/WETH-xxx")
 
 prices_by_pair = {pair: P(pair) for pair in pairs}
 prices_n_by_pair = {Pair.n(pair): p for pair, p in prices_by_pair.items()}
 print("\n\n"+"="*100)
-print("PRICES BY PAIR")
+print("PRICES BY PAIR (COINGECKO)")
 print("="*100)
 for k,v in prices_n_by_pair.items():
     if not v is None:
         print(f"{k:20} {v:20,.6f}")
     else:
         print(f"{k:20}                  ---")
+# -
 
-proxy_curves = [
-    CPC.from_pk(p=price, pair=pair, k=1000, cid=cid(pair), params=dict(exchange="coingecko")) 
+proxy_curves_cg = [
+    CPC.from_pk(p=price, pair=pair, k=1000, cid=cid(pair+"CG"), params=dict(exchange="cgecko")) 
     for pair, price in prices_by_pair.items() if not price is None
 ]
-#proxy_curves
+#proxy_curves_cg
+
+
+# #### Assembly
 
 # CCother = CCu3.bypairs(CCc1.pairs())
-CCother = CPCContainer(proxy_curves)
-CCfull = CCc1.copy().add(CCother)
-CAother = CPCAnalyzer(CCother)
+CCcg = CPCContainer(proxy_curves_cg)
+CCcc = CPCContainer(proxy_curves_cc)
+CCfull = CCc1.copy().add(CCcg).add(CCcc)
+#CAother = CPCAnalyzer(CCother)
 CAfull = CPCAnalyzer(CCfull)
 
-# ## High level reference data
-
-print("\n\n                    CARBON    REFERENCE")
-print(f"Pairs:                {len(pairs):4}    [{len(CCother.pairs()):7}]")
-print(f"Tokens:               {len(CAc1.tokens()):4}    [{len(CAother.tokens()):7}]")
-print(f"Curves:               {len(CAc1.CC):4}    [{len(CAother.CC):7}]")
-
-# ## By pair data for Carbon
+# ## By-pair data for Carbon
 
 # ### Count by pairs
 
@@ -178,6 +207,11 @@ print("PAIRS")
 print("="*100)
 print(df)
 #df
+
+print("\n\n                    CARBON     CGECKO   CCOMP")
+print(f"Pairs:                {len(pairs):4}    {len(CCcg.pairs()):7} {len(CCcc.pairs()):7}")
+print(f"Tokens:               {len(tokens):4}    {len(CCcg.tokens()):7} {len(CCcc.tokens()):7}")
+print(f"Curves:               {len(CAc1.CC):4}    {len(CCcg):7} {len(CCcc):7}")
 
 # ### Calculate by-pair statistics
 
@@ -190,7 +224,7 @@ for pair in list(pairs):
     print(f"Pair = {pair}")
     print("="*100)
     df = pasdf.loc[Pair.n(pair)]
-    hasproxydata = len(df.reset_index()[df.reset_index()["exchange"]=="coingecko"])>0
+    hasproxydata = len(df.reset_index()[df.reset_index()["exchange"]=="cgecko"])>0
     if hasproxydata:
         print("\n--- ALL POSITIONS ---")
         print(df.to_string())
