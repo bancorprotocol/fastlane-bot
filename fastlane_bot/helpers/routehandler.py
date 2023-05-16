@@ -1295,7 +1295,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
 
                 for tx in data:
-                    tx["percent_in"] = tx["amtin"]/expected_in
+                    tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
                     # total_percent += tx["amtin"]/expected_in
 
                 for tx in data:
@@ -1314,9 +1314,12 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                     raw_txs = {
                         "cid": cid,
-                        "amtin": amount_in_wei,
-                        "tknin": tknin_key,
-                        "amtout": amount_out_wei,
+                        "tknin": tx["tknin"],
+                        "amtin": amount_in,
+                        "_amtin_wei": amount_in_wei,
+                        "tknout": tx["tknout"],
+                        "amtout": amount_out,
+                        "_amtout_wei": amount_out_wei,
                     }
                     raw_txs_lst.append(raw_txs)
                     total_in += amount_in
@@ -1328,6 +1331,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 trade_instructions[idx].amtout = amount_out
                 trade_instructions[idx]._amtin_wei = total_in_wei
                 trade_instructions[idx]._amtout_wei = total_out_wei
+                trade_instructions[idx].raw_txs = str(raw_txs_lst)
 
             else:
 
@@ -1347,7 +1351,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 trade_instructions[idx]._amtout_wei = amount_out_wei
 
             next_amount_in = amount_out
-        # trade_instructions[idx].raw_txs = str(raw_txs_lst)
+        
 
         return trade_instructions
 
