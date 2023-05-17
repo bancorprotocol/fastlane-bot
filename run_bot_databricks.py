@@ -34,8 +34,11 @@ bypairs = dbutils.widgets.get("bypairs")
 TENDERLY_FORK = dbutils.widgets.get("TENDERLY_FORK")
 only_carbon = dbutils.widgets.get("only_carbon")
 mode = dbutils.widgets.get("mode")
+arb_mode = dbutils.widgets.get("arb_mode")
 pairs_list_filepath = dbutils.widgets.get("pairs_list_filepath")
 
+if str(arb_mode) == 'None':
+    arb_mode = None
 
 if str(only_carbon) == 'True':
     only_carbon = True
@@ -134,6 +137,9 @@ cmd = f"cd {bot_path}; python run_bot.py"
 
 if cfg == 'tenderly':
     cmd += ' --config=tenderly'
+
+if arb_mode:
+    cmd += f' --arb_mode={arb_mode}'
 
 cmd
 

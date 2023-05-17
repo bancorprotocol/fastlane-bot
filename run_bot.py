@@ -20,11 +20,14 @@ flashloan_tokens = None
 @click.option("--flashloan_tokens", default=flashloan_tokens, type=list)
 @click.option("--polling_interval", default=12, type=int)
 @click.option("--config", default=None, type=str)
+@click.option("--arb_mode", default="single", type=str)
 def main(
         mode: str = "continuous",
         flashloan_tokens: list = None,
         polling_interval: int = 12,
         config: str = None,
+        arb_mode: str = "single"
+
 
 ):
     """
@@ -47,6 +50,12 @@ def main(
             - None: use the default config (Mainnet)
             - tenderly: use the tenderly config
 
+    arb_mode: str
+        The mode of the bot. Options are:
+            - None: default mode
+            - multi_triangle: the bot will run in multi triangle mode
+            - ...
+
     """
     print("Starting bot...")
 
@@ -56,7 +65,7 @@ def main(
         cfg = Config.new(config=Config.CONFIG_MAINNET)
 
     bot = CarbonBot(ConfigObj=cfg)
-    bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode)
+    bot.run(polling_interval=polling_interval, flashloan_tokens=flashloan_tokens, mode=mode, arb_mode=arb_mode)
 
 
 if __name__ == "__main__":
