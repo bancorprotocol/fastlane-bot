@@ -142,10 +142,16 @@ class FastLaneArbBotUI(
                             f"current gas price = {current_gas_price}, breakeven gas price = {break_even_gas_price}, diff = {current_gas_price - break_even_gas_price}"
                         )
 
-                        adjusted_reward = Decimal(str(bnt_profit)) * Decimal(str(ec.ARB_REWARD_PERCENTAGE))
+                        adjusted_reward = Decimal(str(bnt_profit)) * Decimal(
+                            str(ec.ARB_REWARD_PERCENTAGE)
+                        )
                         max_profit = Decimal(ec.ARB_MAX_PROFIT)
 
-                        adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
+                        adjusted_reward = (
+                            max_profit
+                            if adjusted_reward > max_profit
+                            else adjusted_reward
+                        )
 
                         # The 0.81 below can be modified to adjust for the actual expected gas consumption, which is overestimated. Increase this for safer execution and lower it to increase execution frequency.
                         if adjusted_reward > (
