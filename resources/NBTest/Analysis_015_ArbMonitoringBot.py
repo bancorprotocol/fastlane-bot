@@ -14,6 +14,9 @@
 #     name: python3
 # ---
 
+__SCRIPT_VERSION__ = "3.0"
+__SCRIPT_DATE__ = "18/May/2023"
+
 from fastlane_bot.bot import CarbonBot as Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
 from fastlane_bot.tools.analyzer import CPCAnalyzer
@@ -69,7 +72,8 @@ print("*"*100)
 # CCu3    = CCm.byparams(exchange="uniswap_v3")
 # CCu2    = CCm.byparams(exchange="uniswap_v2")
 # CCs2    = CCm.byparams(exchange="sushiswap_v2")
-CCc1    = CCm.byparams(exchange="carbon_v1")
+CCc1      = CCm.byparams(exchange="carbon_v1")              # all Carbon positions
+CCnc1     = CCm.byparams(exchange="carbon_v1", _inv=True)   # all non-Carbon positions
 # tc_u3   = CCu3.token_count(asdict=True)
 # tc_u2   = CCu2.token_count(asdict=True)
 # tc_s2   = CCs2.token_count(asdict=True)
@@ -78,6 +82,8 @@ CCc1    = CCm.byparams(exchange="carbon_v1")
 CAc1 = CPCAnalyzer(CCc1)
 pairs  = CAc1.pairsc()
 
+
+help(CCm.byparams)
 
 # now = datetime.datetime.now()
 # int(now.timestamp()), now.isoformat()## Print heading
@@ -196,6 +202,9 @@ CCcc = CPCContainer(proxy_curves_cc)
 CCfull = CCc1.copy().add(CCcg).add(CCcc)
 #CAother = CPCAnalyzer(CCother)
 CAfull = CPCAnalyzer(CCfull)
+CAnc1  = CPCAnalyzer(CCnc1)
+print(f"CAfull: {len(CAfull.CC):4} entries")
+print(f"CAnc1:  {len(CAnc1.CC):4} entries")
 
 # ## By-pair data for Carbon
 
@@ -215,27 +224,56 @@ print(f"Curves:               {len(CAc1.CC):4}    {len(CCcg):7} {len(CCcc):7}")
 
 # ### Calculate by-pair statistics
 
-pasdf = CAfull.pool_arbitrage_statistics()
+pasdf    = CAfull.pool_arbitrage_statistics()
+pasnc1df = CAnc1.pool_arbitrage_statistics(only_pairs_with_carbon=False)
+
 
 # ### Print by-pair statistics
 
+# +
+def prints(*x):
+    global s
+    s += " ".join([str(x_) for x_ in x])
+    s += "\n"
+out_by_pair = dict()
+carbon_by_pair = dict()
+other_by_pair = dict()
+
 for pair in list(pairs):
-    print("\n\n"+"="*100)
-    print(f"Pair = {pair}")
-    print("="*100)
+    s = ""
+    prints("\n\n"+"="*100)
+    prints(f"Pair = {pair}")
+    prints("="*100)
     df = pasdf.loc[Pair.n(pair)]
+    try:
+        nc1df = pasnc1df.loc[Pair.n(pair)]
+    except:
+        nc1df = pd.DataFrame()
     hasproxydata = len(df.reset_index()[df.reset_index()["exchange"]=="cgecko"])>0
     if hasproxydata:
-        print("\n--- ALL POSITIONS ---")
-        print(df.to_string())
-        print("\n--- IN-THE-MONEY POSITIONS ---")
+        prints("\n--- ALL CARBON AND REFERENCE POSITIONS ---")
+        prints(df.to_string())
+        carbon_by_pair[pair] = [[k,v] for k,v in df.to_dict(orient="index").items()]
+        prints("\n--- IN-THE-MONEY POSITIONS ---")
         dfitm = df[df["itm"]=="x"]
         if len(dfitm) > 0:
-            print(dfitm.to_string())
+            prints(dfitm.to_string())
         else:
-            print("-None-")
+            prints("-None-")
+        prints("\n--- ALL NON-CARBON POSITIONS ---")
+        if len(nc1df) > 0:
+            prints(nc1df.to_string())
+        else:
+            prints("-None-")
+        other_by_pair[pair] = [[k,v] for k,v in nc1df.to_dict(orient="index").items()]
+        
     else:
-        print("\n--- NO PRICE DATA AVAILABLE ---")
+        prints("\n--- NO PRICE DATA AVAILABLE ---")
+    
+    out_by_pair[pair] = s
+    print(s)
+
+# -
 
 # ## Summary data
 
@@ -258,9 +296,13 @@ itmcarb_pos_bypair = {
 missing_pairs = [pair for pair, price in prices_by_pair.items() if price is None]
 missing_pairs
 
+carbon_by_pair
+
 # ### Convert summary data to Telegram
 
 telegram_data = dict(
+    script_version = __SCRIPT_VERSION__,         # version number of the script producing this record
+    script_version_dt = __SCRIPT_DATE__,         # ditto date
     time_ts = int(now.timestamp()),              # timestamp (epoch)
     time_iso = now.isoformat().split('.')[0],    # timestap (iso format)
     prices_usd = token_prices_usd,               # token prices (usd)
@@ -268,13 +310,18 @@ telegram_data = dict(
     pairs_n = len(pairs),                        # ...number
     itm_pairs = itmcarb_pairs,                   # pairs that have curves in the money (list)
     itm_pairs_n = len(itmcarb_pairs),            # ...number
-    itm_pos = itmcarb_pos,                       # carbon positions that are in the money (list)
+    itm_pos = itmcarb_pos,                       # carbon and reference positions that are in the money (list)
     itm_pos_n = len(itmcarb_pos),                # ...number
+    all_pos_bp = carbon_by_pair,                 # all carbon and reference positions by pair (dict->list)
+    all_pos_bp_n = len(carbon_by_pair),          # ...number
+    other_pos_bp = other_by_pair,                # all other positions (dict->list)
+    other_pos_bp_n = len(other_by_pair),         # ...number
     itm_pos_bypair = itmcarb_pos_bypair,         # ditto, but dict[pair] -> list
     missing_pairs = missing_pairs,               # missing pairs
     missing_pairs_n = len(missing_pairs),        # ...number
     removed_tokens = list(REMOVED_TOKENS),       # removed tokens
     removed_tokens_n = len(REMOVED_TOKENS),      # ...number
+    out_by_pair = out_by_pair                    # output by pair
 )
 
 td = telegram_data
@@ -316,7 +363,7 @@ s += "-----------------------------------------------\n"
 s += f"TOTAL {total_vl_usd:25,.0f}   {100*total_arbval/total_vl_usd:5.1f}% {total_arbval:6,.0F}\n"
 s += "===============================================\n"
 s += "\n\n"
-telegram_data["text"] = s
+telegram_data["summary_text"] = s
 print()
 print(s)
 
