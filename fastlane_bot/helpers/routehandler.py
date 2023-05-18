@@ -1309,7 +1309,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                         amount_in_wei,
                         amount_out_wei,
                     ) = self._solve_trade_output(
-                        curve=curve, trade=trade, amount_in=next_amount_in * tx["percent_in"]
+                        curve=curve, trade=trade, amount_in=Decimal(str(next_amount_in)) * tx["percent_in"]
                     )
 
                     raw_txs = {
