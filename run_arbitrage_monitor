@@ -5,6 +5,6 @@ cd "$(dirname "$0")"
 pushd resources/NBTest
 python3 Analysis_015_ArbMonitoringBot.py > Analysis_015.latest.log
 cat Analysis_015.latest.out >> Analysis_015.out
-cat Analysis_015.latest.log >> Analysis_015.log
+#cat Analysis_015.latest.log >> Analysis_015.log
 date >> Analysis_015.heartbeat
 popd
