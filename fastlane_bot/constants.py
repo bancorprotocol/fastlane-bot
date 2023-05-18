@@ -226,6 +226,16 @@ class EthereumNetworkConstants:
         (@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
         @@@@@@@@@@@@@@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     """
+    BANCOR_ARBITRAGE_CONTRACT = web3.eth.contract(
+        address=web3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
+        abi=FAST_LANE_CONTRACT_ABI,
+    )
+    reward_percent, max_profit = BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+    ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+    ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
+
+
 
     def __post_init__(self):
         """
