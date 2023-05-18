@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.4"
-__DATE__ = "13/May/2023"
+__VERSION__ = "1.5"
+__DATE__ = "18/May/2023"
 
 from typing import Any
 from .cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
@@ -408,15 +408,20 @@ class CPCAnalyzer(_DCBase):
     POS_DICT = "dict"
     POS_LIST = "list"
     POS_DF = "df"
-    def pool_arbitrage_statistics(self, result = None, *, sort_price=True):
+    def pool_arbitrage_statistics(self, result = None, *, sort_price=True, only_pairs_with_carbon=True):
         """
         returns arbirage statistics on all Carbon pairs
         
-        :result:    POS_DICT, POS_LIST, POS_DF (default)
-        :returns:   the statistics data in the requested format
+        :result:                    POS_DICT, POS_LIST, POS_DF (default)
+        :only_pairs_with_carbon:    ignore all curves that don't have a Carbon pair
+        :sort_price:                sort by price
+        :returns:                   the statistics data in the requested format
         """
         # select all curves that have at least one Carbon pair...
-        curves_by_carbon_pair = {pair: self.CC.bypairs([pair]) for pair in self.pairsc()}
+        if only_pairs_with_carbon:
+            curves_by_carbon_pair = {pair: self.CC.bypairs([pair]) for pair in self.pairsc()}
+        else:
+            curves_by_carbon_pair = {pair: self.CC.bypairs([pair]) for pair in self.pairs()}
 
         # ...calculate some statistics...
         prices_d = {pair: 
