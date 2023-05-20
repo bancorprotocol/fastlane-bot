@@ -4,4 +4,4 @@ cd "$(dirname "$0")"
 echo STARTING ARBBOT
 pwd 
 
-/usr/bin/python3 run_bot.py
+/usr/bin/python3 run_bot.py --arb_mode=multi_triangle
