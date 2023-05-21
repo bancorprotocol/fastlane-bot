@@ -302,13 +302,13 @@ class TxHelpers:
             return None
 
         current_gas_price = int(
-            self.get_eth_gas_price_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+            self.get_eth_gas_price_alchemy()
         )
         if verbose:
             self.ConfigObj.logger.info("Found a trade. Executing...")
             self.ConfigObj.logger.info(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {num_format(expected_profit)} \n\n")
-        current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy()
+        current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
 
         block_number = self.web3.eth.get_block("latest")["number"]
 
@@ -479,7 +479,7 @@ class TxHelpers:
                 routes, src_address, src_amt
             ).build_transaction(
                 self.build_tx(
-                    gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                    max_fee_per_gas=(gas_price + max_priority), max_priority_fee=max_priority, nonce=nonce
                 )
             )
         except ValueError as e:
@@ -492,13 +492,13 @@ class TxHelpers:
                 message = str(e)
                 split1 = message.split('maxFeePerGas: ')[1]
                 split2 = split1.split(' baseFee: ')
-                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
                 split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
                 transaction = self.arb_contract.functions.flashloanAndArb(
                     routes, src_address, src_amt
                 ).build_transaction(
                     self.build_tx(
-                        gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                        max_fee_per_gas=(split_baseFee + split_maxPriorityFeePerGas), max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
                     )
                 )
             else:
@@ -529,7 +529,7 @@ class TxHelpers:
     def build_tx(
         self,
         nonce: int,
-        gas_price: int = 0,
+        max_fee_per_gas: int = 0,
         max_priority_fee: int = None,
     ) -> Dict[str, Any]:
         """
@@ -538,11 +538,14 @@ class TxHelpers:
         maxFeePerGas: the maximum gas price to be paid for the transaction
         maxPriorityFeePerGas: the maximum miner tip to be given for the transaction
 
+        The following condition must be met:
+        maxFeePerGas <= baseFee + maxPriorityFeePerGas
+
         returns: the transaction to be submitted to the blockchain
         """
         return {
             "type": "0x2",
-            "maxFeePerGas": gas_price,
+            "maxFeePerGas": max_fee_per_gas,
             "maxPriorityFeePerGas": max_priority_fee,
             "from": self.wallet_address,
             "nonce": nonce,
