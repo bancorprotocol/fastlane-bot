@@ -308,7 +308,7 @@ class TxHelpers:
             self.ConfigObj.logger.info("Found a trade. Executing...")
             self.ConfigObj.logger.info(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {num_format(expected_profit)} \n\n")
-        current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+        current_max_priority_gas = int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
         block_number = self.web3.eth.get_block("latest")["number"]
 
@@ -479,7 +479,7 @@ class TxHelpers:
                 routes, src_address, src_amt
             ).build_transaction(
                 self.build_tx(
-                    max_fee_per_gas=(gas_price + max_priority), max_priority_fee=max_priority, nonce=nonce
+                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
                 )
             )
         except ValueError as e:
@@ -498,7 +498,7 @@ class TxHelpers:
                     routes, src_address, src_amt
                 ).build_transaction(
                     self.build_tx(
-                        max_fee_per_gas=(split_baseFee + split_maxPriorityFeePerGas), max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                        base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
                     )
                 )
             else:
@@ -529,8 +529,8 @@ class TxHelpers:
     def build_tx(
         self,
         nonce: int,
-        max_fee_per_gas: int = 0,
-        max_priority_fee: int = None,
+        base_gas_price: int = 0,
+        max_priority_fee: int = 0,
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -543,9 +543,12 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
+        max_priority_fee = int(max_priority_fee)
+        base_gas_price = int(base_gas_price)
+        max_gas_price = base_gas_price + max_priority_fee
         return {
             "type": "0x2",
-            "maxFeePerGas": max_fee_per_gas,
+            "maxFeePerGas": max_gas_price,
             "maxPriorityFeePerGas": max_priority_fee,
             "from": self.wallet_address,
             "nonce": nonce,
