@@ -322,8 +322,8 @@ class TransactionHelpers(BaseHelper):
                 message = str(e)
                 split1 = message.split('maxFeePerGas: ')[1]
                 split2 = split1.split(' baseFee: ')
-                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
+                split_maxPriorityFeePerGas = int(int(split2[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
                 transaction = self.arb_contract.functions.flashloanAndArb(
                     routes, ec.BNT_ADDRESS, src_amt
                 ).build_transaction(
@@ -369,7 +369,7 @@ class TransactionHelpers(BaseHelper):
         """
         return {
             "type": "0x2",
-            "maxFeePerGas": gas_price,
+            "maxFeePerGas": gas_price + max_priority_fee,
             "maxPriorityFeePerGas": max_priority_fee,
             "from": self.wallet_address,
             "nonce": nonce,
