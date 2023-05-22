@@ -74,10 +74,10 @@ class FastLaneArbBotUI(
             return
 
         # Current gas price estimate
-        current_gas_price = int(
-            self.get_eth_gas_price_alchemy()
+        current_gas_price = int(self.get_eth_gas_price_alchemy())
+        current_max_priority_gas = (
+            self.get_max_priority_fee_per_gas_alchemy() * ec.DEFAULT_GAS_PRICE_OFFSET
         )
-        current_max_priority_gas = self.get_max_priority_fee_per_gas_alchemy() * ec.DEFAULT_GAS_PRICE_OFFSET
 
         # Use current Bancor V3 BNT/ETH liquidity to convert gas price to BNT
         bnt, eth = self.get_bnt_eth_liquidity()
@@ -120,9 +120,7 @@ class FastLaneArbBotUI(
                         )
                         gas_estimate = int(gas_estimate + ec.DEFAULT_GAS_SAFETY_OFFSET)
                         logger.info(f"gas estimate = {gas_estimate}")
-                        current_gas_price = int(
-                            current_gas_price
-                        )
+                        current_gas_price = int(current_gas_price)
                         # calculate the cost of gas in BNT
                         gas_in_bnt = self.estimate_gas_in_bnt(
                             gas_price=current_gas_price,
@@ -154,9 +152,7 @@ class FastLaneArbBotUI(
                         )
 
                         # The 0.81 below can be modified to adjust for the actual expected gas consumption, which is overestimated. Increase this for safer execution and lower it to increase execution frequency.
-                        if adjusted_reward > (
-                            gas_in_bnt * Decimal("0.81")
-                        ):
+                        if adjusted_reward > (gas_in_bnt * Decimal("0.81")):
                             logger.info(
                                 f"Expected profit of {bnt_profit} BNT vs cost of {gas_in_bnt} BNT in gas, executing"
                             )

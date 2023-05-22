@@ -313,22 +313,30 @@ class TransactionHelpers(BaseHelper):
                 )
             )
         except ValueError as e:
-            logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
+            logger.error(f"{e.__class__.__name__} Error when building transaction: {e}")
             if e.__class__.__name__ == "ContractLogicError":
                 logger.error(
-                    f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
+                    f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data."
+                )
                 return None
             if "max fee per gas less than block base fee" in str(e):
                 message = str(e)
-                split1 = message.split('maxFeePerGas: ')[1]
-                split2 = split1.split(' baseFee: ')
-                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
-                split_maxPriorityFeePerGas = int(int(split2[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
+                split1 = message.split("maxFeePerGas: ")[1]
+                split2 = split1.split(" baseFee: ")
+                split_baseFee = int(
+                    int(split2[1].split(" (supplied gas")[0])
+                    * ec.DEFAULT_GAS_PRICE_OFFSET
+                )
+                split_maxPriorityFeePerGas = int(
+                    int(split2[0]) * ec.DEFAULT_GAS_PRICE_OFFSET
+                )
                 transaction = self.arb_contract.functions.flashloanAndArb(
                     routes, ec.BNT_ADDRESS, src_amt
                 ).build_transaction(
                     self.build_tx(
-                        gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                        gas_price=split_baseFee,
+                        max_priority_fee=split_maxPriorityFeePerGas,
+                        nonce=nonce,
                     )
                 )
             else:
