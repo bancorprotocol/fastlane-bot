@@ -75,7 +75,7 @@ class FastLaneArbBotUI(
 
         # Current gas price estimate
         current_gas_price = int(self.get_eth_gas_price_alchemy())
-        current_max_priority_gas = (
+        current_max_priority_gas = int(
             self.get_max_priority_fee_per_gas_alchemy() * ec.DEFAULT_GAS_PRICE_OFFSET
         )
 
@@ -92,7 +92,7 @@ class FastLaneArbBotUI(
                     logger.info(
                         f"\nRoute to execute: routes: {trade_path}, sourceAmount: {src_amt}, expected_profit {bnt_profit} \n\n"
                     )
-                    logger.info(f"current gas price = {current_gas_price}")
+                    logger.debug(f"current gas price = {current_gas_price}")
                     nonce = self.get_nonce()
                     if self.network_name in ec.VALID_TENDERLY_NETWORKS:
                         tx_receipt = self.build_transaction_tenderly(
@@ -107,7 +107,7 @@ class FastLaneArbBotUI(
                         arb_tx = self.build_transaction_with_gas(
                             routes=trade_path,
                             src_amt=src_amt,
-                            gas_price=current_gas_price,
+                            base_gas_price=current_gas_price,
                             max_priority=current_max_priority_gas,
                             nonce=nonce,
                         )
