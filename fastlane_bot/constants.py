@@ -16,6 +16,8 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from fastlane_bot.data.abi import *
+import web3
+from web3 import Web3
 
 load_dotenv()
 
@@ -79,7 +81,7 @@ class EthereumNetworkConstants:
     DEFAULT_GAS_PRICE = 0
     DEFAULT_GAS = 950000
     DEFAULT_GAS_SAFETY_OFFSET = 25000
-    DEFAULT_GAS_PRICE_OFFSET = 1.05
+    DEFAULT_GAS_PRICE_OFFSET = 1.15
     DEFAULT_REWARD_PERCENT = Decimal("0.5")
 
     STAR_PRINT = "*" * 50
@@ -170,6 +172,16 @@ class EthereumNetworkConstants:
 
     VALID_TENDERLY_NETWORKS = ["tenderly", "tenderly_mainnet"]
     VALID_ETHEREUM_NETWORKS = ["mainnet", "ethereum"]
+
+    web3 = Web3(web3.HTTPProvider(ETHEREUM_MAINNET_PROVIDER))
+    BANCOR_ARBITRAGE_CONTRACT = web3.eth.contract(
+        address=web3.toChecksumAddress(FASTLANE_CONTRACT_ADDRESS),
+        abi=FAST_LANE_CONTRACT_ABI,
+    )
+    reward_percent, max_profit = BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+
+    ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+    ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
 
     def __post_init__(self):
         """

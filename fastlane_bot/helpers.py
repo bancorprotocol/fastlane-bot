@@ -291,7 +291,7 @@ class TransactionHelpers(BaseHelper):
         self,
         routes: List[Dict[str, Any]],
         src_amt: int,
-        gas_price: int,
+        base_gas_price: int,
         max_priority: int,
         nonce: int,
     ):
@@ -309,20 +309,37 @@ class TransactionHelpers(BaseHelper):
                 routes, ec.BNT_ADDRESS, src_amt
             ).build_transaction(
                 self.build_tx(
-                    gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                    base_gas_price=base_gas_price, max_priority_fee=max_priority, nonce=nonce
                 )
             )
         except ValueError as e:
-            message = str(e).split("baseFee: ")
-            split_fee = message[1].split(" (supplied gas ")
-            baseFee = int(int(split_fee[0]) * ec.DEFAULT_GAS_PRICE_OFFSET)
-            transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, ec.BNT_ADDRESS, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    gas_price=baseFee, max_priority_fee=max_priority, nonce=nonce
+            logger.error(f"{e.__class__.__name__} Error when building transaction: {e}")
+            if e.__class__.__name__ == "ContractLogicError":
+                logger.error(
+                    f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data."
                 )
-            )
+                return None
+            if "max fee per gas less than block base fee" in str(e):
+                message = str(e)
+                split1 = message.split("maxFeePerGas: ")[1]
+                split2 = split1.split(" baseFee: ")
+                split_baseFee = int(
+                    int(split2[1].split(" (supplied gas")[0])
+                )
+                split_maxPriorityFeePerGas = int(
+                    int(split2[0]) * ec.DEFAULT_GAS_PRICE_OFFSET
+                )
+                transaction = self.arb_contract.functions.flashloanAndArb(
+                    routes, ec.BNT_ADDRESS, src_amt
+                ).build_transaction(
+                    self.build_tx(
+                        base_gas_price=split_baseFee,
+                        max_priority_fee=split_maxPriorityFeePerGas,
+                        nonce=nonce,
+                    )
+                )
+            else:
+                return None
 
         try:
             estimated_gas = (
@@ -346,7 +363,7 @@ class TransactionHelpers(BaseHelper):
     def build_tx(
         self,
         nonce: int,
-        gas_price: int = 0,
+        base_gas_price: int = 0,
         max_priority_fee: int = None,
     ) -> Dict[str, Any]:
         """
@@ -357,9 +374,13 @@ class TransactionHelpers(BaseHelper):
 
         returns: the transaction to be submitted to the blockchain
         """
+        max_priority_fee = int(max_priority_fee)
+        base_gas_price = int(base_gas_price)
+        max_gas = base_gas_price + max_priority_fee
+
         return {
             "type": "0x2",
-            "maxFeePerGas": gas_price,
+            "maxFeePerGas": max_gas,
             "maxPriorityFeePerGas": max_priority_fee,
             "from": self.wallet_address,
             "nonce": nonce,
