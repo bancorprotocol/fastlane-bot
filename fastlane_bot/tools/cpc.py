@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.13"
-__DATE__ = "15/May/2023"
+__VERSION__ = "2.14"
+__DATE__ = "23/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -2009,6 +2009,10 @@ class CPCContainer:
                 result = (c for c in self if c.cid.endswith(endswith) and not c.cid in exclude)
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
 
+    def bycid0(self, cid0, **kwargs):
+        """alias for bycids(endswith=cid0)"""
+        return self.bycids(endswith=cid0, **kwargs)
+    
     def bypair(self, pair, *, directed=False, asgenerator=None, ascc=None):
         """returns all curves by (possibly directed) pair (as tuple, genator or CC object)"""
         result = (c for c in self if c.pair == pair)
