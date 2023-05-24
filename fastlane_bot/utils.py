@@ -18,6 +18,7 @@ from web3.contract import Contract
 from fastlane_bot.data.abi import *
 #from fastlane_bot.config import *
 from fastlane_bot.config import config as cfg
+import datetime
 
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """
@@ -38,6 +39,23 @@ def num_format(number):
         return '{0:.4f}'.format(number)
     except Exception as e:
         return number
+
+def num_format_float(number):
+    try:
+        return float('{0:.4f}'.format(number))
+    except Exception as e:
+        return number
+
+def log_format(log_data: {}, log_name: str = "new"):
+    now = datetime.datetime.now()
+    time_ts = str(int(now.timestamp()))  # timestamp (epoch)
+    time_iso = now.isoformat().split('.')[0]
+    # print(time_ts)
+    # print(time_iso)
+
+    log_string = f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
+    return log_string
+    # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
 
 
 def get_coingecko_token_table() -> List[Dict[str, Any]]:
