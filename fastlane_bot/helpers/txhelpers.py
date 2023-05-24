@@ -301,17 +301,20 @@ class TxHelpers:
             self.ConfigObj.logger.info(f"Transaction below minimum profit, reverting... /*_*\\")
             return None
 
-        current_gas_price = int(
-            self.get_eth_gas_price_alchemy()
-        )
+        # Get current base fee for pending block
+        current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
+
         if verbose:
             self.ConfigObj.logger.info("Found a trade. Executing...")
             self.ConfigObj.logger.info(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {num_format(expected_profit)} \n\n")
+
+        # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
+        # Get current block number
         block_number = self.web3.eth.get_block("latest")["number"]
-
+        # Get current nonce for our account
         nonce = self.get_nonce()
 
         if result == self.XS_API_CALLS:
@@ -332,10 +335,9 @@ class TxHelpers:
         if arb_tx is None:
             return None
         gas_estimate = arb_tx["gas"]
-        current_gas_price = arb_tx["maxFeePerGas"] + arb_tx["maxPriorityFeePerGas"]
-        gas_estimate = int(gas_estimate + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET)
+        current_gas_price = arb_tx["maxFeePerGas"]
+
         self.ConfigObj.logger.info(f"gas estimate = {gas_estimate}")
-        current_gas_price = int(current_gas_price * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
         # Calculate the number of BNT paid in gas
         bnt, eth = bnt_eth
@@ -347,11 +349,17 @@ class TxHelpers:
             eth=eth,
         )
 
+        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
+        gas_in_src = gas_in_src * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
+        # Multiply by reward percentage, taken from the arb contract
         adjusted_reward = Decimal(Decimal(expected_profit) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        # Get the max profit, taken from the arb contract
         max_profit = Decimal(self.ConfigObj.ARB_MAX_PROFIT)
+
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
+        # Take the lesser of the adjusted reward or max profit
         adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
 
         if adjusted_reward > gas_in_src or safety_override:
