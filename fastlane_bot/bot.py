@@ -1409,11 +1409,15 @@ class CarbonBot(CarbonBotBase):
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
+            filter_out_weth = [x for x in CCm if (x.params.exchange == 'carbon_v1') & ((x.params.tkny_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') or (x.params.tknx_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'))]
+            CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
 
         if mode == "continuous":
             while True:
                 try:
                     CCm = self.get_curves()
+                    filter_out_weth = [x for x in CCm if (x.params.exchange == 'carbon_v1') & ((x.params.tkny_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') or (x.params.tknx_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'))]
+                    CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
                     tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode)
                     if tx_hash:
                         self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
