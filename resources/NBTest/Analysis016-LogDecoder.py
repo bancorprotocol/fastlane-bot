@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -17,20 +17,30 @@ import re
 import json
 from dataclasses import dataclass
 from datetime import datetime
+import os
 
 # # Log Decoder [Analysis016]
 
 data = """
-2023-05-24 15:40:06,165 [fastlane:INFO] - [2023-05-24T15:40:06::1684932006] |calculated_arb| == {'FLT': 'ETH-EEeE', 'flash_amount': '0.4555', 'profit_native': '0.0013', 'profit_bnt': '4.8882', 'trades': [{'trade': 0, 'tkn_in': 'WETH-6Cc2', 'amount_in': '0.4555', 'tkn_out': 'USDC-eB48', 'amt_out': '829.9234', 'cid': '8841057382'}, {'trade': 1, 'tkn_in': 'USDC-eB48', 'amount_in': '829.9234', 'tkn_out': 'WETH-6Cc2', 'amt_out': '0.4567', 'cid': 'b61bc3f2c4'}]}
-
-2023-05-24 15:40:06,165 [fastlane:INFO] - [2023-05-24T15:40:06::1684932006] |meh| == {'FLT': 'ETH-EEeE', 'flash_amount': '0.4555', 'profit_native': '0.0013', 'profit_bnt': '4.8882', 'trades': [{'trade': 0, 'tkn_in': 'WETH-6Cc2', 'amount_in': '0.4555', 'tkn_out': 'USDC-eB48', 'amt_out': '829.9234', 'cid': '8841057382'}, {'trade': 1, 'tkn_in': 'USDC-eB48', 'amount_in': '829.9234', 'tkn_out': 'WETH-6Cc2', 'amt_out': '0.4567', 'cid': 'b61bc3f2c4'}]}
-
-2023-05-24 15:40:09,656 [fastlane:INFO] - [2023-05-24T15:40:09::1684932009] |arb_with_gas| == {'FLT': 'ETH-EEeE', 'flash_amount': '0.4555', 'profit_native': '0.0013', 'profit_bnt': '4.8882', 'trades': [{'trade': 0, 'tkn_in': 'WETH-6Cc2', 'amount_in': '0.4555', 'tkn_out': 'USDC-eB48', 'amt_out': '829.9234', 'cid': '8841057382'}, {'trade': 1, 'tkn_in': 'USDC-eB48', 'amount_in': '829.9234', 'tkn_out': 'WETH-6Cc2', 'amt_out': '0.4567', 'cid': 'b61bc3f2c4'}], 'block_number': 17329101, 'gas': 587111, 'base_fee': 40189088639, 'priority_fee': 109000000, 'max_gas_fee': 40298088639, 'gas_cost_bnt': '84.6551', 'gas_cost_eth': '0.0189', 'gas_cost_millieth': '18927.5609', 'gas_cost_usd': '$34.3880', 'uni_v3_trade_cost_eth': '0.0063', 'uni_v3_trade_cost_usd': '$11.5014'}
-
-
-2023-05-24 16:39:31,176 [fastlane:INFO] - [2023-05-24T16:39:31::1684935571] |arb_with_gas| == {'flashloan': [{'token': 'ETH-EEeE', 'amount': 0.4555, 'profit': 0.0018}], 'profit_bnt': 6.798, 'trades': [{'trade_index': 0, 'tkn_in': 'WETH-6Cc2', 'amount_in': 0.4555, 'tkn_out': 'USDC-eB48', 'amt_out': 829.9234, 'cid0': '8841057382'}, {'trade_index': 1, 'tkn_in': 'USDC-eB48', 'amount_in': 829.9234, 'tkn_out': 'WETH-6Cc2', 'amt_out': 0.4572, 'cid0': 'b61bc3f2c4'}], 'block_number': 17329396, 'gas': 586996, 'base_fee_wei': 64373808618, 'priority_fee_wei': 109000000, 'max_gas_fee_wei': 64482808618, 'gas_cost_bnt': 135.4339, 'gas_cost_eth': 0.0303, 'gas_cost_usd': 55.0093, 'uni_v3_trade_cost_eth': 0.0101, 'uni_v3_trade_cost_usd': 18.3904}
+/root/flbtest
+Using default database url, if you want to use a different database, set the backend_url found at the bottom of manager_base.py
+Starting bot...
+2023-05-24 19:48:44,936 [fastlane:INFO] - [2023-05-24T19:48:44::1684957724] |calculated_arb| == {'type': 'single', 'profit_bnt': 29.4095, 'profit_usd': 11.8129, 'flashloan': [{'token': 'ETH-EEeE', 'amount': 0.4555, 'profit': 0.0066}], 'trades': [{'trade_index': 0, 'exchange': 'carbon_v1', 'tkn_in': 'WETH-6Cc2', 'amount_in': 0.4555, 'tkn_out': 'USDC-eB48', 'amt_out': 829.9234, 'cid0': '8841057382'}, {'trade_index': 1, 'exchange': 'uniswap_v3', 'tkn_in': 'USDC-eB48', 'amount_in': 829.9234, 'tkn_out': 'WETH-6Cc2', 'amt_out': 0.462, 'cid0': 'b61bc3f2c4'}]}
+2023-05-24 19:48:44,937 [fastlane:INFO] - Opportunity with profit: 29.4095 does not meet minimum profit: 1000, discarding.
 """
 
+
+# +
+# FNAME = "arbbot.log"
+# FNAME = "mylog.log"
+# FPATH = "../.."
+# FFNAME = os.path.join(FPATH, FNAME)
+
+# +
+# with open(FFNAME, "r") as f:
+#     data = f.read()
+# data.splitlines()[-10:]
+# -
 
 @dataclass
 class LogLine():
@@ -47,6 +57,8 @@ class LogLine():
         reads a single line and instantiates a new object
         """
         m = re.match(cls.REGEX, line)
+        if m is None:
+            return None
         return cls(
             time_s = m.group(1)+"Z",
             time_ts = int(m.group(2)),
@@ -60,8 +72,9 @@ class LogLine():
         parses the entire text of the logfile
         """
         lines = (l for l in data.splitlines() if l.strip())
-        ll = list(LogLine.new(l) for l in lines)
-        return ll
+        ll = (LogLine.new(l) for l in lines)
+        ll = (l for l in ll if not l is None)
+        return list(ll)
         
     
     @property
