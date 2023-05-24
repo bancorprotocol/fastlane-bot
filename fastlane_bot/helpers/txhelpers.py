@@ -34,7 +34,7 @@ from fastlane_bot.db.models import Token, Pool
 #import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
-from fastlane_bot.utils import num_format
+from fastlane_bot.utils import num_format, log_format, num_format_float
 
 
 @dataclass
@@ -287,7 +287,8 @@ class TxHelpers:
         bnt_eth: Tuple,
         result: str = None,
         verbose: bool = False,
-        safety_override: bool = False
+        safety_override: bool = False,
+        log_object: {} = None
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -306,8 +307,8 @@ class TxHelpers:
 
         if verbose:
             self.ConfigObj.logger.info("Found a trade. Executing...")
-            self.ConfigObj.logger.info(
-                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected_profit {num_format(expected_profit)} \n\n")
+            self.ConfigObj.logger.debug(
+                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
@@ -337,8 +338,6 @@ class TxHelpers:
         gas_estimate = arb_tx["gas"]
         current_gas_price = arb_tx["maxFeePerGas"]
 
-        self.ConfigObj.logger.info(f"gas estimate = {gas_estimate}")
-
         # Calculate the number of BNT paid in gas
         bnt, eth = bnt_eth
 
@@ -355,7 +354,22 @@ class TxHelpers:
         adjusted_reward = Decimal(Decimal(expected_profit) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
         # Get the max profit, taken from the arb contract
         max_profit = Decimal(self.ConfigObj.ARB_MAX_PROFIT)
+        gas_cost_eth = num_format_float(int(current_gas_price) * int(gas_estimate) * 0.8 / 10 ** 18)
 
+        gas_cost_eth_uni_v3 = (int(current_gas_price) * 157092 / 10 ** 18)
+        eth_price = self.get_eth_price()
+        if eth_price is not None:
+            gas_cost_usd = gas_cost_eth * eth_price
+            uni_v3_cost_usd = gas_cost_eth_uni_v3 * eth_price
+        else:
+            gas_cost_usd = "Coingecko_api_failed"
+            uni_v3_cost_usd = "Coingecko_api_failed"
+
+        transaction_log = {"block_number": block_number, "gas": gas_estimate, "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]), "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price, "gas_cost_bnt": num_format_float(gas_in_src), "gas_cost_eth": num_format_float(gas_cost_eth), "gas_cost_usd": + num_format_float(gas_cost_usd), "uni_v3_trade_cost_eth": num_format_float(gas_cost_eth_uni_v3), "uni_v3_trade_cost_usd": num_format_float(uni_v3_cost_usd)}
+
+        log_json = {**log_object, **transaction_log}
+
+        self.ConfigObj.logger.info(log_format(log_data=log_json, log_name='arb_with_gas'))
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
@@ -364,7 +378,7 @@ class TxHelpers:
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
-                f"Expected profit of {num_format(expected_profit)} BNT vs cost of {num_format(gas_in_src)} BNT in gas, executing"
+                f"Expected reward of {num_format(adjusted_reward)} BNT vs cost of {num_format(gas_in_src)} BNT in gas, executing arb."
             )
 
             # Submit the transaction
@@ -377,6 +391,21 @@ class TxHelpers:
                 f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!"
             )
             return None
+    def get_eth_price(self):
+        """
+        Returns ETH Price using Coingecko API
+        """
+        url = "https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&vs_currencies=USD&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false"
+        response = requests.get(url)
+        data = response.json()
+
+        if data is not None:
+            price = data.get("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2".lower()).get("usd")
+            # item = (token_address.lower(), price)
+            return (float(str(price)))
+        else:
+            return None
+
 
     def get_gas_price(self) -> int:
         """
@@ -592,7 +621,7 @@ class TxHelpers:
 
         returns: The transaction receipt, or None if the transaction failed
         """
-        self.ConfigObj.logger.info(f"Attempting to submit private tx {arb_tx}")
+        self.ConfigObj.logger.info(f"Attempting to submit tx to Flashbots, please hold.")
         signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
         signed_tx_string = signed_arb_tx.hex()
 
@@ -611,14 +640,14 @@ class TxHelpers:
             method_name="eth_sendPrivateTransaction",
             headers=self._get_headers,
         )
-        self.ConfigObj.logger.info(f"Submitted to Flashbots RPC, response: {response}")
+        self.ConfigObj.logger.info(f"Submitted transaction to Flashbots RPC, response: {response}")
         if response != 400:
             tx_hash = response.get("result")
             try:
                 tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
                 return tx_receipt
             except TimeExhausted as e:
-                self.ConfigObj.logger.info(f"Transaction is stuck in mempool, exception: {e}")
+                self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds.")
                 return None
         else:
             self.ConfigObj.logger.info(f"Failed to submit transaction to Flashbots RPC")
