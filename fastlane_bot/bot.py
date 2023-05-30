@@ -1235,24 +1235,24 @@ class CarbonBot(CarbonBotBase):
         fl_token_with_weth = fl_token
         if (fl_token == 'WETH-6Cc2'):
             fl_token = "ETH-EEeE"
-        try:
-            best_profit = calculated_trade_instructions[-1].amtout - calculated_trade_instructions[0].amtin
-            flashloan_tkn_profit = best_profit
-            if fl_token_with_weth != 'BNT-FF1C':
-                bnt_flt_curves = CCm.bypair(pair=f"BNT-FF1C/{fl_token_with_weth}")
-                bnt_flt = [x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"][0]
-                flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
-                best_profit = Decimal(str(flt_per_bnt * best_profit))
-            else:
-                pass
-            bnt_usdc_curve = CCm.bycid("0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b")
-            usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
-            profit_usd = best_profit * Decimal(str(usd_bnt))
-            self.ConfigObj.logger.debug(
-                f"updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
-        except Exception as e:
-            self.ConfigObj.logger.error(f"[Failed to update profit in BNT for price of token: {fl_token}] error:{e}")
-            profit_usd=0
+        # try:
+        best_profit = calculated_trade_instructions[-1].amtout - calculated_trade_instructions[0].amtin
+        flashloan_tkn_profit = best_profit
+        if fl_token_with_weth != 'BNT-FF1C':
+            bnt_flt_curves = CCm.bypair(pair=f"BNT-FF1C/{fl_token_with_weth}")
+            bnt_flt = [x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"][0]
+            flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
+            best_profit = Decimal(str(flt_per_bnt * best_profit))
+        else:
+            pass
+        bnt_usdc_curve = CCm.bycid("0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b")
+        usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
+        profit_usd = best_profit * Decimal(str(usd_bnt))
+        self.ConfigObj.logger.debug(
+            f"updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
+        # except Exception as e:
+        #     self.ConfigObj.logger.error(f"[Failed to update profit in BNT for price of token: {fl_token}] error:{e}")
+        #     profit_usd=0
 
         flashloans = [{"token": fl_token, "amount": num_format_float(calculated_trade_instructions[0].amtin), "profit": num_format_float(flashloan_tkn_profit)}]
 

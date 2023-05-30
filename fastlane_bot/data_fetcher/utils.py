@@ -51,6 +51,8 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         return dict(obj)
     elif isinstance(obj, HexBytes):
         return obj.hex()
+    elif isinstance(obj, bytes):
+        return obj.hex()
     elif isinstance(obj, dict):
         return {k: complex_handler(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):

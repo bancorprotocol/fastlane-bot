@@ -5,9 +5,11 @@ from typing import Dict, Any, Tuple, List
 
 from web3.contract import Contract
 
+from fastlane_bot import Config
+
 
 @dataclass
-class Pool(ABC):
+class Pool(ABC, Config):
     """
     Abstract base class representing a pool.
 
@@ -305,7 +307,7 @@ class BancorV3Pool(Pool):
             Dict[str, Any]: The updated data.
         """
         event_args = event_args["args"]
-        if event_args["token"] == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":  # TODO: Remove hardcoding
+        if event_args["tkn_address"] == self.BNT_ADDRESS:
             data["tkn0_balance"] = event_args["newLiquidity"]
         else:
             data["tkn1_balance"] = event_args["newLiquidity"]
@@ -326,7 +328,7 @@ class BancorV3Pool(Pool):
         Args:
             contract: (Contract) The contract to update from.
         """
-        pool_balances = contract.tradingLiquidity(self.state["address"])
+        pool_balances = contract.tradingLiquidity(self.state["tkn1_address"])
         params = {
             "fee": "0.000",
             "fee_float": 0.000,

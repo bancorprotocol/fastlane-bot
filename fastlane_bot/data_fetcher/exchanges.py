@@ -10,14 +10,13 @@ from fastlane_bot.data.abi import (
     UNISWAP_V3_POOL_ABI,
     SUSHISWAP_POOLS_ABI,
     CARBON_CONTROLLER_ABI,
-    BANCOR_V3_POOL_COLLECTION_ABI,
+    BANCOR_V3_POOL_COLLECTION_ABI, BANCOR_V3_NETWORK_INFO_ABI,
 )
 from fastlane_bot.data_fetcher.pools import Pool
 
 
 @dataclass
-class Exchange(ABC):
-    cfg: Config
+class Exchange(ABC, Config):
     pools: Dict[str, Pool] = field(default_factory=dict)
 
     def get_pools(self) -> List[Pool]:
@@ -161,10 +160,10 @@ class BancorV3(Exchange):
         return "0.000", 0.000
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return self.cfg.BNT_ADDRESS
+        return self.BNT_ADDRESS
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return address
+        return event["args"]["pool"] if event["args"]["pool"] != self.BNT_ADDRESS else event["args"]["tkn_address"]
 
 
 @dataclass
@@ -202,9 +201,8 @@ class CarbonV1(Exchange):
 
 
 class ExchangeFactory:
-    def __init__(self, cfg: Config = None):
+    def __init__(self):
         self._creators = {}
-        self.cfg = cfg
 
     def register_exchange(self, key, creator):
         self._creators[key] = creator
@@ -213,7 +211,7 @@ class ExchangeFactory:
         creator = self._creators.get(key)
         if not creator:
             raise ValueError(key)
-        return creator(cfg=self.cfg)
+        return creator()
 
 
 # Create a single instance of ExchangeFactory
