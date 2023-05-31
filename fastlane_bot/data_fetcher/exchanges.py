@@ -10,13 +10,13 @@ from fastlane_bot.data.abi import (
     UNISWAP_V3_POOL_ABI,
     SUSHISWAP_POOLS_ABI,
     CARBON_CONTROLLER_ABI,
-    BANCOR_V3_POOL_COLLECTION_ABI, BANCOR_V3_NETWORK_INFO_ABI,
+    BANCOR_V3_POOL_COLLECTION_ABI
 )
 from fastlane_bot.data_fetcher.pools import Pool
 
 
 @dataclass
-class Exchange(ABC, Config):
+class Exchange(ABC):
     pools: Dict[str, Pool] = field(default_factory=dict)
 
     def get_pools(self) -> List[Pool]:
@@ -146,6 +146,7 @@ class UniswapV3(Exchange):
 @dataclass
 class BancorV3(Exchange):
     exchange_name: str = "bancor_v3"
+    BNT_ADDRESS: str = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["tkn1_address"]] = pool

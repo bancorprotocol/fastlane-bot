@@ -504,6 +504,7 @@ class Manager:
             using the pool type and the provided pool information. Finally, it adds
             the pool to the corresponding exchange.
         """
+
         pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
         pool = pool_type(state=pool_info)
         self.exchanges[pool_info["exchange_name"]].add_pool(pool)
@@ -576,7 +577,6 @@ class Manager:
             key = "address"
             key_value = addr
         elif ex_name == "bancor_v3":
-            print(f"bancor_v3 event: {event}")
             key = "tkn1_address"
             key_value = event["args"]["tkn_address"] if event["args"]["tkn_address"] != self.cfg.BNT_ADDRESS else event["args"]["pool"]
 
@@ -584,7 +584,6 @@ class Manager:
         for pool in self.pool_data:
             if pool[key] == key_value and pool["exchange_name"] == ex_name:
                 pool_info = pool
-                print(f"Found pool info: {pool_info}")
                 break
 
         pool_info = self.validate_pool_info(addr, event, pool_info)

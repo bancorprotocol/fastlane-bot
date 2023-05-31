@@ -9,7 +9,7 @@ from fastlane_bot import Config
 
 
 @dataclass
-class Pool(ABC, Config):
+class Pool(ABC):
     """
     Abstract base class representing a pool.
 
@@ -307,7 +307,7 @@ class BancorV3Pool(Pool):
             Dict[str, Any]: The updated data.
         """
         event_args = event_args["args"]
-        if event_args["tkn_address"] == self.BNT_ADDRESS:
+        if event_args["tkn_address"] == '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
             data["tkn0_balance"] = event_args["newLiquidity"]
         else:
             data["tkn1_balance"] = event_args["newLiquidity"]

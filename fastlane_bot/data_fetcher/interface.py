@@ -38,6 +38,27 @@ class QueryInterface:
     state: List[Dict[str, Any]] = field(default_factory=list)
     ConfigObj: Config = None
 
+    def remove_zero_liquidity_pools(self):
+        print(f"Removing zero liquidity pools from {len(self.state)} pools")
+        uniswap_v3 = [pool for pool in self.state if pool["exchange_name"] == 'uniswap_v3' if 'liquidity' in pool and pool["liquidity"] > 0]
+        sushiswap_v2 = [pool for pool in self.state if pool["exchange_name"] == 'sushiswap_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
+        uniswap_v2 = [pool for pool in self.state if pool["exchange_name"] == 'uniswap_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
+        bancor_v2 = [pool for pool in self.state if pool["exchange_name"] == 'bancor_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
+        bancor_v3 = [pool for pool in self.state if pool["exchange_name"] == 'bancor_v3' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
+        carbon_v1 = [pool for pool in self.state if pool["exchange_name"] == 'carbon_v1']
+        assert 'BNT-FF1C/ETH-EEeE' in [pair['pair_name'] for pair in bancor_v3], "BNT-FF1C/ETH-EEeE not found in bancor_v3"
+        self.state = uniswap_v3 + sushiswap_v2 + uniswap_v2 + bancor_v2 + bancor_v3 + carbon_v1
+        print(f"Removed zero liquidity pools. {len(self.state)} pools remaining")
+        print(f"uniswap_v3: {len(uniswap_v3)}")
+        print(f"sushiswap_v2: {len(sushiswap_v2)}")
+        print(f"uniswap_v2: {len(uniswap_v2)}")
+        print(f"bancor_v2: {len(bancor_v2)}")
+        print(f"bancor_v3: {len(bancor_v3)}")
+        print(f"carbon_v1: {len(carbon_v1)}")
+
+        # for pool in self.state:
+        #     print(f"pool: {pool['exchange_name']} {pool['pair_name']} {pool['liquidity']} {pool['tkn0_balance']} {pool['tkn1_balance']} \n")
+
     @staticmethod
     def cleanup_token_key(token_key: str) -> str:
         return f"{token_key.split('-', 1)[0]}_{token_key.split('-', 1)[1]}" if len(
