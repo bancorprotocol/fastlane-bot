@@ -226,6 +226,12 @@ def run(
             start_block (int): The starting block number of the events.
             current_block (int): The current block number of the events.
         """
+        if not os.path.exists("event_data"):
+            os.makedirs("event_data")
+
+        if not os.path.exists("pool_data"):
+            os.makedirs("pool_data")
+
         if cache_latest_only:
             path = "event_data/latest.json"
         else:
