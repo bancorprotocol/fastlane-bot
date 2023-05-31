@@ -230,9 +230,12 @@ def run(
             path = "latest_event_data.json"
         else:
             path = f"{mgr.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
-        with open(path, "w") as f:
-            latest_events = [_['args'].pop('contextId', None) for _ in latest_events] and latest_events
-            f.write(json.dumps(latest_events))
+        try:
+            with open(path, "w") as f:
+                latest_events = [_['args'].pop('contextId', None) for _ in latest_events] and latest_events
+                f.write(json.dumps(latest_events))
+        except Exception as e:
+            mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
 
     def update_pools_from_events(latest_events: List[Any]) -> None:
         """
@@ -269,8 +272,11 @@ def run(
             path = "latest_pool_data.json"
         else:
             path = f"{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.pool_data))
+        try:
+            with open(path, "w") as f:
+                f.write(json.dumps(mgr.pool_data))
+        except Exception as e:
+            mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
     def parse_bancor3_rows_to_update(rows_to_update: List[Hashable]) -> Tuple[List[Hashable], List[Hashable]]:
         """
