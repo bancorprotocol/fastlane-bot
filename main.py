@@ -226,16 +226,10 @@ def run(
             start_block (int): The starting block number of the events.
             current_block (int): The current block number of the events.
         """
-        if not os.path.exists("event_data"):
-            os.makedirs("event_data")
-
-        if not os.path.exists("pool_data"):
-            os.makedirs("pool_data")
-
         if cache_latest_only:
-            path = "event_data/latest.json"
+            path = "latest_event_data.json"
         else:
-            path = f"event_data/{mgr.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
+            path = f"{mgr.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
         with open(path, "w") as f:
             latest_events = [_['args'].pop('contextId', None) for _ in latest_events] and latest_events
             f.write(json.dumps(latest_events))
@@ -272,9 +266,9 @@ def run(
             current_block (int): The current block number.
         """
         if cache_latest_only:
-            path = "pool_data/latest.json"
+            path = "latest_pool_data.json"
         else:
-            path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
+            path = f"{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
         with open(path, "w") as f:
             f.write(json.dumps(mgr.pool_data))
 
