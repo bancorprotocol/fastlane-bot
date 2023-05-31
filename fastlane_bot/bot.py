@@ -452,15 +452,15 @@ class CarbonBot(CarbonBotBase):
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
-            quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
-
-            try:
-                profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
-            except Exception as e:
-                self.ConfigObj.logger.error("[TODO CLEAN UP]{e}")
+            if src_token == 'BNT-FF1C':
                 profit = profit_src
-
-            self.ConfigObj.logger.debug(f"Profit in bnt: {profit} {cids}")
+            else:
+                try:
+                    price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                    profit = profit_src/price_src_per_bnt
+                except Exception as e:
+                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
             # candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
             contains_carbon = any(
                 self._check_if_carbon(ti['cid'])[0]
@@ -646,14 +646,14 @@ class CarbonBot(CarbonBotBase):
                     continue
 
                 cids = [ti['cid'] for ti in trade_instructions_dic]
-                quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
-
-                try:
-                    profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
-                except Exception as e:
-                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+                if src_token == 'BNT-FF1C':
                     profit = profit_src
-
+                else:
+                    try:
+                        price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                        profit = profit_src/price_src_per_bnt
+                    except Exception as e:
+                        self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
                 self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
                 try:
                     netchange = trade_instructions_df.iloc[-1]
@@ -784,14 +784,14 @@ class CarbonBot(CarbonBotBase):
                     continue
 
                 cids = [ti['cid'] for ti in trade_instructions_dic]
-                quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
-
-                try:
-                    profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
-                except Exception as e:
-                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+                if src_token == 'BNT-FF1C':
                     profit = profit_src
-
+                else:
+                    try:
+                        price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                        profit = profit_src/price_src_per_bnt
+                    except Exception as e:
+                        self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
                 self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
                 try:
                     netchange = trade_instructions_df.iloc[-1]
@@ -916,15 +916,15 @@ class CarbonBot(CarbonBotBase):
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
-            quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
-
-            try:
-                profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
-            except Exception as e:
-                self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            if src_token == 'BNT-FF1C':
                 profit = profit_src
-
-            self.ConfigObj.logger.debug(f"Profit in bnt: {profit} {cids}")
+            else:
+                try:
+                    price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                    profit = profit_src/price_src_per_bnt
+                except Exception as e:
+                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
             try:
                 netchange = trade_instructions_df.iloc[-1]
             except Exception as e:
@@ -1078,15 +1078,15 @@ class CarbonBot(CarbonBotBase):
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
-            quote_token = "ETH-EEeE" if src_token == "WETH-6Cc2" else src_token
-
-            try:
-                profit = self.db.get_bnt_price_from_tokens(profit_src, src_token)
-            except Exception as e:
-                self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            if src_token == 'BNT-FF1C':
                 profit = profit_src
-
-            self.ConfigObj.logger.debug(f"Profit in bnt: {profit} {cids}")
+            else:
+                try:
+                    price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                    profit = profit_src/price_src_per_bnt
+                except Exception as e:
+                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
             try:
                 netchange = trade_instructions_df.iloc[-1]
             except Exception as e:
