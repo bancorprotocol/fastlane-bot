@@ -49,9 +49,9 @@ class QueryInterface:
             return
 
         rework_pool_2 = [pool for pool in self.state if pool['address']=='0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852']
-        if len(rework_pool_2) > 0:
+        if len(rework_pool_1) > 0:
 
-            rework_pool_2 = rework_pool_2[0]
+            # rework_pool_2 = rework_pool_2[0]
 
             db = DatabaseManager(self.ConfigObj)
             db_pool_1 = db.get_pool(cid='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6')
@@ -71,28 +71,28 @@ class QueryInterface:
                 else:
                     print(f"{col} rework_1={rework_val_1}  ==  db_1={db_val_1}")
 
-            db_pool_2 = db.get_pool(address='0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852')
-
+            # db_pool_2 = db.get_pool(address='0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852')
+            #
             print(f"all_check_pass={all_check_pass}")
-            print()
-
-            if not db_pool_2:
-                print(f"Pool not found in DB")
-                return
-
-            check_cols = ['tkn0_balance', 'tkn1_balance', 'last_updated_block']
-            all_check_pass = True
-            for col in check_cols:
-                rework_val_2 = rework_pool_2[col]
-                db_val_2 = getattr(db_pool_2, col)
-                if rework_val_2 != db_val_2:
-                    print(f"{col} rework_2={rework_val_2}  !=  db_2={db_val_2}")
-                    all_check_pass = False
-                else:
-                    print(f"{col} rework_2={rework_val_2}  ==  db_2={db_val_2}")
-
-            print(f"all_check_pass={all_check_pass}")
-            print()
+            # print()
+            #
+            # if not db_pool_2:
+            #     print(f"Pool not found in DB")
+            #     return
+            #
+            # check_cols = ['tkn0_balance', 'tkn1_balance', 'last_updated_block']
+            # all_check_pass = True
+            # for col in check_cols:
+            #     rework_val_2 = rework_pool_2[col]
+            #     db_val_2 = getattr(db_pool_2, col)
+            #     if rework_val_2 != db_val_2:
+            #         print(f"{col} rework_2={rework_val_2}  !=  db_2={db_val_2}")
+            #         all_check_pass = False
+            #     else:
+            #         print(f"{col} rework_2={rework_val_2}  ==  db_2={db_val_2}")
+            #
+            # print(f"all_check_pass={all_check_pass}")
+            # print()
 
 
         # print(f"Removing non-crosscheck pools from {len(self.state)} pools")
