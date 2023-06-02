@@ -23,11 +23,22 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
     latest_entry_per_pool = {}
     all_events = [event for event_list in events for event in event_list]
     for event in all_events:
+        # print()
+        # print(event)
+        # print()
         key = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event)).unique_key()
-        if key not in latest_entry_per_pool:
-            latest_entry_per_pool[key] = event
-        elif event["blockNumber"] > latest_entry_per_pool[key]["blockNumber"]:
-            latest_entry_per_pool[key] = event
+        if key == 'cid':
+            key = 'id'
+        elif key == 'tkn1_address':
+            if event["args"]["pool"] != mgr.cfg.BNT_ADDRESS:
+                key = 'pool'
+            else:
+                key = 'tkn_address'
+        unique_key = event[key] if key in event else event["args"][key]
+        if unique_key not in latest_entry_per_pool:
+            latest_entry_per_pool[unique_key] = event
+        elif event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
+            latest_entry_per_pool[unique_key] = event
 
     return list(latest_entry_per_pool.values())
 

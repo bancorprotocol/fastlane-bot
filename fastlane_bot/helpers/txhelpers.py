@@ -387,7 +387,7 @@ class TxHelpers:
             )
             return hex(tx_receipt) or None
         else:
-            self.ConfigObj.logger.info(
+            print(
                 f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!"
             )
             return None
@@ -519,25 +519,29 @@ class TxHelpers:
                     base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
                 )
             )
-        except ValueError as e:
-            self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
-            if e.__class__.__name__ == "ContractLogicError":
-                self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
-                return None
-
+        except Exception as e:
+        #     self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
+        #     if e.__class__.__name__ == "ContractLogicError":
+        #         self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
+        #         return None
+        #
+            print(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
-                message = str(e)
-                split1 = message.split('maxFeePerGas: ')[1]
-                split2 = split1.split(' baseFee: ')
-                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
-                split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                transaction = self.arb_contract.functions.flashloanAndArb(
-                    routes, src_address, src_amt
-                ).build_transaction(
-                    self.build_tx(
-                        base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                try:
+                    message = str(e)
+                    split1 = message.split('maxFeePerGas: ')[1]
+                    split2 = split1.split(' baseFee: ')
+                    split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
+                    split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                    transaction = self.arb_contract.functions.flashloanAndArb(
+                        routes, src_address, src_amt
+                    ).build_transaction(
+                        self.build_tx(
+                            base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                        )
                     )
-                )
+                except Exception as e:
+                    print(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
         if test_fake_gas:
