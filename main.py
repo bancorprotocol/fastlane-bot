@@ -45,8 +45,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    # default="uniswap_v3,carbon_v1,bancor_v3",
-    default="carbon_v1,bancor_v3,uniswap_v3",
+    default="uniswap_v3,carbon_v1,bancor_v3",
+    # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
 @click.option(
@@ -332,111 +332,115 @@ def run(
     bot = None
     loop_idx = 0
     while True:
-        try:
+        # try:
 
-            # Save initial state of pool data to assert whether it has changed
-            initial_state = mgr.pool_data.copy()
+        # Save initial state of pool data to assert whether it has changed
+        initial_state = mgr.pool_data.copy()
 
-            # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            # current_block = mgr.web3.eth.blockNumber - reorg_delay
-            current_block = max([block['last_updated_block'] for block in mgr.pool_data]) if last_block != 0 else mgr.web3.eth.blockNumber
+        # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
+        # current_block = mgr.web3.eth.blockNumber - reorg_delay
+        current_block = max([block['last_updated_block'] for block in mgr.pool_data]) if last_block != 0 else mgr.web3.eth.blockNumber
 
-            # Get all events from the last block to the current block
-            start_block = (
-                max(0, current_block - (alchemy_max_block_fetch-2))
-                if last_block == 0
-                else current_block - 1
-            )
+        # Get all events from the last block to the current block
+        start_block = (
+            max(0, current_block - (alchemy_max_block_fetch-2))
+            if last_block == 0
+            else current_block - 1
+        )
 
-            if start_block >= current_block:
-                start_block = current_block - 1
+        if start_block >= current_block:
+            start_block = current_block - 1
 
-            print(f"Fetching events from {start_block} to {current_block}... {last_block}")
+        print(f"Fetching events from {start_block} to {current_block}... {last_block}")
 
-            # Get all event filters, events, and flatten them
-            events = [
+        # Get all event filters, events, and flatten them
+        events = [
+            complex_handler(event)
+            for event in [
                 complex_handler(event)
-                for event in [
-                    complex_handler(event)
-                    for event in get_all_events(
-                        get_event_filters(start_block, current_block)
-                    )
-                ]
+                for event in get_all_events(
+                    get_event_filters(start_block, current_block)
+                )
             ]
+        ]
 
-            # Filter out the latest events per pool, save them to disk, and update the pools
-            latest_events = filter_latest_events(mgr, events)
-            # latest_events = events
-            print(f"Found {len(latest_events)} new events")
-            for event in latest_events:
-                if event['address']=='0x11950d141EcB863F01007AdD7D1A342041227b58':
-                    print()
-                    print('*************** PEPE/WETH UPDATED ***************')
-                    print(event)
-                    print('*************** PEPE/WETH UPDATED ***************')
-                    print()
+        # Filter out the latest events per pool, save them to disk, and update the pools
+        latest_events = filter_latest_events(mgr, events)
+        # latest_events = events
+        print(f"Found {len(latest_events)} new events")
+        for event in latest_events:
+            if event['address']=='0x11950d141EcB863F01007AdD7D1A342041227b58':
+                print()
+                print('*************** PEPE/WETH UPDATED ***************')
+                print(event)
+                print('*************** PEPE/WETH UPDATED ***************')
+                print()
 
-                elif event['address'] == '0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852':
-                    print()
-                    print('*************** WETH/USDT UPDATED ***************')
-                    print(event)
-                    print('*************** WETH/USDT UPDATED ***************')
-                    print()
+            elif event['address'] == '0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852':
+                print()
+                print('*************** WETH/USDT UPDATED ***************')
+                print(event)
+                print('*************** WETH/USDT UPDATED ***************')
+                print()
 
-            # univ2_pools = list(set([event['address'] for event in latest_events if 'reserve0' in event['args']]))
-            # print(f"Found {len(univ2_pools)} new univ2 pools, {univ2_pools}")
+        univ2_pools = list(set([event['address'] for event in latest_events if 'pool' in event['args']]))
+        print(f"Found {len(univ2_pools)} new bancor3 pools, {univ2_pools}")
+
+        # univ2_pools = list(set([event['address'] for event in latest_events if 'reserve0' in event['args']]))
+        # print(f"Found {len(univ2_pools)} new univ2 pools, {univ2_pools}")
 
 
-            save_events_to_json(latest_events, start_block, current_block)
-            update_pools_from_events(latest_events)
+        save_events_to_json(latest_events, start_block, current_block)
+        update_pools_from_events(latest_events)
 
-            # Assert that all the pools in the event data have been updated
-            unique_pools_in_events = {event["address"] for event in latest_events}
-            unique_pools_in_pool_data = {pool["address"] for pool in mgr.pool_data}
-            if not all(pool_address in unique_pools_in_pool_data for pool_address in unique_pools_in_events):
-                mgr.cfg.logger.warning(f"Not all pools in the event data have been updated")
+        # Assert that all the pools in the event data have been updated
+        unique_pools_in_events = {event["address"] for event in latest_events}
+        unique_pools_in_pool_data = {pool["address"] for pool in mgr.pool_data}
+        if not all(pool_address in unique_pools_in_pool_data for pool_address in unique_pools_in_events):
+            mgr.cfg.logger.warning(f"Not all pools in the event data have been updated")
 
-            # If this is the first iteration, update all pools without a recent event from the contracts
-            if last_block == 0 and backdate_pools:
-                rows_to_update = mgr.get_rows_to_update(start_block)
-                bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(rows_to_update)
-                for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    update_pools_directly_from_contracts(rows_to_update)
+        # If this is the first iteration, update all pools without a recent event from the contracts
+        if last_block == 0 and backdate_pools:
+            rows_to_update = mgr.get_rows_to_update(start_block)
+            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
+            bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(rows_to_update)
+            for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
+                update_pools_directly_from_contracts(rows_to_update)
 
-            # Update the last block and write the pool data to disk for debugging, and to backup the state
-            last_block = current_block
-            write_pool_data_to_disk(current_block)
+        # Update the last block and write the pool data to disk for debugging, and to backup the state
+        last_block = current_block
+        write_pool_data_to_disk(current_block)
 
-            # Initialize the bot if it hasn't been initialized yet
-            # if bot is None:
-            del bot
-            bot = init_bot(mgr)
+        # Initialize the bot if it hasn't been initialized yet
+        # if bot is None:
+        del bot
+        bot = init_bot(mgr)
 
-            # Compare the initial state to the final state, and update the state if it has changed
-            final_state = mgr.pool_data.copy()
-            assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-            if initial_state != final_state:
-                mgr.cfg.logger.info("State has changed...")
+        # Compare the initial state to the final state, and update the state if it has changed
+        final_state = mgr.pool_data.copy()
+        assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+        if initial_state != final_state:
+            mgr.cfg.logger.info("State has changed...")
 
-            bot.db.handle_token_key_cleanup()
+        bot.db.handle_token_key_cleanup()
 
-            if loop_idx > 0:
-                bot.db.remove_zero_liquidity_pools()
+        if loop_idx > 0:
+            bot.db.remove_zero_liquidity_pools()
 
-            # Increment the loop index
-            loop_idx += 1
+        # Increment the loop index
+        loop_idx += 1
 
-            bot.run(
-                polling_interval=polling_interval,
-                flashloan_tokens=flashloan_tokens,
-                mode="single",
-                arb_mode=arb_mode,
-            )
-            time.sleep(polling_interval)
+        bot.run(
+            polling_interval=polling_interval,
+            flashloan_tokens=flashloan_tokens,
+            mode="single",
+            arb_mode=arb_mode,
+        )
+        time.sleep(polling_interval)
 
-        except Exception as e:
-            mgr.cfg.logger.error(f"Error in main loop: {e}")
-            time.sleep(polling_interval)
+        # except Exception as e:
+        #     mgr.cfg.logger.error(f"Error in main loop: {e}")
+        #     time.sleep(polling_interval)
 
 
 if __name__ == "__main__":
