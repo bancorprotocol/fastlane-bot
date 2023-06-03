@@ -43,68 +43,7 @@ class QueryInterface:
 
     def remove_zero_liquidity_pools(self):
 
-        rework_pool_1 = [pool for pool in self.state if pool['cid']=='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6'][0]
-        if len(rework_pool_1) == 0:
-            print(f"Pool not found in state")
-            return
-
-        rework_pool_2 = [pool for pool in self.state if pool['address']=='0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852']
-        if len(rework_pool_1) > 0:
-
-            # rework_pool_2 = rework_pool_2[0]
-
-            db = DatabaseManager(self.ConfigObj)
-            db_pool_1 = db.get_pool(cid='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6')
-
-            if not db_pool_1:
-                print(f"Pool not found in DB")
-                return
-
-            check_cols = ['sqrt_price_q96', 'tick','tick_spacing', 'liquidity', 'last_updated_block']
-            all_check_pass = True
-            for col in check_cols:
-                rework_val_1 = rework_pool_1[col]
-                db_val_1 = getattr(db_pool_1, col)
-                if rework_val_1 != db_val_1:
-                    print(f"{col} rework_1={rework_val_1}  !=  db_1={db_val_1}")
-                    all_check_pass = False
-                else:
-                    print(f"{col} rework_1={rework_val_1}  ==  db_1={db_val_1}")
-
-            # db_pool_2 = db.get_pool(address='0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852')
-            #
-            print(f"all_check_pass={all_check_pass}")
-            # print()
-            #
-            # if not db_pool_2:
-            #     print(f"Pool not found in DB")
-            #     return
-            #
-            # check_cols = ['tkn0_balance', 'tkn1_balance', 'last_updated_block']
-            # all_check_pass = True
-            # for col in check_cols:
-            #     rework_val_2 = rework_pool_2[col]
-            #     db_val_2 = getattr(db_pool_2, col)
-            #     if rework_val_2 != db_val_2:
-            #         print(f"{col} rework_2={rework_val_2}  !=  db_2={db_val_2}")
-            #         all_check_pass = False
-            #     else:
-            #         print(f"{col} rework_2={rework_val_2}  ==  db_2={db_val_2}")
-            #
-            # print(f"all_check_pass={all_check_pass}")
-            # print()
-
-
-        # print(f"Removing non-crosscheck pools from {len(self.state)} pools")
-        # crosscheck_cids = self.crosscheck['cid'].unique()
-        # self.state = [pool for pool in self.state if pool['cid'] in crosscheck_cids]
-
-        # assert that all cid's in crosscheck are in state'
-        # missing_cids = [cid for cid in crosscheck_cids if cid not in [pool['cid'] for pool in self.state]]
-        # if len(missing_cids) > 0:
-        #     print(f"Not all cids in crosscheck are in state {len(missing_cids)} {missing_cids}")
-
-        print(f"Removed non-crosscheck pools. {len(self.state)} pools remaining")
+        print(f"Total number of pools. {len(self.state)} before removing zero liquidity pools")
         initial_state = self.state.copy()
         uniswap_v3 = [pool for pool in self.state if pool["exchange_name"] == 'uniswap_v3' if 'liquidity' in pool and pool["liquidity"] > 0]
         sushiswap_v2 = [pool for pool in self.state if pool["exchange_name"] == 'sushiswap_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
@@ -124,26 +63,74 @@ class QueryInterface:
 
         zero_liquidity_pools = [pool for pool in initial_state if pool not in self.state]
         print(f"zero_liquidity_pools: {len(zero_liquidity_pools)}")
-        #
-        # uniswap_v3_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'uniswap_v3']
-        # sushiswap_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'sushiswap_v2']
-        # uniswap_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'uniswap_v2']
-        # bancor_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'bancor_v2']
-        # bancor_v3_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'bancor_v3']
-        # carbon_v1_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'carbon_v1']
-        #
-        # print(f"uniswap_v3_zero_liquidity_pools: {len(uniswap_v3_zero_liquidity_pools)}")
-        # print(f"sushiswap_v2_zero_liquidity_pools: {len(sushiswap_v2_zero_liquidity_pools)}")
-        # print(f"uniswap_v2_zero_liquidity_pools: {len(uniswap_v2_zero_liquidity_pools)}")
-        # print(f"bancor_v2_zero_liquidity_pools: {len(bancor_v2_zero_liquidity_pools)}")
-        # print(f"bancor_v3_zero_liquidity_pools: {len(bancor_v3_zero_liquidity_pools)}")
-        # print(f"carbon_v1_zero_liquidity_pools: {len(carbon_v1_zero_liquidity_pools)}")
-        #
-        # for pool in zero_liquidity_pools:
-        #     print(f"zero_liquidity_pool: {pool} \n")
 
-        # for pool in self.state:
-        #     print(f"pool: {pool['exchange_name']} {pool['pair_name']} {pool['liquidity']} {pool['tkn0_balance']} {pool['tkn1_balance']} \n")
+        uniswap_v3_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'uniswap_v3']
+        sushiswap_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'sushiswap_v2']
+        uniswap_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'uniswap_v2']
+        bancor_v2_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'bancor_v2']
+        bancor_v3_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'bancor_v3']
+        carbon_v1_zero_liquidity_pools = [pool for pool in zero_liquidity_pools if pool["exchange_name"] == 'carbon_v1']
+
+        print(f"uniswap_v3_zero_liquidity_pools: {len(uniswap_v3_zero_liquidity_pools)}")
+        print(f"sushiswap_v2_zero_liquidity_pools: {len(sushiswap_v2_zero_liquidity_pools)}")
+        print(f"uniswap_v2_zero_liquidity_pools: {len(uniswap_v2_zero_liquidity_pools)}")
+        print(f"bancor_v2_zero_liquidity_pools: {len(bancor_v2_zero_liquidity_pools)}")
+        print(f"bancor_v3_zero_liquidity_pools: {len(bancor_v3_zero_liquidity_pools)}")
+        print(f"carbon_v1_zero_liquidity_pools: {len(carbon_v1_zero_liquidity_pools)}")
+
+        rework_pool_1 = [pool for pool in self.state if pool['cid']=='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6']
+
+        db = DatabaseManager(self.ConfigObj)
+        db_pool_1 = db.get_pool(cid='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6')
+
+        if not db_pool_1:
+            print(f"Pool not found in DB")
+            return
+
+        if not rework_pool_1:
+            print(f"Pool not found in rework")
+            return
+
+        rework_pool_1 = rework_pool_1[0]
+
+        check_cols = ['sqrt_price_q96', 'tick','tick_spacing', 'liquidity', 'last_updated_block']
+        all_check_pass = True
+        for col in check_cols:
+            rework_val_1 = rework_pool_1[col]
+            db_val_1 = getattr(db_pool_1, col)
+            if rework_val_1 != db_val_1:
+                print(f"{col} rework_1={rework_val_1}  !=  db_1={db_val_1}")
+                all_check_pass = False
+            else:
+                print(f"{col} rework_1={rework_val_1}  ==  db_1={db_val_1}")
+
+        print(f"all_check_pass={all_check_pass}")
+
+        rework_pool_2 = [pool for pool in self.state if pool['exchange_name']=='bancor_v3' and pool['pair_name']=='BNT-FF1C/ETH-EEeE']
+        db_pool_2 = db.get_pool(exchange_name='bancor_v3', pair_name='BNT-FF1C/ETH-EEeE')
+
+        if not db_pool_2:
+            print(f"Pool not found in DB")
+            return
+
+        if not rework_pool_2:
+            print(f"Pool not found in rework")
+            return
+
+        rework_pool_2 = rework_pool_2[0]
+
+        check_cols = ['last_updated_block', 'tkn0_balance', 'tkn1_balance']
+        all_check_pass = True
+        for col in check_cols:
+            rework_val_2 = rework_pool_2[col]
+            db_val_2 = getattr(db_pool_2, col)
+            if rework_val_2 != db_val_2:
+                print(f"{col} rework_2={rework_val_2}  !=  db_2={db_val_2}")
+                all_check_pass = False
+            else:
+                print(f"{col} rework_2={rework_val_2}  ==  db_2={db_val_2}")
+
+        print(f"all_check_pass={all_check_pass}")
 
     @staticmethod
     def cleanup_token_key(token_key: str) -> str:
