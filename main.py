@@ -403,6 +403,8 @@ def run(
         if last_block == 0 and backdate_pools:
             rows_to_update = mgr.get_rows_to_update(start_block)
             rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
+            
+            # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
             bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(rows_to_update)
             for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
                 update_pools_directly_from_contracts(rows_to_update)
