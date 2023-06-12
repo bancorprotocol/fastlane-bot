@@ -12,11 +12,13 @@ from typing import Union
 from _decimal import Decimal
 
 #import fastlane_bot.config as c
-from fastlane_bot.db.models import Token, Pool
+# from fastlane_bot.db.models import Token, Pool
 
 
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
+from fastlane_bot.data_fetcher.interface import Token, Pool
+
 
 @dataclass
 class TradeInstruction:

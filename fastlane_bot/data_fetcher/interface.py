@@ -6,7 +6,7 @@ import pandas as pd
 from _decimal import Decimal
 
 from fastlane_bot.config import Config
-from fastlane_bot.db.manager import DatabaseManager
+# from fastlane_bot.db.manager import DatabaseManager
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 
@@ -77,60 +77,6 @@ class QueryInterface:
         print(f"bancor_v2_zero_liquidity_pools: {len(bancor_v2_zero_liquidity_pools)}")
         print(f"bancor_v3_zero_liquidity_pools: {len(bancor_v3_zero_liquidity_pools)}")
         print(f"carbon_v1_zero_liquidity_pools: {len(carbon_v1_zero_liquidity_pools)}")
-
-        rework_pool_1 = [pool for pool in self.state if pool['cid']=='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6']
-
-        db = DatabaseManager(self.ConfigObj)
-        db_pool_1 = db.get_pool(cid='0xa00c086bd39848389cc244a239012092df251285163ed7d97e4261d87d733cc6')
-
-        if not db_pool_1:
-            print(f"Pool not found in DB")
-            return
-
-        if not rework_pool_1:
-            print(f"Pool not found in rework")
-            return
-
-        rework_pool_1 = rework_pool_1[0]
-
-        check_cols = ['sqrt_price_q96', 'tick','tick_spacing', 'liquidity', 'last_updated_block']
-        all_check_pass = True
-        for col in check_cols:
-            rework_val_1 = rework_pool_1[col]
-            db_val_1 = getattr(db_pool_1, col)
-            if rework_val_1 != db_val_1:
-                print(f"{col} rework_1={rework_val_1}  !=  db_1={db_val_1}")
-                all_check_pass = False
-            else:
-                print(f"{col} rework_1={rework_val_1}  ==  db_1={db_val_1}")
-
-        print(f"all_check_pass={all_check_pass}")
-
-        rework_pool_2 = [pool for pool in self.state if pool['exchange_name']=='bancor_v3' and pool['pair_name']=='BNT-FF1C/ETH-EEeE']
-        db_pool_2 = db.get_pool(exchange_name='bancor_v3', pair_name='BNT-FF1C/ETH-EEeE')
-
-        if not db_pool_2:
-            print(f"Pool not found in DB")
-            return
-
-        if not rework_pool_2:
-            print(f"Pool not found in rework")
-            return
-
-        rework_pool_2 = rework_pool_2[0]
-
-        check_cols = ['last_updated_block', 'tkn0_balance', 'tkn1_balance']
-        all_check_pass = True
-        for col in check_cols:
-            rework_val_2 = rework_pool_2[col]
-            db_val_2 = getattr(db_pool_2, col)
-            if rework_val_2 != db_val_2:
-                print(f"{col} rework_2={rework_val_2}  !=  db_2={db_val_2}")
-                all_check_pass = False
-            else:
-                print(f"{col} rework_2={rework_val_2}  ==  db_2={db_val_2}")
-
-        print(f"all_check_pass={all_check_pass}")
 
     @staticmethod
     def cleanup_token_key(token_key: str) -> str:

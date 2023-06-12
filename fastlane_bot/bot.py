@@ -51,7 +51,7 @@ from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
 
-from fastlane_bot.db.manager import DatabaseManager
+# from fastlane_bot.db.manager import DatabaseManager
 # from fastlane_bot.db.models import Pool, Token
 from fastlane_bot.helpers import (
     TxSubmitHandler, TxSubmitHandlerBase,
@@ -62,9 +62,10 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-import fastlane_bot.db.models as models
+# import fastlane_bot.db.models as models
 from fastlane_bot.config import Config
-from .db.mock_model_managers import MockDatabaseManager
+from .data_fetcher.interface import QueryInterface
+# from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
 from .utils import num_format, log_format, num_format_float
 
@@ -94,7 +95,7 @@ class CarbonBotBase():
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
-    db: DatabaseManager = field(init=False)
+    db: QueryInterface = field(init=False)
     TxSubmitHandler: any = None
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
@@ -147,13 +148,9 @@ class CarbonBotBase():
                           TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         if self.ConfigObj.DATABASE == self.ConfigObj.DATABASE_UNITTEST:
-            self.db = MockDatabaseManager(ConfigObj=self.ConfigObj)
+            self.db = QueryInterface(ConfigObj=self.ConfigObj)
         else:
-            self.db = DatabaseManager(ConfigObj=self.ConfigObj)
-        # if self.db is None:
-        #     self.db = DatabaseManager(
-        #         data=self.genesis_data, ConfigObj=self.ConfigObj
-        #     )
+            self.db = QueryInterface(ConfigObj=self.ConfigObj)
 
     @property
     def C(self) -> Any:

@@ -30,7 +30,7 @@ from web3.types import TxParams, TxReceipt
 
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 #from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.db.models import Token, Pool
+# from fastlane_bot.db.models import Token, Pool
 #import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
