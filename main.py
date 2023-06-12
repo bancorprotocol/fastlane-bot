@@ -339,6 +339,7 @@ def run(
         ), "QueryInterface not initialized correctly"
         return bot
 
+    bot = None
     loop_idx = last_block = 0
     while True:
         try:
