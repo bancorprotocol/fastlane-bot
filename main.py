@@ -328,10 +328,7 @@ def run(
             The bot object.
         """
         mgr.cfg.logger.info("Initializing the bot...")
-        crosscheck = pd.read_csv(
-            f"fastlane_bot/data/pools_crosscheck.csv", low_memory=False
-        )
-        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data, crosscheck=crosscheck)
+        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data)
         bot = CarbonBot(ConfigObj=mgr.cfg)
         bot.db = db
         assert isinstance(
