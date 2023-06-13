@@ -8,15 +8,8 @@ __VERSION__ = "1.2"
 __DATE__="02/May/2023"
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Any
 from _decimal import Decimal
-
-#import fastlane_bot.config as c
-# from fastlane_bot.db.models import Token, Pool
-
-
-# from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.config import Config
 from fastlane_bot.data_fetcher.interface import Token, Pool
 
 
@@ -70,7 +63,7 @@ class TradeInstruction:
     __VERSION__=__VERSION__
     __DATE__=__DATE__
     
-    ConfigObj: Config
+    ConfigObj: Any
     cid: str
     tknin: str
     amtin: Union[int, Decimal, float]
