@@ -102,12 +102,12 @@ def main(
         dbfs_path (str): The Databricks logging path.
     """
     # Set config
-    # if config and config == "tenderly":
-    #     cfg = Config.new(config=Config.CONFIG_TENDERLY)
-    #     cfg.logger.info("Using Tenderly config")
-    # else:
-    cfg = Config.new(config=Config.CONFIG_MAINNET)
-    cfg.logger.info("Using mainnet config")
+    if config and config == "tenderly":
+        cfg = Config.new(config=Config.CONFIG_TENDERLY)
+        cfg.logger.info("Using Tenderly config")
+    else:
+        cfg = Config.new(config=Config.CONFIG_MAINNET)
+        cfg.logger.info("Using mainnet config")
 
     # Set external exchanges
     exchanges = exchanges.split(",")
