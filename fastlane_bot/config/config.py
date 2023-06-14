@@ -17,6 +17,8 @@ from .connect import EthereumNetwork
 
 load_dotenv()
 TENDERLY_FORK_ID = os.environ.get("TENDERLY_FORK_ID")
+if TENDERLY_FORK_ID is None:
+    TENDERLY_FORK_ID = ''
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 PROVIDER_URL = f'https://rpc.tenderly.co/fork/{TENDERLY_FORK_ID}' if TENDERLY_FORK_ID != '' else f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 NETWORK_ID = 'mainnet' if TENDERLY_FORK_ID == '' else 'tenderly'
