@@ -340,14 +340,11 @@ def run(
         initial_state = mgr.pool_data.copy()
 
         # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-        current_block = max([block['last_updated_block'] for block in mgr.pool_data]) if last_block != 0 else mgr.web3.eth.blockNumber - reorg_delay
+        start_block = max([block['last_updated_block'] for block in mgr.pool_data]) if last_block != 0 else \
+            mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
 
         # Get all events from the last block to the current block
-        start_block = (
-            max(0, current_block - (alchemy_max_block_fetch-2))
-            if last_block == 0
-            else current_block - 1
-        )
+        current_block = mgr.web3.eth.blockNumber - reorg_delay
 
         mgr.cfg.logger.info(f"Fetching events from {start_block} to {current_block}... {last_block}")
 
