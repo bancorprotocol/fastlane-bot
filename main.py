@@ -22,7 +22,7 @@ load_dotenv()
 @click.command()
 @click.option(
     "--cache_latest_only",
-    default=False,
+    default=True,
     type=bool,
     help="Set to True for production. Set to False for " "testing / debugging",
 )
