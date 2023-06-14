@@ -22,7 +22,7 @@ load_dotenv()
 @click.command()
 @click.option(
     "--cache_latest_only",
-    default=True,
+    default=False,
     type=bool,
     help="Set to True for production. Set to False for " "testing / debugging",
 )
@@ -66,6 +66,7 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
+    # default='data/',
     default='/dbfs/FileStore/tables/carbonbot/logs/',
     help="The Databricks logging path.",
 )
@@ -239,6 +240,8 @@ def run(
         if cache_latest_only:
             path = f"{dbfs_path}latest_event_data.json"
         else:
+            if not os.path.isdir("event_data"):
+                os.mkdir("event_data")
             path = f"event_data/{mgr.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
         try:
             with open(path, "w") as f:
@@ -281,6 +284,8 @@ def run(
         if cache_latest_only:
             path = f"{dbfs_path}latest_pool_data.json"
         else:
+            if not os.path.isdir("pool_data"):
+                os.mkdir("pool_data")
             path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
         try:
             with open(path, "w") as f:
