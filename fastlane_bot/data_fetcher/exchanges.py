@@ -4,7 +4,6 @@ from typing import Dict, List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot import Config
 from fastlane_bot.data.abi import (
     UNISWAP_V2_POOL_ABI,
     UNISWAP_V3_POOL_ABI,
