@@ -227,7 +227,11 @@ class QueryInterface:
     def get_token(self, key: str) -> Any:
         # method implementation...
         if "-" in key:
-            return [tkn for tkn in self.get_tokens() if tkn.key == key][0]
+            try:
+                return [tkn for tkn in self.get_tokens() if tkn.key == key][0]
+            except IndexError:
+                print(f"Token not found: {key}")
+                return None
         elif key.startswith("0x"):
             return [tkn for tkn in self.get_tokens() if tkn.address == key][0]
         else:
