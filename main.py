@@ -44,7 +44,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
+    default="uniswap_v3,uniswap_v2,sushiswap_v2,carbon_v1,bancor_v3",
     # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
@@ -339,7 +339,7 @@ def run(
             The bot object.
         """
         mgr.cfg.logger.info("Initializing the bot...")
-        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data, uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings)
+        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data, uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings, exchanges=mgr.exchanges)
         bot = CarbonBot(ConfigObj=mgr.cfg)
         bot.db = db
         assert isinstance(
@@ -419,7 +419,9 @@ def run(
             if loop_idx > 0:
                 bot.db.remove_zero_liquidity_pools()
 
-            bot.db.remove_faulty_token_pools()
+            # bot.db.remove_faulty_token_pools()
+            bot.db.remove_unsupported_exchanges()
+            # bot.db.select_random_pools()
 
             # Increment the loop index
             loop_idx += 1

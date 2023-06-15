@@ -42,6 +42,14 @@ class QueryInterface:
     ConfigObj: Config = None
     crosscheck: Optional[pd.DataFrame] = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    exchanges: List[str] = field(default_factory=list)
+
+    def remove_unsupported_exchanges(self):
+        print(f"Total number of pools. {len(self.state)} before removing unsupported exchanges")
+        initial_state = self.state.copy()
+        self.state = [pool for pool in self.state if pool["exchange_name"] in self.exchanges]
+
+        print(f"Removed {len(initial_state) - len(self.state)}unsupported exchanges. {len(self.state)} pools remaining")
 
     def remove_zero_liquidity_pools(self):
 

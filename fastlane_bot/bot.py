@@ -1441,8 +1441,8 @@ class CarbonBot(CarbonBotBase):
                     CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
                     tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode)
                     if tx_hash:
-                        self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
-                        self.db.update_recently_traded_pools(cids)
+                        if tx_hash[0]:
+                            self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
                     time.sleep(self.polling_interval)
                 except self.NoArbAvailable as e:
@@ -1452,8 +1452,11 @@ class CarbonBot(CarbonBotBase):
                     time.sleep(self.polling_interval)
         else:
             try:
+
                 tx_hash = self._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode)
-                self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                if tx_hash:
+                    if tx_hash[0]:
+                        self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
             except self.NoArbAvailable as e:
                 self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
             except Exception as e:
