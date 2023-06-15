@@ -40,11 +40,17 @@ class QueryInterface:
     state: List[Dict[str, Any]] = field(default_factory=list)
     ConfigObj: Config = None
     crosscheck: Optional[pd.DataFrame] = None
+    uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
 
     def remove_zero_liquidity_pools(self):
 
         print(f"Total number of pools. {len(self.state)} before removing zero liquidity pools")
         initial_state = self.state.copy()
+
+        # remove uniswap v2 pools not found in uniswap_v2_event_mappings
+        self.state = [pool for pool in self.state if pool["exchange_name"] != 'uniswap_v2' or pool["pair_name"] in self.uniswap_v2_event_mappings]
+        print(f"Removed uniswap v2 pools not found in uniswap_v2_event_mappings. {len(self.state)} pools remaining")
+
         uniswap_v3 = [pool for pool in self.state if pool["exchange_name"] == 'uniswap_v3' if 'liquidity' in pool and pool["liquidity"] > 0]
         sushiswap_v2 = [pool for pool in self.state if pool["exchange_name"] == 'sushiswap_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]
         uniswap_v2 = [pool for pool in self.state if pool["exchange_name"] == 'uniswap_v2' if 'tkn0_balance' in pool and pool["tkn0_balance"] > 0]

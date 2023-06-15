@@ -128,6 +128,9 @@ def main(
         uniswap_v2_event_mappings = pd.read_csv(
             f"fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
         )
+        uniswap_v2_event_mappings = {
+            k: v for k, v in uniswap_v2_event_mappings[["address", "exchange"]].values
+        }
     except pd.errors.ParserError:
         cfg.logger.error("Error parsing the CSV file")
         raise
@@ -145,7 +148,7 @@ def main(
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,
         alchemy_max_block_fetch=alchemy_max_block_fetch,
-        uniswap_v2_event_mappings=uniswap_v2_event_mappings.to_dict(orient="records"),
+        uniswap_v2_event_mappings=uniswap_v2_event_mappings,
     )
 
     # Add initial pools for each row in the static_pool_data
@@ -330,7 +333,7 @@ def run(
             The bot object.
         """
         mgr.cfg.logger.info("Initializing the bot...")
-        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data)
+        db = QueryInterface(ConfigObj=mgr.cfg, state=mgr.pool_data, uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings)
         bot = CarbonBot(ConfigObj=mgr.cfg)
         bot.db = db
         assert isinstance(

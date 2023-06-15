@@ -40,7 +40,7 @@ class Manager:
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     SUPPORTED_EXCHANGES: List[str] = None
-    uniswap_v2_event_mappings: List[Dict[str, str]] = field(default_factory=list)
+    uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
@@ -270,9 +270,12 @@ class Manager:
 
         if exchange_name == "uniswap_v2":
             exchange_name = self.uniswap_v2_event_mappings[address] if address in self.uniswap_v2_event_mappings else None
-            if exchange_name is None:
+
+            if exchange_name is None or exchange_name not in self.exchanges:
                 print(f"WARNING: Uniswap V2 event is not mapped/supported for address: {address}")
                 return None
+            else:
+                print(f"INFO: Uniswap V2 event is mapped to {exchange_name} for address: {address}")
 
         # Get pool contract
         pool_contract = self.pool_contracts[exchange_name].get(
@@ -344,12 +347,20 @@ class Manager:
 
         """
         # Get or Create ERC20 contracts for each token
-        t0_symbol, t0_decimals = self.get_tkn_symbol_and_decimals(
+        tkns = self.get_tkn_symbol_and_decimals(
             self.web3, self.erc20_contracts, self.cfg, self.web3.toChecksumAddress(tkn0_address)
         )
-        t1_symbol, t1_decimals = self.get_tkn_symbol_and_decimals(
+        if tkns:
+            t0_symbol, t0_decimals = tkns
+        else:
+            return None
+        tkns = self.get_tkn_symbol_and_decimals(
             self.web3, self.erc20_contracts, self.cfg, self.web3.toChecksumAddress(tkn1_address)
         )
+        if tkns:
+            t1_symbol, t1_decimals = tkns
+        else:
+            return None
 
         # Generate pool info
         pool_info = {
