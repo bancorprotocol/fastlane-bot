@@ -21,7 +21,7 @@ load_dotenv()
 @click.command()
 @click.option(
     "--cache_latest_only",
-    default=True,
+    default=False,
     type=bool,
     help="Set to True for production. Set to False for " "testing / debugging",
 )
@@ -44,8 +44,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
-    # default="carbon_v1,bancor_v3,uniswap_v3",
+    # default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
+    default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
 @click.option(
