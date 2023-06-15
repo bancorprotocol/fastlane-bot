@@ -44,10 +44,11 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    # default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
-    default="carbon_v1,bancor_v3,uniswap_v3",
+    default="carbon_v1,bancor_v3,uniswap_v3,sushiswap_v2,uniswap_v2",
+    # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
+# 2.5528
 @click.option(
     "--polling_interval",
     default=12,
@@ -60,7 +61,7 @@ load_dotenv()
 )
 @click.option(
     "--reorg_delay",
-    default=2,
+    default=0,
     help="Number of blocks delayed to avoid reorgs",
 )
 @click.option(
@@ -201,17 +202,21 @@ def run(
         dbfs_path (str): The path to the DBFS directory.
     """
 
-    def get_event_filters(start_block: int, current_block: int) -> Any:
+    def get_event_filters(start_block: int, current_block: int, reorg_delay: int) -> Any:
         """
         Creates event filters for the specified block range.
 
         Args:
             start_block (int): The starting block number for the event filters.
             current_block (int): The current block number for the event filters.
+            reorg_delay (int): The number of blocks to wait to avoid reorgs.
 
         Returns:
             Any: A list of event filters.
         """
+        if reorg_delay == 0:
+            current_block = 'latest'
+
         return Parallel(n_jobs=n_jobs, backend="threading")(
             delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
             for event in mgr.events
@@ -356,7 +361,7 @@ def run(
             initial_state = mgr.pool_data.copy()
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            start_block = max([block['last_updated_block'] for block in mgr.pool_data]) if last_block != 0 else \
+            start_block = max([block['last_updated_block']-1 for block in mgr.pool_data]) if last_block != 0 else \
                 mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
 
             # Get all events from the last block to the current block
@@ -370,7 +375,7 @@ def run(
                 for event in [
                     complex_handler(event)
                     for event in get_all_events(
-                        get_event_filters(start_block, current_block)
+                        get_event_filters(start_block, current_block, reorg_delay)
                     )
                 ]
             ]
