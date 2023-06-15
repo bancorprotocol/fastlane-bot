@@ -40,6 +40,7 @@ class Manager:
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     SUPPORTED_EXCHANGES: List[str] = None
+    uniswap_v2_event_mappings: List[Dict[str, str]] = field(default_factory=list)
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
@@ -266,6 +267,12 @@ class Manager:
         """
         if exchange_name is None:
             exchange_name = self.exchange_name_from_event(event)
+
+        if exchange_name == "uniswap_v2":
+            exchange_name = self.uniswap_v2_event_mappings[address] if address in self.uniswap_v2_event_mappings else None
+            if exchange_name is None:
+                print(f"WARNING: Uniswap V2 event is not mapped/supported for address: {address}")
+                return None
 
         # Get pool contract
         pool_contract = self.pool_contracts[exchange_name].get(

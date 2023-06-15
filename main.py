@@ -44,8 +44,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    # default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
-    default="carbon_v1,bancor_v3,uniswap_v3",
+    default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
+    # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
 @click.option(
@@ -125,6 +125,9 @@ def main(
         static_pool_data = static_pool_data[
             static_pool_data["exchange_name"].isin(exchanges)
         ]
+        uniswap_v2_event_mappings = pd.read_csv(
+            f"fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
+        )
     except pd.errors.ParserError:
         cfg.logger.error("Error parsing the CSV file")
         raise
@@ -142,6 +145,7 @@ def main(
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,
         alchemy_max_block_fetch=alchemy_max_block_fetch,
+        uniswap_v2_event_mappings=uniswap_v2_event_mappings.to_dict(orient="records"),
     )
 
     # Add initial pools for each row in the static_pool_data
