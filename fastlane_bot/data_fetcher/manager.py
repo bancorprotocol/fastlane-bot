@@ -41,6 +41,7 @@ class Manager:
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     SUPPORTED_EXCHANGES: List[str] = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    unmapped_uni2_events: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
@@ -272,7 +273,9 @@ class Manager:
             exchange_name = self.uniswap_v2_event_mappings[address] if address in self.uniswap_v2_event_mappings else None
 
             if exchange_name is None or exchange_name not in self.exchanges:
-                print(f"WARNING: Uniswap V2 event is not mapped/supported for address: {address}")
+                print(f"WARNING: exchange_name={exchange_name} event is not mapped/supported for address: {address}")
+                if exchange_name is None:
+                    self.unmapped_uni2_events.append(f"https://etherscan.io/address/{address}")
                 return None
             else:
                 print(f"INFO: Uniswap V2 event is mapped to {exchange_name} for address: {address}")

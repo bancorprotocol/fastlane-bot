@@ -44,8 +44,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    # default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
-    default="carbon_v1,bancor_v3,uniswap_v3",
+    default="uniswap_v3,uniswap_v2,carbon_v1,bancor_v3",
+    # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
 @click.option(
@@ -298,6 +298,12 @@ def run(
         except Exception as e:
             mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
+        if not os.path.isdir("unmapped_events"):
+            os.mkdir("unmapped_events")
+        path = f"unmapped_events/missing_{current_block}.json"
+        with open(path, "w") as f:
+            f.write(json.dumps(mgr.unmapped_uni2_events))
+
     def parse_bancor3_rows_to_update(rows_to_update: List[Hashable]) -> Tuple[List[Hashable], List[Hashable]]:
         """
         Parses the rows to update for Bancor v3 pools.
@@ -407,10 +413,13 @@ def run(
                 mgr.cfg.logger.info("State has changed...")
 
             bot.db.handle_token_key_cleanup()
+            bot.db.remove_unmapped_uniswap_v2_pools()
 
             # Remove zero liquidity pools
             if loop_idx > 0:
                 bot.db.remove_zero_liquidity_pools()
+
+            bot.db.remove_faulty_token_pools()
 
             # Increment the loop index
             loop_idx += 1
