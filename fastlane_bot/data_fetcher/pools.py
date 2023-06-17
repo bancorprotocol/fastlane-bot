@@ -376,6 +376,7 @@ class CarbonV1Pool(Pool):
             Dict[str, Any]: The updated data.
         """
         event_type = event_args["event"]
+        print(f"\n *********** [pools.update_from_event] event_type: {event_type}, event_args: {event_args}, data: {data} *********** \n")
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
         for key, value in data.items():
             self.state[key] = value
@@ -417,7 +418,7 @@ class CarbonV1Pool(Pool):
 
         Returns:
             Tuple[List[int], List[int]]: The orders.
-
+['carbon_v1', 'bancor_v3', 'uniswap_v3', 'uniswap_v2']_17498741_17498743.json
         """
         if event_type != "StrategyDeleted":
             order0 = event_args["args"].get("order0")

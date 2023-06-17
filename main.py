@@ -33,7 +33,8 @@ load_dotenv()
 )
 @click.option(
     "--static_pool_data_filename",
-    default="static_pool_data",
+    # default="static_pool_data",
+    default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
 @click.option("--arb_mode", default="single", type=str, help="See arb_mode in bot.py")
@@ -44,11 +45,10 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,sushiswap_v2,uniswap_v2",
+    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2",
     # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
-# 2.5528
 @click.option(
     "--polling_interval",
     default=12,
@@ -56,17 +56,18 @@ load_dotenv()
 )
 @click.option(
     "--alchemy_max_block_fetch",
-    default=2000,
+    default=10,
     help="Max number of blocks to fetch from alchemy",
 )
 @click.option(
     "--reorg_delay",
-    default=0,
+    default=2,
     help="Number of blocks delayed to avoid reorgs",
 )
 @click.option(
     "--dbfs_path",
-    default='/dbfs/FileStore/tables/carbonbot/logs/',
+    # default='/dbfs/FileStore/tables/carbonbot/logs/',
+    default='',
     help="The Databricks logging path.",
 )
 def main(
@@ -106,7 +107,9 @@ def main(
         cfg = Config.new(config=Config.CONFIG_TENDERLY)
         cfg.logger.info("Using Tenderly config")
     else:
-        cfg = Config.new(config=Config.CONFIG_MAINNET)
+        cfg = Config.new(config=Config.CONFIG_MAINNET,
+                         # loglevel=Config.LOGLEVEL_DEBUG
+                         )
         cfg.logger.info("Using mainnet config")
 
     # Set external exchanges
@@ -132,6 +135,7 @@ def main(
         uniswap_v2_event_mappings = {
             k: v for k, v in uniswap_v2_event_mappings[["address", "exchange"]].values
         }
+        tokens = pd.read_csv(f"fastlane_bot/data/tokens.csv", low_memory=False)
     except pd.errors.ParserError:
         cfg.logger.error("Error parsing the CSV file")
         raise
@@ -150,6 +154,7 @@ def main(
         SUPPORTED_EXCHANGES=exchanges,
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
+        tokens=tokens.to_dict(orient="records"),
     )
 
     # Add initial pools for each row in the static_pool_data
@@ -305,7 +310,11 @@ def run(
 
         if not os.path.isdir("unmapped_events"):
             os.mkdir("unmapped_events")
-        path = f"unmapped_events/missing_{current_block}.json"
+
+        if cache_latest_only:
+            path = f"{dbfs_path}missing_events.json"
+        else:
+            path = f"unmapped_events/missing_{current_block}.json"
         with open(path, "w") as f:
             f.write(json.dumps(mgr.unmapped_uni2_events))
 
@@ -361,7 +370,7 @@ def run(
             initial_state = mgr.pool_data.copy()
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            start_block = max([block['last_updated_block']-1 for block in mgr.pool_data]) if last_block != 0 else \
+            start_block = max([block['last_updated_block'] for block in mgr.pool_data])-reorg_delay if last_block != 0 else \
                 mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
 
             # Get all events from the last block to the current block
@@ -384,14 +393,11 @@ def run(
             latest_events = filter_latest_events(mgr, events)
             mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
+            # Save the latest events to disk
             save_events_to_json(latest_events, start_block, current_block)
-            update_pools_from_events(latest_events)
 
-            # Assert that all the pools in the event data have been updated
-            unique_pools_in_events = {event["address"] for event in latest_events}
-            unique_pools_in_pool_data = {pool["address"] for pool in mgr.pool_data}
-            if not all(pool_address in unique_pools_in_pool_data for pool_address in unique_pools_in_events):
-                mgr.cfg.logger.warning(f"Not all pools in the event data have been updated")
+            # Update the pools from the latest events
+            update_pools_from_events(latest_events)
 
             # If this is the first iteration, update all pools without a recent event from the contracts
             if last_block == 0 and backdate_pools:
@@ -403,9 +409,21 @@ def run(
                 for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
                     update_pools_directly_from_contracts(rows_to_update)
 
+            # Update the pool data on disk
+            rows_to_update = []
+            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
+            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/USDC-eB48' and pool['exchange_name'] == 'bancor_v3']
+            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/WBTC-C599' and pool['exchange_name'] == 'bancor_v3']
+            update_pools_directly_from_contracts(rows_to_update)
+
             # Update the last block and write the pool data to disk for debugging, and to backup the state
             last_block = current_block
             write_pool_data_to_disk(current_block)
+
+            # check if any duplicate cid's exist in the pool data
+            mgr.deduplicate_pool_data()
+            cids = [pool['cid'] for pool in mgr.pool_data]
+            assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
 
             # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
             del bot
@@ -424,20 +442,20 @@ def run(
             # Remove zero liquidity pools
             if loop_idx > 0:
                 bot.db.remove_zero_liquidity_pools()
+                bot.db.remove_unsupported_exchanges()
 
-            bot.db.remove_unsupported_exchanges()
+                # Run the bot
+                bot.run(
+                    polling_interval=polling_interval,
+                    flashloan_tokens=flashloan_tokens,
+                    mode="single",
+                    arb_mode=arb_mode,
+                )
 
             # Increment the loop index
             loop_idx += 1
 
-            # Run the bot
-            bot.run(
-                polling_interval=polling_interval,
-                flashloan_tokens=flashloan_tokens,
-                mode="single",
-                arb_mode=arb_mode,
-            )
-
+            # break
             # Sleep for the polling interval
             time.sleep(polling_interval)
 

@@ -62,3 +62,6 @@ dist/
 # Ignore all files in the .coverage.* directory
 .coverage.*
 fastlane_bot/data/combined_tables_old.csv
+latest_event_data.json
+latest_pool_data.json
+missing_events.json

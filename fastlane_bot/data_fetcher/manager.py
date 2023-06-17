@@ -42,6 +42,7 @@ class Manager:
     SUPPORTED_EXCHANGES: List[str] = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
+    tokens: List[Dict[str, str]] = field(default_factory=dict)
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
@@ -215,6 +216,20 @@ class Manager:
         """
 
         cid = strategy[0]
+        if cid == '20416942015256307807802476445906092687539':
+            print("\n **********************************************")
+            print(f"CID DELETED!!!!")
+            print(" **********************************************\n")
+            print("\n **********************************************")
+            print(f"CID DELETED!!!!")
+            print(" **********************************************\n")
+            print("\n **********************************************")
+            print(f"CID DELETED!!!!")
+            print(" **********************************************\n")
+            print("\n **********************************************")
+            print(f"CID DELETED!!!!")
+            print(" **********************************************\n")
+
         order0, order1 = strategy[3][0], strategy[3][1]
         tkn0_address, tkn1_address = self.web3.toChecksumAddress(
             strategy[2][0]
@@ -426,6 +441,8 @@ class Manager:
         """
 
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
+            start_time = time.time()
+            print("Updating carbon pools w/ multicall...")
             with brownie.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
 
                 # Create a CarbonController contract object
@@ -456,15 +473,25 @@ class Manager:
                     carbon_controller.strategiesByPair(*pair) for pair in all_pairs
                 ]
 
+                # Log the time taken for the above operations
+                print(f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds")
+
+            start_time = time.time()
+
             # expand strategies_by_pair
             strategies_by_pair = [
                 s for strat in strategies_by_pair if strat for s in strat if s
             ]
 
+
+
             # Create pool info for each strategy
             for strategy in strategies_by_pair:
                 if len(strategy) > 0:
                     self.add_pool_info_from_strategy(strategy)
+
+            # Log the time taken for the above operations
+            print(f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds")
 
         return [
             i
@@ -506,6 +533,9 @@ class Manager:
             return "BNT", 18
         if addr in [cfg.USDC_ADDRESS]:
             return "USDC", 6
+        if addr in [add["address"] for add in self.tokens]:
+            record = [add for add in self.tokens if add["address"] == addr][0]
+            return record["symbol"], int(record["decimals"])
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
         try:
             return contract.functions.symbol().call(), contract.functions.decimals().call()
@@ -599,6 +629,7 @@ class Manager:
             key_value = addr
         elif ex_name == "bancor_v3":
             key = "tkn1_address"
+            print(f"bancor v3 event: {event}")
             key_value = event["args"]["tkn_address"] if event["args"]["tkn_address"] != self.cfg.BNT_ADDRESS else event["args"]["pool"]
 
         pool_info = None
@@ -615,12 +646,31 @@ class Manager:
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info) or {}
         )
+        if event['event'] == 'StrategyDeleted':
+            cid = event['args']['id']
+            self.pool_data = [p for p in self.pool_data if p['cid'] != cid]
+            self.exchanges['carbon_v1'].delete_strategy(event['args']['id'])
+            return
 
         # Find the corresponding pool in the list and update its information
         for i, p in enumerate(self.pool_data):
             if p["cid"] == pool_info["cid"]:
                 self.pool_data[i].update(data)
                 break
+
+    def deduplicate_pool_data(self) -> None:
+        """
+        Deduplicate the pool data.
+
+        Notes:
+            The method deduplicates the pool data by removing duplicate pools
+            based on the pool address and exchange name.
+        """
+        # find duplicate 'cid' and select the most recent one by 'last_updated_block'
+        self.pool_data = sorted(self.pool_data, key=lambda x: x['last_updated_block'], reverse=True)
+        seen = set()
+        no_duplicates = [d for d in self.pool_data if d['cid'] not in seen and not seen.add(d['cid'])]
+        self.pool_data = no_duplicates
 
     def update_from_pool_info(
             self, pool_info: Optional[Dict[str, Any]] = None

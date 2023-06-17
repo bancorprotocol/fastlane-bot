@@ -199,6 +199,9 @@ class CarbonV1(Exchange):
         else:
             return event["args"]["token1"]
 
+    def delete_strategy(self, id: str):
+        self.pools.pop(id)
+
 
 class ExchangeFactory:
     def __init__(self):
