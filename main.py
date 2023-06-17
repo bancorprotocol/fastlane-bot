@@ -66,8 +66,8 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
-    # default='/dbfs/FileStore/tables/carbonbot/logs/',
-    default='',
+    default='/dbfs/FileStore/tables/carbonbot/logs/',
+    # default='',
     help="The Databricks logging path.",
 )
 def main(
