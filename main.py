@@ -66,8 +66,8 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
-    default='/dbfs/FileStore/tables/carbonbot/logs/',
-    # default='',
+    # default='/dbfs/FileStore/tables/carbonbot/logs/',
+    default='',
     help="The Databricks logging path.",
 )
 def main(
@@ -308,15 +308,14 @@ def run(
         except Exception as e:
             mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
-        if not os.path.isdir("unmapped_events"):
-            os.mkdir("unmapped_events")
-
-        if cache_latest_only:
-            path = f"{dbfs_path}missing_events.json"
-        else:
-            path = f"unmapped_events/missing_{current_block}.json"
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.unmapped_uni2_events))
+        # if cache_latest_only:
+        #     path = f"{dbfs_path}missing_events.json"
+        # else:
+        #     if not os.path.isdir("unmapped_events"):
+        #         os.mkdir("unmapped_events")
+        #     path = f"unmapped_events/missing_{current_block}.json"
+        # with open(path, "w") as f:
+        #     f.write(json.dumps(mgr.unmapped_uni2_events))
 
     def parse_bancor3_rows_to_update(rows_to_update: List[Hashable]) -> Tuple[List[Hashable], List[Hashable]]:
         """
