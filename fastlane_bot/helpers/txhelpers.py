@@ -306,7 +306,7 @@ class TxHelpers:
         current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
 
         if verbose:
-            self.ConfigObj.logger.info("Found a trade. Executing...")
+            self.ConfigObj.logger.info("Found a trade. Validating...")
             self.ConfigObj.logger.debug(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
 

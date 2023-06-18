@@ -1198,6 +1198,7 @@ class CarbonBot(CarbonBotBase):
         if result == self.XS_ARBOPPS:
             return r
         if r == None or len(r) == 0:
+            self.ConfigObj.logger.info(f"No eligible arb opportunities.")
             return None
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
