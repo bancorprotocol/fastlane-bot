@@ -47,6 +47,7 @@ __DATE__ = "03/May/2023"
 import itertools
 import time
 from dataclasses import dataclass, InitVar, asdict, field
+import random
 from typing import Any, Union, Optional
 from typing import List, Dict, Tuple
 from _decimal import Decimal
@@ -669,7 +670,7 @@ class CarbonBot(CarbonBotBase):
                     condition_zeros_one_token = max(netchange) < 1e-4
                     self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                    if condition_zeros_one_token:  # candidate regardless if profitable
+                    if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
                         candidates += [
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
@@ -807,7 +808,7 @@ class CarbonBot(CarbonBotBase):
                     condition_zeros_one_token = max(netchange) < 1e-4
                     self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                    if condition_zeros_one_token:  # candidate regardless if profitable
+                    if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
                         candidates += [
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
@@ -933,7 +934,7 @@ class CarbonBot(CarbonBotBase):
                 condition_zeros_one_token = max(netchange) < 1e-4
                 self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                if condition_zeros_one_token:  # candidate regardless if profitable
+                if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
                     candidates += [
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
@@ -1095,7 +1096,7 @@ class CarbonBot(CarbonBotBase):
                 condition_zeros_one_token = max(netchange) < 1e-4
                 self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
 
-                if condition_zeros_one_token:  # candidate regardless if profitable
+                if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
                     candidates += [
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
@@ -1155,7 +1156,7 @@ class CarbonBot(CarbonBotBase):
     AM_MULTI_TRIANGLE = "multi_triangle"
 
     def _run(
-            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode: str = None
+            self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode: str = None, randomizer=True
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Working-level entry point for run(), performing the actual execution.
@@ -1177,22 +1178,30 @@ class CarbonBot(CarbonBotBase):
             The transaction hash.
         """
         ## Find arbitrage opportunities
+        random_mode = self.AO_CANDIDATES if randomizer else None
+
+        ## Find arbitrage opportunities
         arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
         if arb_mode == self.AM_REGULAR:
-            r = self._find_arbitrage_opportunities(flashloan_tokens, CCm)
+            r = self._find_arbitrage_opportunities(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_SINGLE:
-            r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm)
+            r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_TRIANGLE:
-            r = self._find_arbitrage_opportunities_carbon_single_triangle(flashloan_tokens, CCm)
+            r = self._find_arbitrage_opportunities_carbon_single_triangle(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_MULTI:
-            r = self._find_arbitrage_opportunities_carbon_multi_pairwise(flashloan_tokens, CCm)
+            r = self._find_arbitrage_opportunities_carbon_multi_pairwise(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_MULTI_TRIANGLE:
-            r = self._find_arbitrage_opportunities_carbon_multi_triangle(flashloan_tokens, CCm)
+            r = self._find_arbitrage_opportunities_carbon_multi_triangle(flashloan_tokens, CCm, result=random_mode)
         else:
             raise ValueError(f"arb_mode not recognised {arb_mode}")
 
         if result == self.XS_ARBOPPS:
             return r
+        if r == None or len(r) == 0:
+            return None
+        self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
+        r = random.choice(r) if randomizer else r
+
         (
             best_profit,
             best_trade_instructions_df,
