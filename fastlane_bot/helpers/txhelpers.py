@@ -652,9 +652,35 @@ class TxHelpers:
                 return tx_receipt
             except TimeExhausted as e:
                 self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds.")
+                self.cancel_private_transaction(arb_tx, block_number)
                 return None
         else:
             self.ConfigObj.logger.info(f"Failed to submit transaction to Flashbots RPC")
+            return None
+    def cancel_private_transaction(self, arb_tx, block_number: int):
+        self.ConfigObj.logger.info(f"Attempting to cancel tx to Flashbots, please hold.")
+        arb_tx["data"] = ""
+        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+        signed_tx_string = signed_arb_tx.hex()
+        max_block_number = hex(block_number + 10)
+        params = [
+            {
+                "tx": signed_tx_string,
+                "maxBlockNumber": max_block_number,
+                "preferences": {"fast": True},
+            }
+        ]
+        response = self.alchemy.core.provider.make_request(
+            method="eth_sendPrivateTransaction",
+            params=params,
+            method_name="eth_sendPrivateTransaction",
+            headers=self._get_headers,
+        )
+        if response != 400:
+            self.ConfigObj.logger.info(f"Submitted cancellation to Flashbots RPC, response: {response}")
+            return None
+        else:
+            self.ConfigObj.logger.info(f"Failed to submit cancellation to Flashbots RPC")
             return None
 
     def sign_transaction(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
