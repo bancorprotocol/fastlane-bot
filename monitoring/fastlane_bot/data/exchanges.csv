@@ -1,0 +1,8 @@
+id,name,blockchain_name
+1,bancor_v2,Ethereum
+2,bancor_v3,Ethereum
+3,uniswap_v2,Ethereum
+4,uniswap_v3,Ethereum
+5,sushiswap_v2,Ethereum
+6,carbon_v1,Ethereum
+10000,TestExchange,TestBlockchain
