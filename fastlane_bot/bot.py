@@ -1096,7 +1096,7 @@ class CarbonBot(CarbonBotBase):
             bancor_v3_curve_0 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn0}").byparams(exchange='bancor_v3').curves
             bancor_v3_curve_1 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn1}").byparams(exchange='bancor_v3').curves
 
-            if len(bancor_v3_curve_0) > 0:
+            if len(external_curves) > 0:
                 print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
 
             miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
