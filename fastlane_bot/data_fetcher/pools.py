@@ -132,7 +132,7 @@ class SushiswapPool(Pool):
             "fee_float": 0.003,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
-            "exchange_name": "uniswap_v2",
+            "exchange_name": "sushiswap_v2",
         }
         for key, value in params.items():
             self.state[key] = value
