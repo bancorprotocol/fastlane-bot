@@ -80,7 +80,7 @@ load_dotenv()
     "--static_pool_data_sample_sz",
     # default="max",
     default=100,
-    help="The sample size of the static pool data. (for testing purposes)",
+    help="The sample size of the static pool data. (for testing purposes to speed-up)",
 )
 def main(
         cache_latest_only: bool,
