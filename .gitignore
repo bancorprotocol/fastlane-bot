@@ -7,6 +7,7 @@ __pycache__/*
 topaze
 *.ipynb
 *.gif
+*.json
 
 .DS_Store
 .idea/*
