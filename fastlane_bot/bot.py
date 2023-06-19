@@ -562,7 +562,7 @@ class CarbonBot(CarbonBotBase):
             best_src_token,
             best_trade_instructions
         )
-
+        print(f"[bot.py _find_arbitrage_opportunities_multi] all curves: {len(CCm)}, {CCm}")
         all_tokens = CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
@@ -1170,32 +1170,44 @@ class CarbonBot(CarbonBotBase):
         all_miniverses = []
         #all_carbon_curves = CCm.byparams(exchange='carbon_v1').curves
 
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves: {len(CCm)}, {CCm}")
+        CCuni2 = CCm.byparams(exchange='uniswap_v2').curves
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v2: {len(CCuni2)}, {CCuni2}")
         all_bancor_v3_curves = CCm.byparams(exchange='bancor_v3').curves
 
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}")
-        all_bancor_v3_tokens = all_bancor_v3_curves.tknys
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}, {all_bancor_v3_curves}")
+        all_bancor_v3_tokens = CCm.byparams(exchange='bancor_v3').tknys()
         print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_tokens: {len(all_bancor_v3_tokens)}, {all_bancor_v3_tokens}")
+
         combos = [
             (tkn0, tkn1)
             for tkn0, tkn1 in itertools.product(all_bancor_v3_tokens, all_bancor_v3_tokens)
-            # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1
         ]
 
         print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] combos: {combos}")
 
-        for combo in combos:
+        for tkn0, tkn1 in combos:
+            print(f"{tkn0}/{tkn1}")
+             #CCm.bypairs(f"{tkn0}/{tkn1}")
+            external_curves = CCm.bypairs(f"{tkn0}/{tkn1}")
+            external_curves += CCm.bypairs(f"{tkn1}/{tkn0}")
+            external_curves = list(set(external_curves))
 
-            external_curves = CCm.bypairs(f"{combo[0]}/{combo[1]}").curves
-            external_curves += CCm.bypairs(f"{combo[1]}/{combo[0]}").curves
-            bancor_v3_curve_0 = CCm.bypairs(f"{'BNT-FF1C'}/{combo[0]}").byparams(exchange='bancor_v3').curves
-            bancor_v3_curve_1 = CCm.bypairs(f"{'BNT-FF1C'}/{combo[1]}").byparams(exchange='bancor_v3').curves
+            bancor_v3_curve_0 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn0}").byparams(exchange='bancor_v3').curves
+            bancor_v3_curve_1 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn1}").byparams(exchange='bancor_v3').curves
+
+            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
+
             miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
-            if len(miniverses) > 0:
+            if len(miniverses) > 3:
                 all_miniverses += list(zip(['BNT-FF1C'] * len(miniverses), miniverses))
 
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_miniverses: {all_miniverses}")
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_miniverses: {all_miniverses}")
+
+        if len(all_miniverses) == 0:
+            return None
 
         for src_token, miniverse in all_miniverses:
             r = None
@@ -1218,32 +1230,32 @@ class CarbonBot(CarbonBotBase):
                 3 Create new CPCContainer with correct pools
                 4 Rerun optimizer
                 5 Resume normal flow
-                """
-                non_carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') != "carbon_v1"]
-                non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
-                wrong_direction_cids = []
+                # """
+                # non_carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') != "carbon_v1"]
+                # non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
+                # tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
+                # wrong_direction_cids = []
+                #
+                # for idx, row in trade_instructions_df.iterrows():
+                #     if "-0" in idx or "-1" in idx:
+                #         if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
+                #             wrong_direction_cids.append(idx)
 
-                for idx, row in trade_instructions_df.iterrows():
-                    if "-0" in idx or "-1" in idx:
-                        if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
-                            wrong_direction_cids.append(idx)
+                # if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
+                # self.ConfigObj.logger.debug(
+                #     f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
+                # new_curves = [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
+                # Rerun main flow with the new set of curves
+                # CC_cc = CPCContainer(new_curves)
+                # O = CPCArbOptimizer(CC_cc)
+                # r = O.margp_optimizer(src_token)
+                # profit_src = -r.result
+                # trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                # trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                # trade_instructions = r.trade_instructions()
+                # self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
 
-                if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
-                    self.ConfigObj.logger.debug(
-                        f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
-                    new_curves = [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
-                    # Rerun main flow with the new set of curves
-                    CC_cc = CPCContainer(new_curves)
-                    O = CPCArbOptimizer(CC_cc)
-                    r = O.margp_optimizer(src_token)
-                    profit_src = -r.result
-                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                    trade_instructions = r.trade_instructions()
-                    self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
-
-                self.ConfigObj.logger.debug(
+                self.ConfigObj.logger.info(
                     f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
 
             except:

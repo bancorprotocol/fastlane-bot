@@ -21,19 +21,19 @@ load_dotenv()
 @click.command()
 @click.option(
     "--cache_latest_only",
-    default=True,
+    default=False,
     type=bool,
     help="Set to True for production. Set to False for " "testing / debugging",
 )
 @click.option(
     "--backdate_pools",
-    default=True,
+    default=False,
     type=bool,
     help="Set to False for faster testing / debugging",
 )
 @click.option(
     "--static_pool_data_filename",
-    default="static_pool_data",
+    default="static_pool_data_empty",
     # default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
@@ -45,6 +45,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
+    #default="bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
     default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
     # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
@@ -56,7 +57,7 @@ load_dotenv()
 )
 @click.option(
     "--alchemy_max_block_fetch",
-    default=10,
+    default=100,
     help="Max number of blocks to fetch from alchemy",
 )
 @click.option(
