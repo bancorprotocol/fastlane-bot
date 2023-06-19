@@ -37,7 +37,7 @@ load_dotenv()
     # default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
-@click.option("--arb_mode", default="single", type=str, help="See arb_mode in bot.py")
+@click.option("--arb_mode", default="multi", type=str, help="See arb_mode in bot.py")
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"
 )
@@ -56,7 +56,7 @@ load_dotenv()
 )
 @click.option(
     "--alchemy_max_block_fetch",
-    default=2000,
+    default=10,
     help="Max number of blocks to fetch from alchemy",
 )
 @click.option(
@@ -66,8 +66,8 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
-    default='/dbfs/FileStore/tables/carbonbot/logs/',
-    # default='',
+    #default='/dbfs/FileStore/tables/carbonbot/logs/',
+    default='',
     help="The Databricks logging path.",
 )
 def main(
