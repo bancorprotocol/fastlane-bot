@@ -148,10 +148,7 @@ class CarbonBotBase():
         assert issubclass(self.TxHelpersClass.__class__,
                           TxHelpersBase), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
-        if self.ConfigObj.DATABASE == self.ConfigObj.DATABASE_UNITTEST:
-            self.db = QueryInterface(ConfigObj=self.ConfigObj)
-        else:
-            self.db = QueryInterface(ConfigObj=self.ConfigObj)
+        self.db = QueryInterface(ConfigObj=self.ConfigObj)
 
     @property
     def C(self) -> Any:
@@ -286,23 +283,22 @@ class CarbonBot(CarbonBotBase):
         '''
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
         '''
-        scaled_best_trade_instructions_dic = []
-        for x in best_trade_instructions_dic:
-            scaled_best_trade_instructions_dic += [{k: v for k, v in x.items()}]
-
-        for i in range(len(scaled_best_trade_instructions_dic)):
-            if scaled_best_trade_instructions_dic[i]["tknin"] == best_src_token:
-                scaled_best_trade_instructions_dic[i]["amtin"] *= 0.999
+        scaled_best_trade_instructions_dic = [
+            dict(x.items()) for x in best_trade_instructions_dic
+        ]
+        for item in scaled_best_trade_instructions_dic:
+            if item["tknin"] == best_src_token:
+                item["amtin"] *= 0.999
         #             else:
         #                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
 
         return scaled_best_trade_instructions_dic
 
     def _drop_error(self, trade_instructions_dct):
-        new_dict = []
-        for i in range(len(trade_instructions_dct)):
-            new_dict += [{k: v for k, v in trade_instructions_dct[i].items() if k != 'error'}]
-        return new_dict
+        return [
+            {k: v for k, v in trade_instructions_dct[i].items() if k != 'error'}
+            for i in range(len(trade_instructions_dct))
+        ]
 
     def _convert_trade_instructions(
             self, trade_instructions_dic: List[Dict[str, Any]]
@@ -368,188 +364,10 @@ class CarbonBot(CarbonBotBase):
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
 
-    def _find_arbitrage_opportunities(
-            self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
-        # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
-        """
-        Finds the arbitrage opportunities.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens.
-        CCm: CPCContainer
-            The CPCContainer object.
-        result: AO_XXX or None
-            What (intermediate) result to return.
-            mode: str
-            The mode.
-
-        Returns
-        -------
-        Tuple[Decimal, List[Dict[str, Any]]]
-            The best profit and the trade instructions.
-        """
-        assert mode == "bothin", "parameter not used"
-        # c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
-        best_profit = 0
-        best_src_token = None
-        best_trade_instructions = None
-        best_trade_instructions_df = None
-        best_trade_instructions_dic = None
-        all_tokens = CCm.tokens()
-        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
-        # flashloan_tokens_intersect = [T.BNT, ]
-        combos = [
-            (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
-            # tkn1 is always the token being flash loaned
-            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-            if tkn0 != tkn1
-        ]
-        if result == self.AO_TOKENS:
-            return all_tokens, combos
-
-        ops = (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions
-        )
-
-        candidates = []
-        for tkn0, tkn1 in combos:
-            # try:
-            r = None
-            # c.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
-            CC = CCm.bypairs(f"{tkn0}/{tkn1}")
-            if len(CC) < 2:
-                continue
-            O = CPCArbOptimizer(CC)
-            src_token = tkn1
-            try:
-                pstart = ({tkn0: CCm.bypairs(f"{tkn0}/{tkn1}")[0].p})
-                r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
-                assert not r.is_error
-            except Exception as e:
-                # c.logger.debug(e, r)
-                try:
-                    r = O.margp_optimizer(src_token)
-                    assert not r.is_error
-                except Exception as e:
-                    # c.logger.info(e)
-                    continue
-            try:
-                profit_src = -r.result
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                trade_instructions = r.trade_instructions()
-            except:
-                continue
-
-            cids = [ti['cid'] for ti in trade_instructions_dic]
-            if src_token == 'BNT-FF1C':
-                profit = profit_src
-            else:
-                try:
-                    price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
-                    profit = profit_src/price_src_per_bnt
-                except Exception as e:
-                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
-            self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
-            # candidates += [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
-            contains_carbon = any(
-                self._check_if_carbon(ti['cid'])[0]
-                for ti in trade_instructions_dic
-            )
-            contains_other = any(
-                self._check_if_not_carbon(ti['cid'])
-                for ti in trade_instructions_dic
-            )
-            try:
-                netchange = trade_instructions_df.iloc[-1]
-            except Exception as e:
-                netchange = [500]  # an arbitrary large number
-
-            bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-            self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
-            condition_6 = False
-            if profit > (self.min_profit + bnt_gas_limit):
-                condition_6 = True
-
-            if len(trade_instructions_df) > 0:
-                condition_1 = (profit > best_profit)
-                self.ConfigObj.logger.debug(f"profit > best_profit: {condition_1}")
-                # ordered_scaled_dcts, tx_in_count = self._order_and_scale_trade_instruction_dcts(
-                #     trade_instructions_df, trade_instructions_dic, src_token)
-
-                # condition_5 = tx_in_count > 0
-
-                self.ConfigObj.logger.debug(f"profit > best_profit: {condition_1}")
-                condition_2 = contains_carbon
-                self.ConfigObj.logger.debug(f"contains_carbon: {condition_2}")
-                condition_3 = max(netchange) < 1e-4
-
-                self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_3}")
-                # self.ConfigObj.logger.debug(f"contains_other: {condition_4}")
-                # self.ConfigObj.logger.debug(f"tx_in_count > 0: {condition_5}")
-                if condition_3:
-                    candidates += [
-                        (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
-
-                if condition_1 and condition_2 and condition_3 and condition_6:
-                    self.ConfigObj.logger.debug("*************")
-                    self.ConfigObj.logger.debug(f"New best profit: {profit}")
-
-                    best_profit = profit
-                    best_src_token = src_token
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
-                    best_trade_instructions = trade_instructions
-
-                    self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
-
-                    ops = (
-                        best_profit,
-                        best_trade_instructions_df,
-                        best_trade_instructions_dic,
-                        best_src_token,
-                        best_trade_instructions
-                    )
-                    self.ConfigObj.logger.debug("*************")
-            # except Exception as e:
-            #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
-            #     continue
-
-        return candidates if result == self.AO_CANDIDATES else ops
-
     def _find_arbitrage_opportunities_carbon_multi_pairwise(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
-        # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
-        """
-        Finds the pair-wise arbitrage opportunities for individual carbon orders.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens.
-        CCm: CPCContainer
-            The CPCContainer object.
-        result: AO_XXX or None
-            What (intermediate) result to return.
-            mode: str
-            The mode.
-
-        Returns
-        -------
-        Tuple[Decimal, List[Dict[str, Any]]]
-            The best profit and the trade instructions.
-        """
+    ):
         assert mode == "bothin", "parameter not used"
-        # c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
         best_trade_instructions = None
@@ -608,15 +426,14 @@ class CarbonBot(CarbonBotBase):
                     non_carbon_cids = [curve.cid for curve in curve_combo if
                                        curve.params.get('exchange') != "carbon_v1"]
                     non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                    tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
+                    tkn0_into_carbon = non_carbon_row[0] < 0
                     wrong_direction_cids = []
 
                     for idx, row in trade_instructions_df.iterrows():
-                        if "-0" in idx or "-1" in idx:
-                            if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
-                                wrong_direction_cids.append(idx)
+                        if ((tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0)) and ("-0" in idx or "-1" in idx):
+                            wrong_direction_cids.append(idx)
 
-                    if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
+                    if non_carbon_cids and wrong_direction_cids:
                         self.ConfigObj.logger.debug(
                             f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
                         new_curves = [curve for curve in curve_combo if curve.cid not in wrong_direction_cids]
@@ -631,8 +448,6 @@ class CarbonBot(CarbonBotBase):
                         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                         self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
 
-                    ## If 1+ Carbon curve in wrong direction, need to drop it and resolve /w optimizer##
-
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
 
@@ -640,7 +455,7 @@ class CarbonBot(CarbonBotBase):
                         f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
 
 
-                except:
+                except Exception:
                     continue
 
                 cids = [ti['cid'] for ti in trade_instructions_dic]
@@ -658,12 +473,6 @@ class CarbonBot(CarbonBotBase):
                 except Exception as e:
                     netchange = [500]  # an arbitrary large number
 
-                # bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-                # self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
-                # condition_profit = False
-                # if profit > (self.min_profit + bnt_gas_limit):
-                #     condition_profit = True
-
                 if len(trade_instructions_df) > 0:
                     condition_better_profit = (profit > best_profit)
                     self.ConfigObj.logger.debug(f"profit > best_profit: {condition_better_profit}")
@@ -675,57 +484,34 @@ class CarbonBot(CarbonBotBase):
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                     if condition_better_profit and condition_zeros_one_token:
-                        self.ConfigObj.logger.debug("*************")
-                        self.ConfigObj.logger.debug(f"New best profit: {profit}")
-
-                        best_profit = profit
-                        best_src_token = src_token
-                        best_trade_instructions_df = trade_instructions_df
-                        best_trade_instructions_dic = trade_instructions_dic
-                        best_trade_instructions = trade_instructions
-
-                        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
-
-                        ops = (
-                            best_profit,
-                            best_trade_instructions_df,
-                            best_trade_instructions_dic,
-                            best_src_token,
-                            best_trade_instructions
-                        )
-                        self.ConfigObj.logger.debug("*************")
-                # except Exception as e:
-                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
-                #     continue
-        # self.ConfigObj.logger.info(
-        #     f"\n\n***BEST Multi***\ntrade_instructions_df={best_trade_instructions_df}\ntrade_instructions_dic={best_trade_instructions_dic}\ntrade_instructions={best_trade_instructions}\nsrc={best_src_token}\n")
+                        best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                          trade_instructions_df, trade_instructions_dic)
         return candidates if result == self.AO_CANDIDATES else ops
+
+    def _find_ops(self, best_profit, ops, profit, src_token, trade_instructions, trade_instructions_df,
+                  trade_instructions_dic):
+        self.ConfigObj.logger.debug("*************")
+        self.ConfigObj.logger.debug(f"New best profit: {profit}")
+        best_profit = profit
+        best_src_token = src_token
+        best_trade_instructions_df = trade_instructions_df
+        best_trade_instructions_dic = trade_instructions_dic
+        best_trade_instructions = trade_instructions
+        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
+        ops = (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions
+        )
+        self.ConfigObj.logger.debug("*************")
+        return best_profit, ops
 
     def _find_arbitrage_opportunities_carbon_single_pairwise(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
-        # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
-        """
-        Finds the pair-wise arbitrage opportunities for individual carbon orders.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens.
-        CCm: CPCContainer
-            The CPCContainer object.
-        result: AO_XXX or None
-            What (intermediate) result to return.
-            mode: str
-            The mode.
-
-        Returns
-        -------
-        Tuple[Decimal, List[Dict[str, Any]]]
-            The best profit and the trade instructions.
-        """
+    ):
         assert mode == "bothin", "parameter not used"
-        # c.logger.debug("[_find_arbitrage_opportunities] Number of curves:", len(CCm))
         best_profit = 0
         best_src_token = None
         best_trade_instructions = None
@@ -765,7 +551,6 @@ class CarbonBot(CarbonBotBase):
 
             for curve_combo in curve_combos:
                 CC_cc = CPCContainer(curve_combo)
-                # print(f"[bot ln771] Checking flashloan token = {tkn1}, curve_combo = {[(x.pair, x.cid[-5:]) for x in CC_cc]}")
                 O = CPCArbOptimizer(CC_cc)
                 src_token = tkn1
                 try:
@@ -778,7 +563,7 @@ class CarbonBot(CarbonBotBase):
                     trade_instructions = r.trade_instructions()
                     self.ConfigObj.logger.debug(
                         f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
-                except:
+                except Exception:
                     continue
 
                 cids = [ti['cid'] for ti in trade_instructions_dic]
@@ -796,12 +581,6 @@ class CarbonBot(CarbonBotBase):
                 except Exception as e:
                     netchange = [500]  # an arbitrary large number
 
-                # bnt_gas_limit = self.db.get_bnt_price_from_tokens(self.usd_gas_limit, 'USDC')
-                # self.ConfigObj.logger.debug(f"bnt_gas_limit: {bnt_gas_limit}")
-                # condition_profit = False
-                # if profit > (self.min_profit + bnt_gas_limit):
-                #     condition_profit = True
-
                 if len(trade_instructions_df) > 0:
                     condition_better_profit = (profit > best_profit)
                     self.ConfigObj.logger.debug(f"profit > best_profit: {condition_better_profit}")
@@ -813,35 +592,15 @@ class CarbonBot(CarbonBotBase):
                             (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                     if condition_better_profit and condition_zeros_one_token:
-                        self.ConfigObj.logger.debug("*************")
-                        self.ConfigObj.logger.debug(f"New best profit: {profit}")
-
-                        best_profit = profit
-                        best_src_token = src_token
-                        best_trade_instructions_df = trade_instructions_df
-                        best_trade_instructions_dic = trade_instructions_dic
-                        best_trade_instructions = trade_instructions
-
-                        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
-
-                        ops = (
-                            best_profit,
-                            best_trade_instructions_df,
-                            best_trade_instructions_dic,
-                            best_src_token,
-                            best_trade_instructions
-                        )
-                        self.ConfigObj.logger.debug("*************")
-                # except Exception as e:
-                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
-                #     continue
+                        best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                          trade_instructions_df, trade_instructions_dic)
         self.ConfigObj.logger.debug(
             f"\n\ntrade_instructions_df={best_trade_instructions_df}\ntrade_instructions_dic={best_trade_instructions_dic}\ntrade_instructions={best_trade_instructions}\nsrc={best_src_token}\n")
         return candidates if result == self.AO_CANDIDATES else ops
 
     def _find_arbitrage_opportunities_carbon_single_triangle(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
+    ):    # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
         # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
         """
         Finds the triangle arbitrage opportunities for individual carbon orders.
@@ -883,9 +642,9 @@ class CarbonBot(CarbonBotBase):
 
         for flt in flashloan_tokens:  # may wish to run this for one flt at a time
             non_flt_carbon_curves = [x for x in all_carbon_curves if flt not in x.pair]
-            for i in range(len(non_flt_carbon_curves)):
-                target_tkny = non_flt_carbon_curves[i].tkny
-                target_tknx = non_flt_carbon_curves[i].tknx
+            for non_flt_carbon_curve in non_flt_carbon_curves:
+                target_tkny = non_flt_carbon_curve.tkny
+                target_tknx = non_flt_carbon_curve.tknx
                 carbon_curves = CCm.bypairs(f"{target_tknx}/{target_tkny}").byparams(exchange='carbon_v1').curves
                 y_match_curves = CCm.bypairs(
                     set(CCm.filter_pairs(onein=target_tknx)) & set(CCm.filter_pairs(onein=flt)))
@@ -895,7 +654,7 @@ class CarbonBot(CarbonBotBase):
                 x_match_curves_not_carbon = [x for x in x_match_curves if x.params.exchange != 'carbon_v1']
                 miniverses = list(
                     itertools.product(y_match_curves_not_carbon, carbon_curves, x_match_curves_not_carbon))
-                if len(miniverses) > 0:
+                if miniverses:
                     all_miniverses += list(zip([flt] * len(miniverses), miniverses))
                     # print(flt, target_tkny, target_tknx, len(miniverses))
 
@@ -910,7 +669,7 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
-            except:
+            except Exception:
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
@@ -939,34 +698,17 @@ class CarbonBot(CarbonBotBase):
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                 if condition_better_profit and condition_zeros_one_token:
-                    self.ConfigObj.logger.debug("*************")
-                    self.ConfigObj.logger.debug(f"New best profit: {profit}")
-
-                    best_profit = profit
-                    best_src_token = src_token
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
-                    best_trade_instructions = trade_instructions
-
-                    self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
-
-                    ops = (
-                        best_profit,
-                        best_trade_instructions_df,
-                        best_trade_instructions_dic,
-                        best_src_token,
-                        best_trade_instructions
-                    )
-                    self.ConfigObj.logger.debug("*************")
-            # except Exception as e:
-            #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
-            #     continue
+                    best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                      trade_instructions_df, trade_instructions_dic)
+                # except Exception as e:
+                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
+                #     continue
 
         return candidates if result == self.AO_CANDIDATES else ops
 
     def _find_arbitrage_opportunities_carbon_multi_triangle(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
-    ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
+    ):    # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
         # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
         """
         Finds the triangle arbitrage opportunities for individual carbon orders.
@@ -1008,9 +750,9 @@ class CarbonBot(CarbonBotBase):
 
         for flt in flashloan_tokens:  # may wish to run this for one flt at a time
             non_flt_carbon_curves = [x for x in all_carbon_curves if flt not in x.pair]
-            for i in range(len(non_flt_carbon_curves)):
-                target_tkny = non_flt_carbon_curves[i].tkny
-                target_tknx = non_flt_carbon_curves[i].tknx
+            for non_flt_carbon_curve in non_flt_carbon_curves:
+                target_tkny = non_flt_carbon_curve.tkny
+                target_tknx = non_flt_carbon_curve.tknx
                 carbon_curves = CCm.bypairs(f"{target_tknx}/{target_tkny}").byparams(exchange='carbon_v1').curves
                 y_match_curves = CCm.bypairs(
                     set(CCm.filter_pairs(onein=target_tknx)) & set(CCm.filter_pairs(onein=flt)))
@@ -1020,7 +762,7 @@ class CarbonBot(CarbonBotBase):
                 x_match_curves_not_carbon = [x for x in x_match_curves if x.params.exchange != 'carbon_v1']
                 external_curve_combos = list(itertools.product(y_match_curves_not_carbon, x_match_curves_not_carbon))
                 miniverses = [carbon_curves + list(combo) for combo in external_curve_combos]
-                if len(miniverses) > 0:
+                if miniverses:
                     all_miniverses += list(zip([flt] * len(miniverses), miniverses))
                     # print(flt, target_tkny, target_tknx, len(miniverses))
 
@@ -1047,15 +789,14 @@ class CarbonBot(CarbonBotBase):
                 """
                 non_carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') != "carbon_v1"]
                 non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
+                tkn0_into_carbon = non_carbon_row[0] < 0
                 wrong_direction_cids = []
 
                 for idx, row in trade_instructions_df.iterrows():
-                    if "-0" in idx or "-1" in idx:
-                        if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
-                            wrong_direction_cids.append(idx)
+                    if ((tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0)) and ("-0" in idx or "-1" in idx):
+                        wrong_direction_cids.append(idx)
 
-                if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
+                if non_carbon_cids and wrong_direction_cids:
                     self.ConfigObj.logger.debug(
                         f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
                     new_curves = [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
@@ -1072,7 +813,7 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.debug(
                     f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
 
-            except:
+            except Exception:
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
@@ -1101,28 +842,185 @@ class CarbonBot(CarbonBotBase):
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                 if condition_better_profit and condition_zeros_one_token:
-                    self.ConfigObj.logger.debug("*************")
-                    self.ConfigObj.logger.debug(f"New best profit: {profit}")
+                    best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                      trade_instructions_df, trade_instructions_dic)
+                # except Exception as e:
+                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
+                #     continue
 
-                    best_profit = profit
-                    best_src_token = src_token
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
-                    best_trade_instructions = trade_instructions
+        return candidates if result == self.AO_CANDIDATES else ops
 
-                    self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
+    def _find_arbitrage_opportunities_bancor_v3(
+            self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
+    ):
+        assert mode == "bothin", "parameter not used"
 
-                    ops = (
-                        best_profit,
-                        best_trade_instructions_df,
-                        best_trade_instructions_dic,
-                        best_src_token,
-                        best_trade_instructions
-                    )
-                    self.ConfigObj.logger.debug("*************")
-            # except Exception as e:
-            #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
-            #     continue
+        self.c.logger.info("[bot.py _find_arbitrage_opportunities_bancor_v3] running")
+
+        best_profit = 0
+        best_src_token = None
+        best_trade_instructions = None
+        best_trade_instructions_df = None
+        best_trade_instructions_dic = None
+        ops = (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions
+        )
+        candidates = []
+        all_miniverses = []
+
+        s1 = [] if len(CCm) == 0 else CCm[0]
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves: {len(CCm)}, {s1}")
+
+        CCuni1 = CCm.byparams(exchange='uniswap_v3').curves
+        s2 = [] if len(CCuni1) == 0 else CCuni1[0]
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v3: {len(CCuni1)}, {s2}")
+
+        CCuni2 = CCm.byparams(exchange='uniswap_v2').curves
+        s2 = [] if len(CCuni2) == 0 else CCuni2[0]
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v2: {len(CCuni2)}, {s2}")
+
+        all_bancor_v3_curves = CCm.byparams(exchange='bancor_v3').curves
+        s3 = [] if len(all_bancor_v3_curves) == 0 else all_bancor_v3_curves[0]
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}, {s3}")
+
+        all_bancor_v3_tokens = CCm.byparams(exchange='bancor_v3').tknys()
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_tokens: {len(all_bancor_v3_tokens)}, {all_bancor_v3_tokens}")
+
+        # combos = [
+        #     (tkn0, tkn1)
+        #     for tkn0, tkn1 in itertools.product(all_bancor_v3_tokens, all_bancor_v3_tokens)
+        #     # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
+        #     if tkn0 != tkn1
+        # ]
+
+        all_tokens = CCm.tokens()
+        flashloan_tokens = CCm.byparams(exchange='bancor_v3').tokens()
+
+        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
+        combos = [
+            (tkn0, tkn1)
+            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
+            # tkn1 is always the token being flash loaned
+            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
+            if tkn0 != tkn1
+        ]
+
+        for tkn0, tkn1 in combos:
+            external_curves = CCm.bypairs(f"{tkn0}/{tkn1}")
+            external_curves += CCm.bypairs(f"{tkn1}/{tkn0}")
+
+            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)} {tkn0}, {tkn1}, flashloan_tokens: {flashloan_tokens}")
+
+            bancor_v3_curve_0 = (
+                CCm.bypairs(f"BNT-FF1C/{tkn0}")
+                .byparams(exchange='bancor_v3')
+                .curves
+            )
+            bancor_v3_curve_1 = (
+                CCm.bypairs(f"BNT-FF1C/{tkn1}")
+                .byparams(exchange='bancor_v3')
+                .curves
+            )
+
+            if len(external_curves) > 0:
+                print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)}")
+
+            miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
+            if len(miniverses) > 3:
+                all_miniverses += list(zip(['BNT-FF1C'] * len(miniverses), miniverses))
+
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_miniverses: {all_miniverses}")
+
+        if len(all_miniverses) == 0:
+            return None
+
+        for src_token, miniverse in all_miniverses:
+            r = None
+
+            self.C.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {[(x.pair, x.cid[-5:]) for x in miniverse]}")
+            # print(f"Checking flashloan token = {src_token}, miniverse = {[(x.pair, x.cid[-5:]) for x in miniverse]}")
+            CC_cc = CPCContainer(miniverse)
+            O = CPCArbOptimizer(CC_cc)
+            try:
+                r = O.margp_optimizer(src_token)
+                profit_src = -r.result
+                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                trade_instructions = r.trade_instructions()
+
+                """
+                The following handles an edge case until parallel execution is available:
+                1 Determine correct direction - opposite of non-Carbon pool
+                2 Get cids of wrong-direction Carbon pools
+                3 Create new CPCContainer with correct pools
+                4 Rerun optimizer
+                5 Resume normal flow
+                # """
+                # non_carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') != "carbon_v1"]
+                # non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
+                # tkn0_into_carbon = True if non_carbon_row[0] < 0 else False
+                # wrong_direction_cids = []
+                #
+                # for idx, row in trade_instructions_df.iterrows():
+                #     if "-0" in idx or "-1" in idx:
+                #         if (tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0):
+                #             wrong_direction_cids.append(idx)
+
+                # if len(non_carbon_cids) > 0 and len(wrong_direction_cids) > 0:
+                # self.ConfigObj.logger.debug(
+                #     f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
+                # new_curves = [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
+                # Rerun main flow with the new set of curves
+                # CC_cc = CPCContainer(new_curves)
+                # O = CPCArbOptimizer(CC_cc)
+                # r = O.margp_optimizer(src_token)
+                # profit_src = -r.result
+                # trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                # trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                # trade_instructions = r.trade_instructions()
+                # self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
+
+                self.ConfigObj.logger.info(
+                    f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
+
+            except Exception:
+                continue
+
+            cids = [ti['cid'] for ti in trade_instructions_dic]
+            if src_token == 'BNT-FF1C':
+                profit = profit_src
+            else:
+                try:
+                    price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                    profit = profit_src/price_src_per_bnt
+                except Exception as e:
+                    self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+            self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
+            try:
+                netchange = trade_instructions_df.iloc[-1]
+            except Exception as e:
+                netchange = [500]  # an arbitrary large number
+
+            if len(trade_instructions_df) > 0:
+                condition_better_profit = (profit > best_profit)
+                self.ConfigObj.logger.debug(f"profit > best_profit: {condition_better_profit}")
+                condition_zeros_one_token = max(netchange) < 1e-4
+                self.ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
+
+                if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
+                    candidates += [
+                        (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+
+                if condition_better_profit and condition_zeros_one_token:
+                    best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                      trade_instructions_df, trade_instructions_dic)
+                # except Exception as e:
+                #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
+                #     continue
 
         return candidates if result == self.AO_CANDIDATES else ops
 
@@ -1189,7 +1087,7 @@ class CarbonBot(CarbonBotBase):
         print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] combos: {combos}")
 
         for tkn0, tkn1 in combos:
-            print(f"{tkn0}/{tkn1}")
+            # print(f"{tkn0}/{tkn1}")
              #CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves = CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves += CCm.bypairs(f"{tkn1}/{tkn0}")
@@ -1198,13 +1096,13 @@ class CarbonBot(CarbonBotBase):
             bancor_v3_curve_0 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn0}").byparams(exchange='bancor_v3').curves
             bancor_v3_curve_1 = CCm.bypairs(f"{'BNT-FF1C'}/{tkn1}").byparams(exchange='bancor_v3').curves
 
-            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
+            if len(bancor_v3_curve_0) > 0:
+                print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
 
             miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
             if len(miniverses) > 3:
                 all_miniverses += list(zip(['BNT-FF1C'] * len(miniverses), miniverses))
 
-        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_miniverses: {all_miniverses}")
 
         if len(all_miniverses) == 0:
             return None
@@ -1287,25 +1185,8 @@ class CarbonBot(CarbonBotBase):
                         (profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
 
                 if condition_better_profit and condition_zeros_one_token:
-                    self.ConfigObj.logger.debug("*************")
-                    self.ConfigObj.logger.debug(f"New best profit: {profit}")
-
-                    best_profit = profit
-                    best_src_token = src_token
-                    best_trade_instructions_df = trade_instructions_df
-                    best_trade_instructions_dic = trade_instructions_dic
-                    best_trade_instructions = trade_instructions
-
-                    self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
-
-                    ops = (
-                        best_profit,
-                        best_trade_instructions_df,
-                        best_trade_instructions_dic,
-                        best_src_token,
-                        best_trade_instructions
-                    )
-                    self.ConfigObj.logger.debug("*************")
+                    best_profit, ops = self._find_ops(best_profit, ops, profit, src_token, trade_instructions,
+                                                      trade_instructions_df, trade_instructions_dic)
             # except Exception as e:
             #     self.ConfigObj.logger.debug(f"Error in opt: {e}")
             #     continue
@@ -1389,8 +1270,8 @@ class CarbonBot(CarbonBotBase):
 
         if result == self.XS_ARBOPPS:
             return r
-        if r == None or len(r) == 0:
-            self.ConfigObj.logger.info(f"No eligible arb opportunities.")
+        if r is None or len(r) == 0:
+            self.ConfigObj.logger.info("No eligible arb opportunities.")
             return None
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
@@ -1442,8 +1323,6 @@ class CarbonBot(CarbonBotBase):
             bnt_flt = [x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"][0]
             flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
             best_profit = Decimal(str(flt_per_bnt * best_profit))
-        else:
-            pass
         bnt_usdc_curve = CCm.bycid("0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b")
         usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
         profit_usd = best_profit * Decimal(str(usd_bnt))
@@ -1482,7 +1361,7 @@ class CarbonBot(CarbonBotBase):
 
         # Get the flashloan token and verify
         # fl_token = agg_trade_instructions[0].tknin_key
-        is_carbon = True if agg_trade_instructions[0].raw_txs != [] else False
+        is_carbon = agg_trade_instructions[0].raw_txs != []
         # print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
 
         # elif (fl_token == 'WETH-6Cc2') and not is_carbon:
@@ -1642,9 +1521,8 @@ class CarbonBot(CarbonBotBase):
                     filter_out_weth = [x for x in CCm if (x.params.exchange == 'carbon_v1') & ((x.params.tkny_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') or (x.params.tknx_addr == '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'))]
                     CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
                     tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode)
-                    if tx_hash:
-                        if tx_hash[0]:
-                            self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                    if tx_hash and tx_hash[0]:
+                        self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
                     time.sleep(self.polling_interval)
                 except self.NoArbAvailable as e:
@@ -1656,9 +1534,8 @@ class CarbonBot(CarbonBotBase):
             try:
 
                 tx_hash = self._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode)
-                if tx_hash:
-                    if tx_hash[0]:
-                        self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                if tx_hash and tx_hash[0]:
+                    self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
             except self.NoArbAvailable as e:
                 self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
             except Exception as e:

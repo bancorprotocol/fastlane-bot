@@ -21,19 +21,19 @@ load_dotenv()
 @click.command()
 @click.option(
     "--cache_latest_only",
-    default=False,
+    default=True,
     type=bool,
     help="Set to True for production. Set to False for " "testing / debugging",
 )
 @click.option(
     "--backdate_pools",
-    default=False,
+    default=True,
     type=bool,
     help="Set to False for faster testing / debugging",
 )
 @click.option(
     "--static_pool_data_filename",
-    default="static_pool_data_empty",
+    default="static_pool_data",
     # default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
@@ -67,9 +67,20 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
-    #default='/dbfs/FileStore/tables/carbonbot/logs/',
+    # default='/dbfs/FileStore/tables/carbonbot/logs/',
     default='',
     help="The Databricks logging path.",
+)
+@click.option(
+    "--loglevel",
+    default="INFO",
+    help="The log level to use.",
+)
+@click.option(
+    "--static_pool_data_sample_sz",
+    # default="max",
+    default=100,
+    help="The sample size of the static pool data. (for testing purposes)",
 )
 def main(
         cache_latest_only: bool,
@@ -84,6 +95,8 @@ def main(
         static_pool_data_filename: str,
         reorg_delay: int,
         dbfs_path: str,
+        loglevel: str,
+        static_pool_data_sample_sz: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Manager objects,
@@ -102,14 +115,21 @@ def main(
         static_pool_data_filename (str): The filename of the static pool data to read from.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         dbfs_path (str): The Databricks logging path.
+        loglevel (str): The log level to use.
+        static_pool_data_sample_sz (str): The sample size of the static pool data.
     """
+    # Set log level
+    loglevel = Config.LOGLEVEL_DEBUG if loglevel == "DEBUG" else Config.LOGLEVEL_INFO if loglevel == "INFO" else Config.LOGLEVEL_ERROR if loglevel == "ERROR" else Config.LOGLEVEL_WARNING if loglevel == "WARNING" else Config.LOGLEVEL_CRITICAL if loglevel == "CRITICAL" else Config.LOGLEVEL_NOTSET
+
     # Set config
     if config and config == "tenderly":
-        cfg = Config.new(config=Config.CONFIG_TENDERLY)
+        cfg = Config.new(config=Config.CONFIG_TENDERLY,
+                            loglevel=loglevel
+                            )
         cfg.logger.info("Using Tenderly config")
     else:
         cfg = Config.new(config=Config.CONFIG_MAINNET,
-                         # loglevel=Config.LOGLEVEL_DEBUG
+                         loglevel=loglevel
                          )
         cfg.logger.info("Using mainnet config")
 
@@ -130,6 +150,12 @@ def main(
         static_pool_data = static_pool_data[
             static_pool_data["exchange_name"].isin(exchanges)
         ]
+        bancor3_data = static_pool_data[static_pool_data["exchange_name"] == "bancor_v3"]
+        non_bancor3_data = static_pool_data[static_pool_data["exchange_name"] != "bancor_v3"]
+        if static_pool_data_sample_sz != "max":
+            non_bancor3_data = non_bancor3_data.sample(n=int(static_pool_data_sample_sz))
+            static_pool_data = pd.concat([bancor3_data, non_bancor3_data])
+
         uniswap_v2_event_mappings = pd.read_csv(
             f"fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
         )
