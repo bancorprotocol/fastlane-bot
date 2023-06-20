@@ -881,27 +881,37 @@ class CarbonBot(CarbonBotBase):
         all_miniverses = []
 
         s1 = [] if len(CCm) == 0 else CCm[0]
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves: {len(CCm)}, {s1}")
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves: {len(CCm)}, {s1}")
 
-        CCuni1 = CCm.byparams(exchange='uniswap_v3').curves
-        s2 = [] if len(CCuni1) == 0 else CCuni1[0]
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v3: {len(CCuni1)}, {s2}")
-
-        CCuni2 = CCm.byparams(exchange='uniswap_v2').curves
-        s2 = [] if len(CCuni2) == 0 else CCuni2[0]
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v2: {len(CCuni2)}, {s2}")
+        # CCuni1 = CCm.byparams(exchange='uniswap_v3').curves
+        # s2 = [] if len(CCuni1) == 0 else CCuni1[0]
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v3: {len(CCuni1)}, {s2}")
+        #
+        # CCuni2 = CCm.byparams(exchange='uniswap_v2').curves
+        # s3 = [] if len(CCuni2) == 0 else CCuni2[0]
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves uni v2: {len(CCuni2)}, {s3}")
+        #
+        # CCsushi = CCm.byparams(exchange='sushiswap_v2').curves
+        # s4 = [] if len(CCsushi) == 0 else CCsushi[0]
+        # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all curves sushi: {len(CCuni2)}, {s4}")
 
         all_bancor_v3_curves = CCm.byparams(exchange='bancor_v3').curves
-        s3 = [] if len(all_bancor_v3_curves) == 0 else all_bancor_v3_curves[0]
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}, {s3}")
+        s5 = [] if len(all_bancor_v3_curves) == 0 else all_bancor_v3_curves[0]
+        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}, {s5}")
 
         all_tokens = CCm.tokens()
-        flashloan_tokens = CCm.byparams(exchange='bancor_v3').tknys()
+        flashloan_tokens_bancor_v3 = CCm.byparams(exchange='bancor_v3').tknys()
 
-        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
+
+
+
+        # flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
+        flashloan_tokens_bancor_v3.remove("BNT-FF1C")
+        flashloan_tokens.remove("BNT-FF1C")
+
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
+            for tkn0, tkn1 in itertools.product(flashloan_tokens, flashloan_tokens_bancor_v3)
             # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1
@@ -910,8 +920,11 @@ class CarbonBot(CarbonBotBase):
         for tkn0, tkn1 in combos:
             external_curves = CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves += CCm.bypairs(f"{tkn1}/{tkn0}")
+            external_curves = list(set(external_curves))
+            if len(external_curves) == 0:
+                continue
 
-            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)} {tkn0}, {tkn1}, flashloan_tokens: {flashloan_tokens}")
+            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)} {tkn0}, {tkn1}") #flashloan_tokens: {flashloan_tokens}
 
             bancor_v3_curve_0 = (
                 CCm.bypairs(f"BNT-FF1C/{tkn0}")
@@ -924,16 +937,19 @@ class CarbonBot(CarbonBotBase):
                 .curves
             )
 
-            if len(external_curves) > 0:
-                print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)}")
 
+                #print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {len(external_curves)}, {external_curves}")
+
+            #print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] curves: \n{bancor_v3_curve_0} \n{bancor_v3_curve_1}, \n{external_curves}\n")
             miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
+            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] miniverses: {len(miniverses)}\n {miniverses}")
             if len(miniverses) > 3:
                 all_miniverses += list(zip(['BNT-FF1C'] * len(miniverses), miniverses))
 
         # print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_miniverses: {all_miniverses}")
 
         if len(all_miniverses) == 0:
+            print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] no miniverses found")
             return None
 
         for src_token, miniverse in all_miniverses:
@@ -944,9 +960,11 @@ class CarbonBot(CarbonBotBase):
             CC_cc = CPCContainer(miniverse)
             O = CPCArbOptimizer(CC_cc)
             try:
-                r = O.margp_optimizer(src_token)
+                #r = O.margp_optimizer(src_token)
+                r = O.margp_optimizer("BNT-FF1C")
                 profit_src = -r.result
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                print(trade_instructions_df)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
 
@@ -986,6 +1004,7 @@ class CarbonBot(CarbonBotBase):
                     f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n")
 
             except Exception:
+                print(f"Optimizer failed :(")
                 continue
 
             cids = [ti['cid'] for ti in trade_instructions_dic]
@@ -1022,7 +1041,7 @@ class CarbonBot(CarbonBotBase):
 
         return candidates if result == self.AO_CANDIDATES else ops
 
-    def _find_arbitrage_opportunities_bancor_v3(
+    def _find_arbitrage_opportunities_bancor_v3___(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, mode: str = "bothin", result=None,
     ):  # -> Union[tuple[Any, list[tuple[Any, Any]]], list[Any], tuple[
         # Union[int, Decimal, Decimal], Optional[Any], Optional[Any], Optional[Any], Optional[Any]]]:
@@ -1228,7 +1247,6 @@ class CarbonBot(CarbonBotBase):
 
         ## Find arbitrage opportunities
         arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
-
         if arb_mode == self.AM_SINGLE:
             finder = FindArbitrageSinglePairwise(flashloan_tokens=flashloan_tokens, CCm=CCm, mode='bothin', result=random_mode, ConfigObj=self.ConfigObj)
             r = finder.find_arbitrage(arb_mode=arb_mode)
