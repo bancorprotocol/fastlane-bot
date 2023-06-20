@@ -37,7 +37,7 @@ load_dotenv()
     # default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
-@click.option("--arb_mode", default="multi", type=str, help="See arb_mode in bot.py")
+@click.option("--arb_mode", default="single", type=str, help="See arb_mode in bot.py")
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"
 )
@@ -45,8 +45,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
-    # default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
+    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
     # default="carbon_v1,bancor_v3,uniswap_v3",
     help="Comma separated external exchanges",
 )
@@ -57,7 +56,7 @@ load_dotenv()
 )
 @click.option(
     "--alchemy_max_block_fetch",
-    default=100,
+    default=2000,
     help="Max number of blocks to fetch from alchemy",
 )
 @click.option(
@@ -67,20 +66,21 @@ load_dotenv()
 )
 @click.option(
     "--dbfs_path",
-    # default='/dbfs/FileStore/tables/carbonbot/logs/',
-    default='',
+    default='/dbfs/FileStore/tables/carbonbot/logs/',
+    # default='',
     help="The Databricks logging path.",
 )
 @click.option(
     "--loglevel",
-    default="INFO",
-    help="The log level to use.",
+    default='INFO',
+    type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
+    help="The logging level.",
 )
 @click.option(
     "--static_pool_data_sample_sz",
-    # default="max",
-    default=100,
-    help="The sample size of the static pool data. (for testing purposes to speed-up)",
+    default="max",
+    type=str,
+    help="The sample size of the static pool data.",
 )
 def main(
         cache_latest_only: bool,
@@ -115,22 +115,19 @@ def main(
         static_pool_data_filename (str): The filename of the static pool data to read from.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         dbfs_path (str): The Databricks logging path.
-        loglevel (str): The log level to use.
+        loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
     """
-    # Set log level
-    loglevel = Config.LOGLEVEL_DEBUG if loglevel == "DEBUG" else Config.LOGLEVEL_INFO if loglevel == "INFO" else Config.LOGLEVEL_ERROR if loglevel == "ERROR" else Config.LOGLEVEL_WARNING if loglevel == "WARNING" else Config.LOGLEVEL_CRITICAL if loglevel == "CRITICAL" else Config.LOGLEVEL_NOTSET
-
     # Set config
+    loglevel = Config.LOGLEVEL_DEBUG if loglevel == "DEBUG" else Config.LOGLEVEL_INFO if loglevel == "INFO" else Config.LOGLEVEL_WARNING if loglevel == "WARNING" else Config.LOGLEVEL_ERROR if loglevel == "ERROR" else Config.LOGLEVEL_INFO
+
     if config and config == "tenderly":
         cfg = Config.new(config=Config.CONFIG_TENDERLY,
-                            loglevel=loglevel
-                            )
+                            loglevel=loglevel)
         cfg.logger.info("Using Tenderly config")
     else:
         cfg = Config.new(config=Config.CONFIG_MAINNET,
-                         loglevel=loglevel
-                         )
+                         loglevel=loglevel)
         cfg.logger.info("Using mainnet config")
 
     # Set external exchanges
@@ -150,19 +147,20 @@ def main(
         static_pool_data = static_pool_data[
             static_pool_data["exchange_name"].isin(exchanges)
         ]
-        bancor3_data = static_pool_data[static_pool_data["exchange_name"] == "bancor_v3"]
-        non_bancor3_data = static_pool_data[static_pool_data["exchange_name"] != "bancor_v3"]
         if static_pool_data_sample_sz != "max":
-            non_bancor3_data = non_bancor3_data.sample(n=int(static_pool_data_sample_sz))
-            static_pool_data = pd.concat([bancor3_data, non_bancor3_data])
-
+            bancor3_pool_data = static_pool_data[static_pool_data["exchange_name"] == "bancor_v3"]
+            non_bancor3_pool_data = static_pool_data[static_pool_data["exchange_name"] != "bancor_v3"]
+            non_bancor3_pool_data = non_bancor3_pool_data.sample(
+                n=int(static_pool_data_sample_sz)
+            )
+            static_pool_data = pd.concat([bancor3_pool_data, non_bancor3_pool_data])
         uniswap_v2_event_mappings = pd.read_csv(
-            f"fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
+            "fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
         )
-        uniswap_v2_event_mappings = {
-            k: v for k, v in uniswap_v2_event_mappings[["address", "exchange"]].values
-        }
-        tokens = pd.read_csv(f"fastlane_bot/data/tokens.csv", low_memory=False)
+        uniswap_v2_event_mappings = dict(
+            uniswap_v2_event_mappings[["address", "exchange"]].values
+        )
+        tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
     except pd.errors.ParserError:
         cfg.logger.error("Error parsing the CSV file")
         raise
@@ -172,6 +170,10 @@ def main(
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
+
+    print(f"cid == {static_pool_data[static_pool_data['cid'] == '0x26acb07a2fec88e2d90866801ac1a300b4309ceb0d4d7d470097b5bc2ccafc80'][['address', 'descr', ]].values}")
+
+
 
     # Initialize data fetch manager
     mgr = Manager(
@@ -335,15 +337,6 @@ def run(
         except Exception as e:
             mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
-        # if cache_latest_only:
-        #     path = f"{dbfs_path}missing_events.json"
-        # else:
-        #     if not os.path.isdir("unmapped_events"):
-        #         os.mkdir("unmapped_events")
-        #     path = f"unmapped_events/missing_{current_block}.json"
-        # with open(path, "w") as f:
-        #     f.write(json.dumps(mgr.unmapped_uni2_events))
-
     def parse_bancor3_rows_to_update(rows_to_update: List[Hashable]) -> Tuple[List[Hashable], List[Hashable]]:
         """
         Parses the rows to update for Bancor v3 pools.
@@ -390,104 +383,109 @@ def run(
     bot = None
     loop_idx = last_block = 0
     while True:
-        try:
+        # try:
 
-            # Save initial state of pool data to assert whether it has changed
-            initial_state = mgr.pool_data.copy()
+        # Save initial state of pool data to assert whether it has changed
+        initial_state = mgr.pool_data.copy()
 
-            # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            start_block = max([block['last_updated_block'] for block in mgr.pool_data])-reorg_delay if last_block != 0 else \
-                mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
+        # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
+        start_block = (
+            max(block['last_updated_block'] for block in mgr.pool_data)
+            - reorg_delay
+            if last_block != 0
+            else mgr.web3.eth.blockNumber
+            - reorg_delay
+            - alchemy_max_block_fetch
+        )
 
-            # Get all events from the last block to the current block
-            current_block = mgr.web3.eth.blockNumber - reorg_delay
+        # Get all events from the last block to the current block
+        current_block = mgr.web3.eth.blockNumber - reorg_delay
 
-            mgr.cfg.logger.info(f"Fetching events from {start_block} to {current_block}... {last_block}")
+        mgr.cfg.logger.info(f"Fetching events from {start_block} to {current_block}... {last_block}")
 
-            # Get all event filters, events, and flatten them
-            events = [
+        # Get all event filters, events, and flatten them
+        events = [
+            complex_handler(event)
+            for event in [
                 complex_handler(event)
-                for event in [
-                    complex_handler(event)
-                    for event in get_all_events(
-                        get_event_filters(start_block, current_block, reorg_delay)
-                    )
-                ]
-            ]
-
-            # Filter out the latest events per pool, save them to disk, and update the pools
-            latest_events = filter_latest_events(mgr, events)
-            mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
-
-            # Save the latest events to disk
-            save_events_to_json(latest_events, start_block, current_block)
-
-            # Update the pools from the latest events
-            update_pools_from_events(latest_events)
-
-            # If this is the first iteration, update all pools without a recent event from the contracts
-            if last_block == 0 and backdate_pools:
-                rows_to_update = mgr.get_rows_to_update(start_block)
-                rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
-
-                # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
-                bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(rows_to_update)
-                for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    update_pools_directly_from_contracts(rows_to_update)
-
-            # Update the pool data on disk
-            rows_to_update = []
-            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
-            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/USDC-eB48' and pool['exchange_name'] == 'bancor_v3']
-            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/WBTC-C599' and pool['exchange_name'] == 'bancor_v3']
-            update_pools_directly_from_contracts(rows_to_update)
-
-            # Update the last block and write the pool data to disk for debugging, and to backup the state
-            last_block = current_block
-            write_pool_data_to_disk(current_block)
-
-            # check if any duplicate cid's exist in the pool data
-            mgr.deduplicate_pool_data()
-            cids = [pool['cid'] for pool in mgr.pool_data]
-            assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
-
-            # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
-            del bot
-            bot = init_bot(mgr)
-
-            # Compare the initial state to the final state, and update the state if it has changed
-            final_state = mgr.pool_data.copy()
-            assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-            if initial_state != final_state:
-                mgr.cfg.logger.info("State has changed...")
-
-            bot.db.handle_token_key_cleanup()
-            bot.db.remove_unmapped_uniswap_v2_pools()
-
-
-            # Remove zero liquidity pools
-            if loop_idx > 0:
-                bot.db.remove_zero_liquidity_pools()
-                bot.db.remove_unsupported_exchanges()
-
-                # Run the bot
-                bot.run(
-                    polling_interval=polling_interval,
-                    flashloan_tokens=flashloan_tokens,
-                    mode="single",
-                    arb_mode=arb_mode,
+                for event in get_all_events(
+                    get_event_filters(start_block, current_block, reorg_delay)
                 )
+            ]
+        ]
 
-            # Increment the loop index
-            loop_idx += 1
+        # Filter out the latest events per pool, save them to disk, and update the pools
+        latest_events = filter_latest_events(mgr, events)
+        mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
-            # break
-            # Sleep for the polling interval
-            time.sleep(polling_interval)
+        # Save the latest events to disk
+        save_events_to_json(latest_events, start_block, current_block)
 
-        except Exception as e:
-            mgr.cfg.logger.error(f"Error in main loop: {e}")
-            time.sleep(polling_interval)
+        # Update the pools from the latest events
+        update_pools_from_events(latest_events)
+
+        # If this is the first iteration, update all pools without a recent event from the contracts
+        if last_block == 0 and backdate_pools:
+            rows_to_update = mgr.get_rows_to_update(start_block)
+            rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
+
+            # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
+            bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(rows_to_update)
+            for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
+                update_pools_directly_from_contracts(rows_to_update)
+
+        # Update the pool data on disk
+        rows_to_update = []
+        rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/ETH-EEeE' and pool['exchange_name'] == 'bancor_v3']
+        rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/USDC-eB48' and pool['exchange_name'] == 'bancor_v3']
+        rows_to_update += [idx for idx, pool in enumerate(mgr.pool_data) if pool['pair_name'] == 'BNT-FF1C/WBTC-C599' and pool['exchange_name'] == 'bancor_v3']
+        update_pools_directly_from_contracts(rows_to_update)
+
+        # Update the last block and write the pool data to disk for debugging, and to backup the state
+        last_block = current_block
+        write_pool_data_to_disk(current_block)
+
+        # check if any duplicate cid's exist in the pool data
+        mgr.deduplicate_pool_data()
+        cids = [pool['cid'] for pool in mgr.pool_data]
+        assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
+
+        # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
+        del bot
+        bot = init_bot(mgr)
+
+        # Compare the initial state to the final state, and update the state if it has changed
+        final_state = mgr.pool_data.copy()
+        assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+        if initial_state != final_state:
+            mgr.cfg.logger.info("State has changed...")
+
+        bot.db.handle_token_key_cleanup()
+        bot.db.remove_unmapped_uniswap_v2_pools()
+
+
+        # Remove zero liquidity pools
+        if loop_idx > 0:
+            bot.db.remove_zero_liquidity_pools()
+            bot.db.remove_unsupported_exchanges()
+
+            # Run the bot
+            bot.run(
+                polling_interval=polling_interval,
+                flashloan_tokens=flashloan_tokens,
+                mode="single",
+                arb_mode=arb_mode,
+            )
+
+        # Increment the loop index
+        loop_idx += 1
+
+        # Sleep for the polling interval
+        time.sleep(polling_interval)
+
+        # except Exception as e:
+        #     mgr.cfg.logger.error(f"Error in main loop: {e}")
+        #     time.sleep(polling_interval)
 
 
 if __name__ == "__main__":
