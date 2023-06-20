@@ -892,18 +892,8 @@ class CarbonBot(CarbonBotBase):
         s3 = [] if len(all_bancor_v3_curves) == 0 else all_bancor_v3_curves[0]
         print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_curves: {len(all_bancor_v3_curves)}, {s3}")
 
-        all_bancor_v3_tokens = CCm.byparams(exchange='bancor_v3').tknys()
-        print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] all_bancor_v3_tokens: {len(all_bancor_v3_tokens)}, {all_bancor_v3_tokens}")
-
-        # combos = [
-        #     (tkn0, tkn1)
-        #     for tkn0, tkn1 in itertools.product(all_bancor_v3_tokens, all_bancor_v3_tokens)
-        #     # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-        #     if tkn0 != tkn1
-        # ]
-
         all_tokens = CCm.tokens()
-        flashloan_tokens = CCm.byparams(exchange='bancor_v3').tokens()
+        flashloan_tokens = CCm.byparams(exchange='bancor_v3').tknys()
 
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
@@ -1092,8 +1082,6 @@ class CarbonBot(CarbonBotBase):
         print(f"[bot.py _find_arbitrage_opportunities_bancor_v3] combos: {combos}")
 
         for tkn0, tkn1 in combos:
-            # print(f"{tkn0}/{tkn1}")
-             #CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves = CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves += CCm.bypairs(f"{tkn1}/{tkn0}")
             external_curves = list(set(external_curves))
