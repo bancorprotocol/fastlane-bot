@@ -220,10 +220,10 @@ class QueryInterface:
             The pool and tokens object
 
         """
-        return PoolAndTokens(
+        result = PoolAndTokens(
             ConfigObj=self.ConfigObj,
             id=idx,
-            **{key: record.get(key, None) for key in [
+            **{key: record.get(key) for key in [
                 'cid', 'last_updated', 'last_updated_block', 'descr', 'pair_name',
                 'exchange_name', 'fee', 'fee_float', 'tkn0_balance', 'tkn1_balance',
                 'z_0', 'y_0', 'A_0', 'B_0', 'z_1', 'y_1', 'A_1', 'B_1', 'sqrt_price_q96',
@@ -231,6 +231,11 @@ class QueryInterface:
                 'tkn1_key', 'tkn0_address', 'tkn0_decimals', 'tkn1_address', 'tkn1_decimals'
             ]}
         )
+        result.tkn0 = result.pair_name.split('/')[0].split('-')[0]
+        result.tkn1 = result.pair_name.split('/')[1].split('-')[0]
+        result.tkn0_key = result.pair_name.split('/')[0]
+        result.tkn1_key = result.pair_name.split('/')[1]
+        return result
 
     def get_tokens(self) -> List[Token]:
         """
@@ -265,10 +270,10 @@ class QueryInterface:
 
         """
         return Token(
-            symbol=record.get(f"{prefix}symbol", None),
-            decimals=record.get(f"{prefix}decimals", None),
-            key=record.get(f"{prefix}key", None),
-            address=record.get(f"{prefix}address", None),
+            symbol=record.get(f"{prefix}symbol"),
+            decimals=record.get(f"{prefix}decimals"),
+            key=record.get(f"{prefix}key"),
+            address=record.get(f"{prefix}address"),
         )
 
     def get_bnt_price_from_tokens(self, price: float, tkn: Token) -> float:

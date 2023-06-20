@@ -68,8 +68,8 @@ from fastlane_bot.config import Config
 from .data_fetcher.interface import QueryInterface
 # from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
-from .modes.multi_pairwise import FindArbitrageMultiPairwise
-from .modes.single_pairwise import FindArbitrageSinglePairwise
+from .modes.pairwise_multi import FindArbitrageMultiPairwise
+from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .utils import num_format, log_format, num_format_float
 
 
@@ -222,7 +222,7 @@ class CarbonBotBase():
         pools_and_tokens = self.db.get_pool_data_with_tokens()
         curves = []
         tokens = self.db.get_tokens()
-        ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
+        ADDRDEC = {t.key: (t.address, int(float(t.decimals))) for t in tokens}
         # self.ConfigObj.logger.debug(f"ADDRDEC {ADDRDEC}")
         for p in pools_and_tokens:
             try:
@@ -244,7 +244,8 @@ class CarbonBotBase():
                 # raise
             except Univ3Calculator.DecimalsMissingError as e:
                 self.ConfigObj.logger.error(f"[get_curves] MUST FIX DECIMALS MISSING [{e}]\n")
-                # raise
+                self.ConfigObj.logger.error(f"[get_curves] {p} \n")
+                raise
             except Exception as e:
                 self.ConfigObj.logger.error(f"[get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n")
                 # raise

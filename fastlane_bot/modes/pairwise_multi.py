@@ -1,9 +1,9 @@
-from fastlane_bot.modes.base import ArbitrageFinderBase
+from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
-class FindArbitrageMultiPairwise(ArbitrageFinderBase):
+class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
     def get_trade_instructions(
         self, arb_mode, trade_instructions_df, curve_combo, tkn0, tkn1, src_token, r, O
     ):
