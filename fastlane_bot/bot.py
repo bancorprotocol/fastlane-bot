@@ -68,6 +68,8 @@ from fastlane_bot.config import Config
 from .data_fetcher.interface import QueryInterface
 # from .db.mock_model_managers import MockDatabaseManager
 from .helpers.txhelpers import TxHelper
+from .modes.multi_pairwise import FindArbitrageMultiPairwise
+from .modes.single_pairwise import FindArbitrageSinglePairwise
 from .utils import num_format, log_format, num_format_float
 
 
@@ -394,6 +396,7 @@ class CarbonBot(CarbonBotBase):
             return all_tokens, combos
 
         candidates = []
+        self.ConfigObj.logger.debug(f"\n ************ combos: {len(combos)} ************\n")
         for tkn0, tkn1 in combos:
             r = None
             self.C.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
@@ -1219,6 +1222,7 @@ class CarbonBot(CarbonBotBase):
     def _run(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode: str = None, randomizer=True
     ) -> Optional[Tuple[str, List[Any]]]:
+
         ## Find arbitrage opportunities
         random_mode = self.AO_CANDIDATES if randomizer else None
 
@@ -1226,11 +1230,15 @@ class CarbonBot(CarbonBotBase):
         arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
 
         if arb_mode == self.AM_SINGLE:
-            r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm, result=random_mode)
+            finder = FindArbitrageSinglePairwise(flashloan_tokens=flashloan_tokens, CCm=CCm, mode='bothin', result=random_mode, ConfigObj=self.ConfigObj)
+            r = finder.find_arbitrage(arb_mode=arb_mode)
+            # r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm, result=random_mode)
+        elif arb_mode == self.AM_MULTI:
+            finder = FindArbitrageMultiPairwise(flashloan_tokens=flashloan_tokens, CCm=CCm, mode='bothin', result=random_mode, ConfigObj=self.ConfigObj)
+            r = finder.find_arbitrage(arb_mode=arb_mode)
+            # r = self._find_arbitrage_opportunities_carbon_multi_pairwise(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_TRIANGLE:
             r = self._find_arbitrage_opportunities_carbon_single_triangle(flashloan_tokens, CCm, result=random_mode)
-        elif arb_mode == self.AM_MULTI:
-            r = self._find_arbitrage_opportunities_carbon_multi_pairwise(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_MULTI_TRIANGLE:
             r = self._find_arbitrage_opportunities_carbon_multi_triangle(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_BANCOR_V3:

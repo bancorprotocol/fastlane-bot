@@ -1,66 +1,65 @@
-import itertools
-from typing import List
-
-from fastlane_bot import Config
 from fastlane_bot.modes.base import ArbitrageFinderBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
-class ArbitrageFinderMultiPairwise(ArbitrageFinderBase):
-    def find_arbitrage(self, flashloan_tokens: List[str], CCm: CPCContainer, mode: str = "bothin", result: str = None, ConfigObj: Config = None):
-        assert mode == "bothin", "parameter not used"
+class FindArbitrageMultiPairwise(ArbitrageFinderBase):
+    def get_trade_instructions(
+        self, arb_mode, trade_instructions_df, curve_combo, tkn0, tkn1, src_token, r, O
+    ):
 
-        best_profit, best_src_token, best_trade_instructions, best_trade_instructions_df, best_trade_instructions_dic = self.initialize_best_ops()
-        all_tokens, combos = self.get_tokens_combos(flashloan_tokens, CCm, result)
+        non_base_exchange_cids = [
+            curve.cid
+            for curve in curve_combo
+            if curve.params.get("exchange") != self.base_exchange
+        ]
+        non_base_exchange_row = trade_instructions_df.loc[non_base_exchange_cids[0]]
+        tkn0_into_base_exchange = non_base_exchange_row[0] < 0
+        wrong_direction_cids = self.get_wrong_direction_cids(
+            tkn0_into_base_exchange, trade_instructions_df
+        )
 
-        if result == self.AO_TOKENS: return all_tokens, combos
+        if non_base_exchange_cids and wrong_direction_cids:
+            self.ConfigObj.logger.debug(
+                f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}"
+            )
+            new_curves = [
+                curve for curve in curve_combo if curve.cid not in wrong_direction_cids
+            ]
 
-        candidates = self.find_candidates(combos, CCm, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions)
-        return candidates if result == self.AO_CANDIDATES else (best_profit, best_trade_instructions_df, best_trade_instructions_dic, best_src_token, best_trade_instructions)
+            # Rerun main flow with the new set of curves
+            O, r, trade_instructions_df = self.rerun_flow_with_new_curves(
+                new_curves, src_token, tkn0, tkn1
+            )
 
-    def initialize_best_ops(self):
-        return 0, None, None, None, None
+        trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+        trade_instructions = r.trade_instructions()
+        self.ConfigObj.logger.debug(
+            f"\n\ntrade_instructions_df={trade_instructions_df}\ntrade_instructions_dic={trade_instructions_dic}\ntrade_instructions={trade_instructions}\n\n"
+        )
 
-    def get_tokens_combos(self, flashloan_tokens, CCm, result):
-        all_tokens = CCm.tokens()
-        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
-        combos = [(tkn0, tkn1) for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect) if tkn0 != tkn1]
-        return all_tokens, combos
+        return trade_instructions_df, trade_instructions_dic, trade_instructions
 
-    def find_candidates(self, combos, CCm, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions):
-        candidates = []
-        for tkn0, tkn1 in combos:
-            r = None
-            self.C.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
-            CC = CCm.bypairs(f"{tkn0}/{tkn1}")
-            if len(CC) < 2: continue
+    def get_wrong_direction_cids(self, tkn0_into_base_exchange, trade_instructions_df):
+        return [
+            idx
+            for idx, row in trade_instructions_df.iterrows()
+            if ("-0" in idx or "-1" in idx)
+            and (
+                (tkn0_into_base_exchange and row[0] < 0)
+                or (not tkn0_into_base_exchange and row[0] > 0)
+            )
+        ]
 
-            # Refactor this block of code into a separate function for improved readability and maintainability
-            candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions = self.process_curve_combos(CC, tkn0, tkn1, candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions)
-        return candidates
-
-    def process_curve_combos(self, CC, tkn0, tkn1, candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions):
-        carbon_curves = [x for x in CC.curves if x.params.exchange == 'carbon_v1']
-        not_carbon_curves = [x for x in CC.curves if x.params.exchange != 'carbon_v1']
-        curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
-
-        for curve_combo in curve_combos:
-            CC_cc = CPCContainer(curve_combo)
-            O = CPCArbOptimizer(CC_cc)
-            src_token = tkn1
-            try:
-                pstart = (
-                    {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p})
-                r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
-                trade_instructions_df, trade_instructions_dic, trade_instructions = self.get_trade_instructions(r, O)
-
-                if self.is_valid_trade(trade_instructions_df, trade_instructions_dic):
-                    profit = self.calculate_profit(CCm, src_token, r.result)
-                    netchange = self.get_netchange(trade_instructions_df)
-                    candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions = self.check_candidate(profit, src_token, trade_instructions_df, trade_instructions_dic, trade_instructions, candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions, netchange)
-            except Exception as e:
-                continue
-        return candidates, best_profit, best_src_token, best_trade_instructions_df, best_trade_instructions_dic, best_trade_instructions
-
-
+    def rerun_flow_with_new_curves(self, new_curves, src_token, tkn0, tkn1):
+        CC_cc = CPCContainer(new_curves)
+        O = CPCArbOptimizer(CC_cc)
+        pstart = {
+            tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
+        }  # this intentionally selects the non_base_exchange curve
+        r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
+        trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+        self.ConfigObj.logger.debug(
+            f"trade_instructions_df after: {trade_instructions_df.to_string()}"
+        )
+        return O, r, trade_instructions_df
