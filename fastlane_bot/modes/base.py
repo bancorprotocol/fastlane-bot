@@ -68,6 +68,9 @@ class ArbitrageFinderBase:
         except Exception as e:
             return [500]
 
+    def initialize_best_ops(self):
+        return 0, None, None, None, None
+
     def is_candidate(self, profit, netchange):
         condition_zeros_one_token = max(netchange) < 1e-4
         return condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT

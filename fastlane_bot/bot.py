@@ -1219,36 +1219,13 @@ class CarbonBot(CarbonBotBase):
     def _run(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode: str = None, randomizer=True
     ) -> Optional[Tuple[str, List[Any]]]:
-        """
-        Working-level entry point for run(), performing the actual execution.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens, ie all tokens that can be borrowed.
-        CCm: CPCContainer
-            The CPCContainer object containing all market curves.
-        result: XS_XXX or None
-            What intermediate result to return (default: None)
-        arb_mode: AM_REGULAR or AM_SINGLE or AM_TRIANGLE or AM_MULTI or AM_MULTI_TRIANGLE or None
-            What way to search arbs, 'single' is carbon single pair-wise
-            `AM_MULTI_TRIANGLE` is carbon multi triangle
-        Returns
-        -------
-        str
-            The transaction hash.
-        """
         ## Find arbitrage opportunities
         random_mode = self.AO_CANDIDATES if randomizer else None
 
         ## Find arbitrage opportunities
         arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
 
-        arb_mode = self.AM_BANCOR_V3
-
-        if arb_mode == self.AM_REGULAR:
-            r = self._find_arbitrage_opportunities(flashloan_tokens, CCm, result=random_mode)
-        elif arb_mode == self.AM_SINGLE:
+        if arb_mode == self.AM_SINGLE:
             r = self._find_arbitrage_opportunities_carbon_single_pairwise(flashloan_tokens, CCm, result=random_mode)
         elif arb_mode == self.AM_TRIANGLE:
             r = self._find_arbitrage_opportunities_carbon_single_triangle(flashloan_tokens, CCm, result=random_mode)
@@ -1269,6 +1246,9 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
 
+        return self._handle_trade_instructions(CCm, arb_mode, r, result)
+
+    def _handle_trade_instructions(self, CCm, arb_mode, r, result):
         (
             best_profit,
             best_trade_instructions_df,
@@ -1276,34 +1256,27 @@ class CarbonBot(CarbonBotBase):
             best_src_token,
             best_trade_instructions,
         ) = r
-
         # Order the trades instructions suitable for routing and scale the amounts
         ordered_trade_instructions_dct, tx_in_count = self._simple_ordering_by_src_token(best_trade_instructions_dic,
                                                                                          best_src_token)
         ordered_scaled_dcts = self._basic_scaling(ordered_trade_instructions_dct, best_src_token)
         if result == self.XS_ORDSCAL:
             return ordered_scaled_dcts
-
         ## Convert opportunities to trade instructions
         ordered_trade_instructions_objects = self._convert_trade_instructions(ordered_scaled_dcts)
         if result == self.XS_TI:
             return ordered_trade_instructions_objects
-
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
-
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
             trade_instructions_objects=ordered_trade_instructions_objects
         )
         del ordered_trade_instructions_objects  # TODO: REMOVE THIS
         if result == self.XS_AGGTI:
             return agg_trade_instructions
-
         calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
-
         if result == self.XS_EXACT:
             return calculated_trade_instructions
-
         fl_token = calculated_trade_instructions[0].tknin_key
         fl_token_with_weth = fl_token
         if (fl_token == 'WETH-6Cc2'):
@@ -1321,61 +1294,33 @@ class CarbonBot(CarbonBotBase):
         profit_usd = best_profit * Decimal(str(usd_bnt))
         self.ConfigObj.logger.debug(
             f"updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
-        # except Exception as e:
-        #     self.ConfigObj.logger.error(f"[Failed to update profit in BNT for price of token: {fl_token}] error:{e}")
-        #     profit_usd=0
-
-        flashloans = [{"token": fl_token, "amount": num_format_float(calculated_trade_instructions[0].amtin), "profit": num_format_float(flashloan_tkn_profit)}]
-
-        log_dict = {"type":arb_mode, "profit_bnt": num_format_float(best_profit), "profit_usd": num_format_float(profit_usd),"flashloan": flashloans, "trades": []}
-
-
+        flashloans = [{"token": fl_token, "amount": num_format_float(calculated_trade_instructions[0].amtin),
+                       "profit": num_format_float(flashloan_tkn_profit)}]
+        log_dict = {"type": arb_mode, "profit_bnt": num_format_float(best_profit),
+                    "profit_usd": num_format_float(profit_usd), "flashloan": flashloans, "trades": []}
         for idx, trade in enumerate(calculated_trade_instructions):
-            log_dict["trades"].append({"trade_index": idx, "exchange": trade.exchange_name, "tkn_in": trade.tknin, "amount_in": num_format_float(trade.amtin), "tkn_out": trade.tknout, "amt_out": num_format_float(trade.amtout), "cid0": trade.cid[-10:]})
-
+            log_dict["trades"].append({"trade_index": idx, "exchange": trade.exchange_name, "tkn_in": trade.tknin,
+                                       "amount_in": num_format_float(trade.amtin), "tkn_out": trade.tknout,
+                                       "amt_out": num_format_float(trade.amtout), "cid0": trade.cid[-10:]})
         self.ConfigObj.logger.info(f"{log_format(log_data=log_dict, log_name='calculated_arb')}")
-
         if best_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
             self.ConfigObj.logger.info(
                 f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding.")
             return (None, None)
-
-        # Saved previous agg trade instructions location
-        # agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
-        #     trade_instructions_objects=calculated_trade_instructions
-        # )
-        # del ordered_trade_instructions_objects  # TODO: REMOVE THIS
-        # if result == self.XS_AGGTI:
-        #     return agg_trade_instructions
-
         # Get the flashloan amount
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-        # flashloan_amount = int(sum(agg_trade_instructions[i].amtin_wei for i in range(tx_in_count)))
-
-        # Get the flashloan token and verify
-        # fl_token = agg_trade_instructions[0].tknin_key
-        is_carbon = agg_trade_instructions[0].raw_txs != []
-        # print(fl_token, agg_trade_instructions[0].raw_txs, is_carbon)
-
-        # elif (fl_token == 'WETH-6Cc2') and not is_carbon:
-        # else:
-        #     raise ValueError("Flashloan WETH not yet supported")
         flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
             self.db.get_token(key=fl_token).address
         )
-
         self.ConfigObj.logger.debug(f"flashloan_amount: {flashloan_amount}")
         if result == self.XS_ORDINFO:
             return agg_trade_instructions, flashloan_amount, flashloan_token_address
-
         ## Encode trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(agg_trade_instructions)
         if result == self.XS_ENCTI:
             return encoded_trade_instructions
-
         ## Determine route
         deadline = self._get_deadline()
-
         # Get the route struct
         route_struct = [
             asdict(rs) for rs in tx_route_handler.get_route_structs(
@@ -1384,13 +1329,10 @@ class CarbonBot(CarbonBotBase):
         ]
         if result == self.XS_ROUTE:
             return route_struct, flashloan_amount, flashloan_token_address
-
         ## Submit transaction and obtain transaction receipt
         assert result is None, f"Unknown result requested {result}"
-
         # Get the cids of the trade instructions
         cids = list({ti['cid'].split('-')[0] for ti in best_trade_instructions_dic})
-
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             return (self._validate_and_submit_transaction_tenderly(
                 ConfigObj=self.ConfigObj,
@@ -1398,20 +1340,15 @@ class CarbonBot(CarbonBotBase):
                 src_amount=flashloan_amount,
                 src_address=flashloan_token_address,
             ), cids)
-
         # log the flashloan arbitrage tx info
         self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
         self.ConfigObj.logger.debug(f"Flashloan token address: {flashloan_token_address}")
         self.ConfigObj.logger.debug(f"Route Struct: \n {route_struct}")
         self.ConfigObj.logger.debug(f"Trade Instructions: \n {best_trade_instructions_dic}")
-        # self.ConfigObj.logger.debug(f"Trade Instructions Objects: \n {ordered_trade_instructions_objects}")
-        # self.ConfigObj.logger.debug(f"Aggregated Trade Instructions: \n {agg_trade_instructions}")
-
         pool = (
             self.db.get_pool(exchange_name=self.ConfigObj.BANCOR_V3_NAME, pair_name='BNT-FF1C/ETH-EEeE')
         )
         bnt_eth = (int(pool.tkn0_balance), int(pool.tkn1_balance))
-
         # Init TxHelpers
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
         # Submit tx
@@ -1419,21 +1356,6 @@ class CarbonBot(CarbonBotBase):
                                                            src_address=flashloan_token_address, bnt_eth=bnt_eth,
                                                            expected_profit=best_profit, safety_override=False,
                                                            verbose=True, log_object=log_dict), cids)
-
-        # # Initialize tx helper
-        # tx_helper = TxHelper(
-        #     usd_gas_limit=self.usd_gas_limit,
-        #     w3=self.ConfigObj.w3,
-        #     gas_price_multiplier=self.gas_price_multiplier,
-        #     arb_contract=self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        # )
-        # # Submit the transaction
-        # return tx_helper.submit_flashloan_arb_tx(
-        #     arb_data=route_struct,
-        #     flashloan_token_address=flashloan_token_address,
-        #     flashloan_amount=flashloan_amount,
-        #     verbose=True,
-        # ), cids
 
     def _validate_and_submit_transaction_tenderly(self, ConfigObj, route_struct, src_address, src_amount):
         tx_submit_handler = TxSubmitHandler(
