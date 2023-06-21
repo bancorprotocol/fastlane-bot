@@ -240,8 +240,6 @@ class CarbonBot(CarbonBotBase):
         for item in scaled_best_trade_instructions_dic:
             if item["tknin"] == best_src_token:
                 item["amtin"] *= 0.999
-        #             else:
-        #                 scaled_best_trade_instructions_dic[i]["amtin"] *= 0.99
 
         return scaled_best_trade_instructions_dic
 
@@ -273,7 +271,7 @@ class CarbonBot(CarbonBotBase):
         result = [TradeInstruction(**ti) for ti in result]
         return result
 
-    def _check_if_carbon(self, cid: str):  # -> tuple[bool, str, str]:
+    def _check_if_carbon(self, cid: str):
         """
         Checks if the curve is a Carbon curve.
 
@@ -288,7 +286,7 @@ class CarbonBot(CarbonBotBase):
             return True, _cid_tkn, cid
         return False, "", cid
 
-    def _check_if_not_carbon(self, cid: str):  # -> tuple[bool, str, str]:
+    def _check_if_not_carbon(self, cid: str):
         """
         Checks if the curve is a Carbon curve.
         Returns
