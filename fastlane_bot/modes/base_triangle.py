@@ -1,18 +1,71 @@
-import abc
+import itertools
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
 
 
-class ArbitrageFinderMultiBase(ArbitrageFinderBase):
+class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
-    @abc.abstractmethod
-    def get_trade_instructions(
-        self, arb_mode, trade_instructions_df, curve_combo, tkn0, tkn1, src_token, r, O
+    @staticmethod
+    def get_miniverse(
+        y_match_curves_not_carbon,
+        carbon_curves,
+        x_match_curves_not_carbon,
+        flt,
+        arb_mode,
+        combos,
     ):
-        pass
+        if arb_mode in ["single_triangle", "triangle"]:
+            miniverses = list(
+                itertools.product(
+                    y_match_curves_not_carbon, carbon_curves, x_match_curves_not_carbon
+                )
+            )
+        else:
+            external_curve_combos = list(
+                itertools.product(y_match_curves_not_carbon, x_match_curves_not_carbon)
+            )
+            miniverses = [
+                carbon_curves + list(combo) for combo in external_curve_combos
+            ]
+        if miniverses:
+            combos += list(zip([flt] * len(miniverses), miniverses))
+        return combos
 
-    def find_arbitrage(self, arb_mode: str):
-        pass
-
-    def optimize(self, arb_mode, src_token, curve_combo, tkn0, tkn1, O, CC_cc):
-        pass
+    def get_combos(self, flashloan_tokens, CCm, arb_mode):
+        combos = []
+        all_base_exchange_curves = CCm.byparams(exchange=self.base_exchange).curves
+        for flt in flashloan_tokens:  # may wish to run this for one flt at a time
+            non_flt_carbon_curves = [
+                x for x in all_base_exchange_curves if flt not in x.pair
+            ]
+            for non_flt_carbon_curve in non_flt_carbon_curves:
+                target_tkny = non_flt_carbon_curve.tkny
+                target_tknx = non_flt_carbon_curve.tknx
+                carbon_curves = (
+                    CCm.bypairs(f"{target_tknx}/{target_tkny}")
+                    .byparams(exchange=self.base_exchange)
+                    .curves
+                )
+                y_match_curves = CCm.bypairs(
+                    set(CCm.filter_pairs(onein=target_tknx))
+                    & set(CCm.filter_pairs(onein=flt))
+                )
+                x_match_curves = CCm.bypairs(
+                    set(CCm.filter_pairs(onein=target_tkny))
+                    & set(CCm.filter_pairs(onein=flt))
+                )
+                y_match_curves_not_carbon = [
+                    x for x in y_match_curves if x.params.exchange != self.base_exchange
+                ]
+                x_match_curves_not_carbon = [
+                    x for x in x_match_curves if x.params.exchange != self.base_exchange
+                ]
+                combos = self.get_miniverse(
+                    y_match_curves_not_carbon,
+                    carbon_curves,
+                    x_match_curves_not_carbon,
+                    flt,
+                    arb_mode,
+                    combos,
+                )
+        return combos

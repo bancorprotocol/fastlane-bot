@@ -1,5 +1,9 @@
 import abc
-from typing import Any
+from typing import Any, Tuple, Dict, List, Union
+
+import pandas as pd
+
+from fastlane_bot.utils import num_format
 
 
 class ArbitrageFinderBase:
@@ -15,14 +19,12 @@ class ArbitrageFinderBase:
     XS_ORDINFO = "ordinfo"
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
-
     AM_REGULAR = "regular"
     AM_SINGLE = "single"
     AM_TRIANGLE = "triangle"
     AM_MULTI = "multi"
     AM_MULTI_TRIANGLE = "multi_triangle"
     AM_BANCOR_V3 = "bancor_v3"
-
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
 
@@ -48,75 +50,100 @@ class ArbitrageFinderBase:
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
-    def get_trade_instructions(
-        self, arb_mode, trade_instructions_df, curve_combo, tkn0, tkn1, src_token, r, O
-    ):
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+        """
+        Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
+
+        Returns:
+            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
+                           Otherwise, it returns the optimal opportunity.
+        """
         pass
 
-    @abc.abstractmethod
-    def find_arbitrage(self, arb_mode: str):
-        pass
+    def _set_best_ops(self,
+                      best_profit: float,
+                      ops: Tuple,
+                      profit: float,
+                      src_token: str,
+                      trade_instructions: Any,
+                      trade_instructions_df: pd.DataFrame,
+                      trade_instructions_dic: Dict[str, Any]
+                      ) -> Tuple[float, Tuple]:
+        """
+        Set the best operations.
 
-    @abc.abstractmethod
-    def optimize(self, arb_mode, src_token, curve_combo, tkn0, tkn1, O, CC_cc):
-        pass
+        Parameters:
 
-    def calculate_profit(self, CCm, src_token, result):
-        profit_src = -result
-        if src_token == "BNT-FF1C":
+        """
+        self.ConfigObj.logger.debug("*************")
+        self.ConfigObj.logger.debug(f"New best profit: {profit}")
+
+        # Update the best profit and source token
+        best_profit = profit
+        best_src_token = src_token
+
+        # Update the best trade instructions
+        best_trade_instructions_df = trade_instructions_df
+        best_trade_instructions_dic = trade_instructions_dic
+        best_trade_instructions = trade_instructions
+
+        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
+
+        # Update the optimal operations
+        ops = (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions
+        )
+
+        self.ConfigObj.logger.debug("*************")
+
+        return best_profit, ops
+
+    def calculate_profit(self, src_token, profit_src, CCm, cids):
+        """
+        Calculate profit based on the source token.
+        """
+        if src_token == 'BNT-FF1C':
             profit = profit_src
         else:
             try:
-                price_src_per_bnt = (
-                    CCm.bypair(pair=f"BNT-FF1C/{src_token}")
-                    .byparams(exchange="bancor_v3")[0]
-                    .p
-                )
+                price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
                 profit = profit_src / price_src_per_bnt
             except Exception as e:
-                self.ConfigObj.logger.error(f"{e}")
+                self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
+        self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
         return profit
 
     def get_netchange(self, trade_instructions_df):
+        """
+        Get the net change from the trade instructions.
+        """
         try:
             return trade_instructions_df.iloc[-1]
-        except Exception as e:
-            return [500]
+        except Exception:
+            return [500]  # an arbitrary large number
 
-    def get_conditions(self, profit, netchange, ConfigObj, best_profit):
-        condition_better_profit = profit > best_profit
-        ConfigObj.logger.debug(f"profit > best_profit: {condition_better_profit}")
+    def handle_candidates(self, best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions):
+        """
+        Handle candidate addition based on conditions.
+        """
+        netchange = self.get_netchange(trade_instructions_df)
+        condition_better_profit = (profit > best_profit)
         condition_zeros_one_token = max(netchange) < 1e-4
-        ConfigObj.logger.debug(f"max(netchange)<1e-4: {condition_zeros_one_token}")
-        return condition_better_profit, condition_zeros_one_token
+        if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
+            return [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+        return []
 
-    def add_mandatory_candidates(
-            self,
-            profit,
-            ConfigObj,
-            src_token,
-            trade_instructions_df,
-            trade_instructions_dic,
-            trade_instructions,
-            candidates,
-            condition_zeros_one_token,
-    ):
-        if (
-                condition_zeros_one_token and profit > ConfigObj.DEFAULT_MIN_PROFIT
-        ):  # candidate regardless if profitable
-            candidates += [
-                (
-                    profit,
-                    trade_instructions_df,
-                    trade_instructions_dic,
-                    src_token,
-                    trade_instructions,
-                )
-            ]
-
-        return candidates
-
-    def is_new_best(self, profit, best_profit, netchange):
-        condition_better_profit = profit > best_profit
+    def find_best_operations(self, best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions):
+        """
+        Find the best operations based on conditions.
+        """
+        netchange = self.get_netchange(trade_instructions_df)
+        condition_better_profit = (profit > best_profit)
         condition_zeros_one_token = max(netchange) < 1e-4
-        return condition_better_profit and condition_zeros_one_token
+        if condition_better_profit and condition_zeros_one_token:
+            return self._set_best_ops(best_profit, ops, profit, src_token, trade_instructions, trade_instructions_df, trade_instructions_dic)
+        return best_profit, ops
