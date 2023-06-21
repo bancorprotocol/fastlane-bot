@@ -19,6 +19,8 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
                            Otherwise, it returns the optimal opportunity.
         """
+        if self.base_exchange != "carbon_v1":
+            raise ValueError("base_exchange must be carbon_v1 for `multi` mode")
 
         if candidates is None:
             candidates = []

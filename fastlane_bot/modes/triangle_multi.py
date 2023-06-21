@@ -1,12 +1,8 @@
-import abc
-
-import contextlib
 from typing import List, Any, Tuple, Union
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from fastlane_bot.utils import num_format
 
 
 class ArbitrageFinderTriangleMulti(
@@ -23,6 +19,9 @@ class ArbitrageFinderTriangleMulti(
             list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
                            Otherwise, it returns the optimal opportunity.
         """
+
+        if self.base_exchange != "carbon_v1":
+            raise ValueError("base_exchange must be carbon_v1 for `multi` mode")
 
         if candidates is None:
             candidates = []

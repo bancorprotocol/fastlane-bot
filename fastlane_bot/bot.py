@@ -165,10 +165,6 @@ class CarbonBotBase:
         """
         raise NotImplementedError("update() is deprecated. Use `python run_db_update_w_heartbeat.py` instead")
 
-    def drop_all_tables(self):
-        """convenience method for db.drop_all_tables()"""
-        self.db.drop_all_tables()
-
     def get_curves(self) -> CPCContainer:
         """
         Gets the curves from the database.
@@ -395,7 +391,6 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
-
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
     # TODO: This is still a mess. Refactor. [_handle_trade_instructions]

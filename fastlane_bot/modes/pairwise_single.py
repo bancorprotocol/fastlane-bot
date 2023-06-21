@@ -1,5 +1,7 @@
 from typing import List, Any, Tuple, Union
 
+from tqdm.contrib import itertools
+
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
@@ -22,11 +24,12 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
             candidates = []
 
         all_tokens, combos = self.get_combos(self.CCm, self.flashloan_tokens)
+
         if self.result == self.AO_TOKENS:
             return all_tokens, combos
 
-        candidates = []
         for tkn0, tkn1 in combos:
+            r = None
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
@@ -38,9 +41,8 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
             ]
             self.ConfigObj.logger.debug(f"base_exchange: {self.base_exchange}, base_exchange_curves: {len(base_exchange_curves)}, not_base_exchange_curves: {len(not_base_exchange_curves)}")
 
-            curve_combos = self.get_curve_combos(
-                self.arb_mode, base_exchange_curves, not_base_exchange_curves
-            )
+            curve_combos = list(
+                itertools.product(not_base_exchange_curves, base_exchange_curves))
 
             if not curve_combos:
                 continue
