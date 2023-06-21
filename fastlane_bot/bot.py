@@ -327,7 +327,6 @@ class CarbonBot(CarbonBotBase):
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
 
-
     def _get_deadline(self) -> int:
         """
         Gets the deadline for a transaction.
@@ -338,7 +337,8 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-                c.w3.eth.getBlock(c.w3.eth.block_number).timestamp + c.DEFAULT_BLOCKTIME_DEVIATION
+                self.ConfigObj.w3.eth.getBlock(
+                    self.ConfigObj.w3.eth.block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     XS_ARBOPPS = "arbopps"
