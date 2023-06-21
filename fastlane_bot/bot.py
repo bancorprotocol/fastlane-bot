@@ -60,7 +60,7 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from . import Config
+from fastlane_bot.config import Config
 from .data_fetcher.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_single import FindArbitrageSinglePairwise
@@ -230,9 +230,9 @@ class CarbonBot(CarbonBotBase):
         pass
 
     def _simple_ordering_by_src_token(self, best_trade_instructions_dic, best_src_token):
-        '''
+        """
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
-        '''
+        """
         if best_trade_instructions_dic is None:
             raise self.NoArbAvailable(f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}")
         src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token]
@@ -243,9 +243,9 @@ class CarbonBot(CarbonBotBase):
         return ordered_trade_instructions_dct, tx_in_count
 
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
-        '''
+        """
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
-        '''
+        """
         scaled_best_trade_instructions_dic = [
             dict(x.items()) for x in best_trade_instructions_dic
         ]
@@ -343,9 +343,10 @@ class CarbonBot(CarbonBotBase):
 
     XS_ARBOPPS = "arbopps"
     XS_TI = "ti"
+    XS_EXACT = "exact"
     XS_ORDSCAL = "ordscal"
     XS_AGGTI = "aggti"
-    XS_ORDTI = "ordti"
+    XS_ORDINFO = "ordinfo"
     XS_ENCTI = "encti"
     XS_ROUTE = "route"
 
@@ -411,6 +412,7 @@ class CarbonBot(CarbonBotBase):
 
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
+    # TODO: This is still a mess. Refactor. [_handle_trade_instructions]
     def _handle_trade_instructions(self, CCm, arb_mode, r, result):
         (
             best_profit,
