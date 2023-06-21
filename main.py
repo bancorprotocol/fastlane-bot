@@ -44,7 +44,7 @@ load_dotenv()
     help="Filename of the static pool data.",
 )
 @click.option(
-    "--arb_mode", default="bancor_v3", type=str, help="See arb_mode in bot.py"
+    "--arb_mode", default="multi", type=str, help="See arb_mode in bot.py"
 )
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"
@@ -79,7 +79,7 @@ load_dotenv()
 )
 @click.option(
     "--loglevel",
-    default="DEBUG",
+    default="INFO",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
 )
