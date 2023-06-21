@@ -17,6 +17,12 @@ from fastlane_bot.data_fetcher.utils import complex_handler, filter_latest_event
 
 load_dotenv()
 
+# Cheatsheet:
+# python main.py --arb_mode=single --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
+# python main.py --arb_mode=multi --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
+# python main.py --arb_mode=triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
+# python main.py --arb_mode=multi_triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
+# python main.py --arb_mode=single_triangle_bancor3 --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
 
 @click.command()
 @click.option(

@@ -65,6 +65,7 @@ from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
+from .modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
 from .utils import num_format, log_format, num_format_float
 
 
@@ -349,6 +350,8 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleSingle
         elif arb_mode in {'multi_triangle', 'triangle_multi'}:
             return ArbitrageFinderTriangleMulti
+        elif arb_mode in {'bancor_v3', 'single_triangle_bancor3'}:
+            return ArbitrageFinderTriangleSingleBancor3
 
     def _run(
             self, flashloan_tokens: List[str], CCm: CPCContainer, *, result=None, arb_mode: str = None, randomizer=True
