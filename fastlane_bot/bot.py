@@ -51,7 +51,7 @@ from dataclasses import dataclass, InitVar, asdict, field
 from typing import List, Dict, Tuple, Any, Callable
 from typing import Optional
 
-import fastlane_bot.config as c
+from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxSubmitHandler, TxSubmitHandlerBase,
     TxReceiptHandler, TxReceiptHandlerBase,
@@ -60,7 +60,6 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from fastlane_bot.config import Config
 from .data_fetcher.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_single import FindArbitrageSinglePairwise
@@ -97,25 +96,15 @@ class CarbonBotBase:
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
     ConfigObj: Config = None
-
-    genesis_data: InitVar = None  # DEPRECATED; WILL BE REMOVED SOON
-    drop_tables: InitVar = False  # STAYS
-    seed_pools: InitVar = False  # anything else WILL raise
-    update_pools: InitVar = False  # anything else WILL raise
-
     usd_gas_limit: int = 150
     min_profit: int = 60
     polling_interval: int = None
 
-    def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
+    def __post_init__(self):
         """
         The post init method.
         """
 
-        if genesis_data is not None:
-            self.ConfigObj.logger.warning(
-                "WARNING: genesis_data is deprecated. This argument will be removed soon"
-            )
         if self.ConfigObj is None:
             self.ConfigObj = Config()
 
@@ -134,7 +123,7 @@ class CarbonBotBase:
                           TxReceiptHandlerBase), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
 
         if self.TxRouteHandlerClass is None:
-            self.TxRouteHandlerClass = TxRouteHandler  # (ConfigObj=self.ConfigObj)
+            self.TxRouteHandlerClass = TxRouteHandler
         assert issubclass(self.TxRouteHandlerClass,
                           TxRouteHandlerBase), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
 
@@ -222,9 +211,8 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    def __post_init__(self, genesis_data=None, drop_tables=None, seed_pools=None, update_pools=None):
-        super().__post_init__(genesis_data=genesis_data, drop_tables=drop_tables, seed_pools=seed_pools,
-                              update_pools=update_pools)
+    def __post_init__(self):
+        super().__post_init__()
 
     class NoArbAvailable(Exception):
         pass
