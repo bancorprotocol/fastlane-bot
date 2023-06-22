@@ -490,7 +490,40 @@ class TxHelpers:
                 }
             )
         )
-
+    def get_access_list(self, transaction_data, expected_gas, eth_input=None):
+        expected_gas = hex(expected_gas)
+        json_data = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_createAccessList",
+            "params": [
+                {
+                    "from": self.wallet_address,
+                    "to": self.arb_contract.address,
+                    "gas": expected_gas,
+                    "data": transaction_data
+                }
+            ]
+        } if eth_input is None else {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_createAccessList",
+            "params": [
+                {
+                    "from": self.wallet_address,
+                    "to": self.arb_contract.address,
+                    "gas": expected_gas,
+                    "value": hex(eth_input),
+                    "data": transaction_data
+                }
+            ]
+        }
+        response = requests.post(self.alchemy_api_url, json=json_data)
+        if "failed to apply transaction" in response.text:
+            return None
+        else:
+            access_list = json.loads(response.text)['result']['accessList']
+            return access_list
     def build_transaction_with_gas(
         self,
         routes: List[Dict[str, Any]],
@@ -499,6 +532,7 @@ class TxHelpers:
         gas_price: int,
         max_priority: int,
         nonce: int,
+        access_list: bool = True,
         test_fake_gas: bool = False
     ):
         """
@@ -520,6 +554,7 @@ class TxHelpers:
                 )
             )
         except Exception as e:
+
             self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
@@ -536,7 +571,7 @@ class TxHelpers:
                         )
                     )
                 except Exception as e:
-                    print(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
+                    self.ConfigObj.logger.debug(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
         if test_fake_gas:
@@ -548,6 +583,24 @@ class TxHelpers:
                 self.web3.eth.estimate_gas(transaction=transaction)
                 + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
+            if access_list:
+                access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
+
+                if access_list is not None:
+                    transaction_after = transaction
+                    transaction_after["accessList"] = access_list
+                    self.ConfigObj.logger.debug(f"Transaction after access list: {transaction}")
+                    estimated_gas_after = (
+                            self.web3.eth.estimate_gas(transaction=transaction_after)
+                            + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                    )
+                    self.ConfigObj.logger.debug(f"gas before access list: {estimated_gas}, after access list: {estimated_gas_after}")
+                    if estimated_gas_after is not None:
+                        if estimated_gas_after < estimated_gas:
+                            transaction = transaction_after
+                            estimated_gas = estimated_gas_after
+                else:
+                    self.ConfigObj.logger.info(f"Failed to apply access list to transaction")
         except Exception as e:
             self.ConfigObj.logger.info(
                 f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
