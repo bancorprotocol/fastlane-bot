@@ -77,3 +77,70 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         combos,
                     )
         return combos
+    def get_mono_direction_carbon_curves(self, miniverse, trade_instructions_df):
+
+        columns = trade_instructions_df.columns
+        bancor_3_row = trade_instructions_df.head(1)
+
+        token_in = ''
+        token_in_idx = -1
+        print(f"columns= {columns}\nbancor 3 first row: {bancor_3_row}")
+
+
+        first_bancor_v3_pool = trade_instructions_df.iloc[0]
+        second_bancor_v3_pool = trade_instructions_df.iloc[1]
+
+        for idx, token in enumerate(columns):
+            if token == 'BNT-FF1C':
+                continue
+            if first_bancor_v3_pool[token] is not None:
+                if first_bancor_v3_pool[token] < 0:
+                    token_in = token
+                    break
+            elif second_bancor_v3_pool[token] is not None:
+                if second_bancor_v3_pool[token] < 0:
+                    token_in = token
+                    break
+
+        # for idx, token in enumerate(columns):
+        #     if token == 'BNT-FF1C':
+        #         continue
+        #     print(f"bancor_3_row[token]: {bancor_3_row[token]}")
+        #     print(f"bancor_3_row[idx]: {bancor_3_row[idx]}")
+        #
+        #     if bancor_3_row[token] is not None:
+        #         val = bancor_3_row[token]
+        #         if val < 0:
+        #             token_in = token
+        #             token_in_idx = idx
+        #             break
+        #     else:
+        #         token_in = token
+        #         token_in_idx = idx
+        #         break
+
+        non_carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') != "carbon_v1"]
+
+        non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
+
+        # columns = trade_instructions_df.columns
+        # column_index = columns.get_loc(token_in)
+        # tkn0_into_carbon = non_carbon_row[0] < 0
+
+        print(f"[base_triangle] get_mono_direction_carbon_curves: token_in={token_in}, column_index={token_in_idx}")
+        wrong_direction_cids = []
+
+        for idx, row in trade_instructions_df.iterrows():
+            if (row[token_in_idx] < 0) and (
+                    "-0" in idx or "-1" in idx):
+                wrong_direction_cids.append(idx)
+
+
+        # for idx, row in trade_instructions_df.iterrows():
+        #     if ((tkn0_into_carbon and row[0] < 0) or (not tkn0_into_carbon and row[0] > 0)) and (
+        #             "-0" in idx or "-1" in idx):
+        #         wrong_direction_cids.append(idx)
+        # if non_carbon_cids and wrong_direction_cids:
+        #     self.ConfigObj.logger.debug(
+        #         f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}")
+        return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]

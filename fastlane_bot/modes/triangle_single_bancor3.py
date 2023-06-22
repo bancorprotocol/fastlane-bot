@@ -36,6 +36,10 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
             external_curves = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             external_curves += self.CCm.bypairs(f"{tkn1}/{tkn0}")
             external_curves = list(set(external_curves))
+            carbon_curves = [curve for curve in external_curves if curve.params.get('exchange') == "carbon_v1"]
+            external_curves = [curve for curve in external_curves if curve.params.get('exchange') != "carbon_v1"]
+            if len(external_curves) == 0 and len(carbon_curves) == 0:
+                continue
 
             bancor_v3_curve_0 = (
                 self.CCm.bypairs(f"BNT-FF1C/{tkn0}")
@@ -47,15 +51,25 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                 .byparams(exchange='bancor_v3')
                 .curves
             )
+            if bancor_v3_curve_0 is None or bancor_v3_curve_1 is None:
+                continue
+            if len(bancor_v3_curve_0) == 0 or len(bancor_v3_curve_1) == 0:
+                continue
 
-            if external_curves:
-                self.ConfigObj.logger.debug(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
+            # if external_curves:
+            #     self.ConfigObj.logger.debug(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
 
-            miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + external_curves]
-            if len(miniverses) > 3:
+            miniverses = []
+            if len(external_curves) > 0:
+                for curve in external_curves:
+                    miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve]]
+            if len(carbon_curves) > 0:
+                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
+
+            if len(miniverses) > 0:
                 all_miniverses += list(zip(['BNT-FF1C'] * len(miniverses), miniverses))
 
-        if not all_miniverses:
+        if len(all_miniverses) == 0:
             return None
 
         # Check each source token and miniverse combination
@@ -78,6 +92,25 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
+
+                carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') == "carbon_v1"]
+
+                if len(carbon_cids) > 0:
+                    print(f"rerunning curves")
+                    new_curves = self.get_mono_direction_carbon_curves(miniverse=miniverse, trade_instructions_df=trade_instructions_df)
+                    # Rerun main flow with the new set of curves
+                    print(f"new curves: \n{new_curves}")
+                    CC_cc = CPCContainer(new_curves)
+                    O = CPCArbOptimizer(CC_cc)
+                    r = O.margp_optimizer(src_token)
+                    if r is not None:
+                        profit_src = -r.result
+                        trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                        trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                        trade_instructions = r.trade_instructions()
+                    else:
+                        continue
+
             except Exception:
                 continue
 

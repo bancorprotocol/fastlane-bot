@@ -520,12 +520,7 @@ class TxHelpers:
                 )
             )
         except Exception as e:
-        #     self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
-        #     if e.__class__.__name__ == "ContractLogicError":
-        #         self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
-        #         return None
-        #
-            print(f"Error when building transaction: {e.__class__.__name__} {e}")
+            self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
                     message = str(e)
