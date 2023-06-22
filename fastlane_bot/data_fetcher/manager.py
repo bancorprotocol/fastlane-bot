@@ -298,6 +298,7 @@ class Manager:
         """
         exchange_name = self.check_forked_exchange_names(exchange_name, address, event)
         if not exchange_name:
+            print(f"Exchange name not found {event}")
             return None
 
         pool_contract = self.get_pool_contract(exchange_name, address)
@@ -341,16 +342,7 @@ class Manager:
         if exchange_name_default is None:
             exchange_name_default = self.exchange_name_from_event(event)
 
-        if exchange_name_default == "uniswap_v2":
-            exchange_name_default = self.uniswap_v2_event_mappings.get(address)
-            if exchange_name_default != "uniswap_v2":
-                print(f"crosscheck {exchange_name_default} at {address}")
-
-            if exchange_name_default is None or exchange_name_default not in self.exchanges:
-                if exchange_name_default is None:
-                    self.unmapped_uni2_events.append(f"https://etherscan.io/address/{address}")
-                return None
-        return exchange_name_default
+        return self.correct_for_sushiswap(event, exchange_name_default)
 
     def get_pool_contract(self, exchange_name: str, address: str) -> Contract:
         """
@@ -466,7 +458,7 @@ class Manager:
         tkns = self.get_tkn_symbol_and_decimals(
             self.web3, self.erc20_contracts, self.cfg, self.web3.toChecksumAddress(address)
         )
-        return tkns if tkns else (None, None)
+        return tkns or (None, None)
 
     def generate_pool_info(
             self, address, exchange_name, tkn0_address, tkn1_address,
@@ -744,21 +736,16 @@ class Manager:
             The event.
 
         """
-        is_sushi = False
         addr = self.web3.toChecksumAddress(event["address"])
         ex_name = self.exchange_name_from_event(event)
 
         ex_name = self.correct_for_sushiswap(event, ex_name)
         if not ex_name:
             return
-        if ex_name == "sushiswap_v2":
-            is_sushi = True
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
+        pool_info = self.get_pool_info(key, key_value, ex_name) or self.add_pool_info_from_contract(address=addr, event=event, exchange_name=ex_name)
 
-        pool_info = self.get_pool_info(key, key_value, ex_name)
-        if is_sushi:
-            print("[sushi update_from_event] pool_info", pool_info)
         if not pool_info:
             return
 
@@ -827,7 +814,6 @@ class Manager:
         """
         if ex_name == "sushiswap_v2":
             ex_name = "uniswap_v2"
-            print(f"[get_pool_info] sushiswap_v2 key: {key} key_value: {key_value} ex_name: {ex_name}")
 
         return next(
             (

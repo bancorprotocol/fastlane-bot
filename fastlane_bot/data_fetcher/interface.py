@@ -46,10 +46,10 @@ class QueryInterface:
     def remove_unsupported_exchanges(self) -> None:
         initial_state = self.state.copy()
         self.state = [pool for pool in self.state if pool["exchange_name"] in self.exchanges]
-        self.cfg.logger.debug(f"Removed {len(initial_state) - len(self.state)} unsupported exchanges. {len(self.state)} pools remaining")
+        self.cfg.logger.info(f"Removed {len(initial_state) - len(self.state)} unsupported exchanges. {len(self.state)} pools remaining")
 
         # Log the total number of pools remaining for each exchange
-        self.ConfigObj.logger.debug("Pools remaining per exchange:")
+        self.ConfigObj.logger.info("Pools remaining per exchange:")
         for exchange_name in self.exchanges:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
@@ -106,7 +106,7 @@ class QueryInterface:
             The exchange name to log
 
         """
-        self.cfg.logger.debug(f"{exchange_name}: {len(pools)}")
+        self.cfg.logger.info(f"{exchange_name}: {len(pools)}")
 
     def remove_zero_liquidity_pools(self) -> None:
         """
@@ -140,12 +140,12 @@ class QueryInterface:
         """
         initial_state = self.state.copy()
         self.state = [pool for pool in self.state if pool["exchange_name"] != 'uniswap_v2' or (pool["exchange_name"] in ['uniswap_v2', 'sushiswap_v2'] and pool["address"] in self.uniswap_v2_event_mappings)]
-        self.cfg.logger.debug(f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining")
+        self.cfg.logger.info(f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining")
         self.log_umapped_pools_by_exchange(initial_state)
 
     def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
-        self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
+        self.ConfigObj.logger.info("Unmapped uniswap_v2/sushi pools:")
         unmapped_pools = [pool for pool in initial_state if pool not in self.state]
         assert len(unmapped_pools) == len(initial_state) - len(self.state)
         uniswap_v3_unmapped = [pool for pool in unmapped_pools if pool["exchange_name"] == 'uniswap_v3']
@@ -159,7 +159,7 @@ class QueryInterface:
         """
         Remove pools with faulty tokens
         """
-        self.cfg.logger.debug(f"Total number of pools. {len(self.state)} before removing faulty token pools")
+        self.cfg.logger.info(f"Total number of pools. {len(self.state)} before removing faulty token pools")
 
         safe_pools = []
         for pool in self.state:
@@ -168,8 +168,8 @@ class QueryInterface:
                 self.get_token(pool["tkn1_key"])
                 safe_pools.append(pool)
             except Exception as e:
-                self.cfg.logger.debug(f"Exception: {e}")
-                self.cfg.logger.debug(f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token")
+                self.cfg.logger.info(f"Exception: {e}")
+                self.cfg.logger.info(f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token")
 
         self.state = safe_pools
 
