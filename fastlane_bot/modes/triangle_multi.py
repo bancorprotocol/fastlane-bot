@@ -33,9 +33,9 @@ class ArbitrageFinderTriangleMulti(
         for src_token, miniverse in combos:
 
             r = None
-            self.ConfigObj.logger.debug(
-                f"Checking flashloan token = {src_token}, miniverse = {[(x.pair, x.cid[-5:]) for x in miniverse]}"
-            )
+            # self.ConfigObj.logger.debug(
+            #     f"Checking flashloan token = {src_token}, miniverse = {[(x.pair, x.cid[-5:]) for x in miniverse]}"
+            # )
             CC_cc = CPCContainer(miniverse)
             O = CPCArbOptimizer(CC_cc)
             try:

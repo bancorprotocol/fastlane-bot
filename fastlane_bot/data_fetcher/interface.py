@@ -48,6 +48,12 @@ class QueryInterface:
         self.state = [pool for pool in self.state if pool["exchange_name"] in self.exchanges]
         self.cfg.logger.debug(f"Removed {len(initial_state) - len(self.state)} unsupported exchanges. {len(self.state)} pools remaining")
 
+        # Log the total number of pools remaining for each exchange
+        self.ConfigObj.logger.debug("Pools remaining per exchange:")
+        for exchange_name in self.exchanges:
+            pools = self.filter_pools(exchange_name)
+            self.log_pool_numbers(pools, exchange_name)
+
     def has_balance(self, pool: Dict[str, Any], key: str) -> bool:
         """
         Check if a pool has a balance for a given key
@@ -119,15 +125,35 @@ class QueryInterface:
         zero_liquidity_pools = [pool for pool in initial_state if pool not in self.state]
 
         for exchange in exchanges:
-            self.log_pool_numbers([pool for pool in zero_liquidity_pools if pool['exchange_name'] == exchange], exchange + '_zero_liquidity_pools')
+            self.log_pool_numbers(
+                [
+                    pool
+                    for pool in zero_liquidity_pools
+                    if pool['exchange_name'] == exchange
+                ],
+                f'{exchange}_zero_liquidity_pools',
+            )
 
     def remove_unmapped_uniswap_v2_pools(self) -> None:
         """
         Remove unmapped uniswap_v2 pools
         """
         initial_state = self.state.copy()
-        self.state = [pool for pool in self.state if pool["exchange_name"] != 'uniswap_v2' or (pool["exchange_name"] == 'uniswap_v2' and pool["address"] in self.uniswap_v2_event_mappings)]
+        self.state = [pool for pool in self.state if pool["exchange_name"] != 'uniswap_v2' or (pool["exchange_name"] in ['uniswap_v2', 'sushiswap_v2'] and pool["address"] in self.uniswap_v2_event_mappings)]
         self.cfg.logger.debug(f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining")
+        self.log_umapped_pools_by_exchange(initial_state)
+
+    def log_umapped_pools_by_exchange(self, initial_state):
+        # Log the total number of pools filtered out for each exchange
+        self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
+        unmapped_pools = [pool for pool in initial_state if pool not in self.state]
+        assert len(unmapped_pools) == len(initial_state) - len(self.state)
+        uniswap_v3_unmapped = [pool for pool in unmapped_pools if pool["exchange_name"] == 'uniswap_v3']
+        self.log_pool_numbers(uniswap_v3_unmapped, 'uniswap_v3')
+        uniswap_v2_unmapped = [pool for pool in unmapped_pools if pool["exchange_name"] == 'uniswap_v2']
+        self.log_pool_numbers(uniswap_v2_unmapped, 'uniswap_v2')
+        sushiswap_v2_unmapped = [pool for pool in unmapped_pools if pool["exchange_name"] == 'sushiswap_v2']
+        self.log_pool_numbers(sushiswap_v2_unmapped, 'sushiswap_v2')
 
     def remove_faulty_token_pools(self) -> None:
         """

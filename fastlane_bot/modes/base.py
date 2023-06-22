@@ -131,8 +131,8 @@ class ArbitrageFinderBase:
         Handle candidate addition based on conditions.
         """
         netchange = self.get_netchange(trade_instructions_df)
-        condition_better_profit = (profit > best_profit)
         condition_zeros_one_token = max(netchange) < 1e-4
+
         if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
             return [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
         return []

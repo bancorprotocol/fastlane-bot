@@ -142,7 +142,8 @@ class CarbonBotBase:
         """
         return self.ConfigObj
 
-    def versions(self):
+    @staticmethod
+    def versions():
         """
         Returns the versions of the module and its Carbon dependencies.
         """
@@ -208,6 +209,27 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
+    XS_ARBOPPS = "arbopps"
+    XS_TI = "ti"
+    XS_EXACT = "exact"
+    XS_ORDSCAL = "ordscal"
+    XS_AGGTI = "aggti"
+    XS_ORDINFO = "ordinfo"
+    XS_ENCTI = "encti"
+    XS_ROUTE = "route"
+    AM_REGULAR = "regular"
+    AM_SINGLE = "single"
+    AM_TRIANGLE = "triangle"
+    AM_MULTI = "multi"
+    AM_MULTI_TRIANGLE = "multi_triangle"
+    AM_BANCOR_V3 = "bancor_v3"
+    RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+    RUN_SINGLE = "single"
+    RUN_CONTINUOUS = "continuous"
+    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
+    AO_TOKENS = "tokens"
+    AO_CANDIDATES = "candidates"
+
     def __post_init__(self):
         super().__post_init__()
 
@@ -242,7 +264,8 @@ class CarbonBot(CarbonBotBase):
 
         return trades, tx_in_count
 
-    def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
+    @staticmethod
+    def _basic_scaling(best_trade_instructions_dic, best_src_token):
         """
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
         """
@@ -255,7 +278,8 @@ class CarbonBot(CarbonBotBase):
 
         return scaled_best_trade_instructions_dic
 
-    def _drop_error(self, trade_instructions_dct):
+    @staticmethod
+    def _drop_error(trade_instructions_dct):
         return [
             {k: v for k, v in trade_instructions_dct[i].items() if k != 'error'}
             for i in range(len(trade_instructions_dct))
@@ -283,7 +307,8 @@ class CarbonBot(CarbonBotBase):
         result = [TradeInstruction(**ti) for ti in result]
         return result
 
-    def _check_if_carbon(self, cid: str):
+    @staticmethod
+    def _check_if_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
 
@@ -298,7 +323,8 @@ class CarbonBot(CarbonBotBase):
             return True, _cid_tkn, cid
         return False, "", cid
 
-    def _check_if_not_carbon(self, cid: str):
+    @staticmethod
+    def _check_if_not_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
         Returns
@@ -322,9 +348,6 @@ class CarbonBot(CarbonBotBase):
         def r(self):
             return self.result
 
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
-
     def _get_deadline(self) -> int:
         """
         Gets the deadline for a transaction.
@@ -338,22 +361,6 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.w3.eth.getBlock(
                     self.ConfigObj.w3.eth.block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
-
-    XS_ARBOPPS = "arbopps"
-    XS_TI = "ti"
-    XS_EXACT = "exact"
-    XS_ORDSCAL = "ordscal"
-    XS_AGGTI = "aggti"
-    XS_ORDINFO = "ordinfo"
-    XS_ENCTI = "encti"
-    XS_ROUTE = "route"
-
-    AM_REGULAR = "regular"
-    AM_SINGLE = "single"
-    AM_TRIANGLE = "triangle"
-    AM_MULTI = "multi"
-    AM_MULTI_TRIANGLE = "multi_triangle"
-    AM_BANCOR_V3 = "bancor_v3"
 
     @staticmethod
     def _get_arb_finder(arb_mode: str) -> Callable:
@@ -443,7 +450,7 @@ class CarbonBot(CarbonBotBase):
             return calculated_trade_instructions
         fl_token = calculated_trade_instructions[0].tknin_key
         fl_token_with_weth = fl_token
-        if (fl_token == 'WETH-6Cc2'):
+        if fl_token == 'WETH-6Cc2':
             fl_token = "ETH-EEeE"
         # try:
         best_profit = calculated_trade_instructions[-1].amtout - calculated_trade_instructions[0].amtin
@@ -537,11 +544,6 @@ class CarbonBot(CarbonBotBase):
             src_amount=src_amount
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
-
-    RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
-    RUN_SINGLE = "single"
-    RUN_CONTINUOUS = "continuous"
-    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
 
     def validate_mode(self, mode: str):
         """

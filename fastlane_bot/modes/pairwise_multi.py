@@ -33,7 +33,7 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         self.ConfigObj.logger.debug(f"\n ************ combos: {len(combos)} ************\n")
         for tkn0, tkn1 in combos:
             r = None
-            self.ConfigObj.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
+            # self.ConfigObj.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
@@ -76,6 +76,10 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
                 # Calculate the profit
                 profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
+
+                if str(profit) == 'nan':
+                    self.ConfigObj.logger.debug("profit is nan, skipping")
+                    continue
 
                 # Handle candidates based on conditions
                 candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)

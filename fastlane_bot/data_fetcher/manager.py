@@ -343,6 +343,8 @@ class Manager:
 
         if exchange_name_default == "uniswap_v2":
             exchange_name_default = self.uniswap_v2_event_mappings.get(address)
+            if exchange_name_default != "uniswap_v2":
+                print(f"crosscheck {exchange_name_default} at {address}")
 
             if exchange_name_default is None or exchange_name_default not in self.exchanges:
                 if exchange_name_default is None:
@@ -742,11 +744,21 @@ class Manager:
             The event.
 
         """
+        is_sushi = False
         addr = self.web3.toChecksumAddress(event["address"])
         ex_name = self.exchange_name_from_event(event)
+
+        ex_name = self.correct_for_sushiswap(event, ex_name)
+        if not ex_name:
+            return
+        if ex_name == "sushiswap_v2":
+            is_sushi = True
+
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
         pool_info = self.get_pool_info(key, key_value, ex_name)
+        if is_sushi:
+            print("[sushi update_from_event] pool_info", pool_info)
         if not pool_info:
             return
 
@@ -758,6 +770,13 @@ class Manager:
             return
 
         self.update_pool_data(pool_info, data)
+
+    def correct_for_sushiswap(self, event, ex_name):
+        if ex_name and ex_name == 'uniswap_v2':
+            ex_name = self.uniswap_v2_event_mappings.get(event['address'])
+            if ex_name and ex_name == "sushiswap_v2":
+                print("[correct_for_sushiswap] success")
+        return ex_name
 
     def get_key_and_value(self, event: Dict[str, Any], addr: str, ex_name: str) -> Tuple[str, Any]:
         """
@@ -780,7 +799,7 @@ class Manager:
         """
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
-        if ex_name in ["uniswap_v2", "sushiswap_v2", "uniswap_v3"]:
+        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
             return "address", addr
         if ex_name == "bancor_v3":
             value = event["args"]["tkn_address"] if event["args"]["tkn_address"] != self.cfg.BNT_ADDRESS else event["args"]["pool"]
@@ -806,10 +825,20 @@ class Manager:
         Optional[Dict[str, Any]]
             The pool info.
         """
-        for pool in self.pool_data:
-            if pool[key] == key_value and pool["exchange_name"] == ex_name:
-                return self.validate_pool_info(self.web3.toChecksumAddress(key_value), event, pool)
-        return None
+        if ex_name == "sushiswap_v2":
+            ex_name = "uniswap_v2"
+            print(f"[get_pool_info] sushiswap_v2 key: {key} key_value: {key_value} ex_name: {ex_name}")
+
+        return next(
+            (
+                self.validate_pool_info(
+                    self.web3.toChecksumAddress(key_value), event, pool
+                )
+                for pool in self.pool_data
+                if pool[key] == key_value and pool["exchange_name"] == ex_name
+            ),
+            None,
+        )
 
     def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
         """
@@ -1049,5 +1078,6 @@ class Manager:
                     )
                     time.sleep(rate_limiter)
                 else:
-                    self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
-                    break
+                    raise e
+                    # self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
+                    # break

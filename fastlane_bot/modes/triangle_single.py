@@ -27,7 +27,7 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
         # Check each source token and miniverse combination
         for src_token, miniverse in combos:
             r = None
-            self.ConfigObj.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {miniverse}")
+            # self.ConfigObj.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {miniverse}")
 
             # Instantiate the container and optimizer objects
             CC_cc = CPCContainer(miniverse)
