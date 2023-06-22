@@ -387,8 +387,8 @@ class TxHelpers:
             )
             return hex(tx_receipt) or None
         else:
-            print(
-                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!"
+            self.ConfigObj.logger.info(
+                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!\n\n"
             )
             return None
     def get_eth_price(self):

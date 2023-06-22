@@ -56,9 +56,6 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
             if len(bancor_v3_curve_0) == 0 or len(bancor_v3_curve_1) == 0:
                 continue
 
-            # if external_curves:
-            #     self.ConfigObj.logger.debug(f"[bot.py _find_arbitrage_opportunities_bancor_v3] external_curves: {external_curves}")
-
             miniverses = []
             if len(external_curves) > 0:
                 for curve in external_curves:
@@ -92,14 +89,11 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
-
                 carbon_cids = [curve.cid for curve in miniverse if curve.params.get('exchange') == "carbon_v1"]
 
                 if len(carbon_cids) > 0:
-                    print(f"rerunning curves")
                     new_curves = self.get_mono_direction_carbon_curves(miniverse=miniverse, trade_instructions_df=trade_instructions_df)
                     # Rerun main flow with the new set of curves
-                    print(f"new curves: \n{new_curves}")
                     CC_cc = CPCContainer(new_curves)
                     O = CPCArbOptimizer(CC_cc)
                     r = O.margp_optimizer(src_token)
@@ -110,7 +104,6 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                         trade_instructions = r.trade_instructions()
                     else:
                         continue
-
             except Exception:
                 continue
 
@@ -119,12 +112,10 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
             # Calculate the profit
             profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-
             # Handle candidates based on conditions
             candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
 
             # Find the best operations
             best_profit, ops = self.find_best_operations(best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
-
         return candidates if self.result == self.AO_CANDIDATES else ops
 

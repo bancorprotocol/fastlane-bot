@@ -33,7 +33,7 @@ class ArbitrageFinderBase:
         flashloan_tokens,
         CCm,
         mode="bothin",
-        result=None,
+        result=AO_CANDIDATES,
         ConfigObj: Any = None,
         arb_mode: str = None,
     ):

@@ -221,11 +221,26 @@ class CarbonBot(CarbonBotBase):
         if best_trade_instructions_dic is None:
             raise self.NoArbAvailable(f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}")
         src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token]
-        non_src_token_instr = [x for x in best_trade_instructions_dic if x['tknin'] != best_src_token]
-        ordered_trade_instructions_dct = src_token_instr + non_src_token_instr
+        non_src_token_instr = [x for x in best_trade_instructions_dic if (x['tknin'] != best_src_token and x['tknout'] != best_src_token)]
+        src_token_end = [x for x in best_trade_instructions_dic if x['tknout'] == best_src_token]
+        ordered_trade_instructions_dct = src_token_instr + non_src_token_instr + src_token_end
 
         tx_in_count = len(src_token_instr)
         return ordered_trade_instructions_dct, tx_in_count
+
+    def _simple_ordering_by_src_token_v2(self, best_trade_instructions_dic, best_src_token):
+        """
+        Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
+        """
+        if best_trade_instructions_dic is None:
+            raise self.NoArbAvailable(f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}")
+        trades = [x for x in best_trade_instructions_dic if x['tknin'] == best_src_token]
+        tx_in_count = len(trades)
+        while len(trades) < len(best_trade_instructions_dic):
+            next_tkn = trades[-1]["tknout"]
+            trades += [x for x in best_trade_instructions_dic if x['tknin'] == next_tkn]
+
+        return trades, tx_in_count
 
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
