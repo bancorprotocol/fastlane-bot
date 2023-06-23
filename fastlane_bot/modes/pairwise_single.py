@@ -11,7 +11,9 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
 
     arb_mode = "single_pairwise"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
@@ -39,10 +41,13 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
             not_base_exchange_curves = [
                 x for x in CC.curves if x.params.exchange != self.base_exchange
             ]
-            self.ConfigObj.logger.debug(f"base_exchange: {self.base_exchange}, base_exchange_curves: {len(base_exchange_curves)}, not_base_exchange_curves: {len(not_base_exchange_curves)}")
+            self.ConfigObj.logger.debug(
+                f"base_exchange: {self.base_exchange}, base_exchange_curves: {len(base_exchange_curves)}, not_base_exchange_curves: {len(not_base_exchange_curves)}"
+            )
 
             curve_combos = list(
-                itertools.product(not_base_exchange_curves, base_exchange_curves))
+                itertools.product(not_base_exchange_curves, base_exchange_curves)
+            )
 
             if not curve_combos:
                 continue
@@ -67,14 +72,29 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                 # Calculate the profit
                 profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
 
-                if str(profit) == 'nan':
+                if str(profit) == "nan":
                     self.ConfigObj.logger.debug("profit is nan, skipping")
                     continue
 
                 # Handle candidates based on conditions
-                candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+                candidates += self.handle_candidates(
+                    best_profit,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
 
                 # Find the best operations
-                best_profit, ops = self.find_best_operations(best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+                best_profit, ops = self.find_best_operations(
+                    best_profit,
+                    ops,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
 
         return candidates if self.result == self.AO_CANDIDATES else ops

@@ -4,7 +4,6 @@ from fastlane_bot.modes.base import ArbitrageFinderBase
 
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
-
     def get_combos(self, CCm, flashloan_tokens):
         all_tokens = CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
@@ -28,7 +27,3 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
             return list(
                 itertools.product(not_base_exchange_curves, base_exchange_curves)
             )
-
-
-
-

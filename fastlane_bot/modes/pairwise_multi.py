@@ -11,7 +11,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
     arb_mode = "multi_pairwise"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
@@ -30,15 +32,19 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             return all_tokens, combos
 
         candidates = []
-        self.ConfigObj.logger.debug(f"\n ************ combos: {len(combos)} ************\n")
+        self.ConfigObj.logger.debug(
+            f"\n ************ combos: {len(combos)} ************\n"
+        )
         for tkn0, tkn1 in combos:
             r = None
             # self.ConfigObj.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            carbon_curves = [x for x in CC.curves if x.params.exchange == 'carbon_v1']
-            not_carbon_curves = [x for x in CC.curves if x.params.exchange != 'carbon_v1']
+            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            not_carbon_curves = [
+                x for x in CC.curves if x.params.exchange != "carbon_v1"
+            ]
             curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
 
             for curve_combo in curve_combos:
@@ -46,24 +52,38 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                 O = CPCArbOptimizer(CC_cc)
                 src_token = tkn1
                 try:
-                    pstart = (
-                        {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p})
+                    pstart = {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}
                     r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
                     profit_src = -r.result
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                    non_carbon_cids = [curve.cid for curve in curve_combo if
-                                       curve.params.get('exchange') != "carbon_v1"]
+                    non_carbon_cids = [
+                        curve.cid
+                        for curve in curve_combo
+                        if curve.params.get("exchange") != "carbon_v1"
+                    ]
                     non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
                     tkn0_into_carbon = non_carbon_row[0] < 0
-                    wrong_direction_cids = self.get_wrong_direction_cids(tkn0_into_carbon, trade_instructions_df)
+                    wrong_direction_cids = self.get_wrong_direction_cids(
+                        tkn0_into_carbon, trade_instructions_df
+                    )
 
                     if non_carbon_cids and wrong_direction_cids:
-                        O, profit_src, r, trade_instructions_df = self.process_wrong_direction_pools(O, curve_combo,
-                                                                                                     profit_src, r,
-                                                                                                     src_token, tkn0,
-                                                                                                     tkn1,
-                                                                                                     trade_instructions_df,
-                                                                                                     wrong_direction_cids)
+                        (
+                            O,
+                            profit_src,
+                            r,
+                            trade_instructions_df,
+                        ) = self.process_wrong_direction_pools(
+                            O,
+                            curve_combo,
+                            profit_src,
+                            r,
+                            src_token,
+                            tkn0,
+                            tkn1,
+                            trade_instructions_df,
+                            wrong_direction_cids,
+                        )
 
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
@@ -72,24 +92,41 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                     continue
 
                 # Get the cids
-                cids = [ti['cid'] for ti in trade_instructions_dic]
+                cids = [ti["cid"] for ti in trade_instructions_dic]
 
                 # Calculate the profit
                 profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
 
-                if str(profit) == 'nan':
+                if str(profit) == "nan":
                     self.ConfigObj.logger.debug("profit is nan, skipping")
                     continue
 
                 # Handle candidates based on conditions
-                candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+                candidates += self.handle_candidates(
+                    best_profit,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
 
                 # Find the best operations
-                best_profit, ops = self.find_best_operations(best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+                best_profit, ops = self.find_best_operations(
+                    best_profit,
+                    ops,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def get_wrong_direction_cids(self, tkn0_into_carbon: bool, trade_instructions_df: pd.DataFrame) -> list[Hashable]:
+    def get_wrong_direction_cids(
+        self, tkn0_into_carbon: bool, trade_instructions_df: pd.DataFrame
+    ) -> list[Hashable]:
         """
         Get the cids of the wrong direction curves
 
@@ -115,24 +152,35 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             and ("-0" in idx or "-1" in idx)
         ]
 
-    def rerun_main_flow_with_new_curves(self, new_curves: List[Any], src_token: str, tkn0: str, tkn1: str) -> Tuple[Any, float, Any, pd.DataFrame]:
+    def rerun_main_flow_with_new_curves(
+        self, new_curves: List[Any], src_token: str, tkn0: str, tkn1: str
+    ) -> Tuple[Any, float, Any, pd.DataFrame]:
         """
         Rerun main flow with the new set of curves.
         """
         CC_cc = CPCContainer(new_curves)
         O = CPCArbOptimizer(CC_cc)
-        pstart = ({tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p})  # this intentionally selects the non_carbon curve
+        pstart = {
+            tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
+        }  # this intentionally selects the non_carbon curve
         r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
         profit_src = -r.result
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df
 
-    def process_wrong_direction_pools(self, curve_combo: List[Any], wrong_direction_cids: List[str], src_token: str) -> Tuple[Any, float, Any, pd.DataFrame]:
+    def process_wrong_direction_pools(
+        self, curve_combo: List[Any], wrong_direction_cids: List[str], src_token: str
+    ) -> Tuple[Any, float, Any, pd.DataFrame]:
         """
         Process curves with wrong direction pools.
         """
-        new_curves = [curve for curve in curve_combo if curve.cid not in wrong_direction_cids]
-        O, profit_src, r, trade_instructions_df = self.rerun_main_flow_with_new_curves(new_curves, src_token)
-        self.ConfigObj.logger.debug(f"trade_instructions_df after: {trade_instructions_df.to_string()}")
+        new_curves = [
+            curve for curve in curve_combo if curve.cid not in wrong_direction_cids
+        ]
+        O, profit_src, r, trade_instructions_df = self.rerun_main_flow_with_new_curves(
+            new_curves, src_token
+        )
+        self.ConfigObj.logger.debug(
+            f"trade_instructions_df after: {trade_instructions_df.to_string()}"
+        )
         return O, profit_src, r, trade_instructions_df
-

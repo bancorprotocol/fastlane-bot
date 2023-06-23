@@ -9,7 +9,9 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
 
     arb_mode = "single_triangle"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
@@ -22,7 +24,9 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
             candidates = []
 
         # Get combinations of flashloan tokens
-        combos = self.get_combos(self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode)
+        combos = self.get_combos(
+            self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode
+        )
 
         # Check each source token and miniverse combination
         for src_token, miniverse in combos:
@@ -48,20 +52,34 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
                 continue
 
             # Get the candidate ids
-            cids = [ti['cid'] for ti in trade_instructions_dic]
+            cids = [ti["cid"] for ti in trade_instructions_dic]
 
             # Calculate the profit
             profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
 
-            if str(profit) == 'nan':
+            if str(profit) == "nan":
                 self.ConfigObj.logger.debug("profit is nan, skipping")
                 continue
 
             # Handle candidates based on conditions
-            candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+            candidates += self.handle_candidates(
+                best_profit,
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
 
             # Find the best operations
-            best_profit, ops = self.find_best_operations(best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+            best_profit, ops = self.find_best_operations(
+                best_profit,
+                ops,
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
-

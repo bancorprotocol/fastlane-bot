@@ -50,7 +50,9 @@ class ArbitrageFinderBase:
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
@@ -60,15 +62,16 @@ class ArbitrageFinderBase:
         """
         pass
 
-    def _set_best_ops(self,
-                      best_profit: float,
-                      ops: Tuple,
-                      profit: float,
-                      src_token: str,
-                      trade_instructions: Any,
-                      trade_instructions_df: pd.DataFrame,
-                      trade_instructions_dic: Dict[str, Any]
-                      ) -> Tuple[float, Tuple]:
+    def _set_best_ops(
+        self,
+        best_profit: float,
+        ops: Tuple,
+        profit: float,
+        src_token: str,
+        trade_instructions: Any,
+        trade_instructions_df: pd.DataFrame,
+        trade_instructions_dic: Dict[str, Any],
+    ) -> Tuple[float, Tuple]:
         """
         Set the best operations.
 
@@ -87,7 +90,9 @@ class ArbitrageFinderBase:
         best_trade_instructions_dic = trade_instructions_dic
         best_trade_instructions = trade_instructions
 
-        self.ConfigObj.logger.debug(f"best_trade_instructions_df: {best_trade_instructions_df}")
+        self.ConfigObj.logger.debug(
+            f"best_trade_instructions_df: {best_trade_instructions_df}"
+        )
 
         # Update the optimal operations
         ops = (
@@ -95,7 +100,7 @@ class ArbitrageFinderBase:
             best_trade_instructions_df,
             best_trade_instructions_dic,
             best_src_token,
-            best_trade_instructions
+            best_trade_instructions,
         )
 
         self.ConfigObj.logger.debug("*************")
@@ -106,11 +111,15 @@ class ArbitrageFinderBase:
         """
         Calculate profit based on the source token.
         """
-        if src_token == 'BNT-FF1C':
+        if src_token == "BNT-FF1C":
             profit = profit_src
         else:
             try:
-                price_src_per_bnt = CCm.bypair(pair=f"BNT-FF1C/{src_token}").byparams(exchange='bancor_v3')[0].p
+                price_src_per_bnt = (
+                    CCm.bypair(pair=f"BNT-FF1C/{src_token}")
+                    .byparams(exchange="bancor_v3")[0]
+                    .p
+                )
                 profit = profit_src / price_src_per_bnt
             except Exception as e:
                 self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
@@ -126,24 +135,59 @@ class ArbitrageFinderBase:
         except Exception:
             return [500]  # an arbitrary large number
 
-    def handle_candidates(self, best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions):
+    def handle_candidates(
+        self,
+        best_profit,
+        profit,
+        trade_instructions_df,
+        trade_instructions_dic,
+        src_token,
+        trade_instructions,
+    ):
         """
         Handle candidate addition based on conditions.
         """
         netchange = self.get_netchange(trade_instructions_df)
         condition_zeros_one_token = max(netchange) < 1e-4
 
-        if condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT:  # candidate regardless if profitable
-            return [(profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)]
+        if (
+            condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT
+        ):  # candidate regardless if profitable
+            return [
+                (
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
+            ]
         return []
 
-    def find_best_operations(self, best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions):
+    def find_best_operations(
+        self,
+        best_profit,
+        ops,
+        profit,
+        trade_instructions_df,
+        trade_instructions_dic,
+        src_token,
+        trade_instructions,
+    ):
         """
         Find the best operations based on conditions.
         """
         netchange = self.get_netchange(trade_instructions_df)
-        condition_better_profit = (profit > best_profit)
+        condition_better_profit = profit > best_profit
         condition_zeros_one_token = max(netchange) < 1e-4
         if condition_better_profit and condition_zeros_one_token:
-            return self._set_best_ops(best_profit, ops, profit, src_token, trade_instructions, trade_instructions_df, trade_instructions_dic)
+            return self._set_best_ops(
+                best_profit,
+                ops,
+                profit,
+                src_token,
+                trade_instructions,
+                trade_instructions_df,
+                trade_instructions_dic,
+            )
         return best_profit, ops

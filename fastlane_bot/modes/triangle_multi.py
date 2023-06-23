@@ -5,13 +5,13 @@ from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
-class ArbitrageFinderTriangleMulti(
-    ArbitrageFinderTriangleBase
-):
+class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
     arb_mode = "multi_triangle"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
@@ -62,10 +62,10 @@ class ArbitrageFinderTriangleMulti(
                     idx
                     for idx, row in trade_instructions_df.iterrows()
                     if (
-                               (tkn0_into_carbon and row[0] < 0)
-                               or (not tkn0_into_carbon and row[0] > 0)
-                       )
-                       and ("-0" in idx or "-1" in idx)
+                        (tkn0_into_carbon and row[0] < 0)
+                        or (not tkn0_into_carbon and row[0] > 0)
+                    )
+                    and ("-0" in idx or "-1" in idx)
                 ]
                 if non_carbon_cids and wrong_direction_cids:
                     self.ConfigObj.logger.debug(
@@ -94,15 +94,29 @@ class ArbitrageFinderTriangleMulti(
             # Calculate the profit
             profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
 
-            if str(profit) == 'nan':
+            if str(profit) == "nan":
                 self.ConfigObj.logger.debug("profit is nan, skipping")
                 continue
 
             # Handle candidates based on conditions
-            candidates += self.handle_candidates(best_profit, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+            candidates += self.handle_candidates(
+                best_profit,
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
 
             # Find the best operations
-            best_profit, ops = self.find_best_operations(best_profit, ops, profit, trade_instructions_df, trade_instructions_dic, src_token, trade_instructions)
+            best_profit, ops = self.find_best_operations(
+                best_profit,
+                ops,
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
-

@@ -4,7 +4,6 @@ from fastlane_bot.modes.base import ArbitrageFinderBase
 
 
 class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
-
     @staticmethod
     def get_miniverse(
         y_match_curves_not_carbon,
@@ -17,7 +16,9 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         if arb_mode in ["single_triangle", "triangle"]:
             miniverses = list(
                 itertools.product(
-                    y_match_curves_not_carbon, base_exchange_curves, x_match_curves_not_carbon
+                    y_match_curves_not_carbon,
+                    base_exchange_curves,
+                    x_match_curves_not_carbon,
                 )
             )
         else:
@@ -63,10 +64,14 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         & set(CCm.filter_pairs(onein=flt))
                     )
                     y_match_curves_not_carbon = [
-                        x for x in y_match_curves if x.params.exchange != self.base_exchange
+                        x
+                        for x in y_match_curves
+                        if x.params.exchange != self.base_exchange
                     ]
                     x_match_curves_not_carbon = [
-                        x for x in x_match_curves if x.params.exchange != self.base_exchange
+                        x
+                        for x in x_match_curves
+                        if x.params.exchange != self.base_exchange
                     ]
                     combos = self.get_miniverse(
                         y_match_curves_not_carbon,
@@ -77,7 +82,10 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         combos,
                     )
         return combos
-    def get_mono_direction_carbon_curves(self, miniverse, trade_instructions_df, token_in=None):
+
+    def get_mono_direction_carbon_curves(
+        self, miniverse, trade_instructions_df, token_in=None
+    ):
 
         if token_in is None:
             columns = trade_instructions_df.columns
@@ -86,7 +94,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             second_bancor_v3_pool = check_nan.iloc[1]
 
             for idx, token in enumerate(columns):
-                if token == 'BNT-FF1C':
+                if token == "BNT-FF1C":
                     continue
                 if first_bancor_v3_pool[token] < 0:
                     token_in = token
@@ -97,8 +105,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         wrong_direction_cids = []
         for idx, row in trade_instructions_df.iterrows():
-            if (row[token_in] < 0) and (
-                    "-0" in idx or "-1" in idx):
+            if (row[token_in] < 0) and ("-0" in idx or "-1" in idx):
                 wrong_direction_cids.append(idx)
 
         return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
