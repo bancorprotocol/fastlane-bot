@@ -1064,6 +1064,6 @@ class Manager:
                     )
                     time.sleep(rate_limiter)
                 else:
-                    raise e
-                    # self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
-                    # break
+                    # raise e
+                    self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
+                    break
