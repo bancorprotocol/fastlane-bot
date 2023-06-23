@@ -671,7 +671,7 @@ class Manager:
         try:
             return contract.functions.symbol().call(), contract.functions.decimals().call()
         except Exception as e:
-            self.cfg.logger.error(f"Failed to get symbol and decimals for {addr} {e}")
+            self.cfg.logger.debug(f"Failed to get symbol and decimals for {addr} {e}")
 
     def add_pool_to_exchange(self, pool_info: Dict[str, Any]):
         """
@@ -761,8 +761,6 @@ class Manager:
     def correct_for_sushiswap(self, event, ex_name):
         if ex_name and ex_name == 'uniswap_v2':
             ex_name = self.uniswap_v2_event_mappings.get(event['address'])
-            if ex_name and ex_name == "sushiswap_v2":
-                print("[correct_for_sushiswap] success")
         return ex_name
 
     def get_key_and_value(self, event: Dict[str, Any], addr: str, ex_name: str) -> Tuple[str, Any]:
@@ -1058,12 +1056,11 @@ class Manager:
                     break
                 break
             except Exception as e:
-                if any(err_msg in str(e) for err_msg in ["Too Many Requests for url"]):
+                if any(err_msg in str(e) for err_msg in ["Too many requests"]):
                     self.cfg.logger.debug(
                         f"Alchemy rate limit hit. Retrying after a {rate_limiter} second delay... {e}  {event} {address} {contract}"
                     )
                     time.sleep(rate_limiter)
                 else:
-                    # raise e
                     self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
                     break
