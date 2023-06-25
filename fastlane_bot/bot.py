@@ -418,6 +418,17 @@ class CarbonBot(CarbonBotBase):
         r = random.choice(r) if randomizer else r
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
+    def _carbon_in_trade_route(self, trade_instructions):
+        """
+        Returns True if the exchange route includes Carbon
+        """
+
+        for trade in trade_instructions:
+            if trade.is_carbon:
+                return True
+        return False
+
+
     # TODO: This is still a mess. Refactor. [_handle_trade_instructions]
     def _handle_trade_instructions(self, CCm, arb_mode, r, result):
         (
@@ -439,9 +450,11 @@ class CarbonBot(CarbonBotBase):
             return ordered_trade_instructions_objects
         ## Aggregate trade instructions
         tx_route_handler = self.TxRouteHandlerClass(trade_instructions=ordered_trade_instructions_objects)
+
         agg_trade_instructions = tx_route_handler._aggregate_carbon_trades(
             trade_instructions_objects=ordered_trade_instructions_objects
-        )
+        ) if self._carbon_in_trade_route(ordered_trade_instructions_objects) else ordered_trade_instructions_objects
+
         del ordered_trade_instructions_objects  # TODO: REMOVE THIS
         if result == self.XS_AGGTI:
             return agg_trade_instructions

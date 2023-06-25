@@ -306,7 +306,7 @@ class TxHelpers:
         current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
 
         if verbose:
-            self.ConfigObj.logger.info("Found a trade. Validating...")
+            self.ConfigObj.logger.info("Validating trade...")
             self.ConfigObj.logger.debug(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
 
@@ -382,10 +382,11 @@ class TxHelpers:
             )
 
             # Submit the transaction
-            tx_receipt = self.submit_private_transaction(
+            tx_hash = self.submit_private_transaction(
                 arb_tx=arb_tx, block_number=block_number
             )
-            return hex(tx_receipt) or None
+            self.ConfigObj.logger.info(f"Arbitrage executed, tx hash: {tx_hash}")
+            return tx_hash if tx_hash is not None else None
         else:
             self.ConfigObj.logger.info(
                 f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!\n\n"
@@ -697,9 +698,10 @@ class TxHelpers:
             tx_hash = response.get("result")
             try:
                 tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-                return tx_receipt
+                tx_hash = tx_receipt["transactionHash"]
+                return tx_hash
             except TimeExhausted as e:
-                self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds.")
+                self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds, cancelling.")
                 self.cancel_private_transaction(arb_tx, block_number)
                 return None
         else:
