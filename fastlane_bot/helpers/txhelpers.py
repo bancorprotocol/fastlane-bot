@@ -334,6 +334,7 @@ class TxHelpers:
             return arb_tx
 
         if arb_tx is None:
+            self.ConfigObj.logger.info("Failed to construct trade, discarding.")
             return None
         gas_estimate = arb_tx["gas"]
         current_gas_price = arb_tx["maxFeePerGas"]
