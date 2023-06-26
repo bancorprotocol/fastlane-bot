@@ -132,7 +132,9 @@ class ArbitrageFinderBase:
 
         return best_profit, ops
 
-    def calculate_profit(self, src_token: str, profit_src: float, CCm: Any, cids: List[str]) -> float:
+    def calculate_profit(
+        self, src_token: str, profit_src: float, CCm: Any, cids: List[str]
+    ) -> float:
         """
         Calculate profit based on the source token.
 

@@ -134,7 +134,9 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def run_main_flow(self, miniverse: List, src_token: str) -> Tuple[float, Any, Any, Any]:
+    def run_main_flow(
+        self, miniverse: List, src_token: str
+    ) -> Tuple[float, Any, Any, Any]:
         """
         Run the main flow of the arbitrage finder.
 

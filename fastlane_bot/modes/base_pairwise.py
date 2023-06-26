@@ -19,12 +19,15 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
     """
 
     @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[
-        List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         pass
 
     @staticmethod
-    def get_combos(CCm: CPCContainer, flashloan_tokens: List[str]) -> Tuple[List[Any], List[Any]]:
+    def get_combos(
+        CCm: CPCContainer, flashloan_tokens: List[str]
+    ) -> Tuple[List[Any], List[Any]]:
         """
         Get combos for pairwise arbitrage
 
@@ -51,5 +54,3 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
             if tkn0 != tkn1
         ]
         return all_tokens, combos
-
-

@@ -21,8 +21,9 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
     """
 
     @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[
-        List, Tuple]:
+    def find_arbitrage(
+        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
+    ) -> Union[List, Tuple]:
         """
         see child classes
         """
@@ -80,7 +81,9 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             combos += list(zip([flt] * len(miniverses), miniverses))
         return combos
 
-    def get_combos(self, flashloan_tokens: List[str], CCm: Any, arb_mode: str) -> Tuple[List[str], List[Any]]:
+    def get_combos(
+        self, flashloan_tokens: List[str], CCm: Any, arb_mode: str
+    ) -> Tuple[List[str], List[Any]]:
         """
         Get combos for triangular arbitrage
 
