@@ -148,7 +148,7 @@ class TradeInstruction:
         self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
 
     @property
-    def exchange_id(self) -> int:
+    def platform_id(self) -> int:
         """
         The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
         """

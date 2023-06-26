@@ -44,7 +44,7 @@ class RouteStruct:
 
     Parameters
     ----------
-    exchangeId: int
+    platformId: int
         The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
     targetToken: str
         The target token address.
@@ -70,7 +70,7 @@ class RouteStruct:
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
 
-    exchangeId: int  # TODO: WHY IS THIS AN INT?
+    platformId: int  # TODO: WHY IS THIS AN INT?
     targetToken: str
     minTargetAmount: int
     deadline: int
@@ -108,7 +108,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         Returns
         """
-        return [trade.exchange_id for trade in self.trade_instructions]
+        return [trade.platform_id for trade in self.trade_instructions]
 
     def __post_init__(self):
         self.contains_carbon = True
@@ -290,7 +290,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
 
         return RouteStruct(
-            exchangeId=exchange_id,
+            platformId=exchange_id,
             targetToken=target_address,
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
@@ -334,8 +334,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
-                exchange_id=trade_instructions[idx].exchange_id,
-                custom_address=pools[idx].anchor if trade_instructions[idx].exchange_id == 1 else trade_instructions[
+                exchange_id=trade_instructions[idx].platform_id,
+                custom_address=pools[idx].anchor if trade_instructions[idx].platform_id == 1 else trade_instructions[
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
                 fee_float=fee_float[idx],
