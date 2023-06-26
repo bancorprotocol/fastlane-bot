@@ -80,28 +80,7 @@ class ArbitrageFinderBase:
         Set the best operations.
 
         Parameters:
-        ----------
-        best_profit : float
-            Best profit
-        ops : tuple
-            Operations
-        profit : float
-            Profit
-        src_token : str
-            Source token
-        trade_instructions : any
-            Trade instructions
-        trade_instructions_df : pd.DataFrame
-            Trade instructions dataframe
-        trade_instructions_dic : dict
-            Trade instructions dictionary
 
-        Returns:
-        -------
-        ops : tuple
-            Operations
-        profit : float
-            Profit
         """
         self.ConfigObj.logger.debug("*************")
         self.ConfigObj.logger.debug(f"New best profit: {profit}")
@@ -133,27 +112,10 @@ class ArbitrageFinderBase:
         return best_profit, ops
 
     def calculate_profit(
-        self, src_token: str, profit_src: float, CCm: Any, cids: List[str]
+        self, src_token: str, profit_src: float, CCm: Any, cids: List[str], profit: int = 0
     ) -> float:
         """
         Calculate profit based on the source token.
-
-        Parameters:
-        ----------
-        src_token : str
-            Source token
-        profit_src : float
-            Profit source
-        CCm : any
-            CCm
-        cids : str
-            Cids
-
-        Returns:
-        -------
-        profit : float
-            Profit
-
         """
         if src_token == T.BNT:
             profit = profit_src
