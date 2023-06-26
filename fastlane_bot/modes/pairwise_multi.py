@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Multi-pairwise arbitrage finder mode
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
@@ -8,6 +15,9 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
 class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
+    """
+    Multi-pairwise arbitrage finder mode.
+    """
 
     arb_mode = "multi_pairwise"
 
@@ -17,9 +27,21 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
-        Returns:
-            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-                           Otherwise, it returns the optimal opportunity.
+        Parameters
+        ----------
+        candidates : List[Any], optional
+            List of candidates, by default None
+        ops : Tuple, optional
+            Tuple of operations, by default None
+        best_profit : float, optional
+            Best profit so far, by default 0
+
+
+        Returns
+        -------
+        Union[List, Tuple]
+            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
+
         """
         if self.base_exchange != "carbon_v1":
             raise ValueError("base_exchange must be carbon_v1 for `multi` mode")

@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Triangular arbitrage finder mode
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from typing import List, Any, Tuple, Union
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
@@ -6,6 +13,9 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
+    """
+    Triangular arbitrage finder mode
+    """
 
     arb_mode = "multi_triangle"
 
@@ -33,9 +43,6 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
         for src_token, miniverse in combos:
 
             r = None
-            # self.ConfigObj.logger.debug(
-            #     f"Checking flashloan token = {src_token}, miniverse = {[(x.pair, x.cid[-5:]) for x in miniverse]}"
-            # )
             CC_cc = CPCContainer(miniverse)
             O = CPCArbOptimizer(CC_cc)
             try:

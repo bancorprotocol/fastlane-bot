@@ -1,10 +1,46 @@
+# coding=utf-8
+"""
+Base class for pairwise arbitrage finder modes
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+import abc
 import itertools
+from typing import List, Tuple, Any, Union
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
+from fastlane_bot.tools.cpc import CPCContainer
 
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
-    def get_combos(self, CCm, flashloan_tokens):
+    """
+    Base class for pairwise arbitrage finder modes
+    """
+
+    @abc.abstractmethod
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[
+        List, Tuple]:
+        pass
+
+    @staticmethod
+    def get_combos(CCm: CPCContainer, flashloan_tokens: List[str]) -> Tuple[List[Any], List[Any]]:
+        """
+        Get combos for pairwise arbitrage
+
+        Parameters
+        ----------
+        CCm : CPCContainer
+            Container for all the curves
+        flashloan_tokens : list
+            List of flashloan tokens
+
+        Returns
+        -------
+        all_tokens : list
+            List of all tokens
+
+        """
         all_tokens = CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
@@ -16,14 +52,4 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
         ]
         return all_tokens, combos
 
-    def get_curve_combos(
-        self, arb_mode, base_exchange_curves, not_base_exchange_curves
-    ):
-        if arb_mode in {"multi", "pairwise_multi"}:
-            return [
-                [curve] + base_exchange_curves for curve in not_base_exchange_curves
-            ]
-        elif arb_mode in {"single", "pairwise_single"}:
-            return list(
-                itertools.product(not_base_exchange_curves, base_exchange_curves)
-            )
+

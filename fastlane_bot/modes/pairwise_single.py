@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Single pairwise arbitrage finder mode
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from typing import List, Any, Tuple, Union
 
 from tqdm.contrib import itertools
@@ -8,6 +15,9 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
 class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
+    """
+    Single pairwise arbitrage finder mode
+    """
 
     arb_mode = "single_pairwise"
 

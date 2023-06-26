@@ -1,11 +1,21 @@
-from typing import Union, List, Tuple, Any
+# coding=utf-8
+"""
+Bancor V3 triangular arbitrage finder mode
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+from typing import Union, List, Tuple, Any, Iterable
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.cpc import CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
 class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
+    """
+    Bancor V3 triangular arbitrage finder mode
+    """
 
     arb_mode = "single_triangle_bancor3"
 
@@ -14,6 +24,16 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
     ) -> Union[List, Tuple]:
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
+
+        Parameters:
+        ----------
+        candidates : list, optional
+            List of candidates to append to, by default None
+        ops : tuple, optional
+            Tuple of operations to append to, by default None
+        best_profit : float, optional
+            Best profit so far, by default 0
+
 
         Returns:
             list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
@@ -47,7 +67,6 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         # Check each source token and miniverse combination
         for src_token, miniverse in all_miniverses:
             r = None
-            # self.ConfigObj.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {miniverse}")
 
             try:
                 # Run main flow with the new set of curves
@@ -115,7 +134,23 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def run_main_flow(self, miniverse, src_token):
+    def run_main_flow(self, miniverse: List, src_token: str) -> Tuple[float, Any, Any, Any]:
+        """
+        Run the main flow of the arbitrage finder.
+
+        Parameters
+        ----------
+        miniverse : list
+            List of curves.
+        src_token : str
+            Source token.
+
+        Returns
+        -------
+        tuple
+            Tuple of profit, trade instructions, trade instructions dataframe and trade instructions dictionary.
+
+        """
 
         # Instantiate the container and optimizer objects
         CC_cc = CPCContainer(miniverse)
@@ -139,7 +174,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
             trade_instructions_dic,
         )
 
-    def get_miniverse_combos(self, combos: List[Tuple]) -> List[Tuple]:
+    def get_miniverse_combos(self, combos: Iterable) -> List[Tuple[str, List]]:
         """
         Get the miniverse combinations for a list of token pairs.
 
@@ -173,7 +208,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                 continue
 
             bancor_v3_curve_0 = (
-                self.CCm.bypairs(f"BNT-FF1C/{tkn0}")
+                self.CCm.bypairs(f"{T.BNT}/{tkn0}")
                 .byparams(exchange="bancor_v3")
                 .curves
             )
@@ -195,5 +230,5 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
                 miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
 
             if len(miniverses) > 0:
-                all_miniverses += list(zip(["BNT-FF1C"] * len(miniverses), miniverses))
+                all_miniverses += list(zip([T.BNT] * len(miniverses), miniverses))
         return all_miniverses

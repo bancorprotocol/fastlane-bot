@@ -1,8 +1,16 @@
+# coding=utf-8
+"""
+Base class for all arbitrage finder modes
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 import abc
 from typing import Any, Tuple, Dict, List, Union
 
 import pandas as pd
 
+from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import num_format
 
 
@@ -54,11 +62,7 @@ class ArbitrageFinderBase:
         self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
     ) -> Union[List, Tuple]:
         """
-        Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
-
-        Returns:
-            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-                           Otherwise, it returns the optimal opportunity.
+        See subclasses for details
         """
         pass
 
@@ -76,7 +80,28 @@ class ArbitrageFinderBase:
         Set the best operations.
 
         Parameters:
+        ----------
+        best_profit : float
+            Best profit
+        ops : tuple
+            Operations
+        profit : float
+            Profit
+        src_token : str
+            Source token
+        trade_instructions : any
+            Trade instructions
+        trade_instructions_df : pd.DataFrame
+            Trade instructions dataframe
+        trade_instructions_dic : dict
+            Trade instructions dictionary
 
+        Returns:
+        -------
+        ops : tuple
+            Operations
+        profit : float
+            Profit
         """
         self.ConfigObj.logger.debug("*************")
         self.ConfigObj.logger.debug(f"New best profit: {profit}")
@@ -107,16 +132,33 @@ class ArbitrageFinderBase:
 
         return best_profit, ops
 
-    def calculate_profit(self, src_token, profit_src, CCm, cids, profit=0):
+    def calculate_profit(self, src_token: str, profit_src: float, CCm: Any, cids: List[str]) -> float:
         """
         Calculate profit based on the source token.
+
+        Parameters:
+        ----------
+        src_token : str
+            Source token
+        profit_src : float
+            Profit source
+        CCm : any
+            CCm
+        cids : str
+            Cids
+
+        Returns:
+        -------
+        profit : float
+            Profit
+
         """
-        if src_token == "BNT-FF1C":
+        if src_token == T.BNT:
             profit = profit_src
         else:
             try:
                 price_src_per_bnt = (
-                    CCm.bypair(pair=f"BNT-FF1C/{src_token}")
+                    CCm.bypair(pair=f"{T.BNT}/{src_token}")
                     .byparams(exchange="bancor_v3")[0]
                     .p
                 )
@@ -126,7 +168,8 @@ class ArbitrageFinderBase:
         self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
         return profit
 
-    def get_netchange(self, trade_instructions_df):
+    @staticmethod
+    def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
         """
         Get the net change from the trade instructions.
         """
@@ -137,15 +180,35 @@ class ArbitrageFinderBase:
 
     def handle_candidates(
         self,
-        best_profit,
-        profit,
-        trade_instructions_df,
-        trade_instructions_dic,
-        src_token,
-        trade_instructions,
-    ):
+        best_profit: float,
+        profit: float,
+        trade_instructions_df: pd.DataFrame,
+        trade_instructions_dic: Dict[str, Any],
+        src_token: str,
+        trade_instructions: Any,
+    ) -> List[Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
         """
         Handle candidate addition based on conditions.
+
+        Parameters:
+        ----------
+        best_profit : float
+            Best profit
+        profit : float
+            Profit
+        trade_instructions_df : pd.DataFrame
+            Trade instructions dataframe
+        trade_instructions_dic : dict
+            Trade instructions dictionary
+        src_token : str
+            Source token
+        trade_instructions : any
+            Trade instructions
+
+        Returns:
+        -------
+        candidates : list
+            Candidates
         """
         netchange = self.get_netchange(trade_instructions_df)
         condition_zeros_one_token = max(netchange) < 1e-4
@@ -166,16 +229,40 @@ class ArbitrageFinderBase:
 
     def find_best_operations(
         self,
-        best_profit,
-        ops,
-        profit,
-        trade_instructions_df,
-        trade_instructions_dic,
-        src_token,
-        trade_instructions,
-    ):
+        best_profit: float,
+        ops: Tuple[float, pd.DataFrame, Dict[str, Any], str, Any],
+        profit: float,
+        trade_instructions_df: pd.DataFrame,
+        trade_instructions_dic: Dict[str, Any],
+        src_token: str,
+        trade_instructions: Any,
+    ) -> Tuple[float, Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
         """
         Find the best operations based on conditions.
+
+        Parameters:
+        ----------
+        best_profit : float
+            Best profit
+        ops : tuple
+            Operations
+        profit : float
+            Profit
+        trade_instructions_df : pd.DataFrame
+            Trade instructions dataframe
+        trade_instructions_dic : dict
+            Trade instructions dictionary
+        src_token : str
+            Source token
+        trade_instructions : any
+            Trade instructions
+
+        Returns:
+        -------
+        best_profit : float
+            Best profit
+        ops : tuple
+            Operations
         """
         netchange = self.get_netchange(trade_instructions_df)
         condition_better_profit = profit > best_profit

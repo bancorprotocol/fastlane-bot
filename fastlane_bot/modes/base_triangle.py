@@ -1,18 +1,66 @@
+# coding=utf-8
+"""
+Base class for triangular arbitrage finder modes
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+import abc
 import itertools
+from typing import List, Any, Tuple, Union
+
+import pandas as pd
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
+from fastlane_bot.tools.cpc import T
 
 
 class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
+    """
+    Base class for triangular arbitrage finder modes
+    """
+
+    @abc.abstractmethod
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0) -> Union[
+        List, Tuple]:
+        """
+        see child classes
+        """
+        pass
+
     @staticmethod
     def get_miniverse(
-        y_match_curves_not_carbon,
-        base_exchange_curves,
-        x_match_curves_not_carbon,
-        flt,
-        arb_mode,
-        combos,
-    ):
+        y_match_curves_not_carbon: List[Any],
+        base_exchange_curves: List[Any],
+        x_match_curves_not_carbon: List[Any],
+        flt: str,
+        arb_mode: str,
+        combos: List[Any],
+    ) -> List[Any]:
+        """
+        Get miniverse for triangular arbitrage
+
+        Parameters
+        ----------
+        y_match_curves_not_carbon : list
+            List of curves that match the y token and are not on carbon
+        base_exchange_curves : list
+            List of curves on the base exchange
+        x_match_curves_not_carbon : list
+            List of curves that match the x token and are not on carbon
+        flt : str
+            Flashloan token
+        arb_mode : str
+            Arbitrage mode
+        combos : list
+            List of combos
+
+        Returns
+        -------
+        combos : list
+            List of combos
+
+        """
         if arb_mode in ["single_triangle", "triangle"]:
             miniverses = list(
                 itertools.product(
@@ -32,7 +80,25 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             combos += list(zip([flt] * len(miniverses), miniverses))
         return combos
 
-    def get_combos(self, flashloan_tokens, CCm, arb_mode):
+    def get_combos(self, flashloan_tokens: List[str], CCm: Any, arb_mode: str) -> Tuple[List[str], List[Any]]:
+        """
+        Get combos for triangular arbitrage
+
+        Parameters
+        ----------
+        flashloan_tokens : list
+            List of flashloan tokens
+        CCm : object
+            CCm object
+        arb_mode : str
+            Arbitrage mode
+
+        Returns
+        -------
+        combos : list
+            List of combos
+
+        """
         combos = []
         if arb_mode in ["single_triangle_bancor3", "bancor_v3"]:
             combos = [
@@ -83,9 +149,28 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                     )
         return combos
 
+    @staticmethod
     def get_mono_direction_carbon_curves(
-        self, miniverse, trade_instructions_df, token_in=None
-    ):
+        miniverse: List[Any], token_in: str, trade_instructions_df: pd.DataFrame
+    ) -> List[Any]:
+        """
+        Get mono direction carbon curves for triangular arbitrage
+
+        Parameters
+        ----------
+        miniverse : list
+            List of miniverses
+        token_in : str
+            Token in
+        trade_instructions_df : DataFrame
+            Trade instructions dataframe
+
+        Returns
+        -------
+        mono_direction_carbon_curves : list
+            List of mono direction carbon curves
+
+        """
 
         if token_in is None:
             columns = trade_instructions_df.columns
@@ -94,7 +179,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             second_bancor_v3_pool = check_nan.iloc[1]
 
             for idx, token in enumerate(columns):
-                if token == "BNT-FF1C":
+                if token == T.BNT:
                     continue
                 if first_bancor_v3_pool[token] < 0:
                     token_in = token

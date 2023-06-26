@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Triangle single arbitrage finder mode
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from typing import Union, List, Tuple, Any
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
@@ -6,6 +13,9 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
 class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
+    """
+    Triangle single arbitrage finder mode
+    """
 
     arb_mode = "single_triangle"
 
@@ -15,9 +25,19 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
         """
         Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
 
+        Parameters:
+        ----------
+        candidates : list, optional
+            List of candidates to append to, by default None
+        ops : tuple, optional
+            Tuple of operations to append to, by default None
+        best_profit : float, optional
+            Best profit so far, by default 0
+
         Returns:
-            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-                           Otherwise, it returns the optimal opportunity.
+        -------
+        list or tuple
+            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
         """
 
         if candidates is None:
@@ -31,7 +51,6 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
         # Check each source token and miniverse combination
         for src_token, miniverse in combos:
             r = None
-            # self.ConfigObj.logger.debug(f"Checking flashloan token = {src_token}, miniverse = {miniverse}")
 
             # Instantiate the container and optimizer objects
             CC_cc = CPCContainer(miniverse)
