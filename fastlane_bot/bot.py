@@ -63,7 +63,8 @@ from fastlane_bot.helpers import (
     TxHelpers,
     TxHelpersBase,
     TradeInstruction,
-    Univ3Calculator, RouteStruct,
+    Univ3Calculator,
+    RouteStruct,
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
@@ -505,7 +506,9 @@ class CarbonBot(CarbonBotBase):
                 return True
         return False
 
-    def _handle_trade_instructions(self, CCm: CPCContainer, arb_mode: str, r: Any, result: str) -> Any:
+    def _handle_trade_instructions(
+        self, CCm: CPCContainer, arb_mode: str, r: Any, result: str
+    ) -> Any:
         """
         Handles the trade instructions.
 
@@ -535,7 +538,9 @@ class CarbonBot(CarbonBotBase):
         ) = r
 
         # Order and scale trade instructions
-        ordered_scaled_dcts = self.order_trade_instructions_and_scale(best_src_token, best_trade_instructions_dic)
+        ordered_scaled_dcts = self.order_trade_instructions_and_scale(
+            best_src_token, best_trade_instructions_dic
+        )
         if result == self.XS_ORDSCAL:
             return ordered_scaled_dcts
 
@@ -547,7 +552,9 @@ class CarbonBot(CarbonBotBase):
             return ordered_trade_instructions_objects
 
         # Aggregate trade instructions
-        agg_trade_instructions, tx_route_handler = self.aggregate_trade_instructions(ordered_trade_instructions_objects)
+        agg_trade_instructions, tx_route_handler = self.aggregate_trade_instructions(
+            ordered_trade_instructions_objects
+        )
         del ordered_trade_instructions_objects
         if result == self.XS_AGGTI:
             return agg_trade_instructions
@@ -560,8 +567,9 @@ class CarbonBot(CarbonBotBase):
             return calculated_trade_instructions
 
         # Get best profit
-        best_profit, fl_token, flashloan_tkn_profit, profit_usd = self.get_best_profit(CCm, best_profit,
-                                                                                       calculated_trade_instructions)
+        best_profit, fl_token, flashloan_tkn_profit, profit_usd = self.get_best_profit(
+            CCm, best_profit, calculated_trade_instructions
+        )
         flashloans = [
             {
                 "token": fl_token,
@@ -643,7 +651,12 @@ class CarbonBot(CarbonBotBase):
             )
 
         # log the flashloan arbitrage tx info
-        self.log_tx_info(best_trade_instructions_dic, flashloan_amount, flashloan_token_address, route_struct)
+        self.log_tx_info(
+            best_trade_instructions_dic,
+            flashloan_amount,
+            flashloan_token_address,
+            route_struct,
+        )
 
         # Get the Bancor pool
         pool = self.db.get_pool(
@@ -669,7 +682,13 @@ class CarbonBot(CarbonBotBase):
             cids,
         )
 
-    def log_tx_info(self, best_trade_instructions_dic: Dict[str, Any], flashloan_amount: int, flashloan_token_address: str, route_struct: List[Dict[str, Any]]):
+    def log_tx_info(
+        self,
+        best_trade_instructions_dic: Dict[str, Any],
+        flashloan_amount: int,
+        flashloan_token_address: str,
+        route_struct: List[Dict[str, Any]],
+    ):
         """
         Logs the flashloan arbitrage tx info
 
@@ -693,8 +712,13 @@ class CarbonBot(CarbonBotBase):
             f"Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
-    def get_best_profit(self, CCm: CPCContainer, calculated_trade_instructions: List[Any], arb_mode: str, result: str = None) -> \
-    Tuple[Any, Any, Any, Any]:
+    def get_best_profit(
+        self,
+        CCm: CPCContainer,
+        calculated_trade_instructions: List[Any],
+        arb_mode: str,
+        result: str = None,
+    ) -> Tuple[Any, Any, Any, Any]:
         """
         Gets the best profit
         Parameters
@@ -713,8 +737,8 @@ class CarbonBot(CarbonBotBase):
         if fl_token == T.WETH:
             fl_token = T.ETH
         best_profit = (
-                calculated_trade_instructions[-1].amtout
-                - calculated_trade_instructions[0].amtin
+            calculated_trade_instructions[-1].amtout
+            - calculated_trade_instructions[0].amtin
         )
         flashloan_tkn_profit = best_profit
         if fl_token_with_weth != T.BNT:
@@ -734,7 +758,9 @@ class CarbonBot(CarbonBotBase):
         )
         return best_profit, fl_token, flashloan_tkn_profit, profit_usd
 
-    def aggregate_trade_instructions(self, ordered_trade_instructions_objects: List[Any]) -> Tuple[Any, Any]:
+    def aggregate_trade_instructions(
+        self, ordered_trade_instructions_objects: List[Any]
+    ) -> Tuple[Any, Any]:
         """
         Aggregates the trade instructions
 
@@ -761,7 +787,9 @@ class CarbonBot(CarbonBotBase):
         )
         return agg_trade_instructions, tx_route_handler
 
-    def order_trade_instructions_and_scale(self, best_src_token: str, best_trade_instructions_dic: Dict[str, Any]) -> List[Any]:
+    def order_trade_instructions_and_scale(
+        self, best_src_token: str, best_trade_instructions_dic: Dict[str, Any]
+    ) -> List[Any]:
         """
         Orders the trade instructions and scales them
 
@@ -791,7 +819,11 @@ class CarbonBot(CarbonBotBase):
         return ordered_scaled_dcts
 
     def _validate_and_submit_transaction_tenderly(
-        self, ConfigObj: Config, route_struct: List[RouteStruct], src_address: str, src_amount: int
+        self,
+        ConfigObj: Config,
+        route_struct: List[RouteStruct],
+        src_address: str,
+        src_amount: int,
     ):
         """
         Validate and submit the transaction tenderly
@@ -890,7 +922,9 @@ class CarbonBot(CarbonBotBase):
             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str):
+    def run_continuous_mode(
+        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str
+    ):
         """
         Run the bot in continuous mode.
 
@@ -933,7 +967,9 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
                 time.sleep(self.polling_interval)
 
-    def run_single_mode(self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str):
+    def run_single_mode(
+        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str
+    ):
         """
         Run the bot in single mode.
 
