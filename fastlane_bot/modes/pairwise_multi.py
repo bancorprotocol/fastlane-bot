@@ -59,7 +59,6 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         )
         for tkn0, tkn1 in combos:
             r = None
-            # self.ConfigObj.logger.debug(f"Checking flashloan token = {tkn1}, other token = {tkn0}")
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
@@ -174,8 +173,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             and ("-0" in idx or "-1" in idx)
         ]
 
+    @staticmethod
     def rerun_main_flow_with_new_curves(
-        self, new_curves: List[Any], src_token: str, tkn0: str, tkn1: str
+        new_curves: List[Any], src_token: str, tkn0: str, tkn1: str
     ) -> Tuple[Any, float, Any, pd.DataFrame]:
         """
         Rerun main flow with the new set of curves.
