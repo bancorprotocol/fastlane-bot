@@ -1,9 +1,17 @@
-from typing import Any, Union, Dict, List, Tuple, Set
-from web3.datastructures import AttributeDict
-from hexbytes import HexBytes
+# coding=utf-8
+"""
+Contains the utils functions for events
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+from typing import Any, Union, Dict, Set
 from typing import List
 
-from fastlane_bot.data_fetcher.manager import Manager
+from hexbytes import HexBytes
+from web3.datastructures import AttributeDict
+
+from fastlane_bot.events.manager import Manager
 
 
 def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> List[AttributeDict]:
@@ -23,9 +31,6 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
     latest_entry_per_pool = {}
     all_events = [event for event_list in events for event in event_list]
     for event in all_events:
-        # print()
-        # print(event)
-        # print()
         key = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event)).unique_key()
         if key == 'cid':
             key = 'id'

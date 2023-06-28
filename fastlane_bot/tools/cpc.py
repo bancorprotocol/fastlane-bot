@@ -65,6 +65,7 @@ AD = DAttrDict
 #     print(f"""{k} = "{v}",  """)
 
 TOKENIDS = AttrDict(
+    NATIVE_ETH="ETH-EEeE",
     AAVE="AAVE-DaE9",
     WETH="WETH-6Cc2",
     ETH="WETH-6Cc2",

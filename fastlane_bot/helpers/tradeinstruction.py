@@ -10,7 +10,7 @@ __DATE__="02/May/2023"
 from dataclasses import dataclass
 from typing import Union, Any
 from _decimal import Decimal
-from fastlane_bot.data_fetcher.interface import Token, Pool
+from fastlane_bot.events.interface import Token, Pool
 
 
 @dataclass

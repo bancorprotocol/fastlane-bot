@@ -260,7 +260,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             ),
         }
 
-    def _submit_transaction_tenderly(
+    def submit_transaction_tenderly(
         self, route_struct: List[RouteStruct], src_address: str, src_amount: int
     ) -> Any:
         """

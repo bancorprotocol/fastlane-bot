@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the pools classes
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -5,16 +12,16 @@ from typing import Dict, Any, Tuple, List
 
 from web3.contract import Contract
 
-from fastlane_bot import Config
-
 
 @dataclass
 class Pool(ABC):
     """
     Abstract base class representing a pool.
 
-    Attributes:
-        state (Dict[str, Any]): The state of the pool. Defaults to an empty dictionary.
+    Attributes
+    ----------
+    state : Dict[str, Any]
+        The pool state.
     """
     state: Dict[str, Any] = field(default_factory=dict)
 
@@ -48,12 +55,17 @@ class Pool(ABC):
         """
         Update the pool state from an event.
 
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The pool data.
+        Parameters
+        ----------
+        event_args : Dict[str, Any]
+            The event arguments.
+        data : Dict[str, Any]
+            The pool data.
 
-        Returns:
-            Dict[str, Any]: The updated pool data.
+        Returns
+        -------
+        Dict[str, Any]
+            The updated pool data.
         """
         pass
 
@@ -61,6 +73,16 @@ class Pool(ABC):
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
         Update the pool state from a contract.
+
+        Parameters
+        ----------
+        contract : Contract
+            The contract.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The updated pool data.
         """
         pass
 
@@ -82,6 +104,9 @@ class SushiswapPool(Pool):
 
     @staticmethod
     def unique_key() -> str:
+        """
+        see base class.
+        """
         return "address"
 
     @classmethod
@@ -95,14 +120,7 @@ class SushiswapPool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Update the pool state from a Sushiswap event.
-
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The pool data.
-
-        Returns:
-            Dict[str, Any]: The updated pool data.
+        See base class.
         """
         event_args = event_args["args"]
         data["tkn0_balance"] = event_args["reserve0"]
@@ -118,13 +136,7 @@ class SushiswapPool(Pool):
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
-        Update the pool state from a Sushiswap contract.
-
-        Args:
-            contract (Contract): The Sushiswap contract.
-
-        Returns:
-            Dict[str, Any]: The updated pool state.
+        See base class.
         """
         reserve_balance = contract.caller.getReserves()
         params = {
@@ -148,6 +160,9 @@ class UniswapV2Pool(Pool):
 
     @staticmethod
     def unique_key() -> str:
+        """
+        see base class.
+        """
         return "address"
 
     @classmethod
@@ -161,14 +176,7 @@ class UniswapV2Pool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Update the pool state from a Uniswap v2 event.
-
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The pool data.
-
-        Returns:
-            Dict[str, Any]: The updated pool data.
+        See base class.
         """
         event_args = event_args["args"]
         data["tkn0_balance"] = event_args["reserve0"]
@@ -184,13 +192,7 @@ class UniswapV2Pool(Pool):
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
-        Update the pool state from a Uniswap v2 contract.
-
-        Args:
-            contract (Contract): The Uniswap v2 contract.
-
-        Returns:
-            Dict[str, Any]: The updated pool state.
+        See base class.
         """
         reserve_balance = contract.caller.getReserves()
         params = {
@@ -214,6 +216,9 @@ class UniswapV3Pool(Pool):
 
     @staticmethod
     def unique_key() -> str:
+        """
+        see base class.
+        """
         return "address"
 
     @classmethod
@@ -227,14 +232,7 @@ class UniswapV3Pool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Update the pool state from an event.
-
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The pool data.
-
-        Returns:
-            Dict[str, Any]: The updated pool data.
+        See base class.
         """
         event_args = event_args["args"]
         data["liquidity"] = event_args["liquidity"]
@@ -258,10 +256,7 @@ class UniswapV3Pool(Pool):
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
-        Update the pool state from a Uniswap v3 contract.
-
-        Args:
-            contract: A Uniswap v3 contract.
+        See base class.
         """
         slot0 = contract.caller.slot0()
         fee = contract.caller.fee()
@@ -289,24 +284,34 @@ class BancorV3Pool(Pool):
 
     @staticmethod
     def unique_key() -> str:
+        """
+        see base class.
+        """
         return "tkn1_address"
 
     @classmethod
     def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+        """
+        Check if an event matches the format of a Bancor v3 event.
+
+        Parameters
+        ----------
+        event_args : Dict[str, Any]
+            The event arguments.
+
+        Returns
+        -------
+        bool
+            True if the event matches the format of a Bancor v3 event, False otherwise.
+
+        """
         return "pool" in event_args
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Update the pool state from a Bancor v3 event.
-
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The data to update.
-
-        Returns:
-            Dict[str, Any]: The updated data.
+        See base class.
         """
         event_args = event_args["args"]
         if event_args["tkn_address"] == '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
@@ -325,10 +330,7 @@ class BancorV3Pool(Pool):
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
-        Update the pool state from a Bancor v3 contract.
-
-        Args:
-            contract: (Contract) The contract to update from.
+        See base class.
         """
         pool_balances = contract.tradingLiquidity(self.state["tkn1_address"])
         params = {
@@ -353,12 +355,15 @@ class CarbonV1Pool(Pool):
 
     @staticmethod
     def unique_key() -> str:
+        """
+        see base class.
+        """
         return "cid"
 
     @classmethod
     def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
         """
-        Check if the event matches the format for this pool.
+        see base class.
         """
         return "order0" in event_args
 
@@ -366,17 +371,9 @@ class CarbonV1Pool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Update the pool state from a Carbon v1 event.
-
-        Args:
-            event_args (Dict[str, Any]): The event arguments.
-            data (Dict[str, Any]): The data to update.
-
-        Returns:
-            Dict[str, Any]: The updated data.
+        See base class.
         """
         event_type = event_args["event"]
-        print(f"\n *********** [pools.update_from_event] event_type: {event_type}, event_args: {event_args}, data: {data} *********** \n")
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
         for key, value in data.items():
             self.state[key] = value
@@ -387,13 +384,19 @@ class CarbonV1Pool(Pool):
         """
         Parse the event args into a dict.
 
-        Args:
-            data: The data to update.
-            event_args: The event arguments.
-            event_type: The event type.
+        Parameters
+        ----------
+        data : Dict[str, Any]
+            The data to update.
+        event_args : Dict[str, Any]
+            The event arguments.
+        event_type : str
+            The event type.
 
-        Returns:
-            Dict[str, Any]: The parsed data.
+        Returns
+        -------
+        Dict[str, Any]
+            The updated data.
         """
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
@@ -412,13 +415,17 @@ class CarbonV1Pool(Pool):
         """
         Parse the orders from the event args. If the event type is StrategyDeleted, then return an empty list
 
-        Args:
-            event_args (Dict[str, Any]): The event args.
-            event_type (str): The event type.
+        Parameters
+        ----------
+        event_args : Dict[str, Any]
+            The event arguments.
+        event_type : str
+            The event type.
 
-        Returns:
-            Tuple[List[int], List[int]]: The orders.
-['carbon_v1', 'bancor_v3', 'uniswap_v3', 'uniswap_v2']_17498741_17498743.json
+        Returns
+        -------
+        Tuple[List[int], List[int]]
+            The parsed orders.
         """
         if event_type != "StrategyDeleted":
             order0 = event_args["args"].get("order0")
@@ -429,6 +436,9 @@ class CarbonV1Pool(Pool):
         return order0, order1
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+        """
+        See base class.
+        """
         strategy = contract.caller.strategy(self.state["cid"])
         fake_event = {
             "args": {
@@ -457,8 +467,12 @@ class PoolFactory:
         """
         Register a pool type.
 
-        Args:
-            format_name: The name of the pool type.
+        Parameters
+        ----------
+        format_name : str
+            The name of the pool type.
+        creator : Pool
+            The pool class.
         """
         self._creators[format_name] = creator
 
@@ -466,8 +480,10 @@ class PoolFactory:
         """
         Get a pool.
 
-        Args:
-            format_name: The name of the pool type.
+        Parameters
+        ----------
+        format_name : str
+            The name of the pool type.
         """
         creator = self._creators.get(format_name)
         if not creator:

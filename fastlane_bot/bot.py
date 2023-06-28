@@ -68,7 +68,7 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from .data_fetcher.interface import QueryInterface
+from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
@@ -263,8 +263,10 @@ class CarbonBot(CarbonBotBase):
     RUN_SINGLE = "single"
     RUN_CONTINUOUS = "continuous"
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
+    SCALING_FACTOR = 0.999
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
+    BNT_ETH_CID = "0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b"
 
     def __post_init__(self):
         super().__post_init__()
@@ -320,8 +322,7 @@ class CarbonBot(CarbonBotBase):
 
         return trades, tx_in_count
 
-    @staticmethod
-    def _basic_scaling(best_trade_instructions_dic, best_src_token):
+    def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
         """
@@ -330,7 +331,7 @@ class CarbonBot(CarbonBotBase):
         ]
         for item in scaled_best_trade_instructions_dic:
             if item["tknin"] == best_src_token:
-                item["amtin"] *= 0.999
+                item["amtin"] *= self.SCALING_FACTOR
 
         return scaled_best_trade_instructions_dic
 
@@ -506,6 +507,109 @@ class CarbonBot(CarbonBotBase):
                 return True
         return False
 
+    def calculate_profit(
+        self,
+        CCm: CPCContainer,
+        best_profit: Decimal,
+        fl_token: str,
+        fl_token_with_weth: str,
+    ) -> Tuple[Decimal, Decimal, Decimal]:
+        """
+        Calculate the actual profit in USD.
+
+        Parameters
+        ----------
+        CCm: CPCContainer
+            The container.
+        best_profit: Decimal
+            The best profit.
+        fl_token: str
+            The flashloan token.
+        fl_token_with_weth: str
+            The flashloan token with weth.
+
+        Returns
+        -------
+        Tuple[Decimal, Decimal, Decimal]
+            The updated best_profit, flt_per_bnt, and profit_usd.
+        """
+        flt_per_bnt = Decimal(1)
+        if fl_token_with_weth != T.BNT:
+            bnt_flt_curves = CCm.bypair(pair=f"{T.BNT}/{fl_token_with_weth}")
+            bnt_flt = [
+                x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"
+            ][0]
+            flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
+            best_profit = Decimal(str(flt_per_bnt * best_profit))
+
+        bnt_usdc_curve = CCm.bycid(self.BNT_ETH_CID)
+        usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
+        profit_usd = best_profit * Decimal(str(usd_bnt))
+
+        return best_profit, flt_per_bnt, profit_usd
+
+    @staticmethod
+    def update_log_dict(
+        arb_mode: str,
+        best_profit: Decimal,
+        profit_usd: Decimal,
+        flashloan_tkn_profit: Decimal,
+        calculated_trade_instructions: List[Any],
+        fl_token: str,
+    ) -> Dict[str, Any]:
+        """
+        Update the log dictionary.
+
+        Parameters
+        ----------
+        arb_mode: str
+            The arbitrage mode.
+        best_profit: Decimal
+            The best profit.
+        profit_usd: Decimal
+            The profit in USD.
+        flashloan_tkn_profit: Decimal
+            The profit from flashloan token.
+        calculated_trade_instructions: List[Any]
+            The calculated trade instructions.
+        fl_token: str
+            The flashloan token.
+
+        Returns
+        -------
+        dict
+            The updated log dictionary.
+        """
+        flashloans = [
+            {
+                "token": fl_token,
+                "amount": num_format_float(calculated_trade_instructions[0].amtin),
+                "profit": num_format_float(flashloan_tkn_profit),
+            }
+        ]
+        log_dict = {
+            "type": arb_mode,
+            "profit_bnt": num_format_float(best_profit),
+            "profit_usd": num_format_float(profit_usd),
+            "flashloan": flashloans,
+            "trades": [],
+        }
+
+        for idx, trade in enumerate(calculated_trade_instructions):
+            log_dict["trades"].append(
+                {
+                    "trade_index": idx,
+                    "exchange": trade.exchange_name,
+                    "tkn_in": trade.tknin,
+                    "amount_in": num_format_float(trade.amtin),
+                    "tkn_out": trade.tknout,
+                    "amt_out": num_format_float(trade.amtout),
+                    "cid0": trade.cid[-10:],
+                }
+            )
+
+        return log_dict
+
     def _handle_trade_instructions(
         self, CCm: CPCContainer, arb_mode: str, r: Any, result: str
     ) -> Any:
@@ -527,7 +631,6 @@ class CarbonBot(CarbonBotBase):
         -------
         Any
             The result.
-
         """
         (
             best_profit,
@@ -537,91 +640,106 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions,
         ) = r
 
-        # Order and scale trade instructions
-        ordered_scaled_dcts = self.order_trade_instructions_and_scale(
-            best_src_token, best_trade_instructions_dic
+        # Order the trade instructions
+        (
+            ordered_trade_instructions_dct,
+            tx_in_count,
+        ) = self._simple_ordering_by_src_token(
+            best_trade_instructions_dic, best_src_token
         )
-        if result == self.XS_ORDSCAL:
-            return ordered_scaled_dcts
 
-        # Convert opportunities to trade instructions
+        # Scale the trade instructions
+        ordered_scaled_dcts = self._basic_scaling(
+            ordered_trade_instructions_dct, best_src_token
+        )
+
+        # Convert the trade instructions
         ordered_trade_instructions_objects = self._convert_trade_instructions(
             ordered_scaled_dcts
         )
-        if result == self.XS_TI:
-            return ordered_trade_instructions_objects
 
-        # Aggregate trade instructions
-        agg_trade_instructions, tx_route_handler = self.aggregate_trade_instructions(
-            ordered_trade_instructions_objects
+        # Create the tx route handler
+        tx_route_handler = self.TxRouteHandlerClass(
+            trade_instructions=ordered_trade_instructions_objects
         )
-        del ordered_trade_instructions_objects
-        if result == self.XS_AGGTI:
-            return agg_trade_instructions
 
-        # Calculate trade outputs
+        # Aggregate the carbon trades
+        agg_trade_instructions = (
+            tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+            if self._carbon_in_trade_route(ordered_trade_instructions_objects)
+            else ordered_trade_instructions_objects
+        )
+
+        # Calculate the trade instructions
         calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
             agg_trade_instructions
         )
-        if result == self.XS_EXACT:
-            return calculated_trade_instructions
 
-        # Get best profit
-        best_profit, fl_token, flashloan_tkn_profit, profit_usd = self.get_best_profit(
-            CCm, best_profit, calculated_trade_instructions
+        # Get the flashloan token
+        fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
+
+        # If the flashloan token is WETH, then use ETH
+        if fl_token == T.WETH:
+            fl_token = T.NATIVE_ETH
+
+        # Calculate the profit
+        best_profit = flashloan_tkn_profit = (
+            calculated_trade_instructions[-1].amtout
+            - calculated_trade_instructions[0].amtin
         )
-        flashloans = [
-            {
-                "token": fl_token,
-                "amount": num_format_float(calculated_trade_instructions[0].amtin),
-                "profit": num_format_float(flashloan_tkn_profit),
-            }
-        ]
-        log_dict = {
-            "type": arb_mode,
-            "profit_bnt": num_format_float(best_profit),
-            "profit_usd": num_format_float(profit_usd),
-            "flashloan": flashloans,
-            "trades": [],
-        }
-        for idx, trade in enumerate(calculated_trade_instructions):
-            log_dict["trades"].append(
-                {
-                    "trade_index": idx,
-                    "exchange": trade.exchange_name,
-                    "tkn_in": trade.tknin,
-                    "amount_in": num_format_float(trade.amtin),
-                    "tkn_out": trade.tknout,
-                    "amt_out": num_format_float(trade.amtout),
-                    "cid0": trade.cid[-10:],
-                }
-            )
-        self.ConfigObj.logger.info(
-            f"{log_format(log_data=log_dict, log_name='calculated_arb')}"
+
+        # Use helper function to calculate profit
+        best_profit, flt_per_bnt, profit_usd = self.calculate_profit(
+            CCm, best_profit, fl_token, fl_token_with_weth
         )
+
+        # Log the best trade instructions
+        self.handle_logging_for_trade_instructions(
+            1, # The log id
+            best_profit=best_profit
+        )
+
+        # Use helper function to update the log dict
+        log_dict = self.update_log_dict(
+            arb_mode,
+            best_profit,
+            profit_usd,
+            flashloan_tkn_profit,
+            calculated_trade_instructions,
+            fl_token,
+        )
+
+        # Log the log dict
+        self.handle_logging_for_trade_instructions(
+            2, # The log id
+            log_dict=log_dict
+        )
+
+        # Check if the best profit is greater than the minimum profit
         if best_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
             self.ConfigObj.logger.info(
                 f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
             )
             return None, None
 
-        # Get the flashloan amount
+        # Get the flashloan amount and token address
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
         flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
             self.db.get_token(key=fl_token).address
         )
-        self.ConfigObj.logger.debug(f"flashloan_amount: {flashloan_amount}")
-        if result == self.XS_ORDINFO:
-            return agg_trade_instructions, flashloan_amount, flashloan_token_address
 
-        # Encode trade instructions
+        # Log the flashloan amount and token address
+        self.handle_logging_for_trade_instructions(
+            3, # The log id
+            flashloan_amount=flashloan_amount,
+        )
+
+        # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
             agg_trade_instructions
         )
-        if result == self.XS_ENCTI:
-            return encoded_trade_instructions
 
-        # Determine route
+        # Get the deadline
         deadline = self._get_deadline()
 
         # Get the route struct
@@ -631,14 +749,14 @@ class CarbonBot(CarbonBotBase):
                 encoded_trade_instructions, deadline
             )
         ]
-        if result == self.XS_ROUTE:
-            return route_struct, flashloan_amount, flashloan_token_address
 
-        # Submit transaction and obtain transaction receipt
+        # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 
-        # Get the cids of the trade instructions
+        # Get the cids
         cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})
+
+        # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             return (
                 self._validate_and_submit_transaction_tenderly(
@@ -650,24 +768,28 @@ class CarbonBot(CarbonBotBase):
                 cids,
             )
 
-        # log the flashloan arbitrage tx info
-        self.log_tx_info(
-            best_trade_instructions_dic,
-            flashloan_amount,
-            flashloan_token_address,
-            route_struct,
+        # Log the route_struct
+        self.handle_logging_for_trade_instructions(
+            4, # The log id
+            flashloan_amount=flashloan_amount,
+            flashloan_token_address=flashloan_token_address,
+            route_struct=route_struct,
+            best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
-        # Get the Bancor pool
+        # Get the bnt_eth pool
         pool = self.db.get_pool(
-            exchange_name=self.ConfigObj.BANCOR_V3_NAME, pair_name=f"{T.BNT}/{T.ETH}"
+            exchange_name=self.ConfigObj.BANCOR_V3_NAME,
+            pair_name=f"{T.BNT}/{T.NATIVE_ETH}",
         )
+
+        # Get the bnt_eth price
         bnt_eth = (int(pool.tkn0_balance), int(pool.tkn1_balance))
 
-        # Init TxHelpers
+        # Get the tx helpers class
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
 
-        # Submit tx
+        # Return the validate and submit transaction
         return (
             tx_helpers.validate_and_submit_transaction(
                 route_struct=route_struct,
@@ -682,26 +804,88 @@ class CarbonBot(CarbonBotBase):
             cids,
         )
 
-    def log_tx_info(
-        self,
-        best_trade_instructions_dic: Dict[str, Any],
-        flashloan_amount: int,
-        flashloan_token_address: str,
-        route_struct: List[Dict[str, Any]],
-    ):
+    def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
         """
-        Logs the flashloan arbitrage tx info
+        Handles logging for trade instructions based on log_id.
 
         Parameters
         ----------
-        best_trade_instructions_dic: Dict[str, Any]
-            The best trade instructions dictionary
-        flashloan_amount: int
-            The flashloan amount
-        flashloan_token_address: str
-            The flashloan token address
-        route_struct: List[Dict[str, Any]]
-            The route struct
+        log_id : int
+            The ID for log type.
+        **kwargs : dict
+            Additional parameters required for logging.
+
+        Returns
+        -------
+        None
+        """
+        log_actions = {
+            1: self.log_best_profit,
+            2: self.log_calculated_arb,
+            3: self.log_flashloan_amount,
+            4: self.log_flashloan_details,
+        }
+        log_action = log_actions.get(log_id)
+        if log_action:
+            log_action(**kwargs)
+
+    def log_best_profit(self, best_profit: Optional[float] = None):
+        """
+        Logs the best profit.
+
+        Parameters
+        ----------
+        best_profit : Optional[float], optional
+            The best profit, by default None
+        """
+        self.ConfigObj.logger.debug(
+            f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
+        )
+
+    def log_calculated_arb(self, log_dict: Optional[Dict] = None):
+        """
+        Logs the calculated arbitrage.
+
+        Parameters
+        ----------
+        log_dict : Optional[Dict], optional
+            The dictionary containing log data, by default None
+        """
+        self.ConfigObj.logger.info(
+            f"{log_format(log_data=log_dict, log_name='calculated_arb')}"
+        )
+
+    def log_flashloan_amount(self, flashloan_amount: Optional[float] = None):
+        """
+        Logs the flashloan amount.
+
+        Parameters
+        ----------
+        flashloan_amount : Optional[float], optional
+            The flashloan amount, by default None
+        """
+        self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
+
+    def log_flashloan_details(
+            self,
+            flashloan_amount: Optional[float] = None,
+            flashloan_token_address: Optional[str] = None,
+            route_struct: Optional[List[Dict]] = None,
+            best_trade_instructions_dic: Optional[Dict] = None,
+    ):
+        """
+        Logs the details of flashloan.
+
+        Parameters
+        ----------
+        flashloan_amount : Optional[float], optional
+            The flashloan amount, by default None
+        flashloan_token_address : Optional[str], optional
+            The flashloan token address, by default None
+        route_struct : Optional[List[Dict]], optional
+            The route structure, by default None
+        best_trade_instructions_dic : Optional[Dict], optional
+            The dictionary containing the best trade instructions, by default None
         """
         self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
         self.ConfigObj.logger.debug(
@@ -711,112 +895,6 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.logger.debug(
             f"Trade Instructions: \n {best_trade_instructions_dic}"
         )
-
-    def get_best_profit(
-        self,
-        CCm: CPCContainer,
-        calculated_trade_instructions: List[Any],
-        arb_mode: str,
-        result: str = None,
-    ) -> Tuple[Any, Any, Any, Any]:
-        """
-        Gets the best profit
-        Parameters
-        ----------
-        CCm
-        calculated_trade_instructions
-        arb_mode
-        result
-
-        Returns
-        -------
-
-        """
-        fl_token = calculated_trade_instructions[0].tknin_key
-        fl_token_with_weth = fl_token
-        if fl_token == T.WETH:
-            fl_token = T.ETH
-        best_profit = (
-            calculated_trade_instructions[-1].amtout
-            - calculated_trade_instructions[0].amtin
-        )
-        flashloan_tkn_profit = best_profit
-        if fl_token_with_weth != T.BNT:
-            bnt_flt_curves = CCm.bypair(pair=f"{T.BNT}/{fl_token_with_weth}")
-            bnt_flt = [
-                x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"
-            ][0]
-            flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
-            best_profit = Decimal(str(flt_per_bnt * best_profit))
-        bnt_usdc_curve = CCm.bycid(
-            "0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b"
-        )
-        usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
-        profit_usd = best_profit * Decimal(str(usd_bnt))
-        self.ConfigObj.logger.debug(
-            f"updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
-        )
-        return best_profit, fl_token, flashloan_tkn_profit, profit_usd
-
-    def aggregate_trade_instructions(
-        self, ordered_trade_instructions_objects: List[Any]
-    ) -> Tuple[Any, Any]:
-        """
-        Aggregates the trade instructions
-
-        Parameters
-        ----------
-        ordered_trade_instructions_objects: List[Any]
-            The ordered trade instructions objects
-
-        Returns
-        -------
-        Tuple[Any, Any]
-            The aggregated trade instructions and the tx route handler
-        """
-        # Aggregate trade instructions
-        tx_route_handler = self.TxRouteHandlerClass(
-            trade_instructions=ordered_trade_instructions_objects
-        )
-        agg_trade_instructions = (
-            tx_route_handler._aggregate_carbon_trades(
-                trade_instructions_objects=ordered_trade_instructions_objects
-            )
-            if self._carbon_in_trade_route(ordered_trade_instructions_objects)
-            else ordered_trade_instructions_objects
-        )
-        return agg_trade_instructions, tx_route_handler
-
-    def order_trade_instructions_and_scale(
-        self, best_src_token: str, best_trade_instructions_dic: Dict[str, Any]
-    ) -> List[Any]:
-        """
-        Orders the trade instructions and scales them
-
-        Parameters
-        ----------
-        best_src_token: str
-            The best source token
-        best_trade_instructions_dic: Dict[str, Any]
-            The best trade instructions dictionary
-
-        Returns
-        -------
-        Dict[str, Any]
-            The ordered and scaled trade instructions dictionary
-
-        """
-        # Order the trades instructions suitable for routing and scale the amounts
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
-        ordered_scaled_dcts = self._basic_scaling(
-            ordered_trade_instructions_dct, best_src_token
-        )
-        return ordered_scaled_dcts
 
     def _validate_and_submit_transaction_tenderly(
         self,
@@ -853,7 +931,7 @@ class CarbonBot(CarbonBotBase):
         )
         self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         self.ConfigObj.logger.debug("src_address", src_address)
-        tx = tx_submit_handler._submit_transaction_tenderly(
+        tx = tx_submit_handler.submit_transaction_tenderly(
             route_struct=route_struct, src_address=src_address, src_amount=src_amount
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
@@ -912,19 +990,14 @@ class CarbonBot(CarbonBotBase):
                 for x in CCm
                 if (x.params.exchange == "carbon_v1")
                 & (
-                    (x.params.tkny_addr == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
-                    or (
-                        x.params.tknx_addr
-                        == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-                    )
+                    (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+                    or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
                 )
             ]
             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str
-    ):
+    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str):
         """
         Run the bot in continuous mode.
 
@@ -932,8 +1005,6 @@ class CarbonBot(CarbonBotBase):
         ----------
         flashloan_tokens: List[str]
             The flashloan tokens
-        CCm: CPCContainer
-            The CPCContainer object
         arb_mode: bool
             The arb mode
         """
@@ -945,14 +1016,8 @@ class CarbonBot(CarbonBotBase):
                     for x in CCm
                     if (x.params.exchange == "carbon_v1")
                     & (
-                        (
-                            x.params.tkny_addr
-                            == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-                        )
-                        or (
-                            x.params.tknx_addr
-                            == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-                        )
+                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
                     )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
@@ -1031,6 +1096,6 @@ class CarbonBot(CarbonBotBase):
         CCm = self.setup_CCm(CCm)
 
         if mode == "continuous":
-            self.run_continuous_mode(flashloan_tokens, CCm, arb_mode)
+            self.run_continuous_mode(flashloan_tokens, arb_mode)
         else:
             self.run_single_mode(flashloan_tokens, CCm, arb_mode)

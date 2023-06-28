@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the exchanges classes
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Type, Tuple, Any
@@ -11,11 +18,14 @@ from fastlane_bot.data.abi import (
     CARBON_CONTROLLER_ABI,
     BANCOR_V3_POOL_COLLECTION_ABI
 )
-from fastlane_bot.data_fetcher.pools import Pool
+from fastlane_bot.events.pools import Pool
 
 
 @dataclass
 class Exchange(ABC):
+    """
+    Base class for exchanges
+    """
     pools: Dict[str, Pool] = field(default_factory=dict)
 
     def get_pools(self) -> List[Pool]:
@@ -23,26 +33,112 @@ class Exchange(ABC):
 
     @abstractmethod
     def add_pool(self, pool: Pool):
+        """
+        Add a pool to the exchange.
+
+        Parameters
+        ----------
+        pool : Pool
+            The pool object
+
+        Returns
+        -------
+        None
+        """
         pass
 
     @abstractmethod
     def get_abi(self):
+        """
+        Get the ABI of the exchange
+
+        Returns
+        -------
+        ABI
+            The ABI of the exchange
+
+        """
         pass
 
     @abstractmethod
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
+        """
+        Get the events of the exchange
+
+        Parameters
+        ----------
+        contract : Contract
+            The contract object
+
+        Returns
+        -------
+        List[Type[Contract]]
+            The events of the exchange
+
+        """
         pass
 
     @abstractmethod
     def get_fee(self, address: str, contract: Contract) -> float:
+        """
+        Get the fee of the exchange
+
+        Parameters
+        ----------
+        address : str
+            The address of the exchange
+        contract : Contract
+            The contract object
+
+        Returns
+        -------
+        float
+            The fee of the exchange
+
+        """
         pass
 
     @abstractmethod
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        """
+        Get the tkn0 of the exchange
+
+        Parameters
+        ----------
+        address : str
+            The address of the exchange
+        contract : Contract
+            The contract object
+        event : Any
+            The event object
+
+        Returns
+        -------
+        str
+            The tkn0 of the exchange
+        """
         pass
 
     @abstractmethod
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        """
+        Get the tkn1 of the exchange
+
+        Parameters
+        ----------
+        address : str
+            The address of the exchange
+        contract : Contract
+            The contract object
+        event : Any
+            The event object
+
+        Returns
+        -------
+        str
+            The tkn1 of the exchange
+
+        """
         pass
 
     def get_pool(self, key: str) -> Pool:
@@ -66,6 +162,9 @@ class Exchange(ABC):
 
 @dataclass
 class UniswapV2(Exchange):
+    """
+    UniswapV2 exchange class
+    """
     exchange_name: str = "uniswap_v2"
 
     def add_pool(self, pool: Pool):
@@ -89,6 +188,9 @@ class UniswapV2(Exchange):
 
 @dataclass
 class SushiswapV2(Exchange):
+    """
+    SushiswapV2 exchange class
+    """
     exchange_name: str = "sushiswap_v2"
 
     def add_pool(self, pool: Pool):
@@ -112,6 +214,9 @@ class SushiswapV2(Exchange):
 
 @dataclass
 class UniswapV3(Exchange):
+    """
+    UniswapV3 exchange class
+    """
     exchange_name: str = "uniswap_v3"
 
     def add_pool(self, pool: Pool):
@@ -144,6 +249,9 @@ class UniswapV3(Exchange):
 
 @dataclass
 class BancorV3(Exchange):
+    """
+    BancorV3 exchange class
+    """
     exchange_name: str = "bancor_v3"
     BNT_ADDRESS: str = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'
 
@@ -168,6 +276,9 @@ class BancorV3(Exchange):
 
 @dataclass
 class CarbonV1(Exchange):
+    """
+    Carbon exchange class
+    """
 
     exchange_name: str = "carbon_v1"
 
@@ -200,17 +311,51 @@ class CarbonV1(Exchange):
             return event["args"]["token1"]
 
     def delete_strategy(self, id: str):
+        """
+        Delete a strategy from the exchange
+
+        Parameters
+        ----------
+        id : str (alias for cid)
+            The id of the strategy to delete
+        """
         self.pools.pop(id)
 
 
 class ExchangeFactory:
+    """
+    Factory class for exchanges
+    """
     def __init__(self):
         self._creators = {}
 
     def register_exchange(self, key, creator):
+        """
+        Register an exchange with the factory
+
+        Parameters
+        ----------
+        key : str
+            The key to use for the exchange
+        creator : Exchange
+            The exchange class to register
+        """
         self._creators[key] = creator
 
     def get_exchange(self, key):
+        """
+        Get an exchange from the factory
+
+        Parameters
+        ----------
+        key : str
+            The key to use for the exchange
+
+        Returns
+        -------
+        Exchange
+            The exchange class
+        """
         creator = self._creators.get(key)
         if not creator:
             raise ValueError(key)

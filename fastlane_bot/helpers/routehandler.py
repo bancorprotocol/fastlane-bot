@@ -7,34 +7,16 @@ Licensed under MIT
 __VERSION__ = "1.1.1"
 __DATE__="02/May/2023"
 
-# import itertools
-# import random
-# import time
-from dataclasses import dataclass, asdict
-from typing import List, Union, Any, Dict, Tuple, Optional
-import eth_abi
 import math
+from _decimal import Decimal
+from dataclasses import dataclass
+from typing import List, Any, Dict, Tuple
+
+import eth_abi
 import pandas as pd
 
-# import requests
-from _decimal import Decimal
-from alchemy import Network, Alchemy
-from brownie.network.transaction import TransactionReceipt
-from eth_utils import to_hex
-from web3 import Web3
-from web3._utils.threads import Timeout
-from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
-from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
-
-from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-#from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-# from fastlane_bot.db.models import Token, Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.config import Config
 from .tradeinstruction import TradeInstruction
-from ..data_fetcher.interface import Pool
+from ..events.interface import Pool
 
 
 @dataclass
@@ -97,10 +79,7 @@ class TxRouteHandler(TxRouteHandlerBase):
     """
     __VERSION__=__VERSION__
     __DATE__=__DATE__
-    
-    # ConfigObj: Config
-    # trade_instructions_dic: List[TradeInstruction]
-    # trade_instructions_df: pd.DataFrame
+
     trade_instructions: List[TradeInstruction]
 
     @property
@@ -125,30 +104,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             raise ValueError("Trade instructions must be greater than 1.")
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
-
-    # @staticmethod
-    # def _get_carbon_indexes(
-    #     trade_instructions_dic: List[Dict[str, Any] or TradeInstruction]
-    # ) -> List[int]:
-    #     """
-    #     Gets the indexes of the trades that are on the Carbon exchange.
-
-    #     Returns
-    #     -------
-    #     List[int]
-    #         The indexes of the trades that are on the Carbon exchange.
-    #     """
-    #     if isinstance(trade_instructions_dic[0], TradeInstruction):
-    #         return [
-    #             idx
-    #             for idx in range(len(trade_instructions_dic))
-    #             if "-" in trade_instructions_dic[idx].cid
-    #         ]
-    #     return [
-    #         idx
-    #         for idx in range(len(trade_instructions_dic))
-    #         if "-" in trade_instructions_dic[idx]["cid"]
-    #     ]
 
     def is_weth(self, address: str) -> bool:
         """
@@ -184,7 +139,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
                                 trade["_amtin_wei"]
-                                # Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
                             ),
                         }
                     ]
@@ -414,7 +368,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return list(zip(min_index, slices))
  
-    def _aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
+    def aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
         Aggregate carbon independent IDs and create trade instructions.
 
