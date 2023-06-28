@@ -14,16 +14,17 @@ from fastlane_bot.config import Config
 from fastlane_bot.data_fetcher.interface import QueryInterface
 from fastlane_bot.data_fetcher.manager import Manager
 from fastlane_bot.data_fetcher.utils import complex_handler, filter_latest_events
+from fastlane_bot.tools.cpc import T
 
 load_dotenv()
 
 # Cheatsheet:
-# python main.py --arb_mode=single --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
-# python main.py --arb_mode=multi --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
-# python main.py --arb_mode=triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
-# python main.py --arb_mode=multi_triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
-# python main.py --arb_mode=single_triangle_bancor3 --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --dbfs_path="" --loglevel=DEBUG
-# python main.py --arb_mode=bancor_v3 --static_pool_data_filename=static_pool_data --static_pool_data_sample_sz=max --alchemy_max_block_fetch=2000 --dbfs_path="" --loglevel=INFO
+# python main.py --arb_mode=single --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --logging_path="" --loglevel=DEBUG
+# python main.py --arb_mode=multi --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --logging_path="" --loglevel=DEBUG
+# python main.py --arb_mode=triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --logging_path="" --loglevel=DEBUG
+# python main.py --arb_mode=multi_triangle --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --logging_path="" --loglevel=DEBUG
+# python main.py --arb_mode=single_triangle_bancor3 --static_pool_data_filename=static_pool_data_empty --static_pool_data_sample_sz=max --alchemy_max_block_fetch=200 --logging_path="" --loglevel=DEBUG
+# python main.py --arb_mode=bancor_v3 --static_pool_data_filename=static_pool_data --static_pool_data_sample_sz=max --alchemy_max_block_fetch=2000 --logging_path="" --loglevel=INFO
 
 @click.command()
 @click.option(
@@ -41,11 +42,11 @@ load_dotenv()
 @click.option(
     "--static_pool_data_filename",
     default="static_pool_data",
-    # default="static_pool_data_empty",
     help="Filename of the static pool data.",
 )
 @click.option(
-    "--arb_mode", default="multi", type=str, help="See arb_mode in bot.py"
+    "--arb_mode", default="multi", help="See arb_mode in bot.py",
+    type=click.Choice(["single", "multi", "triangle", "multi_triangle", "bancor_v3"])
 )
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"
@@ -55,7 +56,7 @@ load_dotenv()
 @click.option(
     "--exchanges",
     default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
-    help="Comma separated external exchanges",
+    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included."
 )
 @click.option(
     "--polling_interval",
@@ -73,10 +74,9 @@ load_dotenv()
     help="Number of blocks delayed to avoid reorgs",
 )
 @click.option(
-    "--dbfs_path",
-    default='/dbfs/FileStore/tables/carbonbot/logs/',
-    # default="",
-    help="The Databricks logging path.",
+    "--logging_path",
+    default='',
+    help="The logging path.",
 )
 @click.option(
     "--loglevel",
@@ -88,7 +88,7 @@ load_dotenv()
     "--static_pool_data_sample_sz",
     default="max",
     type=str,
-    help="The sample size of the static pool data.",
+    help="The sample size of the static pool data. Set to 'max' for production.",
 )
 def main(
     cache_latest_only: bool,
@@ -102,7 +102,7 @@ def main(
     alchemy_max_block_fetch: int,
     static_pool_data_filename: str,
     reorg_delay: int,
-    dbfs_path: str,
+    logging_path: str,
     loglevel: str,
     static_pool_data_sample_sz: str,
 ):
@@ -122,7 +122,7 @@ def main(
         alchemy_max_block_fetch (int): The maximum number of blocks to fetch in a single request.
         static_pool_data_filename (str): The filename of the static pool data to read from.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
-        dbfs_path (str): The Databricks logging path.
+        logging_path (str): The Databricks logging path.
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
     """
@@ -220,7 +220,7 @@ def main(
         arb_mode,
         flashloan_tokens,
         reorg_delay,
-        dbfs_path,
+        logging_path,
     )
 
 
@@ -234,7 +234,7 @@ def run(
     arb_mode: str,
     flashloan_tokens: List[str] or None,
     reorg_delay: int,
-    dbfs_path: str,
+    logging_path: str,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -249,7 +249,7 @@ def run(
         arb_mode (str): The arbitrage mode to use.
         flashloan_tokens (List[str]): List of tokens that the bot can use for flash loans.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
-        dbfs_path (str): The path to the DBFS directory.
+        logging_path (str): The path to the DBFS directory.
     """
 
     def get_event_filters(
@@ -300,7 +300,7 @@ def run(
             current_block (int): The current block number of the events.
         """
         if cache_latest_only:
-            path = f"{dbfs_path}latest_event_data.json"
+            path = f"{logging_path}latest_event_data.json"
         else:
             if not os.path.isdir("event_data"):
                 os.mkdir("event_data")
@@ -346,7 +346,7 @@ def run(
             current_block (int): The current block number.
         """
         if cache_latest_only:
-            path = f"{dbfs_path}latest_pool_data.json"
+            path = f"{logging_path}latest_pool_data.json"
         else:
             if not os.path.isdir("pool_data"):
                 os.mkdir("pool_data")
