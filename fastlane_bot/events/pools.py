@@ -439,7 +439,11 @@ class CarbonV1Pool(Pool):
         """
         See base class.
         """
-        strategy = contract.strategy(self.state["cid"])
+        try:
+            strategy = contract.strategy(self.state["cid"])
+        except AttributeError:
+            strategy = contract.caller.strategy(self.state["cid"])
+
         fake_event = {
             "args": {
                 "id": strategy[0],

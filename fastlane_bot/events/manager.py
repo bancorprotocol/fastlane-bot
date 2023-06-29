@@ -699,6 +699,7 @@ class Manager:
             addr: Optional[str] = None,
             event: Optional[Dict[str, Any]] = None,
             pool_info: Optional[Dict[str, Any]] = None,
+            key: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Validate the pool info.
@@ -718,8 +719,9 @@ class Manager:
             The pool info.
 
         """
-        if pool_info is None or not pool_info:
-            pool_info = self.add_pool_info_from_contract(address=addr, event=event)
+        if key != 'cid':
+            if pool_info is None or not pool_info:
+                pool_info = self.add_pool_info_from_contract(address=addr, event=event)
 
         if addr == self.cfg.CARBON_CONTROLLER_ADDRESS:
             cid = event["args"]["id"]
@@ -820,10 +822,13 @@ class Manager:
         if ex_name == "sushiswap_v2":
             ex_name = "uniswap_v2"
 
+        if key == "address":
+            key_value = self.web3.toChecksumAddress(key_value)
+
         return next(
             (
                 self.validate_pool_info(
-                    self.web3.toChecksumAddress(key_value), event, pool
+                    key_value, event, pool, key
                 )
                 for pool in self.pool_data
                 if pool[key] == key_value and pool["exchange_name"] == ex_name
@@ -1063,11 +1068,10 @@ class Manager:
                     break
                 break
             except Exception as e:
-                if any(err_msg in str(e) for err_msg in ["Too many requests"]):
-                    self.cfg.logger.debug(
-                        f"Alchemy rate limit hit. Retrying after a {rate_limiter} second delay... {e}  {event} {address} {contract}"
-                    )
-                    time.sleep(rate_limiter)
-                else:
+                if not any(err_msg in str(e) for err_msg in ["Too Many Requests for url"]):
                     self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
                     break
+
+                else:
+
+                    time.sleep(rate_limiter)
