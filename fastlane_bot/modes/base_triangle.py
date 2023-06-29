@@ -21,11 +21,9 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
     """
 
     @abc.abstractmethod
-    def find_arbitrage(
-        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
-        see child classes
+        see base.py
         """
         pass
 

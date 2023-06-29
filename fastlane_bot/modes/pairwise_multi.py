@@ -21,27 +21,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
     arb_mode = "multi_pairwise"
 
-    def find_arbitrage(
-        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
-        Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
-
-        Parameters
-        ----------
-        candidates : List[Any], optional
-            List of candidates, by default None
-        ops : Tuple, optional
-            Tuple of operations, by default None
-        best_profit : float, optional
-            Best profit so far, by default 0
-
-
-        Returns
-        -------
-        Union[List, Tuple]
-            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-
+        see base.py
         """
         if self.base_exchange != "carbon_v1":
             raise ValueError("base_exchange must be carbon_v1 for `multi` mode")

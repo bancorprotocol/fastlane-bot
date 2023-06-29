@@ -21,15 +21,9 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
 
     arb_mode = "single_pairwise"
 
-    def find_arbitrage(
-        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
-        Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
-
-        Returns:
-            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-                           Otherwise, it returns the optimal opportunity.
+        see base.py
         """
 
         if candidates is None:

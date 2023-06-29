@@ -58,11 +58,25 @@ class ArbitrageFinderBase:
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
-    def find_arbitrage(
-        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
         See subclasses for details
+
+        Parameters
+        ----------
+        candidates : List[Any], optional
+            List of candidates, by default None
+        ops : Tuple, optional
+            Tuple of operations, by default None
+        best_profit : float, optional
+            Best profit so far, by default 0
+        profit_src : float, optional
+            Profit source, by default 0
+
+        Returns
+        -------
+        Union[List, Tuple]
+            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
         """
         pass
 

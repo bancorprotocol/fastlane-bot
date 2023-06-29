@@ -19,26 +19,9 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
     arb_mode = "multi_triangle"
 
-    def find_arbitrage(
-        self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
-        Find arbitrage opportunities in a market and returns either a list of candidates or the optimal opportunity.
-
-        Parameters:
-        ----------
-        candidates : list, optional
-            List of candidates to append to, by default None
-        ops : tuple, optional
-            Tuple of operations to append to, by default None
-        best_profit : float, optional
-            Best profit so far, by default 0
-
-
-        Returns:
-        -------
-            list or tuple: If self.result == self.AO_CANDIDATES, it returns a list of candidates.
-                           Otherwise, it returns the optimal opportunity.
+        see base.py
         """
 
         if self.base_exchange != "carbon_v1":
