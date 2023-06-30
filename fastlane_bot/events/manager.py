@@ -305,7 +305,11 @@ class Manager:
         """
         exchange_name = self.check_forked_exchange_names(exchange_name, address, event)
         if not exchange_name:
-            print(f"Exchange name not found {event}")
+            self.cfg.logger.info(f"Exchange name not found {event}")
+            return None
+
+        if exchange_name not in self.SUPPORTED_EXCHANGES:
+            self.cfg.logger.info(f"Event exchange {exchange_name} not in exchanges={self.SUPPORTED_EXCHANGES} for address={address}")
             return None
 
         pool_contract = self.get_pool_contract(exchange_name, address)
@@ -368,11 +372,14 @@ class Manager:
             The pool contract.
 
         """
-        default_contract = self.web3.eth.contract(
-            address=address, abi=self.exchanges[exchange_name].get_abi()
-        )
-        contract_key = self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS if exchange_name == "bancor_v3" else address
-        return self.pool_contracts[exchange_name].get(contract_key, default_contract)
+        if exchange_name in self.exchanges:
+            default_contract = self.web3.eth.contract(
+                address=address, abi=self.exchanges[exchange_name].get_abi()
+            )
+            contract_key = self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS if exchange_name == "bancor_v3" else address
+            return self.pool_contracts[exchange_name].get(contract_key, default_contract)
+        else:
+            return None
 
     def add_pool_info(
             self,
@@ -1069,8 +1076,9 @@ class Manager:
                 break
             except Exception as e:
                 if not any(err_msg in str(e) for err_msg in ["Too Many Requests for url"]):
-                    self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
-                    break
+                    # self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
+                    # break
+                    raise e
 
                 else:
 
