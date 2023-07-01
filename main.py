@@ -450,9 +450,11 @@ def run(
                 rows_to_update += [
                     idx
                     for idx, pool in enumerate(mgr.pool_data)
-                    if pool["pair_name"] == "BNT-FF1C/ETH-EEeE"
-                    and pool["exchange_name"] == "bancor_v3"
+                    if pool["exchange_name"] == "bancor_v3"
                 ]
+
+                # Remove duplicates
+                rows_to_update = list(set(rows_to_update))
 
                 # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
                 bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
@@ -466,20 +468,7 @@ def run(
             rows_to_update += [
                 idx
                 for idx, pool in enumerate(mgr.pool_data)
-                if pool["pair_name"] == "BNT-FF1C/ETH-EEeE"
-                and pool["exchange_name"] == "bancor_v3"
-            ]
-            rows_to_update += [
-                idx
-                for idx, pool in enumerate(mgr.pool_data)
-                if pool["pair_name"] == "BNT-FF1C/USDC-eB48"
-                and pool["exchange_name"] == "bancor_v3"
-            ]
-            rows_to_update += [
-                idx
-                for idx, pool in enumerate(mgr.pool_data)
-                if pool["pair_name"] == "BNT-FF1C/WBTC-C599"
-                and pool["exchange_name"] == "bancor_v3"
+                if pool["exchange_name"] == "bancor_v3"
             ]
             update_pools_directly_from_contracts(rows_to_update)
 

@@ -309,7 +309,7 @@ class Manager:
             return None
 
         if exchange_name not in self.SUPPORTED_EXCHANGES:
-            self.cfg.logger.info(f"Event exchange {exchange_name} not in exchanges={self.SUPPORTED_EXCHANGES} for address={address}")
+            self.cfg.logger.debug(f"Event exchange {exchange_name} not in exchanges={self.SUPPORTED_EXCHANGES} for address={address}")
             return None
 
         pool_contract = self.get_pool_contract(exchange_name, address)
@@ -353,7 +353,7 @@ class Manager:
         if exchange_name_default is None:
             exchange_name_default = self.exchange_name_from_event(event)
 
-        return self.correct_for_sushiswap(event, exchange_name_default)
+        return exchange_name_default
 
     def get_pool_contract(self, exchange_name: str, address: str) -> Contract:
         """
@@ -755,7 +755,6 @@ class Manager:
         addr = self.web3.toChecksumAddress(event["address"])
         ex_name = self.exchange_name_from_event(event)
 
-        ex_name = self.correct_for_sushiswap(event, ex_name)
         if not ex_name:
             return
 
@@ -774,10 +773,10 @@ class Manager:
 
         self.update_pool_data(pool_info, data)
 
-    def correct_for_sushiswap(self, event, ex_name):
-        if ex_name and ex_name == 'uniswap_v2':
-            ex_name = self.uniswap_v2_event_mappings.get(event['address'])
-        return ex_name
+    # def correct_for_sushiswap(self, event, ex_name):
+    #     if ex_name and ex_name == 'uniswap_v2':
+    #         ex_name = self.uniswap_v2_event_mappings.get(event['address'])
+    #     return ex_name
 
     def get_key_and_value(self, event: Dict[str, Any], addr: str, ex_name: str) -> Tuple[str, Any]:
         """
@@ -1076,10 +1075,7 @@ class Manager:
                 break
             except Exception as e:
                 if not any(err_msg in str(e) for err_msg in ["Too Many Requests for url"]):
-                    # self.cfg.logger.error(f"Error updating pool: {e} {event} {address} {contract}")
-                    # break
-                    raise e
-
+                    self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
+                    break
                 else:
-
                     time.sleep(rate_limiter)
