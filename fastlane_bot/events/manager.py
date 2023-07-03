@@ -1027,6 +1027,8 @@ class Manager:
         elif key == "tkn1_address":
             return event["args"]["token1"]
 
+    print_events = []
+
     def update(
             self,
             event: Dict[str, Any] = None,
