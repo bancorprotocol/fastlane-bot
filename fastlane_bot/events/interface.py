@@ -33,6 +33,9 @@ class QueryInterface:
     to be used with the new data fetcher module without any changes to the bot module.
     """
 
+    __VERSION__ = "0.0.1"
+    __DATE__ = "2023-07-03"
+
     mgr: Any = None
     state: List[Dict[str, Any]] = field(default_factory=list)
     ConfigObj: Config = None

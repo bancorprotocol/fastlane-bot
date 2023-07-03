@@ -24,6 +24,10 @@ class Pool(ABC):
     state : Dict[str, Any]
         The pool state.
     """
+
+    __VERSION__ = "0.0.1"
+    __DATE__ = "2023-07-03"
+
     state: Dict[str, Any] = field(default_factory=dict)        
 
 

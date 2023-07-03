@@ -317,6 +317,8 @@ def run(
         except Exception as e:
             mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
 
+        mgr.cfg.logger.info(f"Saved events to {path}")
+
     def update_pools_from_events(latest_events: List[Any]) -> None:
         """
         Updates the pools with the given events.

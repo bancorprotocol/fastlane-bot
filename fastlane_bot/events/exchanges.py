@@ -26,6 +26,10 @@ class Exchange(ABC):
     """
     Base class for exchanges
     """
+
+    __VERSION__ = "0.0.1"
+    __DATE__ = "2023-07-03"
+
     pools: Dict[str, Pool] = field(default_factory=dict)
 
     def get_pools(self) -> List[Pool]:
