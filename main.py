@@ -389,6 +389,7 @@ def run(
         """
         mgr.cfg.logger.info("Initializing the bot...")
         db = QueryInterface(
+            mgr=mgr,
             ConfigObj=mgr.cfg,
             state=mgr.pool_data,
             uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings,

@@ -295,13 +295,13 @@ class BancorV3Pool(Pool):
         return "tkn1_address"
 
     @classmethod
-    def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
         """
         Check if an event matches the format of a Bancor v3 event.
 
         Parameters
         ----------
-        event_args : Dict[str, Any]
+        event : Dict[str, Any]
             The event arguments.
 
         Returns
@@ -310,6 +310,7 @@ class BancorV3Pool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
+        event_args = event["args"]
         return "pool" in event_args
 
     def update_from_event(
@@ -366,10 +367,11 @@ class CarbonV1Pool(Pool):
         return "cid"
 
     @classmethod
-    def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
         """
         see base class.
         """
+        event_args = event["args"]
         return "order0" in event_args
 
     def update_from_event(

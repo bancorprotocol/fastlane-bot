@@ -448,7 +448,7 @@ class CarbonBot(CarbonBotBase):
         *,
         result=None,
         arb_mode: str = None,
-        randomizer=False,
+        randomizer=True,
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.

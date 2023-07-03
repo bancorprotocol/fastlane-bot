@@ -33,6 +33,7 @@ class QueryInterface:
     to be used with the new data fetcher module without any changes to the bot module.
     """
 
+    mgr: Any = None
     state: List[Dict[str, Any]] = field(default_factory=list)
     ConfigObj: Config = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
