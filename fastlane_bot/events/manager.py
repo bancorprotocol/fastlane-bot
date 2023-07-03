@@ -773,11 +773,6 @@ class Manager:
 
         self.update_pool_data(pool_info, data)
 
-    # def correct_for_sushiswap(self, event, ex_name):
-    #     if ex_name and ex_name == 'uniswap_v2':
-    #         ex_name = self.uniswap_v2_event_mappings.get(event['address'])
-    #     return ex_name
-
     def get_key_and_value(self, event: Dict[str, Any], addr: str, ex_name: str) -> Tuple[str, Any]:
         """
         Get the key and value.

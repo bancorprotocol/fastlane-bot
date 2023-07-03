@@ -82,6 +82,12 @@ load_dotenv()
     type=str,
     help="The sample size of the static pool data. Set to 'max' for production.",
 )
+@click.option(
+    "--use_cached_events",
+    default=False,
+    type=bool,
+    help="Set to True for debugging / testing. Set to False for production.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -97,6 +103,7 @@ def main(
     logging_path: str,
     loglevel: str,
     static_pool_data_sample_sz: str,
+    use_cached_events: bool,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Manager objects,
@@ -117,6 +124,7 @@ def main(
         logging_path (str): The Databricks logging path.
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
+        use_cached_events (bool): Whether to use cached events or not.
     """
     # Set config
     loglevel = (
@@ -213,6 +221,7 @@ def main(
         flashloan_tokens,
         reorg_delay,
         logging_path,
+        use_cached_events
     )
 
 
@@ -227,6 +236,7 @@ def run(
     flashloan_tokens: List[str] or None,
     reorg_delay: int,
     logging_path: str,
+    use_cached_events: bool
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -242,6 +252,7 @@ def run(
         flashloan_tokens (List[str]): List of tokens that the bot can use for flash loans.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         logging_path (str): The path to the DBFS directory.
+        use_cached_events (bool): Whether to use cached events or not.
     """
 
     def get_event_filters(
@@ -424,23 +435,36 @@ def run(
             f"Fetching events from {start_block} to {current_block}... {last_block}"
         )
 
-        # Get all event filters, events, and flatten them
-        events = [
-            complex_handler(event)
-            for event in [
+        if not use_cached_events:
+
+            # Get all event filters, events, and flatten them
+            events = [
                 complex_handler(event)
-                for event in get_all_events(
-                    get_event_filters(start_block, current_block, reorg_delay)
-                )
+                for event in [
+                    complex_handler(event)
+                    for event in get_all_events(
+                        get_event_filters(start_block, current_block, reorg_delay)
+                    )
+                ]
             ]
-        ]
 
-        # Filter out the latest events per pool, save them to disk, and update the pools
-        latest_events = filter_latest_events(mgr, events)
-        mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+            # Filter out the latest events per pool, save them to disk, and update the pools
+            latest_events = filter_latest_events(mgr, events)
+            mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
-        # Save the latest events to disk
-        save_events_to_json(latest_events, start_block, current_block)
+            # Save the latest events to disk
+            save_events_to_json(latest_events, start_block, current_block)
+
+        else:
+            # read data from the json file latest_event_data.json
+            mgr.cfg.logger.info("Using cached events")
+            path = f"{logging_path}latest_event_data.json"
+            os.path.isfile(path)
+            with open(path, "r") as f:
+                latest_events = json.load(f)
+            if not latest_events or len(latest_events) == 0:
+                raise ValueError("No events found in the json file")
+            mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
         # Update the pools from the latest events
         update_pools_from_events(latest_events)
