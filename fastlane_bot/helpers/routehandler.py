@@ -1113,6 +1113,26 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
+    def calculate_trade_profit(
+        self, trade_instructions: List[TradeInstruction]
+    ) -> int or float or Decimal:
+        """
+        Calculates the profit of the trade in the Flashloan token by calculating the sum in vs sum out
+        """
+        sum_in = 0
+        sum_out = 0
+        flt = trade_instructions[0].tknin_key
+
+        for trade in trade_instructions:
+            self.ConfigObj.logger.info(f"trade: {trade.amtin} token {trade.tknin_key} for {trade.amtout} token {trade.tknout_key}")
+            if trade.tknin_key == flt:
+                sum_in += abs(trade.amtin)
+            elif trade.tknout_key == flt:
+                sum_out += abs(trade.amtout)
+
+        sum_profit = sum_out - sum_in
+        self.ConfigObj.logger.info(f"calculating trade profit: token: {flt}, sum out: {sum_out}, sum_in: {sum_in}, profit: {sum_profit}")
+        return sum_profit
 
     def calculate_trade_outputs(
         self, trade_instructions: List[TradeInstruction]

@@ -182,6 +182,7 @@ class TradeInstruction:
 
         if "." not in str(amount):
             return Decimal(str(amount))
+        amount = format(amount, 'f')
         amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
         # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")

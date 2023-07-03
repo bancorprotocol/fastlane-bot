@@ -683,11 +683,16 @@ class CarbonBot(CarbonBotBase):
             fl_token = T.NATIVE_ETH
 
         # Calculate the profit
-        best_profit = flashloan_tkn_profit = (
-            calculated_trade_instructions[-1].amtout
-            - calculated_trade_instructions[0].amtin
-        )
+        # best_profit_old = flashloan_tkn_profit = (
+        #     calculated_trade_instructions[-1].amtout
+        #     - calculated_trade_instructions[0].amtin
+        # )
 
+        best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
+
+        self.ConfigObj.logger.info(
+            f"Opportunity with profit: {num_format(best_profit)} vs old profit {best_profit_old}."
+        )
         # Use helper function to calculate profit
         best_profit, flt_per_bnt, profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, fl_token_with_weth
