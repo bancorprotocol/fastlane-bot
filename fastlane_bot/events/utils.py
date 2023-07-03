@@ -49,9 +49,18 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
             else:
                 key = 'tkn_address'
         unique_key = event[key] if key in event else event["args"][key]
-        if unique_key not in latest_entry_per_pool:
-            latest_entry_per_pool[unique_key] = event
-        elif event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
+
+        if unique_key in latest_entry_per_pool:
+            if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
+                latest_entry_per_pool[unique_key] = event
+            elif event["transactionIndex"] == latest_entry_per_pool[unique_key]["transactionIndex"]:
+                if event["logIndex"] > latest_entry_per_pool[unique_key]["logIndex"]:
+                    latest_entry_per_pool[unique_key] = event
+            elif event["transactionIndex"] > latest_entry_per_pool[unique_key]["transactionIndex"]:
+                latest_entry_per_pool[unique_key] = event
+            else:
+                continue
+        else:
             latest_entry_per_pool[unique_key] = event
 
     return list(latest_entry_per_pool.values())
