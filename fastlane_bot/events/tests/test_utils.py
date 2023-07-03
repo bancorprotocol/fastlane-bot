@@ -1,10 +1,78 @@
-# Imports for test setup
-from typing import List, Union, Any, Dict, Hashable
+# coding=utf-8
+"""
+This module contains the tests for the exchanges classes
+"""
+
+from fastlane_bot import Bot
+from fastlane_bot.events.pools import SushiswapPool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from typing import List
 from web3.datastructures import AttributeDict
 from web3.types import HexBytes
 import pytest
 
-from ..utils import filter_latest_events, complex_handler
+from fastlane_bot.events.utils import filter_latest_events, complex_handler
+
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapPool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
+from fastlane_bot.testing import *
+
+plt.style.use('seaborn-dark')
+plt.rcParams['figure.figsize'] = [12,6]
+from fastlane_bot import __VERSION__
+require("3.0", __VERSION__)
+
+
+
+@pytest.fixture
+def mocked_mgr():
+    class MockManager:
+        def pool_type_from_exchange_name(self, exchange_name):
+            class MockPoolType:
+                def unique_key(self):
+                    return 'address'
+
+            return MockPoolType()
+
+        def exchange_name_from_event(self, event):
+            return 'uniswap_v2'
+
+    mocked_mgr = MockManager()
+    return mocked_mgr
+
+@pytest.fixture
+def mock_events() -> List[List[AttributeDict]]:
+    event1 = AttributeDict({
+        'args': {'reserve0': 100, 'reserve1': 100},
+        'event': 'Sync',
+        'address': '0xabc',
+        'blockNumber': 5,
+        'transactionIndex': 0,
+        'logIndex': 0
+    })
+    event2 = AttributeDict({
+        'args': {'reserve0': 200, 'reserve1': 200},
+        'event': 'Sync',
+        'address': '0xabc',
+        'blockNumber': 10,
+        'transactionIndex': 1,
+        'logIndex': 1
+    })
+    event3 = AttributeDict({
+        'args': {'reserve0': 300, 'reserve1': 300},
+        'event': 'Sync',
+        'address': '0xdef',
+        'blockNumber': 7,
+        'transactionIndex': 1,
+        'logIndex': 1
+    })
+    mock_events = [[event1, event2, event3]]
+    return mock_events
 
 
 def test_filter_latest_events(mocked_mgr, mock_events):
@@ -48,48 +116,3 @@ def test_complex_handler():
     assert complex_handler(123) == 123
     assert complex_handler('abc') == 'abc'
 
-
-# Mocks for filter_latest_events
-
-@pytest.fixture
-def mocked_mgr():
-    class MockManager:
-        def pool_type_from_exchange_name(self, exchange_name):
-            class MockPoolType:
-                def unique_key(self):
-                    return 'address'
-
-            return MockPoolType()
-
-        def exchange_name_from_event(self, event):
-            return 'uniswap_v2'
-
-    return MockManager()
-
-@pytest.fixture
-def mock_events() -> List[List[AttributeDict]]:
-    event1 = AttributeDict({
-        'args': {'reserve0': 100, 'reserve1': 100},
-        'event': 'Sync',
-        'address': '0xabc',
-        'blockNumber': 5,
-        'transactionIndex': 0,
-        'logIndex': 0
-    })
-    event2 = AttributeDict({
-        'args': {'reserve0': 200, 'reserve1': 200},
-        'event': 'Sync',
-        'address': '0xabc',
-        'blockNumber': 10,
-        'transactionIndex': 1,
-        'logIndex': 1
-    })
-    event3 = AttributeDict({
-        'args': {'reserve0': 300, 'reserve1': 300},
-        'event': 'Sync',
-        'address': '0xdef',
-        'blockNumber': 7,
-        'transactionIndex': 1,
-        'logIndex': 1
-    })
-    return [[event1, event2, event3]]

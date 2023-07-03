@@ -8,6 +8,10 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 @dataclass
 class Token:
+
+    __VERSION__ = "0.0.1"
+    __DATE__ = "2023-07-03"
+
     symbol: str
     address: str
     decimals: int
@@ -22,6 +26,10 @@ class Token:
 
 @dataclass
 class Pool(PoolAndTokens):
+
+    __VERSION__ = "0.0.1"
+    __DATE__ = "2023-07-03"
+
     pass
 
 
@@ -192,8 +200,9 @@ class QueryInterface:
             The cleaned up token key
 
         """
-        split_key = token_key.split('-', 1)
-        return f"{split_key[0]}_{split_key[1]}" if len(split_key) > 2 else token_key
+        split_key = token_key.split('-', 2)
+        return f"{split_key[0]}_{split_key[1]}-{split_key[2]}" if len(split_key) > 2 else token_key
+
 
     def handle_token_key_cleanup(self) -> None:
         """
