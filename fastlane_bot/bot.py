@@ -259,7 +259,7 @@ class CarbonBot(CarbonBotBase):
     AM_MULTI = "multi"
     AM_MULTI_TRIANGLE = "multi_triangle"
     AM_BANCOR_V3 = "bancor_v3"
-    RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT]
+    RUN_FLASHLOAN_TOKENS = [T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT, T.NATIVE_ETH]
     RUN_SINGLE = "single"
     RUN_CONTINUOUS = "continuous"
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
@@ -448,7 +448,7 @@ class CarbonBot(CarbonBotBase):
         *,
         result=None,
         arb_mode: str = None,
-        randomizer=True,
+        randomizer=False,
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.

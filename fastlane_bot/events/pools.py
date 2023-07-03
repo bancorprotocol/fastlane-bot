@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Any, Tuple, List
 
+import pandas as pd
 from web3.contract import Contract
 
 
@@ -23,7 +24,8 @@ class Pool(ABC):
     state : Dict[str, Any]
         The pool state.
     """
-    state: Dict[str, Any] = field(default_factory=dict)
+    state: Dict[str, Any] = field(default_factory=dict)        
+
 
     @staticmethod
     def get_common_data(
@@ -110,11 +112,12 @@ class SushiswapPool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
         """
         Check if an event matches the format of a Sushiswap event.
         """
-        return "reserve0" in event_args
+        event_args = event["args"]
+        return "reserve0" in event_args and event['address'] in sushiswap_v2_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -166,11 +169,12 @@ class UniswapV2Pool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
         """
-        return "reserve0" in event_args
+        event_args = event["args"]
+        return "reserve0" in event_args and event['address'] in uniswap_v2_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -222,11 +226,12 @@ class UniswapV3Pool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event_args: Dict[str, Any]) -> bool:
+    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.
         """
-        return "sqrtPriceX96" in event_args
+        event_args = event["args"]
+        return "sqrtPriceX96" in event_args and event['address'] in uniswap_v3_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -491,7 +496,11 @@ class PoolFactory:
         """
         creator = self._creators.get(format_name)
         if not creator:
-            raise ValueError(format_name)
+            if format_name:
+                raise ValueError(format_name)
+            else:
+                # raise ValueError("format_name")
+                pass
         return creator
 
 
@@ -504,3 +513,19 @@ pool_factory.register_format("uniswap_v3", UniswapV3Pool)
 pool_factory.register_format("sushiswap_v2", SushiswapPool)
 pool_factory.register_format("bancor_v3", BancorV3Pool)
 pool_factory.register_format("carbon_v1", CarbonV1Pool)
+
+
+static_data = pd.read_csv('fastlane_bot/data/static_pool_data.csv').to_dict('records')
+sushiswap_v2_pools = [
+    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'sushiswap_v2'
+]
+sushiswap_v3_pools = [
+    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'sushiswap_v3'
+]
+uniswap_v2_pools = [
+    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'uniswap_v2'
+]
+uniswap_v3_pools = [
+    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'uniswap_v3'
+]
+del static_data # clear static data to save memory

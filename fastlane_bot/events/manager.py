@@ -146,7 +146,7 @@ class Manager:
             (
                 exchange_name
                 for exchange_name, pool_class in pool_factory._creators.items()
-                if pool_class.event_matches_format(event["args"])
+                if pool_class.event_matches_format(event)
             ),
             None,
         )
@@ -1074,7 +1074,10 @@ class Manager:
                     break
                 break
             except Exception as e:
-                if not any(err_msg in str(e) for err_msg in ["Too Many Requests for url"]):
+                if all(
+                    err_msg not in str(e)
+                    for err_msg in ["Too Many Requests for url", "format_name"]
+                ):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
                     break
                 else:

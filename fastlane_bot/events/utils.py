@@ -8,6 +8,7 @@ Licensed under MIT
 from typing import Any, Union, Dict, Set
 from typing import List
 
+import pandas as pd
 from hexbytes import HexBytes
 from web3.datastructures import AttributeDict
 
@@ -30,8 +31,16 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
     """
     latest_entry_per_pool = {}
     all_events = [event for event_list in events for event in event_list]
+
+    # Handles the case where multiple pools are created in the same block
+    all_events.reverse()
+
     for event in all_events:
-        key = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event)).unique_key()
+        pool_type = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event))
+        if pool_type:
+            key = pool_type.unique_key()
+        else:
+            continue
         if key == 'cid':
             key = 'id'
         elif key == 'tkn1_address':
@@ -77,3 +86,4 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         return list(obj)
     else:
         return obj
+
