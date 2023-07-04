@@ -449,6 +449,7 @@ class CarbonBot(CarbonBotBase):
         result=None,
         arb_mode: str = None,
         randomizer=True,
+        data_validator=True,
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.
@@ -494,8 +495,41 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
+        if data_validator:
+            # Add random chance if we should check or not
+            self.validate_pool_data(arb_opp=r)
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
+    def validate_pool_data(self, arb_opp):
+        self.ConfigObj.logger.info(f"Validating pool data.")
+        validation_passed = True
+        (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        ) = arb_opp
+        for pool in best_trade_instructions_dic:
+            pool_cid = pool["cid"]
+            if "-0" in pool_cid or "-1" in pool_cid:
+                pool_cid = pool_cid.split("-")[0]
+            current_pool = self.db.get_pool(cid=pool_cid)
+            pool_info = {"cid": pool_cid, "id": current_pool.id, "address": current_pool.address, "pair_name": current_pool.pair_name,
+                         "exchange_name": current_pool.exchange_name, "tkn0_address": current_pool.tkn0_address, "tkn1_address": current_pool.tkn1_address, "tkn0_key": current_pool.tkn0_key, "tkn1_key": current_pool.tkn1_key, "args": {"id": current_pool.cid}}
+            fetched_pool = self.db.mgr.update_from_contract(pool_info=pool_info)
+            if current_pool.exchange_name == "carbon_v1":
+                assert current_pool.y_0 == fetched_pool["y_0"], f"Current data for Carbon pool {current_pool.cid} order 0 balance {current_pool.y_0} does not match actual balance: {fetched_pool['y_0']}"
+                assert current_pool.y_1 == fetched_pool["y_1"], f"Current data for Carbon pool {current_pool.cid} order 1 balance {current_pool.y_1} does not match actual balance: {fetched_pool['y_1']}"
+            elif current_pool.exchange_name == "uniswap_v3" or current_pool.exchange_name == "sushiswap_v3":
+                assert current_pool.liquidity == fetched_pool["liquidity"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} liquidity {current_pool.liquidity} does not match actual liquidity: {fetched_pool['liquidity']}"
+                assert current_pool.sqrt_price_q96 == fetched_pool["sqrt_price_q96"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} sqrt_price_q96 {current_pool.sqrt_price_q96} does not match actual liquidity: {fetched_pool['sqrt_price_q96']}"
+                assert current_pool.tick == fetched_pool["tick"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} tick {current_pool.tick} does not match actual tick: {fetched_pool['tick']}"
+            else:
+                assert current_pool.tkn0_balance == fetched_pool["tkn0_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn0 balance {current_pool.tkn0_balance} does not match actual balance: {fetched_pool['tkn0_balance']}"
+                assert current_pool.tkn1_balance == fetched_pool["tkn1_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn1 balance {current_pool.tkn1_balance} does not match actual balance: {fetched_pool['tkn1_balance']}"
+
+        self.ConfigObj.logger.info(f"All data checks passed! Pools in sync!")
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
         """
@@ -1002,7 +1036,7 @@ class CarbonBot(CarbonBotBase):
             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str):
+    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str, run_data_validator: bool):
         """
         Run the bot in continuous mode.
 
@@ -1026,7 +1060,7 @@ class CarbonBot(CarbonBotBase):
                     )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-                tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode)
+                tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode, data_validator=run_data_validator)
                 if tx_hash and tx_hash[0]:
                     self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
@@ -1072,6 +1106,7 @@ class CarbonBot(CarbonBotBase):
         polling_interval: int = None,
         mode: str = None,
         arb_mode: str = None,
+        run_data_validator: bool = False
     ):
         """
         Runs the bot.
@@ -1101,6 +1136,6 @@ class CarbonBot(CarbonBotBase):
         CCm = self.setup_CCm(CCm)
 
         if mode == "continuous":
-            self.run_continuous_mode(flashloan_tokens, arb_mode)
+            self.run_continuous_mode(flashloan_tokens, arb_mode, run_data_validator)
         else:
             self.run_single_mode(flashloan_tokens, CCm, arb_mode)

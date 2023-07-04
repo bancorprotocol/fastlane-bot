@@ -33,6 +33,7 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
     all_events = [event for event_list in events for event in event_list]
 
     # Handles the case where multiple pools are created in the same block
+    all_events = list(set(all_events))
     all_events.reverse()
 
     for event in all_events:
@@ -53,11 +54,14 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
         if unique_key in latest_entry_per_pool:
             if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
                 latest_entry_per_pool[unique_key] = event
-            elif event["transactionIndex"] == latest_entry_per_pool[unique_key]["transactionIndex"]:
-                if event["logIndex"] > latest_entry_per_pool[unique_key]["logIndex"]:
+            elif event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]:
+                if event["transactionIndex"] == latest_entry_per_pool[unique_key]["transactionIndex"]:
+                    if event["logIndex"] > latest_entry_per_pool[unique_key]["logIndex"]:
+                        latest_entry_per_pool[unique_key] = event
+                elif event["transactionIndex"] > latest_entry_per_pool[unique_key]["transactionIndex"]:
                     latest_entry_per_pool[unique_key] = event
-            elif event["transactionIndex"] > latest_entry_per_pool[unique_key]["transactionIndex"]:
-                latest_entry_per_pool[unique_key] = event
+                else:
+                    continue
             else:
                 continue
         else:

@@ -731,7 +731,10 @@ class Manager:
                 pool_info = self.add_pool_info_from_contract(address=addr, event=event)
 
         if addr == self.cfg.CARBON_CONTROLLER_ADDRESS:
-            cid = event["args"]["id"]
+            if event is not None:
+                cid = event["args"]["id"]
+            else:
+                cid = pool_info["cid"]
             for pool in self.pool_data:
                 if pool["cid"] == cid:
                     pool_info = pool

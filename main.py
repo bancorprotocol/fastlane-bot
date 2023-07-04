@@ -88,6 +88,12 @@ load_dotenv()
     type=bool,
     help="Set to True for debugging / testing. Set to False for production.",
 )
+@click.option(
+    "--run_data_validator",
+    default=True,
+    type=bool,
+    help="Set to True for debugging / testing. Set to False for production.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -104,6 +110,7 @@ def main(
     loglevel: str,
     static_pool_data_sample_sz: str,
     use_cached_events: bool,
+    run_data_validator: bool
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Manager objects,
@@ -221,7 +228,8 @@ def main(
         flashloan_tokens,
         reorg_delay,
         logging_path,
-        use_cached_events
+        use_cached_events,
+        run_data_validator
     )
 
 
@@ -236,7 +244,8 @@ def run(
     flashloan_tokens: List[str] or None,
     reorg_delay: int,
     logging_path: str,
-    use_cached_events: bool
+    use_cached_events: bool,
+    run_data_validator: bool
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -532,6 +541,7 @@ def run(
                 flashloan_tokens=flashloan_tokens,
                 mode="single",
                 arb_mode=arb_mode,
+                run_data_validator=run_data_validator
             )
 
         # Increment the loop index
