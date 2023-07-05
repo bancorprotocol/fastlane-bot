@@ -473,7 +473,6 @@ class CarbonBot(CarbonBotBase):
             The result.
 
         """
-
         random_mode = self.AO_CANDIDATES if randomizer else None
         arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
         arb_finder = self._get_arb_finder(arb_mode)
@@ -1047,6 +1046,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: bool
             The arb mode
         """
+        print(f"run_continuous_mode run_data_validator={run_data_validator}")
         while True:
             try:
                 CCm = self.get_curves()
@@ -1072,7 +1072,7 @@ class CarbonBot(CarbonBotBase):
                 time.sleep(self.polling_interval)
 
     def run_single_mode(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str
+        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str, run_data_validator: bool
     ):
         """
         Run the bot in single mode.
@@ -1088,7 +1088,7 @@ class CarbonBot(CarbonBotBase):
         """
         try:
             tx_hash = self._run(
-                flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode
+                flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=run_data_validator
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
@@ -1138,4 +1138,4 @@ class CarbonBot(CarbonBotBase):
         if mode == "continuous":
             self.run_continuous_mode(flashloan_tokens, arb_mode, run_data_validator)
         else:
-            self.run_single_mode(flashloan_tokens, CCm, arb_mode)
+            self.run_single_mode(flashloan_tokens, CCm, arb_mode, run_data_validator)
