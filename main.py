@@ -27,7 +27,7 @@ load_dotenv()
 )
 @click.option(
     "--backdate_pools",
-    default=True,
+    default=False,
     type=bool,
     help="Set to False for faster testing / debugging",
 )
@@ -90,7 +90,7 @@ load_dotenv()
 )
 @click.option(
     "--run_data_validator",
-    default=True,
+    default=False,
     type=bool,
     help="Set to True for debugging / testing. Set to False for production.",
 )
@@ -339,18 +339,22 @@ def run(
             delayed(mgr.update)(event=event) for event in latest_events
         )
 
-    def update_pools_directly_from_contracts(rows_to_update: List[int]) -> None:
+    def update_pools_directly_from_contracts(rows_to_update: List[int], not_bancor_v3: bool = True, current_block: int = None) -> None:
         """
         Updates the pools directly from the contracts.
 
         Args:
             rows_to_update (List[int]): A list of indices of rows to update.
         """
-        with brownie.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
+        if not_bancor_v3:
             Parallel(n_jobs=n_jobs, backend="threading")(
-                delayed(mgr.update)(pool_info=mgr.pool_data[idx])
+                delayed(mgr.update)(pool_info=mgr.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)
                 for idx in rows_to_update
             )
+        else:
+            with brownie.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
+                for idx, pool in enumerate(rows_to_update):
+                    mgr.update(pool_info=mgr.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)
 
     def write_pool_data_to_disk(current_block: int) -> None:
         """
@@ -491,23 +495,23 @@ def run(
 
             # Remove duplicates
             rows_to_update = list(set(rows_to_update))
-
             # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
             bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
                 rows_to_update
             )
+
             for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                update_pools_directly_from_contracts(rows_to_update)
+                update_pools_directly_from_contracts(rows_to_update=rows_to_update, current_block=current_block)
 
-        # Update the pool data on disk
-        rows_to_update = []
-        rows_to_update += [
-            idx
-            for idx, pool in enumerate(mgr.pool_data)
-            if pool["exchange_name"] == "bancor_v3"
-        ]
-        update_pools_directly_from_contracts(rows_to_update)
-
+        elif last_block == 0 and "bancor_v3" in mgr.exchanges:
+            # Update the pool data on disk
+            rows_to_update = []
+            rows_to_update += [
+                idx
+                for idx, pool in enumerate(mgr.pool_data)
+                if pool["exchange_name"] == "bancor_v3"
+            ]
+            update_pools_directly_from_contracts(rows_to_update=rows_to_update, not_bancor_v3=False, current_block=current_block)
         # Update the last block and write the pool data to disk for debugging, and to backup the state
         last_block = current_block
         write_pool_data_to_disk(current_block)

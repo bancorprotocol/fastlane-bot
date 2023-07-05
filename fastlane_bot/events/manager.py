@@ -243,7 +243,7 @@ class Manager:
             for pool in exchange.get_pools()
         ]
 
-    def add_pool_info_from_strategy(self, strategy: List[Any]) -> Dict[str, Any]:
+    def add_pool_info_from_strategy(self, strategy: List[Any], block_number: int = None) -> Dict[str, Any]:
         """
         Add the pool info from the strategy.
 
@@ -251,6 +251,8 @@ class Manager:
         ----------
         strategy : List[Any]
             The strategy.
+        block_number (optional) : int
+            The block number the data was gathered.
 
         Returns
         -------
@@ -282,6 +284,7 @@ class Manager:
                 B_0=order0[3],
                 B_1=order1[3],
             ),
+            block_number=block_number
         )
 
     def add_pool_info_from_contract(self, exchange_name: str = None, address: str = None, event: Any = None) -> Dict[str, Any]:
@@ -303,6 +306,7 @@ class Manager:
             The pool info from the contract.
 
         """
+        print(f"ADDING POOL INFO FROM CONTRACT")
         exchange_name = self.check_forked_exchange_names(exchange_name, address, event)
         if not exchange_name:
             self.cfg.logger.info(f"Exchange name not found {event}")
@@ -392,6 +396,7 @@ class Manager:
             cid: Optional[str] = None,
             other_args: Optional[Dict[str, Any]] = None,
             contract: Optional[Contract] = None,
+            block_number: int = None
     ) -> Dict[str, Any]:
         """
         This is the main function for adding pool info.
@@ -434,7 +439,7 @@ class Manager:
         # Generate pool info
         pool_info = self.generate_pool_info(
             address, exchange_name, tkn0_address, tkn1_address, t0_symbol, t1_symbol,
-            t0_decimals, t1_decimals, cid, fee, fee_float)
+            t0_decimals, t1_decimals, cid, fee, fee_float, block_number)
 
         # Add other args if necessary
         if other_args:
@@ -476,7 +481,7 @@ class Manager:
 
     def generate_pool_info(
             self, address, exchange_name, tkn0_address, tkn1_address,
-            t0_symbol, t1_symbol, t0_decimals, t1_decimals, cid, fee, fee_float
+            t0_symbol, t1_symbol, t0_decimals, t1_decimals, cid, fee, fee_float, block_number: int = None
     ) -> Dict[str, Any]:
         """
         Generate the pool info.
@@ -512,8 +517,10 @@ class Manager:
             The pool info.
 
         """
+        if block_number is None:
+            print(f"empty block_number for exchange {exchange_name}")
         pool_info = {
-            "last_updated_block": self.web3.eth.blockNumber,
+            "last_updated_block": block_number if block_number is not None else self.web3.eth.blockNumber,
             "address": address,
             "exchange_name": exchange_name,
             "tkn0_address": tkn0_address,
@@ -552,50 +559,46 @@ class Manager:
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
             start_time = time.time()
             self.cfg.logger.info("Updating carbon pools w/ multicall...")
+            # Create a CarbonController contract object
+            carbon_controller = brownie.Contract.from_abi(
+                address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                abi=self.exchanges["carbon_v1"].get_abi(),
+                name="CarbonController",
+            )
+            # Store the contract object in pool_contracts
+            self.pool_contracts["carbon_v1"][
+                self.cfg.CARBON_CONTROLLER_ADDRESS
+            ] = carbon_controller
+            # Create a list of pairs from the CarbonController contract object
+            pairs = [(second, first) for first, second in carbon_controller.pairs()]
+
+            # Create a reversed list of pairs
+            pairs_reverse = [(second, first) for first, second in pairs]
+            # Combine both pair lists and add extra parameters
+            all_pairs = [
+                (pair[0], pair[1], 0, 5000) for pair in pairs
+            ]
+
             with brownie.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
-
-                # Create a CarbonController contract object
-                carbon_controller = brownie.Contract.from_abi(
-                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
-                    abi=self.exchanges["carbon_v1"].get_abi(),
-                    name="CarbonController",
-                )
-
-                # Store the contract object in pool_contracts
-                self.pool_contracts["carbon_v1"][
-                    self.cfg.CARBON_CONTROLLER_ADDRESS
-                ] = carbon_controller
-
-                # Create a list of pairs from the CarbonController contract object
-                pairs = [(second, first) for first, second in carbon_controller.pairs()]
-
-                # Create a reversed list of pairs
-                pairs_reverse = [(second, first) for first, second in pairs]
-
-                # Combine both pair lists and add extra parameters
-                all_pairs = [
-                    (pair[0], pair[1], 0, 5000) for pair in pairs + pairs_reverse
-                ]
-
                 # Fetch strategies for each pair from the CarbonController contract object
                 strategies_by_pair = [
                     carbon_controller.strategiesByPair(*pair) for pair in all_pairs
                 ]
-
-                # Log the time taken for the above operations
-                self.cfg.logger.info(f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds")
-
-            start_time = time.time()
 
             # expand strategies_by_pair
             strategies_by_pair = [
                 s for strat in strategies_by_pair if strat for s in strat if s
             ]
 
+            # Log the time taken for the above operations
+            self.cfg.logger.info(f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds")
+
+            start_time = time.time()
+            current_block = self.web3.eth.blockNumber
             # Create pool info for each strategy
             for strategy in strategies_by_pair:
                 if len(strategy) > 0:
-                    self.add_pool_info_from_strategy(strategy)
+                    self.add_pool_info_from_strategy(strategy=strategy, block_number=current_block)
 
             # Log the time taken for the above operations
             self.cfg.logger.info(f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds")
@@ -763,7 +766,6 @@ class Manager:
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
         pool_info = self.get_pool_info(key, key_value, ex_name) or self.add_pool_info_from_contract(address=addr, event=event, exchange_name=ex_name)
-
         if not pool_info:
             return
 
@@ -773,7 +775,6 @@ class Manager:
         if event['event'] == 'StrategyDeleted':
             self.handle_strategy_deleted(event)
             return
-
         self.update_pool_data(pool_info, data)
 
     def get_key_and_value(self, event: Dict[str, Any], addr: str, ex_name: str) -> Tuple[str, Any]:
@@ -880,7 +881,7 @@ class Manager:
         self.pool_data = no_duplicates
 
     def update_from_pool_info(
-            self, pool_info: Optional[Dict[str, Any]] = None
+            self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
     ) -> Dict[str, Any]:
         """
         Update the pool info.
@@ -890,7 +891,7 @@ class Manager:
         pool_info : Optional[Dict[str, Any]], optional
             The pool info, by default None.
         """
-        pool_info["last_updated_block"] = self.web3.eth.blockNumber
+        pool_info["last_updated_block"] = self.web3.eth.blockNumber if current_block is None else current_block
         contract = self.pool_contracts[pool_info["exchange_name"]].get(
             pool_info["address"],
             self.web3.eth.contract(
@@ -905,7 +906,7 @@ class Manager:
         return pool_info
 
     def update_from_contract(
-            self, address: str = None, contract: Optional[Contract] = None, pool_info: Optional[Dict[str, Any]] = None
+            self, address: str = None, contract: Optional[Contract] = None, pool_info: Optional[Dict[str, Any]] = None, block_number: int = None
     ) -> Dict[str, Any]:
         """
         Update the state from the contract (instead of events).
@@ -939,7 +940,7 @@ class Manager:
         if not pool_info:
             return
 
-        pool_info["last_updated_block"] = self.web3.eth.blockNumber
+        pool_info["last_updated_block"] = block_number if block_number is not None else self.web3.eth.blockNumber
         if contract is None:
             contract = self.pool_contracts[pool_info["exchange_name"]].get(
                 pool_info["address"],
@@ -1033,6 +1034,8 @@ class Manager:
             address: str = None,
             pool_info: Dict[str, Any] = None,
             contract: Contract = None,
+            limiter: bool = True,
+            block_number: int = None
     ) -> None:
         """
         Update the state.
@@ -1057,16 +1060,16 @@ class Manager:
             If the pool info is invalid.
         """
         while True:
-            rate_limiter = 0.1 + 0.9 * random.random()
-
-            try:
+            if limiter:
+                rate_limiter = 0.1 + 0.9 * random.random()
                 time.sleep(rate_limiter)
+            try:
                 if event:
                     self.update_from_event(event)
                 elif address:
-                    self.update_from_contract(address, contract)
+                    self.update_from_contract(address, contract, block_number=block_number)
                 elif pool_info:
-                    self.update_from_pool_info(pool_info)
+                    self.update_from_pool_info(pool_info=pool_info, current_block=block_number)
                 else:
                     self.cfg.logger.debug(
                         f"No event or pool info provided {event} {address} {contract}"
