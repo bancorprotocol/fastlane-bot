@@ -505,13 +505,16 @@ def run(
 
         elif last_block == 0 and "bancor_v3" in mgr.exchanges:
             # Update the pool data on disk
-            rows_to_update = []
-            rows_to_update += [
+            mgr.get_rows_to_update(start_block)
+            rows_to_update = [
                 idx
                 for idx, pool in enumerate(mgr.pool_data)
                 if pool["exchange_name"] == "bancor_v3"
             ]
             update_pools_directly_from_contracts(rows_to_update=rows_to_update, not_bancor_v3=False, current_block=current_block)
+        elif last_block == 0 and "carbon_v1" in mgr.exchanges:
+            # Update the pool data on disk
+            mgr.get_rows_to_update(start_block)
         # Update the last block and write the pool data to disk for debugging, and to backup the state
         last_block = current_block
         write_pool_data_to_disk(current_block)

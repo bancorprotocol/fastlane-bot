@@ -1124,14 +1124,11 @@ class TxRouteHandler(TxRouteHandlerBase):
         flt = trade_instructions[0].tknin_key
 
         for trade in trade_instructions:
-            self.ConfigObj.logger.info(f"trade: {trade.amtin} token {trade.tknin_key} for {trade.amtout} token {trade.tknout_key}")
             if trade.tknin_key == flt:
                 sum_in += abs(trade.amtin)
             elif trade.tknout_key == flt:
                 sum_out += abs(trade.amtout)
-
         sum_profit = sum_out - sum_in
-        self.ConfigObj.logger.info(f"calculating trade profit: token: {flt}, sum out: {sum_out}, sum_in: {sum_in}, profit: {sum_profit}")
         return sum_profit
 
     def calculate_trade_outputs(

@@ -287,7 +287,7 @@ class Manager:
             block_number=block_number
         )
 
-    def add_pool_info_from_contract(self, exchange_name: str = None, address: str = None, event: Any = None) -> Dict[str, Any]:
+    def add_pool_info_from_contract(self, exchange_name: str = None, address: str = None, event: Any = None, block_number: int = None) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
 
@@ -306,7 +306,6 @@ class Manager:
             The pool info from the contract.
 
         """
-        print(f"ADDING POOL INFO FROM CONTRACT")
         exchange_name = self.check_forked_exchange_names(exchange_name, address, event)
         if not exchange_name:
             self.cfg.logger.info(f"Exchange name not found {event}")
@@ -322,6 +321,7 @@ class Manager:
 
         t0_addr = self.exchanges[exchange_name].get_tkn0(address, pool_contract, event)
         t1_addr = self.exchanges[exchange_name].get_tkn1(address, pool_contract, event)
+        block_number = event["blockNumber"]
 
         return self.add_pool_info(
             address=address,
@@ -332,6 +332,7 @@ class Manager:
             tkn1_address=t1_addr,
             cid=event["args"]["id"] if exchange_name == "carbon_v1" else None,
             contract=pool_contract,
+            block_number=block_number
         )
 
     def check_forked_exchange_names(self, exchange_name_default: str = None, address: str = None, event: Any = None) -> str:
@@ -517,8 +518,6 @@ class Manager:
             The pool info.
 
         """
-        if block_number is None:
-            print(f"empty block_number for exchange {exchange_name}")
         pool_info = {
             "last_updated_block": block_number if block_number is not None else self.web3.eth.blockNumber,
             "address": address,
@@ -731,7 +730,7 @@ class Manager:
         """
         if key != 'cid':
             if pool_info is None or not pool_info:
-                pool_info = self.add_pool_info_from_contract(address=addr, event=event)
+                pool_info = self.add_pool_info_from_contract(address=addr, event=event, block_number=block_number)
 
         if addr == self.cfg.CARBON_CONTROLLER_ADDRESS:
             if event is not None:
@@ -748,7 +747,7 @@ class Manager:
 
         return pool_info
 
-    def update_from_event(self, event: Dict[str, Any]) -> None:
+    def update_from_event(self, event: Dict[str, Any], block_number: int = None) -> None:
         """
         Updates the state of the pool data from an event.
 
@@ -765,7 +764,7 @@ class Manager:
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
-        pool_info = self.get_pool_info(key, key_value, ex_name) or self.add_pool_info_from_contract(address=addr, event=event, exchange_name=ex_name)
+        pool_info = self.get_pool_info(key, key_value, ex_name) or self.add_pool_info_from_contract(address=addr, event=event, exchange_name=ex_name, block_number=block_number)
         if not pool_info:
             return
 
@@ -1065,7 +1064,7 @@ class Manager:
                 time.sleep(rate_limiter)
             try:
                 if event:
-                    self.update_from_event(event)
+                    self.update_from_event(event=event, block_number=block_number)
                 elif address:
                     self.update_from_contract(address, contract, block_number=block_number)
                 elif pool_info:
