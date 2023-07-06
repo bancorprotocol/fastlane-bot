@@ -3,7 +3,8 @@
 Converts traditional pytest test files into Jupyter notebooks.
 
 Example Usage:
-    python fastlane_bot/events/tests/convert_py_test_to_jupyter.py fastlane_bot/events/tests/test_exchanges.py fastlane_bot/events/tests/output_notebook.ipynb
+    python fastlane_bot/events/tests/convert_py_test_to_jupyter.py fastlane_bot/events/tests/test_manager.py NBTest_036_events_Manager.ipynb
+
 """
 import ast
 import textwrap

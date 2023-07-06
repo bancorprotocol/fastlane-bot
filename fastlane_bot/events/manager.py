@@ -11,6 +11,7 @@ from dataclasses import field, dataclass
 from typing import Dict, Any, List, Type, Optional, Callable, Tuple
 
 import brownie
+from joblib import Parallel, delayed
 from web3 import Web3
 from web3.contract import Contract
 
@@ -538,6 +539,9 @@ class Manager:
         pool_info["descr"] = self.pool_descr_from_info(pool_info)
         return pool_info
 
+    def multicall(self, address):
+        return brownie.multicall(address)
+
 
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
@@ -578,11 +582,7 @@ class Manager:
                 (pair[0], pair[1], 0, 5000) for pair in pairs
             ]
 
-            with brownie.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
-                # Fetch strategies for each pair from the CarbonController contract object
-                strategies_by_pair = [
-                    carbon_controller.strategiesByPair(*pair) for pair in all_pairs
-                ]
+            strategies_by_pair = self.get_strats_by_pair(all_pairs, carbon_controller)
 
             # expand strategies_by_pair
             strategies_by_pair = [
@@ -608,6 +608,14 @@ class Manager:
             if pool_info["last_updated_block"]
                < update_from_contract_block - self.alchemy_max_block_fetch
         ]
+
+    def get_strats_by_pair(self, all_pairs, carbon_controller):
+        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+            # Fetch strategies for each pair from the CarbonController contract object
+            strategies_by_pair = [
+                carbon_controller.strategiesByPair(*pair) for pair in all_pairs
+            ]
+        return strategies_by_pair
 
     def get_tkn_symbol_and_decimals(
             self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
@@ -721,6 +729,10 @@ class Manager:
             The event, by default None
         pool_info : Optional[Dict[str, Any]], optional
             The pool info, by default None
+        key : Optional[str], optional
+            The key, by default None
+        block_number : Optional[int], optional
+            The block number, by default None
 
         Returns
         -------
@@ -728,15 +740,11 @@ class Manager:
             The pool info.
 
         """
-        if key != 'cid':
-            if pool_info is None or not pool_info:
-                pool_info = self.add_pool_info_from_contract(address=addr, event=event, block_number=block_number)
+        if key != 'cid' and (pool_info is None or not pool_info):
+            pool_info = self.add_pool_info_from_contract(address=addr, event=event, block_number=event["blockNumber"])
 
         if addr == self.cfg.CARBON_CONTROLLER_ADDRESS:
-            if event is not None:
-                cid = event["args"]["id"]
-            else:
-                cid = pool_info["cid"]
+            cid = event["args"]["id"] if event is not None else pool_info["cid"]
             for pool in self.pool_data:
                 if pool["cid"] == cid:
                     pool_info = pool
@@ -755,6 +763,8 @@ class Manager:
         ----------
         event  : Dict[str, Any]
             The event.
+        block_number : int, optional
+            The block number, by default None
 
         """
         addr = self.web3.toChecksumAddress(event["address"])
@@ -1084,3 +1094,16 @@ class Manager:
                     break
                 else:
                     time.sleep(rate_limiter)
+
+
+    def update_pools_directly_from_contracts(self, n_jobs, rows_to_update: List[int], not_bancor_v3: bool = True,
+                                             current_block: int = None) -> None:
+        if not_bancor_v3:
+            Parallel(n_jobs=n_jobs, backend="threading")(
+                delayed(self.update)(pool_info=self.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)
+                for idx in rows_to_update
+            )
+        else:
+            with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+                for idx, pool in enumerate(rows_to_update):
+                    self.update(pool_info=self.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)

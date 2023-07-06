@@ -1,9 +1,9 @@
 import json
 import os
+import random
 import time
 from typing import List, Any, Tuple, Hashable
 
-import brownie
 import click
 import pandas as pd
 from dotenv import load_dotenv
@@ -339,23 +339,6 @@ def run(
             delayed(mgr.update)(event=event) for event in latest_events
         )
 
-    def update_pools_directly_from_contracts(rows_to_update: List[int], not_bancor_v3: bool = True, current_block: int = None) -> None:
-        """
-        Updates the pools directly from the contracts.
-
-        Args:
-            rows_to_update (List[int]): A list of indices of rows to update.
-        """
-        if not_bancor_v3:
-            Parallel(n_jobs=n_jobs, backend="threading")(
-                delayed(mgr.update)(pool_info=mgr.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)
-                for idx in rows_to_update
-            )
-        else:
-            with brownie.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
-                for idx, pool in enumerate(rows_to_update):
-                    mgr.update(pool_info=mgr.pool_data[idx], limiter=not_bancor_v3, block_number=current_block)
-
     def write_pool_data_to_disk(current_block: int) -> None:
         """
         Writes the pool data to disk.
@@ -501,7 +484,8 @@ def run(
             )
 
             for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                update_pools_directly_from_contracts(rows_to_update=rows_to_update, current_block=current_block)
+                mgr.update_pools_directly_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update,
+                                                         current_block=current_block)
 
         elif last_block == 0 and "bancor_v3" in mgr.exchanges:
             # Update the pool data on disk
@@ -511,10 +495,25 @@ def run(
                 for idx, pool in enumerate(mgr.pool_data)
                 if pool["exchange_name"] == "bancor_v3"
             ]
-            update_pools_directly_from_contracts(rows_to_update=rows_to_update, not_bancor_v3=False, current_block=current_block)
+            mgr.update_pools_directly_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update, not_bancor_v3=False,
+                                                 current_block=current_block)
         elif last_block == 0 and "carbon_v1" in mgr.exchanges:
             # Update the pool data on disk
             mgr.get_rows_to_update(start_block)
+
+        # # print a sample of five bancor3_pool_rows and their corresponding pool_data
+        # print()
+        # print("********* S *********")
+        # bancor3_pool_rows = [idx for idx, pool in enumerate(mgr.pool_data) if pool["exchange_name"] == "bancor_v3"]
+        # bancor3_pool_rows_sample = random.sample(bancor3_pool_rows, 5)
+        # print("bancor3_pool_rows_sample")
+        # print(bancor3_pool_rows_sample)
+        # print()
+        # print("pool_data_sample")
+        # print([mgr.pool_data[i] for i in bancor3_pool_rows_sample])
+        # print("********* E *********")
+        # print()
+
         # Update the last block and write the pool data to disk for debugging, and to backup the state
         last_block = current_block
         write_pool_data_to_disk(current_block)

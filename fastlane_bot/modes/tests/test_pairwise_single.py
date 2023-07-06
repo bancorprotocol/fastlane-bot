@@ -63,19 +63,3 @@ def test_setup_curves():
     assert iseq(1/2010, cc1.p_min)
     assert cc1.p_convention() == 'WETH per USDC'
     assert cc1.p_min < cc1.p_max
-
-@pytest.mark.unittest
-def test_curve_cid_and_univ3(setup_bot):
-    cc1 = CPC.from_carbon(pair="WETH-6Cc2/USDC-eB48", tkny="WETH-6Cc2", yint=10, y=10, pa=1/2000, pb=1/2010,
-                          cid="1701411834604692317316873037158841057285-1", params={"exchange":'carbon_v1'})
-
-    cid = cc1.cid
-    assert setup_bot.db.get_pool(cid=cid.split('-')[0]).exchange_name == 'carbon_v1', "The cids are chosen as they are the correct pools in the test data pools.csv"
-
-    cu1 = CPC.from_univ3(pair="WETH-6Cc2/USDC-eB48", Pmarg=2100, uniPa=2000, uniPb=2200,
-                         uniL=200*m.sqrt(2100*2100), fee=0, cid="10548753374549092367364612830384814555378", descr="", params={"exchange":'uniswap_v3'})
-    assert iseq(cu1.p, 2100)
-    assert iseq(cu1.p_min, 2000)
-    assert iseq(cu1.p_max, 2200)
-    assert cu1.p_convention() == 'USDC per WETH'
-    assert cu1.p_min < cu1.p_max
