@@ -16,14 +16,14 @@ from astunparse import unparse
 class RewriteFunctions(ast.NodeTransformer):
     def visit_FunctionDef(self, node):
         # If the function is a test function or a pytest fixture, transform it to standalone code
-        if node.name.startswith('test_') or any(decorator.__dict__['attr']=='fixture' for decorator in node.decorator_list):
+        if node.name.startswith('test_') or any(decorator.__dict__['attr'] in ['fixture','mark'] for decorator in node.decorator_list if hasattr(decorator,'__dict__') and 'attr' in decorator.__dict__):
             node.decorator_list = []  # Remove decorators
             return node  # Return the modified function
         return node  # Leave the function definition unchanged for non-test functions
 
     def return_function_body(self, node):
         # Return the body of the function as a string
-        if node.name.startswith('test_') or any(decorator.__dict__['attr']=='fixture' for decorator in node.decorator_list):
+        if node.name.startswith('test_') or any(decorator.__dict__['attr'] in ['fixture','mark'] for decorator in node.decorator_list if hasattr(decorator,'__dict__') and 'attr' in decorator.__dict__):
             # node.decorator_list = []  # Remove decorators
             # return node  # Return the modified function
             return unparse(node.body)

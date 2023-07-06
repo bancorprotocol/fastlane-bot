@@ -1,15 +1,28 @@
-import pytest
-from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider, __VERSION__
+# coding=utf-8
+"""
+This module contains the tests for the exchanges classes
+"""
+from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config.db import _ConfigDBPostgres
-from fastlane_bot.config.logger import _ConfigLoggerDefault
-from fastlane_bot.config.network import _ConfigNetworkMainnet
-from fastlane_bot.config.provider import _ConfigProviderAlchemy
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-from fastlane_bot.testing import iseq
+import pytest
+
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
+
+plt.style.use('seaborn-dark')
+plt.rcParams['figure.figsize'] = [12,6]
+from fastlane_bot import __VERSION__
+require("3.0", __VERSION__)
 
 # Setup
 
