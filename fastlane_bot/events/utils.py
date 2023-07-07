@@ -15,7 +15,9 @@ from web3.datastructures import AttributeDict
 from fastlane_bot.events.manager import Manager
 
 
-def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> List[AttributeDict]:
+def filter_latest_events(
+    mgr: Manager, events: List[List[AttributeDict]]
+) -> List[AttributeDict]:
     """
     This function filters out the latest events for each pool. Given a nested list of events, it iterates through all events
     and keeps track of the latest event (i.e., with the highest block number) for each pool. The key used to identify each pool
@@ -36,28 +38,41 @@ def filter_latest_events(mgr: Manager, events: List[List[AttributeDict]]) -> Lis
     all_events.reverse()
 
     for event in all_events:
-        pool_type = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event))
+        pool_type = mgr.pool_type_from_exchange_name(
+            mgr.exchange_name_from_event(event)
+        )
         if pool_type:
             key = pool_type.unique_key()
         else:
             continue
-        if key == 'cid':
-            key = 'id'
-        elif key == 'tkn1_address':
+        if key == "cid":
+            key = "id"
+        elif key == "tkn1_address":
             if event["args"]["pool"] != mgr.cfg.BNT_ADDRESS:
-                key = 'pool'
+                key = "pool"
             else:
-                key = 'tkn_address'
+                key = "tkn_address"
         unique_key = event[key] if key in event else event["args"][key]
 
         if unique_key in latest_entry_per_pool:
             if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
                 latest_entry_per_pool[unique_key] = event
-            elif event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]:
-                if event["transactionIndex"] == latest_entry_per_pool[unique_key]["transactionIndex"]:
-                    if event["logIndex"] > latest_entry_per_pool[unique_key]["logIndex"]:
+            elif (
+                event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
+            ):
+                if (
+                    event["transactionIndex"]
+                    == latest_entry_per_pool[unique_key]["transactionIndex"]
+                ):
+                    if (
+                        event["logIndex"]
+                        > latest_entry_per_pool[unique_key]["logIndex"]
+                    ):
                         latest_entry_per_pool[unique_key] = event
-                elif event["transactionIndex"] > latest_entry_per_pool[unique_key]["transactionIndex"]:
+                elif (
+                    event["transactionIndex"]
+                    > latest_entry_per_pool[unique_key]["transactionIndex"]
+                ):
                     latest_entry_per_pool[unique_key] = event
                 else:
                     continue
@@ -98,4 +113,3 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         return list(obj)
     else:
         return obj
-

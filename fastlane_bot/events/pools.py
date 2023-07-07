@@ -28,12 +28,11 @@ class Pool(ABC):
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
-    state: Dict[str, Any] = field(default_factory=dict)        
-
+    state: Dict[str, Any] = field(default_factory=dict)
 
     @staticmethod
     def get_common_data(
-            event: Dict[str, Any], pool_info: Dict[str, Any]
+        event: Dict[str, Any], pool_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Get common (common to all Pool child classes) data from an event and pool info.
@@ -106,6 +105,7 @@ class SushiswapPool(Pool):
     """
     Class representing a Sushiswap pool.
     """
+
     exchange_name: str = "sushiswap_v2"
 
     @staticmethod
@@ -121,7 +121,7 @@ class SushiswapPool(Pool):
         Check if an event matches the format of a Sushiswap event.
         """
         event_args = event["args"]
-        return "reserve0" in event_args and event['address'] in sushiswap_v2_pools
+        return "reserve0" in event_args and event["address"] in sushiswap_v2_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -163,6 +163,7 @@ class UniswapV2Pool(Pool):
     """
     Class representing a Uniswap v2 pool.
     """
+
     exchange_name: str = "uniswap_v2"
 
     @staticmethod
@@ -178,7 +179,7 @@ class UniswapV2Pool(Pool):
         Check if an event matches the format of a Uniswap v2 event.
         """
         event_args = event["args"]
-        return "reserve0" in event_args and event['address'] in uniswap_v2_pools
+        return "reserve0" in event_args and event["address"] in uniswap_v2_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -220,6 +221,7 @@ class UniswapV3Pool(Pool):
     """
     Class representing a Uniswap v3 pool.
     """
+
     exchange_name: str = "uniswap_v3"
 
     @staticmethod
@@ -235,7 +237,7 @@ class UniswapV3Pool(Pool):
         Check if an event matches the format of a Uniswap v3 event.
         """
         event_args = event["args"]
-        return "sqrtPriceX96" in event_args and event['address'] in uniswap_v3_pools
+        return "sqrtPriceX96" in event_args and event["address"] in uniswap_v3_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -289,6 +291,7 @@ class BancorV3Pool(Pool):
     """
     Class representing a Bancor v3 pool.
     """
+
     exchange_name: str = "bancor_v3"
 
     @staticmethod
@@ -324,7 +327,7 @@ class BancorV3Pool(Pool):
         See base class.
         """
         event_args = event_args["args"]
-        if event_args["tkn_address"] == '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
+        if event_args["tkn_address"] == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
             data["tkn0_balance"] = event_args["newLiquidity"]
         else:
             data["tkn1_balance"] = event_args["newLiquidity"]
@@ -361,6 +364,7 @@ class CarbonV1Pool(Pool):
     """
     Class representing a Carbon v1 pool.
     """
+
     exchange_name: str = "carbon_v1"
 
     @staticmethod
@@ -391,7 +395,9 @@ class CarbonV1Pool(Pool):
         return data
 
     @staticmethod
-    def parse_event(data: Dict[str, Any], event_args: Dict[str, Any], event_type: str) -> Dict[str, Any]:
+    def parse_event(
+        data: Dict[str, Any], event_args: Dict[str, Any], event_type: str
+    ) -> Dict[str, Any]:
         """
         Parse the event args into a dict.
 
@@ -422,7 +428,9 @@ class CarbonV1Pool(Pool):
         return data
 
     @staticmethod
-    def parse_orders(event_args: Dict[str, Any], event_type: str) -> Tuple[List[int], List[int]]:
+    def parse_orders(
+        event_args: Dict[str, Any], event_type: str
+    ) -> Tuple[List[int], List[int]]:
         """
         Parse the orders from the event args. If the event type is StrategyDeleted, then return an empty list
 
@@ -475,6 +483,7 @@ class PoolFactory:
     """
     Factory class for creating pools.
     """
+
     def __init__(self):
         self._creators = {}
 
@@ -521,17 +530,25 @@ pool_factory.register_format("bancor_v3", BancorV3Pool)
 pool_factory.register_format("carbon_v1", CarbonV1Pool)
 
 
-static_data = pd.read_csv('fastlane_bot/data/static_pool_data.csv').to_dict('records')
+static_data = pd.read_csv("fastlane_bot/data/static_pool_data.csv").to_dict("records")
 sushiswap_v2_pools = [
-    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'sushiswap_v2'
+    static_data[idx]["address"]
+    for idx in range(len(static_data))
+    if static_data[idx]["exchange_name"] == "sushiswap_v2"
 ]
 sushiswap_v3_pools = [
-    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'sushiswap_v3'
+    static_data[idx]["address"]
+    for idx in range(len(static_data))
+    if static_data[idx]["exchange_name"] == "sushiswap_v3"
 ]
 uniswap_v2_pools = [
-    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'uniswap_v2'
+    static_data[idx]["address"]
+    for idx in range(len(static_data))
+    if static_data[idx]["exchange_name"] == "uniswap_v2"
 ]
 uniswap_v3_pools = [
-    static_data[idx]['address'] for idx in range(len(static_data)) if static_data[idx]['exchange_name'] == 'uniswap_v3'
+    static_data[idx]["address"]
+    for idx in range(len(static_data))
+    if static_data[idx]["exchange_name"] == "uniswap_v3"
 ]
-del static_data # clear static data to save memory
+del static_data  # clear static data to save memory
