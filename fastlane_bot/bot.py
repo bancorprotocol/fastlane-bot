@@ -474,8 +474,46 @@ class CarbonBot(CarbonBotBase):
         r = random.choice(r) if randomizer else r
         if data_validator:
             # Add random chance if we should check or not
+            self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
             self.validate_pool_data(arb_opp=r)
+            
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
+
+    def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
+        (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        ) = arb_opp
+
+        (
+            ordered_trade_instructions_dct,
+            tx_in_count,
+        ) = self._simple_ordering_by_src_token(
+            best_trade_instructions_dic, best_src_token
+        )
+
+        if arb_mode == "bancor_v3":
+
+            cids = []
+
+            has_carbon_pool = False
+            for pool in ordered_trade_instructions_dct:
+                pool_cid = pool["cid"]
+                if "-0" in pool_cid or "-1" in pool_cid:
+                    pool_cid = pool_cid.split("-")[0]
+                    has_carbon_pool = True
+
+                cids.append(pool_cid)
+
+            max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, has_carbon_pool=has_carbon_pool)
+            self.ConfigObj.logger.info(f"max_trade_in = {max_trade_in}, optimizer trade in = {best_trade_instructions}")
+
+
+        elif arb_mode == self.AM_SINGLE:
+            pass
 
     def validate_pool_data(self, arb_opp):
         self.ConfigObj.logger.info("Validating pool data.")
