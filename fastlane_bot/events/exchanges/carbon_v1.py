@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the exchange class for CarbonV1. This class is responsible for handling CarbonV1 events and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 

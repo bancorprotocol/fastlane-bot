@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the base class for exchanges. This class is responsible for handling exchanges and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Type, Any

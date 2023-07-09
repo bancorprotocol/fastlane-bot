@@ -1,3 +1,11 @@
+# coding=utf-8
+"""
+Contains the factory class for exchanges. This class is responsible for creating exchanges.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
+
 class ExchangeFactory:
     """
     Factory class for exchanges
