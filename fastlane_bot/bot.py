@@ -169,27 +169,6 @@ class CarbonBotBase:
     UDTYPE_FROM_CONTRACTS = "from_contracts"
     UDTYPE_FROM_EVENTS = "from_events"
 
-    def update(
-        self,
-        udtype=None,
-        *,
-        drop_tables=False,
-        top_n: int = None,
-        only_carbon: bool = True,
-        bypairs: List[str] = None,
-    ):
-        """
-        convenience access to the db.update methods
-
-        :udtype:            UDTYPE_FROM_CONTRACTS or UDTYPE_FROM_EVENTS
-        :drop_tables:       if True, drops all tables before updating
-        :top_n:             if not None, only updates the top n pools
-        :only_carbon:       if True, only updates carbon pools and other exchanges that are carbon-pool compatible pairs
-        """
-        raise NotImplementedError(
-            "update() is deprecated. Use `python run_db_update_w_heartbeat.py` instead"
-        )
-
     def get_curves(self) -> CPCContainer:
         """
         Gets the curves from the database.
