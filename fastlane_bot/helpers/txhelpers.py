@@ -374,8 +374,6 @@ class TxHelpers:
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
-        # Take the lesser of the adjusted reward or max profit
-        adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
