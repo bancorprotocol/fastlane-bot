@@ -17,8 +17,10 @@ from web3.contract import Contract
 
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI, BANCOR_V3_NETWORK_INFO_ABI
-from fastlane_bot.events.exchanges import exchange_factory, Exchange
-from fastlane_bot.events.pools import Pool, pool_factory
+from fastlane_bot.events.exchanges import exchange_factory
+from fastlane_bot.events.exchanges.base import Exchange
+from fastlane_bot.events.pools import pool_factory
+from fastlane_bot.events.pools.base import Pool
 
 
 @dataclass

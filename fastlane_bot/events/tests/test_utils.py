@@ -5,7 +5,7 @@ This module contains the tests for the exchanges classes
 
 from fastlane_bot import Bot
 from fastlane_bot.events.pools import (
-    SushiswapPool,
+    SushiswapV2Pool,
     UniswapV2Pool,
     UniswapV3Pool,
     BancorV3Pool,
@@ -23,7 +23,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapPool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
 from fastlane_bot.testing import *
