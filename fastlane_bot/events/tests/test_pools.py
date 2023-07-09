@@ -8,7 +8,7 @@ import pytest
 
 from fastlane_bot import Bot
 from fastlane_bot.events.pools import (
-    SushiswapPool,
+    SushiswapV2Pool,
     UniswapV2Pool,
     UniswapV3Pool,
     BancorV3Pool,
@@ -20,7 +20,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapPool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
 from fastlane_bot.testing import *
@@ -66,7 +66,7 @@ def test_uniswap_v2_pool(setup_data):
 
 
 def test_sushiswap_v2_pool(setup_data):
-    sushiswap_v2_pool = SushiswapPool()
+    sushiswap_v2_pool = SushiswapV2Pool()
     sushiswap_v2_pool.update_from_event(
         setup_data["sushiswap_v2_event"],
         {

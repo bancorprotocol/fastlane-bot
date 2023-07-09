@@ -20,6 +20,9 @@ import fastlane_bot.db.models as models
 from fastlane_bot.db.model_managers import PoolManager, PairManager, TokenManager
 from fastlane_bot.db.manager import DatabaseManager
 
+import fastlane_bot.events.exchanges.base
+import fastlane_bot.events.pools.base
+
 # +
 # Create a ContractHelper instance
 pool_manager = PoolManager()
@@ -130,8 +133,8 @@ blockchain = models.Blockchain(name="TestBlockchain")
 
 db_manager.create(blockchain)
 
-exchange = models.Exchange(name="TestExchange",
-                           blockchain_name="TestBlockchain")
+exchange = fastlane_bot.events.exchanges.base.Exchange(name="TestExchange",
+                                                       blockchain_name="TestBlockchain")
 
 db_manager.create(exchange)
 
@@ -139,16 +142,16 @@ db_manager.create(exchange)
 # + jupyter={"outputs_hidden": false}
 # Test add_pool: Test if a pool can be added to the database and if the pool has the correct attributes.
 pool_manager = PoolManager()
-pool = models.Pool(id=10000000000,
-                   cid='1x',
-                   pair_name="Test/Pair",
-                   exchange_name="TestExchange",
-                   last_updated_block=10000000000,
-                   address="0x1234567890abcdef1234567890abcdef12345678",
-                   fee=str(0.003))
+pool = fastlane_bot.events.pools.base.Pool(id=10000000000,
+                                           cid='1x',
+                                           pair_name="Test/Pair",
+                                           exchange_name="TestExchange",
+                                           last_updated_block=10000000000,
+                                           address="0x1234567890abcdef1234567890abcdef12345678",
+                                           fee=str(0.003))
 pool_manager.create_pool(pool)
 
-db_pool = pool_manager.session.query(models.Pool).filter_by(
+db_pool = pool_manager.session.query(fastlane_bot.events.pools.base.Pool).filter_by(
     exchange_name=pool.exchange_name,
     pair_name=pool.pair_name).first()
 assert db_pool is not None
