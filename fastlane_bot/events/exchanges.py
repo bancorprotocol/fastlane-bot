@@ -16,7 +16,7 @@ from fastlane_bot.data.abi import (
     UNISWAP_V3_POOL_ABI,
     SUSHISWAP_POOLS_ABI,
     CARBON_CONTROLLER_ABI,
-    BANCOR_V3_POOL_COLLECTION_ABI
+    BANCOR_V3_POOL_COLLECTION_ABI,
 )
 from fastlane_bot.events.pools import Pool
 
@@ -169,6 +169,7 @@ class UniswapV2(Exchange):
     """
     UniswapV2 exchange class
     """
+
     exchange_name: str = "uniswap_v2"
 
     def add_pool(self, pool: Pool):
@@ -195,6 +196,7 @@ class SushiswapV2(Exchange):
     """
     SushiswapV2 exchange class
     """
+
     exchange_name: str = "sushiswap_v2"
 
     def add_pool(self, pool: Pool):
@@ -221,6 +223,7 @@ class UniswapV3(Exchange):
     """
     UniswapV3 exchange class
     """
+
     exchange_name: str = "uniswap_v3"
 
     def add_pool(self, pool: Pool):
@@ -256,8 +259,9 @@ class BancorV3(Exchange):
     """
     BancorV3 exchange class
     """
+
     exchange_name: str = "bancor_v3"
-    BNT_ADDRESS: str = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'
+    BNT_ADDRESS: str = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["tkn1_address"]] = pool
@@ -275,7 +279,11 @@ class BancorV3(Exchange):
         return self.BNT_ADDRESS
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return event["args"]["pool"] if event["args"]["pool"] != self.BNT_ADDRESS else event["args"]["tkn_address"]
+        return (
+            event["args"]["pool"]
+            if event["args"]["pool"] != self.BNT_ADDRESS
+            else event["args"]["tkn_address"]
+        )
 
 
 @dataclass
@@ -330,6 +338,7 @@ class ExchangeFactory:
     """
     Factory class for exchanges
     """
+
     def __init__(self):
         self._creators = {}
 

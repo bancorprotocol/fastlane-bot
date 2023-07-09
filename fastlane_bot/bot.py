@@ -39,7 +39,6 @@ Licensed under MIT
     &@@@@@@@@@@@@@@@@@@@@@@@@@@%((((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@&(((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     (@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-    MB@RICHARDSON@BANCOR@(2023)@@@@@/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 """
 __VERSION__ = "3-b2.2"
@@ -169,27 +168,6 @@ class CarbonBotBase:
 
     UDTYPE_FROM_CONTRACTS = "from_contracts"
     UDTYPE_FROM_EVENTS = "from_events"
-
-    def update(
-        self,
-        udtype=None,
-        *,
-        drop_tables=False,
-        top_n: int = None,
-        only_carbon: bool = True,
-        bypairs: List[str] = None,
-    ):
-        """
-        convenience access to the db.update methods
-
-        :udtype:            UDTYPE_FROM_CONTRACTS or UDTYPE_FROM_EVENTS
-        :drop_tables:       if True, drops all tables before updating
-        :top_n:             if not None, only updates the top n pools
-        :only_carbon:       if True, only updates carbon pools and other exchanges that are carbon-pool compatible pairs
-        """
-        raise NotImplementedError(
-            "update() is deprecated. Use `python run_db_update_w_heartbeat.py` instead"
-        )
 
     def get_curves(self) -> CPCContainer:
         """
@@ -496,12 +474,49 @@ class CarbonBot(CarbonBotBase):
         r = random.choice(r) if randomizer else r
         if data_validator:
             # Add random chance if we should check or not
+            self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
             self.validate_pool_data(arb_opp=r)
+            
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
+    def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
+        (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        ) = arb_opp
+
+        (
+            ordered_trade_instructions_dct,
+            tx_in_count,
+        ) = self._simple_ordering_by_src_token(
+            best_trade_instructions_dic, best_src_token
+        )
+
+        if arb_mode == "bancor_v3":
+
+            cids = []
+
+            has_carbon_pool = False
+            for pool in ordered_trade_instructions_dct:
+                pool_cid = pool["cid"]
+                if "-0" in pool_cid or "-1" in pool_cid:
+                    pool_cid = pool_cid.split("-")[0]
+                    has_carbon_pool = True
+
+                cids.append(pool_cid)
+
+            max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, has_carbon_pool=has_carbon_pool)
+            self.ConfigObj.logger.info(f"max_trade_in = {max_trade_in}, optimizer trade in = {best_trade_instructions}")
+
+
+        elif arb_mode == self.AM_SINGLE:
+            pass
+
     def validate_pool_data(self, arb_opp):
-        self.ConfigObj.logger.info(f"Validating pool data.")
-        validation_passed = True
+        self.ConfigObj.logger.info("Validating pool data.")
         (
             best_profit,
             best_trade_instructions_df,
@@ -511,16 +526,28 @@ class CarbonBot(CarbonBotBase):
         ) = arb_opp
         for pool in best_trade_instructions_dic:
             pool_cid = pool["cid"]
+
             if "-0" in pool_cid or "-1" in pool_cid:
                 pool_cid = pool_cid.split("-")[0]
+
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {"cid": pool_cid, "id": current_pool.id, "address": current_pool.address, "pair_name": current_pool.pair_name,
                          "exchange_name": current_pool.exchange_name, "tkn0_address": current_pool.tkn0_address, "tkn1_address": current_pool.tkn1_address, "tkn0_key": current_pool.tkn0_key, "tkn1_key": current_pool.tkn1_key, "args": {"id": current_pool.cid}}
-            fetched_pool = self.db.mgr.update_from_contract(pool_info=pool_info)
+
+            fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
+            if fetched_pool is None:
+                self.ConfigObj.logger.error(f"Could not fetch pool data for {pool_cid}")
+
+            ex_name = fetched_pool['exchange_name']
+            if ex_name == "bancor_v3":
+                self.ConfigObj.logger.info(f"[bot.py validate] pool_cid: {pool_cid}")
+                self.ConfigObj.logger.info(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
+                self.ConfigObj.logger.info(f"[bot.py validate] fetched_pool: {fetched_pool}")
+
             if current_pool.exchange_name == "carbon_v1":
                 assert current_pool.y_0 == fetched_pool["y_0"], f"Current data for Carbon pool {current_pool.cid} order 0 balance {current_pool.y_0} does not match actual balance: {fetched_pool['y_0']}"
                 assert current_pool.y_1 == fetched_pool["y_1"], f"Current data for Carbon pool {current_pool.cid} order 1 balance {current_pool.y_1} does not match actual balance: {fetched_pool['y_1']}"
-            elif current_pool.exchange_name == "uniswap_v3" or current_pool.exchange_name == "sushiswap_v3":
+            elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
                 assert current_pool.liquidity == fetched_pool["liquidity"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} liquidity {current_pool.liquidity} does not match actual liquidity: {fetched_pool['liquidity']}"
                 assert current_pool.sqrt_price_q96 == fetched_pool["sqrt_price_q96"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} sqrt_price_q96 {current_pool.sqrt_price_q96} does not match actual liquidity: {fetched_pool['sqrt_price_q96']}"
                 assert current_pool.tick == fetched_pool["tick"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} tick {current_pool.tick} does not match actual tick: {fetched_pool['tick']}"
@@ -528,17 +555,14 @@ class CarbonBot(CarbonBotBase):
                 assert current_pool.tkn0_balance == fetched_pool["tkn0_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn0 balance {current_pool.tkn0_balance} does not match actual balance: {fetched_pool['tkn0_balance']}"
                 assert current_pool.tkn1_balance == fetched_pool["tkn1_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn1 balance {current_pool.tkn1_balance} does not match actual balance: {fetched_pool['tkn1_balance']}"
 
-        self.ConfigObj.logger.info(f"All data checks passed! Pools in sync!")
+        self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
+
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
         """
         Returns True if the exchange route includes Carbon
         """
-
-        for trade in trade_instructions:
-            if trade.is_carbon:
-                return True
-        return False
+        return any(trade.is_carbon for trade in trade_instructions)
 
     def calculate_profit(
         self,
