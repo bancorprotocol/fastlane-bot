@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the pool class for SushiswapV2. This class is responsible for handling SushiswapV2 pools and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import Dict, Any
 

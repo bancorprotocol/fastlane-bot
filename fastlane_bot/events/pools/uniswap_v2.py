@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the pool class for Uniswap v2. This class is responsible for handling Uniswap v2 pools and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import Dict, Any
 

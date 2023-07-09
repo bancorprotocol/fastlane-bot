@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the factory class for pools. This class is responsible for creating pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from fastlane_bot.events.pools.base import Pool
 
 
