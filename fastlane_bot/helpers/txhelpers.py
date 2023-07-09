@@ -374,6 +374,7 @@ class TxHelpers:
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
+
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
                 f"Expected reward of {num_format(adjusted_reward)} BNT vs cost of {num_format(gas_in_src)} BNT in gas, executing arb."
