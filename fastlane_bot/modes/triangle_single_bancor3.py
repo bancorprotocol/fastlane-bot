@@ -9,7 +9,7 @@ import math
 from typing import Union, List, Tuple, Any, Iterable
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer, T
+from fastlane_bot.tools.cpc import CPCContainer, T, ConstantProductCurve
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
@@ -119,130 +119,158 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def get_optimal_arb_trade_amts(self, cids: [], has_carbon: bool = False):
-        pools = [self.CCm.byparams(cid=cid) for cid in cids]
+    def get_tkn(self, pool: ConstantProductCurve, tkn_num: int) -> str:
+        """
+        Gets the token ID from a pool object
 
-        p0t0 = pools[0].gettknx
-        p0t1 = pools[0].gettkny
-        p2t0 = pools[2].gettknx
-        p2t1 = pools[2].gettkny
+        Parameters
+        ----------
+        pool: ConstantProductCurve
+            The ConstantProductCurve object
+        tkn_num: int
+            The token number to get, either 0 or 1
+
+        Returns
+        -------
+        str
+        """
+        return pool.pair.split("/")[tkn_num]
+
+    @staticmethod
+    def get_fee_safe(fee: int or float):
+        """
+        Fixes the format of the fee if the fee is in PPM format
+
+        Parameters
+        ----------
+        fee: int or float
+
+        Returns
+        -------
+        float
+        """
+        if fee > 1:
+            fee = fee / 1000000
+        return fee
+
+    def get_exact_pools(self, cids: List[str]) -> List[CPCContainer]:
+        """
+        Gets the specific pools that will be used for calculations. It does this inefficiently to preserve the order.
+
+        Parameters
+        ----------
+        cids: List
+
+        Returns
+        -------
+        List
+        """
+
+        pools = [curve for curve in self.CCm if curve.cid == cids[0]]
+        pools += [curve for curve in self.CCm if curve.cid == cids[1]]
+        pools += [curve for curve in self.CCm if curve.cid == cids[2]]
+        return pools
+
+    def get_optimal_arb_trade_amts(self, cids: List[str], flt: str) -> float:
+        """
+        Gets the optimal trade 0 amount for a triangular arb cycle
+
+        Parameters
+        ----------
+        cids: List
+        flt: str
+
+        Returns
+        -------
+        float
+        """
+        pools = self.get_exact_pools(cids=cids)
+        tkn0 = self.get_tkn(pool=pools[0], tkn_num=0)
+        tkn1 = self.get_tkn(pool=pools[0], tkn_num=1)
+        tkn2 = self.get_tkn(pool=pools[1], tkn_num=0)
+        tkn5 = self.get_tkn(pool=pools[2], tkn_num=0)
+        p0t0 = pools[0].x_act if tkn0 == flt else pools[0].y_act
+        p0t1 = pools[0].y_act if tkn0 == flt else pools[0].x_act
+        p2t1 = pools[2].x_act if tkn5 == flt else pools[2].y_act
+        p2t0 = pools[2].y_act if tkn5 == flt else pools[2].x_act
+        fee1 = self.get_fee_safe(pools[1].fee)
+
+        if pools[1].params.exchange == "carbon_v1":
+            return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
+
+        p1t0 = pools[1].x if tkn1 == tkn2 else pools[1].y
+        p1t1 = pools[1].y if tkn1 == tkn2 else pools[1].x
         fee0 = 0
         fee2 = 0
+        return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
 
-        if not has_carbon:
-            p1t0 = pools[1].gettknx
-            p1t1 = pools[1].gettkny
-            fee1 = pools[0].fee
-            return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-        else:
+    def get_exact_input_with_carbon(self, p0t0: float, p0t1: float, p2t0: float, p2t1: float, carbon_pool: ConstantProductCurve) -> float:
+        """
+        Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
 
-            carbon_pool = pools[1]
-            y = carbon_pool.y
-            z = carbon_pool.z
-            A = carbon_pool.A
-            B = carbon_pool.B
-            C = (B * z + A * y) ** 2
-            D = B * A * z + A**2 * y
-            return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p2t0: float
+        p2t1: float
+        carbon_pool: ConstantProductCurve
 
+        Returns
+        -------
+        float
+        """
+        y = carbon_pool.y
+        z = carbon_pool.z
+        A = carbon_pool.A
+        B = carbon_pool.B
+        C = (B * z + A * y) ** 2
+        D = B * A * z + A ** 2 * y
+        return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
 
-    def max_arb_trade_in_cp_carbon_cp(self, p0t0, p0t1, p2t0, p2t1, C, D, z):
+    @staticmethod
+    def max_arb_trade_in_cp_carbon_cp(p0t0: float, p0t1: float, p2t0: float, p2t1: float, C: float, D: float, z: float) -> float:
+        """
+        Equation to solve optimal trade input for a constant product -> Carbon order -> constant product route.
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p2t0: float
+        p2t1: float
+        C: float
+        D: float
+        z: float
+        Returns
+        -------
+        float
+
+        """
         trade_input = (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
-
         return trade_input
 
+    @staticmethod
+    def max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
+        """
+        Equation to solve optimal trade input for a constant product -> constant product -> constant product route.
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p1t0: float
+        p1t1: float
+        p2t0: float
+        p2t1: float
+        fee0: float
+        fee1: float
+        fee2: float
+        Returns
+        -------
+        float
 
-    def max_arb_trade_in_constant_product(self, p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
-        p0t0 = float(str(p0t0))
-        p0t1 = float(str(p0t1))
-        p1t0 = float(str(p1t0))
-        p1t1 = float(str(p1t1))
-        p2t0 = float(str(p2t0))
-        p2t1 = float(str(p2t1))
-        fee0 = float(str(fee0))
-        fee1 = float(str(fee1))
-        fee2 = float(str(fee2))
-        val = (
-                (
-                        -p1t0 * p2t0 * p0t0
-                        + (
-                                (-1)
-                                * p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee1
-                                * fee2
-                                * fee0
-                                + p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee1
-                                * fee2
-                                + p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee1
-                                * fee0
-                                - p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee1
-                                + p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee2
-                                * fee0
-                                - p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee2
-                                - p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                                * fee0
-                                + p1t0
-                                * p2t0
-                                * p0t0
-                                * p1t1
-                                * p2t1
-                                * p0t1
-                        )
-                        ** 0.5
-                )
-                / (
-                        p1t0 * p2t0
-                        - p2t0 * p0t1 * fee0
-                        + p2t0 * p0t1
-                        + p1t1 * p0t1 * fee1 * fee0
-                        - p1t1 * p0t1 * fee1
-                        - p1t1 * p0t1 * fee0
-                        + p1t1 * p0t1
-                )
-        )
+        """
+        val = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
         return val
-
-
 
     @staticmethod
     def run_main_flow(
