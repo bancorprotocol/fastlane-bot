@@ -586,30 +586,47 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.error(f"Could not fetch pool data for {pool_cid}")
 
             ex_name = fetched_pool['exchange_name']
-            self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
-            self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
-            self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
+            self._validate_pool_data_logging(pool_cid, fetched_pool)
+
             if ex_name == "bancor_v3":
-                pass
-                self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
-                self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
-                self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
+                self._validate_pool_data_logging(pool_cid, fetched_pool)
 
             if current_pool.exchange_name == "carbon_v1":
                 if current_pool.y_0 != fetched_pool["y_0"] or current_pool.y_1 != fetched_pool["y_1"]:
-                    self.ConfigObj.logger.debug(f"Carbon pool not up to date, updating and restarting.")
+                    self.ConfigObj.logger.debug(
+                        "Carbon pool not up to date, updating and restarting."
+                    )
                     return False
 
             elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
                 if current_pool.liquidity != fetched_pool["liquidity"] or current_pool.sqrt_price_q96 != fetched_pool["sqrt_price_q96"] or current_pool.tick != fetched_pool["tick"]:
-                    self.ConfigObj.logger.debug(f"UniV3 pool not up to date, updating and restarting.")
+                    self.ConfigObj.logger.debug(
+                        "UniV3 pool not up to date, updating and restarting."
+                    )
                     return False
 
-            else:
-                if current_pool.tkn0_balance != fetched_pool["tkn0_balance"] or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]:
-                    self.ConfigObj.logger.debug(f"{ex_name} pool not up to date, updating and restarting.")
-                    return False
+            elif current_pool.tkn0_balance != fetched_pool["tkn0_balance"] or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]:
+                self.ConfigObj.logger.debug(f"{ex_name} pool not up to date, updating and restarting.")
+                return False
+            
         return True
+
+    def _validate_pool_data_logging(self, pool_cid: str, fetched_pool: Dict[str, Any]) -> None:
+        """
+        Logs the pool data validation.
+
+        Parameters
+        ----------
+        pool_cid: str
+            The pool CID.
+        fetched_pool: dict
+            The fetched pool data.
+
+        """
+        self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
+        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
+        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
+
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
         """
