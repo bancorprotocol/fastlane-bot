@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+Contains the exchange class for UniswapV2. This class is responsible for handling UniswapV2 exchanges and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 

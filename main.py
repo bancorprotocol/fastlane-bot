@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import time
 from typing import List, Any, Tuple, Hashable
 
@@ -12,7 +11,7 @@ from joblib import Parallel, delayed
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config import Config
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.events.manager import Manager
+from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.utils import complex_handler, filter_latest_events
 
 load_dotenv()
@@ -113,8 +112,8 @@ def main(
     run_data_validator: bool
 ):
     """
-    The main entry point of the program. It sets up the configuration, initializes the web3 and Manager objects,
-    adds initial pools to the Manager and then calls the `run` function.
+    The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
+    adds initial pools to the Base and then calls the `run` function.
 
     Args:
         cache_latest_only (bool): Whether to cache only the latest events or not.
@@ -253,7 +252,7 @@ def run(
     Args:
         cache_latest_only (bool): Whether to cache only the latest events or not.
         backdate_pools (bool): Whether to backdate pools or not. Set to False for quicker testing runs.
-        mgr (Manager): The manager object that is responsible for handling events and updating pools.
+        mgr (Base): The manager object that is responsible for handling events and updating pools.
         n_jobs (int): The number of jobs to run in parallel.
         polling_interval (int): The time interval at which the bot polls for new events.
         alchemy_max_block_fetch (int): The maximum number of blocks to fetch in a single request.
@@ -388,7 +387,7 @@ def run(
 
         Parameters
         ----------
-        mgr : Manager
+        mgr : Base
             The manager object.
 
         Returns
@@ -410,6 +409,45 @@ def run(
             bot.db, QueryInterface
         ), "QueryInterface not initialized correctly"
         return bot
+
+    def update_pools_from_contracts(
+            n_jobs,
+            rows_to_update: List[int],
+            not_bancor_v3: bool = True,
+            current_block: int = None,
+    ) -> None:
+        """
+        Updates the pools with the given indices by calling the contracts.
+
+        Parameters
+        ----------
+        n_jobs : int
+            The number of jobs to run in parallel.
+        rows_to_update : List[int]
+            A list of indices of rows to update.
+        not_bancor_v3 : bool, optional
+            Whether to update pools that are not Bancor v3 pools, by default True
+        current_block : int, optional
+            The current block number, by default None
+
+        """
+        if not_bancor_v3:
+            Parallel(n_jobs=n_jobs, backend="threading")(
+                delayed(mgr.update)(
+                    pool_info=mgr.pool_data[idx],
+                    limiter=not_bancor_v3,
+                    block_number=current_block,
+                )
+                for idx in rows_to_update
+            )
+        else:
+            with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
+                for idx, pool in enumerate(rows_to_update):
+                    mgr.update(
+                        pool_info=mgr.pool_data[idx],
+                        limiter=not_bancor_v3,
+                        block_number=current_block,
+                    )
 
     bot = None
     loop_idx = last_block = 0
@@ -484,7 +522,7 @@ def run(
                 )
 
                 for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    mgr.update_pools_directly_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update,
+                    update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update,
                                                              current_block=current_block)
 
             elif last_block == 0 and "bancor_v3" in mgr.exchanges:
@@ -495,7 +533,7 @@ def run(
                     for idx, pool in enumerate(mgr.pool_data)
                     if pool["exchange_name"] == "bancor_v3"
                 ]
-                mgr.update_pools_directly_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update, not_bancor_v3=False,
+                update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update, not_bancor_v3=False,
                                                      current_block=current_block)
             elif last_block == 0 and "carbon_v1" in mgr.exchanges:
                 # Update the pool data on disk

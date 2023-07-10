@@ -18,7 +18,7 @@ from fastlane_bot.events.exchanges import (
     CarbonV1,
     BancorV3,
 )
-from fastlane_bot.events.manager import Manager
+from fastlane_bot.events.managers.base import Manager
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -355,7 +355,7 @@ def my_multicall(*args, **kwargs):
 
 
 @patch.object(brownie, "multicall", autospec=True)
-@patch("fastlane_bot.events.manager.Manager.update")
+@patch("fastlane_bot.events.manager.Base.update")
 def test_update_pools_directly_from_contracts_bancor_v3(
     self, update_mock, manager, pool_data
 ):

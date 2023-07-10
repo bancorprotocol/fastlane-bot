@@ -1,10 +1,16 @@
+# coding=utf-8
+"""
+Contains the exchange class for BancorV3. This class is responsible for handling BancorV3 events and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import Dict, Any
 
 from web3.contract import Contract
 
 from .base import Pool
-from .factory import pool_factory
 
 
 @dataclass

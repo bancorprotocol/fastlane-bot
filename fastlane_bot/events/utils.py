@@ -8,11 +8,10 @@ Licensed under MIT
 from typing import Any, Union, Dict, Set
 from typing import List
 
-import pandas as pd
 from hexbytes import HexBytes
 from web3.datastructures import AttributeDict
 
-from fastlane_bot.events.manager import Manager
+from fastlane_bot.events.managers.manager import Manager
 
 
 def filter_latest_events(
@@ -24,7 +23,7 @@ def filter_latest_events(
     is derived from the event data using manager's methods.
 
     Args:
-        mgr (Manager): A Manager object that provides methods to handle events and their related pools.
+        mgr (Base): A Base object that provides methods to handle events and their related pools.
         events (List[List[AttributeDict]]): A nested list of events, where each event is an AttributeDict that includes
         the event data and associated metadata.
 

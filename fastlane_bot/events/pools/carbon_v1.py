@@ -1,10 +1,16 @@
+# coding=utf-8
+"""
+Contains the pool class for Carbon v1. This class is responsible for handling Carbon v1 pools and updating the state of the pools.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from dataclasses import dataclass
 from typing import Dict, Any, Tuple, List
 
 from web3.contract import Contract
 
 from .base import Pool
-from .factory import pool_factory
 
 
 @dataclass
