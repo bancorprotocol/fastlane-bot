@@ -444,6 +444,8 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         randomizer: bool
             Whether to randomize the arbitrage opportunities.
+        data_validator: bool
+            If extra data validation should be performed
 
         Returns
         -------
@@ -472,14 +474,39 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = random.choice(r) if randomizer else r
-        if data_validator:
+        if data_validator or arb_mode == "bancor_v3":
             # Add random chance if we should check or not
-            self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
-            self.validate_pool_data(arb_opp=r)
+            r = self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
+            if r is None:
+                self.ConfigObj.logger.info("Math validation eliminated arb opportunity, restarting.")
+                return None
+            if self.validate_pool_data(arb_opp=r):
+                self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
+            else:
+                self.ConfigObj.logger.info("Data validation failed. Updating pools and restarting.")
+                return None
             
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
+        """
+        Validates arbitrage trade input using equations that account for fees.
+        This has limited coverage, but is very effective for the instances it covers.
+
+        Parameters
+        ----------
+        arb_opp: tuple
+            The tuple containing an arbitrage opportunity found by the Optimizer
+        arb_mode: str
+            The arbitrage mode.
+        arb_finder: Any
+            The Arb mode class that handles the differences required for each arb route.
+
+
+        Returns
+        -------
+        tuple or None
+        """
         (
             best_profit,
             best_trade_instructions_df,
@@ -494,28 +521,49 @@ class CarbonBot(CarbonBotBase):
         ) = self._simple_ordering_by_src_token(
             best_trade_instructions_dic, best_src_token
         )
-
         if arb_mode == "bancor_v3":
 
             cids = []
-
-            has_carbon_pool = False
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]
                 if "-0" in pool_cid or "-1" in pool_cid:
                     pool_cid = pool_cid.split("-")[0]
-                    has_carbon_pool = True
-
                 cids.append(pool_cid)
+            if len(cids) > 3:
+                self.ConfigObj.logger.info(f"Math validation not supported for more than 3 pools, returning to main flow.")
+                return arb_opp
+            max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=best_src_token)
+            if max_trade_in is None:
+                return None
+            if max_trade_in < 0.0:
+                return None
+            self.ConfigObj.logger.debug(f"max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}")
+            ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
-            max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, has_carbon_pool=has_carbon_pool)
-            self.ConfigObj.logger.info(f"max_trade_in = {max_trade_in}, optimizer trade in = {best_trade_instructions}")
+            best_trade_instructions_dic = ordered_trade_instructions_dct
 
-
-        elif arb_mode == self.AM_SINGLE:
-            pass
+        arb_opp = (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        )
+        return arb_opp
 
     def validate_pool_data(self, arb_opp):
+        """
+        Validates that the data for each pool in the arbitrage opportunity is fresh.
+
+        Parameters
+        ----------
+        arb_opp: tuple
+            The tuple containing an arbitrage opportunity found by the Optimizer
+
+        Returns
+        -------
+        bool
+        """
         self.ConfigObj.logger.info("Validating pool data.")
         (
             best_profit,
@@ -529,7 +577,6 @@ class CarbonBot(CarbonBotBase):
 
             if "-0" in pool_cid or "-1" in pool_cid:
                 pool_cid = pool_cid.split("-")[0]
-
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {"cid": pool_cid, "id": current_pool.id, "address": current_pool.address, "pair_name": current_pool.pair_name,
                          "exchange_name": current_pool.exchange_name, "tkn0_address": current_pool.tkn0_address, "tkn1_address": current_pool.tkn1_address, "tkn0_key": current_pool.tkn0_key, "tkn1_key": current_pool.tkn1_key, "args": {"id": current_pool.cid}}
@@ -539,23 +586,46 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.error(f"Could not fetch pool data for {pool_cid}")
 
             ex_name = fetched_pool['exchange_name']
+            self._validate_pool_data_logging(pool_cid, fetched_pool)
+
             if ex_name == "bancor_v3":
-                self.ConfigObj.logger.info(f"[bot.py validate] pool_cid: {pool_cid}")
-                self.ConfigObj.logger.info(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
-                self.ConfigObj.logger.info(f"[bot.py validate] fetched_pool: {fetched_pool}")
+                self._validate_pool_data_logging(pool_cid, fetched_pool)
 
             if current_pool.exchange_name == "carbon_v1":
-                assert current_pool.y_0 == fetched_pool["y_0"], f"Current data for Carbon pool {current_pool.cid} order 0 balance {current_pool.y_0} does not match actual balance: {fetched_pool['y_0']}"
-                assert current_pool.y_1 == fetched_pool["y_1"], f"Current data for Carbon pool {current_pool.cid} order 1 balance {current_pool.y_1} does not match actual balance: {fetched_pool['y_1']}"
-            elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
-                assert current_pool.liquidity == fetched_pool["liquidity"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} liquidity {current_pool.liquidity} does not match actual liquidity: {fetched_pool['liquidity']}"
-                assert current_pool.sqrt_price_q96 == fetched_pool["sqrt_price_q96"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} sqrt_price_q96 {current_pool.sqrt_price_q96} does not match actual liquidity: {fetched_pool['sqrt_price_q96']}"
-                assert current_pool.tick == fetched_pool["tick"], f"Current data for Uni/Sushi V3 pool {current_pool.cid} tick {current_pool.tick} does not match actual tick: {fetched_pool['tick']}"
-            else:
-                assert current_pool.tkn0_balance == fetched_pool["tkn0_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn0 balance {current_pool.tkn0_balance} does not match actual balance: {fetched_pool['tkn0_balance']}"
-                assert current_pool.tkn1_balance == fetched_pool["tkn1_balance"], f"Current data for Constant Product pool {current_pool.cid} on {current_pool.exchange_name}, tkn1 balance {current_pool.tkn1_balance} does not match actual balance: {fetched_pool['tkn1_balance']}"
+                if current_pool.y_0 != fetched_pool["y_0"] or current_pool.y_1 != fetched_pool["y_1"]:
+                    self.ConfigObj.logger.debug(
+                        "Carbon pool not up to date, updating and restarting."
+                    )
+                    return False
 
-        self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
+            elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
+                if current_pool.liquidity != fetched_pool["liquidity"] or current_pool.sqrt_price_q96 != fetched_pool["sqrt_price_q96"] or current_pool.tick != fetched_pool["tick"]:
+                    self.ConfigObj.logger.debug(
+                        "UniV3 pool not up to date, updating and restarting."
+                    )
+                    return False
+
+            elif current_pool.tkn0_balance != fetched_pool["tkn0_balance"] or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]:
+                self.ConfigObj.logger.debug(f"{ex_name} pool not up to date, updating and restarting.")
+                return False
+            
+        return True
+
+    def _validate_pool_data_logging(self, pool_cid: str, fetched_pool: Dict[str, Any]) -> None:
+        """
+        Logs the pool data validation.
+
+        Parameters
+        ----------
+        pool_cid: str
+            The pool CID.
+        fetched_pool: dict
+            The fetched pool data.
+
+        """
+        self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
+        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}")
+        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
 
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
