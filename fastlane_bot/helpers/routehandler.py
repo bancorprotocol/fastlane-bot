@@ -7,33 +7,16 @@ Licensed under MIT
 __VERSION__ = "1.1.1"
 __DATE__="02/May/2023"
 
-# import itertools
-# import random
-# import time
-from dataclasses import dataclass, asdict
-from typing import List, Union, Any, Dict, Tuple, Optional
-import eth_abi
 import math
+from _decimal import Decimal
+from dataclasses import dataclass
+from typing import List, Any, Dict, Tuple
+
+import eth_abi
 import pandas as pd
 
-# import requests
-from _decimal import Decimal
-from alchemy import Network, Alchemy
-from brownie.network.transaction import TransactionReceipt
-from eth_utils import to_hex
-from web3 import Web3
-from web3._utils.threads import Timeout
-from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
-from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
-
-from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-#from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.db.models import Token, Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.config import Config
 from .tradeinstruction import TradeInstruction
+from ..events.interface import Pool
 
 
 @dataclass
@@ -43,7 +26,7 @@ class RouteStruct:
 
     Parameters
     ----------
-    exchangeId: int
+    platformId: int
         The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
     targetToken: str
         The target token address.
@@ -69,7 +52,7 @@ class RouteStruct:
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
 
-    exchangeId: int  # TODO: WHY IS THIS AN INT?
+    platformId: int  # TODO: WHY IS THIS AN INT?
     targetToken: str
     minTargetAmount: int
     deadline: int
@@ -96,10 +79,7 @@ class TxRouteHandler(TxRouteHandlerBase):
     """
     __VERSION__=__VERSION__
     __DATE__=__DATE__
-    
-    # ConfigObj: Config
-    # trade_instructions_dic: List[TradeInstruction]
-    # trade_instructions_df: pd.DataFrame
+
     trade_instructions: List[TradeInstruction]
 
     @property
@@ -107,7 +87,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         Returns
         """
-        return [trade.exchange_id for trade in self.trade_instructions]
+        return [trade.platform_id for trade in self.trade_instructions]
 
     def __post_init__(self):
         self.contains_carbon = True
@@ -124,30 +104,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             raise ValueError("Trade instructions must be greater than 1.")
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
-
-    # @staticmethod
-    # def _get_carbon_indexes(
-    #     trade_instructions_dic: List[Dict[str, Any] or TradeInstruction]
-    # ) -> List[int]:
-    #     """
-    #     Gets the indexes of the trades that are on the Carbon exchange.
-
-    #     Returns
-    #     -------
-    #     List[int]
-    #         The indexes of the trades that are on the Carbon exchange.
-    #     """
-    #     if isinstance(trade_instructions_dic[0], TradeInstruction):
-    #         return [
-    #             idx
-    #             for idx in range(len(trade_instructions_dic))
-    #             if "-" in trade_instructions_dic[idx].cid
-    #         ]
-    #     return [
-    #         idx
-    #         for idx in range(len(trade_instructions_dic))
-    #         if "-" in trade_instructions_dic[idx]["cid"]
-    #     ]
 
     def is_weth(self, address: str) -> bool:
         """
@@ -183,7 +139,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                             "strategyId": int(trade["cid"].split("-")[0]),
                             "amount": int(
                                 trade["_amtin_wei"]
-                                # Decimal('0.99') * Decimal(trade["amtin"])* 10**instr.tknin_decimals
                             ),
                         }
                     ]
@@ -207,8 +162,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 agg_trade_instructions[i] = instr
         return agg_trade_instructions
 
+    @staticmethod
     def _abi_encode_data(
-        self,
         idx_of_carbon_trades: List[int],
         trade_instructions: List[TradeInstruction],
     ) -> bytes:
@@ -219,8 +174,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         ----------
         idx_of_carbon_trades: List[int]
             The indices of the trades that are on Carbon.
-        trade_instructions_dic: List[Dict[str, str]]
-            The trade instructions dictionary.
+        trade_instructions: List[TradeInstruction]
+            The trade instructions.
 
         """
         trade_actions_dic = [
@@ -250,7 +205,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee_float: Any = None,
         customData: Any = None,
         override_min_target_amount: bool = True,
-        # ConfigObj: Config = None
     ) -> RouteStruct:
         """
         Converts the trade instructions into the variables needed to instantiate the `TxSubmitHandler` class.
@@ -261,8 +215,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             The minimum target amount.
         deadline: int
             The deadline.
-        web3: Web3
-            The web3 instance.
         target_address: str
             The target address.
         exchange_id: int
@@ -289,21 +241,16 @@ class TxRouteHandler(TxRouteHandlerBase):
         if override_min_target_amount:
             min_target_amount = 1
 
-        # if exchange_id != 4:
-        #     fee = Decimal(fee)
-        #     fee *= Decimal(1000000)
-
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
 
         return RouteStruct(
-            exchangeId=exchange_id,
+            platformId=exchange_id,
             targetToken=target_address,
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
             customAddress=custom_address,
             customInt=fee_customInt_specifier,
             customData=customData,
-            # ConfigObj=ConfigObj,
 
         )
 
@@ -315,25 +262,17 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         Parameters
         ----------
-        min_target_amount: Decimal
-            The minimum target amount.
+        trade_instructions: List[TradeInstruction]
+            The trade instructions.
         deadline: int
             The deadline.
-        target_address: str
-            The target address.
-        exchange_id: int
-            The exchange id.
-        custom_address: str
+
 
         """
-        # TODO: MIKE/KEVIN - CONFIRM
         if trade_instructions is None:
             trade_instructions = self.trade_instructions
         
         assert not deadline is None, "deadline cannot be None"
-        
-        # for t in trade_instructions:
-        #     print(f"trade_instruction.cid: {t.cid}")
 
         pools = [
             self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
@@ -342,7 +281,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         try:
             fee_float = [pools[idx].fee_float for idx, _ in enumerate(trade_instructions)]
         except:
-            # print("[ERROR] error calculating fee_float")
             fee_float = [0 for idx, _ in enumerate(trade_instructions)]
 
         return [
@@ -350,14 +288,13 @@ class TxRouteHandler(TxRouteHandlerBase):
                 min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
-                exchange_id=trade_instructions[idx].exchange_id,
-                custom_address=pools[idx].anchor if trade_instructions[idx].exchange_id == 1 else trade_instructions[
+                exchange_id=trade_instructions[idx].platform_id,
+                custom_address=pools[idx].anchor if trade_instructions[idx].platform_id == 1 else trade_instructions[
                     idx
                 ].tknout_address,  # TODO: rework for bancor 2
                 fee_float=fee_float[idx],
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
-                # ConfigObj=trade_instructions[idx].ConfigObj,
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
@@ -376,10 +313,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         route_struct = self.get_route_structs(
             trade_instructions=trade_instructions, deadline=deadline
         )
-        # src_amount = int(self.trade_instructions_dic[0].amtin_wei)
         return route_struct
-    
-    def _get_trade_dicts_from_objects(self, trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
+
+    @staticmethod
+    def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
         return [
             {
                 "cid": instr.cid + "-" + str(instr.cid_tkn)
@@ -395,7 +332,22 @@ class TxRouteHandler(TxRouteHandlerBase):
             for instr in trade_instructions
         ]
 
-    def _slice_dataframe(self, df):
+    @staticmethod
+    def _slice_dataframe(df: pd.DataFrame) -> List[Tuple[int, pd.DataFrame]]:
+        """
+        Slices a dataframe into a list of dataframes.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            The dataframe to slice.
+
+        Returns
+        -------
+        List[Tuple[int, pd.DataFrame]]
+            The list of dataframes.
+
+        """
         slices = []
         current_pair_sorting = df.pair_sorting.values[0]
         current_slice = []
@@ -414,10 +366,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         for df in slices:
             min_index += [min(df.index.values)]
 
-        
         return list(zip(min_index, slices))
  
-    def _aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
+    def aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
         Aggregate carbon independent IDs and create trade instructions.
 
@@ -427,13 +378,13 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         Parameters
         ----------
-        trade_instructions : List[TradeInstruction]
-            A list of trade instructions as TradeInstruction objects.
+        trade_instructions_objects: List[TradeInstruction]
+            The trade instructions objects.
 
         Returns
         -------
         List[TradeInstruction]
-            A list of aggregated trade instructions as TradeInstruction objects.
+            The trade instructions objects.
 
         """
         config_object = trade_instructions_objects[0].ConfigObj
@@ -477,106 +428,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         for i in sorted(list(new_trade_instructions_carbons.keys())):
             agg_trade_instructions += [TradeInstruction(**new_trade_instructions_carbons[i])]
         return agg_trade_instructions
-
-    # def _aggregate_carbon_trades(self, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
-    #     """
-    #     Aggregate carbon independent IDs and create trade instructions.
-
-    #     This function takes a list of dictionaries containing trade instructions,
-    #     aggregates the instructions with carbon independent IDs, and creates
-    #     a list of TradeInstruction objects.
-
-    #     Parameters
-    #     ----------
-    #     trade_instructions : List[TradeInstruction]
-    #         A list of trade instructions as TradeInstruction objects.
-
-    #     Returns
-    #     -------
-    #     List[TradeInstruction]
-    #         A list of aggregated trade instructions as TradeInstruction objects.
-
-    #     """
-    #     # Get the indices of the carbon trades
-    #     listti = self._get_trade_dicts_from_objects(trade_instructions)
-    #     df = pd.DataFrame(listti)
-    #     carbons = df[df.cid.str.contains("-")].copy()
-    #     nocarbons = df[~df.cid.str.contains("-")]
-    #     carbons["pair_sorting"] = carbons.tknin + carbons.tknout
-
-    #     new_trade_instructions = [
-    #         {
-    #             "pair_sorting": pair_sorting,
-    #             "cid": newdf.cid.values[0],
-    #             "tknin": newdf.tknin.values[0],
-    #             "amtin": newdf.amtin.sum(),
-    #             "tknout": newdf.tknout.values[0],
-    #             "amtout": newdf.amtout.sum(),
-    #             "raw_txs": str(newdf.to_dict(orient="records")),
-    #         }
-    #         for pair_sorting, newdf in carbons.groupby("pair_sorting")
-    #     ]
-
-    #     nocarbons["pair_sorting"] = nocarbons.tknin + nocarbons.tknout
-    #     nocarbons["raw_txs"] = str([])
-    #     new_trade_instructions.extend(nocarbons.to_dict(orient="records"))
-
-    #     trade_instructions = [
-    #         TradeInstruction(**instruction)
-    #         for instruction in new_trade_instructions
-    #     ]
-
-    #     return trade_instructions
-
-    # @staticmethod
-    # def _agg_carbon_independentIDs(trade_instructions):
-    #     listti = []
-    #     for instr in trade_instructions:
-    #
-    #         listti += [
-    #             {
-    #                 "cid": instr.cid + "-" + str(instr.cid_tkn)
-    #                 if instr.cid_tkn
-    #                 else instr.cid,
-    #                 "tknin": instr.tknin,
-    #                 "amtin": instr.amtin,
-    #                 "tknout": instr.tknout,
-    #                 "amtout": instr.amtout,
-    #             }
-    #         ]
-    #     df = pd.DataFrame.from_dict(listti)
-    #     carbons = df[df.cid.str.contains("-")].copy()
-    #     nocarbons = df[~df.cid.str.contains("-")]
-    #     dropindexes = []
-    #     new_trade_instructions = []
-    #     carbons["pair_sorting"] = carbons.tknin + carbons.tknout
-    #     for pair_sorting in carbons.pair_sorting.unique():
-    #         newdf = carbons[carbons.pair_sorting == pair_sorting]
-    #         newoutput = {
-    #             "pair_sorting": pair_sorting,
-    #             "cid": newdf.cid.values[0],
-    #             "tknin": newdf.tknin.values[0],
-    #             "amtin": newdf.sum()["amtin"],
-    #             "tknout": newdf.tknout.values[0],
-    #             "amtout": newdf.sum()["amtout"],
-    #             "raw_txs": str(newdf.to_dict(orient="records")),
-    #         }
-    #         new_trade_instructions.append(newoutput)
-    #
-    #     print("new_trade_instructions", new_trade_instructions)
-    #     nocarbons_instructions = []
-    #     dictnocarbons = nocarbons.to_dict(orient="records")
-    #     for dct in dictnocarbons:
-    #         dct["pair_sorting"] = dct["tknin"] + dct["tknout"]
-    #         dct["raw_txs"] = str([])
-    #         nocarbons_instructions += [dct]
-    #
-    #     new_trade_instructions += nocarbons_instructions
-    #     trade_instructions = [
-    #         TradeInstruction(**new_trade_instructions[i])
-    #         for i in range(len(new_trade_instructions))
-    #     ]
-    #     return trade_instructions
 
     @staticmethod
     def _find_tradematches(trade_instructions):
@@ -1262,6 +1113,23 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
+    def calculate_trade_profit(
+        self, trade_instructions: List[TradeInstruction]
+    ) -> int or float or Decimal:
+        """
+        Calculates the profit of the trade in the Flashloan token by calculating the sum in vs sum out
+        """
+        sum_in = 0
+        sum_out = 0
+        flt = trade_instructions[0].tknin_key
+
+        for trade in trade_instructions:
+            if trade.tknin_key == flt:
+                sum_in += abs(trade.amtin)
+            elif trade.tknout_key == flt:
+                sum_out += abs(trade.amtout)
+        sum_profit = sum_out - sum_in
+        return sum_profit
 
     def calculate_trade_outputs(
         self, trade_instructions: List[TradeInstruction]

@@ -16,16 +16,13 @@ from dotenv import load_dotenv
 from .connect import EthereumNetwork
 
 load_dotenv()
-
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-POSTGRES_USER = os.environ.get("POSTGRES_USER")
-POSTGRES_DB = os.environ.get("POSTGRES_DB")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST")
-POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
+TENDERLY_FORK_ID = os.environ.get("TENDERLY_FORK_ID")
+if TENDERLY_FORK_ID is None:
+    TENDERLY_FORK_ID = ''
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
-PROVIDER_URL = f'https://rpc.tenderly.co/fork/{POSTGRES_DB}' if POSTGRES_DB != 'defaultdb' else f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
-NETWORK_ID = 'mainnet' if POSTGRES_DB == 'defaultdb' else 'tenderly'
-NETWORK_NAME = "Ethereum Mainnet" if POSTGRES_DB == 'defaultdb' else 'Tenderly (Alchemy)'
+PROVIDER_URL = f'https://rpc.tenderly.co/fork/{TENDERLY_FORK_ID}' if TENDERLY_FORK_ID != '' else f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+NETWORK_ID = 'mainnet' if TENDERLY_FORK_ID == '' else 'tenderly'
+NETWORK_NAME = "Ethereum Mainnet" if TENDERLY_FORK_ID == '' else 'Tenderly (Alchemy)'
 
 
 @dataclass
@@ -56,7 +53,6 @@ class Config():
     LL_ERR = S.LOGLEVEL_ERROR
 
     SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']
-    POSTGRES_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     connection = EthereumNetwork(
         network_id=NETWORK_ID,
         network_name=NETWORK_NAME,

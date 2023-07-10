@@ -8,15 +8,10 @@ __VERSION__ = "1.2"
 __DATE__="02/May/2023"
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Any
 from _decimal import Decimal
+from fastlane_bot.events.interface import Token, Pool
 
-#import fastlane_bot.config as c
-from fastlane_bot.db.models import Token, Pool
-
-
-# from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.config import Config
 
 @dataclass
 class TradeInstruction:
@@ -68,7 +63,7 @@ class TradeInstruction:
     __VERSION__=__VERSION__
     __DATE__=__DATE__
     
-    ConfigObj: Config
+    ConfigObj: Any
     cid: str
     tknin: str
     amtin: Union[int, Decimal, float]
@@ -153,7 +148,7 @@ class TradeInstruction:
         self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
 
     @property
-    def exchange_id(self) -> int:
+    def platform_id(self) -> int:
         """
         The exchange ID. (0 = Bancor V2, 1 = Bancor V3, 2 = Uniswap V2, 3 = Uniswap V3, 4 = Sushiswap V2, 5 = Sushiswap, 6 = Carbon)
         """
@@ -187,6 +182,7 @@ class TradeInstruction:
 
         if "." not in str(amount):
             return Decimal(str(amount))
+        amount = format(amount, 'f')
         amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
         # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")

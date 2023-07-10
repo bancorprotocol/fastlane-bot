@@ -4,21 +4,21 @@ Utility functions for FastLane project
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import datetime
 import math
 import os.path
+from _decimal import Decimal
 from dataclasses import dataclass
 from typing import Tuple, List, Dict, Any
 
 import pandas as pd
 import requests
-from _decimal import Decimal
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import *
-#from fastlane_bot.config import *
 from fastlane_bot.config import config as cfg
-import datetime
+from fastlane_bot.data.abi import *
+
 
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """

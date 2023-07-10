@@ -15,7 +15,7 @@ load_dotenv()
 from decimal import Decimal
 
 
-TENDERLY_FORK = os.environ.get("POSTGRES_DB")
+TENDERLY_FORK = os.environ.get("TENDERLY_FORK_ID")
 DEFAULT_MIN_PROFIT_BNT = Decimal(os.environ.get("DEFAULT_MIN_PROFIT_BNT"))
 
 
@@ -152,7 +152,6 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
     TENDERLY_FORK = TENDERLY_FORK
-    # TENDERLY_FORK = "058b12b9-c69e-4676-a7bd-2ba09c9b23c7"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################

@@ -30,7 +30,7 @@ from web3.types import TxParams, TxReceipt
 
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 #from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-from fastlane_bot.db.models import Token, Pool
+# from fastlane_bot.db.models import Token, Pool
 #import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
@@ -306,7 +306,7 @@ class TxHelpers:
         current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
 
         if verbose:
-            self.ConfigObj.logger.info("Found a trade. Executing...")
+            self.ConfigObj.logger.info("Validating trade...")
             self.ConfigObj.logger.debug(
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
 
@@ -334,6 +334,7 @@ class TxHelpers:
             return arb_tx
 
         if arb_tx is None:
+            self.ConfigObj.logger.info("Failed to construct trade, discarding.")
             return None
         gas_estimate = arb_tx["gas"]
         current_gas_price = arb_tx["maxFeePerGas"]
@@ -373,8 +374,6 @@ class TxHelpers:
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
 
-        # Take the lesser of the adjusted reward or max profit
-        adjusted_reward = max_profit if adjusted_reward > max_profit else adjusted_reward
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
@@ -382,13 +381,14 @@ class TxHelpers:
             )
 
             # Submit the transaction
-            tx_receipt = self.submit_private_transaction(
+            tx_hash = self.submit_private_transaction(
                 arb_tx=arb_tx, block_number=block_number
             )
-            return hex(tx_receipt) or None
+            self.ConfigObj.logger.info(f"Arbitrage executed, tx hash: {tx_hash}")
+            return tx_hash if tx_hash is not None else None
         else:
             self.ConfigObj.logger.info(
-                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!"
+                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!\n\n"
             )
             return None
     def get_eth_price(self):
@@ -490,7 +490,40 @@ class TxHelpers:
                 }
             )
         )
-
+    def get_access_list(self, transaction_data, expected_gas, eth_input=None):
+        expected_gas = hex(expected_gas)
+        json_data = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_createAccessList",
+            "params": [
+                {
+                    "from": self.wallet_address,
+                    "to": self.arb_contract.address,
+                    "gas": expected_gas,
+                    "data": transaction_data
+                }
+            ]
+        } if eth_input is None else {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_createAccessList",
+            "params": [
+                {
+                    "from": self.wallet_address,
+                    "to": self.arb_contract.address,
+                    "gas": expected_gas,
+                    "value": hex(eth_input),
+                    "data": transaction_data
+                }
+            ]
+        }
+        response = requests.post(self.alchemy_api_url, json=json_data)
+        if "failed to apply transaction" in response.text:
+            return None
+        else:
+            access_list = json.loads(response.text)['result']['accessList']
+            return access_list
     def build_transaction_with_gas(
         self,
         routes: List[Dict[str, Any]],
@@ -499,6 +532,7 @@ class TxHelpers:
         gas_price: int,
         max_priority: int,
         nonce: int,
+        access_list: bool = True,
         test_fake_gas: bool = False
     ):
         """
@@ -519,25 +553,25 @@ class TxHelpers:
                     base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
                 )
             )
-        except ValueError as e:
-            self.ConfigObj.logger.error(f'{e.__class__.__name__} Error when building transaction: {e}')
-            if e.__class__.__name__ == "ContractLogicError":
-                self.ConfigObj.logger.error(f"Contract Logic error. This occurs when the transaction would fail & is likely due to stale pool data.")
-                return None
+        except Exception as e:
 
+            self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
-                message = str(e)
-                split1 = message.split('maxFeePerGas: ')[1]
-                split2 = split1.split(' baseFee: ')
-                split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
-                split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                transaction = self.arb_contract.functions.flashloanAndArb(
-                    routes, src_address, src_amt
-                ).build_transaction(
-                    self.build_tx(
-                        base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                try:
+                    message = str(e)
+                    split1 = message.split('maxFeePerGas: ')[1]
+                    split2 = split1.split(' baseFee: ')
+                    split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
+                    split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+                    transaction = self.arb_contract.functions.flashloanAndArb(
+                        routes, src_address, src_amt
+                    ).build_transaction(
+                        self.build_tx(
+                            base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
+                        )
                     )
-                )
+                except Exception as e:
+                    self.ConfigObj.logger.debug(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
         if test_fake_gas:
@@ -549,6 +583,24 @@ class TxHelpers:
                 self.web3.eth.estimate_gas(transaction=transaction)
                 + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
+            if access_list:
+                access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
+
+                if access_list is not None:
+                    transaction_after = transaction
+                    transaction_after["accessList"] = access_list
+                    self.ConfigObj.logger.debug(f"Transaction after access list: {transaction}")
+                    estimated_gas_after = (
+                            self.web3.eth.estimate_gas(transaction=transaction_after)
+                            + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                    )
+                    self.ConfigObj.logger.debug(f"gas before access list: {estimated_gas}, after access list: {estimated_gas_after}")
+                    if estimated_gas_after is not None:
+                        if estimated_gas_after < estimated_gas:
+                            transaction = transaction_after
+                            estimated_gas = estimated_gas_after
+                else:
+                    self.ConfigObj.logger.info(f"Failed to apply access list to transaction")
         except Exception as e:
             self.ConfigObj.logger.info(
                 f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
@@ -645,12 +697,39 @@ class TxHelpers:
             tx_hash = response.get("result")
             try:
                 tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-                return tx_receipt
+                tx_hash = tx_receipt["transactionHash"]
+                return tx_hash
             except TimeExhausted as e:
-                self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds.")
+                self.ConfigObj.logger.info(f"Transaction stuck in mempool for 120 seconds, cancelling.")
+                self.cancel_private_transaction(arb_tx, block_number)
                 return None
         else:
             self.ConfigObj.logger.info(f"Failed to submit transaction to Flashbots RPC")
+            return None
+    def cancel_private_transaction(self, arb_tx, block_number: int):
+        self.ConfigObj.logger.info(f"Attempting to cancel tx to Flashbots, please hold.")
+        arb_tx["data"] = ""
+        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+        signed_tx_string = signed_arb_tx.hex()
+        max_block_number = hex(block_number + 10)
+        params = [
+            {
+                "tx": signed_tx_string,
+                "maxBlockNumber": max_block_number,
+                "preferences": {"fast": True},
+            }
+        ]
+        response = self.alchemy.core.provider.make_request(
+            method="eth_sendPrivateTransaction",
+            params=params,
+            method_name="eth_sendPrivateTransaction",
+            headers=self._get_headers,
+        )
+        if response != 400:
+            self.ConfigObj.logger.info(f"Submitted cancellation to Flashbots RPC, response: {response}")
+            return None
+        else:
+            self.ConfigObj.logger.info(f"Failed to submit cancellation to Flashbots RPC")
             return None
 
     def sign_transaction(self, transaction: Dict[str, Any]) -> Dict[str, Any]:

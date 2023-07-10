@@ -279,8 +279,8 @@ class PoolAndTokens:
             try:
                 if typed_args["y"] > 0:
                     lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
-                else:
-                    self.ConfigObj.logger.debug(f"empty carbon pool [{typed_args['cid']}]")
+                # else:
+                #     self.ConfigObj.logger.debug(f"empty carbon pool [{typed_args['cid']}]")
             except Exception as e:
                 errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
                 self.ConfigObj.logger.debug(errmsg)
