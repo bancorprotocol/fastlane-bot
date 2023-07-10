@@ -26,6 +26,15 @@ class Exchange(ABC):
     pools: Dict[str, Pool] = field(default_factory=dict)
 
     def get_pools(self) -> List[Pool]:
+        """
+        Get the pools of the exchange.
+
+        Returns
+        -------
+        List[Pool]
+            The pools of the exchange
+
+        """
         return list(self.pools.values())
 
     @abstractmethod
