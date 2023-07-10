@@ -131,4 +131,3 @@ class CarbonV1Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
-
