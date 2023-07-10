@@ -119,63 +119,153 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def get_optimal_arb_trade_amts(self, cids: [], flt: str):
-        pools = []
+    def get_tkn(self, pool, tkn_num) -> str:
+        """
+        Gets the token ID from a pool object
+
+        Parameters
+        ----------
+        pool: Pool
+            The pool object
+        tkn_num: int
+            The token number to get, either 0 or 1
+
+        Returns
+        -------
+        str
+        """
+        return pool.pair.split("/")[tkn_num]
+
+    def get_fee_safe(self, fee: int or float):
+        """
+        Fixes the format of the fee if the fee is in PPM format
+
+        Parameters
+        ----------
+        fee: int or float
+
+        Returns
+        -------
+        float
+        """
+        if fee > 1:
+            fee = fee / 1000000
+        return fee
+
+    def get_exact_pools(self, cids: []) -> List:
+        """
+        Gets the specific pools that will be used for calculations. It does this inefficiently to preserve the order.
+
+        Parameters
+        ----------
+        cids: List
+
+        Returns
+        -------
+        List
+        """
+
         pools = [curve for curve in self.CCm if curve.cid == cids[0]]
         pools += [curve for curve in self.CCm if curve.cid == cids[1]]
         pools += [curve for curve in self.CCm if curve.cid == cids[2]]
+        return pools
 
-        tkn0 = pools[0].pair.split("/")[0]
-        tkn1 = pools[0].pair.split("/")[1]
-        tkn2 = pools[1].pair.split("/")[0]
-        tkn3 = pools[1].pair.split("/")[1]
-        tkn4 = pools[2].pair.split("/")[1]
-        tkn5 = pools[2].pair.split("/")[0]
 
+    def get_optimal_arb_trade_amts(self, cids: [], flt: str):
+        """
+        Gets the optimal trade 0 amount for a triangular arb cycle
+
+        Parameters
+        ----------
+        cids: List
+        flt: str
+        Returns
+        -------
+        float
+        """
+        pools = self.get_exact_pools(cids=cids)
+        tkn0 = self.get_tkn(pool=pools[0], tkn_num=0)
+        tkn1 = self.get_tkn(pool=pools[0], tkn_num=1)
+        tkn2 = self.get_tkn(pool=pools[1], tkn_num=0)
+        tkn5 = self.get_tkn(pool=pools[2], tkn_num=0)
         p0t0 = pools[0].x_act if tkn0 == flt else pools[0].y_act
         p0t1 = pools[0].y_act if tkn0 == flt else pools[0].x_act
         p2t1 = pools[2].x_act if tkn5 == flt else pools[2].y_act
         p2t0 = pools[2].y_act if tkn5 == flt else pools[2].x_act
         fee0 = 0
         fee2 = 0
+        fee1 = self.get_fee_safe(pools[1].fee)
 
-        mid_exchange = pools[1].params.exchange
-
-        if mid_exchange == "uniswap_v3":
+        if pools[1].params.exchange != "carbon_v1":
             p1t0 = pools[1].x if tkn1 == tkn2 else pools[1].y
             p1t1 = pools[1].y if tkn1 == tkn2 else pools[1].x
-            fee1 = pools[1].fee
-            if fee1 > 1:
-                fee1 = fee1 / 1000000
-            return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1,
-                                                          fee2=fee2)
-        elif mid_exchange == "carbon_v1":
-            carbon_pool = pools[1]
-            y = carbon_pool.y
-            z = carbon_pool.z
-            A = carbon_pool.A
-            B = carbon_pool.B
-            C = (B * z + A * y) ** 2
-            D = B * A * z + A ** 2 * y
-            return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
-
+            return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
         else:
-            p1t0 = pools[1].x_act if tkn1 == tkn2 else pools[1].y_act
-            p1t1 = pools[1].y_act if tkn1 == tkn2 else pools[1].x_act
-            fee1 = pools[1].fee
-            if fee1 > 1:
-                fee1 = fee1 / 1000000
-            max_trade = self.max_arb_trade_in_constant_product(p0t0=p0t0, p0t1=p0t1, p1t0=p1t0, p1t1=p1t1, p2t0=p2t0, p2t1=p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-            return max_trade
+            return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
+    def get_exact_input_with_carbon(self, p0t0, p0t1, p2t0, p2t1, carbon_pool):
+        """
+        Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
 
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p2t0: float
+        p2t1: float
+        carbon_pool: Pool
+        Returns
+        -------
+        float
+        """
+        y = carbon_pool.y
+        z = carbon_pool.z
+        A = carbon_pool.A
+        B = carbon_pool.B
+        C = (B * z + A * y) ** 2
+        D = B * A * z + A ** 2 * y
+        return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
 
+    @staticmethod
+    def max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z):
+        """
+        Equation to solve optimal trade input for a constant product -> Carbon order -> constant product route.
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p2t0: float
+        p2t1: float
+        C: float
+        D: float
+        z: float
+        Returns
+        -------
+        float
 
-    def max_arb_trade_in_cp_carbon_cp(self, p0t0, p0t1, p2t0, p2t1, C, D, z):
+        """
         trade_input = (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
         return trade_input
 
+    @staticmethod
+    def max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
+        """
+        Equation to solve optimal trade input for a constant product -> constant product -> constant product route.
+        Parameters
+        ----------
+        p0t0: float
+        p0t1: float
+        p1t0: float
+        p1t1: float
+        p2t0: float
+        p2t1: float
+        fee0: float
+        fee1: float
+        fee2: float
+        Returns
+        -------
+        float
 
-    def max_arb_trade_in_constant_product(self, p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
+        """
         val = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
         return val
 

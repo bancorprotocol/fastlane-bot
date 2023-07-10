@@ -444,6 +444,8 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         randomizer: bool
             Whether to randomize the arbitrage opportunities.
+        data_validator: bool
+            If extra data validation should be performed
 
         Returns
         -------
@@ -487,6 +489,24 @@ class CarbonBot(CarbonBotBase):
         return self._handle_trade_instructions(CCm, arb_mode, r, result)
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
+        """
+        Validates arbitrage trade input using equations that account for fees.
+        This has limited coverage, but is very effective for the instances it covers.
+
+        Parameters
+        ----------
+        arb_opp: tuple
+            The tuple containing an arbitrage opportunity found by the Optimizer
+        arb_mode: str
+            The arbitrage mode.
+        arb_finder: Any
+            The Arb mode class that handles the differences required for each arb route.
+
+
+        Returns
+        -------
+        tuple or None
+        """
         (
             best_profit,
             best_trade_instructions_df,
@@ -532,6 +552,18 @@ class CarbonBot(CarbonBotBase):
         return arb_opp
 
     def validate_pool_data(self, arb_opp):
+        """
+        Validates that the data for each pool in the arbitrage opportunity is fresh.
+
+        Parameters
+        ----------
+        arb_opp: tuple
+            The tuple containing an arbitrage opportunity found by the Optimizer
+
+        Returns
+        -------
+        bool
+        """
         self.ConfigObj.logger.info("Validating pool data.")
         (
             best_profit,
