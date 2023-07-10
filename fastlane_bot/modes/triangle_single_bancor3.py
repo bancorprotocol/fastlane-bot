@@ -9,7 +9,7 @@ import math
 from typing import Union, List, Tuple, Any, Iterable
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer, T
+from fastlane_bot.tools.cpc import CPCContainer, T, ConstantProductCurve
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 
 
@@ -119,14 +119,14 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def get_tkn(self, pool, tkn_num) -> str:
+    def get_tkn(self, pool: ConstantProductCurve, tkn_num: int) -> str:
         """
         Gets the token ID from a pool object
 
         Parameters
         ----------
-        pool: Pool
-            The pool object
+        pool: ConstantProductCurve
+            The ConstantProductCurve object
         tkn_num: int
             The token number to get, either 0 or 1
 
@@ -136,7 +136,8 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         """
         return pool.pair.split("/")[tkn_num]
 
-    def get_fee_safe(self, fee: int or float):
+    @staticmethod
+    def get_fee_safe(fee: int or float):
         """
         Fixes the format of the fee if the fee is in PPM format
 
@@ -152,7 +153,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
             fee = fee / 1000000
         return fee
 
-    def get_exact_pools(self, cids: []) -> List:
+    def get_exact_pools(self, cids: List[str]) -> List[CPCContainer]:
         """
         Gets the specific pools that will be used for calculations. It does this inefficiently to preserve the order.
 
@@ -170,8 +171,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         pools += [curve for curve in self.CCm if curve.cid == cids[2]]
         return pools
 
-
-    def get_optimal_arb_trade_amts(self, cids: [], flt: str):
+    def get_optimal_arb_trade_amts(self, cids: List[str], flt: str) -> float:
         """
         Gets the optimal trade 0 amount for a triangular arb cycle
 
@@ -179,6 +179,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         ----------
         cids: List
         flt: str
+
         Returns
         -------
         float
@@ -192,17 +193,18 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         p0t1 = pools[0].y_act if tkn0 == flt else pools[0].x_act
         p2t1 = pools[2].x_act if tkn5 == flt else pools[2].y_act
         p2t0 = pools[2].y_act if tkn5 == flt else pools[2].x_act
-        fee0 = 0
-        fee2 = 0
         fee1 = self.get_fee_safe(pools[1].fee)
 
-        if pools[1].params.exchange != "carbon_v1":
-            p1t0 = pools[1].x if tkn1 == tkn2 else pools[1].y
-            p1t1 = pools[1].y if tkn1 == tkn2 else pools[1].x
-            return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-        else:
+        if pools[1].params.exchange == "carbon_v1":
             return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
-    def get_exact_input_with_carbon(self, p0t0, p0t1, p2t0, p2t1, carbon_pool):
+
+        p1t0 = pools[1].x if tkn1 == tkn2 else pools[1].y
+        p1t1 = pools[1].y if tkn1 == tkn2 else pools[1].x
+        fee0 = 0
+        fee2 = 0
+        return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
+
+    def get_exact_input_with_carbon(self, p0t0: float, p0t1: float, p2t0: float, p2t1: float, carbon_pool: ConstantProductCurve) -> float:
         """
         Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
 
@@ -212,7 +214,8 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         p0t1: float
         p2t0: float
         p2t1: float
-        carbon_pool: Pool
+        carbon_pool: ConstantProductCurve
+
         Returns
         -------
         float
@@ -226,7 +229,7 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
 
     @staticmethod
-    def max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z):
+    def max_arb_trade_in_cp_carbon_cp(p0t0: float, p0t1: float, p2t0: float, p2t1: float, C: float, D: float, z: float) -> float:
         """
         Equation to solve optimal trade input for a constant product -> Carbon order -> constant product route.
         Parameters
@@ -268,8 +271,6 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         """
         val = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
         return val
-
-
 
     @staticmethod
     def run_main_flow(
