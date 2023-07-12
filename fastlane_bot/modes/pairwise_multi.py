@@ -129,7 +129,7 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
     def get_wrong_direction_cids(
         self, tkn0_into_carbon: bool, trade_instructions_df: pd.DataFrame
-    ) -> list[Hashable]:
+    ) -> List[Hashable]:
         """
         Get the cids of the wrong direction curves
 
