@@ -1,9 +1,9 @@
 # ------------------------------------------------------------
-# Auto generated test file `test_004-GraphCode_.py`
+# Auto generated test file `test_004_GraphCode.py`
 # ------------------------------------------------------------
-# source file   = NBTest_004-GraphCode.py
-# test id       = 004-GraphCode
-# test comment  = 
+# source file   = NBTest_004_GraphCode.py
+# test id       = 004
+# test comment  = GraphCode
 # ------------------------------------------------------------
 
 
@@ -23,8 +23,8 @@ require("2.0", __VERSION__)
 
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   ArbGraphs test and demo
 # ------------------------------------------------------------
 def test_arbgraphs_test_and_demo():
@@ -61,8 +61,8 @@ def test_arbgraphs_test_and_demo():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Paths and cycles
 # ------------------------------------------------------------
 def test_paths_and_cycles():
@@ -136,8 +136,8 @@ def test_paths_and_cycles():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Arbgraph transport test and demo
 # ------------------------------------------------------------
 def test_arbgraph_transport_test_and_demo():
@@ -301,8 +301,8 @@ def test_arbgraph_transport_test_and_demo():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Arbgraph transport test and demo 2
 # ------------------------------------------------------------
 def test_arbgraph_transport_test_and_demo_2():
@@ -384,8 +384,8 @@ def test_arbgraph_transport_test_and_demo_2():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Transport 3 and prices
 # ------------------------------------------------------------
 def test_transport_3_and_prices():
@@ -443,8 +443,8 @@ def test_transport_3_and_prices():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Arbraph connection only edges test
 # ------------------------------------------------------------
 def test_arbraph_connection_only_edges_test():
@@ -576,8 +576,8 @@ def test_arbraph_connection_only_edges_test():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Interaction with CPC
 # ------------------------------------------------------------
 def test_interaction_with_cpc():
@@ -615,8 +615,8 @@ def test_interaction_with_cpc():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   With real data from CPC
 # ------------------------------------------------------------
 def test_with_real_data_from_cpc():
@@ -701,8 +701,8 @@ def test_with_real_data_from_cpc():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Amount algebra
 # ------------------------------------------------------------
 def test_amount_algebra():
@@ -742,8 +742,8 @@ def test_amount_algebra():
     
 
 # ------------------------------------------------------------
-# Test      004-GraphCode
-# File      test_004-GraphCode_.py
+# Test      004
+# File      test_004_GraphCode.py
 # Segment   Specific Arb examples
 # ------------------------------------------------------------
 def test_specific_arb_examples():
