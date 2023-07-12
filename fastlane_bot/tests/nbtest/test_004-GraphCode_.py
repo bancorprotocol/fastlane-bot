@@ -441,7 +441,6 @@ def test_transport_3_and_prices():
     assert len(pt["data"]) == len(pt["labels"])
     assert pt["data"][0] == [1, 0.2, 0.01, 0.0005, 0.0001]
     
-    # + [markdown] tags=[]
 
 # ------------------------------------------------------------
 # Test      004-GraphCode
@@ -450,7 +449,6 @@ def test_transport_3_and_prices():
 # ------------------------------------------------------------
 def test_arbraph_connection_only_edges_test():
 # ------------------------------------------------------------
-    # -
     
     nodes = lambda: ag.create_node_list("ETH, USDC")
     ETH, USDC = nodes()

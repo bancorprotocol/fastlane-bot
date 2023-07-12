@@ -7,9 +7,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -327,12 +327,14 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 #
 # `to_excel` converts the dataframe to an xlsx file; older versions of pandas may allow to also save in the old xls format, but this is deprecated; note that Excel files can be rather big, and saving them is very slow, 10-15x(!) longer than csv.
 
-start_time = time.time()
-df.to_excel(".curves.xlsx")
-df_xlsx = pd.read_excel(".curves.xlsx")
-assert CPCContainer.from_df(df_xlsx) == CC
-print(f"elapsed time: {time.time()-start_time:.2f}s")
-df_xlsx[:3]
+# +
+# start_time = time.time()
+# df.to_excel(".curves.xlsx")
+# df_xlsx = pd.read_excel(".curves.xlsx")
+# assert CPCContainer.from_df(df_xlsx) == CC
+# print(f"elapsed time: {time.time()-start_time:.2f}s")
+# df_xlsx[:3]
+# -
 
 # #### pickle
 #
@@ -358,7 +360,7 @@ df_pickle[:3]
 #      
 # Below are the figures for the current run (timing figures inline above)
 
-print(f"{len(df_xlsx)} curves")
+#print(f"{len(df_xlsx)} curves")
 print(f"                         {len(cc_json)}              .curves.json", )
 # !ls -l .curves*
 

@@ -7,9 +7,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -414,9 +414,7 @@ assert pt["labels"] == ['USDC', 'LINK', 'AAVE', 'WETH', 'BTC']
 assert len(pt["data"]) == len(pt["labels"])
 assert pt["data"][0] == [1, 0.2, 0.01, 0.0005, 0.0001]
 
-# + [markdown] tags=[]
 # ## Arbraph connection only edges test
-# -
 
 nodes = lambda: ag.create_node_list("ETH, USDC")
 ETH, USDC = nodes()
