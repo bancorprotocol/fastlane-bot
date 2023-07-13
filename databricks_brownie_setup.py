@@ -7,11 +7,13 @@
 
 import os
 
-bot_path = '/Workspace/Repos/mike@bancor.network/carbonbot-refactor'
 ETH_PRIVATE_KEY = dbutils.secrets.get(scope="fastlane", key=f"ETH_PRIVATE_KEY_BE_CAREFUL")
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get('WEB3_ALCHEMY_PROJECT_ID')
 DEFAULT_MIN_PROFIT_BNT = os.environ.get('DEFAULT_MIN_PROFIT_BNT')
 TENDERLY_FORK_ID = os.environ.get('TENDERLY_FORK_ID')
+USER_EMAIL = os.environ.get('USER_EMAIL')
+bot_path = f'/Workspace/Repos/{USER_EMAIL}/carbonbot-refactor'
+
 
 #!/bin/bash
 ! export ETH_PRIVATE_KEY_BE_CAREFUL={ETH_PRIVATE_KEY}
