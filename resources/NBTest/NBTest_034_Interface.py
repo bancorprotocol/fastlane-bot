@@ -6,14 +6,14 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: carbonbot-main
 #     language: python
-#     name: python3
+#     name: carbonbot-main
 # ---
 
-# + is_executing=true
+# +
 from dataclasses import asdict
 from unittest.mock import MagicMock
 from unittest.mock import Mock
@@ -56,8 +56,9 @@ assert (len(qi.state) == 1)
 
 # ## test_has_balance
 
+qi.state = [{'exchange_name': 'uniswap_v2', 'address': '0x123', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0x456', 'pair_name': 'Pair-0x789', 'liquidity': 10}, {'exchange_name': 'sushiswap_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0xabc', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 0}]
 assert (qi.has_balance(qi.state[0], 'liquidity') == True)
-assert (qi.has_balance(qi.state[1], "liquidity") == False)
+assert (qi.has_balance(qi.state[1], 'liquidity') == False)
 
 # ## test_filter_pools
 
@@ -84,7 +85,3 @@ assert isinstance(token, Token)
 new_state = [{'last_updated_block': 17614344, 'address': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'exchange_name': 'carbon_v1', 'tkn0_address': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'tkn1_address': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'tkn0_symbol': 'ETH', 'tkn1_symbol': 'USDC', 'tkn0_decimals': 18, 'tkn1_decimals': 6, 'cid': 1701411834604692317316873037158841057365, 'tkn0_key': 'ETH-EEeE', 'tkn1_key': 'USDC-eB48', 'pair_name': 'ETH-EEeE/USDC-eB48', 'fee_float': 0.002, 'fee': '0.002', 'descr': 'carbon_v1 ETH-EEeE/USDC-eB48 0.002', 'y_0': 9882507039899549, 'y_1': 0, 'z_0': 9882507039899549, 'z_1': 17936137, 'A_0': 0, 'A_1': 99105201, 'B_0': 0, 'B_1': 11941971885}]
 qi.update_state(new_state)
 pool = qi.get_pool(cid=1701411834604692317316873037158841057365)
-
-
-
-
