@@ -1189,7 +1189,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                         "amtout": amount_out,
                         "_amtout_wei": amount_out_wei,
                     }
-                    raw_txs_lst.append(raw_txs)
+
+                    if amount_in_wei > 0:
+                        raw_txs_lst.append(raw_txs)
+
                     total_in += amount_in
                     total_out += amount_out
                     total_in_wei += amount_in_wei
