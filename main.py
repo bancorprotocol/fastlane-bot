@@ -93,6 +93,12 @@ load_dotenv()
     type=bool,
     help="Set to True for debugging / testing. Set to False for production.",
 )
+@click.option(
+    "--randomizer",
+    default=True,
+    type=bool,
+    help="Set to True for debugging / testing. Set to False for production.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -109,7 +115,8 @@ def main(
     loglevel: str,
     static_pool_data_sample_sz: str,
     use_cached_events: bool,
-    run_data_validator: bool
+    run_data_validator: bool,
+    randomizer: bool,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -131,6 +138,7 @@ def main(
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
+        randomizer (bool): Whether to randomize the order of the pools or not.
     """
     # Set config
     loglevel = (
@@ -228,7 +236,8 @@ def main(
         reorg_delay,
         logging_path,
         use_cached_events,
-        run_data_validator
+        run_data_validator,
+        randomizer
     )
 
 
@@ -244,7 +253,8 @@ def run(
     reorg_delay: int,
     logging_path: str,
     use_cached_events: bool,
-    run_data_validator: bool
+    run_data_validator: bool,
+    randomizer: bool
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -261,6 +271,8 @@ def run(
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         logging_path (str): The path to the DBFS directory.
         use_cached_events (bool): Whether to use cached events or not.
+        run_data_validator (bool): Whether to run the data validator or not.
+        randomizer (bool): Whether to randomize the polling interval or not.
     """
 
     def get_event_filters(
@@ -572,7 +584,8 @@ def run(
                     flashloan_tokens=flashloan_tokens,
                     mode="single",
                     arb_mode=arb_mode,
-                    run_data_validator=run_data_validator
+                    run_data_validator=run_data_validator,
+                    randomizer=randomizer
                 )
 
             # Increment the loop index
