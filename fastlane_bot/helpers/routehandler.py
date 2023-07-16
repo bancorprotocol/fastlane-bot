@@ -367,7 +367,44 @@ class TxRouteHandler(TxRouteHandlerBase):
             min_index += [min(df.index.values)]
 
         return list(zip(min_index, slices))
- 
+
+    @staticmethod
+    def aggregate_bancor_v3_trades(calculated_trade_instructions: List[TradeInstruction]):
+        """
+        This function aggregates Bancor V3 trades into a single multi-hop when possible
+
+        Parameters
+        ----------
+        calculated_trade_instructions: List[TradeInstruction]
+            Trade instructions that have already had trades calculated
+
+
+        Returns
+        -------
+        calculated_trade_instructions
+            The trade instructions now with Bancor V3 trades combined into single trades when possible.
+        """
+
+        for idx, trade in enumerate(calculated_trade_instructions):
+            if idx > 0:
+                if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
+                    trade_before = calculated_trade_instructions[idx - 1]
+                    # This checks for a two-hop trade through BNT and combines them
+                    if trade_before.tknout_key == "BNT-FF1C" and trade.tknin_key == "BNT-FF1C":
+                        new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
+                                                                 amtin=trade_before.amtin, amtout=trade.amtout,
+                                                                 tknin=trade_before.tknin_key, tknout=trade.tknout_key,
+                                                                 pair_sorting="", raw_txs="[]", db=trade.db)
+                        calculated_trade_instructions[idx - 1] = new_trade_instruction
+                        calculated_trade_instructions.pop(idx)
+
+        return calculated_trade_instructions
+
+
+
+
+
+
     def aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
         Aggregate carbon independent IDs and create trade instructions.

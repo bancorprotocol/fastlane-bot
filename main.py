@@ -37,7 +37,7 @@ load_dotenv()
 )
 @click.option(
     "--arb_mode", default="multi", help="See arb_mode in bot.py",
-    type=click.Choice(["single", "multi", "triangle", "multi_triangle", "bancor_v3"])
+    type=click.Choice(["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop"])
 )
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"

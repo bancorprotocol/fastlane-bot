@@ -101,7 +101,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         """
         combos = []
-        if arb_mode in ["single_triangle_bancor3", "bancor_v3"]:
+        if arb_mode in ["single_triangle_bancor3", "bancor_v3", "b3_two_hop"]:
             combos = [
                 (tkn0, tkn1)
                 for tkn0, tkn1 in itertools.product(flashloan_tokens, flashloan_tokens)
