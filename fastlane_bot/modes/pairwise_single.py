@@ -45,9 +45,9 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
             not_base_exchange_curves = [
                 x for x in CC.curves if x.params.exchange != self.base_exchange
             ]
-            self.ConfigObj.logger.debug(
-                f"base_exchange: {self.base_exchange}, base_exchange_curves: {len(base_exchange_curves)}, not_base_exchange_curves: {len(not_base_exchange_curves)}"
-            )
+            # self.ConfigObj.logger.debug(
+            #     f"base_exchange: {self.base_exchange}, base_exchange_curves: {len(base_exchange_curves)}, not_base_exchange_curves: {len(not_base_exchange_curves)}"
+            # )
 
             curve_combos = list(
                 itertools.product(not_base_exchange_curves, base_exchange_curves)
@@ -77,7 +77,7 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                 profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
 
                 if str(profit) == "nan":
-                    self.ConfigObj.logger.debug("profit is nan, skipping")
+                    # self.ConfigObj.logger.debug("profit is nan, skipping")
                     continue
 
                 # Handle candidates based on conditions
