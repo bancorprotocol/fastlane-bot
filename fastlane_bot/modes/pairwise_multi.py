@@ -51,14 +51,19 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
 
             for curve_combo in curve_combos:
-                CC_cc = CPCContainer(curve_combo)
-                O = CPCArbOptimizer(CC_cc)
                 src_token = tkn1
+
+                if len(curve_combo) < 2:
+                    continue
+
                 try:
-                    pstart = {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}
-                    r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
-                    profit_src = -r.result
-                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                    (
+                        O,
+                        profit_src,
+                        r,
+                        trade_instructions_df,
+                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+
                     non_carbon_cids = [
                         curve.cid
                         for curve in curve_combo
@@ -70,24 +75,18 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                         tkn0_into_carbon, trade_instructions_df
                     )
 
-                    if non_carbon_cids and wrong_direction_cids:
+                    if non_carbon_cids and len(wrong_direction_cids) > 0:
+                        filtered_curves = self.process_wrong_direction_pools(
+                            curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
+                        )
+                        if len(filtered_curves) < 2:
+                            continue
                         (
                             O,
                             profit_src,
                             r,
                             trade_instructions_df,
-                        ) = self.process_wrong_direction_pools(
-                            O,
-                            curve_combo,
-                            profit_src,
-                            r,
-                            src_token,
-                            tkn0,
-                            tkn1,
-                            trade_instructions_df,
-                            wrong_direction_cids,
-                        )
-
+                        ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
 
@@ -156,13 +155,13 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         ]
 
     @staticmethod
-    def rerun_main_flow_with_new_curves(
-        new_curves: List[Any], src_token: str, tkn0: str, tkn1: str
+    def run_main_flow(
+        curves: List[Any], src_token: str, tkn0: str, tkn1: str
     ) -> Tuple[Any, float, Any, pd.DataFrame]:
         """
-        Rerun main flow with the new set of curves.
+        Run main flow to find arbitrage.
         """
-        CC_cc = CPCContainer(new_curves)
+        CC_cc = CPCContainer(curves)
         O = CPCArbOptimizer(CC_cc)
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
@@ -173,18 +172,12 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         return O, profit_src, r, trade_instructions_df
 
     def process_wrong_direction_pools(
-        self, curve_combo: List[Any], wrong_direction_cids: List[str], src_token: str
-    ) -> Tuple[Any, float, Any, pd.DataFrame]:
+        self, curve_combo: List[Any], wrong_direction_cids: List[Hashable]
+    ) -> [str]:
         """
         Process curves with wrong direction pools.
         """
         new_curves = [
             curve for curve in curve_combo if curve.cid not in wrong_direction_cids
         ]
-        O, profit_src, r, trade_instructions_df = self.rerun_main_flow_with_new_curves(
-            new_curves, src_token
-        )
-        self.ConfigObj.logger.debug(
-            f"trade_instructions_df after: {trade_instructions_df.to_string()}"
-        )
-        return O, profit_src, r, trade_instructions_df
+        return new_curves
