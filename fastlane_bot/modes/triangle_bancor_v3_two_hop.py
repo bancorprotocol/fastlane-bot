@@ -190,8 +190,8 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         p0t1 = pools[0].y if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].x
         p1t0 = pools[1].x if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].y
         p1t1 = pools[1].y if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].x
-        p2t0 = pools[2].x if self.get_tkn(pool=pools[1], tkn_num=0) != flt else pools[2].y
-        p2t1 = pools[2].y if self.get_tkn(pool=pools[1], tkn_num=0) != flt else pools[2].x
+        p2t0 = pools[2].x if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].y
+        p2t1 = pools[2].y if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].x
         fee0 = self.get_fee_safe(pools[0].fee)
         fee1 = self.get_fee_safe(pools[1].fee)
         fee2 = self.get_fee_safe(pools[2].fee)
