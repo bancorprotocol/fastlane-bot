@@ -119,7 +119,7 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
-    def get_tkn(self, pool: ConstantProductCurve, tkn_num: int) -> str:
+    def get_tkn(self, pool: Any, tkn_num: int) -> str:
         """
         Gets the token ID from a pool object
 
@@ -185,24 +185,19 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         float
         """
         pools = self.get_exact_pools(cids=cids)
-        tkn0 = flt
         tkn1 = self.get_tkn(pool=pools[0], tkn_num=1) if self.get_tkn(pool=pools[0], tkn_num=1) != flt else self.get_tkn(pool=pools[0], tkn_num=0)
-        tkn2 = self.get_tkn(pool=pools[1], tkn_num=0) if self.get_tkn(pool=pools[1], tkn_num=0) == tkn1 else self.get_tkn(pool=pools[1], tkn_num=1)
-        tkn5 = self.get_tkn(pool=pools[2], tkn_num=1) if self.get_tkn(pool=pools[2], tkn_num=1) == flt else self.get_tkn(pool=pools[2], tkn_num=0)
-        p0t0 = pools[0].x_act if tkn1 == flt else pools[0].y_act
-        p0t1 = pools[0].y_act if tkn1 == flt else pools[0].x_act
-        p1t0 = pools[1].x if tkn1 == tkn2 else pools[1].y
-        p1t1 = pools[1].y if tkn1 == tkn2 else pools[1].x
-        p2t1 = pools[2].x_act if tkn5 == flt else pools[2].y_act
-        p2t0 = pools[2].y_act if tkn5 == flt else pools[2].x_act
+        p0t0 = pools[0].x if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].y
+        p0t1 = pools[0].y if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].x
+        p1t0 = pools[1].x if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].y
+        p1t1 = pools[1].y if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].x
+        p2t0 = pools[2].x if self.get_tkn(pool=pools[1], tkn_num=0) != flt else pools[2].y
+        p2t1 = pools[2].y if self.get_tkn(pool=pools[1], tkn_num=0) != flt else pools[2].x
         fee0 = self.get_fee_safe(pools[0].fee)
         fee1 = self.get_fee_safe(pools[1].fee)
         fee2 = self.get_fee_safe(pools[2].fee)
 
         if pools[1].params.exchange == "carbon_v1":
             return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
-
-
 
         return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
 
