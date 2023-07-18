@@ -527,7 +527,9 @@ class CarbonBot(CarbonBotBase):
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]
                 if "-0" in pool_cid or "-1" in pool_cid:
-                    pool_cid = pool_cid.split("-")[0]
+                    self.ConfigObj.logger.debug(f"Math arb validation not currently supported for arbs with Carbon, returning to main flow.")
+                    return arb_opp
+                    # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
             if len(cids) > 3:
                 self.ConfigObj.logger.info(f"Math validation not supported for more than 3 pools, returning to main flow.")
@@ -1129,7 +1131,7 @@ class CarbonBot(CarbonBotBase):
             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str, run_data_validator: bool):
+    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str, run_data_validator: bool, randomizer: bool):
         """
         Run the bot in continuous mode.
 
@@ -1154,7 +1156,7 @@ class CarbonBot(CarbonBotBase):
                     )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-                tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode, data_validator=run_data_validator)
+                tx_hash, cids = self._run(flashloan_tokens, CCm, arb_mode=arb_mode, data_validator=run_data_validator, randomizer=randomizer)
                 if tx_hash and tx_hash[0]:
                     self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
@@ -1166,7 +1168,7 @@ class CarbonBot(CarbonBotBase):
                 time.sleep(self.polling_interval)
 
     def run_single_mode(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str, run_data_validator: bool
+        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str, run_data_validator: bool, randomizer: bool
     ):
         """
         Run the bot in single mode.
@@ -1182,7 +1184,7 @@ class CarbonBot(CarbonBotBase):
         """
         try:
             tx_hash = self._run(
-                flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=run_data_validator
+                flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=run_data_validator, randomizer=randomizer
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
@@ -1200,7 +1202,8 @@ class CarbonBot(CarbonBotBase):
         polling_interval: int = None,
         mode: str = None,
         arb_mode: str = None,
-        run_data_validator: bool = False
+        run_data_validator: bool = False,
+        randomizer: bool = False
     ):
         """
         Runs the bot.
@@ -1230,6 +1233,6 @@ class CarbonBot(CarbonBotBase):
         CCm = self.setup_CCm(CCm)
 
         if mode == "continuous":
-            self.run_continuous_mode(flashloan_tokens, arb_mode, run_data_validator)
+            self.run_continuous_mode(flashloan_tokens, arb_mode, run_data_validator, randomizer)
         else:
-            self.run_single_mode(flashloan_tokens, CCm, arb_mode, run_data_validator)
+            self.run_single_mode(flashloan_tokens, CCm, arb_mode, run_data_validator, randomizer)

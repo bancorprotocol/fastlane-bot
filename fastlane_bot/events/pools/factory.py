@@ -50,5 +50,3 @@ class PoolFactory:
 
 # create an instance of the factory
 pool_factory = PoolFactory()
-
-
