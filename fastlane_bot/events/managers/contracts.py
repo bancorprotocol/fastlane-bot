@@ -16,7 +16,6 @@ from fastlane_bot.events.managers.base import BaseManager
 
 
 class ContractsManager(BaseManager):
-
     def init_exchange_contracts(self):
         """
         Initialize the exchange contracts.
@@ -37,7 +36,7 @@ class ContractsManager(BaseManager):
 
     @staticmethod
     def get_or_create_token_contracts(
-            web3: Web3, erc20_contracts: Dict[str, Contract], address: str
+        web3: Web3, erc20_contracts: Dict[str, Contract], address: str
     ) -> Contract:
         """
         Get or create the token contracts.
@@ -65,10 +64,10 @@ class ContractsManager(BaseManager):
         return contract
 
     def add_pool_info_from_contract(
-            self,
-            exchange_name: str = None,
-            address: str = None,
-            event: Any = None,
+        self,
+        exchange_name: str = None,
+        address: str = None,
+        event: Any = None,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
@@ -152,7 +151,7 @@ class ContractsManager(BaseManager):
             return None
 
     def get_token_info_from_contract(
-            self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
+        self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
     ) -> Tuple[str, int]:
         """
         Get the token info from contract.

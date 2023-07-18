@@ -13,9 +13,6 @@ from fastlane_bot.events.managers.base import BaseManager
 
 
 class EventManager(BaseManager):
-
-
-
     @property
     def events(self) -> List[Type[Contract]]:
         """
@@ -35,7 +32,7 @@ class EventManager(BaseManager):
         ]
 
     def add_pool_info_from_event(
-            self, strategy: List[Any], block_number: int = None
+        self, strategy: List[Any], block_number: int = None
     ) -> Dict[str, Any]:
         """
         Add the pool info from the strategy.
@@ -79,8 +76,3 @@ class EventManager(BaseManager):
             ),
             block_number=block_number,
         )
-
-
-
-
-
