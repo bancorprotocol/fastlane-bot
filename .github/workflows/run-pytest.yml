@@ -36,19 +36,18 @@ jobs:
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
       - name: Run Tests
         run: |
-          echo $TENDERLY_FORK > carbonbot/.env
-          echo $WEB3_ALCHEMY_PROJECT_ID >> carbonbot/.env
-          echo $ETHERSCAN_TOKEN >> carbonbot/.env
-          echo $DEFAULT_MIN_PROFIT_BNT >> carbonbot/.env
-          echo $ETH_PRIVATE_KEY_BE_CAREFUL >> carbonbot/.env
-          cd resources/NBTest
-          ln -s ../../fastlane_bot fastlane_bot
-          cd ..;cd ..;./run_tests
+          echo TENDERLY_FORK=$TENDERLY_FORK > .env
+          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
+          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
+          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+          cd resources/NBTest;ln -s ../../fastlane_bot fastlane_bot;cd ..;cd ..;./run_tests
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
           DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
           ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
+      
 
 
