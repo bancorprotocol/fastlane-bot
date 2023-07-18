@@ -29,6 +29,7 @@ jobs:
       - name: Setup Brownie
         run: |
           brownie networks import ./brownie-config.yaml true
+          brownie networks delete mainnet
           brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
