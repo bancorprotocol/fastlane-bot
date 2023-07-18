@@ -46,10 +46,17 @@ require("3.0", __VERSION__)
 
 # # Single Mode [NB038]
 
+# +
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
+C.DEFAULT_MIN_PROFIT_BNT = 0.02
+C.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
+cfg.DEFAULT_MIN_PROFIT = 0.02
+
 setup_bot = CarbonBot(ConfigObj=C)
+# -
 
 assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
