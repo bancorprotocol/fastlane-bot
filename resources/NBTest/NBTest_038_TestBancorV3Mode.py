@@ -44,6 +44,10 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
+C.DEFAULT_MIN_PROFIT_BNT = 50
+C.DEFAULT_MIN_PROFIT = 50
+cfg.DEFAULT_MIN_PROFIT_BNT = 50
+cfg.DEFAULT_MIN_PROFIT = 50
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
