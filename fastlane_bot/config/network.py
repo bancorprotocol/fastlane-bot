@@ -14,9 +14,13 @@ load_dotenv()
 
 from decimal import Decimal
 
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env.
 
 TENDERLY_FORK = os.environ.get("TENDERLY_FORK_ID")
-DEFAULT_MIN_PROFIT_BNT = Decimal(os.environ.get("DEFAULT_MIN_PROFIT_BNT"))
+mp = os.environ.get("DEFAULT_MIN_PROFIT_BNT")
+DEFAULT_MIN_PROFIT_BNT = Decimal('1')
 
 
 class ConfigNetwork(ConfigBase):
