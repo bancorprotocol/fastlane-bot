@@ -37,11 +37,11 @@ jobs:
       - name: Run Tests
         run: |
           echo `ls`
-          echo $TENDERLY_FORK > .env
-          echo $WEB3_ALCHEMY_PROJECT_ID >> .env
-          echo $ETHERSCAN_TOKEN >> .env
-          echo $DEFAULT_MIN_PROFIT_BNT >> .env
-          echo $ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+          echo $TENDERLY_FORK > carbonbot/.env
+          echo $WEB3_ALCHEMY_PROJECT_ID >> carbonbot/.env
+          echo $ETHERSCAN_TOKEN >> carbonbot/.env
+          echo $DEFAULT_MIN_PROFIT_BNT >> carbonbot/.env
+          echo $ETH_PRIVATE_KEY_BE_CAREFUL >> carbonbot/.env
           cd resources/NBTest
           ln -s ../../fastlane_bot fastlane_bot
           cd ..;cd ..;./run_tests
