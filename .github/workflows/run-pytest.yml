@@ -39,6 +39,8 @@ jobs:
           echo $TENDERLY_FORK > .env
           echo $WEB3_ALCHEMY_PROJECT_ID >> .env
           echo $ETHERSCAN_TOKEN >> .env
+          echo $DEFAULT_MIN_PROFIT_BNT >> .env
+          echo $ETH_PRIVATE_KEY_BE_CAREFUL >> .env
           cd resources/NBTest
           ln -s ../../fastlane_bot fastlane_bot
           cd ..;cd ..;./run_tests
