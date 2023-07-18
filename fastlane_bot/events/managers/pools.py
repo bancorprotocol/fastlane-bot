@@ -16,7 +16,6 @@ from fastlane_bot.events.pools import pool_factory
 
 
 class PoolManager(BaseManager):
-
     @staticmethod
     def pool_key_from_info(pool_info: Dict[str, Any]) -> str:
         """
@@ -98,8 +97,6 @@ class PoolManager(BaseManager):
         """
         return web3.keccak(text=descr).hex()
 
-
-
     @property
     def pools(self) -> List[Pool]:
         """
@@ -117,19 +114,19 @@ class PoolManager(BaseManager):
         ]
 
     def generate_pool_info(
-            self,
-            address,
-            exchange_name,
-            tkn0_address,
-            tkn1_address,
-            t0_symbol,
-            t1_symbol,
-            t0_decimals,
-            t1_decimals,
-            cid,
-            fee,
-            fee_float,
-            block_number: int = None,
+        self,
+        address,
+        exchange_name,
+        tkn0_address,
+        tkn1_address,
+        t0_symbol,
+        t1_symbol,
+        t0_decimals,
+        t1_decimals,
+        cid,
+        fee,
+        fee_float,
+        block_number: int = None,
     ) -> Dict[str, Any]:
         """
         Generate the pool info.
@@ -190,17 +187,17 @@ class PoolManager(BaseManager):
         return pool_info
 
     def add_pool_info(
-            self,
-            address: str,
-            exchange_name: str,
-            fee: Any,
-            fee_float: float,
-            tkn0_address: str,
-            tkn1_address: str,
-            cid: Optional[str] = None,
-            other_args: Optional[Dict[str, Any]] = None,
-            contract: Optional[Contract] = None,
-            block_number: int = None,
+        self,
+        address: str,
+        exchange_name: str,
+        fee: Any,
+        fee_float: float,
+        tkn0_address: str,
+        tkn1_address: str,
+        cid: Optional[str] = None,
+        other_args: Optional[Dict[str, Any]] = None,
+        contract: Optional[Contract] = None,
+        block_number: int = None,
     ) -> Dict[str, Any]:
         """
         This is the main function for adding pool info.
@@ -289,11 +286,11 @@ class PoolManager(BaseManager):
         self.exchanges[pool_info["exchange_name"]].add_pool(pool)
 
     def get_pool_info(
-            self,
-            key: str,
-            key_value: str,
-            ex_name: str,
-            event: Optional[Dict[str, Any]] = None,
+        self,
+        key: str,
+        key_value: str,
+        ex_name: str,
+        event: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Get the pool info.
