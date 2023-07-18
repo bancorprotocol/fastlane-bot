@@ -36,7 +36,6 @@ jobs:
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
       - name: Run Tests
         run: |
-          echo `ls`
           echo $TENDERLY_FORK > carbonbot/.env
           echo $WEB3_ALCHEMY_PROJECT_ID >> carbonbot/.env
           echo $ETHERSCAN_TOKEN >> carbonbot/.env
