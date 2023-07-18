@@ -48,7 +48,9 @@ require("3.0", __VERSION__)
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 C.DEFAULT_MIN_PROFIT_BNT = 0.02
+C.DEFAULT_MIN_PROFIT = 0.02
 cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
+cfg.DEFAULT_MIN_PROFIT = 0.02
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
