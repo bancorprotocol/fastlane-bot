@@ -29,7 +29,7 @@ jobs:
       - name: Setup Brownie
         run: |
           brownie networks import ./brownie-config.yaml true
-          brownie networks add "Ethereum" "tenderly" host="https://rpc.tenderly.co/fork/${{ secrets.TENDERLY_FORK }}" name="Mainnet (Tenderly)" chainid=1
+          brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
