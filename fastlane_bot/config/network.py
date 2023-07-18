@@ -20,9 +20,7 @@ load_dotenv()  # take environment variables from .env.
 
 TENDERLY_FORK = os.environ.get("TENDERLY_FORK_ID")
 mp = os.environ.get("DEFAULT_MIN_PROFIT_BNT")
-if mp is None:
-    mp = "1"
-DEFAULT_MIN_PROFIT_BNT = Decimal(mp)
+DEFAULT_MIN_PROFIT_BNT = Decimal('1')
 
 
 class ConfigNetwork(ConfigBase):
