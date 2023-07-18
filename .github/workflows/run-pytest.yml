@@ -36,16 +36,15 @@ jobs:
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
       - name: Run Tests
         run: |
-          echo TENDERLY_FORK > fastlane_bot/.env
-          echo $WEB3_ALCHEMY_PROJECT_ID > fastlane_bot/.env
+          echo $TENDERLY_FORK > fastlane_bot/.env
+          echo $WEB3_ALCHEMY_PROJECT_ID >> fastlane_bot/.env
           echo $ETHERSCAN_TOKEN >> fastlane_bot/.env
-          cd [thisdir]
-          ln -s ../../carbon carbon
+          cd resources/NBTest
+          ln -s ../../fastlane_bot fastlane_bot
           ./run_tests
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
-
 
 
