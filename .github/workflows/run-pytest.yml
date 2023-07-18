@@ -39,7 +39,7 @@ jobs:
           echo TENDERLY_FORK > fastlane_bot/.env
           echo $WEB3_ALCHEMY_PROJECT_ID > fastlane_bot/.env
           echo $ETHERSCAN_TOKEN >> fastlane_bot/.env
-          pytest fastlane_bot/tests
+          ./run_tests
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
