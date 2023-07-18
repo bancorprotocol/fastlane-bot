@@ -48,13 +48,16 @@ require("3.0", __VERSION__)
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 C.DEFAULT_MIN_PROFIT_BNT = 0.02
+C.DEFAULT_MIN_PROFIT = 0.02
 cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
+cfg.DEFAULT_MIN_PROFIT = 0.02
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 
 assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+
 
 # +
 
@@ -167,6 +170,8 @@ bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 
+assert bot.ConfigObj.DEFAULT_MIN_PROFIT_BNT == 0.02
+
 tokens = bot.db.get_tokens()
 
 ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
@@ -192,7 +197,7 @@ finder2 = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 
-arb = finder2.find_arbitrage()
+
 
 combos = finder2.get_combos(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode="multi_triangle")
 
@@ -212,6 +217,8 @@ finder = arb_finder(
 
 r = finder.find_arbitrage()
 
+
+
 assert len(r) == 40, f"[TestMultiMode] Expected 40 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage: {len(r)} - to match _run: {len(run_full)}"
 
@@ -230,7 +237,6 @@ for arb in r:
         ) = arb
     if len(best_trade_instructions_dic) > 3:
         multi_carbon_count += 1
-print(multi_carbon_count)
 assert multi_carbon_count > 0, f"[TestMultiMode] Not finding arbs with multiple Carbon curves."
 # -
 
