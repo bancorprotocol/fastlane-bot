@@ -48,6 +48,6 @@ jobs:
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
           DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
           ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
-      
+
 
 
