@@ -152,7 +152,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
     @staticmethod
     def get_mono_direction_carbon_curves(
-        miniverse: List[Any], token_in: str, trade_instructions_df: pd.DataFrame
+        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
     ) -> List[Any]:
         """
         Get mono direction carbon curves for triangular arbitrage
