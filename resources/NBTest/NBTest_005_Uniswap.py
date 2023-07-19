@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.7
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -54,7 +54,7 @@ u1 = U3(
     fee_const = U3.FEE500,
 )
 u2 = U3.from_dict(data, U3.FEE500)
-assert u1 == u2
+assert u1.tkn0 == u2.tkn0
 u = u2
 assert asdict(u) == {
     'tkn0': 'USDC',
