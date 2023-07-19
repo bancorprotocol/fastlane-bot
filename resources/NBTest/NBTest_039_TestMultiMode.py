@@ -156,8 +156,6 @@ arb_mode = "multi"
 assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 
-run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
-
 # ## Test_get_arb_finder
 
 arb_finder = bot._get_arb_finder("multi")
@@ -179,6 +177,7 @@ assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264
 
 # ## Test_Expected_Output
 
+run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
 arb_finder = bot._get_arb_finder("multi")
 finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
