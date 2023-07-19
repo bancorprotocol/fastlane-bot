@@ -543,6 +543,8 @@ class CarbonBot(CarbonBotBase):
             ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
             best_trade_instructions_dic = ordered_trade_instructions_dct
+        else:
+            return arb_opp
 
         arb_opp = (
             best_profit,
