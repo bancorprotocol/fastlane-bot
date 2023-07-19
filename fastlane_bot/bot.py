@@ -545,6 +545,7 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions_dic = ordered_trade_instructions_dct
         else:
             return arb_opp
+
         arb_opp = (
             best_profit,
             best_trade_instructions_df,
