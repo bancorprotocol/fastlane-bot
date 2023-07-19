@@ -6,6 +6,7 @@ Contains the factory class for exchanges. This class is responsible for creating
 Licensed under MIT
 """
 
+
 class ExchangeFactory:
     """
     Factory class for exchanges
