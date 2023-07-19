@@ -1,0 +1,55 @@
+
+# This is a basic workflow to run unit tests
+
+name: CI-PyTest
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Ganesh-CLI
+        run: npm install -g ganache
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --force-reinstall
+      - name: Setup Brownie
+        run: |
+          brownie networks import ./brownie-config.yaml true
+          brownie networks delete mainnet
+          brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
+          brownie networks set_provider alchemy
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+      - name: Run Tests
+        run: |
+          echo TENDERLY_FORK=$TENDERLY_FORK > .env
+          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
+          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
+          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+          cd resources/NBTest;ln -s ../../fastlane_bot fastlane_bot;cd ..;cd ..;./run_tests
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+          DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
+          ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
+
+
+

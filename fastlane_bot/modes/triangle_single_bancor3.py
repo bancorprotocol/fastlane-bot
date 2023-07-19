@@ -220,10 +220,10 @@ class ArbitrageFinderTriangleSingleBancor3(ArbitrageFinderTriangleBase):
         -------
         float
         """
-        y = carbon_pool.y
-        z = carbon_pool.z
-        A = carbon_pool.A
-        B = carbon_pool.B
+        y = carbon_pool.params['y']
+        z = carbon_pool.params['yint']
+        A = carbon_pool.params['A']
+        B = carbon_pool.params['B']
         C = (B * z + A * y) ** 2
         D = B * A * z + A ** 2 * y
         return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)

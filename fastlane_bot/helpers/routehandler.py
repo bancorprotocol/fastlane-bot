@@ -734,25 +734,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        # amount_in = amount_in * (Decimal(str(1)) - fee)
-        # result = ((liquidity * (sqrt_price - ((liquidity*self.ConfigObj.Q96*sqrt_price) / (liquidity * self.ConfigObj.Q96 + (
-        #             amount_in * decimal_tkn0_modifier) * sqrt_price))) / self.ConfigObj.Q96) / decimal_tkn1_modifier)
+        amount_in = amount_in * (Decimal(str(1)) - fee)
 
-        #return result
-
-        # amount_decimal_adjusted = (
-        #     amount_in * decimal_tkn0_modifier * (Decimal(str(1)) - fee)
-        # )
-
-        # liquidity_x96 = Decimal(liquidity * self.ConfigObj.Q96)
         price_next = Decimal(str(math.floor((
             int(liquidity * self.ConfigObj.Q96 * sqrt_price)
             / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
         ))
-        #print(f"p_next: {price_next}")
         amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
-
-        #print(f"Equation result = {result}, calc0 result={amount_out/decimal_tkn1_modifier}")
 
         return Decimal(amount_out / decimal_tkn1_modifier)
 
