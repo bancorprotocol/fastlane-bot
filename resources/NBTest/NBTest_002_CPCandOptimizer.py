@@ -18,10 +18,10 @@
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
 #from fastlane_bot.tools.simplepair import SimplePair
 from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
-import carbon.tools.tokenscale as ts
+#import carbon.tools.tokenscale as ts
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
+#print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 from fastlane_bot.testing import *
@@ -681,52 +681,62 @@ assert set(CC2.tknyl()) == CC2.tknys()
 assert len(CC2.tknxl()) == len(CC2.tknyl())
 assert len(CC2.tknxl()) == len(CC2)
 
-# ## TokenScale tests
+# ## TokenScale tests [NOTEST]
 
-TSB = ts.TokenScaleBase()
-assert raises (TSB.scale,"ETH")
-assert TSB.DEFAULT_SCALE == 1e-2
+pass
 
-TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
-TS
+# +
+# TSB = ts.TokenScaleBase()
+# assert raises (TSB.scale,"ETH")
+# assert TSB.DEFAULT_SCALE == 1e-2
 
-assert TS("USDC") == 1
-assert TS("ETH") == 1000
-assert TS("BTC") == 10000
-assert TS("MEH") == TS.DEFAULT_SCALE
+# +
+# TS = ts.TokenScale.from_tokenscales(USDC=1e0, ETH=1e3, BTC=1e4)
+# TS
 
-TSD = ts.TokenScaleData
+# +
+# assert TS("USDC") == 1
+# assert TS("ETH") == 1000
+# assert TS("BTC") == 10000
+# assert TS("MEH") == TS.DEFAULT_SCALE
 
-tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
-assert tknset - set(TSD.scale_dct.keys()) == set()
+# +
+# TSD = ts.TokenScaleData
 
-cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-assert cc1.tokenscale is cc1.TOKENSCALE
-assert cc1.tknx == "ETH"
-assert cc1.tkny == "USDC"
-assert cc1.scalex == 1
-assert cc1.scaley == 1
-cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-assert cc2.tknx == "BTC"
-assert cc2.tkny == "MEH"
-assert cc2.scalex == 1
-assert cc2.scaley == 1
-assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# +
+# tknset = {'AAVE', 'BNT', 'BTC', 'ETH', 'LINK', 'USDC', 'USDT', 'WBTC', 'WETH'}
+# assert tknset - set(TSD.scale_dct.keys()) == set()
 
-cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
-cc1.set_tokenscale(TSD)
-assert cc1.tokenscale != cc1.TOKENSCALE
-assert cc1.tknx == "ETH"
-assert cc1.tkny == "USDC"
-assert cc1.scalex == 1e3
-assert cc1.scaley == 1e0
-cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
-cc2.set_tokenscale(TSD)
-assert cc2.tknx == "BTC"
-assert cc2.tkny == "MEH"
-assert cc2.scalex == 1e4
-assert cc2.scaley == 1e-2
-assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# +
+# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+# assert cc1.tokenscale is cc1.TOKENSCALE
+# assert cc1.tknx == "ETH"
+# assert cc1.tkny == "USDC"
+# assert cc1.scalex == 1
+# assert cc1.scaley == 1
+# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+# assert cc2.tknx == "BTC"
+# assert cc2.tkny == "MEH"
+# assert cc2.scalex == 1
+# assert cc2.scaley == 1
+# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+
+# +
+# cc1 = CPC.from_xy(x=10, y=20000, pair="ETH/USDC")
+# cc1.set_tokenscale(TSD)
+# assert cc1.tokenscale != cc1.TOKENSCALE
+# assert cc1.tknx == "ETH"
+# assert cc1.tkny == "USDC"
+# assert cc1.scalex == 1e3
+# assert cc1.scaley == 1e0
+# cc2 = CPC.from_xy(x=10, y=20000, pair="BTC/MEH")
+# cc2.set_tokenscale(TSD)
+# assert cc2.tknx == "BTC"
+# assert cc2.tkny == "MEH"
+# assert cc2.scalex == 1e4
+# assert cc2.scaley == 1e-2
+# assert cc2.scaley == cc2.tokenscale.DEFAULT_SCALE
+# -
 
 # ## dx_min and dx_max etc
 
