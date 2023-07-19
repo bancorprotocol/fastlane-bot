@@ -68,7 +68,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
                     )
                     and ("-0" in idx or "-1" in idx)
                 ]
-                if non_carbon_cids and wrong_direction_cids:
+                if non_carbon_cids and len(wrong_direction_cids) > 0:
                     self.ConfigObj.logger.debug(
                         f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}"
                     )

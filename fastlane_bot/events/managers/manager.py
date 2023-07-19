@@ -17,9 +17,8 @@ from fastlane_bot.events.managers.pools import PoolManager
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-
     def update_from_event(
-            self, event: Dict[str, Any], block_number: int = None
+        self, event: Dict[str, Any], block_number: int = None
     ) -> None:
         """
         Updates the state of the pool data from an event.
@@ -58,7 +57,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.update_pool_data(pool_info, data)
 
     def update_from_pool_info(
-            self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
+        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
     ) -> Dict[str, Any]:
         """
         Update the pool info.
@@ -93,11 +92,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
         return pool_info
 
     def update_from_contract(
-            self,
-            address: str = None,
-            contract: Optional[Contract] = None,
-            pool_info: Optional[Dict[str, Any]] = None,
-            block_number: int = None,
+        self,
+        address: str = None,
+        contract: Optional[Contract] = None,
+        pool_info: Optional[Dict[str, Any]] = None,
+        block_number: int = None,
     ) -> Dict[str, Any]:
         """
         Update the state from the contract (instead of events).
@@ -151,13 +150,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
         return pool_info
 
     def update(
-            self,
-            event: Dict[str, Any] = None,
-            address: str = None,
-            pool_info: Dict[str, Any] = None,
-            contract: Contract = None,
-            limiter: bool = True,
-            block_number: int = None,
+        self,
+        event: Dict[str, Any] = None,
+        address: str = None,
+        pool_info: Dict[str, Any] = None,
+        contract: Contract = None,
+        limiter: bool = True,
+        block_number: int = None,
     ) -> None:
         """
         Update the state.
@@ -208,8 +207,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 break
             except Exception as e:
                 if all(
-                        err_msg not in str(e)
-                        for err_msg in ["Too Many Requests for url", "format_name"]
+                    err_msg not in str(e)
+                    for err_msg in ["Too Many Requests for url", "format_name"]
                 ):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
                     break
