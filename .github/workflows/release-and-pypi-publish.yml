@@ -6,24 +6,39 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Create Release and Publish
+name: Bump version, create release, publish, and generate changelog
 
-# Trigger the create release workflow
 on:
   push:
-    tags:
-      - 'v*'
     branches:
-      - "release/*"
+      - release-*
 
 jobs:
-  release:
-    name: Create Release
+  bump_version:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install bumpversion
+        run: pip install bumpversion
+      - name: Bump version
+        run: bumpversion minor --current-version $(python -c "from fastlane_bot import __version__; print(__version__)") fastlane_bot/__init__.py
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: ${{ github.ref }}
+  release:
+    needs: bump_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
@@ -32,23 +47,31 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          PACKAGE_VERSION: v.$(python setup.py --version)
+          PACKAGE_VERSION: $(python -c "from fastlane_bot import __version__; print(__version__)")
         with:
-          tag_name: $PACKAGE_VERSION
-          release_name: $PACKAGE_VERSION
+          tag_name: v$PACKAGE_VERSION
+          release_name: v$PACKAGE_VERSION
           draft: true
           prerelease: true
-
-  publish-gpr:
-    needs: release # After release is created then run the second workflow
+  generate_changelog:
+    needs: release
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
-          python-version: 3.9 #install the python version needed
+          token: ${{ secrets.GH_TOKEN }}
+  publish:
+    needs: generate_changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
       - name: Install dependencies
         run: |
           python setup.py install
@@ -63,3 +86,4 @@ jobs:
         with:
           user: ${{ secrets.PYPI_USER }}
           password: ${{ secrets.PYPI_API_TOKEN }}
+
