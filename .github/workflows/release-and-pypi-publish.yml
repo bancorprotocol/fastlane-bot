@@ -150,9 +150,9 @@ jobs:
         run: |
           pip install wheel
           python setup.py bdist_wheel
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: ${{ secrets.PYPI_USER }}
           password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
+          repository-url: https://pypi.org/project/fastlane-bot/
 
