@@ -109,7 +109,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
 
         self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
         self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
-        self.EXPECTED_GAS_MODIFIER = "0.8"
+        self.EXPECTED_GAS_MODIFIER = "0.85"
 
 
 class _ConfigProviderTenderly(ConfigProvider):

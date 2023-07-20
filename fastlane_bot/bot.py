@@ -426,7 +426,7 @@ class CarbonBot(CarbonBotBase):
         *,
         result=None,
         arb_mode: str = None,
-        randomizer=True,
+        randomizer=int,
         data_validator=True,
     ) -> Optional[Tuple[str, List[Any]]]:
         """
@@ -442,8 +442,8 @@ class CarbonBot(CarbonBotBase):
             The result type.
         arb_mode: str
             The arbitrage mode.
-        randomizer: bool
-            Whether to randomize the arbitrage opportunities.
+        randomizer: int
+            randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         data_validator: bool
             If extra data validation should be performed
 
@@ -473,7 +473,7 @@ class CarbonBot(CarbonBotBase):
             return None
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
-        r = random.choice(r) if randomizer else r
+        r = self.randomize(arb_opps=r, randomizer=randomizer)
         if data_validator or arb_mode == "bancor_v3":
             # Add random chance if we should check or not
             r = self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
@@ -615,6 +615,28 @@ class CarbonBot(CarbonBotBase):
             
         return True
 
+    @staticmethod
+    def randomize(arb_opps, randomizer: int = 1):
+        """
+        Sorts arb opportunities by profit, then returns a random element from the top N arbs, with N being the value input in randomizer.
+        :param arb_opps: Arb opportunities
+        :param randomizer: the number of arb ops to choose from after sorting by profit. For example, a value of 3 would be the top 3 arbs by profitability.
+        returns:
+            A randomly selected arb opportunity.
+
+        """
+        if arb_opps is None:
+            return None
+        if len(arb_opps) > 0:
+            sorted(arb_opps, key=lambda x: x[0])
+            if randomizer < 1:
+                randomizer = 1
+            if len(arb_opps) < randomizer:
+                randomizer = len(arb_opps)
+            top_n_arbs = arb_opps[:randomizer]
+            return random.choice(top_n_arbs)
+        else:
+            return None
     def _validate_pool_data_logging(self, pool_cid: str, fetched_pool: Dict[str, Any]) -> None:
         """
         Logs the pool data validation.
@@ -1133,7 +1155,7 @@ class CarbonBot(CarbonBotBase):
             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str, run_data_validator: bool, randomizer: bool):
+    def run_continuous_mode(self, flashloan_tokens: List[str], arb_mode: str, run_data_validator: bool, randomizer: int):
         """
         Run the bot in continuous mode.
 
@@ -1170,7 +1192,7 @@ class CarbonBot(CarbonBotBase):
                 time.sleep(self.polling_interval)
 
     def run_single_mode(
-        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str, run_data_validator: bool, randomizer: bool
+        self, flashloan_tokens: List[str], CCm: CPCContainer, arb_mode: str, run_data_validator: bool, randomizer: int
     ):
         """
         Run the bot in single mode.
@@ -1205,7 +1227,7 @@ class CarbonBot(CarbonBotBase):
         mode: str = None,
         arb_mode: str = None,
         run_data_validator: bool = False,
-        randomizer: bool = False
+        randomizer: int = 0
     ):
         """
         Runs the bot.
