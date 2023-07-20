@@ -75,8 +75,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
-          echo "version={NEW_VERSION}" >> $GITHUB_OUTPUT
-          echo "::set-output name=version::$NEW_VERSION"
+          echo "name=version::$NEW_VERSION" >> $GITHUB_OUTPUT
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
