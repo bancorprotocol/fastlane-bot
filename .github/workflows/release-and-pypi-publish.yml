@@ -61,9 +61,11 @@ jobs:
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
       - name: Install bumpversion
         run: pip install bumpversion
-      - name: Bump version
+      - name: Bump version and set output
+        id: bump_version_and_set_output
         run: |
-          bumpversion minor --current-version $(python -c "import fastlane_bot; print(fastlane_bot.__version__)") fastlane_bot/__init__.py
+          python -c "import bumpversion; print(bumpversion.bump_version('minor', fastlane_bot.__version__))" > version
+          echo "::set-output name=version::$(cat version)"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
@@ -87,10 +89,9 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          PACKAGE_VERSION: $(python -c "import fastlane_bot; print(fastlane_bot.__version__)")
         with:
-          tag_name: v$PACKAGE_VERSION
-          release_name: v$PACKAGE_VERSION
+          tag_name: v${{ needs.bump_version.outputs.version }}
+          release_name: v${{ needs.bump_version.outputs.version }}
           draft: false
           prerelease: false
   generate_changelog:
