@@ -73,7 +73,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
-          echo "::set-output name=version::$NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_ENV
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
@@ -95,8 +95,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: v${{ steps.bump_version.outputs.version }}
-          release_name: v${{ steps.bump_version.outputs.version }}
+          tag_name: v${{ env.version }}
+          release_name: Release v${{ env.version }}
           draft: false
           prerelease: false
   generate_changelog:
