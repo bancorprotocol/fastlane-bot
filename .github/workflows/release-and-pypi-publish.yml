@@ -95,8 +95,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: v${{ needs.bump_version_and_set_output.outputs.version }}
-          release_name: v${{ needs.bump_version_and_set_output.outputs.version }}
+          tag_name: v${{ steps.bump_version.outputs.version }}
+          release_name: v${{ steps.bump_version.outputs.version }}
           draft: false
           prerelease: false
   generate_changelog:
