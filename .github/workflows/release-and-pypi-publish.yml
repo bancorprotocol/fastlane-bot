@@ -28,7 +28,7 @@ name: Bump Version, Create Release, Publish, and Generate Changelog
 on:
   push:
     branches:
-      - release-*
+      - main
 
 jobs:
   bump_version:
