@@ -91,8 +91,8 @@ jobs:
           pr_body: "Automatic version bump"
       - name: Merge pull request
         run: |
-          PR_NUMBER=$(gh pr create --title "Bump version" --body "Automatic version bump" --head version-bump --repo ${{ github.repository }} --base main --reviewer ${{ github.actor }} --confirm | grep -oP '(?<=https://github.com/.*?/pull/)[^/]+' | head -1)
-          gh pr merge $PR_NUMBER --auto --merge --repo ${{ github.repository }}
+          PR_NUMBER=$(yes | gh pr create --title "Bump version" --body "Automatic version bump" --head version-bump --repo bancorprotocol/carbonbot --base main --reviewer mikewcasale | grep -oP '(?<=https://github.com/.*?/pull/)[^/]+' | head -1)
+          echo high pr merge $PR_NUMBER --auto --merge --repo bancorprotocol/carbonbot
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
