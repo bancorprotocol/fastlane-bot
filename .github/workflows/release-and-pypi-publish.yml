@@ -1,29 +1,93 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+################################################################################################################
+#
+# This GitHub Action workflow automates several processes for the 'fastlane_bot' Python project.
+# It consists of four main jobs: version bumping, release creation, changelog generation, and PyPi package publishing.
+#
+# 1. Version Bumping ('bump_version'): This job automatically increments the minor version of the project, as defined in 'fastlane_bot/__init__.py'.
+# This is done using 'bumpversion', a Python library for version bumping.
+#
+# 2. Release Creation ('release'): Upon successful version bumping, a new GitHub release is created,
+# using the incremented version number as the release's tag.
+#
+# 3. Changelog Generation ('generate_changelog'): After the creation of the new release,
+# this job generates a changelog that provides a record of changes made to the project, including new features, bug fixes, and more.
+# The generation is handled by the 'github-changelog-generator-action' GitHub Action.
+#
+# 4. PyPi Package Publishing ('publish'): The final job publishes the new version of the project to PyPi,
+# making the new version accessible via pip install. This job is executed after the successful completion of all previous jobs,
+# ensuring that all changes are included in the published package.
+#
+# (c) Copyright Bprotocol foundation 2023.
+# Licensed under MIT
+#
+################################################################################################################
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
 
-name: Create Release and Publish
+name: Bump Version, Create Release, Publish, and Generate Changelog
 
-# Trigger the create release workflow
 on:
   push:
-    tags:
-      - 'v*'
     branches:
-      - "release/*"
+      - main
 
 jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Ganesh-CLI
+        run: npm install -g ganache
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --force-reinstall
+      - name: Setup Brownie
+        run: |
+          brownie networks import ./brownie-config.yaml true
+          brownie networks delete mainnet
+          brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
+          brownie networks set_provider alchemy
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+      - name: Install bumpversion
+        run: pip install bumpversion
+      - name: Bump version and set output
+        id: bump_version_and_set_output
+        run: |
+          CURRENT_VERSION=$(python -c "import fastlane_bot; print(fastlane_bot.__version__)")
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+          NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
+          echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Bump version" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: ${{ github.ref }}
   release:
-    name: Create Release
+    needs: bump_version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
@@ -32,24 +96,66 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          PACKAGE_VERSION: v.$(python setup.py --version)
         with:
-          tag_name: $PACKAGE_VERSION
-          release_name: $PACKAGE_VERSION
-          draft: true
-          prerelease: true
+          tag_name: v${{ needs.bump_version.outputs.version }}
+          release_name: Release v${{ needs.bump_version.outputs.version }}
+          draft: false
+          prerelease: false
 
-  publish-gpr:
-    needs: release # After release is created then run the second workflow
+  generate_changelog:
+    needs: release
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
-          python-version: 3.9 #install the python version needed
-      - name: Install dependencies
+          token: ${{ secrets.GH_TOKEN }}
+  publish:
+    needs: generate_changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install Ganesh-CLI
+        run: npm install -g ganache
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --force-reinstall
+      - name: Setup Brownie
+        run: |
+          brownie networks import ./brownie-config.yaml true
+          brownie networks delete mainnet
+          brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
+          brownie networks set_provider alchemy
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+      - name: Create .env file
+        run: |
+          echo TENDERLY_FORK=$TENDERLY_FORK > .env
+          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
+          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
+          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+          echo TENDERLY_FORK_ID=$TENDERLY_FORK_ID >> .env
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          TENDERLY_FORK_ID: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+          DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
+          ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
+      - name: Install package
         run: |
           python setup.py install
       - name: Build package
@@ -58,8 +164,9 @@ jobs:
         run: |
           pip install wheel
           python setup.py bdist_wheel
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: ${{ secrets.PYPI_USER }}
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
+          repository-url: https://upload.pypi.org/legacy/
+
