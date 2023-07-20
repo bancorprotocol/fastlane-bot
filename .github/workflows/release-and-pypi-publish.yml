@@ -70,10 +70,10 @@ jobs:
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
-          echo "::set-output name=version::$NEW_VERSION"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
+          echo "::set-output name=version::$NEW_VERSION"
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
