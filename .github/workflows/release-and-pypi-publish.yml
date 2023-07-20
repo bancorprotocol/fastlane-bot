@@ -34,7 +34,7 @@ jobs:
   bump_version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.bump_version_and_set_output.outputs.version }}
+      version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -71,11 +71,11 @@ jobs:
           MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
+          echo "new_version={NEW_VERSION}" >> $GITHUB_OUTPUT
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
-          echo "name=version::$NEW_VERSION" >> $GITHUB_OUTPUT
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
