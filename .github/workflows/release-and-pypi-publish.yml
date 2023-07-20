@@ -62,7 +62,11 @@ jobs:
       - name: Install bumpversion
         run: pip install bumpversion
       - name: Bump version
-        run: bumpversion minor --current-version $(python -c "import fastlane_bot; print(fastlane_bot.__version__)") fastlane_bot/__init__.py
+        run: |
+          bumpversion minor --current-version $(python -c "import fastlane_bot; print(fastlane_bot.__version__)") fastlane_bot/__init__.py
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Bump version" -a
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
