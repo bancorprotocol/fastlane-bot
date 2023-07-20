@@ -72,15 +72,29 @@ jobs:
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
+          git checkout -b version-bump
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        run: |
+          git push origin version-bump
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GH_TOKEN }}
-          branch: ${{ github.ref }}
+          destination_branch: "main"
+          pr_title: "Bump version"
+          pr_body: "Automatic version bump"
+      - name: Merge pull request
+        run: |
+          PR_NUMBER=$(yes | gh pr create --title "Bump version" --body "Automatic version bump" --head version-bump --repo bancorprotocol/carbonbot --base main --reviewer mikewcasale | grep -oP '(?<=https://github.com/.*?/pull/)[^/]+' | head -1)
+          echo high pr merge $PR_NUMBER --auto --merge --repo bancorprotocol/carbonbot
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
     needs: bump_version
     runs-on: ubuntu-latest
