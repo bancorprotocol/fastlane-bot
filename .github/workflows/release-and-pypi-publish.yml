@@ -80,7 +80,9 @@ jobs:
           git commit -m "Bump version" -a
       - name: Push changes
         run: |
-          git push origin $BRANCH_NAME
+          git push origin ${BRANCH_NAME} || true
+          git branch --set-upstream-to=origin/${BRANCH_NAME}
+          git push
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request
