@@ -1,10 +1,29 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+################################################################################################################
+#
+# This GitHub Action workflow automates several processes for the 'fastlane_bot' Python project.
+# It consists of four main jobs: version bumping, release creation, changelog generation, and PyPi package publishing.
+#
+# 1. Version Bumping ('bump_version'): This job automatically increments the minor version of the project, as defined in 'fastlane_bot/__init__.py'.
+# This is done using 'bumpversion', a Python library for version bumping.
+#
+# 2. Release Creation ('release'): Upon successful version bumping, a new GitHub release is created,
+# using the incremented version number as the release's tag.
+#
+# 3. Changelog Generation ('generate_changelog'): After the creation of the new release,
+# this job generates a changelog that provides a record of changes made to the project, including new features, bug fixes, and more.
+# The generation is handled by the 'github-changelog-generator-action' GitHub Action.
+#
+# 4. PyPi Package Publishing ('publish'): The final job publishes the new version of the project to PyPi,
+# making the new version accessible via pip install. This job is executed after the successful completion of all previous jobs,
+# ensuring that all changes are included in the published package.
+#
+# This workflow automates these processes, which are typically executed manually, saving time and reducing the potential for human error.
+#
+#
+# (c) Copyright Bprotocol foundation 2023.
+# Licensed under MIT
+#
+################################################################################################################
 
 name: Bump Version, Create Release, Publish, and Generate Changelog
 
@@ -110,6 +129,19 @@ jobs:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+      - name: Create .env file
+        run: |
+          echo TENDERLY_FORK=$TENDERLY_FORK > .env
+          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
+          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
+          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+          DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
+          ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
       - name: Install dependencies
         run: |
           python setup.py install
