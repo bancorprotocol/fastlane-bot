@@ -22,6 +22,7 @@
 #
 ################################################################################################################
 
+
 name: Bump Version, Create Release, Publish, and Generate Changelog
 
 on:
@@ -61,7 +62,7 @@ jobs:
       - name: Install bumpversion
         run: pip install bumpversion
       - name: Bump version
-        run: bumpversion minor --current-version $(python -c "from fastlane_bot import __version__; print(__version__)") fastlane_bot/__init__.py
+        run: bumpversion minor --current-version $(python -c "import fastlane_bot; print(fastlane_bot.__version__)") fastlane_bot/__init__.py
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
@@ -82,12 +83,12 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          PACKAGE_VERSION: $(python -c "from fastlane_bot import __version__; print(__version__)")
+          PACKAGE_VERSION: $(python -c "import fastlane_bot; print(fastlane_bot.__version__)")
         with:
           tag_name: v$PACKAGE_VERSION
           release_name: v$PACKAGE_VERSION
-          draft: true
-          prerelease: true
+          draft: false
+          prerelease: false
   generate_changelog:
     needs: release
     runs-on: ubuntu-latest
