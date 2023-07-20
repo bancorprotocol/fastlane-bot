@@ -64,8 +64,10 @@ jobs:
       - name: Bump version and set output
         id: bump_version_and_set_output
         run: |
-          bumpversion minor fastlane_bot/__init__.py --allow-dirty
-          echo "::set-output name=version::$(python -c "import fastlane_bot; print(fastlane_bot.__version__)")"
+          CURRENT_VERSION=$(python -c "import fastlane_bot; print(fastlane_bot.__version__)")
+          NEW_VERSION=$(python -c "from packaging import version; print(version.Version('$CURRENT_VERSION').bump_release())")
+          sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
+          echo "::set-output name=version::$NEW_VERSION"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
