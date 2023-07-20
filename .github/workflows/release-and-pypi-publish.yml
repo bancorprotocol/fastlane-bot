@@ -17,9 +17,6 @@
 # making the new version accessible via pip install. This job is executed after the successful completion of all previous jobs,
 # ensuring that all changes are included in the published package.
 #
-# This workflow automates these processes, which are typically executed manually, saving time and reducing the potential for human error.
-#
-#
 # (c) Copyright Bprotocol foundation 2023.
 # Licensed under MIT
 #
@@ -157,5 +154,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
           user: ${{ secrets.PYPI_USER }}
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
 
