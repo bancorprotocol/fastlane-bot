@@ -87,7 +87,7 @@ jobs:
       - name: Create Pull Request
         id: create_pull_request
         run: |
-          gh pr create --title "Bump version" --body "Automatic version bump" --head $BRANCH_NAME --base main > pr.txt
+          gh pr create --title "Bump version" --body "Automatic version bump" --head "$BRANCH_NAME" --base "main" > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
