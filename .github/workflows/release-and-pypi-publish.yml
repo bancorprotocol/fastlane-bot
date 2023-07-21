@@ -34,7 +34,7 @@ jobs:
   check_commit:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ steps.check.outputs.skip }}
+      skipout: ${{ steps.check.outputs.skip }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -43,14 +43,14 @@ jobs:
         run: |
           MESSAGE=$(git log --format=%B -n 1 ${{ github.event.after }})
           if [[ "$MESSAGE" == "Bump version" ]]; then
-            echo skip=true >> $GITHUB_OUTPUT
+            echo skip='true' >> $GITHUB_OUTPUT
           else
-            echo skip=false >> $GITHUB_OUTPUT
+            echo skip='false' >> $GITHUB_OUTPUT
           fi
         shell: bash
   bump_version:
     needs: check_commit
-    if: needs.check_commit.outputs.skip != 'true'
+    if: needs.check_commit.outputs.skipout != 'true'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
@@ -118,7 +118,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
     needs: [bump_version,check_commit]
-    if: needs.check_commit.outputs.skip != 'true'
+    if: needs.check_commit.outputs.skipout != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -140,7 +140,7 @@ jobs:
 
   generate_changelog:
     needs: [release,check_commit]
-    if: needs.check_commit.outputs.skip != 'true'
+    if: needs.check_commit.outputs.skipout != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -151,7 +151,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
   publish:
     needs: [generate_changelog, check_commit]
-    if: needs.check_commit.outputs.skip != 'true'
+    if: needs.check_commit.outputs.skipout != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
