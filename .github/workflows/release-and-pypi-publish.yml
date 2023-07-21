@@ -94,9 +94,7 @@ jobs:
           pr_body: "Automatic version bump"
       - name: Merge pull request
         run: |
-          PR_NUMBER=$(echo 'https://github.com/.../pull/123' | awk -F/ '{print $NF}')
-          echo PR_NUMBER is $PR_NUMBER
-          gh pr merge $PR_NUMBER --auto --merge --repo bancorprotocol/carbonbot
+          gh pr merge ${{ steps.create_pull_request.outputs.pull_request_number }} --auto --merge
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
