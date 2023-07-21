@@ -72,17 +72,20 @@ jobs:
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
-          git checkout -b version-bump
+          BRANCH_NAME="version-bump-$NEW_VERSION"
+          git checkout -b $BRANCH_NAME
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version" -a
       - name: Push changes
         run: |
-          git push origin version-bump
+          git config --global push.autoSetupRemote true
+          git push origin $BRANCH_NAME
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request
+        id: create_pull_request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GH_TOKEN }}
@@ -91,8 +94,9 @@ jobs:
           pr_body: "Automatic version bump"
       - name: Merge pull request
         run: |
-          PR_NUMBER=$(yes | gh pr create --title "Bump version" --body "Automatic version bump" --head version-bump --repo bancorprotocol/carbonbot --base main --reviewer mikewcasale | grep -oP '(?<=https://github.com/.*?/pull/)[^/]+' | head -1)
-          echo high pr merge $PR_NUMBER --auto --merge --repo bancorprotocol/carbonbot
+          PR_NUMBER=$(echo '${{ steps.create_pull_request.outputs.pr_url }}' | grep -oP '(?<=https://github.com/.*?/pull/)[^/]+')
+          echo PR_NUMBER is $PR_NUMBER
+          gh pr merge $PR_NUMBER --auto --merge --repo bancorprotocol/carbonbot
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
