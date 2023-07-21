@@ -6,7 +6,7 @@ name: CI-PyTest
 on: 
   pull_request:
     branches-ignore:
-      - '*version-bump*'
+      - 'version-bump*'
 
 jobs:
   build:
