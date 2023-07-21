@@ -72,7 +72,7 @@ jobs:
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
-          BRANCH_NAME="version-bump-$NEW_VERSION"
+          BRANCH_NAME="version-bump-$NEW_VERSION-run-$GITHUB_RUN_NUMBER"
           git checkout -b $BRANCH_NAME
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
           git config --local user.email "action@github.com"
