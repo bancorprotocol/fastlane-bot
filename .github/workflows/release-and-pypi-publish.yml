@@ -86,12 +86,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request
         id: create_pull_request
-        uses: repo-sync/pull-request@v2
-        with:
-          github_token: ${{ secrets.GH_TOKEN }}
-          destination_branch: "main"
-          pr_title: "Bump version"
-          pr_body: "Automatic version bump"
+        run: |
+          PR_URL=$(gh api repos/$GITHUB_REPOSITORY/pulls -X POST -f head=$BRANCH_NAME -f base=main -f title="Bump version" -f body="Automatic version bump" --jq .html_url)
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
           gh pr merge ${{ steps.create_pull_request.outputs.pull_request_number }} --auto --merge
