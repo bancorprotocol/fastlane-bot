@@ -29,12 +29,11 @@ on:
   push:
     branches:
       - main
-    branches-ignore:
-      - '*version-bump*'
 
 jobs:
   bump_version:
     runs-on: ubuntu-latest
+    if: "! contains(github.head_ref, 'version-bump')"
     outputs:
       version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
     steps:
@@ -100,6 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
+    if: "! contains(github.head_ref, 'version-bump')"
     needs: bump_version
     runs-on: ubuntu-latest
     steps:
@@ -131,6 +131,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
   publish:
+    if: "! contains(github.head_ref, 'version-bump')"
     needs: generate_changelog
     runs-on: ubuntu-latest
     steps:
