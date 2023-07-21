@@ -32,7 +32,7 @@ on:
 
 jobs:
   bump_version:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'actions-user'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'actions-user'
     needs: bump_version
     runs-on: ubuntu-latest
     steps:
@@ -121,7 +121,7 @@ jobs:
           prerelease: false
 
   generate_changelog:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'actions-user'
     needs: release
     runs-on: ubuntu-latest
     steps:
@@ -132,7 +132,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
   publish:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'actions-user'
     needs: generate_changelog
     runs-on: ubuntu-latest
     steps:
