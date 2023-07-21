@@ -1,7 +1,7 @@
 from .bot import CarbonBot as Bot, __VERSION__, __DATE__
 from .config import Config, ConfigNetwork, ConfigDB, ConfigLogger, ConfigProvider
 
-__version__ = '0.66.1'
+__version__ = '0.67.1'
 
 
 
