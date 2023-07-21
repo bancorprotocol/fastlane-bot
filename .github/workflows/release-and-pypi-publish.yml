@@ -87,17 +87,16 @@ jobs:
       - name: Create Pull Request
         id: create_pull_request
         run: |
-          PR_URL=$(gh api repos/$GITHUB_REPOSITORY/pulls -X POST -f head=$BRANCH_NAME -f base=main -f title="Bump version" -f body="Automatic version bump" -f maintainer_can_modify=False --jq .html_url)
-          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+          gh pr create --title "Bump version" --body "Automatic version bump" --head $BRANCH_NAME --base main > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
+          PR_URL=$(cat pr.txt)
           PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
           gh pr merge $PR_NUMBER --auto --merge
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PR_URL: ${{ env.PR_URL }}
   release:
     needs: bump_version
     runs-on: ubuntu-latest
