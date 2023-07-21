@@ -94,7 +94,7 @@ jobs:
         run: |
           PR_URL=$(cat pr.txt)
           PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
-          gh pr merge $PR_NUMBER --merge
+          gh pr merge $PR_NUMBER --admin --merge
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
