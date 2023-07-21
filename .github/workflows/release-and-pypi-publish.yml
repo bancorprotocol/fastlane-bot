@@ -87,7 +87,7 @@ jobs:
       - name: Create Pull Request
         id: create_pull_request
         run: |
-          PR_URL=$(gh -F api repos/$GITHUB_REPOSITORY/pulls -X POST -f head=$BRANCH_NAME -f base=main -f title="Bump version" -f body="Automatic version bump" --jq .html_url)
+          PR_URL=$(gh api repos/$GITHUB_REPOSITORY/pulls -X POST -f head=$BRANCH_NAME -f base=main -f title="Bump version" -f body="Automatic version bump" --jq .html_url)
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
