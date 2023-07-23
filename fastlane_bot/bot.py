@@ -628,7 +628,7 @@ class CarbonBot(CarbonBotBase):
         if arb_opps is None:
             return None
         if len(arb_opps) > 0:
-            sorted(arb_opps, key=lambda x: x[0])
+            arb_opps.sort(key=lambda x: x[0], reverse=True)
             if randomizer < 1:
                 randomizer = 1
             if len(arb_opps) < randomizer:
