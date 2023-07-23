@@ -73,6 +73,7 @@ from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
+from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format, log_format, num_format_float
 
 
@@ -418,6 +419,8 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleMulti
         elif arb_mode in {"bancor_v3", "single_triangle_bancor3"}:
             return ArbitrageFinderTriangleSingleBancor3
+        elif arb_mode in {"b3_two_hop"}:
+            return ArbitrageFinderTriangleBancor3TwoHop
 
     def _run(
         self,
@@ -521,7 +524,7 @@ class CarbonBot(CarbonBotBase):
         ) = self._simple_ordering_by_src_token(
             best_trade_instructions_dic, best_src_token
         )
-        if arb_mode == "bancor_v3":
+        if arb_mode == "bancor_v3" or arb_mode == "b3_two_hop":
 
             cids = []
             for pool in ordered_trade_instructions_dct:
@@ -804,6 +807,11 @@ class CarbonBot(CarbonBotBase):
         # Calculate the trade instructions
         calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
             agg_trade_instructions
+        )
+
+        # Aggregate multiple Bancor V3 trades into a single trade
+        calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
+            calculated_trade_instructions
         )
 
         # Get the flashloan token

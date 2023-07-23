@@ -101,7 +101,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         """
         combos = []
-        if arb_mode in ["single_triangle_bancor3", "bancor_v3"]:
+        if arb_mode in ["single_triangle_bancor3", "bancor_v3", "b3_two_hop"]:
             combos = [
                 (tkn0, tkn1)
                 for tkn0, tkn1 in itertools.product(flashloan_tokens, flashloan_tokens)
@@ -152,7 +152,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
     @staticmethod
     def get_mono_direction_carbon_curves(
-        miniverse: List[Any], token_in: str, trade_instructions_df: pd.DataFrame
+        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
     ) -> List[Any]:
         """
         Get mono direction carbon curves for triangular arbitrage
