@@ -880,7 +880,7 @@ class CarbonBot(CarbonBotBase):
 
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-            agg_trade_instructions
+            calculated_trade_instructions
         )
 
         # Get the deadline
