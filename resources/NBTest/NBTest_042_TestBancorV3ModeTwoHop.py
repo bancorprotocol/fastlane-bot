@@ -224,18 +224,19 @@ finder = arb_finder(
         )
 r = finder.find_arbitrage()
 (
-ordered_trade_instructions_dct,
-tx_in_count,
-) = bot._simple_ordering_by_src_token(
-best_trade_instructions_dic, best_src_token
-)
-(
             best_profit,
             best_trade_instructions_df,
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
         ) = r
+(
+ordered_trade_instructions_dct,
+tx_in_count,
+) = bot._simple_ordering_by_src_token(
+best_trade_instructions_dic, best_src_token
+)
+
 
 pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
 first_check_pools = finder.get_exact_pools(pool_cids)
@@ -266,18 +267,19 @@ finder = arb_finder(
         )
 r = finder.find_arbitrage()
 (
-ordered_trade_instructions_dct,
-tx_in_count,
-) = bot._simple_ordering_by_src_token(
-best_trade_instructions_dic, best_src_token
-)
-(
             best_profit,
             best_trade_instructions_df,
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
         ) = r
+(
+ordered_trade_instructions_dct,
+tx_in_count,
+) = bot._simple_ordering_by_src_token(
+best_trade_instructions_dic, best_src_token
+)
+
 
 pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
 first_check_pools = finder.get_exact_pools(pool_cids)
@@ -316,18 +318,18 @@ finder = arb_finder(
         )
 r = finder.find_arbitrage()
 (
-ordered_trade_instructions_dct,
-tx_in_count,
-) = bot._simple_ordering_by_src_token(
-best_trade_instructions_dic, best_src_token
-)
-(
             best_profit,
             best_trade_instructions_df,
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
         ) = r
+(
+ordered_trade_instructions_dct,
+tx_in_count,
+) = bot._simple_ordering_by_src_token(
+best_trade_instructions_dic, best_src_token
+)
 
 pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
 first_check_pools = finder.get_exact_pools(pool_cids)
