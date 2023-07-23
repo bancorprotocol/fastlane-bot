@@ -527,7 +527,9 @@ class CarbonBot(CarbonBotBase):
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]
                 if "-0" in pool_cid or "-1" in pool_cid:
-                    pool_cid = pool_cid.split("-")[0]
+                    self.ConfigObj.logger.debug(f"Math arb validation not currently supported for arbs with Carbon, returning to main flow.")
+                    return arb_opp
+                    # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
             if len(cids) > 3:
                 self.ConfigObj.logger.info(f"Math validation not supported for more than 3 pools, returning to main flow.")
@@ -541,6 +543,8 @@ class CarbonBot(CarbonBotBase):
             ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
             best_trade_instructions_dic = ordered_trade_instructions_dct
+        else:
+            return arb_opp
 
         arb_opp = (
             best_profit,

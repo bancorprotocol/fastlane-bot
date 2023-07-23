@@ -468,14 +468,28 @@ class QueryInterface:
 
         """
         pool_data_with_tokens = self.get_pool_data_with_tokens()
-        return next(
-            (
-                pool
-                for pool in pool_data_with_tokens
-                if all(getattr(pool, key) == kwargs[key] for key in kwargs)
-            ),
-            None,
-        )
+        try:
+            pool = next(
+                (
+                    pool
+                    for pool in pool_data_with_tokens
+                    if all(getattr(pool, key) == kwargs[key] for key in kwargs)
+                ),
+                None,
+            )
+            pool.exchange_name
+        except AttributeError:
+            if 'cid' in kwargs:
+                kwargs['cid'] = int(kwargs['cid'])
+                pool = next(
+                    (
+                        pool
+                        for pool in pool_data_with_tokens
+                        if all(getattr(pool, key) == kwargs[key] for key in kwargs)
+                    ),
+                    None,
+                )
+        return pool
 
     def get_pools(self) -> List[PoolAndTokens]:
         """

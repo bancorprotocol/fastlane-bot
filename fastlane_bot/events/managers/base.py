@@ -83,7 +83,6 @@ class BaseManager:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
 
-
     @staticmethod
     def exchange_name_from_event(event: Dict[str, Any]) -> str:
         """
@@ -108,9 +107,8 @@ class BaseManager:
             None,
         )
 
-
     def check_forked_exchange_names(
-            self, exchange_name_default: str = None, address: str = None, event: Any = None
+        self, exchange_name_default: str = None, address: str = None, event: Any = None
     ) -> str:
         """
         Check the forked exchange names. If the exchange name is forked (Sushiswap from UniswapV2, etc) return the
@@ -158,8 +156,6 @@ class BaseManager:
             self.web3.toChecksumAddress(address),
         )
         return tkns or (None, None)
-
-
 
     def multicall(self, address):
         return brownie.multicall(address)
@@ -308,10 +304,6 @@ class BaseManager:
             None,
         )
 
-
-
-
-
     def validate_pool_info(
         self,
         addr: Optional[str] = None,
@@ -391,8 +383,6 @@ class BaseManager:
             )
             return "tkn1_address", value
 
-
-
     def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
         """
         Handle the strategy deleted event.
@@ -406,8 +396,6 @@ class BaseManager:
         self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
         self.exchanges["carbon_v1"].delete_strategy(event["args"]["id"])
 
-
-
     def deduplicate_pool_data(self) -> None:
         """
         Deduplicate the pool data.
@@ -420,14 +408,6 @@ class BaseManager:
             d for d in self.pool_data if d["cid"] not in seen and not seen.add(d["cid"])
         ]
         self.pool_data = no_duplicates
-
-
-
-
-
-
-
-
 
     @staticmethod
     def pool_key_value_from_event(key: str, event: Dict[str, Any]) -> Any:
@@ -456,7 +436,3 @@ class BaseManager:
             return event["args"]["token1"]
 
     print_events = []
-
-
-
-

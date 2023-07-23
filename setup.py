@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Carbon Arbitrage Bot setup.py installer.
 
@@ -8,6 +9,27 @@ Licensed under MIT
 import re
 
 from setuptools import find_packages, setup
+
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+env_file = '.env'
+assert os.path.exists(env_file), "The .env file is missing. See README.md for instructions"
+load_dotenv(env_file)
+
+# Check for required variables
+required_vars = ['WEB3_ALCHEMY_PROJECT_ID',
+                 'ETH_PRIVATE_KEY_BE_CAREFUL',
+                 'ETHERSCAN_TOKEN',
+                 'TENDERLY_FORK_ID']
+
+for var in required_vars:
+    assert var in os.environ, f"The {var} environment variable is missing in .env file. See README.md for instructions"
+    if var != 'TENDERLY_FORK_ID':
+        assert os.environ[var], f"The {var} environment variable cannot be blank or None"
+
+import brownie_setup
 
 with open("fastlane_bot/__init__.py") as fd:
     version = re.search(
