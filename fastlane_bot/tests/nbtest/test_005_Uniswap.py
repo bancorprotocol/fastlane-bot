@@ -133,6 +133,49 @@ def test_u3_standalone():
 # ------------------------------------------------------------
 # Test      005
 # File      test_005_Uniswap.py
+# Segment   Univ3 Issue
+# ------------------------------------------------------------
+def test_univ3_issue():
+# ------------------------------------------------------------
+    
+    u3data = dict(
+        sqrt_price_q96=Decimal('79204503519896773685362'), 
+        tick=-276330, 
+        tick_spacing=10, 
+        liquidity=Decimal('420303555647537236581'), 
+        address='0x5720EB958685dEEEB5AA0b34F677861cE3a8c7F5', 
+        anchor='NaN', tkn0='USDP-89E1', 
+        tkn1='USDC-eB48', 
+        tkn0_address='0x8E870D67F660D95d5be530380D0eC0bd388289E1', 
+        tkn0_decimals=18, 
+        tkn1_address='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
+        tkn1_decimals=6, 
+        tkn0_key='USDP-89E1',
+        tkn1_key='USDC-eB48'
+    )
+    u3data["token0"] = u3data["tkn0_address"]
+    u3data["token1"] = u3data["tkn1_address"]
+    
+    u3 = U3.from_dict(u3data, tkn0decv=u3data["tkn0_decimals"], 
+                      tkn1decv=u3data["tkn1_decimals"], fee_const=U3.FEE100)
+    
+    u3d = u3.cpc_params()
+    u3d
+    
+    pa,pb = u3.papb
+    pm = u3.p
+    r = u3.cpc_params()
+    assert r["uniPa"] == pa
+    assert r["uniPb"] == pb
+    assert r["uniPa"] <= r["Pmarg"]
+    assert r["uniPb"] >= r["Pmarg"]
+    print(r["Pmarg"]/pm-1)
+    assert abs(r["Pmarg"]/pm-1)<1e-10
+    
+
+# ------------------------------------------------------------
+# Test      005
+# File      test_005_Uniswap.py
 # Segment   with cpc
 # ------------------------------------------------------------
 def test_with_cpc():

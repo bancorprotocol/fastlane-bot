@@ -86,7 +86,7 @@ class CarbonV1Pool(Pool):
         event_args: Dict[str, Any], event_type: str
     ) -> Tuple[List[int], List[int]]:
         """
-        Parse the orders from the event args. If the event type is StrategyDeleted, then return an empty list
+        Parse the orders from the event args. If the event type is StrategyDeleted, then the orders are set to 0.
 
         Parameters
         ----------
@@ -131,4 +131,3 @@ class CarbonV1Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
-

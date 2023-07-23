@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+This is the main file for configuring the bot and running the fastlane bot.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 import json
 import os
 import time
