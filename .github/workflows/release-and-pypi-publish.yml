@@ -140,7 +140,7 @@ jobs:
           git add -A
           git commit -m "Clean CHANGELOG.md" || exit 0
           git pull --rebase
-          git push
+          git push --admin
   clean_changelog:
     needs: generate_changelog
     runs-on: ubuntu-latest
@@ -160,7 +160,7 @@ jobs:
           git pull origin ${{ github.ref }} --allow-unrelated-histories -X ours
           git add -A
           git commit -m "Clean CHANGELOG.md" || exit 0
-          git push
+          git push --admin
       - name: Read changelog
         id: read
         run: |
