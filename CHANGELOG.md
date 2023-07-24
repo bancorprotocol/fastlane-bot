@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.97.1](https://github.com/bancorprotocol/carbonbot/tree/v0.97.1) (2023-07-24)
+
+[Full Changelog](https://github.com/bancorprotocol/carbonbot/compare/v0.96.1...v0.97.1)
+
+Merged pull requests
+
+- Update release-and-pypi-publish.yml [\#374](https://github.com/bancorprotocol/carbonbot/pull/374) ([mikewcasale](https://github.com/mikewcasale))
+- Clean CHANGELOG.md [\#373](https://github.com/bancorprotocol/carbonbot/pull/373) ([bancor-services](https://github.com/bancor-services))
+- Clean CHANGELOG.md [\#372](https://github.com/bancorprotocol/carbonbot/pull/372) ([bancor-services](https://github.com/bancor-services))
+- Update CHANGELOG.md [\#371](https://github.com/bancorprotocol/carbonbot/pull/371) ([bancor-services](https://github.com/bancor-services))
+- Update CHANGELOG.md [\#370](https://github.com/bancorprotocol/carbonbot/pull/370) ([bancor-services](https://github.com/bancor-services))
+- Bump version \[skip ci\] [\#369](https://github.com/bancorprotocol/carbonbot/pull/369) ([bancor-services](https://github.com/bancor-services))
+- Bump version \[skip ci\] [\#368](https://github.com/bancorprotocol/carbonbot/pull/368) ([bancor-services](https://github.com/bancor-services))
+- Clean CHANGELOG.md [\#367](https://github.com/bancorprotocol/carbonbot/pull/367) ([bancor-services](https://github.com/bancor-services))
+
 ## [v0.96.1](https://github.com/bancorprotocol/carbonbot/tree/v0.96.1) (2023-07-24)
 
 [Full Changelog](https://github.com/bancorprotocol/carbonbot/compare/v0.95.1...v0.96.1)
@@ -16,12 +31,24 @@ Merged pull requests
 Merged pull requests
 
 - Update/readme [\#364](https://github.com/bancorprotocol/carbonbot/pull/364) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#363](https://github.com/bancorprotocol/carbonbot/pull/363) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#362](https://github.com/bancorprotocol/carbonbot/pull/362) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#360](https://github.com/bancorprotocol/carbonbot/pull/360) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#359](https://github.com/bancorprotocol/carbonbot/pull/359) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#358](https://github.com/bancorprotocol/carbonbot/pull/358) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#357](https://github.com/bancorprotocol/carbonbot/pull/357) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#356](https://github.com/bancorprotocol/carbonbot/pull/356) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#355](https://github.com/bancorprotocol/carbonbot/pull/355) ([mikewcasale](https://github.com/mikewcasale))
 - Update CHANGELOG.md [\#354](https://github.com/bancorprotocol/carbonbot/pull/354) ([mikewcasale](https://github.com/mikewcasale))
 - Update CHANGELOG.md [\#352](https://github.com/bancorprotocol/carbonbot/pull/352) ([mikewcasale](https://github.com/mikewcasale))
 - Update CHANGELOG.md [\#351](https://github.com/bancorprotocol/carbonbot/pull/351) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#350](https://github.com/bancorprotocol/carbonbot/pull/350) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#349](https://github.com/bancorprotocol/carbonbot/pull/349) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#348](https://github.com/bancorprotocol/carbonbot/pull/348) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#347](https://github.com/bancorprotocol/carbonbot/pull/347) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#346](https://github.com/bancorprotocol/carbonbot/pull/346) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#345](https://github.com/bancorprotocol/carbonbot/pull/345) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#344](https://github.com/bancorprotocol/carbonbot/pull/344) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#343](https://github.com/bancorprotocol/carbonbot/pull/343) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#342](https://github.com/bancorprotocol/carbonbot/pull/342) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#341](https://github.com/bancorprotocol/carbonbot/pull/341) ([mikewcasale](https://github.com/mikewcasale))
@@ -29,6 +56,10 @@ Merged pull requests
 - Update CHANGELOG.md [\#338](https://github.com/bancorprotocol/carbonbot/pull/338) ([mikewcasale](https://github.com/mikewcasale))
 - Update CHANGELOG.md [\#337](https://github.com/bancorprotocol/carbonbot/pull/337) ([mikewcasale](https://github.com/mikewcasale))
 - Update CHANGELOG.md [\#336](https://github.com/bancorprotocol/carbonbot/pull/336) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#335](https://github.com/bancorprotocol/carbonbot/pull/335) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#334](https://github.com/bancorprotocol/carbonbot/pull/334) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#333](https://github.com/bancorprotocol/carbonbot/pull/333) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#332](https://github.com/bancorprotocol/carbonbot/pull/332) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#330](https://github.com/bancorprotocol/carbonbot/pull/330) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#329](https://github.com/bancorprotocol/carbonbot/pull/329) ([mikewcasale](https://github.com/mikewcasale))
 
