@@ -7,8 +7,6 @@
 Merged pull requests
 
 - Update CHANGELOG.md [\#302](https://github.com/bancorprotocol/carbonbot/pull/302) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version \[skip ci\] [\#301](https://github.com/bancorprotocol/carbonbot/pull/301) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version \[skip ci\] [\#300](https://github.com/bancorprotocol/carbonbot/pull/300) ([mikewcasale](https://github.com/mikewcasale))
 - Clean CHANGELOG.md [\#299](https://github.com/bancorprotocol/carbonbot/pull/299) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.88.1](https://github.com/bancorprotocol/carbonbot/tree/v0.88.1) (2023-07-24)
