@@ -142,13 +142,13 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md Bump version [skip ci]"
+          git commit -m "Bump version [skip ci]"
           git push origin HEAD
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog update
         run: |
-          gh pr create --title "Update CHANGELOG.md" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
+          gh pr create --title "Bump version [skip ci]" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
@@ -159,7 +159,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   clean_changelog:
-    needs: generate_changelog
+    needs: [generate_changelog,check_commit]
+    if: needs.check_commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     outputs:
       changelog: ${{ steps.generate.outputs.changelog }}
@@ -179,13 +180,13 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Clean CHANGELOG.md Bump version [skip ci]"
+          git commit -m "Bump version [skip ci]"
           git push origin HEAD
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog cleaning
         run: |
-          gh pr create --title "Clean CHANGELOG.md Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
+          gh pr create --title "Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
@@ -197,7 +198,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
     needs: [ bump_version,check_commit,generate_changelog,clean_changelog ]
-    if: needs.check_commit.outputs.skipout != 'true'
+    if: needs.check_commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     outputs:
       version_changes: ${{ steps.extract_changes.outputs.version_changes }}
