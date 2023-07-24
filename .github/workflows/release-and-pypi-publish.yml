@@ -138,7 +138,8 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add -A
-          git commit -m "Update CHANGELOG.md" || exit 0
+          git commit -m "Clean CHANGELOG.md" || exit 0
+          git pull --rebase
           git push
   clean_changelog:
     needs: generate_changelog
@@ -251,5 +252,3 @@ jobs:
         with:
           password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
           repository-url: https://upload.pypi.org/legacy/
-
-
