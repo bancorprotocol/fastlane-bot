@@ -15,19 +15,45 @@ from dotenv import load_dotenv
 
 # Load .env file
 env_file = '.env'
-assert os.path.exists(env_file), "The .env file is missing. See README.md for instructions"
+try:
+    assert os.path.exists(env_file), "The .env file is missing. See README.md for instructions"
+except AssertionError as e:
+    # Create .env file
+    print("Creating .env file. Please update it with your environment variables. See README.md for instructions")
+    with open(env_file, 'w') as f:
+        f.write(f"export WEB3_ALCHEMY_PROJECT_ID=\n")
+        f.write(f"export ETH_PRIVATE_KEY_BE_CAREFUL=\n")
+        f.write(f"export DEFAULT_MIN_PROFIT_BNT=200\n")
+        f.write(f"export ETHERSCAN_TOKEN=\n")
+        f.write(f"export TENDERLY_FORK_ID=\n")
+        f.write(f"export TENDERLY_ACCESS_KEY=\n")
+        f.write(f"export TENDERLY_PROJECT=\n")
+        f.write(f"export TENDERLY_USER=\n")
+
 load_dotenv(env_file)
 
 # Check for required variables
 required_vars = ['WEB3_ALCHEMY_PROJECT_ID',
                  'ETH_PRIVATE_KEY_BE_CAREFUL',
+                 'DEFAULT_MIN_PROFIT_BNT',
                  'ETHERSCAN_TOKEN',
-                 'TENDERLY_FORK_ID']
+                 'TENDERLY_FORK_ID',
+                 'TENDERLY_ACCESS_KEY',
+                 'TENDERLY_PROJECT',
+                 'TENDERLY_USER']
 
-for var in required_vars:
-    assert var in os.environ, f"The {var} environment variable is missing in .env file. See README.md for instructions"
-    if var != 'TENDERLY_FORK_ID':
-        assert os.environ[var], f"The {var} environment variable cannot be blank or None"
+with open(env_file, 'a') as f:
+    for var in required_vars:
+        if var not in os.environ:
+            print(f"The {var} environment variable is missing in .env file. Adding it with a default empty value. See README.md for instructions")
+            if var == 'DEFAULT_MIN_PROFIT_BNT':
+                f.write(f"export {var}=200\n")
+                os.environ[var] = '200'
+            else:
+                f.write(f"export {var}=\n")
+                os.environ[var] = ''  # Optionally update the current environment as well
+        if os.environ[var] == '' and 'TENDERLY' not in var and 'ETHERSCAN_TOKEN' not in var:
+            print(f"The {var} environment variable cannot be None. Please update the .env file. See README.md for instructions")
 
 import brownie_setup
 
