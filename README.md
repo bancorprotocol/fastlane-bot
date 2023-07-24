@@ -1,108 +1,125 @@
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-# Fast Lane
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+# Fastlane Arbitrage Bot
 
-**Warning**
+## ⚠️ WARNING: Use at Your Own Risk
 
-_The Fast Lane is in beta.  We cannot be held responsible for any losses caused by use of this code._
+The Fastlane Bot requires an Ethereum private key. **Your funds are AT RISK when you run the Fastlane Arbitrage Bot**. Read the _Preparation_ section below. The bot is provided as-is, with the authors and the Bprotocol Foundation not liable for any losses.
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+## Overview
 
+The Fastlane Arbitrage Bot identifies and executes arbitrage opportunities between Carbon, Bancor, and the broader market, enhancing market efficiency by aligning Carbon and Bancor with market trends.
 
-## About Fast Lane
+Permanent URL for this repository: [github.com/bancorprotocol/fastlane-bot][repo]
 
-The Fast Lane is a tool developed to find and close arbitrage opportunities that occur on Bancor exchanges. This serves to increase market efficiency by ensuring Bancor liquidity is trading at rates similar to the rest of the market.
+[repo]:https://github.com/bancorprotocol/fastlane-bot
 
-The permanent URL for this repo is [https://github.com/bancorprotocol/fastlane-bot](https://github.com/bancorprotocol/fastlane-bot).
+## Getting Started
 
-## Getting started
+### Installation
 
-Before using the Fast Lane, it is *__HIGHLY__* recommended to set up a new Ethereum wallet dedicated exclusively to running the bot. The wallet will need ETH for gas fees. Because the project requires the wallet's private key, extreme caution should be exercised.
+Install Fastlane Arbitrage Bot from PyPi using the following command:
 
-Running the Fast Lane requires the ability to read and write to Ethereum. It is preconfigured to use Alchemy, and requires an Alchemy API key to make network requests.
-* [Alchemy](https://www.alchemy.com/)
+```bash
+pip install fastlane_bot
+```
 
-### Project Setup
-Create a file named *.env,* and add the Alchemy API key, and your __new__ wallet's private key using the format provided in *.env.example*, in the main `fastlane_bot` project folder.
+Or clone the repo from Bancor's GitHub:
 
-### Configurable Options
-The Fast Lane can be configured to search only for specific exchanges or tokens. These are configured in `run.py`, in the `@click.option` section. 
+```bash
+git clone https://github.com/bancorprotocol/fastlane-bot
+cd fastlane-bot
+pip install -r requirements.txt
+python setup.py install
+```
 
-* __Exchanges:__ To change exchanges, edit the `exchanges` variable, and include/exclude exchange names (found in constants.py), separated by dashes. For example: `@click.option("--tokens", default=f"{ec.BANCOR_V3_NAME}-{ec.UNISWAP_V2_NAME}", type=str)`
-* __Tokens:__ To change tokens, edit the `tokens` variable, and include/exclude a string of tokens, separated by dashes. For example: `@click.option("--tokens", default=f"LINK-ETH-WBTC", type=str)`
+[sim]:https://github.com/bancorprotocol/carbon-simulator
 
-### Method 1. Quick setup
+### Legacy Installation (v1.0)
+You can access the legacy version of the Fastlane Arbitrage Bot, which was solely designed to facilitate single triangle arbitrage transactions which both initiate and conclude with BNT on the Bancor V3 exchange, by referring to the following link:
 
-Navigate to the top level project directory and run:
+[github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0](https://github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0)
 
-````{tab} PyPI
-$ pip install -r requirements.txt
-````
+### Preparation
 
-Then, from the same directory run:
+The Fastlane Arbitrage Bot needs access to an Ethereum wallet's private key. **THIS KEY IS AT RISK AND SHOULD NOT BE USED ELSEWHERE**. Maintain some ETH in the wallet for gas fees and regularly sweep profits. Supply the private key to the bot using an environment variable, as shown:
 
-````{tab} PyPI
-$ python run.py
-````
+```bash
+set ETH_PRIVATE_KEY_BE_CAREFUL="0x9c..."
+```
 
-If you get import errors or a `ModuleNotFound` exception, try:
+The bot also needs access to the Ethereum blockchain, preconfigured to use Alchemy. Obtain a free API key from [alchemy.com][alchemy] and supply it to the bot using an environment variable:
 
-````{tab} PyPI
-$ python your-local-absolute-path/run.py
-````
+```bash
+set WEB3_ALCHEMY_PROJECT_ID="0-R5..."
+```
 
-If you hit Brownie related errors, skip to the section below titled `Brownie Troubleshooting`, then come back and attempt Method 1 again after you've confirmed Brownie is setup on your system.
+[alchemy]:https://www.alchemy.com/
 
-The upside of Method 1 is that you get started quickly and easily. The downside is that the `fastlane_bot` library may only work for notebooks and scripts located in the root directory of this project.
+The bot uses [python-dotenv][dotenvev] to load environment variables from a `.env` file in the root directory. However, this is not recommended for security reasons, especially on unencrypted disks.
 
-### Method 2. Installation
+```bash
+export WEB3_ALCHEMY_PROJECT_ID="0-R5..."
+export ETH_PRIVATE_KEY_BE_CAREFUL="0x9c..."
+```
 
-This method will install the `fastlane_bot` package as well as all its dependencies on your system. We highly recommend to do this [in a virtual environment][venv], in which case no permanent changes will be made. To install the `fastlane_bot` library, navigate to the top level project directory, and run the installation process via:
+[dotenvev]:https://pypi.org/project/python-dotenv/
 
-````{tab} PyPI
-$ python setup.py install
-````
+### Execution
 
-Then try running the following command:
-````{tab} PyPI
-$ python run.py
-````
+After installation, run the bot with default parameters using the command:
 
-As the `fastlane_bot` library is now installed on your system, you can run the code from anywhere whilst the virtual environment is active.
+```bash
+python main.py 
+```
 
-#### Brownie Troubleshooting
+### Configuration Options
 
-The Fast Lane uses Brownie with Alchemy for some Ethereum network calls. The software is setup to automatically connect to Brownie, however, in the event that you need to manually configure Brownie, follow the steps below:
+You can configure the Fastlane Arbitrage Bot using the options in the `@click.option` section of `main.py`. An overview of options is provided below:
 
-To configure Brownie with Alchemy, open a terminal in the main project folder, and execute the following commands:
+- **cache_latest_only** (bool): Whether to cache only the latest events.
+- **arb_mode** (str): Specifies the arbitrage mode. Options include:
+    - **single**: Arbitrage between one Carbon curve and one other exchange curve.
+    - **multi** (default): Arbitrage between multiple Carbon curves and one other exchange curve.
+    - **triangle**: Triangular arbitrage between one Carbon curve and two other exchange curves.
+    - **multi_triangle**: Triangular arbitrage between multiple Carbon curves and two other exchange curves.
+    - **bancor_v3**: Arbitrage between two Bancor v3 pools and one other exchange curve.
+- **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify tokens as a comma-separated string in TKN-ADDR format (e.g., BNT-FF1C, WETH-6Cc2).
+- **exchanges** (str): Comma-separated string of exchanges to include.
+- **polling_interval** (int): Bot's polling interval for new events.
+- **alchemy_max_block_fetch** (int): Maximum number of blocks to fetch in a single request.
+- **reorg_delay** (int): Number of blocks to wait to avoid reorgs.
+- **loglevel** (str): Logging level, which can be DEBUG, INFO, WARNING, or ERROR.
 
-1: `brownie networks update_provider alchemy https://eth-{}.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID`
+Specify options in the command line. For example:
 
-2: `brownie networks modify mainnet provider=alchemy`
+```bash
+python main.py --arb_mode=multi --polling_interval=12 --reorg_delay=10 --loglevel=INFO
+```
 
-3: `brownie networks set_provider alchemy`
+## Troubleshooting
 
-If you receive the error: ValueError: Unable to expand environment variable in host setting: `https:// mainnet.infura.io/v3/$WEB3_INFURA_PROJECT_ID`, try repeating the previous steps, and check [Brownie documentation](https://eth-brownie.readthedocs.io/en/stable/install.html).
+If you encounter import errors or `ModuleNotFound` exceptions, try:
 
-# Branches and versioning
+```bash
+python <absolute_path>/main.py
+```
 
-## 
-This repo contains two key branches, `main`, and `dev`. Their respective properties are as follows:
+The Fastlane Arbitrage Bot uses Brownie with Alchemy for Ethereum network calls. If you need to manually configure Brownie, follow these steps:
 
-- `main`. The main branch is the main release branch of this project. It may not contain all bleeding edge features, but it has been tested thoroughly (but see the disclaimer on top).
+```bash
+brownie networks update_provider alchemy https://eth-{}.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID
+brownie networks modify mainnet provider=alchemy
+brownie networks set_provider alchemy
+```
 
-- `dev`. The dev branch contains the latest features. The test suit will not usually run before pushing to dev, so this branch may be broken.
+For further issues, check the [Brownie documentation][bdoc].
 
-## Versioning
+[bdoc]:https://eth-brownie.readthedocs.io/en/stable/install.html
 
-We attempt to use [semantic versioning][semver] (`major.minor.patch`), so the major number is changed on backward incompatible API changes, the minor number on compatible changes, and the patch number for minor patches.
+## Change Log
+
+We follow [semantic versioning][semver] (`major.minor.patch`), updating the major number for backward incompatible API changes, minor for compatible changes, and patch for minor patches.
 
 [semver]:https://semver.org/
 
-# Change log
-
-- **v1.0** - initial release
-
-# Coverage:
-
-![codecoverage](coverage.png)
+- **v2.0** - Complete rewrite to include Carbon along with Bancor.
+- **v1.0** - Initial bot version for Bancor protocol pools only.

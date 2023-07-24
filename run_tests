@@ -1,0 +1,12 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+
+rm -rf fastlane_bot/tests/nbtest/*
+mkdir fastlane_bot/tests/nbtest/
+mkdir fastlane_bot/tests/nbtest_data/
+cp resources/nbtest_data/* fastlane_bot/tests/nbtest_data/
+touch fastlane_bot/tests/nbtest/__init__.py
+python resources/NBTest/ConvertNBTest.py >/dev/null
+mv fastlane_bot/tests/nbtest/* fastlane_bot/tests/
+pytest fastlane_bot/tests $1
