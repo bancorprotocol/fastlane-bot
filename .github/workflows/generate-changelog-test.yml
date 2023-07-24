@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Clean changelog
         run: |
-          sed -i '/Bump version \\\[skip ci\\\]/d' CHANGELOG.md
+          sed -i '/Bump version/d' CHANGELOG.md
       - name: Commit changes
         run: |
           git config --global user.name 'GitHub Action'
