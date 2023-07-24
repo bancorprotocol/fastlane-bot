@@ -33,6 +33,7 @@ jobs:
           git commit -m "Update CHANGELOG.md" || exit 0
           git push
   clean_changelog:
+    needs: generate_changelog
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
