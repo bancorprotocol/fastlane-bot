@@ -116,7 +116,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
   generate_changelog:
     if: needs.check_commit.outputs.skip != 'true'
-    needs: [ release,check_commit ]
+    needs: [ bump_version,check_commit ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
