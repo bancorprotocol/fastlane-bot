@@ -47,8 +47,8 @@ with open(env_file, 'a') as f:
         if var not in os.environ:
             print(f"The {var} environment variable is missing in .env file. Adding it with a default empty value. See README.md for instructions")
             if var == 'DEFAULT_MIN_PROFIT_BNT':
-                f.write(f"export {var}=200\n")
-                os.environ[var] = '200'
+                f.write(f"export {var}=1\n")
+                os.environ[var] = '1'
             else:
                 f.write(f"export {var}=\n")
                 os.environ[var] = ''  # Optionally update the current environment as well
