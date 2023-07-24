@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.81.1](https://github.com/bancorprotocol/carbonbot/tree/v0.81.1) (2023-07-24)
+
+[Full Changelog](https://github.com/bancorprotocol/carbonbot/compare/v0.80.1...v0.81.1)
+
+Merged pull requests
+
+- Bump version \[skip ci\] [\#278](https://github.com/bancorprotocol/carbonbot/pull/278) ([mikewcasale](https://github.com/mikewcasale))
+
 ## [v0.80.1](https://github.com/bancorprotocol/carbonbot/tree/v0.80.1) (2023-07-23)
 
 [Full Changelog](https://github.com/bancorprotocol/carbonbot/compare/v0.79.1...v0.80.1)
