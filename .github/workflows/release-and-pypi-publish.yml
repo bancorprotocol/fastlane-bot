@@ -27,7 +27,7 @@ name: Bump Version, Generate Changelog, Create Release, and Publish
 on:
   push:
     branches:
-      - '**'
+      - main
 
 jobs:
   check_commit:
