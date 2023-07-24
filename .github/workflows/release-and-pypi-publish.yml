@@ -142,7 +142,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md"
+          git commit -m "Update CHANGELOG.md Bump version [skip ci]"
           git push origin HEAD
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -178,13 +178,13 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Clean CHANGELOG.md"
+          git commit -m "Clean CHANGELOG.md Bump version [skip ci]"
           git push origin HEAD
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog cleaning
         run: |
-          gh pr create --title "Clean CHANGELOG.md" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+          gh pr create --title "Clean CHANGELOG.md Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
