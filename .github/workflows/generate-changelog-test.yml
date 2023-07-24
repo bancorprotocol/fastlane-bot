@@ -3,7 +3,7 @@ name: Generate Changelog
 on:
   push:
     branches:
-      - *
+      - '**'
 
 jobs:
   generate_changelog:
