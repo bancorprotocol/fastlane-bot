@@ -53,7 +53,7 @@ with open(env_file, 'a') as f:
                 f.write(f"export {var}=\n")
                 os.environ[var] = ''  # Optionally update the current environment as well
         if os.environ[var] == '' and 'TENDERLY' not in var and 'ETHERSCAN_TOKEN' not in var:
-            print(f"The {var} environment variable cannot be None. Please update the .env file. See README.md for instructions")
+            raise Exception(f"The {var} environment variable cannot be None. Please update the .env file. See README.md for instructions")
 
 import brownie_setup
 
