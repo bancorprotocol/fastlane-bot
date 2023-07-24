@@ -27,7 +27,7 @@ name: Bump Version, Generate Changelog, Create Release, and Publish
 on:
   push:
     branches:
-      - main
+      - '**'
 
 jobs:
   check_commit:
@@ -132,15 +132,22 @@ jobs:
           prLabel: 'Merged pull requests'
           compareLink: true
           addSections: '{"Security fixes": {"labels": ["security"]}, "Breaking changes": {"labels": ["breaking"]}}'
-      - name: Commit and push if it's not a pull request
-        if: github.event_name == 'push'
+      - name: Create branch for changelog update
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add -A
-          git commit -m "Clean CHANGELOG.md" || exit 0
-          git pull --rebase
-          git push --admin
+          BRANCH_NAME="update-changelog-${{ github.run_number }}"
+          git checkout -b $BRANCH_NAME
+      - name: Commit and push changelog update
+        run: |
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md"
+          git push origin HEAD
+      - name: Create Pull Request for changelog update
+        run: |
+          gh pr create --title "Update CHANGELOG.md" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+      - name: Merge pull request
+        run: |
+          PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
+          gh pr merge $PR_NUMBER --admin --merge
   clean_changelog:
     needs: generate_changelog
     runs-on: ubuntu-latest
@@ -152,19 +159,22 @@ jobs:
       - name: Clean changelog
         run: |
           sed -i '/Bump version/d' CHANGELOG.md
-      - name: Commit changes
+      - name: Create branch for changelog cleaning
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git config merge.ours.driver true
-          git pull origin ${{ github.ref }} --allow-unrelated-histories -X ours
-          git add -A
-          git commit -m "Clean CHANGELOG.md" || exit 0
-          git push --admin
-      - name: Read changelog
-        id: read
+          BRANCH_NAME="clean-changelog-${{ github.run_number }}"
+          git checkout -b $BRANCH_NAME
+      - name: Commit and push changelog cleaning
         run: |
-          echo "::set-output name=changelog::$(cat CHANGELOG.md)"
+          git add CHANGELOG.md
+          git commit -m "Clean CHANGELOG.md"
+          git push origin HEAD
+      - name: Create Pull Request for changelog cleaning
+        run: |
+          gh pr create --title "Clean CHANGELOG.md" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+      - name: Merge pull request
+        run: |
+          PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
+          gh pr merge $PR_NUMBER --admin --merge
   release:
     needs: [ bump_version,check_commit,generate_changelog,clean_changelog ]
     if: needs.check_commit.outputs.skipout != 'true'
