@@ -183,7 +183,7 @@ jobs:
           prerelease: false
   publish:
     if: needs.check_commit.outputs.skip != 'true'
-    needs: [generate_changelog,check_commit]
+    needs: [release,check_commit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
