@@ -8,6 +8,7 @@
 
 Merged pull requests
 
+- Bump version \[skip ci\] [\#277](https://github.com/bancorprotocol/carbonbot/pull/277) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.79.1](https://github.com/bancorprotocol/carbonbot/tree/v0.79.1) (2023-07-23)
 
@@ -15,6 +16,7 @@ Merged pull requests
 
 Merged pull requests
 
+- Bump version \[skip ci\] [\#276](https://github.com/bancorprotocol/carbonbot/pull/276) ([mikewcasale](https://github.com/mikewcasale))
 - Tests/no empty carbon order trades [\#274](https://github.com/bancorprotocol/carbonbot/pull/274) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v0.78.1](https://github.com/bancorprotocol/carbonbot/tree/v0.78.1) (2023-07-23)
@@ -25,6 +27,7 @@ Merged pull requests
 
 Merged pull requests
 
+- Bump version \[skip ci\] [\#275](https://github.com/bancorprotocol/carbonbot/pull/275) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.77.1](https://github.com/bancorprotocol/carbonbot/tree/v0.77.1) (2023-07-23)
 
@@ -34,6 +37,7 @@ Merged pull requests
 
 Merged pull requests
 
+- Bump version \[skip ci\] [\#273](https://github.com/bancorprotocol/carbonbot/pull/273) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.76.1](https://github.com/bancorprotocol/carbonbot/tree/v0.76.1) (2023-07-21)
 
