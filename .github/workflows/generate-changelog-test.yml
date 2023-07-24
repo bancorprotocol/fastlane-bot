@@ -1,0 +1,27 @@
+name: Generate Changelog
+
+on:
+  push:
+    branches:
+      - *
+
+jobs:
+  generate_changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          output: 'CHANGELOG.md'
+          configureSections: '{"Merged pull requests": {"labels": ["pull-request"]}, "Fixed bugs": {"labels": ["bug"]}, "Implemented enhancements": {"labels": ["enhancement"]}, "Closed issues": {"labels": ["closed-issue"]}}'
+          bugsLabel: 'Fixed bugs'
+          enhancementLabel: 'Implemented enhancements'
+          issuesLabel: 'Closed issues'
+          prLabel: 'Merged pull requests'
+          compareLink: true
+          addSections: '{"Security fixes": {"labels": ["security"]}, "Breaking changes": {"labels": ["breaking"]}}'
+
+
