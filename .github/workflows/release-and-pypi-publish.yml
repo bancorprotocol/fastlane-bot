@@ -28,7 +28,7 @@ name: Create Release, Publish, and Generate Changelog
 on:
   push:
     branches:
-      - '**'
+      - main
 
 jobs:
   check_commit:
@@ -170,7 +170,7 @@ jobs:
     if: needs.check_commit.outputs.skipout != 'true'
     runs-on: ubuntu-latest
     outputs:
-        version_changes: ${{ steps.extract_changes.outputs.version_changes }}
+      version_changes: ${{ steps.extract_changes.outputs.version_changes }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
