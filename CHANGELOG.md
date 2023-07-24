@@ -8,7 +8,6 @@
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#277](https://github.com/bancorprotocol/carbonbot/pull/277) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.79.1](https://github.com/bancorprotocol/carbonbot/tree/v0.79.1) (2023-07-23)
 
@@ -16,7 +15,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#276](https://github.com/bancorprotocol/carbonbot/pull/276) ([mikewcasale](https://github.com/mikewcasale))
 - Tests/no empty carbon order trades [\#274](https://github.com/bancorprotocol/carbonbot/pull/274) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v0.78.1](https://github.com/bancorprotocol/carbonbot/tree/v0.78.1) (2023-07-23)
@@ -27,7 +25,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#275](https://github.com/bancorprotocol/carbonbot/pull/275) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.77.1](https://github.com/bancorprotocol/carbonbot/tree/v0.77.1) (2023-07-23)
 
@@ -37,7 +34,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#273](https://github.com/bancorprotocol/carbonbot/pull/273) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.76.1](https://github.com/bancorprotocol/carbonbot/tree/v0.76.1) (2023-07-21)
 
@@ -46,7 +42,6 @@ Merged pull requests
 Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#272](https://github.com/bancorprotocol/carbonbot/pull/272) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#271](https://github.com/bancorprotocol/carbonbot/pull/271) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.75.1](https://github.com/bancorprotocol/carbonbot/tree/v0.75.1) (2023-07-21)
 
@@ -55,8 +50,6 @@ Merged pull requests
 Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#270](https://github.com/bancorprotocol/carbonbot/pull/270) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#269](https://github.com/bancorprotocol/carbonbot/pull/269) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#268](https://github.com/bancorprotocol/carbonbot/pull/268) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.73.1](https://github.com/bancorprotocol/carbonbot/tree/v0.73.1) (2023-07-21)
 
@@ -64,7 +57,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#267](https://github.com/bancorprotocol/carbonbot/pull/267) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.72.1](https://github.com/bancorprotocol/carbonbot/tree/v0.72.1) (2023-07-21)
 
@@ -72,7 +64,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#266](https://github.com/bancorprotocol/carbonbot/pull/266) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.71.1](https://github.com/bancorprotocol/carbonbot/tree/v0.71.1) (2023-07-21)
 
@@ -80,7 +71,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#265](https://github.com/bancorprotocol/carbonbot/pull/265) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.70.1](https://github.com/bancorprotocol/carbonbot/tree/v0.70.1) (2023-07-21)
 
@@ -88,7 +78,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#264](https://github.com/bancorprotocol/carbonbot/pull/264) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.69.1](https://github.com/bancorprotocol/carbonbot/tree/v0.69.1) (2023-07-21)
 
@@ -96,7 +85,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#263](https://github.com/bancorprotocol/carbonbot/pull/263) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.68.1](https://github.com/bancorprotocol/carbonbot/tree/v0.68.1) (2023-07-21)
 
@@ -104,7 +92,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#262](https://github.com/bancorprotocol/carbonbot/pull/262) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.67.1](https://github.com/bancorprotocol/carbonbot/tree/v0.67.1) (2023-07-21)
 
@@ -112,7 +99,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#261](https://github.com/bancorprotocol/carbonbot/pull/261) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.66.1](https://github.com/bancorprotocol/carbonbot/tree/v0.66.1) (2023-07-21)
 
@@ -120,7 +106,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#260](https://github.com/bancorprotocol/carbonbot/pull/260) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.65.1](https://github.com/bancorprotocol/carbonbot/tree/v0.65.1) (2023-07-21)
 
@@ -128,7 +113,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#259](https://github.com/bancorprotocol/carbonbot/pull/259) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.64.1](https://github.com/bancorprotocol/carbonbot/tree/v0.64.1) (2023-07-21)
 
@@ -136,7 +120,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#258](https://github.com/bancorprotocol/carbonbot/pull/258) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.63.1](https://github.com/bancorprotocol/carbonbot/tree/v0.63.1) (2023-07-21)
 
@@ -144,7 +127,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#257](https://github.com/bancorprotocol/carbonbot/pull/257) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.62.1](https://github.com/bancorprotocol/carbonbot/tree/v0.62.1) (2023-07-21)
 
@@ -152,7 +134,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#256](https://github.com/bancorprotocol/carbonbot/pull/256) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.61.1](https://github.com/bancorprotocol/carbonbot/tree/v0.61.1) (2023-07-21)
 
@@ -161,7 +142,6 @@ Merged pull requests
 Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#255](https://github.com/bancorprotocol/carbonbot/pull/255) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#254](https://github.com/bancorprotocol/carbonbot/pull/254) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.60.1](https://github.com/bancorprotocol/carbonbot/tree/v0.60.1) (2023-07-21)
 
@@ -169,8 +149,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#253](https://github.com/bancorprotocol/carbonbot/pull/253) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#252](https://github.com/bancorprotocol/carbonbot/pull/252) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.58.1](https://github.com/bancorprotocol/carbonbot/tree/v0.58.1) (2023-07-21)
 
@@ -180,7 +158,6 @@ Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#251](https://github.com/bancorprotocol/carbonbot/pull/251) ([mikewcasale](https://github.com/mikewcasale))
 - Update release-and-pypi-publish.yml [\#250](https://github.com/bancorprotocol/carbonbot/pull/250) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#249](https://github.com/bancorprotocol/carbonbot/pull/249) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.57.1](https://github.com/bancorprotocol/carbonbot/tree/v0.57.1) (2023-07-21)
 
@@ -189,7 +166,6 @@ Merged pull requests
 Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#248](https://github.com/bancorprotocol/carbonbot/pull/248) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#247](https://github.com/bancorprotocol/carbonbot/pull/247) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.56.1](https://github.com/bancorprotocol/carbonbot/tree/v0.56.1) (2023-07-21)
 
@@ -197,7 +173,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#246](https://github.com/bancorprotocol/carbonbot/pull/246) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.55.1](https://github.com/bancorprotocol/carbonbot/tree/v0.55.1) (2023-07-21)
 
@@ -206,7 +181,6 @@ Merged pull requests
 Merged pull requests
 
 - Bugfix/GitHub action testing [\#245](https://github.com/bancorprotocol/carbonbot/pull/245) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#244](https://github.com/bancorprotocol/carbonbot/pull/244) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.54.1](https://github.com/bancorprotocol/carbonbot/tree/v0.54.1) (2023-07-21)
 
@@ -214,7 +188,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#243](https://github.com/bancorprotocol/carbonbot/pull/243) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.53.1](https://github.com/bancorprotocol/carbonbot/tree/v0.53.1) (2023-07-21)
 
@@ -222,7 +195,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#242](https://github.com/bancorprotocol/carbonbot/pull/242) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.52.1](https://github.com/bancorprotocol/carbonbot/tree/v0.52.1) (2023-07-21)
 
@@ -230,7 +202,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#241](https://github.com/bancorprotocol/carbonbot/pull/241) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.51.1](https://github.com/bancorprotocol/carbonbot/tree/v0.51.1) (2023-07-21)
 
@@ -238,7 +209,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#240](https://github.com/bancorprotocol/carbonbot/pull/240) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.50.1](https://github.com/bancorprotocol/carbonbot/tree/v0.50.1) (2023-07-21)
 
@@ -246,7 +216,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#239](https://github.com/bancorprotocol/carbonbot/pull/239) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.49.1](https://github.com/bancorprotocol/carbonbot/tree/v0.49.1) (2023-07-21)
 
@@ -256,7 +225,6 @@ Merged pull requests
 
 - Update release-and-pypi-publish.yml [\#238](https://github.com/bancorprotocol/carbonbot/pull/238) ([mikewcasale](https://github.com/mikewcasale))
 - Bugfix/GitHub action testing [\#237](https://github.com/bancorprotocol/carbonbot/pull/237) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#236](https://github.com/bancorprotocol/carbonbot/pull/236) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.48.1](https://github.com/bancorprotocol/carbonbot/tree/v0.48.1) (2023-07-21)
 
@@ -264,7 +232,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#235](https://github.com/bancorprotocol/carbonbot/pull/235) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.47.1](https://github.com/bancorprotocol/carbonbot/tree/v0.47.1) (2023-07-21)
 
@@ -272,7 +239,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#234](https://github.com/bancorprotocol/carbonbot/pull/234) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.46.1](https://github.com/bancorprotocol/carbonbot/tree/v0.46.1) (2023-07-21)
 
@@ -280,7 +246,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#233](https://github.com/bancorprotocol/carbonbot/pull/233) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.45.1](https://github.com/bancorprotocol/carbonbot/tree/v0.45.1) (2023-07-21)
 
@@ -288,7 +253,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#232](https://github.com/bancorprotocol/carbonbot/pull/232) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.44.1](https://github.com/bancorprotocol/carbonbot/tree/v0.44.1) (2023-07-21)
 
@@ -296,7 +260,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#231](https://github.com/bancorprotocol/carbonbot/pull/231) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.43.1](https://github.com/bancorprotocol/carbonbot/tree/v0.43.1) (2023-07-21)
 
@@ -304,7 +267,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#230](https://github.com/bancorprotocol/carbonbot/pull/230) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.42.1](https://github.com/bancorprotocol/carbonbot/tree/v0.42.1) (2023-07-21)
 
@@ -312,7 +274,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#229](https://github.com/bancorprotocol/carbonbot/pull/229) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.41.1](https://github.com/bancorprotocol/carbonbot/tree/v0.41.1) (2023-07-21)
 
@@ -320,7 +281,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#228](https://github.com/bancorprotocol/carbonbot/pull/228) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.40.1](https://github.com/bancorprotocol/carbonbot/tree/v0.40.1) (2023-07-21)
 
@@ -328,7 +288,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#227](https://github.com/bancorprotocol/carbonbot/pull/227) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.39.1](https://github.com/bancorprotocol/carbonbot/tree/v0.39.1) (2023-07-21)
 
@@ -336,7 +295,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#226](https://github.com/bancorprotocol/carbonbot/pull/226) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.38.1](https://github.com/bancorprotocol/carbonbot/tree/v0.38.1) (2023-07-21)
 
@@ -344,7 +302,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#225](https://github.com/bancorprotocol/carbonbot/pull/225) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.37.1](https://github.com/bancorprotocol/carbonbot/tree/v0.37.1) (2023-07-21)
 
@@ -352,7 +309,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#224](https://github.com/bancorprotocol/carbonbot/pull/224) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.36.1](https://github.com/bancorprotocol/carbonbot/tree/v0.36.1) (2023-07-21)
 
@@ -360,7 +316,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#223](https://github.com/bancorprotocol/carbonbot/pull/223) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.35.1](https://github.com/bancorprotocol/carbonbot/tree/v0.35.1) (2023-07-21)
 
@@ -368,7 +323,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#222](https://github.com/bancorprotocol/carbonbot/pull/222) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.34.1](https://github.com/bancorprotocol/carbonbot/tree/v0.34.1) (2023-07-21)
 
@@ -376,7 +330,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#221](https://github.com/bancorprotocol/carbonbot/pull/221) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.33.1](https://github.com/bancorprotocol/carbonbot/tree/v0.33.1) (2023-07-21)
 
@@ -384,7 +337,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#220](https://github.com/bancorprotocol/carbonbot/pull/220) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.32.1](https://github.com/bancorprotocol/carbonbot/tree/v0.32.1) (2023-07-21)
 
@@ -392,7 +344,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#219](https://github.com/bancorprotocol/carbonbot/pull/219) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.31.1](https://github.com/bancorprotocol/carbonbot/tree/v0.31.1) (2023-07-21)
 
@@ -400,7 +351,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#218](https://github.com/bancorprotocol/carbonbot/pull/218) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.30.1](https://github.com/bancorprotocol/carbonbot/tree/v0.30.1) (2023-07-21)
 
@@ -408,7 +358,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#217](https://github.com/bancorprotocol/carbonbot/pull/217) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.29.1](https://github.com/bancorprotocol/carbonbot/tree/v0.29.1) (2023-07-21)
 
@@ -416,7 +365,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#216](https://github.com/bancorprotocol/carbonbot/pull/216) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.28.1](https://github.com/bancorprotocol/carbonbot/tree/v0.28.1) (2023-07-21)
 
@@ -424,7 +372,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#215](https://github.com/bancorprotocol/carbonbot/pull/215) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.27.1](https://github.com/bancorprotocol/carbonbot/tree/v0.27.1) (2023-07-21)
 
@@ -432,7 +379,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#214](https://github.com/bancorprotocol/carbonbot/pull/214) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.26.1](https://github.com/bancorprotocol/carbonbot/tree/v0.26.1) (2023-07-21)
 
@@ -440,7 +386,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#213](https://github.com/bancorprotocol/carbonbot/pull/213) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.25.1](https://github.com/bancorprotocol/carbonbot/tree/v0.25.1) (2023-07-21)
 
@@ -448,7 +393,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#212](https://github.com/bancorprotocol/carbonbot/pull/212) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.24.1](https://github.com/bancorprotocol/carbonbot/tree/v0.24.1) (2023-07-21)
 
@@ -456,7 +400,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#211](https://github.com/bancorprotocol/carbonbot/pull/211) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.23.1](https://github.com/bancorprotocol/carbonbot/tree/v0.23.1) (2023-07-21)
 
@@ -464,7 +407,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#210](https://github.com/bancorprotocol/carbonbot/pull/210) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.22.1](https://github.com/bancorprotocol/carbonbot/tree/v0.22.1) (2023-07-21)
 
@@ -472,7 +414,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#209](https://github.com/bancorprotocol/carbonbot/pull/209) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.21.1](https://github.com/bancorprotocol/carbonbot/tree/v0.21.1) (2023-07-21)
 
@@ -480,7 +421,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#208](https://github.com/bancorprotocol/carbonbot/pull/208) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.20.1](https://github.com/bancorprotocol/carbonbot/tree/v0.20.1) (2023-07-21)
 
@@ -488,7 +428,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#207](https://github.com/bancorprotocol/carbonbot/pull/207) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.19.1](https://github.com/bancorprotocol/carbonbot/tree/v0.19.1) (2023-07-21)
 
@@ -496,7 +435,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#206](https://github.com/bancorprotocol/carbonbot/pull/206) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.18.1](https://github.com/bancorprotocol/carbonbot/tree/v0.18.1) (2023-07-21)
 
@@ -504,7 +442,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#205](https://github.com/bancorprotocol/carbonbot/pull/205) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.17.1](https://github.com/bancorprotocol/carbonbot/tree/v0.17.1) (2023-07-21)
 
@@ -512,7 +449,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#204](https://github.com/bancorprotocol/carbonbot/pull/204) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.16.1](https://github.com/bancorprotocol/carbonbot/tree/v0.16.1) (2023-07-21)
 
@@ -520,7 +456,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#203](https://github.com/bancorprotocol/carbonbot/pull/203) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.15.1](https://github.com/bancorprotocol/carbonbot/tree/v0.15.1) (2023-07-21)
 
@@ -528,7 +463,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#202](https://github.com/bancorprotocol/carbonbot/pull/202) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.14.1](https://github.com/bancorprotocol/carbonbot/tree/v0.14.1) (2023-07-21)
 
@@ -536,8 +470,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#200](https://github.com/bancorprotocol/carbonbot/pull/200) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#199](https://github.com/bancorprotocol/carbonbot/pull/199) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.13.1](https://github.com/bancorprotocol/carbonbot/tree/v0.13.1) (2023-07-21)
 
@@ -545,8 +477,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#198](https://github.com/bancorprotocol/carbonbot/pull/198) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#197](https://github.com/bancorprotocol/carbonbot/pull/197) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.12.1](https://github.com/bancorprotocol/carbonbot/tree/v0.12.1) (2023-07-21)
 
@@ -554,8 +484,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#196](https://github.com/bancorprotocol/carbonbot/pull/196) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#195](https://github.com/bancorprotocol/carbonbot/pull/195) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.11.1](https://github.com/bancorprotocol/carbonbot/tree/v0.11.1) (2023-07-21)
 
@@ -563,8 +491,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#194](https://github.com/bancorprotocol/carbonbot/pull/194) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#193](https://github.com/bancorprotocol/carbonbot/pull/193) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.10.1](https://github.com/bancorprotocol/carbonbot/tree/v0.10.1) (2023-07-21)
 
@@ -572,8 +498,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#192](https://github.com/bancorprotocol/carbonbot/pull/192) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#191](https://github.com/bancorprotocol/carbonbot/pull/191) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.9.1](https://github.com/bancorprotocol/carbonbot/tree/v0.9.1) (2023-07-21)
 
@@ -581,8 +505,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#190](https://github.com/bancorprotocol/carbonbot/pull/190) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#189](https://github.com/bancorprotocol/carbonbot/pull/189) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.8.1](https://github.com/bancorprotocol/carbonbot/tree/v0.8.1) (2023-07-21)
 
@@ -590,8 +512,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#188](https://github.com/bancorprotocol/carbonbot/pull/188) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#187](https://github.com/bancorprotocol/carbonbot/pull/187) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.7.1](https://github.com/bancorprotocol/carbonbot/tree/v0.7.1) (2023-07-21)
 
@@ -599,8 +519,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#186](https://github.com/bancorprotocol/carbonbot/pull/186) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#185](https://github.com/bancorprotocol/carbonbot/pull/185) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.6.1](https://github.com/bancorprotocol/carbonbot/tree/v0.6.1) (2023-07-21)
 
@@ -608,8 +526,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#184](https://github.com/bancorprotocol/carbonbot/pull/184) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#183](https://github.com/bancorprotocol/carbonbot/pull/183) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.5.1](https://github.com/bancorprotocol/carbonbot/tree/v0.5.1) (2023-07-21)
 
@@ -617,8 +533,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#182](https://github.com/bancorprotocol/carbonbot/pull/182) ([mikewcasale](https://github.com/mikewcasale))
-- Bump version [\#181](https://github.com/bancorprotocol/carbonbot/pull/181) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.4.1](https://github.com/bancorprotocol/carbonbot/tree/v0.4.1) (2023-07-21)
 
@@ -626,7 +540,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#180](https://github.com/bancorprotocol/carbonbot/pull/180) ([mikewcasale](https://github.com/mikewcasale))
 - Update release-and-pypi-publish.yml [\#179](https://github.com/bancorprotocol/carbonbot/pull/179) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.3.1](https://github.com/bancorprotocol/carbonbot/tree/v0.3.1) (2023-07-21)
@@ -635,7 +548,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#178](https://github.com/bancorprotocol/carbonbot/pull/178) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v0.2.1](https://github.com/bancorprotocol/carbonbot/tree/v0.2.1) (2023-07-21)
 
@@ -643,7 +555,6 @@ Merged pull requests
 
 Merged pull requests
 
-- Bump version [\#177](https://github.com/bancorprotocol/carbonbot/pull/177) ([mikewcasale](https://github.com/mikewcasale))
 - Update release-and-pypi-publish.yml [\#176](https://github.com/bancorprotocol/carbonbot/pull/176) ([mikewcasale](https://github.com/mikewcasale))
 - Update release-and-pypi-publish.yml [\#174](https://github.com/bancorprotocol/carbonbot/pull/174) ([mikewcasale](https://github.com/mikewcasale))
 - Update release-and-pypi-publish.yml [\#172](https://github.com/bancorprotocol/carbonbot/pull/172) ([mikewcasale](https://github.com/mikewcasale))
