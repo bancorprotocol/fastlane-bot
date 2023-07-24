@@ -138,6 +138,8 @@ jobs:
           git checkout -b $BRANCH_NAME
       - name: Commit and push changelog update
         run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG.md"
@@ -166,6 +168,8 @@ jobs:
           git checkout -b $BRANCH_NAME
       - name: Commit and push changelog cleaning
         run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git config --global push.autoSetupRemote true
           git add CHANGELOG.md
           git commit -m "Clean CHANGELOG.md"
