@@ -138,6 +138,7 @@ jobs:
           git checkout -b $BRANCH_NAME
       - name: Commit and push changelog update
         run: |
+          git config --global push.autoSetupRemote true
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG.md"
           git push origin HEAD
@@ -165,6 +166,7 @@ jobs:
           git checkout -b $BRANCH_NAME
       - name: Commit and push changelog cleaning
         run: |
+          git config --global push.autoSetupRemote true
           git add CHANGELOG.md
           git commit -m "Clean CHANGELOG.md"
           git push origin HEAD
