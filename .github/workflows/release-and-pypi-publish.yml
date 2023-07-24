@@ -28,7 +28,7 @@ name: Create Release, Publish, and Generate Changelog
 on:
   push:
     branches:
-      - '**'
+      - main
 
 jobs:
   check_commit:
