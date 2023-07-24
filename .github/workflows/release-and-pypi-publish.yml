@@ -144,13 +144,19 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG.md"
           git push origin HEAD
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog update
         run: |
           gh pr create --title "Update CHANGELOG.md" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
           PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
           gh pr merge $PR_NUMBER --admin --merge
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
   clean_changelog:
     needs: generate_changelog
     runs-on: ubuntu-latest
@@ -174,13 +180,19 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Clean CHANGELOG.md"
           git push origin HEAD
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog cleaning
         run: |
           gh pr create --title "Clean CHANGELOG.md" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
           PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
           gh pr merge $PR_NUMBER --admin --merge
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
   release:
     needs: [ bump_version,check_commit,generate_changelog,clean_changelog ]
     if: needs.check_commit.outputs.skipout != 'true'
