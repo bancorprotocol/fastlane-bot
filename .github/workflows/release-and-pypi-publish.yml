@@ -148,12 +148,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog update
         run: |
-          gh pr create --title "Update CHANGELOG.md" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+          gh pr create --title "Update CHANGELOG.md" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
-          PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
+          PR_URL=$(cat pr.txt)
+          PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
           gh pr merge $PR_NUMBER --admin --merge
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -184,12 +185,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Create Pull Request for changelog cleaning
         run: |
-          gh pr create --title "Clean CHANGELOG.md Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main"
+          gh pr create --title "Clean CHANGELOG.md Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Merge pull request
         run: |
-          PR_NUMBER=$(gh pr list --base main --json number --jq '.[0].number')
+          PR_URL=$(cat pr.txt)
+          PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
           gh pr merge $PR_NUMBER --admin --merge
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
