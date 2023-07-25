@@ -6,7 +6,6 @@
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#14](https://github.com/bancorprotocol/fastlane-bot/pull/14) ([bancor-services](https://github.com/bancor-services))
 
 ## [v1.0](https://github.com/bancorprotocol/fastlane-bot/tree/v1.0) (2023-05-23)
 
