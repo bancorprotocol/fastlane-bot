@@ -2,10 +2,48 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v1.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725g...HEAD)
 
 Merged pull requests
 
+- Bump version \[skip ci\] [\#20](https://github.com/bancorprotocol/fastlane-bot/pull/20) ([bancor-services](https://github.com/bancor-services))
+- updating DEFAULT\_MIN\_PROFIT\_BNT to 1 [\#19](https://github.com/bancorprotocol/fastlane-bot/pull/19) ([mikewcasale](https://github.com/mikewcasale))
+
+## [main_skl_flbot_20230725g](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725g) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725f...main_skl_flbot_20230725g)
+
+## [main_skl_flbot_20230725f](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725f) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725e...main_skl_flbot_20230725f)
+
+## [main_skl_flbot_20230725e](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725e) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725d...main_skl_flbot_20230725e)
+
+## [main_skl_flbot_20230725d](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725d) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725c...main_skl_flbot_20230725d)
+
+## [main_skl_flbot_20230725c](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725c) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725b...main_skl_flbot_20230725c)
+
+## [main_skl_flbot_20230725b](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725b) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725...main_skl_flbot_20230725b)
+
+## [main_skl_flbot_20230725](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725) (2023-07-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.1.0...main_skl_flbot_20230725)
+
+## [v2.1.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.1.0) (2023-07-24)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v1.0...v2.1.0)
+
+Merged pull requests
+
+- Bump version \[skip ci\] [\#15](https://github.com/bancorprotocol/fastlane-bot/pull/15) ([bancor-services](https://github.com/bancor-services))
 - Bump version \[skip ci\] [\#14](https://github.com/bancorprotocol/fastlane-bot/pull/14) ([bancor-services](https://github.com/bancor-services))
 
 ## [v1.0](https://github.com/bancorprotocol/fastlane-bot/tree/v1.0) (2023-05-23)
