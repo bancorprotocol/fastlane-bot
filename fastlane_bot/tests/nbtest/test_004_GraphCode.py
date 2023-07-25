@@ -14,7 +14,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ag.ArbGraph))
 
 from fastlane_bot.testing import *
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
@@ -623,9 +623,9 @@ def test_with_real_data_from_cpc():
 # ------------------------------------------------------------
     
     try:
-        df = pd.read_csv("../nb_data/NBTEST_002_Curves.csv.gz")
+        df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
     except:
-        df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
+        df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
     CC0 = CPCContainer.from_df(df)
     print("Num curves:", len(CC0))
     print("Num pairs:", len(CC0.pairs()))
@@ -844,6 +844,12 @@ def test_specific_arb_examples():
     
     assert raises(AG.price, AG.nodes[0], AG.nodes[1])
     raises(AG.price, AG.nodes[0], AG.nodes[1])
+    
+    
+    
+    
+    
+    
     
     
     
