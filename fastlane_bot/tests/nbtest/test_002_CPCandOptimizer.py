@@ -24,10 +24,10 @@ require("3.0", __VERSION__)
 
 
 try:
-    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
+    market_df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
-CCmarket = CPCContainer.from_df(df)
+    market_df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
+CCmarket = CPCContainer.from_df(market_df)
 
 
 # ------------------------------------------------------------
@@ -763,13 +763,13 @@ def test_new_cpc_features_in_v2():
 def test_real_data_and_retrieval_of_curves():
 # ------------------------------------------------------------
     
-    try:
-        df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
-    except:
-        df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
-    CC = CPCContainer.from_df(df)
+    # try:
+    #     df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
+    # except:
+    #     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
+    CC = CPCContainer.from_df(market_df)
     assert len(CC) == 459
-    assert len(CC) == len(df)
+    assert len(CC) == len(market_df)
     assert len(CC.pairs()) == 326
     assert len(CC.tokens()) == 141
     assert CC.tokens_s
