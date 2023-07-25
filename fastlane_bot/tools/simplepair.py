@@ -4,8 +4,8 @@ simple representation of a pair of tokens, used by cpc and arbgraph
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "2.0"
-__DATE__ = "5/May/2023"
+__VERSION__ = "2.1"
+__DATE__ = "18/May/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 
@@ -93,6 +93,7 @@ class SimplePair:
                 "USDN",
                 "USDP",
                 "USDQ",
+                "BNT",
                 "ETH",
                 "WETH",
                 "WBTC",
