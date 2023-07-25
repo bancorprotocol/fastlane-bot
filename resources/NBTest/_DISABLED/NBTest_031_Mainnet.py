@@ -30,7 +30,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Mainnet Server [NB031]
+# # Mainnet Server [A011]
 
 bot     = Bot()
 CCm     = bot.get_curves()
@@ -45,7 +45,7 @@ assert CA.pairs()  == CCm.pairs(standardize=True)
 assert CA.pairsc() == {c.pairo.primary for c in CCm if c.P("exchange")=="carbon_v1"}
 assert CA.tokens() == CCm.tokens()
 
-# ## Overall market [NOTEST]
+# ## Overall market
 
 print(f"Total pairs:    {len(pairs0):4}")
 print(f"Primary pairs:  {len(pairs):4}")
@@ -53,7 +53,7 @@ print(f"...carbon:      {len(pairsc):4}")
 print(f"Tokens:         {len(CCm.tokens()):4}")
 print(f"Curves:         {len(CCm):4}")
 
-# ## By pair [NOTEST]
+# ## By pair
 
 # ### All pairs
 

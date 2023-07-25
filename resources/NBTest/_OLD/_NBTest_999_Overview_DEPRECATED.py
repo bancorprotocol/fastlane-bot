@@ -26,7 +26,7 @@ require("3.0", __VERSION__)
 
 # # Overview Notebook [NB999]
 
-# ## Introduction [NOTEST]
+# ## Introduction
 #
 # ### Agenda
 #
@@ -74,7 +74,7 @@ help(Bot._run)
 
 help(Config.new)
 
-# ## Goal [NOTEST]
+# ## Goal
 
 # ### Tenderly
 
@@ -93,7 +93,7 @@ bot = Bot(ConfigObj=C)
 bot.update()
 CCm = bot.get_curves()
 
-# ## Execution [NOTEST]
+# ## Execution
 
 # ### Configuration
 #
@@ -114,7 +114,7 @@ bot.update(drop_tables=True, top_n=10, only_carbon=False)
 
 bot.run(flashloan_tokens=flt, mode=bot.RUN_SINGLE)
 
-# ## Execution analysis [NOTEST]
+# ## Execution analysis
 
 CCm = bot.get_curves()
 
@@ -144,7 +144,7 @@ except bot.NoArbAvailable as e:
     ordinfo = None
 ordinfo
 
-# ## Market analysis [NOTEST]
+# ## Market analysis
 
 # ### Overall market
 
@@ -169,7 +169,7 @@ for xc in exch:
     c = CCp.byparams(exchange=xc)[0]
     print(f"{xc+':':16} {c.p:.4f} {1/c.p:.4f}")
 
-# ## Technical [NOTEST]
+# ## Technical
 
 # ### Validation and assertions
 
