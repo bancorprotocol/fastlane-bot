@@ -5,8 +5,10 @@ __pycache__/*
 */out/*
 *.pdf
 topaze
+*.ipynb
 *.gif
 *.json
+monitoring.*
 
 .DS_Store
 .idea/*
