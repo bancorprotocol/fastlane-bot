@@ -30,9 +30,9 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Prices on Mainnet and Tenderly [NB032]
+# # Prices on Mainnet and Tenderly [A012]
 
-# ## Price estimates [NOTEST]
+# ## Price estimates
 
 start_time = time.time()
 botm    = Bot()
@@ -49,7 +49,8 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 
 start_time = time.time()
 tokensm = CCm.tokens()
-prices_usdc = CCm.price_estimates(tknbs=tokensm, tknqs=f"{T.USDC}", raiseonerror=False)
+prices_usdc = CCm.price_estimates(tknbs=tokensm, tknqs=f"{T.USDC}", 
+                                  stopatfirst=True, verbose=False, raiseonerror=False)
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 
 pricesdf = pd.DataFrame(prices_usdc, index=tokensm, columns=["USDC"]).sort_values("USDC", ascending=False)
@@ -66,6 +67,10 @@ for ix, d in pricesdf.iterrows():
     except:
         continue
     print(f"{ix:25} {price}")
+
+
+
+
 
 print("TOKEN                       PRICE(USc)")
 print("======================================")
@@ -88,5 +93,8 @@ for ix, d in pricesdf.iterrows():
     except:
         pass
     print(f"{ix:25}")
+
+CCP = CCm.bypairs(CCm.filter_pairs(onein="CPI-ec53"))
+CCP.plot()
 
 
