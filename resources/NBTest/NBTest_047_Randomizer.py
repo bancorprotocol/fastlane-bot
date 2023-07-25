@@ -1,13 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.13.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -39,7 +40,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
 from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -185,20 +186,24 @@ assert len(arb_opp_25) == 5, f"[NB047 Randomizer], expected 1 arb back from rand
 assert isinstance(np.float64(arb_opp_0[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_0[0])}"
 assert isinstance(np.float64(arb_opp_1[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_1[0])}"
 assert isinstance(np.float64(arb_opp_2[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_2[0])}"
+# -
+
 assert isinstance(np.float64(arb_opp_3[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_3[0])}"
 assert isinstance(np.float64(arb_opp_25[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_25[0])}"
-assert type(arb_opp_0[2]) == list, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_0[2])}"
-assert type(arb_opp_1[2]) == list, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_1[2])}"
-assert type(arb_opp_2[2]) == list, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_2[2])}"
-assert type(arb_opp_3[2]) == list, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_3[2])}"
-assert type(arb_opp_25[2]) == list, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_25[2])}"
+
+arb_opp_0[2]
+
+assert type(arb_opp_0[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_0[2])}"
+assert type(arb_opp_1[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_1[2])}"
+assert type(arb_opp_2[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_2[2])}"
+assert type(arb_opp_3[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_3[2])}"
+assert type(arb_opp_25[2]) == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_25[2])}"
+
 assert arb_opp_None == None, f"[NB047 Randomizer], expected randomizer to return None when it receives None, but it returned {type(arb_opp_None)}"
-# -
 
 # ## Test_sorted_by_profit
 
 # +
-
 arb_opps = [(2.6927646232907136, [{'cid': '0xe37abfaee752c24a764955cbb2d10c3c9f88472263cbd2c00ca57facb0f128fe', 'tknin': 'WETH-6Cc2', 'amtin': 0.003982724863828224, 'tknout': 'BNT-FF1C', 'amtout': -19.27862435251882, 'error': None}, {'cid': '3743106036130323098097120681749450326076-0', 'tknin': 'BNT-FF1C', 'amtin': 16.585859729228105, 'tknout': 'WETH-6Cc2', 'amtout': -0.003982724874543209, 'error': None}]
 ), (2.5352758371554955, [{'cid': '0x748ab2bef0d97e5a044268626e6c9c104bab818605d44f650fdeaa03a3c742d2', 'tknin': 'WETH-6Cc2', 'amtin': 0.003982718826136988, 'tknout': 'BNT-FF1C', 'amtout': -19.1211355663836, 'error': None}, {'cid': '3743106036130323098097120681749450326076-0', 'tknin': 'BNT-FF1C', 'amtin': 16.585859729228105, 'tknout': 'WETH-6Cc2', 'amtout': -0.003982724874543209, 'error': None}]
 ), (1.9702345513100596, [{'cid': '0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b', 'tknin': 'BNT-FF1C', 'amtin': 750.6057364856824, 'tknout': 'USDC-eB48', 'amtout': -293.5068652469199, 'error': None}, {'cid': '2381976568446569244243622252022377480332-1', 'tknin': 'USDC-eB48', 'amtin': 292.73623752593994, 'tknout': 'BNT-FF1C', 'amtout': -750.6057367324829, 'error': None}]
@@ -214,6 +219,6 @@ arb_opps = [(2.6927646232907136, [{'cid': '0xe37abfaee752c24a764955cbb2d10c3c9f8
 ops = bot.randomize(arb_opps=arb_opps, randomizer=3)
 
 assert iseq(ops[0], 8.465616944048316) or iseq(ops[0], 6.717558869249757) or iseq(ops[0], 5.438084583685771), f"[NB047 Randomizer], expected randomizer to return top 3 most profitable arbs, but it did not!"
-
+# -
 
 

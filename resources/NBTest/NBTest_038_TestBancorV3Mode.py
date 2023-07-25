@@ -1,13 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.13.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -39,7 +40,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
 from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -362,3 +363,10 @@ mono_carbon = finder.get_mono_direction_carbon_curves(miniverse[0], trade_instru
 test_mono_carbon = finder.get_mono_direction_carbon_curves(miniverse[0], trade_instructions_df=trade_instructions_df_0, token_in='WETH-6Cc2')
 # Test that get_mono_direction_carbon_curves removed two curves
 assert len(test_mono_carbon) != len(mono_carbon), f"[test_bancor_v3] Issue with get_mono_direction_carbon_curves, should have removed one or more pools"
+# -
+
+
+
+
+
+
