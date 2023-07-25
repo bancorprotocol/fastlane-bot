@@ -9,12 +9,10 @@
 
 
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-#from fastlane_bot.tools.simplepair import SimplePair
-from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
-#import carbon.tools.tokenscale as ts
+from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, SimpleOptimizer
+from fastlane_bot.tools.analyzer import CPCAnalyzer
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-#print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ts.TokenScale))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 from fastlane_bot.testing import *
@@ -31,6 +29,57 @@ except:
     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(df)
 
+
+# ------------------------------------------------------------
+# Test      002
+# File      test_002_CPCandOptimizer.py
+# Segment   description
+# ------------------------------------------------------------
+def test_description():
+# ------------------------------------------------------------
+    
+    d = CCmarket.bycid("167").description()
+    assert d.strip() == """
+    cid      = 167 [167]
+    primary  = WETH/DAI [WETH/DAI]
+    pp       = 1,826.764318 DAI per WETH
+    pair     = DAI/WETH [DAI/WETH]
+    tknx     =     3,967,283.591895 DAI        [virtual:        3,967,283.592]
+    tkny     =         2,171.754481 WETH       [virtual:            2,171.754]
+    p        = 0.0005474159913752679 [min=None, max=None] WETH per DAI
+    fee      = 0.003
+    descr    = sushiswap_v2 DAI/WETH 0.003
+    """.strip()
+    print(d)
+    
+
+# ------------------------------------------------------------
+# Test      002
+# File      test_002_CPCandOptimizer.py
+# Segment   bycids
+# ------------------------------------------------------------
+def test_bycids():
+# ------------------------------------------------------------
+    
+    CC = CCmarket
+    
+    assert len(CC.bycids()) == len(CC)
+    assert type(CC.bycids()) == type(CC)
+    assert type(CC.bycids(ascc=False)) == tuple
+    for c in CC:
+        assert isinstance(c.cid, str), f"{c.cid} is not of type str"
+    cids = [c.cid for c in CC]
+    assert raises(CC.bycids, include="foo", endswith="bar") == 'include and endswith cannot be used together'
+    assert raises(CC.bycids,"167, 168, 169")
+    CC1 = CC.bycids(["167", "168", "169"])
+    assert len(CC1) == 3
+    assert [c.cid for c in CC1] == ['167', '168', '169']
+    CC2 = CC.bycids(endswith="11")
+    assert len(CC2) == 5
+    assert [c.cid for c in CC2] == ['211', '311', '411', '511', '611']
+    CC3 = CC.bycids(endswith="11", exclude=['311', '411'])
+    assert [c.cid for c in CC3] == ['211', '511', '611']
+    
 
 # ------------------------------------------------------------
 # Test      002
@@ -535,7 +584,7 @@ def test_price_estimates_in_optimizer():
                 CCfm  += CPC.from_pk(p=pp, k=k, pair=pair, cid = f"mkt-{ctr}")
                 ctr += 1
     
-    O = CPCArbOptimizer(CCfm)
+    O = MargPOptimizer(CCfm)
     assert O.MO_PSTART == O.MO_P
     tknq = "WETH"
     df = O.margp_optimizer(tknq, result=O.MO_PSTART)
@@ -735,7 +784,7 @@ def test_real_data_and_retrieval_of_curves():
     cids = [c.cid for c in CC.bypairs(CC.fp(onein="WBTC"))]
     assert len(cids) == len(CC1)
     assert CC.bycid("bla") is None
-    assert not CC.bycid(191) is None
+    assert not CC.bycid("191") is None
     assert raises(CC.bycids, ["bla"])
     assert len(CC.bycids(cids)) == len(cids)
     assert len(CC.bytknx("WETH")) == 46
@@ -1065,8 +1114,8 @@ def test_simple_optimizer():
     assert iseq([c.p for c in CC0][-1], 2000)
     
     # +
-    O = CPCArbOptimizer(CC)
-    O0 = CPCArbOptimizer(CC0)
+    O = SimpleOptimizer(CC)
+    O0 = SimpleOptimizer(CC0)
     func = O.simple_optimizer(result=O.SO_DXDYVECFUNC)
     func0 = O0.simple_optimizer(result=O.SO_DXDYVECFUNC)
     funcs = O.simple_optimizer(result=O.SO_DXDYSUMFUNC)
@@ -1158,7 +1207,7 @@ def test_optimizer_plus_inverted_curves():
     # CC.plot()
     # -
     
-    O = CPCArbOptimizer(CC)
+    O = SimpleOptimizer(CC)
     r = O.simple_optimizer()
     print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
     assert iseq(r.result, -1.3194573866437527)
@@ -1248,7 +1297,7 @@ def test_tradeinstructions():
         for i in range(10)
     ]
     tild = TI.to_dicts(til)
-    tildf = TI.to_df(til)
+    tildf = TI.to_df(til, robj=None)
     assert len(tild) == 10
     assert len(tildf) == 10
     assert tild[0] == {
@@ -1286,7 +1335,7 @@ def test_margp_optimizer():
     CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
     CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
     CCa += CPC.from_pk(pair="USDC/USDT", p=1.0, k=200000*200000, cid="c2")
-    O = CPCArbOptimizer(CCa)
+    O = MargPOptimizer(CCa)
     
     r = O.margp_optimizer("WETH", result=O.MO_DEBUG)
     assert isinstance(r, dict)
@@ -1322,7 +1371,7 @@ def test_margp_optimizer():
     assert r.targettkn == "WETH"
     assert r.dtokens is None
     assert sum(abs(x) for x in r.dtokens_t) < 1e-10
-    assert r.p_optimal is None
+    assert not r.p_optimal is None
     assert iseq(0.0005, r.p_optimal_t[0], r.p_optimal_t[1])
     assert set(r.tokens_t) == {'USDC', 'USDT'}
     assert r.errormsg is None
@@ -1351,7 +1400,7 @@ def test_margp_optimizer():
     assert sum(abs(x) for x in r.dtokens_t) < 1e-10
     assert iseq(0.0005, r.p_optimal["USDC"], r.p_optimal["USDT"])
     assert iseq(0.0005, r.p_optimal_t[0], r.p_optimal_t[1])
-    assert tuple(r.p_optimal.values()) == r.p_optimal_t
+    assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
     assert set(r.tokens_t) == set(('USDC', 'USDT'))
     assert r.errormsg is None
     assert r.is_error == False
@@ -1365,7 +1414,7 @@ def test_margp_optimizer():
     CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
     CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
     CCa += CPC.from_pk(pair="USDC/USDT", p=1.2, k=200000*200000, cid="c2")
-    O = CPCArbOptimizer(CCa)
+    O = MargPOptimizer(CCa)
     
     r = O.margp_optimizer("WETH", result=O.MO_DEBUG)
     assert isinstance(r, dict)
@@ -1395,11 +1444,11 @@ def test_margp_optimizer():
     assert abs(r.dtokens_t[0]) < 1e-6
     assert abs(r.dtokens_t[1]) < 1e-6
     assert r.dtokens["WETH"] == float(r)
-    assert tuple(r.p_optimal.values()) == r.p_optimal_t
-    assert tuple(r.p_optimal) == r.tokens_t
+    assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
+    assert tuple(r.p_optimal)[:-1] == r.tokens_t
     assert iseq(r.p_optimal_t[0], 0.0005421803152482512) or iseq(r.p_optimal_t[0], 0.00045575394031021585)
     assert iseq(r.p_optimal_t[1], 0.0005421803152482512) or iseq(r.p_optimal_t[1], 0.00045575394031021585)
-    assert tuple(r.p_optimal.values()) == r.p_optimal_t
+    assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
     assert set(r.tokens_t) == set(('USDC', 'USDT'))
     assert r.errormsg is None
     assert r.is_error == False
@@ -1408,7 +1457,42 @@ def test_margp_optimizer():
     
     abs(r.dtokens_t[0])
     
+    ti = r.trade_instructions()
+    assert len(ti) == 3
+    dfa = r.trade_instructions(ti_format=O.TIF_DFAGGR)
+    assert len(dfa)==7
+    assert list(dfa.index) == ['c0', 'c1', 'c2', 'PRICE', 'AMMIn', 'AMMOut', 'TOTAL NET']
+    assert list(dfa.columns) == ['WETH', 'USDC', 'USDT']
+    assert dfa.loc["PRICE"][0] == 1
+    assert iseq(dfa.loc["PRICE"][1], 0.0005421803152)
+    assert iseq(dfa.loc["PRICE"][2], 0.0004557539403)
+    dfa
     
+    df = r.trade_instructions(ti_format=O.TIF_DF)
+    assert len(df) == 3
+    assert list(df.columns) == ['pair', 'pairp', 'tknin', 'tknout', 'WETH', 'USDC', 'USDT']
+    df
+    
+    df = r.trade_instructions(ti_format=O.TIF_DF).fillna("")
+    assert len(df) == 3
+    assert list(df.columns) == ['pair', 'pairp', 'tknin', 'tknout', 'WETH', 'USDC', 'USDT']
+    assert df["USDT"].loc["c0"] == ""
+    df
+    
+    dcts = r.trade_instructions(ti_format=O.TIF_DICTS)
+    assert len(dcts) == 3
+    assert list(dcts[0].keys()) == ['cid', 'tknin', 'amtin', 'tknout', 'amtout', 'error']
+    d0 = dcts[0]
+    assert d0["cid"] == "c0"
+    assert iseq(d0["amtin"], 0.41326380379418914)
+    dcts
+    
+    objs = r.trade_instructions(ti_format=O.TIF_OBJECTS)
+    assert len(objs) == 3
+    assert type(objs[0]).__name__ == 'TradeInstruction'
+    objs
+    
+    help(r.trade_instructions)
     
 
 # ------------------------------------------------------------
@@ -1423,8 +1507,8 @@ def notest_simple_optimizer_demo():
     O = CPCArbOptimizer(CC)
     c0 = CC.curves[0]
     CC0 = CPCContainer([c0])
-    O = CPCArbOptimizer(CC)
-    O0 = CPCArbOptimizer(CC0)
+    O = SimpleOptimizer(CC)
+    O0 = SimpleOptimizer(CC0)
     funcvx = O.simple_optimizer(result=O.SO_DXDYVALXFUNC)
     funcvy = O.simple_optimizer(result=O.SO_DXDYVALYFUNC)
     funcvx0 = O0.simple_optimizer(result=O.SO_DXDYVALXFUNC)
@@ -1465,7 +1549,7 @@ def notest_margp_optimizer_demo():
     CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
     CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
     CCa += CPC.from_pk(pair="USDC/USDT", p=1.2, k=20000*20000, cid="c2")
-    O = CPCArbOptimizer(CCa)
+    O = MargPOptimizer(CCa)
     
     CCa.plot()
     
@@ -1495,7 +1579,7 @@ def notest_optimizer_plus_inverted_curves():
     assert len(CC) == len(CCr) + len(CCi)
     CC.plot()
     
-    O = CPCArbOptimizer(CC)
+    O = SimpleOptimizer(CC)
     r = O.simple_optimizer()
     print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
     CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
