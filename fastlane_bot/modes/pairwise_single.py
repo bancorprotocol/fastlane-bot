@@ -11,7 +11,7 @@ from tqdm.contrib import itertools
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools.optimizer import MargPOptimizer
 
 
 class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
@@ -58,7 +58,7 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
 
             for curve_combo in curve_combos:
                 CC_cc = CPCContainer(curve_combo)
-                O = CPCArbOptimizer(CC_cc)
+                O = MargPOptimizer(CC_cc)
                 src_token = tkn1
                 try:
                     pstart = {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}
@@ -68,6 +68,7 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
                 except Exception as e:
+                    print("[FindArbitrageSinglePairwise] Exception: ", e)
                     continue
 
                 # Get the candidate ids
