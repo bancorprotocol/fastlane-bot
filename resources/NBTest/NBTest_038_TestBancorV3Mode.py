@@ -363,3 +363,10 @@ mono_carbon = finder.get_mono_direction_carbon_curves(miniverse[0], trade_instru
 test_mono_carbon = finder.get_mono_direction_carbon_curves(miniverse[0], trade_instructions_df=trade_instructions_df_0, token_in='WETH-6Cc2')
 # Test that get_mono_direction_carbon_curves removed two curves
 assert len(test_mono_carbon) != len(mono_carbon), f"[test_bancor_v3] Issue with get_mono_direction_carbon_curves, should have removed one or more pools"
+# -
+
+
+
+
+
+
