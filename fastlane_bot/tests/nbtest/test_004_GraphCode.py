@@ -623,9 +623,9 @@ def test_with_real_data_from_cpc():
 # ------------------------------------------------------------
     
     try:
-        df = pd.read_csv("../nb_data/NBTEST_002_Curves.csv.gz")
+        df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
     except:
-        df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
+        df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
     CC0 = CPCContainer.from_df(df)
     print("Num curves:", len(CC0))
     print("Num pairs:", len(CC0.pairs()))

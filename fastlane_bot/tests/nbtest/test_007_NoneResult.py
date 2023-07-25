@@ -101,6 +101,7 @@ def test_none_format():
 def test_math_functions():
 # ------------------------------------------------------------
     
+    none = NoneResult()
     assert m.sin(none) == 0
     assert m.cos(none) == 1
     assert m.exp(none) == 1

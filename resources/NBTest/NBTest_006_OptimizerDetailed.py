@@ -36,12 +36,14 @@ require("3.0", __VERSION__)
 
 # # Mostly Optimizer Tests [NB006]
 
+# +
 # bot     = Bot()
 # CCm     = bot.get_curves()
 try:
     CCm = CPCContainer.from_df(pd.read_csv("_data/NBTest_006.csv.gz"))
 except:
     CCm = CPCContainer.from_df(pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTest_006.csv.gz"))
+
 CCu3    = CCm.byparams(exchange="uniswap_v3")
 CCu2    = CCm.byparams(exchange="uniswap_v2")
 CCs2    = CCm.byparams(exchange="sushiswap_v2")
@@ -52,14 +54,15 @@ tc_s2   = CCs2.token_count(asdict=True)
 tc_c1   = CCc1.token_count(asdict=True)
 CAm     = CPCAnalyzer(CCm)
 #CCm.asdf().to_csv("A011-test.csv.gz", compression = "gzip")
+# -
 
-# ## Market structure analysis [NOTEST]
-
-CA = CAm
+CA      = CAm
 pairs0  = CA.CC.pairs(standardize=False)
 pairs   = CA.pairs()
 pairsc  = CA.pairsc()
 tokens  = CA.tokens()
+
+# ## Market structure analysis [NOTEST]
 
 print(f"Total pairs:    {len(pairs0):4}")
 print(f"Primary pairs:  {len(pairs):4}")
@@ -119,6 +122,8 @@ ArbGraph.from_r(r).plot()._
 # -
 
 # ## Tests
+
+CA = CAm
 
 # ### General tests
 
@@ -437,7 +442,7 @@ CCo  = CCu2.bypairs(CCu2.filter_pairs(bothin=tokens))
 CCo += CCs2.bypairs(CCu2.filter_pairs(bothin=tokens))
 CA   = CPCAnalyzer(CCo)
 O = ConvexOptimizer(CCo)
-ArbGraph.from_cc(CCo).plot()._
+#ArbGraph.from_cc(CCo).plot()._
 
 CA.count_by_tokens()
 
@@ -534,11 +539,13 @@ pair = f"{T.ETH}/{T.USDC}"
 CCs  = CCm.bypairs(pair)
 CA   = CPCAnalyzer(CCs)
 O = SimpleOptimizer(CCs)
-ArbGraph.from_cc(CCs).plot()._
+#ArbGraph.from_cc(CCs).plot()._
 
 CA.count_by_tokens()
 
-CCs.plot()
+# +
+#CCs.plot()
+# -
 
 # #### simple optimizer
 
@@ -641,7 +648,7 @@ df = pricedf.loc[Pair.n(pair)]
 assert len(df)==24
 df
 
-pi = CA.pair_data(pair)
+pi = CAm.pair_data(pair)
 O = MargPOptimizer(pi.CC)
 
 # #### Target token = base token
@@ -665,5 +672,3 @@ r.trade_instructions(ti_format=O.TIF_DFAGGR)
 dfti2 = r.trade_instructions(ti_format=O.TIF_DFPG8)
 print(f"Total gain: {sum(dfti2['gain_ttkn']):.4f}", targettkn)
 dfti2
-
-

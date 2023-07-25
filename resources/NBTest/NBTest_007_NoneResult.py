@@ -86,6 +86,7 @@ f"{none:40}"
 
 # ## math functions
 
+none = NoneResult()
 assert m.sin(none) == 0
 assert m.cos(none) == 1
 assert m.exp(none) == 1
