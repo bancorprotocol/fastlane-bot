@@ -29,7 +29,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 from fastlane_bot.testing import *
 import itertools as it
 import collections as cl
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
