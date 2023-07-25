@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.1"
-__DATE__ = "16/Apr/2023"
+__VERSION__ = "2.2"
+__DATE__ = "09/May/2023"
 
 from dataclasses import dataclass, field, asdict, astuple, InitVar
 from .simplepair import SimplePair as Pair
@@ -1603,7 +1603,10 @@ class ArbGraph(_DCBase):
         "labels": True,
         "edge_labels": False,
         "node_color": "lightblue",
+        "node_size": 200,
         "show": True,
+        "font_size": 12,
+        "font_color": "k",
     }
 
     def plot(self, **params):
@@ -1613,7 +1616,10 @@ class ArbGraph(_DCBase):
         :directed:      if True (default), plot a directed graph, otherwise undirected
         :labels:        if True (default), plot node labels
         :edge_labels:   if True (default), plot edge labels
-        :node_color:    color of the nodes (default: "lightblue")
+        :node_color:    node color (default: "lightblue")
+        :node_size:     node size (default: 200)
+        :font_size:     font size (default: 12)
+        :font_color:    font color (default: "k")
         :show:          if True (default), show the plot
         :rnone:         if True, returns None, otherwise returns self
         """
@@ -1630,6 +1636,9 @@ class ArbGraph(_DCBase):
             with_labels=p("labels"),
             labels=nx.get_node_attributes(G, "label"),
             node_color=p("node_color"),
+            node_size=p("node_size"),
+            font_size=p("font_size"),
+            font_color=p("font_color"),
         )
 
         if p("edge_labels"):
