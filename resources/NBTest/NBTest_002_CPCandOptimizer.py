@@ -32,15 +32,15 @@ require("3.0", __VERSION__)
 # # CPC and Optimizer in Fastlane [NBTest002]
 
 try:
-    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
+    market_df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
-CCmarket = CPCContainer.from_df(df)
+    market_df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
+CCmarket = CPCContainer.from_df(market_df)
 
 # ## description
 
-d = CCmarket.bycid("167").description()
-assert d.strip() == """
+d = CCmarket.bycid("167").description().splitlines()
+d0 = """
 cid      = 167 [167]
 primary  = WETH/DAI [WETH/DAI]
 pp       = 1,826.764318 DAI per WETH
@@ -50,8 +50,11 @@ tkny     =         2,171.754481 WETH       [virtual:            2,171.754]
 p        = 0.0005474159913752679 [min=None, max=None] WETH per DAI
 fee      = 0.003
 descr    = sushiswap_v2 DAI/WETH 0.003
-""".strip()
-print(d)
+""".strip().splitlines()
+d0 = [l.strip() for l in d0]
+assert d == d0
+for l in d0:
+    print(l)
 
 # ## bycids
 
@@ -663,13 +666,13 @@ assert P("XYZ/USDT").isprimary
 
 # ## Real data and retrieval of curves
 
-try:
-    df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
-except:
-    df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
-CC = CPCContainer.from_df(df)
+# try:
+#     df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
+# except:
+#     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
+CC = CPCContainer.from_df(market_df)
 assert len(CC) == 459
-assert len(CC) == len(df)
+assert len(CC) == len(market_df)
 assert len(CC.pairs()) == 326
 assert len(CC.tokens()) == 141
 assert CC.tokens_s
