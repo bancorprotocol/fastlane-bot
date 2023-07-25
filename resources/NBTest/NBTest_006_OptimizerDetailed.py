@@ -38,7 +38,10 @@ require("3.0", __VERSION__)
 
 # bot     = Bot()
 # CCm     = bot.get_curves()
-CCm     = CPCContainer.from_df(pd.read_csv("NBTest_006.csv.gz"))
+try:
+    CCm = CPCContainer.from_df(pd.read_csv("_data/NBTest_006.csv.gz"))
+except:
+    CCm = CPCContainer.from_df(pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTest_006.csv.gz"))
 CCu3    = CCm.byparams(exchange="uniswap_v3")
 CCu2    = CCm.byparams(exchange="uniswap_v2")
 CCs2    = CCm.byparams(exchange="sushiswap_v2")
