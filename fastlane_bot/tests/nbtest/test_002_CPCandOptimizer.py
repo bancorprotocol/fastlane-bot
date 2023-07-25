@@ -38,8 +38,8 @@ CCmarket = CPCContainer.from_df(df)
 def test_description():
 # ------------------------------------------------------------
     
-    d = CCmarket.bycid("167").description()
-    assert d.strip() == """
+    d = CCmarket.bycid("167").description().splitlines()
+    d0 = """
     cid      = 167 [167]
     primary  = WETH/DAI [WETH/DAI]
     pp       = 1,826.764318 DAI per WETH
@@ -49,8 +49,11 @@ def test_description():
     p        = 0.0005474159913752679 [min=None, max=None] WETH per DAI
     fee      = 0.003
     descr    = sushiswap_v2 DAI/WETH 0.003
-    """.strip()
-    print(d)
+    """.strip().splitlines()
+    d0 = [l.strip() for l in d0]
+    assert d == d0
+    for l in d0:
+        print(l)
     
 
 # ------------------------------------------------------------
