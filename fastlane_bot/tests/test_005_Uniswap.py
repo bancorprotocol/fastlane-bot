@@ -43,9 +43,9 @@ def test_u3_standalone():
     help(U3.from_dict)
     
     u1 = U3(
-        tkn0="USDC", 
+        tkn0="USDC-eB48", 
         tkn0decv=6, 
-        tkn1="WETH", 
+        tkn1="WETH-6Cc2", 
         tkn1decv=18,
         sp96=data["sqrt_price_q96"],
         tick=data["tick"],
@@ -56,15 +56,15 @@ def test_u3_standalone():
     assert u1 == u2
     u = u2
     assert asdict(u) == {
-        'tkn0': 'USDC',
-        'tkn1': 'WETH',
+        'tkn0': 'USDC-eB48',
+        'tkn1': 'WETH-6Cc2',
         'sp96': int(data["sqrt_price_q96"]),
         'tick': int(data["tick"]),
         'liquidity': int(data["liquidity"]),
         'fee_const': U3.FEE500
     }
-    assert u.tkn0 == "USDC"
-    assert u.tkn1 == "WETH"
+    assert u.tkn0 == "USDC-eB48"
+    assert u.tkn1 == "WETH-6Cc2"
     assert u.tkn0dec == 6
     assert u.tkn1dec == 18
     assert u.decf == 1e-12
@@ -73,7 +73,7 @@ def test_u3_standalone():
     assert iseq(1/u.p, 2108.6828205033694)
     assert u.p == u.price_tkn1_per_tkn0
     assert 1/u.p == u.price_tkn0_per_tkn1
-    assert u.price_convention == 'USDC/WETH [WETH per USDC]'
+    assert u.price_convention == 'USDC-eB48/WETH-6Cc2 [WETH-6Cc2 per USDC-eB48]'
     assert iseq(u._price_f(1725337071198080486317035748446190), 474229689.86928403)
     assert iseq(u._price_f(u.sp96), 474229689.86928403)
     assert u.ticksize == 10
