@@ -1,18 +1,13 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.5
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_040_TestSingleMode.py`
+# ------------------------------------------------------------
+# source file   = NBTest_040_TestSingleMode.py
+# test id       = 040
+# test comment  = TestSingleMode
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
 This module contains the tests for the exchanges classes
 """
@@ -39,14 +34,13 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
 from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Multi Mode [NB039]
 
-# +
+
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 C.DEFAULT_MIN_PROFIT_BNT = 0.02
 C.DEFAULT_MIN_PROFIT = 0.02
@@ -84,7 +78,6 @@ static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
-# Filter out pools that are not in the supported exchanges
 static_pool_data = [
     row for index, row in static_pool_data.iterrows()
     if row["exchange_name"] in exchanges
@@ -92,7 +85,6 @@ static_pool_data = [
 
 static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
-# Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
     cfg=cfg,
@@ -103,14 +95,12 @@ mgr = Manager(
     tokens=tokens.to_dict(orient="records"),
 )
 
-# Add initial pools for each row in the static_pool_data
 start_time = time.time()
 Parallel(n_jobs=-1, backend="threading")(
     delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
 )
 cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
 
-# check if any duplicate cid's exist in the pool data
 mgr.deduplicate_pool_data()
 cids = [pool["cid"] for pool in mgr.pool_data]
 assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
@@ -137,7 +127,6 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-# add data cleanup steps from main.py
 bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
@@ -148,106 +137,93 @@ flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
-# -
+arb_mode = "single"
 
-# ## Test_MIN_PROFIT
-
-assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-
-# ## Test_validator_in_out
-
-arb_finder = bot._get_arb_finder("multi")
-assert arb_finder.__name__ == "FindArbitrageMultiPairwise", f"[TestMultiMode] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
-
-# ## Test_validator_multi
-
-# +
-arb_finder = bot._get_arb_finder("multi")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-
-arb_opp = r[0]
-
-validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode="multi", arb_finder=finder)
+assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 
 
 
-assert arb_opp == validated
 
-# -
+# ------------------------------------------------------------
+# Test      040
+# File      test_040_TestSingleMode.py
+# Segment   Test_arb_mode_class
+# ------------------------------------------------------------
+def test_test_arb_mode_class():
+# ------------------------------------------------------------
+    
+    arb_finder = bot._get_arb_finder("single")
+    assert arb_finder.__name__ == "FindArbitrageSinglePairwise", f"[TestSingleMode] Expected arb_finder class name name = FindArbitrageSinglePairwise, found {arb_finder.__name__}"
+    
 
-# ## Test_validator_single
+# ------------------------------------------------------------
+# Test      040
+# File      test_040_TestSingleMode.py
+# Segment   Test_tokens_and_combos
+# ------------------------------------------------------------
+def test_test_tokens_and_combos():
+# ------------------------------------------------------------
+    
+    arb_finder = bot._get_arb_finder("single")
+    finder2 = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_TOKENS,
+                ConfigObj=bot.ConfigObj,
+            )
+    all_tokens, combos = finder2.find_arbitrage()
+    assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
+    assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+    
+    # ### Test_Single_Arb_Finder_vs_run
+    
+    run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
+    arb_finder = bot._get_arb_finder("single")
+    finder = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_CANDIDATES,
+                ConfigObj=bot.ConfigObj,
+            )
+    r = finder.find_arbitrage()
+    assert len(r) == 22, f"[TestSingleMode] Expected 22 arbs, found {len(r)}"
+    assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
+    
+    r
+    
 
-# +
-arb_mode="single"
-arb_finder = bot._get_arb_finder(arb_mode)
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-
-arb_opp = r[0]
-
-validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-
-
-assert arb_opp == validated
-# -
-
-# ## Test_validator_bancor_v3
-
-# +
-arb_mode="bancor_v3"
-
-arb_finder = bot._get_arb_finder(arb_mode)
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-
-arb_opp = r[0]
-
-validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-
-
-
-assert arb_opp != validated
-# -
-
-# ## Test_validator_multi_triangle
-
-# +
-arb_mode="multi_triangle"
-arb_finder = bot._get_arb_finder(arb_mode)
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-
-arb_opp = r[0]
-
-validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-
-
-
-assert arb_opp == validated
+# ------------------------------------------------------------
+# Test      040
+# File      test_040_TestSingleMode.py
+# Segment   Test_no_multi_carbon
+# ------------------------------------------------------------
+def test_test_no_multi_carbon():
+# ------------------------------------------------------------
+    
+    # +
+    arb_finder = bot._get_arb_finder("single")
+    finder = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_CANDIDATES,
+                ConfigObj=bot.ConfigObj,
+            )
+    r = finder.find_arbitrage()
+    multi_carbon_count = 0
+    
+    for arb in r:
+        (
+                best_profit,
+                best_trade_instructions_df,
+                best_trade_instructions_dic,
+                best_src_token,
+                best_trade_instructions,
+            ) = arb
+        if len(best_trade_instructions_dic) > 2:
+            multi_carbon_count += 1
+    
+    assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"

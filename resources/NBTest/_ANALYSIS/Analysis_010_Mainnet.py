@@ -26,7 +26,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Mainnet Server [NB030]
+# # Mainnet Server [A010]
 
 bot     = Bot()
 CCm     = bot.get_curves()
@@ -35,7 +35,7 @@ pairs0  = CCm.pairs(standardize=False)
 pairs   = CCm.pairs(standardize=True)
 pairsc  = {c.pairo.primary for c in CCm if c.P("exchange")=="carbon_v1"}
 
-# ## Overall market [NOTEST]
+# ## Overall market 
 
 print(f"Total pairs:    {len(pairs0):4}")
 print(f"Primary pairs:  {len(pairs):4}")
@@ -43,7 +43,7 @@ print(f"...carbon:      {len(pairsc):4}")
 print(f"Tokens:         {len(CCm.tokens()):4}")
 print(f"Curves:         {len(CCm):4}")
 
-# ## By pair [NOTEST]
+# ## By pair 
 
 # ### All pairs
 
@@ -215,7 +215,7 @@ raise
 #
 # -
 
-# ## Execution [NOTEST]
+# ## Execution 
 
 # ### Configuration
 #
@@ -236,7 +236,7 @@ bot.update(drop_tables=True, top_n=10, only_carbon=False)
 
 bot.run(flashloan_tokens=flt, mode=bot.RUN_SINGLE)
 
-# ## Execution analysis [NOTEST]
+# ## Execution analysis 
 
 CCm = bot.get_curves()
 
@@ -266,7 +266,7 @@ except bot.NoArbAvailable as e:
     ordinfo = None
 ordinfo
 
-# ## Market analysis [NOTEST]
+# ## Market analysis 
 
 # ### Overall market
 
@@ -291,7 +291,7 @@ for xc in exch:
     c = CCp.byparams(exchange=xc)[0]
     print(f"{xc+':':16} {c.p:.4f} {1/c.p:.4f}")
 
-# ## Technical [NOTEST]
+# ## Technical 
 
 # ### Validation and assertions
 

@@ -9,7 +9,7 @@ from typing import List, Any, Tuple, Union
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools.optimizer import MargPOptimizer
 
 
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
@@ -38,7 +38,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
             r = None
             CC_cc = CPCContainer(miniverse)
-            O = CPCArbOptimizer(CC_cc)
+            O = MargPOptimizer(CC_cc)
             try:
                 r = O.margp_optimizer(src_token)
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
@@ -80,7 +80,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
                     # Rerun main flow with the new set of curves
                     CC_cc = CPCContainer(new_curves)
-                    O = CPCArbOptimizer(CC_cc)
+                    O = MargPOptimizer(CC_cc)
                     r = O.margp_optimizer(src_token)
                     profit_src = -r.result
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)

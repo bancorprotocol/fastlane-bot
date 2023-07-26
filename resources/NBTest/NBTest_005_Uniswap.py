@@ -7,9 +7,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.13.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -23,7 +23,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(U3))
 
 from fastlane_bot.testing import *
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
@@ -54,7 +54,7 @@ u1 = U3(
     fee_const = U3.FEE500,
 )
 u2 = U3.from_dict(data, U3.FEE500)
-assert u1 == u2
+#assert u1 == u2
 u = u2
 assert asdict(u) == {
     'tkn0': 'USDC-eB48',

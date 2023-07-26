@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.4" 
-__DATE__ = "07/May/2023"
+__VERSION__ = "1.4.1" 
+__DATE__ = "25/Jul/2023"
 
 from math import sqrt
 from dataclasses import dataclass, InitVar, asdict
@@ -39,12 +39,12 @@ class Univ3Calculator():
     tkn0decv: InitVar[int] = None
     tkn1decv: InitVar[int] = None
     addrdec: InitVar[dict] = None
-    ADDRDEC = dict(
+    ADDRDEC = {
         # only for testing
-        USDC = ("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 6),
-        WETH = ("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 18),
-    )
-
+        "USDC-eB48": ("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 6),
+        "WETH-6Cc2": ("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 18),
+    }
+    
     @classmethod
     def from_dict(cls, d, fee_const, *, addrdec=None, tkn0decv=None, tkn1decv=None):
         """

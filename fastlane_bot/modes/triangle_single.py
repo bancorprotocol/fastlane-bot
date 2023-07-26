@@ -9,7 +9,7 @@ from typing import Union, List, Tuple, Any
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools.optimizer import MargPOptimizer
 
 
 class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
@@ -38,7 +38,7 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
 
             # Instantiate the container and optimizer objects
             CC_cc = CPCContainer(miniverse)
-            O = CPCArbOptimizer(CC_cc)
+            O = MargPOptimizer(CC_cc)
 
             try:
                 # Perform the optimization
