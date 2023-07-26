@@ -100,7 +100,7 @@ jobs:
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
           BRANCH_NAME="version-bump-$NEW_VERSION-run-$GITHUB_RUN_NUMBER"
-          git checkout -b $BRANCH_NAME
+#          git checkout -b $BRANCH_NAME
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -125,7 +125,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          sed -i '/[skip ci]/d' CHANGELOG.md
+#          sed -i '/[skip ci]/d' CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update changelog [skip ci]"
 
