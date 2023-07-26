@@ -1,66 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
+## [Unreleased](https://github.com/mikewcasale/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725g...HEAD)
-
-Merged pull requests
-
-- Bump version \[skip ci\] [\#20](https://github.com/bancorprotocol/fastlane-bot/pull/20) ([bancor-services](https://github.com/bancor-services))
-- updating DEFAULT\_MIN\_PROFIT\_BNT to 1 [\#19](https://github.com/bancorprotocol/fastlane-bot/pull/19) ([mikewcasale](https://github.com/mikewcasale))
-
-## [main_skl_flbot_20230725g](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725g) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725f...main_skl_flbot_20230725g)
-
-## [main_skl_flbot_20230725f](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725f) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725e...main_skl_flbot_20230725f)
-
-## [main_skl_flbot_20230725e](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725e) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725d...main_skl_flbot_20230725e)
-
-## [main_skl_flbot_20230725d](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725d) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725c...main_skl_flbot_20230725d)
-
-## [main_skl_flbot_20230725c](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725c) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725b...main_skl_flbot_20230725c)
-
-## [main_skl_flbot_20230725b](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725b) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725...main_skl_flbot_20230725b)
-
-## [main_skl_flbot_20230725](https://github.com/bancorprotocol/fastlane-bot/tree/main_skl_flbot_20230725) (2023-07-25)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.1.0...main_skl_flbot_20230725)
-
-## [v2.1.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.1.0) (2023-07-24)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v1.0...v2.1.0)
+[Full Changelog](https://github.com/mikewcasale/fastlane-bot/compare/8ba1c6eebf13a8ff8e550cb28ea86e7e286e4e43...HEAD)
 
 Merged pull requests
 
-- Bump version \[skip ci\] [\#15](https://github.com/bancorprotocol/fastlane-bot/pull/15) ([bancor-services](https://github.com/bancor-services))
-- Bump version \[skip ci\] [\#14](https://github.com/bancorprotocol/fastlane-bot/pull/14) ([bancor-services](https://github.com/bancor-services))
-
-## [v1.0](https://github.com/bancorprotocol/fastlane-bot/tree/v1.0) (2023-05-23)
-
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/8ba1c6eebf13a8ff8e550cb28ea86e7e286e4e43...v1.0)
-
-Merged pull requests
-
-- Feature/read reward settings from arb contract [\#10](https://github.com/bancorprotocol/fastlane-bot/pull/10) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Fix typo in readme [\#9](https://github.com/bancorprotocol/fastlane-bot/pull/9) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- update arb function name [\#8](https://github.com/bancorprotocol/fastlane-bot/pull/8) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Update contract ABI [\#7](https://github.com/bancorprotocol/fastlane-bot/pull/7) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Feature/contract upgrade [\#6](https://github.com/bancorprotocol/fastlane-bot/pull/6) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Feature/private transactions [\#4](https://github.com/bancorprotocol/fastlane-bot/pull/4) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Bugfix/collection path [\#3](https://github.com/bancorprotocol/fastlane-bot/pull/3) ([Lesigh-3100](https://github.com/Lesigh-3100))
-- Dev [\#2](https://github.com/bancorprotocol/fastlane-bot/pull/2) ([mikewcasale](https://github.com/mikewcasale))
-- Dev [\#1](https://github.com/bancorprotocol/fastlane-bot/pull/1) ([mikewcasale](https://github.com/mikewcasale))
+- Update release-and-pypi-publish.yml [\#1](https://github.com/mikewcasale/fastlane-bot/pull/1) ([mikewcasale](https://github.com/mikewcasale))
 
 
 
