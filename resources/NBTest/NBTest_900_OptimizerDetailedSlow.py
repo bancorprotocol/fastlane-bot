@@ -18,9 +18,12 @@
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
 from fastlane_bot.tools.analyzer import CPCAnalyzer
 from fastlane_bot.tools.optimizer import SimpleOptimizer, MargPOptimizer, ConvexOptimizer
+from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
 from fastlane_bot.tools.arbgraphs import ArbGraph
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(OptimizerBase))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimpleOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ConvexOptimizer))
@@ -121,7 +124,25 @@ ArbGraph.from_r(r).plot()._
 #O.CC.plot()
 # -
 
-# ## Tests
+# ## ABC Tests
+
+assert raises(OptimizerBase).startswith("Can't instantiate abstract class")
+assert raises(OptimizerBase.OptimizerResult).startswith("Can't instantiate abstract class")
+
+assert raises(CPCArbOptimizer).startswith("Can't instantiate abstract class")
+assert raises(CPCArbOptimizer.OptimizerResult).startswith("Can't instantiate abstract class")
+
+assert not raises(MargPOptimizer, CCm)
+assert not raises(SimpleOptimizer, CCm)
+assert not raises(ConvexOptimizer, CCm)
+
+assert MargPOptimizer(CCm).kind == "margp"
+assert SimpleOptimizer(CCm).kind == "simple"
+assert ConvexOptimizer(CCm).kind == "convex"
+
+CPCArbOptimizer.MargpOptimizerResult(None, time=0,errormsg="err", optimizer=None)
+
+# ## General and Specific Tests
 
 CA = CAm
 

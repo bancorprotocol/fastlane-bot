@@ -21,6 +21,8 @@ from fastlane_bot.tools.analyzer import CPCAnalyzer
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimpleOptimizer))
 
 from fastlane_bot.testing import *
 #plt.style.use('seaborn-dark')
@@ -444,8 +446,8 @@ assert iseq(sum(w), 894.4271909999159)
 pe = CC.price_estimate(tknq="USDC", tknb="WETH")
 assert pe == np.average(p, weights=w)
 
-O = CPCArbOptimizer(CC)
-Om = CPCArbOptimizer(CCmarket)
+O = SimpleOptimizer(CC)
+Om = SimpleOptimizer(CCmarket)
 assert O.price_estimates(tknq="USDC", tknbs=["WETH"]) == CC.price_estimates(tknqs=["USDC"], tknbs=["WETH"])
 CCmarket.fp(onein="USDC")
 r = Om.price_estimates(tknq="USDC", tknbs=["WETH", "WBTC"])
