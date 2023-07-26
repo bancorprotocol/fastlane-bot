@@ -6,6 +6,9 @@
 
 Merged pull requests
 
+- Bugfix/automated release action [\#29](https://github.com/bancorprotocol/fastlane-bot/pull/29) ([mikewcasale](https://github.com/mikewcasale))
+- Bugfix/GitHub actions [\#28](https://github.com/bancorprotocol/fastlane-bot/pull/28) ([mikewcasale](https://github.com/mikewcasale))
+- Bump version \[skip ci\] [\#21](https://github.com/bancorprotocol/fastlane-bot/pull/21) ([bancor-services](https://github.com/bancor-services))
 - Bump version \[skip ci\] [\#20](https://github.com/bancorprotocol/fastlane-bot/pull/20) ([bancor-services](https://github.com/bancor-services))
 - updating DEFAULT\_MIN\_PROFIT\_BNT to 1 [\#19](https://github.com/bancorprotocol/fastlane-bot/pull/19) ([mikewcasale](https://github.com/mikewcasale))
 
