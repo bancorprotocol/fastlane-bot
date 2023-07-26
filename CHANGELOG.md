@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725g...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.2.0...HEAD)
+
+Merged pull requests
+
+- Merging DEVSKL from the old repo into the new repo [\#17](https://github.com/bancorprotocol/fastlane-bot/pull/17) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.2.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.2.0) (2023-07-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/main_skl_flbot_20230725g...v2.2.0)
 
 Merged pull requests
 
