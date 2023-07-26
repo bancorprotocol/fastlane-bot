@@ -30,13 +30,18 @@ on:
       - main
 
 jobs:
-  check_commit:
+  combined_job:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ steps.check.outputs.skip }}
+      version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
+      changelog: ${{ steps.generate.outputs.changelog }}
+      version_changes: ${{ steps.extract_changes.outputs.version_changes }}
     steps:
+      # Checkout
       - name: Checkout code
         uses: actions/checkout@v2
+
+      # Check commit message
       - id: check
         run: |
           MESSAGE=$(git log -1 --pretty=%B)
@@ -45,29 +50,31 @@ jobs:
           else
             echo "::set-output name=skip::false"
           fi
-  bump_version:
-    runs-on: ubuntu-latest
-    needs: check_commit
-    if: needs.check_commit.outputs.skip != 'true'
-    outputs:
-      version: ${{ steps.bump_version_and_set_output.outputs.new_version }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+
+      # If commit message doesn't contain "[skip ci]", continue to the next steps
       - name: Set up Python
+        if: steps.check.outputs.skip != 'true'
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+
       - uses: actions/setup-node@v3
+        if: steps.check.outputs.skip != 'true'
         with:
           node-version: 16
+
       - name: Install Ganesh-CLI
+        if: steps.check.outputs.skip != 'true'
         run: npm install -g ganache
+
       - name: Install Dependencies
+        if: steps.check.outputs.skip != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt --force-reinstall
+
       - name: Setup Brownie
+        if: steps.check.outputs.skip != 'true'
         run: |
           brownie networks import ./brownie-config.yaml true
           brownie networks delete mainnet
@@ -77,9 +84,13 @@ jobs:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+
       - name: Install bumpversion
+        if: steps.check.outputs.skip != 'true'
         run: pip install bumpversion
+
       - name: Bump version and set output
+        if: steps.check.outputs.skip != 'true'
         id: bump_version_and_set_output
         run: |
           CURRENT_VERSION=$(python -c "import fastlane_bot; print(fastlane_bot.__version__)")
@@ -94,33 +105,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -m "Bump version [skip ci]" -a
-      - name: Push changes
-        run: |
-          git config --global push.autoSetupRemote true
-          git push origin $BRANCH_NAME
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Create Pull Request
-        id: create_pull_request
-        run: |
-          gh pr create --title "Bump version [skip ci]" --body "Automatic version bump" --head "$BRANCH_NAME" --base "main" > pr.txt
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Merge pull request
-        run: |
-          PR_URL=$(cat pr.txt)
-          PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
-          gh pr merge $PR_NUMBER --admin --merge
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  generate_changelog:
-    if: needs.check_commit.outputs.skip != 'true'
-    needs: [ bump_version,check_commit ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+
       - name: Generate changelog
+        if: steps.check.outputs.skip != 'true'
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
           token: ${{ secrets.GH_TOKEN }}
@@ -132,154 +119,52 @@ jobs:
           prLabel: 'Merged pull requests'
           compareLink: true
           addSections: '{"Security fixes": {"labels": ["security"]}, "Breaking changes": {"labels": ["breaking"]}}'
-      - name: Create branch for changelog update
-        run: |
-          BRANCH_NAME="update-changelog-${{ github.run_number }}"
-          git checkout -b $BRANCH_NAME
-      - name: Commit and push changelog update
+
+      - name: Commit changelog update
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Bump version [skip ci]"
-          git push origin HEAD
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Create Pull Request for changelog update
-        run: |
-          gh pr create --title "Bump version [skip ci]" --body "Automatic update of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Merge pull request
-        run: |
-          PR_URL=$(cat pr.txt)
-          PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
-          gh pr merge $PR_NUMBER --admin --merge
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  clean_changelog:
-    needs: [generate_changelog,check_commit]
-    if: needs.check_commit.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      changelog: ${{ steps.generate.outputs.changelog }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+          git commit -m "Update changelog [skip ci]"
+
       - name: Clean changelog
+        if: steps.check.outputs.skip != 'true'
         run: |
-          sed -i '/Bump version/d' CHANGELOG.md
-      - name: Create branch for changelog cleaning
-        run: |
-          BRANCH_NAME="clean-changelog-${{ github.run_number }}"
-          git checkout -b $BRANCH_NAME
-      - name: Commit and push changelog cleaning
+          sed -i '/[skip ci]/d' CHANGELOG.md
+
+      - name: Commit changelog cleaning
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git config --global push.autoSetupRemote true
           git add CHANGELOG.md
-          git commit -m "Bump version [skip ci]"
-          git push origin HEAD
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Create Pull Request for changelog cleaning
-        run: |
-          gh pr create --title "Bump version [skip ci]" --body "Automatic cleaning of CHANGELOG.md" --head "$(git rev-parse --abbrev-ref HEAD)" --base "main" > pr.txt
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      - name: Merge pull request
-        run: |
-          PR_URL=$(cat pr.txt)
-          PR_NUMBER=$(echo $PR_URL | awk -F'/' '{print $NF}')
-          gh pr merge $PR_NUMBER --admin --merge
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-  release:
-    needs: [ bump_version,check_commit,generate_changelog,clean_changelog ]
-    if: needs.check_commit.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      version_changes: ${{ steps.extract_changes.outputs.version_changes }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
+          git commit -m "Clean changelog [skip ci]"
+
       - name: Extract version changes from CHANGELOG.md
+        if: steps.check.outputs.skip != 'true'
         id: extract_changes
         run: |
-          VERSION_CHANGES=$(sed -n "/\[v${{ needs.bump_version.outputs.version }}\]/,/\[v.*\]/p" CHANGELOG.md | head -n -2)
+          VERSION_CHANGES=$(sed -n "/\[v${{ steps.bump_version_and_set_output.outputs.new_version }}\]/,/\[v.*\]/p" CHANGELOG.md | head -n -2)
           echo "::set-output name=version_changes::$VERSION_CHANGES"
+
       - name: Create Release
+        if: steps.check.outputs.skip != 'true'
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: v${{ needs.bump_version.outputs.version }}
-          release_name: Release v${{ needs.bump_version.outputs.version }}
+          tag_name: v${{ steps.bump_version_and_set_output.outputs.new_version }}
+          release_name: Release v${{ steps.bump_version_and_set_output.outputs.new_version }}
           body: ${{ steps.extract_changes.outputs.version_changes }}
           draft: false
           prerelease: false
-  publish:
-    if: needs.check_commit.outputs.skip != 'true'
-    needs: [release,check_commit]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+
+      # Final step, push to main branch using CasperWA/push-protected@v2 action
+      - name: Push to protected branch
+        if: steps.check.outputs.skip != 'true'
+        uses: CasperWA/push-protected@v2
         with:
-          python-version: 3.9
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Install Ganesh-CLI
-        run: npm install -g ganache
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt --force-reinstall
-      - name: Setup Brownie
-        run: |
-          brownie networks import ./brownie-config.yaml true
-          brownie networks delete mainnet
-          brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
-          brownie networks set_provider alchemy
-        env:
-          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
-          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
-          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
-      - name: Create .env file
-        run: |
-          echo TENDERLY_FORK=$TENDERLY_FORK > .env
-          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
-          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
-          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
-          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
-          echo TENDERLY_FORK_ID=$TENDERLY_FORK_ID >> .env
-        env:
-          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
-          TENDERLY_FORK_ID: '${{ secrets.TENDERLY_FORK }}'
-          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
-          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
-          DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
-          ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
-      - name: Install package
-        run: |
-          python setup.py install
-      - name: Build package
-        run: python setup.py sdist
-      - name: Build wheel
-        run: |
-          pip install wheel
-          python setup.py bdist_wheel
-      - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
-          repository-url: https://upload.pypi.org/legacy/
+          token: ${{ secrets.GH_TOKEN }}
+          branch: main
