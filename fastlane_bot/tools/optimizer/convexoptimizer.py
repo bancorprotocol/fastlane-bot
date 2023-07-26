@@ -13,8 +13,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0.1"
-__DATE__ = "15/May/2023"
+__VERSION__ = "5.0"
+__DATE__ = "26/Jul/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -105,6 +105,10 @@ class ConvexOptimizer(CPCArbOptimizer):
     implements the marginal price optimization method
     """
     
+    @property
+    def kind(self):
+        return "convex"
+    
     @dataclass
     class ConvexOptimizerResult(OptimizerBase.OptimizerResult):
 
@@ -126,6 +130,13 @@ class ConvexOptimizer(CPCArbOptimizer):
         def status(self):
             """problem status"""
             return self.problem.status
+        
+        @property
+        def detailed_error(self):
+            """detailed error message"""
+            if self.is_error:
+                return f"ERROR: {self.status} {self.result}"
+            return
 
         @property
         def is_error(self):

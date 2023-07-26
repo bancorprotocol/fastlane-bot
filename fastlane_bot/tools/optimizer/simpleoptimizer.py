@@ -13,8 +13,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0"
-__DATE__ = "10/May/2023"
+__VERSION__ = "5.0"
+__DATE__ = "26/Jul/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -39,6 +39,10 @@ class SimpleOptimizer(CPCArbOptimizer):
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
+    
+    @property
+    def kind(self):
+        return "simple"
     
     @dataclass
     class SimpleOptimizerResult(OptimizerBase.OptimizerResult):

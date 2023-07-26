@@ -7,10 +7,11 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "4.0"
-__DATE__ = "10/May/2023"
+__VERSION__ = "5.0"
+__DATE__ = "26/Jul/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
+from abc import ABC, abstractmethod, abstractproperty
 import pandas as pd
 import numpy as np
 
@@ -22,7 +23,7 @@ from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
 from sys import float_info
 from .dcbase import DCBase
 
-class OptimizerBase:
+class OptimizerBase(ABC):
     """
     base class for all optimizers
 
@@ -33,6 +34,12 @@ class OptimizerBase:
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
+    
+    @abstractproperty
+    def kind(self):
+        """
+        returns the kind of optimizer (as str)
+        """
 
     def pickle(self, basefilename, addts=True):
         """
@@ -56,7 +63,7 @@ class OptimizerBase:
         return object
 
     @dataclass
-    class OptimizerResult(DCBase):
+    class OptimizerResult(DCBase, ABC):
         """
         base class for all optimizer results
 
@@ -83,20 +90,35 @@ class OptimizerBase:
         def __float__(self):
             return float(self.result)
 
-        @property
+        # @property
+        # def status(self):
+        #     """problem status"""
+        #     raise NotImplementedError("must be implemented in derived class")
+        
+        @abstractproperty
         def status(self):
             """problem status"""
-            raise NotImplementedError("must be implemented in derived class")
-
-        @property
+            pass
+        
+        # @property
+        # def is_error(self):
+        #     """True if problem status is not OPTIMAL"""
+        #     raise NotImplementedError("must be implemented in derived class")
+        
+        @abstractproperty
         def is_error(self):
             """True if problem status is not OPTIMAL"""
-            raise NotImplementedError("must be implemented in derived class")
+            pass
 
+        # def detailed_error(self):
+        #     """detailed error analysis"""
+        #     raise NotImplementedError("must be implemented in derived class")
+
+        @abstractproperty
         def detailed_error(self):
             """detailed error analysis"""
-            raise NotImplementedError("must be implemented in derived class")
-
+            pass
+        
         @property
         def error(self):
             """problem error"""
