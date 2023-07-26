@@ -72,10 +72,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt --force-reinstall
-
-      - name: Setup Brownie
-        if: steps.check.outputs.skip != 'true'
-        run: |
+          pip install bumpversion
           brownie networks import ./brownie-config.yaml true
           brownie networks delete mainnet
           brownie networks add "Ethereum Mainnet" "mainnet" host="https://eth-mainnet.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID" chainid=1
@@ -84,10 +81,6 @@ jobs:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
-
-      - name: Install bumpversion
-        if: steps.check.outputs.skip != 'true'
-        run: pip install bumpversion
 
       - name: Bump version and set output
         if: steps.check.outputs.skip != 'true'
@@ -100,11 +93,12 @@ jobs:
           NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
           BRANCH_NAME="version-bump-$NEW_VERSION-run-$GITHUB_RUN_NUMBER"
-#          git checkout -b $BRANCH_NAME
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
+          git checkout main
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -m "Bump version [skip ci]" -a
+          git add fastlane_bot/__init__.py
+          git commit -m "Bump version [skip ci]"
 
       - name: Generate changelog
         if: steps.check.outputs.skip != 'true'
@@ -112,7 +106,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           output: 'CHANGELOG.md'
-          configureSections: '{"Merged pull requests": {"labels": ["pull-request"]}, "Fixed bugs": {"labels": ["bug"]}, "Implemented enhancements": {"labels": ["enhancement"]}, "Closed issues": {"labels": ["closed-issue"]}}'
+          configureSections: '{"Merged pull requests": {"labels": ["pull-request","Merge pull request"]}, "Fixed bugs": {"labels": ["bug","bugfix"]}, "Implemented enhancements": {"labels": ["enhancement","feature"]}, "Closed issues": {"labels": ["closed-issue"]}}'
           bugsLabel: 'Fixed bugs'
           enhancementLabel: 'Implemented enhancements'
           issuesLabel: 'Closed issues'
@@ -123,35 +117,19 @@ jobs:
       - name: Commit changelog update
         if: steps.check.outputs.skip != 'true'
         run: |
+          git checkout main
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-#          sed -i '/[skip ci]/d' CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update changelog [skip ci]"
 
-#      - name: Clean changelog
-#        if: steps.check.outputs.skip != 'true'
-#        run: |
-#          git config --local user.email "action@github.com"
-#          git config --local user.name "GitHub Action"
-#          sed -i '/[skip ci]/d' CHANGELOG.md
-#          git add CHANGELOG.md
-#          git commit -m "Clean changelog [skip ci]"
-
-#      - name: Commit changelog cleaning
-#        if: steps.check.outputs.skip != 'true'
-#        run: |
-#          git config --local user.email "action@github.com"
-#          git config --local user.name "GitHub Action"
-#          git add CHANGELOG.md
-#          git commit -m "Clean changelog [skip ci]"
-
-#      - name: Extract version changes from CHANGELOG.md
-#        if: steps.check.outputs.skip != 'true'
-#        id: extract_changes
-#        run: |
-#          VERSION_CHANGES=$(sed -n "/\[v${{ steps.bump_version_and_set_output.outputs.new_version }}\]/,/\[v.*\]/p" CHANGELOG.md | head -n -2)
-#          echo "::set-output name=version_changes::$VERSION_CHANGES"
+      # push to main branch using CasperWA/push-protected@v2 action
+      - name: Push to protected branch
+        if: steps.check.outputs.skip != 'true'
+        uses: CasperWA/push-protected@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          branch: main
 
       - name: Create Release
         if: steps.check.outputs.skip != 'true'
@@ -166,10 +144,38 @@ jobs:
           draft: false
           prerelease: false
 
-      # Final step, push to main branch using CasperWA/push-protected@v2 action
-      - name: Push to protected branch
-        if: steps.check.outputs.skip != 'true'
-        uses: CasperWA/push-protected@v2
+      - name: Create .env file
+        run: |
+          echo TENDERLY_FORK=$TENDERLY_FORK > .env
+          echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
+          echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
+          echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
+          echo TENDERLY_FORK_ID=$TENDERLY_FORK_ID >> .env
+        env:
+          TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
+          TENDERLY_FORK_ID: '${{ secrets.TENDERLY_FORK }}'
+          WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
+          DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
+          ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
+
+      - name: Install package
+        run: |
+          python setup.py install
+
+      - name: Build package
+        run: python setup.py sdist
+
+      - name: Build wheel
+        run: |
+          pip install wheel
+          python setup.py bdist_wheel
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          token: ${{ secrets.GH_TOKEN }}
-          branch: main
+          password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
+          repository-url: https://upload.pypi.org/legacy/
+
+
