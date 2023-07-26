@@ -188,6 +188,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             if limiter:
                 rate_limiter = 0.1 + 0.9 * random.random()
                 time.sleep(rate_limiter)
+            else:
+                rate_limiter = 0
             try:
                 if event:
                     self.update_from_event(event=event, block_number=block_number)
