@@ -141,12 +141,12 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Clean changelog [skip ci]"
 
-      - name: Extract version changes from CHANGELOG.md
-        if: steps.check.outputs.skip != 'true'
-        id: extract_changes
-        run: |
-          VERSION_CHANGES=$(sed -n "/\[v${{ steps.bump_version_and_set_output.outputs.new_version }}\]/,/\[v.*\]/p" CHANGELOG.md | head -n -2)
-          echo "::set-output name=version_changes::$VERSION_CHANGES"
+#      - name: Extract version changes from CHANGELOG.md
+#        if: steps.check.outputs.skip != 'true'
+#        id: extract_changes
+#        run: |
+#          VERSION_CHANGES=$(sed -n "/\[v${{ steps.bump_version_and_set_output.outputs.new_version }}\]/,/\[v.*\]/p" CHANGELOG.md | head -n -2)
+#          echo "::set-output name=version_changes::$VERSION_CHANGES"
 
       - name: Create Release
         if: steps.check.outputs.skip != 'true'
