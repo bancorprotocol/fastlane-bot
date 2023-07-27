@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.2.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.3.0...HEAD)
+
+- Unassigned 'rate\_limiter' Error with Shared Alchemy API Key [\#32](https://github.com/bancorprotocol/fastlane-bot/issues/32)
+- bugfix closes \#32 [\#33](https://github.com/bancorprotocol/fastlane-bot/pull/33) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.3.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.3.0) (2023-07-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.2.0...v2.3.0)
 
 Merged pull requests
 
