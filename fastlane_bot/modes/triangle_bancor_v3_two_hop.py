@@ -33,7 +33,8 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         self.ConfigObj.logger.info(
             f"flashloan_tokens for arb_mode={self.arb_mode} will be overwritten. "
         )
-        self.flashloan_tokens = self.CCm.byparams(exchange="bancor_v3").tknys()
+
+        self._check_limit_flashloan_tokens_for_bancor3()
 
         if candidates is None:
             candidates = []

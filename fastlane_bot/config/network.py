@@ -94,6 +94,7 @@ class ConfigNetwork(ConfigBase):
     CARBON_FEE = Decimal("0.002")
     BANCOR_V3_FEE = Decimal("0.0")
     DEFAULT_REWARD_PERCENT = Decimal("0.5")
+    LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
 
     # SUNDRY SECTION
     #######################################################################################

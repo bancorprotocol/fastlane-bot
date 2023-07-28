@@ -106,6 +106,12 @@ load_dotenv()
     type=int,
     help="Set to the number of arb opportunities to pick from.",
 )
+@click.option(
+    "--limit_bancor3_flashloan_tokens",
+    default=True,
+    type=bool,
+    help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens parameter to be overwritten as all tokens supported by Bancor v3.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -124,6 +130,7 @@ def main(
     use_cached_events: bool,
     run_data_validator: bool,
     randomizer: int,
+    limit_bancor3_flashloan_tokens: bool
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -146,6 +153,7 @@ def main(
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
+        limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
     """
     # Set config
     loglevel = (
@@ -166,6 +174,8 @@ def main(
     else:
         cfg = Config.new(config=Config.CONFIG_MAINNET, loglevel=loglevel)
         cfg.logger.info("Using mainnet config")
+
+    cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
 
     # Set external exchanges
     exchanges = exchanges.split(",")
