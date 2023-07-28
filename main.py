@@ -8,6 +8,7 @@ Licensed under MIT
 import json
 import os
 import time
+from _decimal import Decimal
 from typing import List, Any, Tuple, Hashable
 
 import click
@@ -112,25 +113,32 @@ load_dotenv()
     type=bool,
     help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens parameter to be overwritten as all tokens supported by Bancor v3.",
 )
+@click.option(
+    "--default_min_profit_bnt",
+    default=80,
+    type=int,
+    help="Set to the default minimum profit in BNT. This should be reasonably high to avoid losses from gas fees.",
+)
 def main(
-    cache_latest_only: bool,
-    backdate_pools: bool,
-    arb_mode: str,
-    flashloan_tokens: str,
-    config: str,
-    n_jobs: int,
-    exchanges: str,
-    polling_interval: int,
-    alchemy_max_block_fetch: int,
-    static_pool_data_filename: str,
-    reorg_delay: int,
-    logging_path: str,
-    loglevel: str,
-    static_pool_data_sample_sz: str,
-    use_cached_events: bool,
-    run_data_validator: bool,
-    randomizer: int,
-    limit_bancor3_flashloan_tokens: bool
+        cache_latest_only: bool,
+        backdate_pools: bool,
+        arb_mode: str,
+        flashloan_tokens: str,
+        config: str,
+        n_jobs: int,
+        exchanges: str,
+        polling_interval: int,
+        alchemy_max_block_fetch: int,
+        static_pool_data_filename: str,
+        reorg_delay: int,
+        logging_path: str,
+        loglevel: str,
+        static_pool_data_sample_sz: str,
+        use_cached_events: bool,
+        run_data_validator: bool,
+        randomizer: int,
+        limit_bancor3_flashloan_tokens: bool,
+        default_min_profit_bnt: int
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -154,6 +162,8 @@ def main(
         use_cached_events (bool): Whether to use cached events or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
+        default_min_profit_bnt (int): The default minimum profit in BNT.
+
     """
     # Set config
     loglevel = (
@@ -168,6 +178,8 @@ def main(
         else Config.LOGLEVEL_INFO
     )
 
+    default_min_profit_bnt = Decimal(default_min_profit_bnt)
+
     if config and config == "tenderly":
         cfg = Config.new(config=Config.CONFIG_TENDERLY, loglevel=loglevel)
         cfg.logger.info("Using Tenderly config")
@@ -176,6 +188,8 @@ def main(
         cfg.logger.info("Using mainnet config")
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
+    cfg.DEFAULT_MIN_PROFIT_BNT = Decimal(str(default_min_profit_bnt))
+    cfg.DEFAULT_MIN_PROFIT = Decimal(str(default_min_profit_bnt))
 
     # Set external exchanges
     exchanges = exchanges.split(",")
@@ -197,10 +211,10 @@ def main(
         if static_pool_data_sample_sz != "max":
             bancor3_pool_data = static_pool_data[
                 static_pool_data["exchange_name"] == "bancor_v3"
-            ]
+                ]
             non_bancor3_pool_data = static_pool_data[
                 static_pool_data["exchange_name"] != "bancor_v3"
-            ]
+                ]
             non_bancor3_pool_data = non_bancor3_pool_data.sample(
                 n=int(static_pool_data_sample_sz)
             )
@@ -259,19 +273,19 @@ def main(
 
 
 def run(
-    cache_latest_only: bool,
-    backdate_pools: bool,
-    mgr: Manager,
-    n_jobs: int,
-    polling_interval: int,
-    alchemy_max_block_fetch: int,
-    arb_mode: str,
-    flashloan_tokens: List[str] or None,
-    reorg_delay: int,
-    logging_path: str,
-    use_cached_events: bool,
-    run_data_validator: bool,
-    randomizer: int
+        cache_latest_only: bool,
+        backdate_pools: bool,
+        mgr: Manager,
+        n_jobs: int,
+        polling_interval: int,
+        alchemy_max_block_fetch: int,
+        arb_mode: str,
+        flashloan_tokens: List[str] or None,
+        reorg_delay: int,
+        logging_path: str,
+        use_cached_events: bool,
+        run_data_validator: bool,
+        randomizer: int,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -293,7 +307,7 @@ def run(
     """
 
     def get_event_filters(
-        start_block: int, current_block: int, reorg_delay: int
+            start_block: int, current_block: int, reorg_delay: int
     ) -> Any:
         """
         Creates event filters for the specified block range.
@@ -329,7 +343,7 @@ def run(
         )
 
     def save_events_to_json(
-        latest_events: List[Any], start_block: int, current_block: int
+            latest_events: List[Any], start_block: int, current_block: int
     ) -> None:
         """
         Saves the given events to a JSON file.
@@ -348,8 +362,8 @@ def run(
         try:
             with open(path, "w") as f:
                 latest_events = [
-                    _["args"].pop("contextId", None) for _ in latest_events
-                ] and latest_events
+                                    _["args"].pop("contextId", None) for _ in latest_events
+                                ] and latest_events
                 f.write(json.dumps(latest_events))
         except Exception as e:
             mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
@@ -387,7 +401,7 @@ def run(
             mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
     def parse_bancor3_rows_to_update(
-        rows_to_update: List[Hashable],
+            rows_to_update: List[Hashable],
     ) -> Tuple[List[Hashable], List[Hashable]]:
         """
         Parses the rows to update for Bancor v3 pools.
@@ -552,7 +566,7 @@ def run(
 
                 for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
                     update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update,
-                                                             current_block=current_block)
+                                                current_block=current_block)
 
             elif last_block == 0 and "bancor_v3" in mgr.exchanges:
                 # Update the pool data on disk
@@ -563,7 +577,7 @@ def run(
                     if pool["exchange_name"] == "bancor_v3"
                 ]
                 update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update, not_bancor_v3=False,
-                                                     current_block=current_block)
+                                            current_block=current_block)
             elif last_block == 0 and "carbon_v1" in mgr.exchanges:
                 # Update the pool data on disk
                 mgr.get_rows_to_update(start_block)
@@ -602,7 +616,7 @@ def run(
                     mode="single",
                     arb_mode=arb_mode,
                     run_data_validator=run_data_validator,
-                    randomizer=randomizer
+                    randomizer=randomizer,
                 )
 
             # Increment the loop index

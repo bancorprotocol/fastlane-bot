@@ -1252,6 +1252,10 @@ class CarbonBot(CarbonBotBase):
             whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
         arb_mode: str
             the arbitrage mode (default: None)
+        run_data_validator: bool
+            whether to run the data validator (default: False)
+        randomizer: int
+            the randomizer (default: 0)
 
         Returns
         -------
