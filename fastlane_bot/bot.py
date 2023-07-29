@@ -477,7 +477,7 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = self.randomize(arb_opps=r, randomizer=randomizer)
-        if data_validator or arb_mode == "bancor_v3":
+        if data_validator or arb_mode in ["bancor_v3", "b3_two_hop"]:
             # Add random chance if we should check or not
             r = self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
             if r is None:
