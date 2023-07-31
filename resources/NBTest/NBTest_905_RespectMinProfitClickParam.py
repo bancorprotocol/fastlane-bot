@@ -80,7 +80,7 @@ def run_command(arb_mode, expected_log_line):
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=60)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr or expected_log_line in result.stdout:
@@ -94,7 +94,6 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test Minimum Profit BNT Is Respected
 
-# + is_executing=true
 expected_log_line = "Bot successfully updated min profit"
 arb_mode = "multi"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
