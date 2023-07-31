@@ -119,6 +119,12 @@ load_dotenv()
     type=int,
     help="Set to the default minimum profit in BNT. This should be reasonably high to avoid losses from gas fees.",
 )
+@click.option(
+    "--timeout",
+    default=None,
+    type=int,
+    help="Set to the timeout in seconds. Set to None for no timeout.",
+)
 def main(
         cache_latest_only: bool,
         backdate_pools: bool,
@@ -138,7 +144,8 @@ def main(
         run_data_validator: bool,
         randomizer: int,
         limit_bancor3_flashloan_tokens: bool,
-        default_min_profit_bnt: int
+        default_min_profit_bnt: int,
+        timeout: int,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -163,6 +170,7 @@ def main(
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
         default_min_profit_bnt (int): The default minimum profit in BNT.
+        timeout (int): The timeout in seconds.
 
     """
     # Set config
@@ -268,7 +276,8 @@ def main(
         logging_path,
         use_cached_events,
         run_data_validator,
-        randomizer
+        randomizer,
+        timeout
     )
 
 
@@ -286,6 +295,7 @@ def run(
         use_cached_events: bool,
         run_data_validator: bool,
         randomizer: int,
+        timeout: int
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -304,6 +314,7 @@ def run(
         use_cached_events (bool): Whether to use cached events or not.
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (bool): Whether to randomize the polling interval or not.
+        timeout (int): The timeout for the polling interval.
     """
 
     def get_event_filters(
@@ -494,6 +505,7 @@ def run(
 
     bot = None
     loop_idx = last_block = 0
+    start_timeout = time.time()
     while True:
         try:
 
@@ -624,6 +636,11 @@ def run(
 
             # Sleep for the polling interval
             time.sleep(polling_interval)
+
+            print(f"timeout: {timeout}")
+            if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                break
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
