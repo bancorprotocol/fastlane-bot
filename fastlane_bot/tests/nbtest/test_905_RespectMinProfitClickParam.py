@@ -1,20 +1,15 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.7
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_905_RespectMinProfitClickParam.py`
+# ------------------------------------------------------------
+# source file   = NBTest_905_RespectMinProfitClickParam.py
+# test id       = 905
+# test comment  = RespectMinProfitClickParam
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
-This module contains the tests which ensure that data validation checks always occur when running a bancor3-related arb_mode.
+This module contains the tests which ensure that the minimum profit BNT parameter is respected.
 """
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -34,9 +29,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
-# # Setup
 
-# +
+
 def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
@@ -73,7 +67,8 @@ def run_command(arb_mode, expected_log_line):
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=45"
+        "--timeout=45",
+        "--loglevel=DEBUG",
     ]
     subprocess.Popen(cmd)
         
@@ -89,10 +84,16 @@ def run_command(arb_mode, expected_log_line):
         pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
 
 
-# -
 
-# ## Test Data Validation For b3_two_hop
 
-expected_log_line = "Transactions will be required to pass data validation for"
-arb_mode = "b3_two_hop"
-run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
+# ------------------------------------------------------------
+# Test      905
+# File      test_905_RespectMinProfitClickParam.py
+# Segment   Test Minimum Profit BNT Is Respected
+# ------------------------------------------------------------
+def test_test_minimum_profit_bnt_is_respected():
+# ------------------------------------------------------------
+    
+    expected_log_line = "Bot successfully updated min profit"
+    arb_mode = "multi"
+    run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)

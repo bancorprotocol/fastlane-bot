@@ -1,18 +1,13 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.7
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_904_Bancor3DataValidation.py`
+# ------------------------------------------------------------
+# source file   = NBTest_904_Bancor3DataValidation.py
+# test id       = 904
+# test comment  = Bancor3DataValidation
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
 This module contains the tests which ensure that data validation checks always occur when running a bancor3-related arb_mode.
 """
@@ -34,9 +29,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
-# # Setup
 
-# +
+
 def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
@@ -89,10 +83,16 @@ def run_command(arb_mode, expected_log_line):
         pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
 
 
-# -
 
-# ## Test Data Validation For b3_two_hop
 
-expected_log_line = "Transactions will be required to pass data validation for"
-arb_mode = "b3_two_hop"
-run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
+# ------------------------------------------------------------
+# Test      904
+# File      test_904_Bancor3DataValidation.py
+# Segment   Test Data Validation For b3_two_hop
+# ------------------------------------------------------------
+def test_test_data_validation_for_b3_two_hop():
+# ------------------------------------------------------------
+    
+    expected_log_line = "Transactions will be required to pass data validation for"
+    arb_mode = "b3_two_hop"
+    run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)

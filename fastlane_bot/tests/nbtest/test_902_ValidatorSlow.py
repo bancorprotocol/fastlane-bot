@@ -190,7 +190,6 @@ def test_test_validator_multi():
     
     
     assert arb_opp == validated
-    
     # -
     
 
@@ -250,7 +249,7 @@ def test_test_validator_bancor_v3():
     
     
     
-    assert arb_opp != validated
+    assert arb_opp == validated
     # -
     
 
