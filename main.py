@@ -607,6 +607,9 @@ def run(
             del bot
             bot = init_bot(mgr)
 
+            assert bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT, "bot failed to update min profit"
+            mgr.cfg.logger.debug("Bot successfully updated min profit")
+
             # Compare the initial state to the final state, and update the state if it has changed
             final_state = mgr.pool_data.copy()
             assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
@@ -637,7 +640,6 @@ def run(
             # Sleep for the polling interval
             time.sleep(polling_interval)
 
-            print(f"timeout: {timeout}")
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
