@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.7
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -213,16 +213,6 @@ optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, 'BNT-FF1C')
 assert type(optimal_arb) == float, f"[test_bancor_v3] Optimal arb calculation type is {type(optimal_arb)} not float"
 assert iseq(optimal_arb, 4051.1611717583105), f"[test_bancor_v3] Optimal arb calculation type is {optimal_arb}, expected 4051.1611717583105"
 # -
-
-
-
-
-
-
-
-
-
-
 # ## Test_max_arb_trade_in_constant_product
 
 # +
