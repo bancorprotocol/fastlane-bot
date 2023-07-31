@@ -23,7 +23,6 @@ except AssertionError as e:
     with open(env_file, 'w') as f:
         f.write(f"export WEB3_ALCHEMY_PROJECT_ID=\n")
         f.write(f"export ETH_PRIVATE_KEY_BE_CAREFUL=\n")
-        f.write(f"export DEFAULT_MIN_PROFIT_BNT=200\n")
         f.write(f"export ETHERSCAN_TOKEN=\n")
         f.write(f"export TENDERLY_FORK_ID=\n")
         f.write(f"export TENDERLY_ACCESS_KEY=\n")
@@ -35,7 +34,6 @@ load_dotenv(env_file)
 # Check for required variables
 required_vars = ['WEB3_ALCHEMY_PROJECT_ID',
                  'ETH_PRIVATE_KEY_BE_CAREFUL',
-                 'DEFAULT_MIN_PROFIT_BNT',
                  'ETHERSCAN_TOKEN',
                  'TENDERLY_FORK_ID',
                  'TENDERLY_ACCESS_KEY',
@@ -46,12 +44,8 @@ with open(env_file, 'a') as f:
     for var in required_vars:
         if var not in os.environ:
             print(f"The {var} environment variable is missing in .env file. Adding it with a default empty value. See README.md for instructions")
-            if var == 'DEFAULT_MIN_PROFIT_BNT':
-                f.write(f"export {var}=1\n")
-                os.environ[var] = '1'
-            else:
-                f.write(f"export {var}=\n")
-                os.environ[var] = ''  # Optionally update the current environment as well
+            f.write(f"export {var}=\n")
+            os.environ[var] = ''  # Optionally update the current environment as well
         if os.environ[var] == '' and 'TENDERLY' not in var and 'ETHERSCAN_TOKEN' not in var:
             raise Exception(f"The {var} environment variable cannot be None. Please update the .env file. See README.md for instructions")
 

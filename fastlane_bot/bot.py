@@ -477,7 +477,8 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = self.randomize(arb_opps=r, randomizer=randomizer)
-        if data_validator or arb_mode == "bancor_v3":
+
+        if data_validator:
             # Add random chance if we should check or not
             r = self.validate_optimizer_trades(arb_opp=r, arb_mode=arb_mode, arb_finder=finder)
             if r is None:
@@ -1252,6 +1253,10 @@ class CarbonBot(CarbonBotBase):
             whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
         arb_mode: str
             the arbitrage mode (default: None)
+        run_data_validator: bool
+            whether to run the data validator (default: False)
+        randomizer: int
+            the randomizer (default: 0)
 
         Returns
         -------
@@ -1263,6 +1268,11 @@ class CarbonBot(CarbonBotBase):
         self.setup_polling_interval(polling_interval)
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
+
+        if arb_mode in {"bancor_v3", "b3_two_hop"}:
+            run_data_validator = True
+            # The following logs are used for asserting various pytests, do not remove.
+            self.ConfigObj.logger.info(f"Transactions will be required to pass data validation for {arb_mode}")
 
         if mode == "continuous":
             self.run_continuous_mode(flashloan_tokens, arb_mode, run_data_validator, randomizer)

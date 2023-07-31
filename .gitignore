@@ -9,6 +9,7 @@ topaze
 *.gif
 *.json
 
+.sourcery.yaml
 .DS_Store
 .idea/*
 .idea/modules.xml

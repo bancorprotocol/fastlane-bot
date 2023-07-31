@@ -8,8 +8,12 @@ mkdir fastlane_bot/tests/nbtest/_data/
 cp resources/NBTest/_data/* fastlane_bot/tests/nbtest/_data/
 touch fastlane_bot/tests/__init__.py
 touch fastlane_bot/tests/nbtest/__init__.py
+
+# convert .ipynb to .py here...
+for notebook in resources/NBTest/*.ipynb; do
+    jupytext --to py "$notebook"
+done
+
 python resources/NBTest/ConvertNBTest.py >/dev/null
-#python resources/NBTest/ConvertNBTest.py
-#mv fastlane_bot/tests/nbtest/* fastlane_bot/tests/
-#pytest fastlane_bot/tests $1
-pytest fastlane_bot/tests/nbtest $1
+
+pytest fastlane_bot/tests/nbtest -v $1

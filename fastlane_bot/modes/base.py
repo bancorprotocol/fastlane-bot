@@ -256,3 +256,15 @@ class ArbitrageFinderBase:
                 trade_instructions_dic,
             )
         return best_profit, ops
+
+    def _check_limit_flashloan_tokens_for_bancor3(self):
+        """
+        Limit the flashloan tokens for bancor v3.
+        """
+        fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
+        if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
+            # Filter out tokens that are not in the existing flashloan_tokens list
+            self.flashloan_tokens = [tkn for tkn in fltkns if tkn in self.flashloan_tokens]
+            self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
+        else:
+            self.flashloan_tokens = fltkns
