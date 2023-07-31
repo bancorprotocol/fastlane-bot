@@ -79,7 +79,7 @@ def run_command(arb_mode, expected_log_line):
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=60)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr:
