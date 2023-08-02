@@ -2,13 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.5.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.6.0...HEAD)
+
+- Add new GitHub action for automating production job restart upon new version update. [\#46](https://github.com/bancorprotocol/fastlane-bot/issues/46)
+- Adding to exiting workflow instead of stand-alone [\#50](https://github.com/bancorprotocol/fastlane-bot/pull/50) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.6.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.6.0) (2023-07-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.5.0...v2.6.0)
 
 - b3\_two\_hop Arb Mode Resulting in Losses Due to Lack of Data Validation [\#42](https://github.com/bancorprotocol/fastlane-bot/issues/42)
 - Increase DEFAULT\_MIN\_PROFIT\_BNT Value & Fix Hardcoding Issue in config/network.py [\#37](https://github.com/bancorprotocol/fastlane-bot/issues/37)
 - Bug: Overwriting of flashloan\_tokens List Set in main.py [\#35](https://github.com/bancorprotocol/fastlane-bot/issues/35)
 
-- Add new GitHub action for automating production job restart upon new version update. [\#46](https://github.com/bancorprotocol/fastlane-bot/issues/46)
 - 46 add new GitHub action for automating production job restart upon new version update [\#49](https://github.com/bancorprotocol/fastlane-bot/pull/49) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.5.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.5.0) (2023-07-31)
