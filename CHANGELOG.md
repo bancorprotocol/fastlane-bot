@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.6.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.0...HEAD)
+
+- Change automation to increment patch version instead of minor version. [\#53](https://github.com/bancorprotocol/fastlane-bot/issues/53)
+- Change automation to increment patch version instead of minor. [\#54](https://github.com/bancorprotocol/fastlane-bot/pull/54) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.0) (2023-08-02)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.6.0...v2.7.0)
 
 - Add new GitHub action for automating production job restart upon new version update. [\#46](https://github.com/bancorprotocol/fastlane-bot/issues/46)
 - Adding to exiting workflow instead of stand-alone [\#50](https://github.com/bancorprotocol/fastlane-bot/pull/50) ([mikewcasale](https://github.com/mikewcasale))
