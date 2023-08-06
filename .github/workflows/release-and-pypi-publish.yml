@@ -90,7 +90,7 @@ jobs:
           MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
           MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
           PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
-          NEW_VERSION="${MAJOR}.$((MINOR + 1)).${PATCH}"
+          NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
           echo new_version=$NEW_VERSION >> $GITHUB_OUTPUT
           BRANCH_NAME="version-bump-$NEW_VERSION-run-$GITHUB_RUN_NUMBER"
           sed -i "s/$CURRENT_VERSION/$NEW_VERSION/" fastlane_bot/__init__.py
