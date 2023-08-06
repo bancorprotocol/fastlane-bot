@@ -57,7 +57,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=[T.WETH, T.DAI, T.USDC, T.USDT, T.WBTC, T.BNT, T.NATIVE_ETH],
+    default=f"{T.WETH},{T.DAI},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, the search space is decreased for all modes, including the b3_two_hop mode (assuming that --limit_bancor3_flashloan_tokens=True).",
 )
