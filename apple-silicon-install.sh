@@ -31,7 +31,7 @@ fi
 
 # Install remaining packages from requirements.txt with pip
 if [ -f requirements.txt ]; then
-    pip install -r requirements.txt
+    pip install -r requirements.txt --ignore-installed
 else
     echo "requirements.txt not found in the current directory"
     exit 1
