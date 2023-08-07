@@ -2,9 +2,29 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.2...HEAD)
+
+- Cleanup of Unused Top-Level Files [\#47](https://github.com/bancorprotocol/fastlane-bot/issues/47)
+- Removes unused files. [\#48](https://github.com/bancorprotocol/fastlane-bot/pull/48) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- Update README with Brownie and pyyaml Install Troubleshoot [\#31](https://github.com/bancorprotocol/fastlane-bot/issues/31)
+
+## [v2.7.2](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.2) (2023-08-07)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.1...v2.7.2)
 
 - Change automation to increment patch version instead of minor version. [\#53](https://github.com/bancorprotocol/fastlane-bot/issues/53)
+
+Merged pull requests
+
+- Adds additional installation instructions for apple-silicon users. [\#52](https://github.com/bancorprotocol/fastlane-bot/pull/52) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.1](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.1) (2023-08-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.0...v2.7.1)
+
 - Change automation to increment patch version instead of minor. [\#54](https://github.com/bancorprotocol/fastlane-bot/pull/54) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.7.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.0) (2023-08-02)
