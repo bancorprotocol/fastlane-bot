@@ -2,9 +2,32 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.4.0...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.0...HEAD)
+
+- Change automation to increment patch version instead of minor version. [\#53](https://github.com/bancorprotocol/fastlane-bot/issues/53)
+- Change automation to increment patch version instead of minor. [\#54](https://github.com/bancorprotocol/fastlane-bot/pull/54) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.0) (2023-08-02)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.6.0...v2.7.0)
+
+- Add new GitHub action for automating production job restart upon new version update. [\#46](https://github.com/bancorprotocol/fastlane-bot/issues/46)
+- Adding to exiting workflow instead of stand-alone [\#50](https://github.com/bancorprotocol/fastlane-bot/pull/50) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.6.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.6.0) (2023-07-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.5.0...v2.6.0)
 
 - b3\_two\_hop Arb Mode Resulting in Losses Due to Lack of Data Validation [\#42](https://github.com/bancorprotocol/fastlane-bot/issues/42)
+- Increase DEFAULT\_MIN\_PROFIT\_BNT Value & Fix Hardcoding Issue in config/network.py [\#37](https://github.com/bancorprotocol/fastlane-bot/issues/37)
+- Bug: Overwriting of flashloan\_tokens List Set in main.py [\#35](https://github.com/bancorprotocol/fastlane-bot/issues/35)
+
+- 46 add new GitHub action for automating production job restart upon new version update [\#49](https://github.com/bancorprotocol/fastlane-bot/pull/49) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.5.0](https://github.com/bancorprotocol/fastlane-bot/tree/v2.5.0) (2023-07-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.4.0...v2.5.0)
+
 - Unassigned 'rate\_limiter' Error with Shared Alchemy API Key [\#32](https://github.com/bancorprotocol/fastlane-bot/issues/32)
 - Adds data validation to `b3_two_hop` mode by default. [\#43](https://github.com/bancorprotocol/fastlane-bot/pull/43) ([mikewcasale](https://github.com/mikewcasale))
 
