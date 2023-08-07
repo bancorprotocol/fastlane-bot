@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.7
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -182,7 +182,6 @@ validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode="multi", arb
 
 
 assert arb_opp == validated
-
 # -
 
 # ## Test_validator_single
