@@ -215,7 +215,7 @@ validated = bot.validate_optimizer_trades(
 )
 
 
-assert arb_opp != validated
+assert arb_opp == validated
 
 # -
 
@@ -265,7 +265,7 @@ validated = bot.validate_optimizer_trades(
 )
 
 
-assert arb_opp != validated
+assert arb_opp == validated
 # -
 
 # ## Test_validator_multi_triangle
