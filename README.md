@@ -18,11 +18,7 @@ Permanent URL for this repository: [github.com/bancorprotocol/fastlane-bot][repo
 
 Install Fastlane Arbitrage Bot from PyPi using the following command:
 
-```bash
-pip install fastlane_bot
-```
-
-Or clone the repo from Bancor's GitHub:
+Clone the repo from Bancor's GitHub and install:
 
 ```bash
 git clone https://github.com/bancorprotocol/fastlane-bot
@@ -30,6 +26,44 @@ cd fastlane-bot
 pip install -r requirements.txt
 python setup.py install
 ```
+
+Here are the added instructions for Mac users with an Apple Silicon chip:
+
+### Installation for Mac users with Apple Silicon chip
+
+Due to the architectural differences of the Apple Silicon chip, some Python packages may not install correctly using the standard method. Follow the instructions below to create a compatible conda environment, and then install Fastlane Arbitrage Bot:
+
+1. Install Miniforge tailored for Apple Silicon from [here](https://github.com/conda-forge/miniforge#miniforge3).
+
+```bash
+# to install miniforge
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+bash Miniforge3-MacOSX-arm64.sh
+```
+
+Follow the terminal prompts to ensure conda is installed and initialized.
+
+2. Create a new conda environment using the correct architecture:
+
+```bash
+conda create -n fastlane_bot_env python=3.9
+conda activate fastlane_bot_env
+```
+
+3. Clone the repo from GitHub:
+
+```bash
+git clone https://github.com/bancorprotocol/fastlane-bot
+cd fastlane-bot
+```
+
+3. Now, install Fastlane Arbitrage Bot by using the provided bash scrip `apple-silicon-install.sh`:
+
+```bash
+./apple-silicon-install.sh
+```
+
+Please note that due to potential compatibility issues with the new Apple Silicon chip, some packages may still fail to install correctly. If you encounter any issues, please report them to the package maintainers.
 
 [sim]:https://github.com/bancorprotocol/carbon-simulator
 
