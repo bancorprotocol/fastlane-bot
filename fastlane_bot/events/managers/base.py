@@ -195,9 +195,6 @@ class BaseManager:
             # Create a list of pairs from the CarbonController contract object
             pairs = [(second, first) for first, second in carbon_controller.pairs()]
 
-            # Create a reversed list of pairs
-            pairs_reverse = [(second, first) for first, second in pairs]
-
             # Combine both pair lists and add extra parameters
             all_pairs = [(pair[0], pair[1], 0, 5000) for pair in pairs]
 
@@ -207,6 +204,15 @@ class BaseManager:
             strategies_by_pair = [
                 s for strat in strategies_by_pair if strat for s in strat if s
             ]
+
+            fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
+            fee_pairs = {
+                (
+                    self.web3.toChecksumAddress(pair[0]),
+                    self.web3.toChecksumAddress(pair[1]),
+                ): fee
+                for pair, fee in zip(all_pairs, fees_by_pair)
+            }
 
             # Log the time taken for the above operations
             self.cfg.logger.info(
@@ -220,7 +226,9 @@ class BaseManager:
             for strategy in strategies_by_pair:
                 if len(strategy) > 0:
                     self.add_pool_info_from_event(
-                        strategy=strategy, block_number=current_block
+                        strategy=strategy,
+                        block_number=current_block,
+                        fee_pairs=fee_pairs,
                     )
 
             # Log the time taken for the above operations
@@ -242,6 +250,14 @@ class BaseManager:
                 carbon_controller.strategiesByPair(*pair) for pair in all_pairs
             ]
         return strategies_by_pair
+
+    def get_fees_by_pair(self, all_pairs, carbon_controller):
+        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+            # Fetch strategies for each pair from the CarbonController contract object
+            fees_by_pair = [
+                carbon_controller.pairTradingFeePPM(*pair) for pair in all_pairs
+            ]
+        return fees_by_pair
 
     def get_tkn_symbol_and_decimals(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
