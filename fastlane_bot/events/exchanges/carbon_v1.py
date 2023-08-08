@@ -10,7 +10,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI, CARBON_CONTROLLER_ABI_WITH_FEES
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -27,17 +27,20 @@ class CarbonV1(Exchange):
         self.pools[pool.state["cid"]] = pool
 
     def get_abi(self):
-        return CARBON_CONTROLLER_ABI
+        return CARBON_CONTROLLER_ABI_WITH_FEES
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [
             contract.events.StrategyCreated,
             contract.events.StrategyUpdated,
             contract.events.StrategyDeleted,
+            contract.events.TradingFeePPMUpdated,
         ]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        return "0.002", 0.002
+        fee = contract.caller.tradingFeePPM()
+        fee = fee / 1e6
+        return f"{fee}", fee
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         if event is None:
@@ -61,3 +64,6 @@ class CarbonV1(Exchange):
             The id of the strategy to delete
         """
         self.pools.pop(id)
+
+
+#%%
