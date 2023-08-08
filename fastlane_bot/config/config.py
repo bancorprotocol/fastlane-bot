@@ -23,6 +23,9 @@ WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 PROVIDER_URL = f'https://rpc.tenderly.co/fork/{TENDERLY_FORK_ID}' if TENDERLY_FORK_ID != '' else f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 NETWORK_ID = 'mainnet' if TENDERLY_FORK_ID == '' else 'tenderly'
 NETWORK_NAME = "Ethereum Mainnet" if TENDERLY_FORK_ID == '' else 'Tenderly (Alchemy)'
+if NETWORK_ID == 'tenderly':
+    from . import brownie_setup_tenderly
+
 
 
 @dataclass
