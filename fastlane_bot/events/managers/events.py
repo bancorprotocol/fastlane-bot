@@ -5,8 +5,9 @@ Contains the events manager module for handling event related functionality of d
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import Dict, Any, List, Type
+from typing import Dict, Any, List, Type, Tuple
 
+from eth_typing import ChecksumAddress
 from web3.contract import Contract
 
 from fastlane_bot.events.managers.base import BaseManager
@@ -32,10 +33,13 @@ class EventManager(BaseManager):
         ]
 
     def add_pool_info_from_event(
-        self, strategy: List[Any], block_number: int = None
+        self,
+        strategy: List[Any],
+        block_number: int = None,
+        fee_pairs: Dict[Tuple[ChecksumAddress, ChecksumAddress], Any] = None,
     ) -> Dict[str, Any]:
         """
-        Add the pool info from the strategy.
+        Add the pool info from the strategy. Only for Carbon.
 
         Parameters
         ----------
@@ -43,6 +47,8 @@ class EventManager(BaseManager):
             The strategy.
         block_number (optional) : int
             The block number the data was gathered.
+        fee_pairs (optional) : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any]
+            The custom fees per pair, where pair is a (token0_address, token1_address) tuple.
 
         Returns
         -------
@@ -56,11 +62,15 @@ class EventManager(BaseManager):
             strategy[2][0]
         ), self.web3.toChecksumAddress(strategy[2][1])
 
+        fee = self.get_custom_trading_fee(
+            fee_pairs=fee_pairs, tkn0_address=tkn0_address, tkn1_address=tkn1_address
+        )
+
         return self.add_pool_info(
             address=self.cfg.CARBON_CONTROLLER_ADDRESS,
             exchange_name="carbon_v1",
-            fee="0.002",
-            fee_float=0.002,
+            fee=f"{fee}",
+            fee_float=fee,
             tkn0_address=tkn0_address,
             tkn1_address=tkn1_address,
             cid=cid,
@@ -76,3 +86,32 @@ class EventManager(BaseManager):
             ),
             block_number=block_number,
         )
+
+    def get_custom_trading_fee(
+        self,
+        fee_pairs: Dict[Tuple[ChecksumAddress, ChecksumAddress], Any],
+        tkn0_address: ChecksumAddress,
+        tkn1_address: ChecksumAddress,
+    ) -> float:
+        """
+        Get the custom trading fee.
+
+        Parameters
+        ----------
+        fee_pairs : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any]
+            The custom fees per pair, where pair is a (token0_address, token1_address) tuple.
+        tkn0_address : ChecksumAddress
+            The token0 address.
+        tkn1_address : ChecksumAddress
+            The token1 address.
+
+        Returns
+        -------
+        float
+            The custom trading fee.
+        """
+        fee = self.event_contracts["carbon_v1"].caller.tradingFeePPM()
+        if fee_pairs is not None:
+            fee = fee_pairs[(tkn0_address, tkn1_address)]
+        fee = fee / 1e6
+        return fee
