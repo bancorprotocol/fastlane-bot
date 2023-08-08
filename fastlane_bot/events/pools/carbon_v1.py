@@ -69,16 +69,23 @@ class CarbonV1Pool(Pool):
         Dict[str, Any]
             The updated data.
         """
-        order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
-        data["cid"] = event_args["args"].get("id")
-        data["y_0"] = order0[0]
-        data["z_0"] = order0[1]
-        data["A_0"] = order0[2]
-        data["B_0"] = order0[3]
-        data["y_1"] = order1[0]
-        data["z_1"] = order1[1]
-        data["A_1"] = order1[2]
-        data["B_1"] = order1[3]
+        if event_type == "TradingFeePPMUpdated":
+            fee = event_args["args"]["newFeePPM"] / 1e6
+            data["cid"] = event_args["args"].get("id")
+            data["fee"] = f"{fee}"
+            data["fee_float"] = fee
+        else:
+            order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
+            data["cid"] = event_args["args"].get("id")
+            data["y_0"] = order0[0]
+            data["z_0"] = order0[1]
+            data["A_0"] = order0[2]
+            data["B_0"] = order0[3]
+            data["y_1"] = order1[0]
+            data["z_1"] = order1[1]
+            data["A_1"] = order1[2]
+            data["B_1"] = order1[3]
+
         return data
 
     @staticmethod
@@ -100,10 +107,10 @@ class CarbonV1Pool(Pool):
         Tuple[List[int], List[int]]
             The parsed orders.
         """
-        if event_type != "StrategyDeleted":
+        if event_type not in ["StrategyDeleted", "TradingFeePPMUpdated"]:
             order0 = event_args["args"].get("order0")
             order1 = event_args["args"].get("order1")
-        else:
+        elif event_type == "StrategyDeleted":
             order0 = [0, 0, 0, 0]
             order1 = [0, 0, 0, 0]
         return order0, order1
@@ -125,9 +132,22 @@ class CarbonV1Pool(Pool):
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
-        params["fee"] = "0.002"
-        params["fee_float"] = 0.002
+
+        try:
+            fee = contract.pairTradingFeePPM(
+                self.state["tkn0_address"], self.state["tkn1_address"]
+            )
+        except AttributeError:
+            fee = contract.caller.pairTradingFeePPM(
+                self.state["tkn0_address"], self.state["tkn1_address"]
+            )
+
+        fee = fee / 1e6
+        params["fee"] = f"{fee}"
+        params["fee_float"] = fee
+
         params["exchange_name"] = "carbon_v1"
         for key, value in params.items():
             self.state[key] = value
+
         return params
