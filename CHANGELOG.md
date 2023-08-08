@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.2...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.3...HEAD)
 
 - Cleanup of Unused Top-Level Files [\#47](https://github.com/bancorprotocol/fastlane-bot/issues/47)
+
+Closed issues
+
+- Installation Issue with pyyaml==5.4.1 and Brownie [\#30](https://github.com/bancorprotocol/fastlane-bot/issues/30)
+
+Merged pull requests
+
+- Creates a bash install script to handle the conda vs pip installation… [\#51](https://github.com/bancorprotocol/fastlane-bot/pull/51) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.3](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.3) (2023-08-07)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.2...v2.7.3)
+
 - Removes unused files. [\#48](https://github.com/bancorprotocol/fastlane-bot/pull/48) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
