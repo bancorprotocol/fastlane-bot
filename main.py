@@ -44,8 +44,12 @@ load_dotenv()
     help="Filename of the static pool data.",
 )
 @click.option(
-    "--arb_mode", default="multi", help="See arb_mode in bot.py",
-    type=click.Choice(["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop"])
+    "--arb_mode",
+    default="multi",
+    help="See arb_mode in bot.py",
+    type=click.Choice(
+        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop"]
+    ),
 )
 @click.option(
     "--flashloan_tokens", default=None, type=str, help="See flashloan_tokens in bot.py"
@@ -55,7 +59,7 @@ load_dotenv()
 @click.option(
     "--exchanges",
     default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
-    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included."
+    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
 )
 @click.option(
     "--polling_interval",
@@ -74,7 +78,7 @@ load_dotenv()
 )
 @click.option(
     "--logging_path",
-    default='',
+    default="",
     help="The logging path.",
 )
 @click.option(
@@ -126,26 +130,26 @@ load_dotenv()
     help="Set to the timeout in seconds. Set to None for no timeout.",
 )
 def main(
-        cache_latest_only: bool,
-        backdate_pools: bool,
-        arb_mode: str,
-        flashloan_tokens: str,
-        config: str,
-        n_jobs: int,
-        exchanges: str,
-        polling_interval: int,
-        alchemy_max_block_fetch: int,
-        static_pool_data_filename: str,
-        reorg_delay: int,
-        logging_path: str,
-        loglevel: str,
-        static_pool_data_sample_sz: str,
-        use_cached_events: bool,
-        run_data_validator: bool,
-        randomizer: int,
-        limit_bancor3_flashloan_tokens: bool,
-        default_min_profit_bnt: int,
-        timeout: int,
+    cache_latest_only: bool,
+    backdate_pools: bool,
+    arb_mode: str,
+    flashloan_tokens: str,
+    config: str,
+    n_jobs: int,
+    exchanges: str,
+    polling_interval: int,
+    alchemy_max_block_fetch: int,
+    static_pool_data_filename: str,
+    reorg_delay: int,
+    logging_path: str,
+    loglevel: str,
+    static_pool_data_sample_sz: str,
+    use_cached_events: bool,
+    run_data_validator: bool,
+    randomizer: int,
+    limit_bancor3_flashloan_tokens: bool,
+    default_min_profit_bnt: int,
+    timeout: int,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -219,10 +223,10 @@ def main(
         if static_pool_data_sample_sz != "max":
             bancor3_pool_data = static_pool_data[
                 static_pool_data["exchange_name"] == "bancor_v3"
-                ]
+            ]
             non_bancor3_pool_data = static_pool_data[
                 static_pool_data["exchange_name"] != "bancor_v3"
-                ]
+            ]
             non_bancor3_pool_data = non_bancor3_pool_data.sample(
                 n=int(static_pool_data_sample_sz)
             )
@@ -255,6 +259,12 @@ def main(
         tokens=tokens.to_dict(orient="records"),
     )
 
+    # Set the default Carbon fee based on the current contract
+    carbon_controller = mgr.get_pool_contract(
+        "carbon_v1", cfg.CARBON_CONTROLLER_ADDRESS
+    )
+    mgr.cfg.CARBON_FEE = carbon_controller.caller.tradingFeePPM()
+
     # Add initial pools for each row in the static_pool_data
     start_time = time.time()
     Parallel(n_jobs=n_jobs, backend="threading")(
@@ -277,25 +287,25 @@ def main(
         use_cached_events,
         run_data_validator,
         randomizer,
-        timeout
+        timeout,
     )
 
 
 def run(
-        cache_latest_only: bool,
-        backdate_pools: bool,
-        mgr: Manager,
-        n_jobs: int,
-        polling_interval: int,
-        alchemy_max_block_fetch: int,
-        arb_mode: str,
-        flashloan_tokens: List[str] or None,
-        reorg_delay: int,
-        logging_path: str,
-        use_cached_events: bool,
-        run_data_validator: bool,
-        randomizer: int,
-        timeout: int
+    cache_latest_only: bool,
+    backdate_pools: bool,
+    mgr: Manager,
+    n_jobs: int,
+    polling_interval: int,
+    alchemy_max_block_fetch: int,
+    arb_mode: str,
+    flashloan_tokens: List[str] or None,
+    reorg_delay: int,
+    logging_path: str,
+    use_cached_events: bool,
+    run_data_validator: bool,
+    randomizer: int,
+    timeout: int,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -318,7 +328,7 @@ def run(
     """
 
     def get_event_filters(
-            start_block: int, current_block: int, reorg_delay: int
+        start_block: int, current_block: int, reorg_delay: int
     ) -> Any:
         """
         Creates event filters for the specified block range.
@@ -354,7 +364,7 @@ def run(
         )
 
     def save_events_to_json(
-            latest_events: List[Any], start_block: int, current_block: int
+        latest_events: List[Any], start_block: int, current_block: int
     ) -> None:
         """
         Saves the given events to a JSON file.
@@ -373,8 +383,8 @@ def run(
         try:
             with open(path, "w") as f:
                 latest_events = [
-                                    _["args"].pop("contextId", None) for _ in latest_events
-                                ] and latest_events
+                    _["args"].pop("contextId", None) for _ in latest_events
+                ] and latest_events
                 f.write(json.dumps(latest_events))
         except Exception as e:
             mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
@@ -412,7 +422,7 @@ def run(
             mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
     def parse_bancor3_rows_to_update(
-            rows_to_update: List[Hashable],
+        rows_to_update: List[Hashable],
     ) -> Tuple[List[Hashable], List[Hashable]]:
         """
         Parses the rows to update for Bancor v3 pools.
@@ -465,10 +475,10 @@ def run(
         return bot
 
     def update_pools_from_contracts(
-            n_jobs,
-            rows_to_update: List[int],
-            not_bancor_v3: bool = True,
-            current_block: int = None,
+        n_jobs,
+        rows_to_update: List[int],
+        not_bancor_v3: bool = True,
+        current_block: int = None,
     ) -> None:
         """
         Updates the pools with the given indices by calling the contracts.
@@ -514,7 +524,8 @@ def run(
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block = (
-                max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
+                max(block["last_updated_block"] for block in mgr.pool_data)
+                - reorg_delay
                 if last_block != 0
                 else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
             )
@@ -577,8 +588,11 @@ def run(
                 )
 
                 for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update,
-                                                current_block=current_block)
+                    update_pools_from_contracts(
+                        n_jobs=n_jobs,
+                        rows_to_update=rows_to_update,
+                        current_block=current_block,
+                    )
 
             elif last_block == 0 and "bancor_v3" in mgr.exchanges:
                 # Update the pool data on disk
@@ -588,8 +602,12 @@ def run(
                     for idx, pool in enumerate(mgr.pool_data)
                     if pool["exchange_name"] == "bancor_v3"
                 ]
-                update_pools_from_contracts(n_jobs=n_jobs, rows_to_update=rows_to_update, not_bancor_v3=False,
-                                            current_block=current_block)
+                update_pools_from_contracts(
+                    n_jobs=n_jobs,
+                    rows_to_update=rows_to_update,
+                    not_bancor_v3=False,
+                    current_block=current_block,
+                )
             elif last_block == 0 and "carbon_v1" in mgr.exchanges:
                 # Update the pool data on disk
                 mgr.get_rows_to_update(start_block)
@@ -607,12 +625,16 @@ def run(
             del bot
             bot = init_bot(mgr)
 
-            assert bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT, "bot failed to update min profit"
+            assert (
+                bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+            ), "bot failed to update min profit"
             mgr.cfg.logger.debug("Bot successfully updated min profit")
 
             # Compare the initial state to the final state, and update the state if it has changed
             final_state = mgr.pool_data.copy()
-            assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+            assert (
+                bot.db.state == final_state
+            ), "\n *** bot failed to update state *** \n"
             if initial_state != final_state:
                 mgr.cfg.logger.info("State has changed...")
 

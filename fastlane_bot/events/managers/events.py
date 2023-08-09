@@ -45,10 +45,10 @@ class EventManager(BaseManager):
         ----------
         strategy : List[Any]
             The strategy.
-        block_number (optional) : int
-            The block number the data was gathered.
-        fee_pairs (optional) : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any]
-            The custom fees per pair, where pair is a (token0_address, token1_address) tuple.
+        block_number : int, optional
+            The block number.
+        fee_pairs : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any], optional
+            The fee pairs.
 
         Returns
         -------
@@ -110,8 +110,7 @@ class EventManager(BaseManager):
         float
             The custom trading fee.
         """
-        fee = self.event_contracts["carbon_v1"].caller.tradingFeePPM()
+        fee = self.cfg.CARBON_FEE
         if fee_pairs is not None:
             fee = fee_pairs[(tkn0_address, tkn1_address)]
-        fee = fee / 1e6
-        return fee
+        return fee / 1e6

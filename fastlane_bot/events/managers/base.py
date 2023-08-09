@@ -205,6 +205,7 @@ class BaseManager:
                 s for strat in strategies_by_pair if strat for s in strat if s
             ]
 
+            # Get the fees for each pair and store in a dictionary
             fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
             fee_pairs = {
                 (
@@ -213,6 +214,17 @@ class BaseManager:
                 ): fee
                 for pair, fee in zip(all_pairs, fees_by_pair)
             }
+
+            # Add the reverse pair to the fee_pairs dictionary
+            fee_pairs.update(
+                {
+                    (
+                        self.web3.toChecksumAddress(pair[1]),
+                        self.web3.toChecksumAddress(pair[0]),
+                    ): fee
+                    for pair, fee in zip(all_pairs, fees_by_pair)
+                }
+            )
 
             # Log the time taken for the above operations
             self.cfg.logger.info(
@@ -243,7 +255,25 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
-    def get_strats_by_pair(self, all_pairs, carbon_controller):
+    def get_strats_by_pair(
+        self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
+    ):
+        """
+        Get the strategies by pair.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple[str, str]]
+            The pairs.
+        carbon_controller : Contract
+            The carbon controller contract object.
+
+        Returns
+        -------
+        List[int]
+            The strategies by pair.
+
+        """
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
             # Fetch strategies for each pair from the CarbonController contract object
             strategies_by_pair = [
@@ -251,11 +281,30 @@ class BaseManager:
             ]
         return strategies_by_pair
 
-    def get_fees_by_pair(self, all_pairs, carbon_controller):
+    def get_fees_by_pair(
+        self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
+    ):
+        """
+        Get the fees by pair.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple[str, str]]
+            The pairs.
+        carbon_controller : Contract
+            The carbon controller contract object.
+
+        Returns
+        -------
+        List[int]
+            The fees by pair.
+
+        """
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
             # Fetch strategies for each pair from the CarbonController contract object
             fees_by_pair = [
-                carbon_controller.pairTradingFeePPM(*pair) for pair in all_pairs
+                carbon_controller.pairTradingFeePPM(pair[0], pair[1])
+                for pair in all_pairs
             ]
         return fees_by_pair
 
@@ -282,12 +331,10 @@ class BaseManager:
             The token symbol and decimals.
 
         """
-        token_info = self.get_token_info_from_config(cfg, addr)
-        if token_info:
+        if token_info := self.get_token_info_from_config(cfg, addr):
             return token_info
 
-        record = next((add for add in self.tokens if add["address"] == addr), None)
-        if record:
+        if record := next((add for add in self.tokens if add["address"] == addr), None):
             return record["symbol"], int(record["decimals"])
 
         return self.get_token_info_from_contract(web3, erc20_contracts, addr)
