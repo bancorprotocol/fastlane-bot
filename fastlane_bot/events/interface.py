@@ -60,6 +60,26 @@ class QueryInterface:
     def cfg(self) -> Config:
         return self.ConfigObj
 
+    def filter_target_tokens(self, target_tokens: List[str]):
+        """
+        Filter the pools to only include pools that are in the target pools list
+
+        Parameters
+        ----------
+        target_tokens: List[str]
+            The list of tokens to filter pools by. Pools must contain both tokens in the list to be included.
+        """
+        initial_state = self.state.copy()
+        self.state = [
+            pool
+            for pool in self.state
+            if pool["tkn0_key"] in target_tokens and pool["tkn1_key"] in target_tokens
+        ]
+
+        self.cfg.logger.info(
+            f"Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
+        )
+
     def remove_unsupported_exchanges(self) -> None:
         initial_state = self.state.copy()
         self.state = [
@@ -479,8 +499,8 @@ class QueryInterface:
             )
             pool.exchange_name
         except AttributeError:
-            if 'cid' in kwargs:
-                kwargs['cid'] = int(kwargs['cid'])
+            if "cid" in kwargs:
+                kwargs["cid"] = int(kwargs["cid"])
                 pool = next(
                     (
                         pool
