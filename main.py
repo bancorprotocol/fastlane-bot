@@ -136,6 +136,12 @@ load_dotenv()
     type=int,
     help="Set to the timeout in seconds. Set to None for no timeout.",
 )
+@click.option(
+    "--target_tokens",
+    default=None,
+    type=str,
+    help="A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -157,6 +163,7 @@ def main(
     limit_bancor3_flashloan_tokens: bool,
     default_min_profit_bnt: int,
     timeout: int,
+    target_tokens: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -182,6 +189,7 @@ def main(
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
         default_min_profit_bnt (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
+        target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
 
     """
     start_time = time.time()
@@ -220,6 +228,27 @@ def main(
     cfg.logger.info(
         f"Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
     )
+
+    if target_tokens:
+        if target_tokens == "flashloan_tokens":
+            target_tokens = flashloan_tokens
+        else:
+            target_tokens = target_tokens.split(",")
+            target_tokens = [
+                QueryInterface.cleanup_token_key(token) for token in target_tokens
+            ]
+
+            # Ensure that the target tokens are a subset of the flashloan tokens
+            for token in flashloan_tokens:
+                if token not in target_tokens:
+                    cfg.logger.warning(
+                        f"Falshloan token {token} not in target tokens. Adding it to target tokens."
+                    )
+                    target_tokens.append(token)
+
+        cfg.logger.info(
+            f"Target tokens are set as: {target_tokens}, {type(target_tokens)}"
+        )
 
     # Set external exchanges
     exchanges = exchanges.split(",")
@@ -304,6 +333,7 @@ def main(
         run_data_validator,
         randomizer,
         timeout,
+        target_tokens,
     )
 
 
@@ -322,6 +352,7 @@ def run(
     run_data_validator: bool,
     randomizer: int,
     timeout: int,
+    target_tokens: List[str] or None,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -341,6 +372,7 @@ def run(
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (bool): Whether to randomize the polling interval or not.
         timeout (int): The timeout for the polling interval.
+        target_tokens (List[str]): List of tokens that the bot will target for arbitrage.
     """
 
     def get_event_filters(
@@ -661,6 +693,10 @@ def run(
             if loop_idx > 0:
                 bot.db.remove_zero_liquidity_pools()
                 bot.db.remove_unsupported_exchanges()
+
+                # Filter the target tokens
+                if target_tokens:
+                    bot.db.filter_target_tokens(target_tokens)
 
                 # Run the bot
                 bot.run(
