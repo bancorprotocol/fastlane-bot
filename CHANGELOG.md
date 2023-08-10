@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.6...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.7...HEAD)
 
 - Fix broken pypi automation [\#66](https://github.com/bancorprotocol/fastlane-bot/issues/66)
+
+Closed issues
+
+- Broken Link To Github [\#64](https://github.com/bancorprotocol/fastlane-bot/issues/64)
+
+Merged pull requests
+
+- Fix Github Link [\#65](https://github.com/bancorprotocol/fastlane-bot/pull/65) ([shmuel44](https://github.com/shmuel44))
+
+## [v2.7.7](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.7) (2023-08-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.6...v2.7.7)
+
 - Update release-and-pypi-publish.yml [\#67](https://github.com/bancorprotocol/fastlane-bot/pull/67) ([mikewcasale](https://github.com/mikewcasale))
 
 - Feature Request: Add `target_tokens` Setting to Narrow Search Space [\#62](https://github.com/bancorprotocol/fastlane-bot/issues/62)
