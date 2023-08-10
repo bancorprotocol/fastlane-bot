@@ -2,11 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.5...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.6...HEAD)
+
+- Fix broken pypi automation [\#66](https://github.com/bancorprotocol/fastlane-bot/issues/66)
+- Update release-and-pypi-publish.yml [\#67](https://github.com/bancorprotocol/fastlane-bot/pull/67) ([mikewcasale](https://github.com/mikewcasale))
+
+- Feature Request: Add `target_tokens` Setting to Narrow Search Space [\#62](https://github.com/bancorprotocol/fastlane-bot/issues/62)
+
+## [v2.7.6](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.6) (2023-08-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.5...v2.7.6)
 
 - Change the `--flashloan_tokens` flag type to list [\#57](https://github.com/bancorprotocol/fastlane-bot/issues/57)
 
-- Feature Request: Add `target_tokens` Setting to Narrow Search Space [\#62](https://github.com/bancorprotocol/fastlane-bot/issues/62)
 - 62 add target tokens setting to narrow search space [\#63](https://github.com/bancorprotocol/fastlane-bot/pull/63) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.7.5](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.5) (2023-08-09)
