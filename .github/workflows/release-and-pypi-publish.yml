@@ -171,6 +171,7 @@ jobs:
         run: |
           pip install wheel
           python setup.py bdist_wheel
+          find dist -type f ! -name "*.whl" -exec rm -f {} +
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
