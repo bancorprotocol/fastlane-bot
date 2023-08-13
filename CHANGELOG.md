@@ -2,13 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.7...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.8...HEAD)
 
-- Fix broken pypi automation [\#66](https://github.com/bancorprotocol/fastlane-bot/issues/66)
+- Bugfix: Remove DAI from `flashloan_tokens` [\#78](https://github.com/bancorprotocol/fastlane-bot/issues/78)
+- Remove DAI from default `flashloan_tokens` to fix logging error message. [\#79](https://github.com/bancorprotocol/fastlane-bot/pull/79) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
 - Broken Link To Github [\#64](https://github.com/bancorprotocol/fastlane-bot/issues/64)
+
+## [v2.7.8](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.8) (2023-08-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.7...v2.7.8)
+
+- Fix broken pypi automation [\#66](https://github.com/bancorprotocol/fastlane-bot/issues/66)
 
 Merged pull requests
 
