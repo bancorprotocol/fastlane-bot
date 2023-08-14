@@ -57,7 +57,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.WETH},{T.DAI},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
+    default=f"{T.WETH},{T.DAI},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH},{T.LINK}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, the search space is decreased for all modes, including the b3_two_hop mode (assuming that --limit_bancor3_flashloan_tokens=True).",
 )
@@ -65,7 +65,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2",
+    default="carbon_v1,bancor_v3,bancor_v2,uniswap_v2,sushiswap_v2,uniswap_v3",
     help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
 )
 @click.option(

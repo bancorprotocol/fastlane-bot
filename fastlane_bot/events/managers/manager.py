@@ -210,9 +210,14 @@ class Manager(PoolManager, EventManager, ContractsManager):
             except Exception as e:
                 if all(
                     err_msg not in str(e)
-                    for err_msg in ["Too Many Requests for url", "format_name"]
+                    for err_msg in [
+                        "Too Many Requests for url",
+                        "format_name",
+                    ]
                 ):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
+                    if "ERC721:" not in str(e):
+                        raise e
                     break
                 else:
                     time.sleep(rate_limiter)
