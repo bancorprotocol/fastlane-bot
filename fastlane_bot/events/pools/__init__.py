@@ -13,6 +13,7 @@ from fastlane_bot.events.pools.factory import pool_factory
 from fastlane_bot.events.pools.sushiswap_v2 import SushiswapV2Pool
 from fastlane_bot.events.pools.uniswap_v2 import UniswapV2Pool
 from fastlane_bot.events.pools.uniswap_v3 import UniswapV3Pool
+from fastlane_bot.events.pools.pancakeswap_v2 import PancakeswapV2Pool
 
 # register your pool types
 pool_factory.register_format("uniswap_v3", UniswapV3Pool)
@@ -20,3 +21,4 @@ pool_factory.register_format("uniswap_v2", UniswapV2Pool)
 pool_factory.register_format("sushiswap_v2", SushiswapV2Pool)
 pool_factory.register_format("bancor_v3", BancorV3Pool)
 pool_factory.register_format("carbon_v1", CarbonV1Pool)
+pool_factory.register_format("pancakeswap_v2", PancakeswapV2Pool)

@@ -32,7 +32,12 @@ class PoolManager(BaseManager):
             The pool key.
 
         """
-        if pool_info["exchange_name"] in ["uniswap_v2", "sushiswap_v2", "uniswap_v3"]:
+        if pool_info["exchange_name"] in [
+            "uniswap_v2",
+            "sushiswap_v2",
+            "uniswap_v3",
+            "pancakeswap_v2",
+        ]:
             return pool_info["address"]
         elif pool_info["exchange_name"] == "carbon_v1":
             return pool_info["cid"]

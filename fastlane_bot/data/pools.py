@@ -23,4 +23,11 @@ uniswap_v3_pools = [
     for idx in range(len(static_data))
     if static_data[idx]["exchange_name"] == "uniswap_v3"
 ]
+
+# get all pancakeswap v2 pools
+pancakeswap_v2_pools = [
+    static_data[idx]["address"]
+    for idx in range(len(static_data))
+    if static_data[idx]["exchange_name"] == "pancakeswap_v2"
+]
 del static_data  # clear static data to save memory
