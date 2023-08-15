@@ -39,8 +39,7 @@ class CarbonV1(Exchange):
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         fee = contract.caller.tradingFeePPM()
-        fee = fee / 1e6
-        return f"{fee}", fee
+        return f"{fee}", fee / 1e6
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         if event is None:
