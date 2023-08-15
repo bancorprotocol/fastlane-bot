@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
 import brownie
+from eth_typing import ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 
@@ -160,6 +161,93 @@ class BaseManager:
     def multicall(self, address):
         return brownie.multicall(address)
 
+    def get_carbon_controller_contract(self):
+        """
+        Gets the Carbon Controller contract, already initialized.
+        """
+        return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
+
+    def get_pool(self, cid) -> Dict[str, Any]:
+        """
+        Get a pool from the state
+
+        Parameters
+        ----------
+        cid: str
+
+
+        """
+        return [p for p in self.pool_data if p["cid"] == cid][0]
+
+    def get_custom_trading_fee(
+        self,
+        fee_pairs: Dict[Tuple[ChecksumAddress, ChecksumAddress], Any],
+        tkn0_address: ChecksumAddress,
+        tkn1_address: ChecksumAddress,
+    ) -> float:
+        """
+        Get the custom trading fee.
+
+        Parameters
+        ----------
+        fee_pairs : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any]
+            The custom fees per pair, where pair is a (token0_address, token1_address) tuple.
+        tkn0_address : ChecksumAddress
+            The token0 address.
+        tkn1_address : ChecksumAddress
+            The token1 address.
+
+        Returns
+        -------
+        float
+            The custom trading fee.
+        """
+        fee = None
+        if fee_pairs is not None:
+            fee = fee_pairs[(tkn0_address, tkn1_address)]
+        return fee
+
+    def update_carbon_fees_for_pairs(self, carbon_controller, pairs):
+        """
+        Update all carbon fees.
+        """
+        all_pairs = pairs
+
+        fee_pairs = self.get_fee_pairs(all_pairs, carbon_controller)
+
+        strategies_by_pair = self.get_strats_by_pair(all_pairs, carbon_controller)
+
+        strategies_by_pair = [
+            s for strat in strategies_by_pair if strat for s in strat if s
+        ]
+
+        for strategy in strategies_by_pair:
+            if len(strategy) > 0:
+
+                cid = strategy[0]
+                pool_info = self.get_pool(cid)
+                tkn0_address, tkn1_address = (
+                    pool_info["tkn0_address"],
+                    pool_info["tkn1_address"],
+                )
+                fee = self.get_custom_trading_fee(
+                    fee_pairs=fee_pairs,
+                    tkn0_address=tkn0_address,
+                    tkn1_address=tkn1_address,
+                )
+
+                # Update pool_info fee and fee_float
+                pool_info["fee"] = f"{fee}"
+                pool_info["fee_float"] = float(fee) / 1e6
+
+                # Update pool_data
+                self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
+                self.pool_data.append(pool_info)
+
+        self.cfg.logger.info(
+            f"Updating pool {cid} with fee {fee} and fee_float {float(fee) / 1e6}"
+        )
+
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
         Get the rows to update.
@@ -192,39 +280,13 @@ class BaseManager:
                 self.cfg.CARBON_CONTROLLER_ADDRESS
             ] = carbon_controller
 
-            # Create a list of pairs from the CarbonController contract object
-            pairs = [(second, first) for first, second in carbon_controller.pairs()]
-
-            # Combine both pair lists and add extra parameters
-            all_pairs = [(pair[0], pair[1], 0, 5000) for pair in pairs]
-
+            all_pairs = self.get_pairs_from_carbon_controller(carbon_controller)
             strategies_by_pair = self.get_strats_by_pair(all_pairs, carbon_controller)
 
             # expand strategies_by_pair
             strategies_by_pair = [
                 s for strat in strategies_by_pair if strat for s in strat if s
             ]
-
-            # Get the fees for each pair and store in a dictionary
-            fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
-            fee_pairs = {
-                (
-                    self.web3.toChecksumAddress(pair[0]),
-                    self.web3.toChecksumAddress(pair[1]),
-                ): fee
-                for pair, fee in zip(all_pairs, fees_by_pair)
-            }
-
-            # Add the reverse pair to the fee_pairs dictionary
-            fee_pairs.update(
-                {
-                    (
-                        self.web3.toChecksumAddress(pair[1]),
-                        self.web3.toChecksumAddress(pair[0]),
-                    ): fee
-                    for pair, fee in zip(all_pairs, fees_by_pair)
-                }
-            )
 
             # Log the time taken for the above operations
             self.cfg.logger.info(
@@ -240,7 +302,6 @@ class BaseManager:
                     self.add_pool_info_from_event(
                         strategy=strategy,
                         block_number=current_block,
-                        fee_pairs=fee_pairs,
                     )
 
             # Log the time taken for the above operations
@@ -255,8 +316,69 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
+    @staticmethod
+    def get_pairs_from_carbon_controller(carbon_controller: Contract) -> List[Tuple]:
+        """
+        Get all pairs from the CarbonController contract.
+
+        Parameters
+        ----------
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        List[Tuple]
+            A list of pairs.
+
+        """
+        # Create a list of pairs from the CarbonController contract object
+        pairs = [(second, first) for first, second in carbon_controller.pairs()]
+        # Combine both pair lists and add extra parameters
+        all_pairs = [(pair[0], pair[1], 0, 5000) for pair in pairs]
+        return all_pairs
+
+    def get_fee_pairs(
+        self, all_pairs: List[Tuple], carbon_controller: Contract
+    ) -> Dict:
+        """
+        Get the fees for each pair and store in a dictionary.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple]
+            A list of pairs.
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        Dict
+            A dictionary of fees for each pair.
+        """
+        # Get the fees for each pair and store in a dictionary
+        fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
+        fee_pairs = {
+            (
+                self.web3.toChecksumAddress(pair[0]),
+                self.web3.toChecksumAddress(pair[1]),
+            ): fee
+            for pair, fee in zip(all_pairs, fees_by_pair)
+        }
+        # Add the reverse pair to the fee_pairs dictionary
+        fee_pairs.update(
+            {
+                (
+                    self.web3.toChecksumAddress(pair[1]),
+                    self.web3.toChecksumAddress(pair[0]),
+                ): fee
+                for pair, fee in zip(all_pairs, fees_by_pair)
+            }
+        )
+        return fee_pairs
+
     def get_strats_by_pair(
-        self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
+        self, all_pairs: List[Tuple[Any, Any, int, int]], carbon_controller: Contract
     ):
         """
         Get the strategies by pair.
@@ -275,10 +397,16 @@ class BaseManager:
 
         """
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
-            # Fetch strategies for each pair from the CarbonController contract object
-            strategies_by_pair = [
-                carbon_controller.strategiesByPair(*pair) for pair in all_pairs
-            ]
+            try:
+                # Fetch strategies for each pair from the CarbonController contract object
+                strategies_by_pair = [
+                    carbon_controller.strategiesByPair(*pair) for pair in all_pairs
+                ]
+            except AttributeError:
+                strategies_by_pair = [
+                    carbon_controller.caller.strategiesByPair(*pair)
+                    for pair in all_pairs
+                ]
         return strategies_by_pair
 
     def get_fees_by_pair(
@@ -302,10 +430,17 @@ class BaseManager:
         """
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
             # Fetch strategies for each pair from the CarbonController contract object
-            fees_by_pair = [
-                carbon_controller.pairTradingFeePPM(pair[0], pair[1])
-                for pair in all_pairs
-            ]
+            try:
+                fees_by_pair = [
+                    carbon_controller.pairTradingFeePPM(pair[0], pair[1])
+                    for pair in all_pairs
+                ]
+            except AttributeError:
+                fees_by_pair = [
+                    carbon_controller.caller.pairTradingFeePPM(pair[0], pair[1])
+                    for pair in all_pairs
+                ]
+
         return fees_by_pair
 
     def get_tkn_symbol_and_decimals(

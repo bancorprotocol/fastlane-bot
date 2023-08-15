@@ -132,20 +132,6 @@ class CarbonV1Pool(Pool):
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
-
-        try:
-            fee = contract.pairTradingFeePPM(
-                self.state["tkn0_address"], self.state["tkn1_address"]
-            )
-        except AttributeError:
-            fee = contract.caller.pairTradingFeePPM(
-                self.state["tkn0_address"], self.state["tkn1_address"]
-            )
-
-        fee = fee / 1e6
-        params["fee"] = f"{fee}"
-        params["fee_float"] = fee
-
         params["exchange_name"] = "carbon_v1"
         for key, value in params.items():
             self.state[key] = value

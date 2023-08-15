@@ -402,6 +402,30 @@ def run(
             delayed(mgr.update)(event=event) for event in latest_events
         )
 
+        all_trading_fees_updated = False
+        strategies_created = []
+        for event in latest_events:
+            if event["event"] == "TradingFeePPMUpdated":
+                all_trading_fees_updated = True
+            elif event["event"] == "StrategyCreated":
+                strategies_created.append(event)
+
+        if all_trading_fees_updated:
+            update_all_carbon_fees(mgr)
+
+        if strategies_created and not all_trading_fees_updated:
+            mgr.cfg.logger.info(
+                "One or more Strategies created, updating pool data fees for pairs"
+            )
+            carbon_controller = mgr.get_carbon_controller_contract()
+            pairs = []
+            for strat in strategies_created:
+                cid = strat["args"]["id"]
+                pool = mgr.get_pool(cid)
+                pairs.append((pool["tkn0_address"], pool["tkn1_address"], 0, 5000))
+            with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
+                mgr.update_carbon_fees_for_pairs(carbon_controller, pairs)
+
     def write_pool_data_to_disk(current_block: int) -> None:
         """
         Writes the pool data to disk.
@@ -445,7 +469,7 @@ def run(
         ]
         return bancor3_pool_rows, other_pool_rows
 
-    def init_bot(mgr: Manager) -> CarbonBot:
+    def init_bot(mgr: Manager, loop_idx: int) -> CarbonBot:
         """
         Initializes the bot.
 
@@ -453,6 +477,8 @@ def run(
         ----------
         mgr : Base
             The manager object.
+        loop_idx : int
+            The loop index.
 
         Returns
         -------
@@ -460,6 +486,10 @@ def run(
             The bot object.
         """
         mgr.cfg.logger.info("Initializing the bot...")
+
+        if loop_idx == 0:
+            update_all_carbon_fees(mgr)
+
         db = QueryInterface(
             mgr=mgr,
             ConfigObj=mgr.cfg,
@@ -473,6 +503,16 @@ def run(
             bot.db, QueryInterface
         ), "QueryInterface not initialized correctly"
         return bot
+
+    def update_all_carbon_fees(mgr):
+        start_t = time.time()
+        carbon_controller = mgr.get_carbon_controller_contract()
+        pairs = mgr.get_pairs_from_carbon_controller(carbon_controller)
+        with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
+            mgr.update_carbon_fees_for_pairs(carbon_controller, pairs)
+        mgr.cfg.logger.info(
+            f"Updated all carbon fees in {time.time() - start_t} seconds"
+        )
 
     def update_pools_from_contracts(
         n_jobs,
@@ -612,10 +652,6 @@ def run(
                 # Update the pool data on disk
                 mgr.get_rows_to_update(start_block)
 
-            # Update the last block and write the pool data to disk for debugging, and to backup the state
-            last_block = current_block
-            write_pool_data_to_disk(current_block)
-
             # check if any duplicate cid's exist in the pool data
             mgr.deduplicate_pool_data()
             cids = [pool["cid"] for pool in mgr.pool_data]
@@ -623,7 +659,11 @@ def run(
 
             # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
             del bot
-            bot = init_bot(mgr)
+            bot = init_bot(mgr, loop_idx)
+
+            # Update the last block and write the pool data to disk for debugging, and to backup the state
+            last_block = current_block
+            write_pool_data_to_disk(current_block)
 
             assert (
                 bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT

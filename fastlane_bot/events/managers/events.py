@@ -15,7 +15,7 @@ from fastlane_bot.events.managers.base import BaseManager
 
 class EventManager(BaseManager):
     @property
-    def events(self) -> List[Type[Contract]]:
+    def events(self) -> List[Contract]:
         """
         Get the events from the exchanges.
 
@@ -62,15 +62,9 @@ class EventManager(BaseManager):
             strategy[2][0]
         ), self.web3.toChecksumAddress(strategy[2][1])
 
-        fee = self.get_custom_trading_fee(
-            fee_pairs=fee_pairs, tkn0_address=tkn0_address, tkn1_address=tkn1_address
-        )
-
         return self.add_pool_info(
             address=self.cfg.CARBON_CONTROLLER_ADDRESS,
             exchange_name="carbon_v1",
-            fee=f"{fee}",
-            fee_float=fee,
             tkn0_address=tkn0_address,
             tkn1_address=tkn1_address,
             cid=cid,
@@ -87,30 +81,5 @@ class EventManager(BaseManager):
             block_number=block_number,
         )
 
-    def get_custom_trading_fee(
-        self,
-        fee_pairs: Dict[Tuple[ChecksumAddress, ChecksumAddress], Any],
-        tkn0_address: ChecksumAddress,
-        tkn1_address: ChecksumAddress,
-    ) -> float:
-        """
-        Get the custom trading fee.
 
-        Parameters
-        ----------
-        fee_pairs : Dict[Tuple[ChecksumAddress,ChecksumAddress], Any]
-            The custom fees per pair, where pair is a (token0_address, token1_address) tuple.
-        tkn0_address : ChecksumAddress
-            The token0 address.
-        tkn1_address : ChecksumAddress
-            The token1 address.
-
-        Returns
-        -------
-        float
-            The custom trading fee.
-        """
-        fee = self.cfg.CARBON_FEE
-        if fee_pairs is not None:
-            fee = fee_pairs[(tkn0_address, tkn1_address)]
-        return fee / 1e6
+#%%
