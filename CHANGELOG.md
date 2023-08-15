@@ -2,13 +2,56 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.3...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.8...HEAD)
 
-- Cleanup of Unused Top-Level Files [\#47](https://github.com/bancorprotocol/fastlane-bot/issues/47)
+- Bugfix: Remove DAI from `flashloan_tokens` [\#78](https://github.com/bancorprotocol/fastlane-bot/issues/78)
+- Remove DAI from default `flashloan_tokens` to fix logging error message. [\#79](https://github.com/bancorprotocol/fastlane-bot/pull/79) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- Broken Link To Github [\#64](https://github.com/bancorprotocol/fastlane-bot/issues/64)
+
+## [v2.7.8](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.8) (2023-08-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.7...v2.7.8)
+
+- Fix broken pypi automation [\#66](https://github.com/bancorprotocol/fastlane-bot/issues/66)
+
+Merged pull requests
+
+- Fix Github Link [\#65](https://github.com/bancorprotocol/fastlane-bot/pull/65) ([shmuel44](https://github.com/shmuel44))
+
+## [v2.7.7](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.7) (2023-08-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.6...v2.7.7)
+
+- Update release-and-pypi-publish.yml [\#67](https://github.com/bancorprotocol/fastlane-bot/pull/67) ([mikewcasale](https://github.com/mikewcasale))
+
+- Feature Request: Add `target_tokens` Setting to Narrow Search Space [\#62](https://github.com/bancorprotocol/fastlane-bot/issues/62)
+
+## [v2.7.6](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.6) (2023-08-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.5...v2.7.6)
+
+- Change the `--flashloan_tokens` flag type to list [\#57](https://github.com/bancorprotocol/fastlane-bot/issues/57)
+
+- 62 add target tokens setting to narrow search space [\#63](https://github.com/bancorprotocol/fastlane-bot/pull/63) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.5](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.5) (2023-08-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.4...v2.7.5)
+
+- Fix to ensure the @click flag for flashloan\_tokens is respected [\#58](https://github.com/bancorprotocol/fastlane-bot/pull/58) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
 - Installation Issue with pyyaml==5.4.1 and Brownie [\#30](https://github.com/bancorprotocol/fastlane-bot/issues/30)
+
+## [v2.7.4](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.4) (2023-08-07)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.3...v2.7.4)
+
+- Cleanup of Unused Top-Level Files [\#47](https://github.com/bancorprotocol/fastlane-bot/issues/47)
 
 Merged pull requests
 
