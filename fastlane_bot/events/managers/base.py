@@ -377,8 +377,39 @@ class BaseManager:
         )
         return fee_pairs
 
+    def get_strats_by_pair_from_state(
+        self, all_pairs: List[Tuple[Any, Any, int, int]]
+    ) -> List[int]:
+        """
+        Get the strategies by pair from the state.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple[str, str]]
+            The pairs.
+
+        Returns
+        -------
+        List[int]
+            The strategies by pair.
+
+        """
+        strategies_by_pair = []
+        for pair in all_pairs:
+            strat = [
+                p
+                for p in self.pool_data
+                if (p["tkn0_address"] == pair[0] and p["tkn1_address"] == pair[1])
+                or (p["tkn0_address"] == pair[1] and p["tkn1_address"] == pair[0])
+            ][0]
+            strategies_by_pair.append(strat["cid"])
+        return strategies_by_pair
+
     def get_strats_by_pair(
-        self, all_pairs: List[Tuple[Any, Any, int, int]], carbon_controller: Contract
+        self,
+        all_pairs: List[Tuple[Any, Any, int, int]],
+        carbon_controller: Contract,
+        by_state=False,
     ):
         """
         Get the strategies by pair.
@@ -389,6 +420,8 @@ class BaseManager:
             The pairs.
         carbon_controller : Contract
             The carbon controller contract object.
+        by_state : bool
+            Whether to get the strategies by pair from the state.
 
         Returns
         -------
@@ -396,6 +429,9 @@ class BaseManager:
             The strategies by pair.
 
         """
+        if by_state:
+            return self.get_strats_by_pair_from_state(all_pairs)
+
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
             try:
                 # Fetch strategies for each pair from the CarbonController contract object
