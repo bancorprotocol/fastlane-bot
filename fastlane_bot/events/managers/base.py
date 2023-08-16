@@ -244,7 +244,7 @@ class BaseManager:
                 self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
                 self.pool_data.append(pool_info)
 
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Updating pool {cid} with fee {fee} and fee_float {float(fee) / 1e6}"
         )
 
