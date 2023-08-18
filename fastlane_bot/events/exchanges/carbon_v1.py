@@ -65,20 +65,67 @@ class CarbonV1(Exchange):
     def get_fee(
         self, address: str, contract: Contract or BrownieContract
     ) -> Tuple[str, float]:
+        """
+        Get the fee from the contract.
+
+        Parameters
+        ----------
+        address
+        contract
+
+        Returns
+        -------
+
+        """
         try:
             fee = contract.functions.tradingFeePPM().call()
         except AttributeError:
             fee = contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
-        # return None, None
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        """
+        Get the token0 address from the contract or event.
+
+        Parameters
+        ----------
+        address : str
+            The address of the contract.
+        contract : Contract
+            The contract.
+        event : Any
+            The event.
+
+        Returns
+        -------
+        str
+            The token0 address.
+
+        """
         if event is None:
             return contract.functions.token0().call()
         else:
             return event["args"]["token0"]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        """
+        Get the token1 address from the contract or event.
+
+        Parameters
+        ----------
+        address : str
+            The address of the contract.
+        contract : Contract
+            The contract.
+        event : Any
+            The event.
+
+        Returns
+        -------
+        str
+            The token1 address.
+
+        """
         if event is None:
             return contract.functions.token1().call()
         else:
@@ -96,7 +143,12 @@ class CarbonV1(Exchange):
         self.pools.pop(id)
 
     def save_strategy(
-        self, strategy: List[Any], block_number: int, cfg: Config, func: Callable
+        self,
+        strategy: List[Any],
+        block_number: int,
+        cfg: Config,
+        func: Callable,
+        carbon_controller: BrownieContract,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the strategy.
@@ -105,12 +157,14 @@ class CarbonV1(Exchange):
         ----------
         strategy : List[Any]
             The strategy.
-        block_number (optional) : int
-            The block number the data was gathered.
-        cfg (optional) : Config
+        block_number : int
+            The block number.
+        cfg : Config
             The config.
-        func (optional) : Callable
-            The function to call to add the pool info.
+        func : Callable
+            The function to call.
+        carbon_controller : BrownieContract
+            The carbon controller contract.
 
         Returns
         -------
@@ -124,8 +178,15 @@ class CarbonV1(Exchange):
             strategy[2][0]
         ), cfg.w3.toChecksumAddress(strategy[2][1])
 
-        fee = self.fee_pairs[(tkn0_address, tkn1_address)]
-        fee_float = fee / 1e6
+        try:
+            fee = self.fee_pairs[(tkn0_address, tkn1_address)]
+            fee_float = fee / 1e6
+        except KeyError:
+            cfg.logger.warning(
+                f"Fee pair not found for {tkn0_address} and {tkn1_address}... setting to default"
+            )
+            fee = carbon_controller.tradingFeePPM()
+            fee_float = fee / 1e6
 
         return func(
             address=cfg.CARBON_CONTROLLER_ADDRESS,

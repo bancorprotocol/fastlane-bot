@@ -264,7 +264,7 @@ class BaseManager:
         """
 
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
-            self.update_carbon()
+            self.update_carbon(update_from_contract_block)
 
         return [
             i
@@ -273,9 +273,14 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
-    def update_carbon(self):
+    def update_carbon(self, current_block: int):
         """
         Update the carbon pools.
+
+        Parameters
+        ----------
+        current_block : int
+            The current block number.
 
         Returns
         -------
@@ -305,7 +310,6 @@ class BaseManager:
         )
 
         start_time = time.time()
-        current_block = self.web3.eth.blockNumber
 
         # Create pool info for each strategy
         for strategy in strategies_by_pair:
@@ -315,6 +319,7 @@ class BaseManager:
                     block_number=current_block,
                     cfg=self.cfg,
                     func=self.add_pool_info,
+                    carbon_controller=carbon_controller,
                 )
 
         # Log the time taken for the above operations

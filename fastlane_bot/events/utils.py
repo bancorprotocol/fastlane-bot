@@ -5,14 +5,19 @@ Contains the utils functions for events
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import contextlib
+import importlib
 import json
 import os
+import sys
 import time
 from _decimal import Decimal
 from typing import Any, Union, Dict, Set, List, Tuple, Hashable
 from typing import List
 
 import pandas as pd
+import requests
+from fastlane_bot.config.connect import EthereumNetwork
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3.datastructures import AttributeDict
@@ -718,6 +723,10 @@ def handle_subsequent_iterations(
     run_data_validator: bool,
     target_tokens: List[str] = None,
     loop_idx: int = 0,
+    replay_from_block: int = None,
+    tenderly_uri: str = None,
+    forks_to_cleanup: List[str] = None,
+    mgr: Any = None,
 ):
     """
     Handles the subsequent iterations of the bot.
@@ -740,6 +749,14 @@ def handle_subsequent_iterations(
         A list of target tokens, by default None
     loop_idx : int, optional
         The loop index, by default 0
+    replay_from_block : int, optional
+        The block number to replay from, by default None
+    tenderly_uri : str, optional
+        The Tenderly URI, by default None
+    forks_to_cleanup : List[str], optional
+        A list of forks to cleanup, by default None
+    mgr : Any
+        The manager object.
 
     """
     if loop_idx > 0:
@@ -760,6 +777,8 @@ def handle_subsequent_iterations(
             arb_mode=arb_mode,
             run_data_validator=run_data_validator,
             randomizer=randomizer,
+            replay_mode=True if replay_from_block else False,
+            tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
         )
 
 
@@ -955,3 +974,379 @@ def get_start_block(
         if last_block != 0
         else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
     )
+
+
+def setup_replay_from_block(mgr: Any, block_number: int) -> str:
+    """
+    Setup a Tenderly fork from a specific block number.
+
+    Parameters
+    ----------
+    mgr : Any
+        The manager object
+    block_number: int
+        The block number to fork from.
+
+    Returns
+    -------
+    str
+        The web3 provider URL to use for the fork.
+
+    """
+    from web3 import Web3
+
+    # The network and block where Tenderly fork gets created
+    forkingPoint = {"network_id": "1", "block_number": block_number}
+
+    # Define your Tenderly credentials and project info
+    tenderly_access_key = os.getenv("TENDERLY_ACCESS_KEY")
+    tenderly_user = os.getenv("TENDERLY_USER")
+    tenderly_project = os.getenv("TENDERLY_PROJECT")
+
+    # Base URL for Tenderly's API
+    base_url = "https://api.tenderly.co/api/v1"
+
+    # Define the headers for the request
+    headers = {"X-Access-Key": tenderly_access_key, "Content-Type": "application/json"}
+
+    # Define the project URL
+    project_url = f"account/{tenderly_user}/project/{tenderly_project}"
+
+    # Make the request to create the fork
+    fork_response = requests.post(
+        f"{base_url}/{project_url}/fork", headers=headers, json=forkingPoint
+    )
+
+    # Check if the request was successful
+    fork_response.raise_for_status()
+
+    # Parse the JSON response
+    fork_data = fork_response.json()
+
+    # Extract the fork id from the response
+    fork_id = fork_data["simulation_fork"]["id"]
+
+    def replace_tenderly_fork_id(file_path, fork_id):
+        # Read the file content
+        with open(file_path, "r") as f:
+            content = f.readlines()
+
+        # Perform replacement operation
+        replaced = False
+        for i, line in enumerate(content):
+            if line.startswith("TENDERLY_FORK_ID="):
+                content[i] = f"TENDERLY_FORK_ID={fork_id}\n"
+                replaced = True
+                break
+
+        # If the TENDERLY_FORK_ID was not found, append it
+        if not replaced:
+            content.append(f"TENDERLY_FORK_ID={fork_id}\n")
+
+        # Write the modified content back to the file
+        with open(file_path, "w") as f:
+            f.writelines(content)
+
+    # Replace the TENDERLY_FORK_ID in the .env file
+    replace_tenderly_fork_id(".env", fork_id)
+
+    # Log the fork id
+    mgr.cfg.logger.info(f"Forked with fork id: {fork_id}")
+
+    # Create the provider you can use throughout the rest of your project
+    provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{fork_id}")
+
+    return provider.endpoint_uri
+
+
+def set_network_connection_to_tenderly(
+    mgr: Any, use_cached_events: bool, replay_from_block: int, tenderly_uri: str
+) -> Any:
+    """
+    Set the network connection to Tenderly.
+
+    Parameters
+    ----------
+    mgr: Any (Manager)
+        The manager object.
+    use_cached_events: bool
+        Whether to use cached events.
+    replay_from_block: int
+        The block number to replay from.
+
+    Returns
+    -------
+    Any (Manager object, Any is used to avoid circular import)
+        The manager object.
+
+    """
+    assert (
+        not use_cached_events
+    ), "Cannot replay from block and use cached events at the same time"
+    if not tenderly_uri:
+        tenderly_uri = setup_replay_from_block(mgr, replay_from_block)
+
+    if mgr.cfg.connection.network.is_connected:
+        with contextlib.suppress(Exception):
+            mgr.cfg.connection.network.disconnect()
+
+    importlib.reload(sys.modules["fastlane_bot.config.connect"])
+    from fastlane_bot.config.connect import EthereumNetwork
+
+    connection = EthereumNetwork(
+        network_id="tenderly",
+        network_name="Tenderly (Alchemy)",
+        provider_url=tenderly_uri,
+        provider_name="alchemy",
+    )
+    connection.connect_network()
+    mgr.cfg.w3 = connection.web3
+
+    assert (
+        mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
+    ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
+    mgr.cfg.logger.info(f"Successfully connected to Tenderly fork at {tenderly_uri}")
+    mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
+    return mgr
+
+
+def set_network_connection_to_mainnet(
+    mgr: Any, use_cached_events: bool, mainnet_uri: str
+) -> Any:
+    """
+    Set the network connection to Mainnet.
+
+    Parameters
+    ----------
+    mgr
+    use_cached_events
+    mainnet_uri
+
+    Returns
+    -------
+    Any (Manager object, Any is used to avoid circular import)
+        The manager object.
+
+    """
+
+    assert (
+        not use_cached_events
+    ), "Cannot replay from block and use cached events at the same time"
+
+    if mgr.cfg.connection.network.is_connected:
+        with contextlib.suppress(Exception):
+            mgr.cfg.connection.network.disconnect()
+
+    connection = EthereumNetwork(
+        network_id="mainnet",
+        network_name="Ethereum Mainnet",
+        provider_url=mainnet_uri,
+        provider_name="alchemy",
+    )
+    connection.connect_network()
+    mgr.cfg.w3 = connection.web3
+
+    assert (
+        mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
+    ), f"Failed to connect to Mainnet at {mainnet_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
+    mgr.cfg.logger.info("Successfully connected to Mainnet")
+    mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
+    return mgr
+
+
+def handle_limit_pairs_for_replay_mode(
+    cfg: Config,
+    limit_pairs_for_replay: str,
+    replay_from_block: int,
+    static_pool_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Splits, validates, and logs the `limit_pairs_for_replay` for replay mode.
+
+    Parameters
+    ----------
+    cfg: Config
+        The config object.
+    limit_pairs_for_replay: str
+        A comma-separated list of pairs to limit replay to. Must be in the format
+    replay_from_block: int
+        The block number to replay from. (For debugging / testing)
+    static_pool_data: pd.DataFrame
+        The static pool data.
+
+    Returns
+    -------
+    pd.DataFrame
+        The static pool data.
+
+    """
+    if limit_pairs_for_replay and replay_from_block:
+        limit_pairs_for_replay = limit_pairs_for_replay.split(",")
+        cfg.logger.info(f"Limiting replay to pairs: {limit_pairs_for_replay}")
+        static_pool_data = static_pool_data[
+            static_pool_data["pair_name"].isin(limit_pairs_for_replay)
+        ]
+    return static_pool_data
+
+
+def set_network_to_tenderly_if_replay(
+    last_block: int,
+    loop_idx: int,
+    mgr: Any,
+    replay_from_block: int,
+    tenderly_uri: str,
+    use_cached_events: bool,
+) -> Tuple[Any, str]:
+    """
+    Set the network connection to Tenderly if replaying from a block
+
+    Parameters
+    ----------
+    last_block : int
+        The last block that was processed
+    loop_idx : int
+        The current loop index
+    mgr : Any
+        The manager object
+    replay_from_block : int
+        The block to replay from
+    tenderly_uri : str
+        The Tenderly URI
+    use_cached_events : bool
+        Whether to use cached events
+
+    Returns
+    -------
+    mgr : Any
+        The manager object
+    tenderly_uri : str
+        The Tenderly URI
+    """
+    if replay_from_block and last_block == 0:
+        mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
+        mgr = set_network_connection_to_tenderly(
+            mgr=mgr,
+            use_cached_events=use_cached_events,
+            replay_from_block=replay_from_block,
+            tenderly_uri=tenderly_uri,
+        )
+        tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
+        return mgr, tenderly_uri
+
+    if replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
+        # Tx must always be submitted from Tenderly when in replay mode
+        mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
+        mgr = set_network_connection_to_tenderly(
+            mgr=mgr,
+            use_cached_events=use_cached_events,
+            replay_from_block=replay_from_block,
+            tenderly_uri=tenderly_uri,
+        )
+        tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
+        return mgr, tenderly_uri
+
+    return mgr, tenderly_uri
+
+
+def set_network_to_mainnet_if_replay(
+    last_block: int,
+    loop_idx: int,
+    mainnet_uri: str,
+    mgr: Any,
+    replay_from_block: int,
+    use_cached_events: bool,
+):
+    """
+    Set the network connection to Mainnet if replaying from a block
+
+    Parameters
+    ----------
+    last_block : int
+        The last block that the bot processed
+    loop_idx : int
+        The current loop index
+    mainnet_uri : str
+        The URI of the Mainnet node
+    mgr : Any
+        The manager object
+    replay_from_block : int
+        The block to replay from
+    use_cached_events : bool
+        Whether to use cached events
+
+    Returns
+    -------
+    mgr : Any
+        The manager object
+
+    """
+    if replay_from_block and mgr.cfg.NETWORK != "mainnet" and last_block != 0:
+        mgr.cfg.logger.info(f"Setting network connection to Mainnet idx: {loop_idx}")
+        mgr = set_network_connection_to_mainnet(
+            mgr=mgr,
+            use_cached_events=use_cached_events,
+            mainnet_uri=mainnet_uri,
+        )
+    return mgr
+
+
+def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):
+    """
+    Appends the fork to the forks_to_cleanup list if it is not None.
+
+    Parameters
+    ----------
+    forks_to_cleanup : List[str]
+        The list of forks to cleanup.
+    tenderly_uri : str
+        The tenderly uri.
+
+    Returns
+    -------
+    forks_to_cleanup : List[str]
+        The list of forks to cleanup.
+
+    """
+    if tenderly_uri is not None:
+        forks_to_cleanup.append(tenderly_uri.split("/")[-1])
+    return forks_to_cleanup
+
+
+def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
+    """
+    Deletes the forks that were created on Tenderly.
+
+    Parameters
+    ----------
+    forks_to_cleanup : List[str]
+        List of Tenderly fork names to delete.
+    mgr : Any
+        The manager object.
+    """
+
+    forks_to_keep = [forks_to_cleanup[-1], forks_to_cleanup[-2]]
+    forks_to_cleanup = [fork for fork in forks_to_cleanup if fork not in forks_to_keep]
+
+    # Delete the forks
+    for fork in forks_to_cleanup:
+
+        # Define your Tenderly credentials and project info
+        tenderly_access_key = os.getenv("TENDERLY_ACCESS_KEY")
+        tenderly_project = os.getenv("TENDERLY_PROJECT")
+
+        # Define the headers for the request
+        headers = {
+            "X-Access-Key": tenderly_access_key,
+            "Content-Type": "application/json",
+        }
+
+        url = f"https://api.tenderly.co/api/v2/project/{tenderly_project}/forks/{fork}"
+
+        # Make the request to create the fork
+        fork_response = requests.delete(url, headers=headers)
+
+        mgr.cfg.logger.info(
+            f"Delete Fork {fork}, Response: {fork_response.status_code}"
+        )
+
+    return forks_to_keep
