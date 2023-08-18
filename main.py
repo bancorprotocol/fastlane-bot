@@ -69,9 +69,9 @@ load_dotenv()
     default=f"{T.WETH},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
-         "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
-         "the search space is decreased for all modes, including the b3_two_hop mode (assuming that "
-         "--limit_bancor3_flashloan_tokens=True).",
+    "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
+    "the search space is decreased for all modes, including the b3_two_hop mode (assuming that "
+    "--limit_bancor3_flashloan_tokens=True).",
 )
 @click.option("--config", default=None, type=str, help="See config in config/*")
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
@@ -134,7 +134,8 @@ load_dotenv()
     "--limit_bancor3_flashloan_tokens",
     default=True,
     type=bool,
-    help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens parameter to be overwritten as all tokens supported by Bancor v3.",
+    help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens "
+    "parameter to be overwritten as all tokens supported by Bancor v3.",
 )
 @click.option(
     "--default_min_profit_bnt",
@@ -229,7 +230,7 @@ def main(
         cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
     )
 
-    # Set the timeout
+    # Break if timeout is hit to test the bot flags
     if timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
         return
