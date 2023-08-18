@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Type, Optional, Tuple
 import brownie
 from web3 import Web3
 from web3.contract import Contract
+from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot import Config
 from fastlane_bot.events.exchanges import exchange_factory
@@ -77,11 +78,97 @@ class BaseManager:
     )
 
     SUPPORTED_EXCHANGES: List[str] = None
+    _fee_pairs: Dict[Tuple[str, str], int] = field(default_factory=dict)
+    carbon_inititalized: bool = None
+
+    @property
+    def fee_pairs(self) -> Dict[Tuple[str, str], int]:
+        """
+        Get the fee pairs.
+
+        Returns
+        -------
+        Dict[Tuple[str, str], int]
+            The fee pairs.
+
+        """
+        return self._fee_pairs
+
+    @fee_pairs.setter
+    def fee_pairs(self, value: Dict[Tuple[str, str], int]):
+        """
+        Set the fee pairs.
+
+        Parameters
+        ----------
+        value : Dict[Tuple[str, str], int]
+            The fee pairs.
+
+        """
+        self._fee_pairs = value
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
+        self.set_carbon_v1_fee_pairs()
+
+    def set_carbon_v1_fee_pairs(self):
+        """
+        Set the carbon v1 fee pairs.
+        """
+        if "carbon_v1" in self.exchanges:
+
+            # Create or get CarbonController contract object
+            carbon_controller = self.create_or_get_carbon_controller()
+
+            # Get pairs by contract
+            pairs = self.get_carbon_pairs(carbon_controller)
+
+            # Get the fee for each pair
+            fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
+
+            # Set the fee pairs
+            self.exchanges["carbon_v1"].fee_pairs = fee_pairs
+
+    def get_fee_pairs(
+        self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
+    ) -> Dict[Tuple[str, str], int]:
+        """
+        Get the fees for each pair and store in a dictionary.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple]
+            A list of pairs.
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        Dict[Tuple[str, str], int]
+            A dictionary of fees for each pair.
+        """
+        # Get the fees for each pair and store in a dictionary
+        fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
+        fee_pairs = {
+            (
+                self.web3.toChecksumAddress(pair[0]),
+                self.web3.toChecksumAddress(pair[1]),
+            ): fee
+            for pair, fee in zip(all_pairs, fees_by_pair)
+        }
+        # Add the reverse pair to the fee_pairs dictionary
+        fee_pairs.update(
+            {
+                (
+                    self.web3.toChecksumAddress(pair[1]),
+                    self.web3.toChecksumAddress(pair[0]),
+                ): fee
+                for pair, fee in zip(all_pairs, fees_by_pair)
+            }
+        )
+        return fee_pairs
 
     @staticmethod
     def exchange_name_from_event(event: Dict[str, Any]) -> str:
@@ -177,56 +264,7 @@ class BaseManager:
         """
 
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
-            start_time = time.time()
-            self.cfg.logger.info("Updating carbon pools w/ multicall...")
-
-            # Create a CarbonController contract object
-            carbon_controller = brownie.Contract.from_abi(
-                address=self.cfg.CARBON_CONTROLLER_ADDRESS,
-                abi=self.exchanges["carbon_v1"].get_abi(),
-                name="CarbonController",
-            )
-
-            # Store the contract object in pool_contracts
-            self.pool_contracts["carbon_v1"][
-                self.cfg.CARBON_CONTROLLER_ADDRESS
-            ] = carbon_controller
-
-            # Create a list of pairs from the CarbonController contract object
-            pairs = [(second, first) for first, second in carbon_controller.pairs()]
-
-            # Create a reversed list of pairs
-            pairs_reverse = [(second, first) for first, second in pairs]
-
-            # Combine both pair lists and add extra parameters
-            all_pairs = [(pair[0], pair[1], 0, 5000) for pair in pairs]
-
-            strategies_by_pair = self.get_strats_by_pair(all_pairs, carbon_controller)
-
-            # expand strategies_by_pair
-            strategies_by_pair = [
-                s for strat in strategies_by_pair if strat for s in strat if s
-            ]
-
-            # Log the time taken for the above operations
-            self.cfg.logger.info(
-                f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds"
-            )
-
-            start_time = time.time()
-            current_block = self.web3.eth.blockNumber
-
-            # Create pool info for each strategy
-            for strategy in strategies_by_pair:
-                if len(strategy) > 0:
-                    self.add_pool_info_from_event(
-                        strategy=strategy, block_number=current_block
-                    )
-
-            # Log the time taken for the above operations
-            self.cfg.logger.info(
-                f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
-            )
+            self.update_carbon()
 
         return [
             i
@@ -235,13 +273,273 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
-    def get_strats_by_pair(self, all_pairs, carbon_controller):
+    def update_carbon(self):
+        """
+        Update the carbon pools.
+
+        Returns
+        -------
+        List[int]
+            The rows to update.
+
+        """
+        start_time = time.time()
+        self.cfg.logger.info("Updating carbon pools w/ multicall...")
+
+        # Create or get CarbonController contract object
+        carbon_controller = self.create_or_get_carbon_controller()
+
+        # Create a list of pairs from the CarbonController contract object
+        pairs = self.get_carbon_pairs(carbon_controller)
+
+        # Create a list of strategies for each pair
+        strategies_by_pair = self.get_strategies(pairs, carbon_controller)
+
+        # Get the fee for each pair
+        if not self.fee_pairs:
+            self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
+
+        # Log the time taken for the above operations
+        self.cfg.logger.info(
+            f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds"
+        )
+
+        start_time = time.time()
+        current_block = self.web3.eth.blockNumber
+
+        # Create pool info for each strategy
+        for strategy in strategies_by_pair:
+            if len(strategy) > 0:
+                self.exchanges["carbon_v1"].save_strategy(
+                    strategy=strategy,
+                    block_number=current_block,
+                    cfg=self.cfg,
+                    func=self.add_pool_info,
+                )
+
+        # Log the time taken for the above operations
+        self.cfg.logger.info(
+            f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
+        )
+
+    def get_carbon_pairs(
+        self, carbon_controller: Contract
+    ) -> List[Tuple[str, str, int, int]]:
+        """
+        Get the carbon pairs.
+
+        Parameters
+        ----------
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        List[Tuple[str, str, int, int]]
+            The carbon pairs.
+
+        """
+        pairs = (
+            self.get_carbon_pairs_by_state()
+            if self.carbon_inititalized
+            else self.get_carbon_pairs_by_contract(carbon_controller)
+        )
+        return [(pair[0], pair[1], 0, 5000) for pair in pairs]
+
+    @staticmethod
+    def get_carbon_pairs_by_contract(
+        carbon_controller: Contract,
+    ) -> List[Tuple[str, str]]:
+        """
+        Get the carbon pairs by contract.
+
+        Parameters
+        ----------
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        List[Tuple[str, str]]
+            The carbon pairs.
+
+        """
+        return [(second, first) for first, second in carbon_controller.pairs()]
+
+    def get_carbon_pairs_by_state(self) -> List[Tuple[str, str]]:
+        """
+        Get the carbon pairs by state.
+
+        Returns
+        -------
+        List[Tuple[str, str]]
+            The carbon pairs.
+
+        """
+        return [
+            (p["tkn0_address"], p["tkn1_address"])
+            for p in self.pool_data
+            if p["exchange_name"] == "carbon_v1"
+        ]
+
+    def create_or_get_carbon_controller(self):
+        """
+        Create or get the CarbonController contract object.
+
+        Returns
+        -------
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        """
+        if self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]:
+            return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
+
+        # Create a CarbonController contract object
+        carbon_controller = brownie.Contract.from_abi(
+            address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+            abi=self.exchanges["carbon_v1"].get_abi(),
+            name="CarbonController",
+        )
+
+        # Store the contract object in pool_contracts
+        self.pool_contracts["carbon_v1"][
+            self.cfg.CARBON_CONTROLLER_ADDRESS
+        ] = carbon_controller
+        return carbon_controller
+
+    def get_strats_by_contract(
+        self, pairs: List[Tuple[str, str, int, int]], carbon_controller: BrownieContract
+    ) -> List[List[Any]]:
+        """
+        Get the strategies by contract.
+
+        Parameters
+        ----------
+        pairs : List[Tuple[str, str, int, int]]
+            The pairs.
+        carbon_controller : BrownieContract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        List[List[str]]
+            The strategies.
+
+        """
         with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
             # Fetch strategies for each pair from the CarbonController contract object
             strategies_by_pair = [
-                carbon_controller.strategiesByPair(*pair) for pair in all_pairs
+                carbon_controller.strategiesByPair(*pair) for pair in pairs
             ]
-        return strategies_by_pair
+
+        self.carbon_inititalized = True
+
+        return [s for strat in strategies_by_pair if strat for s in strat if s]
+
+    def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:
+        """
+        Get the strategies by state.
+
+        Parameters
+        ----------
+        pairs : List[Tuple[str, str, int, int]]
+            The pairs.
+
+        Returns
+        -------
+        List[List[Any]]
+            The strategies retrieved from the state.
+
+        """
+        cids = [
+            pool["cid"]
+            for pool in self.pool_data
+            if pool["exchange_name"] == "carbon_v1"
+            and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
+            or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
+        ]
+        strategies = []
+        for cid in cids:
+
+            pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
+
+            # Constructing the orders based on the values from the pool_data dictionary
+            order0 = [
+                pool_data["y_0"],
+                pool_data["z_0"],
+                pool_data["A_0"],
+                pool_data["B_0"],
+            ]
+            order1 = [
+                pool_data["y_1"],
+                pool_data["z_1"],
+                pool_data["A_1"],
+                pool_data["B_1"],
+            ]
+
+            # Fetching token addresses and converting them
+            tkn0_address, tkn1_address = pool_data["tkn0"], pool_data["tkn1"]
+
+            # Reconstructing the strategy object
+            strategy = [cid, None, [tkn0_address, tkn1_address], [order0, order1]]
+
+            # Appending the strategy to the list of strategies
+            strategies.append(strategy)
+
+        return strategies
+
+    def get_strategies(
+        self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
+    ) -> List[List[str]]:
+        """
+        Get the strategies.
+
+        Parameters
+        ----------
+        pairs : List[Tuple[str, str, int, int]]
+            The pairs.
+        carbon_controller : Contract
+            The CarbonController contract object.
+
+        Returns
+        -------
+        List[List[str]]
+            The strategies.
+
+        """
+        return (
+            self.get_strats_by_state(pairs)
+            if self.carbon_inititalized
+            else self.get_strats_by_contract(pairs, carbon_controller)
+        )
+
+    def get_fees_by_pair(
+        self, all_pairs: List[Tuple[str, str]], carbon_controller: BrownieContract
+    ):
+        """
+        Get the fees by pair.
+
+        Parameters
+        ----------
+        all_pairs : List[Tuple[str, str]]
+            The pairs.
+        carbon_controller : BrownieContract
+            The carbon controller contract object.
+
+        Returns
+        -------
+        List[int]
+            The fees by pair.
+
+        """
+        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+            # Fetch strategies for each pair from the CarbonController contract object
+            fees_by_pair = [
+                carbon_controller.pairTradingFeePPM(pair[0], pair[1])
+                for pair in all_pairs
+            ]
+        return fees_by_pair
 
     def get_tkn_symbol_and_decimals(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str

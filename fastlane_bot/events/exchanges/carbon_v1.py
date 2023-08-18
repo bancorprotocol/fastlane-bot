@@ -6,9 +6,12 @@ Contains the exchange class for CarbonV1. This class is responsible for handling
 Licensed under MIT
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Any, Dict, Callable
 
+import web3
+from fastlane_bot import Config
 from web3.contract import Contract
+from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
@@ -22,6 +25,26 @@ class CarbonV1(Exchange):
     """
 
     exchange_name: str = "carbon_v1"
+    _fee_pairs: Dict[Tuple[str, str], int] = None
+
+    @property
+    def fee_pairs(self) -> Dict[Tuple[str, str], int]:
+        """
+        Get the fee pairs.
+        """
+        return self._fee_pairs
+
+    @fee_pairs.setter
+    def fee_pairs(self, value: Dict[Tuple[str, str], int]):
+        """
+        Set the fee pairs.
+
+        Parameters
+        ----------
+        value : List[Dict[Tuple[str, str], int]]
+
+        """
+        self._fee_pairs = value
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["cid"]] = pool
@@ -34,10 +57,20 @@ class CarbonV1(Exchange):
             contract.events.StrategyCreated,
             contract.events.StrategyUpdated,
             contract.events.StrategyDeleted,
+            contract.events.PairTradingFeePPMUpdated,
+            contract.events.TradingFeePPMUpdated,
+            contract.events.PairCreated,
         ]
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        return "0.002", 0.002
+    def get_fee(
+        self, address: str, contract: Contract or BrownieContract
+    ) -> Tuple[str, float]:
+        try:
+            fee = contract.functions.tradingFeePPM().call()
+        except AttributeError:
+            fee = contract.tradingFeePPM()
+        return f"{fee}", fee / 1e6
+        # return None, None
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         if event is None:
@@ -61,3 +94,56 @@ class CarbonV1(Exchange):
             The id of the strategy to delete
         """
         self.pools.pop(id)
+
+    def save_strategy(
+        self, strategy: List[Any], block_number: int, cfg: Config, func: Callable
+    ) -> Dict[str, Any]:
+        """
+        Add the pool info from the strategy.
+
+        Parameters
+        ----------
+        strategy : List[Any]
+            The strategy.
+        block_number (optional) : int
+            The block number the data was gathered.
+        cfg (optional) : Config
+            The config.
+        func (optional) : Callable
+            The function to call to add the pool info.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The pool info.
+
+        """
+        cid = strategy[0]
+        order0, order1 = strategy[3][0], strategy[3][1]
+        tkn0_address, tkn1_address = cfg.w3.toChecksumAddress(
+            strategy[2][0]
+        ), cfg.w3.toChecksumAddress(strategy[2][1])
+
+        fee = self.fee_pairs[(tkn0_address, tkn1_address)]
+        fee_float = fee / 1e6
+
+        return func(
+            address=cfg.CARBON_CONTROLLER_ADDRESS,
+            exchange_name="carbon_v1",
+            fee=f"{fee}",
+            fee_float=fee_float,
+            tkn0_address=tkn0_address,
+            tkn1_address=tkn1_address,
+            cid=cid,
+            other_args=dict(
+                y_0=order0[0],
+                y_1=order1[0],
+                z_0=order0[1],
+                z_1=order1[1],
+                A_0=order0[2],
+                A_1=order1[2],
+                B_0=order0[3],
+                B_1=order1[3],
+            ),
+            block_number=block_number,
+        )
