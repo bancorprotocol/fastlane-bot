@@ -195,7 +195,7 @@ def main(
         alchemy_max_block_fetch (int): The maximum number of blocks to fetch in a single request.
         static_pool_data_filename (str): The filename of the static pool data to read from.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
-        logging_path (str): The Databricks logging path.
+        logging_path (str): The logging path.
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
