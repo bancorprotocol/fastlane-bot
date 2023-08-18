@@ -565,154 +565,154 @@ def run(
     loop_idx = last_block = 0
     start_timeout = time.time()
     while True:
-        # try:
+        try:
 
-        # Save initial state of pool data to assert whether it has changed
-        initial_state = mgr.pool_data.copy()
+            # Save initial state of pool data to assert whether it has changed
+            initial_state = mgr.pool_data.copy()
 
-        # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-        start_block = (
-            max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
-            if last_block != 0
-            else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
-        )
+            # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
+            start_block = (
+                max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
+                if last_block != 0
+                else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
+            )
 
-        # Get all events from the last block to the current block
-        current_block = mgr.web3.eth.blockNumber - reorg_delay
+            # Get all events from the last block to the current block
+            current_block = mgr.web3.eth.blockNumber - reorg_delay
 
-        mgr.cfg.logger.info(
-            f"Fetching events from {start_block} to {current_block}... {last_block}"
-        )
+            mgr.cfg.logger.info(
+                f"Fetching events from {start_block} to {current_block}... {last_block}"
+            )
 
-        if not use_cached_events:
+            if not use_cached_events:
 
-            # Get all event filters, events, and flatten them
-            events = [
-                complex_handler(event)
-                for event in [
+                # Get all event filters, events, and flatten them
+                events = [
                     complex_handler(event)
-                    for event in get_all_events(
-                        get_event_filters(start_block, current_block, reorg_delay)
-                    )
+                    for event in [
+                        complex_handler(event)
+                        for event in get_all_events(
+                            get_event_filters(start_block, current_block, reorg_delay)
+                        )
+                    ]
                 ]
-            ]
 
-            # Filter out the latest events per pool, save them to disk, and update the pools
-            latest_events = filter_latest_events(mgr, events)
-            mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+                # Filter out the latest events per pool, save them to disk, and update the pools
+                latest_events = filter_latest_events(mgr, events)
+                mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
-            # Save the latest events to disk
-            save_events_to_json(latest_events, start_block, current_block)
+                # Save the latest events to disk
+                save_events_to_json(latest_events, start_block, current_block)
 
-        else:
-            # read data from the json file latest_event_data.json
-            mgr.cfg.logger.info("Using cached events")
-            path = f"{logging_path}latest_event_data.json"
-            os.path.isfile(path)
-            with open(path, "r") as f:
-                latest_events = json.load(f)
-            if not latest_events or len(latest_events) == 0:
-                raise ValueError("No events found in the json file")
-            mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+            else:
+                # read data from the json file latest_event_data.json
+                mgr.cfg.logger.info("Using cached events")
+                path = f"{logging_path}latest_event_data.json"
+                os.path.isfile(path)
+                with open(path, "r") as f:
+                    latest_events = json.load(f)
+                if not latest_events or len(latest_events) == 0:
+                    raise ValueError("No events found in the json file")
+                mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
-        # Update the pools from the latest events
-        update_pools_from_events(latest_events)
+            # Update the pools from the latest events
+            update_pools_from_events(latest_events)
 
-        if last_block == 0:
-            mgr.get_rows_to_update(start_block)
+            if last_block == 0:
+                mgr.get_rows_to_update(start_block)
 
-            # Construct rows_to_update for "bancor_v3"
-            bancor_v3_rows = [
-                idx
-                for idx, pool in enumerate(mgr.pool_data)
-                if pool["exchange_name"] == "bancor_v3"
-            ]
+                # Construct rows_to_update for "bancor_v3"
+                bancor_v3_rows = [
+                    idx
+                    for idx, pool in enumerate(mgr.pool_data)
+                    if pool["exchange_name"] == "bancor_v3"
+                ]
 
-            if backdate_pools:
-                rows_to_update = bancor_v3_rows
+                if backdate_pools:
+                    rows_to_update = bancor_v3_rows
 
-                # Remove duplicates
-                rows_to_update = list(set(rows_to_update))
+                    # Remove duplicates
+                    rows_to_update = list(set(rows_to_update))
 
-                # Parse the rows to update
-                bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
-                    rows_to_update
-                )
+                    # Parse the rows to update
+                    bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
+                        rows_to_update
+                    )
 
-                for rows in [bancor3_pool_rows, other_pool_rows]:
+                    for rows in [bancor3_pool_rows, other_pool_rows]:
+                        update_pools_from_contracts(
+                            n_jobs=n_jobs,
+                            rows_to_update=rows,
+                            current_block=current_block,
+                        )
+
+                elif "bancor_v3" in mgr.exchanges:
                     update_pools_from_contracts(
                         n_jobs=n_jobs,
-                        rows_to_update=rows,
+                        rows_to_update=bancor_v3_rows,
+                        not_bancor_v3=False,
                         current_block=current_block,
                     )
 
-            elif "bancor_v3" in mgr.exchanges:
-                update_pools_from_contracts(
-                    n_jobs=n_jobs,
-                    rows_to_update=bancor_v3_rows,
-                    not_bancor_v3=False,
-                    current_block=current_block,
+            # Update the last block and write the pool data to disk for debugging, and to backup the state
+            last_block = current_block
+            write_pool_data_to_disk(current_block)
+
+            # check if any duplicate cid's exist in the pool data
+            mgr.deduplicate_pool_data()
+            cids = [pool["cid"] for pool in mgr.pool_data]
+            assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
+
+            # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
+            del bot
+            bot = init_bot(mgr)
+
+            assert (
+                bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+            ), "bot failed to update min profit"
+            mgr.cfg.logger.debug("Bot successfully updated min profit")
+
+            # Compare the initial state to the final state, and update the state if it has changed
+            final_state = mgr.pool_data.copy()
+            assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+            if initial_state != final_state:
+                mgr.cfg.logger.info("State has changed...")
+
+            bot.db.handle_token_key_cleanup()
+            bot.db.remove_unmapped_uniswap_v2_pools()
+
+            # Remove zero liquidity pools
+            if loop_idx > 0:
+                bot.db.remove_zero_liquidity_pools()
+                bot.db.remove_unsupported_exchanges()
+
+                # Filter the target tokens
+                if target_tokens:
+                    bot.db.filter_target_tokens(target_tokens)
+
+                # Run the bot
+                bot.run(
+                    polling_interval=polling_interval,
+                    flashloan_tokens=flashloan_tokens,
+                    mode="single",
+                    arb_mode=arb_mode,
+                    run_data_validator=run_data_validator,
+                    randomizer=randomizer,
                 )
 
-        # Update the last block and write the pool data to disk for debugging, and to backup the state
-        last_block = current_block
-        write_pool_data_to_disk(current_block)
+            # Increment the loop index
+            loop_idx += 1
 
-        # check if any duplicate cid's exist in the pool data
-        mgr.deduplicate_pool_data()
-        cids = [pool["cid"] for pool in mgr.pool_data]
-        assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
+            # Sleep for the polling interval
+            time.sleep(polling_interval)
 
-        # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
-        del bot
-        bot = init_bot(mgr)
+            if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                break
 
-        assert (
-            bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
-        ), "bot failed to update min profit"
-        mgr.cfg.logger.debug("Bot successfully updated min profit")
-
-        # Compare the initial state to the final state, and update the state if it has changed
-        final_state = mgr.pool_data.copy()
-        assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-        if initial_state != final_state:
-            mgr.cfg.logger.info("State has changed...")
-
-        bot.db.handle_token_key_cleanup()
-        bot.db.remove_unmapped_uniswap_v2_pools()
-
-        # Remove zero liquidity pools
-        if loop_idx > 0:
-            bot.db.remove_zero_liquidity_pools()
-            bot.db.remove_unsupported_exchanges()
-
-            # Filter the target tokens
-            if target_tokens:
-                bot.db.filter_target_tokens(target_tokens)
-
-            # Run the bot
-            bot.run(
-                polling_interval=polling_interval,
-                flashloan_tokens=flashloan_tokens,
-                mode="single",
-                arb_mode=arb_mode,
-                run_data_validator=run_data_validator,
-                randomizer=randomizer,
-            )
-
-        # Increment the loop index
-        loop_idx += 1
-
-        # Sleep for the polling interval
-        time.sleep(polling_interval)
-
-        if timeout is not None and time.time() - start_timeout > timeout:
-            mgr.cfg.logger.info("Timeout hit... stopping bot")
-            break
-
-        # except Exception as e:
-        #     mgr.cfg.logger.error(f"Error in main loop: {e}")
-        #     time.sleep(polling_interval)
+        except Exception as e:
+            mgr.cfg.logger.error(f"Error in main loop: {e}")
+            time.sleep(polling_interval)
 
 
 if __name__ == "__main__":
