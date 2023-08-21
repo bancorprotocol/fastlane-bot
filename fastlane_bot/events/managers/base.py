@@ -80,6 +80,7 @@ class BaseManager:
     SUPPORTED_EXCHANGES: List[str] = None
     _fee_pairs: Dict[Tuple[str, str], int] = field(default_factory=dict)
     carbon_inititalized: bool = None
+    is_replay_mode: bool = False
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -302,6 +303,8 @@ class BaseManager:
 
         # Get the fee for each pair
         if not self.fee_pairs:
+            # Log that the fee pairs are being set
+            self.cfg.logger.info("Setting carbon fee pairs...")
             self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
 
         # Log the time taken for the above operations
@@ -348,6 +351,10 @@ class BaseManager:
             self.get_carbon_pairs_by_state()
             if self.carbon_inititalized
             else self.get_carbon_pairs_by_contract(carbon_controller)
+        )
+        # Log whether the carbon pairs were retrieved from the state or the contract
+        self.cfg.logger.info(
+            f"Retrieved {len(pairs)} carbon pairs from {'state' if self.carbon_inititalized else 'contract'}"
         )
         return [(pair[0], pair[1], 0, 5000) for pair in pairs]
 
@@ -397,7 +404,10 @@ class BaseManager:
             The CarbonController contract object.
 
         """
-        if self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]:
+        if (
+            self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]
+            and not self.is_replay_mode
+        ):
             return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
 
         # Create a CarbonController contract object
@@ -439,6 +449,9 @@ class BaseManager:
             ]
 
         self.carbon_inititalized = True
+
+        # Log that Carbon is initialized
+        self.cfg.logger.info(f"Carbon is initialized {self.carbon_inititalized}")
 
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
@@ -513,6 +526,10 @@ class BaseManager:
             The strategies.
 
         """
+        # Log whether the carbon strats were retrieved from the state or the contract
+        self.cfg.logger.info(
+            f"Retrieving carbon strategies from {'state' if self.carbon_inititalized else 'contract'}"
+        )
         return (
             self.get_strats_by_state(pairs)
             if self.carbon_inititalized

@@ -183,10 +183,11 @@ class CarbonV1(Exchange):
             fee_float = fee / 1e6
         except KeyError:
             cfg.logger.warning(
-                f"Fee pair not found for {tkn0_address} and {tkn1_address}... setting to default"
+                f"Fee pair not found for {tkn0_address} and {tkn1_address}... re-fetching from contract."
             )
-            fee = carbon_controller.tradingFeePPM()
+            fee = carbon_controller.pairTradingFeePPM(tkn0_address, tkn1_address)
             fee_float = fee / 1e6
+            self.fee_pairs[(tkn0_address, tkn1_address)] = fee
 
         return func(
             address=cfg.CARBON_CONTROLLER_ADDRESS,

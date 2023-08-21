@@ -124,12 +124,6 @@ class CarbonBotBase:
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
 
-        if self.TxSubmitHandler is None:
-            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        assert issubclass(
-            self.TxSubmitHandler.__class__, TxSubmitHandlerBase
-        ), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
-
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler
         assert issubclass(
@@ -1373,6 +1367,12 @@ class CarbonBot(CarbonBotBase):
         self.setup_polling_interval(polling_interval)
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
+
+        if self.TxSubmitHandler is None:
+            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
+        assert issubclass(
+            self.TxSubmitHandler.__class__, TxSubmitHandlerBase
+        ), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
 
         if arb_mode in {"bancor_v3", "b3_two_hop"}:
             run_data_validator = True
