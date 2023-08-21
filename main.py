@@ -572,8 +572,7 @@ def run(
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block = (
-                max(block["last_updated_block"] for block in mgr.pool_data)
-                - reorg_delay
+                max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
                 if last_block != 0
                 else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
             )
@@ -619,46 +618,41 @@ def run(
             # Update the pools from the latest events
             update_pools_from_events(latest_events)
 
-            # If this is the first iteration, update all pools without a recent event from the contracts
-            if last_block == 0 and backdate_pools:
-                rows_to_update = mgr.get_rows_to_update(start_block)
-                rows_to_update += [
+            if last_block == 0:
+                mgr.get_rows_to_update(start_block)
+
+                # Construct rows_to_update for "bancor_v3"
+                bancor_v3_rows = [
                     idx
                     for idx, pool in enumerate(mgr.pool_data)
                     if pool["exchange_name"] == "bancor_v3"
                 ]
 
-                # Remove duplicates
-                rows_to_update = list(set(rows_to_update))
-                # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
-                bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
-                    rows_to_update
-                )
+                if backdate_pools:
+                    rows_to_update = bancor_v3_rows
 
-                for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    update_pools_from_contracts(
-                        n_jobs=n_jobs,
-                        rows_to_update=rows_to_update,
-                        current_block=current_block,
+                    # Remove duplicates
+                    rows_to_update = list(set(rows_to_update))
+
+                    # Parse the rows to update
+                    bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
+                        rows_to_update
                     )
 
-            elif last_block == 0 and "bancor_v3" in mgr.exchanges:
-                # Update the pool data on disk
-                mgr.get_rows_to_update(start_block)
-                rows_to_update = [
-                    idx
-                    for idx, pool in enumerate(mgr.pool_data)
-                    if pool["exchange_name"] == "bancor_v3"
-                ]
-                update_pools_from_contracts(
-                    n_jobs=n_jobs,
-                    rows_to_update=rows_to_update,
-                    not_bancor_v3=False,
-                    current_block=current_block,
-                )
-            elif last_block == 0 and "carbon_v1" in mgr.exchanges:
-                # Update the pool data on disk
-                mgr.get_rows_to_update(start_block)
+                    for rows in [bancor3_pool_rows, other_pool_rows]:
+                        update_pools_from_contracts(
+                            n_jobs=n_jobs,
+                            rows_to_update=rows,
+                            current_block=current_block,
+                        )
+
+                elif "bancor_v3" in mgr.exchanges:
+                    update_pools_from_contracts(
+                        n_jobs=n_jobs,
+                        rows_to_update=bancor_v3_rows,
+                        not_bancor_v3=False,
+                        current_block=current_block,
+                    )
 
             # Update the last block and write the pool data to disk for debugging, and to backup the state
             last_block = current_block
@@ -680,9 +674,7 @@ def run(
 
             # Compare the initial state to the final state, and update the state if it has changed
             final_state = mgr.pool_data.copy()
-            assert (
-                bot.db.state == final_state
-            ), "\n *** bot failed to update state *** \n"
+            assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
             if initial_state != final_state:
                 mgr.cfg.logger.info("State has changed...")
 

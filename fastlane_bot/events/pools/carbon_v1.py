@@ -43,6 +43,9 @@ class CarbonV1Pool(Pool):
         See base class.
         """
         event_type = event_args["event"]
+        assert event_type not in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"], (
+            "This event should not be " "handled by this class."
+        )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
         for key, value in data.items():
             self.state[key] = value
@@ -100,7 +103,7 @@ class CarbonV1Pool(Pool):
         Tuple[List[int], List[int]]
             The parsed orders.
         """
-        if event_type != "StrategyDeleted":
+        if event_type not in ["StrategyDeleted"]:
             order0 = event_args["args"].get("order0")
             order1 = event_args["args"].get("order1")
         else:
@@ -125,9 +128,8 @@ class CarbonV1Pool(Pool):
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
-        params["fee"] = "0.002"
-        params["fee_float"] = 0.002
         params["exchange_name"] = "carbon_v1"
         for key, value in params.items():
             self.state[key] = value
+
         return params
