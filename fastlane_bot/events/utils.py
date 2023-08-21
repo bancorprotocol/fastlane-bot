@@ -955,3 +955,22 @@ def get_start_block(
         if last_block != 0
         else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
     )
+
+
+def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
+    """
+    Verifies that the bot respects the min profit. Used for testing.
+
+    Parameters
+    ----------
+    bot : CarbonBot
+        The bot object.
+    mgr : Any
+        The manager object.
+
+    """
+    # Verify MIN_PROFIT_BNT is set and respected
+    assert (
+        bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+    ), "bot failed to update min profit"
+    mgr.cfg.logger.debug("Bot successfully updated min profit")

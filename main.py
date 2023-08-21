@@ -6,7 +6,6 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 import time
-from _decimal import Decimal
 from typing import List
 
 import click
@@ -21,7 +20,6 @@ from fastlane_bot.events.utils import (
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    save_events_to_json,
     update_pools_from_events,
     write_pool_data_to_disk,
     init_bot,
@@ -32,6 +30,7 @@ from fastlane_bot.events.utils import (
     handle_initial_iteration,
     get_latest_events,
     get_start_block,
+    verify_min_bnt_is_respected,
 )
 from fastlane_bot.tools.cpc import T
 
@@ -369,6 +368,9 @@ def run(
 
             # Verify that the state has changed
             verify_state_changed(bot, initial_state, mgr)
+
+            # Verify that the minimum profit in BNT is respected
+            verify_min_bnt_is_respected(bot, mgr)
 
             # Handle subsequent iterations
             handle_subsequent_iterations(
