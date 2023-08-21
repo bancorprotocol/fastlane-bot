@@ -457,8 +457,8 @@ def get_event_filters(
     Any
         A list of event filters.
     """
-    if reorg_delay == 0:
-        current_block = "latest"
+    # if reorg_delay == 0:
+    #     current_block = "latest"
 
     return Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
@@ -730,6 +730,7 @@ def handle_subsequent_iterations(
     tenderly_uri: str = None,
     forks_to_cleanup: List[str] = None,
     mgr: Any = None,
+    forked_from_block: int = None,
 ):
     """
     Handles the subsequent iterations of the bot.
@@ -760,6 +761,8 @@ def handle_subsequent_iterations(
         A list of forks to cleanup, by default None
     mgr : Any
         The manager object.
+    forked_from_block : int
+        The block number to fork from.
 
     """
     if loop_idx > 0:
@@ -772,6 +775,12 @@ def handle_subsequent_iterations(
         if target_tokens:
             bot.db.filter_target_tokens(target_tokens)
 
+        # Log the forked_from_block
+        if forked_from_block:
+            mgr.cfg.logger.info(
+                f"Submitting bot.run with forked_from_block: {forked_from_block}"
+            )
+
         # Run the bot
         bot.run(
             polling_interval=polling_interval,
@@ -782,6 +791,7 @@ def handle_subsequent_iterations(
             randomizer=randomizer,
             replay_mode=True if replay_from_block else False,
             tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
+            replay_from_block=forked_from_block,
         )
 
 
@@ -950,7 +960,11 @@ def get_latest_events(
 
 
 def get_start_block(
-    alchemy_max_block_fetch: int, last_block: int, mgr: Any, reorg_delay: int
+    alchemy_max_block_fetch: int,
+    last_block: int,
+    mgr: Any,
+    reorg_delay: int,
+    replay_from_block: int,
 ) -> int:
     """
     Gets the starting block number.
@@ -965,6 +979,8 @@ def get_start_block(
         The manager object.
     reorg_delay : int
         The reorg delay.
+    replay_from_block : int
+        The block number to replay from.
 
     Returns
     -------
@@ -972,14 +988,21 @@ def get_start_block(
         The starting block number.
 
     """
-    return (
-        max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
-        if last_block != 0
-        else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
-    )
+    if not replay_from_block:
+        return (
+            max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
+            if last_block != 0
+            else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
+        )
+    else:
+        return (
+            replay_from_block - 1
+            if last_block != 0
+            else replay_from_block - reorg_delay - alchemy_max_block_fetch
+        )
 
 
-def setup_replay_from_block(mgr: Any, block_number: int) -> str:
+def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     """
     Setup a Tenderly fork from a specific block number.
 
@@ -1059,11 +1082,17 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> str:
     # Create the provider you can use throughout the rest of your project
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{fork_id}")
 
-    return provider.endpoint_uri
+    print(f"Forking from block_number: {block_number}, for fork_id: {fork_id}")
+
+    return provider.endpoint_uri, block_number
 
 
 def set_network_connection_to_tenderly(
-    mgr: Any, use_cached_events: bool, replay_from_block: int, tenderly_uri: str
+    mgr: Any,
+    use_cached_events: bool,
+    replay_from_block: int,
+    tenderly_uri: str,
+    forked_from_block: int = None,
 ) -> Any:
     """
     Set the network connection to Tenderly.
@@ -1076,6 +1105,10 @@ def set_network_connection_to_tenderly(
         Whether to use cached events.
     replay_from_block: int
         The block number to replay from.
+    tenderly_uri: str
+        The Tenderly URI.
+    forked_from_block: int
+        The block number the Tenderly fork was created from.
 
     Returns
     -------
@@ -1087,7 +1120,9 @@ def set_network_connection_to_tenderly(
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
     if not tenderly_uri:
-        tenderly_uri = setup_replay_from_block(mgr, replay_from_block)
+        tenderly_uri, forked_from_block = setup_replay_from_block(
+            mgr, forked_from_block
+        )
 
     if mgr.cfg.connection.network.is_connected:
         with contextlib.suppress(Exception):
@@ -1110,7 +1145,7 @@ def set_network_connection_to_tenderly(
     ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
     mgr.cfg.logger.info(f"Successfully connected to Tenderly fork at {tenderly_uri}")
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
-    return mgr
+    return mgr, forked_from_block
 
 
 def set_network_connection_to_mainnet(
@@ -1199,6 +1234,7 @@ def set_network_to_tenderly_if_replay(
     replay_from_block: int,
     tenderly_uri: str,
     use_cached_events: bool,
+    forked_from_block: int = None,
 ) -> Tuple[Any, str]:
     """
     Set the network connection to Tenderly if replaying from a block
@@ -1217,6 +1253,8 @@ def set_network_to_tenderly_if_replay(
         The Tenderly URI
     use_cached_events : bool
         Whether to use cached events
+    forked_from_block : int
+        The block number the Tenderly fork was created from.
 
     Returns
     -------
@@ -1224,31 +1262,35 @@ def set_network_to_tenderly_if_replay(
         The manager object
     tenderly_uri : str
         The Tenderly URI
+    forked_from_block : int
+        The block number the Tenderly fork was created from.
     """
     if replay_from_block and last_block == 0:
         mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
-        mgr = set_network_connection_to_tenderly(
+        mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             replay_from_block=replay_from_block,
             tenderly_uri=tenderly_uri,
+            forked_from_block=forked_from_block,
         )
         tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
-        return mgr, tenderly_uri
+        return mgr, tenderly_uri, forked_from_block
 
     if replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
         # Tx must always be submitted from Tenderly when in replay mode
         mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
-        mgr = set_network_connection_to_tenderly(
+        mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             replay_from_block=replay_from_block,
             tenderly_uri=tenderly_uri,
+            forked_from_block=forked_from_block,
         )
-        tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
-        return mgr, tenderly_uri
+        mgr.cfg.w3.provider.endpoint_uri = tenderly_uri
+        return mgr, tenderly_uri, forked_from_block
 
-    return mgr, tenderly_uri
+    return mgr, tenderly_uri, forked_from_block
 
 
 def set_network_to_mainnet_if_replay(

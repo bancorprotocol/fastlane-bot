@@ -387,7 +387,7 @@ class CarbonBot(CarbonBotBase):
         def r(self):
             return self.result
 
-    def _get_deadline(self) -> int:
+    def _get_deadline(self, block_number) -> int:
         """
         Gets the deadline for a transaction.
 
@@ -397,7 +397,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            self.ConfigObj.w3.eth.getBlock(self.ConfigObj.w3.eth.block_number).timestamp
+            self.ConfigObj.w3.eth.getBlock(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
@@ -803,7 +803,12 @@ class CarbonBot(CarbonBotBase):
         return log_dict
 
     def _handle_trade_instructions(
-        self, CCm: CPCContainer, arb_mode: str, r: Any, result: str
+        self,
+        CCm: CPCContainer,
+        arb_mode: str,
+        r: Any,
+        result: str,
+        block_number: int = None,
     ) -> Any:
         """
         Handles the trade instructions.
@@ -818,6 +823,8 @@ class CarbonBot(CarbonBotBase):
             The result.
         result: str
             The result type.
+        block_number: int
+            The block number.
 
         Returns
         -------
@@ -940,7 +947,8 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the deadline
-        deadline = self._get_deadline()
+        deadline = self._get_deadline(self.replay_from_block)
+        print(f"deadline: {deadline}")
 
         # Get the route struct
         route_struct = [
@@ -1332,6 +1340,7 @@ class CarbonBot(CarbonBotBase):
         randomizer: int = 0,
         replay_mode: bool = False,
         tenderly_fork: str = None,
+        replay_from_block: int = None,
     ):
         """
         Runs the bot.
@@ -1356,6 +1365,8 @@ class CarbonBot(CarbonBotBase):
             whether to run in replay mode (default: False)
         tenderly_fork: str
             the Tenderly fork ID (default: None)
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         Returns
         -------
@@ -1367,6 +1378,7 @@ class CarbonBot(CarbonBotBase):
         self.setup_polling_interval(polling_interval)
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
+        self.replay_from_block = replay_from_block
 
         if self.TxSubmitHandler is None:
             self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)

@@ -351,7 +351,7 @@ def run(
         replay_from_block (int): The block number to replay from. (For debugging / testing)
     """
 
-    bot = tenderly_uri = None
+    bot = tenderly_uri = forked_from_block = None
     loop_idx = last_block = 0
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
@@ -364,11 +364,16 @@ def run(
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block = get_start_block(
-                alchemy_max_block_fetch, last_block, mgr, reorg_delay
+                alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
             )
 
             # Get all events from the last block to the current block
-            current_block = mgr.web3.eth.blockNumber - reorg_delay
+            if not replay_from_block:
+                current_block = mgr.web3.eth.blockNumber - reorg_delay
+            elif last_block == 0:
+                current_block = replay_from_block - reorg_delay
+            else:
+                current_block = last_block + 1
 
             # Log the current start, end and last block
             mgr.cfg.logger.info(
@@ -404,13 +409,14 @@ def run(
             update_pools_from_events(n_jobs, mgr, latest_events)
 
             # Set the network connection to Tenderly if replaying from a block
-            mgr, tenderly_uri = set_network_to_tenderly_if_replay(
+            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
                 last_block,
                 loop_idx,
                 mgr,
                 replay_from_block,
                 tenderly_uri,
                 use_cached_events,
+                forked_from_block or current_block,
             )
 
             # Append the fork to the list of forks to clean up if replaying from a block
@@ -432,16 +438,6 @@ def run(
 
             # Delete the bot (if it exists) to avoid memory leaks
             del bot
-
-            # Set the network connection to Tenderly if replaying from a block
-            mgr, tenderly_uri = set_network_to_tenderly_if_replay(
-                last_block,
-                loop_idx,
-                mgr,
-                replay_from_block,
-                tenderly_uri,
-                use_cached_events,
-            )
 
             # Append the fork to the list of forks to clean up if replaying from a block
             forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
@@ -469,6 +465,7 @@ def run(
                 tenderly_uri,
                 forks_to_cleanup,
                 mgr,
+                forked_from_block,
             )
 
             # Increment the loop index
