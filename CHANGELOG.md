@@ -2,9 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.8...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.9...HEAD)
 
 - Bugfix: Remove DAI from `flashloan_tokens` [\#78](https://github.com/bancorprotocol/fastlane-bot/issues/78)
+
+- Cleanup `main.py` for improved logical clarity of steps. [\#85](https://github.com/bancorprotocol/fastlane-bot/issues/85)
+- Add support for new Carbon contract custom fees per strategy [\#41](https://github.com/bancorprotocol/fastlane-bot/issues/41)
+- 85 cleanup mainpy for improved logical clarity of steps [\#86](https://github.com/bancorprotocol/fastlane-bot/pull/86) ([mikewcasale](https://github.com/mikewcasale))
+- Adds support for custom fee contract changes [\#84](https://github.com/bancorprotocol/fastlane-bot/pull/84) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.9](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.9) (2023-08-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.8...v2.7.9)
+
 - Remove DAI from default `flashloan_tokens` to fix logging error message. [\#79](https://github.com/bancorprotocol/fastlane-bot/pull/79) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
