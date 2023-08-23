@@ -66,6 +66,7 @@ class BaseManager:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
+    target_tokens: List[str] = field(default_factory=list)
 
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -119,7 +120,6 @@ class BaseManager:
         Set the carbon v1 fee pairs.
         """
         if "carbon_v1" in self.exchanges:
-
             # Create or get CarbonController contract object
             carbon_controller = self.create_or_get_carbon_controller()
 
@@ -296,7 +296,7 @@ class BaseManager:
         carbon_controller = self.create_or_get_carbon_controller()
 
         # Create a list of pairs from the CarbonController contract object
-        pairs = self.get_carbon_pairs(carbon_controller)
+        pairs = self.get_carbon_pairs(carbon_controller, self.target_tokens)
 
         # Create a list of strategies for each pair
         strategies_by_pair = self.get_strategies(pairs, carbon_controller)
@@ -331,7 +331,7 @@ class BaseManager:
         )
 
     def get_carbon_pairs(
-        self, carbon_controller: Contract
+        self, carbon_controller: Contract, target_tokens: List[str] = None
     ) -> List[Tuple[str, str, int, int]]:
         """
         Get the carbon pairs.
@@ -340,6 +340,8 @@ class BaseManager:
         ----------
         carbon_controller : Contract
             The CarbonController contract object.
+        target_tokens : List[str], optional
+            The target tokens, by default None
 
         Returns
         -------
@@ -356,7 +358,18 @@ class BaseManager:
         self.cfg.logger.info(
             f"Retrieved {len(pairs)} carbon pairs from {'state' if self.carbon_inititalized else 'contract'}"
         )
-        return [(pair[0], pair[1], 0, 5000) for pair in pairs]
+        if target_tokens is None:
+            target_tokens = []
+            for pair in pairs:
+                if pair[0] not in target_tokens:
+                    target_tokens.append(pair[0])
+                if pair[1] not in target_tokens:
+                    target_tokens.append(pair[1])
+        return [
+            (pair[0], pair[1], 0, 5000)
+            for pair in pairs
+            if pair[0] in target_tokens and pair[1] in target_tokens
+        ]
 
     @staticmethod
     def get_carbon_pairs_by_contract(
@@ -479,7 +492,6 @@ class BaseManager:
         ]
         strategies = []
         for cid in cids:
-
             pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
 
             # Constructing the orders based on the values from the pool_data dictionary

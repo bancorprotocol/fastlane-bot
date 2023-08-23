@@ -41,12 +41,12 @@ from fastlane_bot.events.utils import (
     handle_initial_iteration,
     get_latest_events,
     get_start_block,
-    handle_limit_pairs_for_replay_mode,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
     append_fork_for_cleanup,
     delete_tenderly_forks,
     verify_min_bnt_is_respected,
+    handle_target_token_addresses,
 )
 from fastlane_bot.tools.cpc import T
 
@@ -81,7 +81,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.WETH},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
+    default=f"{T.WBTC},{T.BNT},{T.NATIVE_ETH},{T.USDC},{T.USDT},{T.WETH},{T.LINK}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -177,12 +177,6 @@ load_dotenv()
     type=int,
     help="Set to a block number to replay from that block. (For debugging / testing)",
 )
-@click.option(
-    "--limit_pairs_for_replay",
-    default=None,
-    type=str,
-    help="Set to a comma separated list of pairs to limit replay to those pairs. (For debugging / testing)",
-)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -206,7 +200,6 @@ def main(
     timeout: int,
     target_tokens: str,
     replay_from_block: int,
-    limit_pairs_for_replay: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -235,13 +228,8 @@ def main(
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
-        limit_pairs_for_replay (str): A comma separated list of pairs to limit replay to those pairs. (For debugging / testing)
 
     """
-
-    # Set the replay from block while accounting for the reorg delay and subtracting 1 for full data sync before search
-    if replay_from_block is not None:
-        replay_from_block -= 1 + reorg_delay
 
     # Set config
     loglevel = get_loglevel(loglevel)
@@ -265,15 +253,14 @@ def main(
         cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
     )
 
+    target_token_addresses = handle_target_token_addresses(
+        static_pool_data, target_tokens
+    )
+
     # Break if timeout is hit to test the bot flags
     if timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
         return
-
-    # Split, validate, and log the limit pairs for replay
-    static_pool_data = handle_limit_pairs_for_replay_mode(
-        cfg, limit_pairs_for_replay, replay_from_block, static_pool_data
-    )
 
     # Initialize data fetch manager
     mgr = Manager(
@@ -285,6 +272,7 @@ def main(
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         is_replay_mode=replay_from_block is not None,
+        target_tokens=target_token_addresses,
     )
 
     # Add initial pool data to the manager
@@ -416,7 +404,7 @@ def run(
                 replay_from_block,
                 tenderly_uri,
                 use_cached_events,
-                forked_from_block or current_block,
+                current_block,
             )
 
             # Append the fork to the list of forks to clean up if replaying from a block
@@ -482,6 +470,9 @@ def run(
 
             # Delete all Tenderly forks except the most recent one
             forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
+
+            if replay_from_block:
+                break
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")

@@ -15,6 +15,7 @@ from _decimal import Decimal
 from typing import Any, Union, Dict, Set, List, Tuple, Hashable
 from typing import List
 
+import brownie
 import pandas as pd
 import requests
 from fastlane_bot.config.connect import EthereumNetwork
@@ -295,7 +296,9 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
 
 
 def handle_target_tokens(
-    cfg: Config, flashloan_tokens: List[str], target_tokens: str
+    cfg: Config,
+    flashloan_tokens: List[str],
+    target_tokens: str,
 ) -> List[str]:
     """
     Handles the target tokens parameter.
@@ -315,6 +318,7 @@ def handle_target_tokens(
         A list of target tokens to fetch data for.
 
     """
+
     if target_tokens:
         if target_tokens == "flashloan_tokens":
             target_tokens = flashloan_tokens
@@ -335,6 +339,7 @@ def handle_target_tokens(
         cfg.logger.info(
             f"Target tokens are set as: {target_tokens}, {type(target_tokens)}"
         )
+
     return target_tokens
 
 
@@ -763,9 +768,11 @@ def handle_subsequent_iterations(
         The manager object.
     forked_from_block : int
         The block number to fork from.
+    limit_pairs_for_replay : List[str], optional
+        A list of pairs to limit replay to, by default None
 
     """
-    if loop_idx > 0:
+    if loop_idx > 0 or replay_from_block:
         bot.db.handle_token_key_cleanup()
         bot.db.remove_unmapped_uniswap_v2_pools()
         bot.db.remove_zero_liquidity_pools()
@@ -1140,6 +1147,8 @@ def set_network_connection_to_tenderly(
     connection.connect_network()
     mgr.cfg.w3 = connection.web3
 
+    brownie.network.web3.provider.endpoint_uri = tenderly_uri
+
     assert (
         mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
     ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
@@ -1183,6 +1192,8 @@ def set_network_connection_to_mainnet(
     )
     connection.connect_network()
     mgr.cfg.w3 = connection.web3
+
+    brownie.network.web3.provider.endpoint_uri = mainnet_uri
 
     assert (
         mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
@@ -1414,3 +1425,39 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
         bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
+
+
+def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens: List):
+    """
+    Get the addresses of the target tokens.
+
+    Parameters
+    ----------
+    static_pool_data : pd.DataFrame
+        The static pool data.
+    target_tokens : List
+        The target tokens.
+
+    Returns
+    -------
+    List
+        The addresses of the target tokens.
+
+    """
+    # Get the addresses of the target tokens
+    target_token_addresses = []
+    for token in target_tokens:
+        target_token_addresses = (
+            target_token_addresses
+            + static_pool_data[static_pool_data["tkn0_key"] == token][
+                "tkn0_address"
+            ].tolist()
+        )
+        target_token_addresses = (
+            target_token_addresses
+            + static_pool_data[static_pool_data["tkn1_key"] == token][
+                "tkn1_address"
+            ].tolist()
+        )
+    target_token_addresses = list(set(target_token_addresses))
+    return target_token_addresses

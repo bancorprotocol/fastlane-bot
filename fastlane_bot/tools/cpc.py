@@ -66,6 +66,7 @@ AD = DAttrDict
 # for k,v in {t:tp.get(t) for t in T}.items():
 #     print(f"""{k} = "{v}",  """)
 
+
 TOKENIDS = AttrDict(
     NATIVE_ETH="ETH-EEeE",
     AAVE="AAVE-DaE9",
@@ -383,8 +384,8 @@ class ConstantProductCurve:
 
         if self.constr is None:
             super().__setattr__("constr", "default")
-            
-        super().__setattr__("cid", str(self.cid))   
+
+        super().__setattr__("cid", str(self.cid))
 
         if self.params is None:
             super().__setattr__("params", AttrDict())
@@ -407,11 +408,9 @@ class ConstantProductCurve:
 
         if self.isbigger(big=self.x_act, small=self.x):
             print(f"[ConstantProductCurve] x_act > x in {self.cid}", self.x_act, self.x)
-            
+
         if self.isbigger(big=self.y_act, small=self.y):
             print(f"[ConstantProductCurve] y_act > y in {self.cid}", self.y_act, self.y)
-
-        
 
         self.set_tokenscale(self.TOKENSCALE)
 
@@ -439,7 +438,7 @@ class ConstantProductCurve:
     def cid0(self):
         "short cid [last 8 characters]"
         return self.cid[-8:]
-    
+
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
     # change this to a different scale object be creating a derived class
@@ -479,8 +478,9 @@ class ConstantProductCurve:
         super().__setattr__("cid", cid)
         return self
 
-    class CPCValidationError(ValueError): pass
-    
+    class CPCValidationError(ValueError):
+        pass
+
     @classmethod
     def from_kx(
         cls,
@@ -869,11 +869,11 @@ class ConstantProductCurve:
             B = sqrt(pb)
             A0 = A if pa0 != pb0 else 0
         else:
-            pb0 = B * B             # B = sqrt(pb), A = sqrt(pa) - sqrt(pb)
-            pa0 = (A+B) * (A+B)     # A+B = sqrt(pa)
+            pb0 = B * B  # B = sqrt(pb), A = sqrt(pa) - sqrt(pb)
+            pa0 = (A + B) * (A + B)  # A+B = sqrt(pa)
             A0 = A
-            if A/B < 1e-7:
-                A = B*1e-7
+            if A / B < 1e-7:
+                A = B * 1e-7
 
         # set some intermediate parameters (see handwritten notes in repo)
         # yasym = yint * B / A
@@ -891,8 +891,10 @@ class ConstantProductCurve:
 
         return cls(
             k=kappa,
-            x=kappa_times_A / (y * A + yasym_times_A) if y * A + yasym_times_A != 0 else 1e99,
-            #x=kappa / (y + yasym) if y + yasym != 0 else 0,
+            x=kappa_times_A / (y * A + yasym_times_A)
+            if y * A + yasym_times_A != 0
+            else 1e99,
+            # x=kappa / (y + yasym) if y + yasym != 0 else 0,
             x_act=0,
             y_act=y,
             pair=f"{tknx}/{tkny}",
@@ -903,7 +905,6 @@ class ConstantProductCurve:
             params=params,
         )
 
-    
     def execute(self, dx=None, dy=None, *, ignorebounds=False, verbose=False):
         """
         executes a transaction in the pool, returning a new curve object
@@ -1023,9 +1024,13 @@ class ConstantProductCurve:
         """
         returns b (buy primary tknb), s (sells primary tknb) or bs (buys and sells)
         """
-        b,s = ("b", "s") if not verbose else ("buy-", "sell-")
-        xa, ya = (self.x_act, self.y_act) if self.pairo.isprimary else (self.y_act, self.x_act)
-        result  = b if ya > 0 else ""
+        b, s = ("b", "s") if not verbose else ("buy-", "sell-")
+        xa, ya = (
+            (self.x_act, self.y_act)
+            if self.pairo.isprimary
+            else (self.y_act, self.x_act)
+        )
+        result = b if ya > 0 else ""
         result += s if xa > 0 else ""
         if verbose:
             result += f"{self.pairo.primary_tknb}"
@@ -1036,16 +1041,17 @@ class ConstantProductCurve:
             return result, self.primaryp()
         else:
             return result
-    
+
     def buy(self):
         """returns 'b' if the curve buys the primary token, '' otherwise"""
         return self.buysell(verbose=False, withprice=False).replace("s", "")
-    
+
     def sell(self):
         """returns 's' if the curve sells the primary token, '' otherwise"""
         return self.buysell(verbose=False, withprice=False).replace("b", "")
-        
+
     ITM_THRESHOLDPC = 0.01
+
     @classmethod
     def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
         """
@@ -1059,20 +1065,20 @@ class ConstantProductCurve:
             thresholdpc = cls.ITM_THRESHOLDPC
         bs1, p1 = bsp1
         bs2, p2 = bsp2
-        
+
         # if  prices are equal (within threshold), positions are not in the money
-        if abs(p2/p1-1) < thresholdpc:
+        if abs(p2 / p1 - 1) < thresholdpc:
             return False
         if bs1 == "bs" and bs2 == "bs":
             return True
-        
+
         if p2 > p1:
             # if p2 > p1: amm1 must sell and amm2 must buy
             return "s" in bs1 and "b" in bs2
         else:
             # if p1 < p2: amm1 must buy and amm2 must sell
             return "b" in bs1 and "s" in bs2
-    
+
     def itm(self, other, *, thresholdpc=None, aggr=True):
         """
         like itm0, but self against another curve object
@@ -1091,8 +1097,7 @@ class ConstantProductCurve:
         bss = self.buysell(verbose=False, withprice=True)
         bso = other.buysell(verbose=False, withprice=True)
         return self.itm0(bss, bso, thresholdpc=thresholdpc)
-    
-    
+
     def tvl(self, tkn=None, *, mult=1.0, incltkn=False, raiseonerror=True):
         """
         total value locked in the curve, expressed in the token tkn (default: tknq)
@@ -1120,24 +1125,24 @@ class ConstantProductCurve:
     def p_convention(self):
         """price convention for p (dy/dx)"""
         return f"{self.tknyp} per {self.tknxp}"
-    
+
     @property
     def primary(self):
         "alias for self.pairo.primary"
         return self.pairo.primary
-    
+
     @property
     def isprimary(self):
         "alias for self.pairo.isprimary"
         return self.pairo.isprimary
-    
+
     def primaryp(self, *, withconvention=False):
         "pool price in the native quote of the curve Pair object"
         price = self.pairo.pp(self.p)
         if not withconvention:
             return price
-        return f"{price:.2f} {self.pairo.pp_convention}"     
-    
+        return f"{price:.2f} {self.pairo.pp_convention}"
+
     @property
     def pp(self):
         """alias for self.primaryp()"""
@@ -1204,13 +1209,14 @@ class ConstantProductCurve:
             return self.y_max / self.x_min
         else:
             return None
-        
+
     def p_max_primary(self, swap=True):
         "p_max in the native quote of the curve Pair object (swap=True: p_min)"
         p = self.p_max if not (swap and not self.isprimary) else self.p_min
-        if p is None: return None
-        return p if self.isprimary else 1/p
-    
+        if p is None:
+            return None
+        return p if self.isprimary else 1 / p
+
     @property
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
@@ -1218,13 +1224,14 @@ class ConstantProductCurve:
             return self.y_min / self.x_max
         else:
             return None
-    
+
     def p_min_primary(self, swap=True):
         "p_min in the native quote of the curve Pair object (swap=True: p_max)"
         p = self.p_min if not (swap and not self.isprimary) else self.p_max
-        if p is None: return None
-        return p if self.isprimary else 1/p
-    
+        if p is None:
+            return None
+        return p if self.isprimary else 1 / p
+
     def format(self, *, heading=False, formatid=None):
         """returns info about the curve as a formatted string"""
         if formatid is None:
@@ -1509,10 +1516,11 @@ class CPCContainer:
             return None
         pp = sum(c.pp for c in curves) / len(curves)
         return pp if pairo.isprimary else 1 / pp
-    
+
     PR_TUPLE = "tuple"
     PR_DICT = "dict"
     PR_DF = "df"
+
     def prices(self, result=None, *, inclpair=None, primary=None):
         """
         returns tuple or dictionary of the prices of all curves in the container
@@ -1521,28 +1529,33 @@ class CPCContainer:
         :inclpair:      if True, includes the pair in the dictionary
         :result:        what result to return (PR_TUPLE, PR_DICT, PR_DF)
         """
-        if primary is None: primary = True
-        if inclpair is None: inclpair = True
-        if result is None: result = self.PR_DICT
-        price_g = ((
+        if primary is None:
+            primary = True
+        if inclpair is None:
+            inclpair = True
+        if result is None:
+            result = self.PR_DICT
+        price_g = (
+            (
                 c.cid,
-                c.primaryp() if primary else c.p, 
-                c.pairo.primary if primary else c.pair
-            ) for c in self.curves
+                c.primaryp() if primary else c.p,
+                c.pairo.primary if primary else c.pair,
+            )
+            for c in self.curves
         )
-        
+
         if result == self.PR_TUPLE:
             if inclpair:
                 return tuple(price_g)
             else:
                 return tuple(r[1] for r in price_g)
-        
+
         if result == self.PR_DICT:
             if inclpair:
                 return {r[0]: (r[1], r[2]) for r in price_g}
             else:
                 return {r[0]: r[1] for r in price_g}
-        
+
         if result == self.PR_DF:
             df = pd.DataFrame.from_records(price_g, columns=["cid", "price", "pair"])
             df = df.set_index("cid")
@@ -1611,7 +1624,7 @@ class CPCContainer:
         if not asdict:
             return tokens_l
         return dict(tokens_l)
-    
+
     def pairs(self, *, standardize=True):
         """
         returns set of all pairs used by the curves
@@ -1985,8 +1998,10 @@ class CPCContainer:
     def bycid(self, cid):
         """returns curve by cid"""
         return self.curves_by_cid.get(cid, None)
-    
-    def bycids(self, include=None, *, endswith=None, exclude=None, asgenerator=None, ascc=None):
+
+    def bycids(
+        self, include=None, *, endswith=None, exclude=None, asgenerator=None, ascc=None
+    ):
         """
         returns curves by cids (as tuple, generator or CC object)
 
@@ -2004,15 +2019,19 @@ class CPCContainer:
             result = (c for c in self if not c.cid in exclude)
         else:
             if not include is None:
-                result = (self.curves_by_cid[cid] for cid in include if not cid in exclude)
+                result = (
+                    self.curves_by_cid[cid] for cid in include if not cid in exclude
+                )
             else:
-                result = (c for c in self if c.cid.endswith(endswith) and not c.cid in exclude)
+                result = (
+                    c for c in self if c.cid.endswith(endswith) and not c.cid in exclude
+                )
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
 
     def bycid0(self, cid0, **kwargs):
         """alias for bycids(endswith=cid0)"""
         return self.bycids(endswith=cid0, **kwargs)
-    
+
     def bypair(self, pair, *, directed=False, asgenerator=None, ascc=None):
         """returns all curves by (possibly directed) pair (as tuple, genator or CC object)"""
         result = (c for c in self if c.pair == pair)
@@ -2057,11 +2076,11 @@ class CPCContainer:
         """
         if not params:
             raise ValueError(f"no params given {params}")
-        
+
         params_t = tuple(params.items())
         if len(params_t) > 1:
             raise NotImplementedError(f"currently only one param allowed {params}")
-        
+
         pname, pvalue = params_t[0]
         if _inv:
             result = (c for c in self if c.P(pname) != pvalue)
@@ -2165,11 +2184,13 @@ class CPCContainer:
                         :PE_DATA:      prices, weights
         :returns:       price (quote per base)
         """
-        assert tknq is not None and tknb is not None or pair is not None, (
-            f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
-        )
-        assert not (not tknb is None and not pair is None), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
-        
+        assert (
+            tknq is not None and tknb is not None or pair is not None
+        ), f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
+        assert not (
+            not tknb is None and not pair is None
+        ), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+
         if not pair is None:
             tknb, tknq = pair.split("/")
         if tknq == tknb:
@@ -2218,7 +2239,7 @@ class CPCContainer:
 
         :tknqs:         list of quote tokens to calculate prices for
         :tknbs:         list of base tokens to calculate prices for
-        :triangulate:   tokens used as intermediate token for triangulation; if True, a standard 
+        :triangulate:   tokens used as intermediate token for triangulation; if True, a standard
                         token list is used; if None or False, no triangulation
         :unwrapsingle:  if there is only one quote token, a 1-d array is returned
         :pairs:         if True, returns the slashpairs instead of the prices
@@ -2230,7 +2251,7 @@ class CPCContainer:
         # NOTE: this code is relatively slow to compute, on the order of a few seconds
         # for go through the entire token list; the likely reason is that it keeps reestablishing
         # the CPCContainer objects whenever price_estimate is called; there may be a way to
-        # speed this up by smartly computing the container objects once and storing them 
+        # speed this up by smartly computing the container objects once and storing them
         # in a dictionary the is then passed to price_estimate.
         start_time = time.time()
         assert not tknqs is None, "tknqs must be set"
@@ -2245,22 +2266,28 @@ class CPCContainer:
         result = np.array(
             [
                 [
-                    self.price_estimate(tknb=b, tknq=q, raiseonerror=False, result=resulttp)
+                    self.price_estimate(
+                        tknb=b, tknq=q, raiseonerror=False, result=resulttp
+                    )
                     for b in tknbs
-                ] 
+                ]
                 for q in tknqs
             ]
         )
-        #print(f"[price_estimates] PAIRS [{time.time()-start_time:.2f}s]")
+        # print(f"[price_estimates] PAIRS [{time.time()-start_time:.2f}s]")
         flattened = result.flatten()
         nmissing = len([r for r in flattened if r is None])
         if verbose:
-            print(f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing")
+            print(
+                f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing"
+            )
             if nmissing > 0 and not triangulate:
-                print(f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]")
+                print(
+                    f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]"
+                )
             if nmissing == 0 and triangulate:
                 print(f"[price_estimates] no missing pairs, triangulation not needed")
-        
+
         if triangulate and nmissing > 0:
             if triangulate is True:
                 triangulate = self.TRIANGTOKENS
@@ -2269,30 +2296,36 @@ class CPCContainer:
             if verbose:
                 print("[price_estimates] triangulation tokens", triangulate)
             for ib, b in enumerate(tknbs):
-                #print(f"TOKENB={b:22} [{time.time()-start_time:.4f}s]")
+                # print(f"TOKENB={b:22} [{time.time()-start_time:.4f}s]")
                 for iq, q in enumerate(tknqs):
-                    #print(f" TOKENQ={q:21} [{time.time()-start_time:.4f}s]")
+                    # print(f" TOKENQ={q:21} [{time.time()-start_time:.4f}s]")
                     if result[iq][ib] is None:
                         result1 = []
                         for tkn in triangulate:
-                            #print(f"  TKN={tkn:23} [{time.time()-start_time:.4f}s]")
-                            #print(f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}")
-                            b_tkn = self.price_estimate(tknb=b, tknq=tkn, raiseonerror=False)
-                            q_tkn = self.price_estimate(tknb=q, tknq=tkn, raiseonerror=False)
-                            #print(f"[price_estimates] triangulating {b}/{tkn} = {b_tkn}, {q}/{tkn} = {q_tkn}")
+                            # print(f"  TKN={tkn:23} [{time.time()-start_time:.4f}s]")
+                            # print(f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}")
+                            b_tkn = self.price_estimate(
+                                tknb=b, tknq=tkn, raiseonerror=False
+                            )
+                            q_tkn = self.price_estimate(
+                                tknb=q, tknq=tkn, raiseonerror=False
+                            )
+                            # print(f"[price_estimates] triangulating {b}/{tkn} = {b_tkn}, {q}/{tkn} = {q_tkn}")
                             if not b_tkn is None and not q_tkn is None:
                                 if verbose:
-                                    print(f"[price_estimates] triangulated {b}/{q} via {tkn} [={b_tkn/q_tkn}]")
+                                    print(
+                                        f"[price_estimates] triangulated {b}/{q} via {tkn} [={b_tkn/q_tkn}]"
+                                    )
                                 result1 += [b_tkn / q_tkn]
                                 if stopatfirst:
-                                    #print(f"[price_estimates] stop at first")
+                                    # print(f"[price_estimates] stop at first")
                                     break
                                 # else:
                                 #     print(f"[price_estimates] continue {stopatfirst}")
                         result2 = np.mean(result1) if len(result1) > 0 else None
-                        #print(f"[price_estimates] final result {b}/{q} = {result2} [{len(result1)}]")
+                        # print(f"[price_estimates] final result {b}/{q} = {result2} [{len(result1)}]")
                         result[iq][ib] = result2
-        
+
         flattened = result.flatten()
         nmissing = len([r for r in flattened if r is None])
         if verbose:
@@ -2303,9 +2336,11 @@ class CPCContainer:
                     for iq, q in enumerate(tknqs)
                     if result[iq][ib] is None
                 }
-                print(f"[price_estimates] after triangulation {nmissing} missing", missing)
+                print(
+                    f"[price_estimates] after triangulation {nmissing} missing", missing
+                )
             else:
-                print("[price_estimates] no missing pairs after triangulation")  
+                print("[price_estimates] no missing pairs after triangulation")
         if raiseonerror:
             missing = {
                 f"{b}/{q}"
@@ -2322,7 +2357,7 @@ class CPCContainer:
                     len(missing),
                 )
 
-        #print(f"[price_estimates] DONE [{time.time()-start_time:.2f}s]")
+        # print(f"[price_estimates] DONE [{time.time()-start_time:.2f}s]")
         if unwrapsingle and len(tknqs) == 1:
             result = result[0]
         return result
@@ -2607,12 +2642,12 @@ class CPCInverter:
     @property
     def pair(self):
         return f"{self.tknb}/{self.tknq}"
-    
+
     @property
     def primary(self):
         "alias for self.pairo.primary [pair]"
         return self.pairo.primary
-    
+
     @property
     def pairp(self):
         "prety pair (without the -xxx part)"
@@ -2624,7 +2659,7 @@ class CPCInverter:
         tokens = self.primary.split("/")
         tokens = [t.split("-")[0] for t in tokens]
         return "/".join(tokens)
-    
+
     @property
     def x_min(self):
         return self.curve.y_min
@@ -2698,5 +2733,3 @@ class CPCInverter:
 
     # TOKENS_NOETH=TOKENS_NOETH
     # TOKENIDS=TOKENIDS
-
-
