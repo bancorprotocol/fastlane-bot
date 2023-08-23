@@ -1446,18 +1446,19 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     """
     # Get the addresses of the target tokens
     target_token_addresses = []
-    for token in target_tokens:
-        target_token_addresses = (
-            target_token_addresses
-            + static_pool_data[static_pool_data["tkn0_key"] == token][
-                "tkn0_address"
-            ].tolist()
-        )
-        target_token_addresses = (
-            target_token_addresses
-            + static_pool_data[static_pool_data["tkn1_key"] == token][
-                "tkn1_address"
-            ].tolist()
-        )
+    if target_tokens:
+        for token in target_tokens:
+            target_token_addresses = (
+                target_token_addresses
+                + static_pool_data[static_pool_data["tkn0_key"] == token][
+                    "tkn0_address"
+                ].tolist()
+            )
+            target_token_addresses = (
+                target_token_addresses
+                + static_pool_data[static_pool_data["tkn1_key"] == token][
+                    "tkn1_address"
+                ].tolist()
+            )
     target_token_addresses = list(set(target_token_addresses))
     return target_token_addresses

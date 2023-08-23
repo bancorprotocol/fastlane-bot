@@ -358,7 +358,7 @@ class BaseManager:
         self.cfg.logger.info(
             f"Retrieved {len(pairs)} carbon pairs from {'state' if self.carbon_inititalized else 'contract'}"
         )
-        if target_tokens is None:
+        if target_tokens is None or target_tokens == []:
             target_tokens = []
             for pair in pairs:
                 if pair[0] not in target_tokens:
