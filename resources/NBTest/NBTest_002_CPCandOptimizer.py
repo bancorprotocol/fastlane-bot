@@ -1342,7 +1342,7 @@ help(r.trade_instructions)
 # ## simple_optimizer demo [NOTEST]
 
 CC = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+i*10000), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
-O = CPCArbOptimizer(CC)
+#O = CPCArbOptimizer(CC)
 c0 = CC.curves[0]
 CC0 = CPCContainer([c0])
 O = SimpleOptimizer(CC)

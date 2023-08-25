@@ -16,17 +16,65 @@
 
 # +
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-#from flbtools.cpc import ConstantProductCurve as CPC
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-
 from fastlane_bot.testing import *
+
+#from flbtools.cpc import ConstantProductCurve as CPC
 #from flbtesting import *
 from math import sqrt
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 # from fastlane_bot import __VERSION__
 # require("3.0", __VERSION__)
 # -
 
 # # CPC for Balancer [NBTest049]
+
+# ## pvec interface for CPC
+
+c0 = CPC.from_xy(100, 200)
+assert c0.tknx == "TKNB"
+assert c0.tkny == "TKNQ"
+
+x,y,_ = c0.xyfromp_f(c0.p)
+xvec = c0.xvecfrompvec_f({c0.tknx: c0.p, c0.tkny: 1} )
+assert iseq(x, 100)
+assert iseq(y, 200)
+assert iseq(xvec[c0.tknx], x)
+assert iseq(xvec[c0.tkny], y)
+assert raises(c0.xvecfrompvec_f, {c0.tknx: c0.p} ).startswith("pvec must contain")
+assert raises(c0.xvecfrompvec_f, {c0.tkny: 1} ).startswith("pvec must contain")
+
+p = 1.5*c0.p
+x,y,_ = c0.xyfromp_f(p)
+xvec  = c0.xvecfrompvec_f({c0.tknx: p, c0.tkny: 1} )
+xvec2 = c0.xvecfrompvec_f({c0.tknx: 3*p, c0.tkny: 3} )
+xvec3 = c0.xvecfrompvec_f({c0.tknx: 3*p, c0.tkny: 3, "ETH": 15, "BTC": 300} )
+assert xvec == xvec2
+assert xvec == xvec3
+assert iseq(x, 81.64965809277261)
+assert iseq(y, 244.9489742783178)
+assert iseq(xvec[c0.tknx], x)
+assert iseq(xvec[c0.tkny], y)
+
+dx,dy,_ = c0.dxdyfromp_f(c0.p)
+dxvec = c0.dxvecfrompvec_f({c0.tknx: c0.p, c0.tkny: 1} )
+assert abs(dx)<1e-10
+assert abs(dy)<1e-10
+assert iseq(dxvec[c0.tknx], dx)
+assert iseq(dxvec[c0.tkny], dy)
+assert raises(c0.dxvecfrompvec_f, {c0.tknx: c0.p} ).startswith("pvec must contain")
+assert raises(c0.dxvecfrompvec_f, {c0.tkny: 1} ).startswith("pvec must contain")
+
+p = 1.5*c0.p
+dx,dy,_ = c0.dxdyfromp_f(p)
+dxvec  = c0.dxvecfrompvec_f({c0.tknx: p, c0.tkny: 1} )
+dxvec2 = c0.dxvecfrompvec_f({c0.tknx: 3*p, c0.tkny: 3} )
+dxvec3 = c0.dxvecfrompvec_f({c0.tknx: 3*p, c0.tkny: 3, "ETH": 15, "BTC": 300} )
+assert dxvec == dxvec2
+assert dxvec == dxvec3
+assert iseq(dx, -18.35034190722739)
+assert iseq(dy, 44.94897427831779)
+assert iseq(dxvec[c0.tknx], dx)
+assert iseq(dxvec[c0.tkny], dy)
 
 # ## Constant product constructor
 
