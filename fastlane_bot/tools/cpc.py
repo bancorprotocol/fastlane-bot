@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.0"
-__DATE__ = "22/Aug/2023"
+__VERSION__ = "3.1"
+__DATE__ = "25/Aug/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -1404,6 +1404,21 @@ class ConstantProductCurve:
 
         return x, y, p
 
+    def xvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        """
+        altertnative API to xyfromp_f
+        
+        :pvec:      a dict containing all prices; the dict must contain the keys
+                    for tknx and for tkny and the associated value must be the respective
+                    price in any numeraire (only the ratio is used)
+        :returns:   token amounts as dict {tknx: x, tkny: y}
+        """
+        assert self.tknx in pvec, f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
+        assert self.tkny in pvec, f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
+        p = pvec[self.tknx] / pvec[self.tkny]
+        x, y, _ = self.xyfromp_f(p, ignorebounds=ignorebounds)
+        return {self.tknx: x, self.tkny: y}
+    
     def dxdyfromp_f(self, p=None, *, ignorebounds=False, withunits=False):
         """like xyfromp_f, but returns dx,dy,p instead of x,y,p"""
         x, y, p = self.xyfromp_f(p, ignorebounds=ignorebounds)
@@ -1412,6 +1427,21 @@ class ConstantProductCurve:
         if withunits:
             return dx, dy, p, self.tknxp, self.tknyp, self.pairp
         return dx, dy, p
+    
+    def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        """
+        altertnative API to dxdyfromp_f
+        
+        :pvec:      a dict containing all prices; the dict must contain the keys
+                    for tknx and for tkny and the associated value must be the respective
+                    price in any numeraire (only the ratio is used)
+        :returns:   token difference amounts as dict {tknx: dx, tkny: dy}
+        """
+        assert self.tknx in pvec, f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
+        assert self.tkny in pvec, f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
+        p = pvec[self.tknx] / pvec[self.tkny]
+        dx, dy, _ = self.dxdyfromp_f(p, ignorebounds=ignorebounds)
+        return {self.tknx: dx, self.tkny: dy}
 
     def yfromx_f(self, x, *, ignorebounds=False):
         "y value for given x value (if in range; None otherwise)"
