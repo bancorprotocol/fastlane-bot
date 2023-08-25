@@ -14,8 +14,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "5.0"
-__DATE__ = "26/Jul/2023"
+__VERSION__ = "5.1"
+__DATE__ = "25/Aug/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -211,7 +211,13 @@ class MargPOptimizer(CPCArbOptimizer):
                     print(f"\n[dtknfromp_f] =====================>>>")
                     print(f"prices={p}")
                     print(f"tokens={tokens_t}")
-
+                
+                # pvec is dict {tkn -> (log) price} for all tokens in p
+                pvec = {tkn: p_ for tkn, p_ in zip(tokens_t, p)}
+                pvec[targettkn] = 1
+                if P("debug") and not quiet:
+                    print(f"pvec={pvec}")
+                
                 sum_by_tkn = {t: 0 for t in alltokens_s}
                 for pair, (tknb, tknq) in zip(pairs, pairs_t):
                     if get(p, tokens_ix.get(tknq)) > 0:
@@ -221,8 +227,14 @@ class MargPOptimizer(CPCArbOptimizer):
                         price = 1
                     curves = curves_by_pair[pair]
                     c0 = curves[0]
-                    dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
+                    #dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
+                    dxvecs = (c.dxvecfrompvec_f(pvec) for c in curves)
+                    
                     if P("debug2") and not quiet:
+                        dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
+                            # TODO: rewrite this using the dxvec
+                            # there is no need to extract dy dx; just iterate over dict
+                            # however not urgent because this is debug code
                         print(f"\n{c0.pairp} --->>")
                         print(f"  price={price:,.4f}, 1/price={1/price:,.4f}")
                         for r, c in zip(dxdy, curves):
@@ -233,12 +245,16 @@ class MargPOptimizer(CPCArbOptimizer):
                             print(s)
                         print(f"<<--- {c0.pairp}")
 
-                    sumdx, sumdy = sum(dxdy)
-                    sum_by_tkn[tknq] += sumdy
-                    sum_by_tkn[tknb] += sumdx
+                    # old code from dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
+                    # sumdx, sumdy = sum(dxdy)
+                    # sum_by_tkn[tknq] += sumdy
+                    # sum_by_tkn[tknb] += sumdx
+                    for dxvec in dxvecs:
+                        for tkn, dx_ in dxvec.items():
+                            sum_by_tkn[tkn] += dx_
 
-                    if P("debug") and not quiet:
-                        print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
+                    # if P("debug") and not quiet:
+                    #     print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
 
                 result = tuple(sum_by_tkn[t] for t in tokens_t)
                 if P("debug") and not quiet:
