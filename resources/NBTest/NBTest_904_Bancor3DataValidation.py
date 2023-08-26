@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.7
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -82,7 +82,7 @@ def run_command(arb_mode, expected_log_line):
     result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
 
     # Check if the expected log line is in the output
-    if expected_log_line in result.stderr:
+    if expected_log_line in result.stderr or expected_log_line in result.stdout:
         found = True
 
     if not found:

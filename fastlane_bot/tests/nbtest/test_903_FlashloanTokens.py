@@ -1,18 +1,13 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.13.1
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_903_FlashloanTokens.py`
+# ------------------------------------------------------------
+# source file   = NBTest_903_FlashloanTokens.py
+# test id       = 903
+# test comment  = FlashloanTokens
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
 This module contains the tests which ensure the the flashloan_tokens parameter is respected when using the b3_two_hop and bancor_v3 arb modes.
 """
@@ -34,9 +29,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
-# # Setup
 
-# +
+
 def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
@@ -93,8 +87,14 @@ def run_command(mode):
         pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
 
 
-# -
 
-# ## Test Flashloan Tokens b3_two_hop
 
-run_command("b3_two_hop")
+# ------------------------------------------------------------
+# Test      903
+# File      test_903_FlashloanTokens.py
+# Segment   Test Flashloan Tokens b3_two_hop
+# ------------------------------------------------------------
+def test_test_flashloan_tokens_b3_two_hop():
+# ------------------------------------------------------------
+    
+    run_command("b3_two_hop")
