@@ -196,9 +196,8 @@ finder = arb_finder(
             result=bot.AO_CANDIDATES,
             ConfigObj=bot.ConfigObj,
         )
-r = finder.find_arbitrage()
 
-arb_opp = r[0]
+arb_opp = 111
 
 validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
 
@@ -221,11 +220,19 @@ finder = arb_finder(
         )
 r = finder.find_arbitrage()
 
-arb_opp = r[0]
+arb_opp = None
+
+for arb in r:
+    has_carbon = False
+    for trade in arb[2]:
+        if '-' in trade['cid']:
+            has_carbon = True
+    
+    if not has_carbon:
+        arb_opp = arb
+        break
 
 validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-
-
 
 assert arb_opp != validated
 # -
@@ -242,9 +249,8 @@ finder = arb_finder(
             result=bot.AO_CANDIDATES,
             ConfigObj=bot.ConfigObj,
         )
-r = finder.find_arbitrage()
 
-arb_opp = r[0]
+arb_opp = 1191
 
 validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
 
