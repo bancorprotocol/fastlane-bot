@@ -248,6 +248,14 @@ def main(
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
 
+    # check the number of bancor v2 pools
+    num_bancor_v2_pools = len(
+        [pool for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"]
+    )
+    if num_bancor_v2_pools == 0:
+        cfg.logger.error("No bancor v2 pools found. Exiting...")
+        return
+
     # Run the main loop
     run(
         cache_latest_only,

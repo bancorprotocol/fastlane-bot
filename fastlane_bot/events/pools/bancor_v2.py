@@ -56,9 +56,9 @@ class BancorV2Pool(Pool):
         The one we want is the one where _token1 and _token2 match the token addresses of the pool.
         """
 
-        if "tkn0_address" not in self.state:
-            self.state["tkn0_address"] = event_args["args"]["_token1"]
-            self.state["tkn1_address"] = event_args["args"]["_token2"]
+        # if "tkn0_address" not in self.state:
+        #     self.state["tkn0_address"] = event_args["args"]["_token1"]
+        #     self.state["tkn1_address"] = event_args["args"]["_token2"]
 
         if (
             self.state["tkn0_address"] == event_args["args"]["_token1"]
@@ -73,8 +73,8 @@ class BancorV2Pool(Pool):
         for key, value in data.items():
             self.state[key] = value
 
-        if "anchor" not in self.state:
-            self.state["anchor"] = event_args["address"]
+        # if "anchor" not in self.state:
+        #     self.state["anchor"] = event_args["address"]
 
         data["anchor"] = self.state["anchor"]
         data["cid"] = self.state["cid"]
