@@ -395,8 +395,6 @@ def run(
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
 
-            break
-
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
             time.sleep(polling_interval)
