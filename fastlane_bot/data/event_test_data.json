@@ -218,5 +218,19 @@
       "newFeePPM": 3000
     },
     "event": "TradingFeePPMUpdated"
+  },
+  "bancor_v2_event": {
+    "args": {
+      "_token1": "0xB2607CB158bc222DD687e4D794c607B5ce983Ce2",
+      "_token2": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+      "_rateN": 701296523896722535,
+      "_rateD": 124447579392500555356},
+    "event": "TokenRateUpdate",
+    "logIndex": 106,
+    "transactionIndex": 22,
+    "transactionHash": "0x5b03ac11612de4b57824bcec404cdbbe96265425c073b3ac3abfa9b9edf8dd1e",
+    "address": "0xADd45B18153382D69AB5A13c44d1782B8f3aDEEc",
+    "blockHash": "0x45f34d791644169219b806ebdf60341fb5e62e4ed49e9da225e34d82e17f1f8b",
+    "blockNumber": 18005932
   }
 }

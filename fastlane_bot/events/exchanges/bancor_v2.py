@@ -46,7 +46,15 @@ class BancorV2(Exchange):
         return fee, fee_float
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.reserveTokens().call()[0]
+        return (
+            event["args"]["_token1"]
+            if event
+            else contract.functions.reserveTokens().call()[0]
+        )
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.reserveTokens().call()[1]
+        return (
+            event["args"]["_token2"]
+            if event
+            else contract.functions.reserveTokens().call()[1]
+        )

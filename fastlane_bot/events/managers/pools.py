@@ -365,11 +365,6 @@ class PoolManager(BaseManager):
 
         pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
 
-        if pool_info["exchange_name"] == "bancor_v2":
-            print(f'pool_info["exchange_name"]: {pool_info["exchange_name"]}')
-            print(f"key: {key}")
-            print(f"pool: {pool}")
-
         if not pool:
             self.add_pool_to_exchange(pool_info)
             key = self.pool_key_from_info(pool_info)

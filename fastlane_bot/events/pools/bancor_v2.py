@@ -51,28 +51,30 @@ class BancorV2Pool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        See base class.
-        """
-        tkn0 = self.state["tkn0_address"]
-        tkn1 = self.state["tkn1_address"]
-
-        event_args = event_args["args"]
-
-        """
         **** IMPORTANT ****
-        Bancor V2 pools emit 3 events per trade. Only one of them contains the new token balances we want. 
+        Bancor V2 pools emit 3 events per trade. Only one of them contains the new token balances we want.
         The one we want is the one where _token1 and _token2 match the token addresses of the pool.
         """
 
-        if event_args["_token1"] == tkn0 and event_args["_token2"] == tkn1:
-            data["tkn0_balance"] = event_args["_rateN"]
-            data["tkn1_balance"] = event_args["_rateD"]
+        if "tkn0_address" not in self.state:
+            self.state["tkn0_address"] = event_args["args"]["_token1"]
+            self.state["tkn1_address"] = event_args["args"]["_token2"]
+
+        if (
+            self.state["tkn0_address"] == event_args["args"]["_token1"]
+            and self.state["tkn1_address"] == event_args["args"]["_token2"]
+        ):
+            data["tkn0_balance"] = event_args["args"]["_rateN"]
+            data["tkn1_balance"] = event_args["args"]["_rateD"]
         else:
             data["tkn0_balance"] = self.state["tkn0_balance"]
-            data["tkn1_balance"] = self.state["tkn0_balance"]
+            data["tkn1_balance"] = self.state["tkn1_balance"]
 
         for key, value in data.items():
             self.state[key] = value
+
+        if "anchor" not in self.state:
+            self.state["anchor"] = event_args["address"]
 
         data["anchor"] = self.state["anchor"]
         data["cid"] = self.state["cid"]
@@ -86,6 +88,7 @@ class BancorV2Pool(Pool):
         See base class.
         """
         reserve0, reserve1 = contract.caller.reserveBalances()
+        tkn0_address, tkn1_address = contract.caller.reserveTokens()
         fee = contract.caller.conversionFee()
 
         params = {
@@ -96,6 +99,8 @@ class BancorV2Pool(Pool):
             "anchor": contract.caller.anchor(),
             "tkn0_balance": reserve0,
             "tkn1_balance": reserve1,
+            "tkn0_address": tkn0_address,
+            "tkn1_address": tkn1_address,
         }
         for key, value in params.items():
             self.state[key] = value
