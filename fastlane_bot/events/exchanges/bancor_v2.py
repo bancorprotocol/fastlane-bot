@@ -31,7 +31,7 @@ class BancorV2(Exchange):
         return BANCOR_V2_CONVERTER_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.LiquidityAdded, contract.events.LiquidityRemoved]
+        return [contract.events.TokenRateUpdate]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         pool = self.get_pool(address)
@@ -45,13 +45,8 @@ class BancorV2(Exchange):
         )
         return fee, fee_float
 
-    def _get_tokens(self, contract: Contract) -> List[str]:
-        if not self._tokens:
-            self._tokens = contract.functions.reserveTokens().call()
-        return self._tokens
-
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return self._get_tokens(contract)[0]
+        return contract.functions.reserveTokens().call()[0]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return self._get_tokens(contract)[1]
+        return contract.functions.reserveTokens().call()[1]
