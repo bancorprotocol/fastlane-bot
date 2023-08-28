@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.7
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -86,7 +86,7 @@ assert (bancor_v3_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v3_e
 bancor_v2_exchange = BancorV2()
 assert (bancor_v2_exchange.get_abi() == BANCOR_V2_CONVERTER_ABI)
 assert (bancor_v2_exchange.get_fee('', mocked_contract) == (3000, 0.003))
-assert (bancor_v2_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v2_event']) == '0xB2607CB158bc222DD687e4D794c607B5ce983Ce2')
+assert (bancor_v2_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v2_event']) == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
 
 # ## test_carbon_v1_exchange_update
 
