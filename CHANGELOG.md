@@ -2,11 +2,24 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.9...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.11...HEAD)
+
+- test\_902\_ValidatorSlow non-recurrent \(?\) issue [\#25](https://github.com/bancorprotocol/fastlane-bot/issues/25)
+- fix issue in which validator test could randomly fail [\#90](https://github.com/bancorprotocol/fastlane-bot/pull/90) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.11](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.11) (2023-08-27)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.10...v2.7.11)
+
+- Cleanup `main.py` for improved logical clarity of steps. [\#85](https://github.com/bancorprotocol/fastlane-bot/issues/85)
+- Balancer base code, part 1 [\#87](https://github.com/bancorprotocol/fastlane-bot/pull/87) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.7.10](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.10) (2023-08-21)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.9...v2.7.10)
 
 - Bugfix: Remove DAI from `flashloan_tokens` [\#78](https://github.com/bancorprotocol/fastlane-bot/issues/78)
 
-- Cleanup `main.py` for improved logical clarity of steps. [\#85](https://github.com/bancorprotocol/fastlane-bot/issues/85)
 - Add support for new Carbon contract custom fees per strategy [\#41](https://github.com/bancorprotocol/fastlane-bot/issues/41)
 - 85 cleanup mainpy for improved logical clarity of steps [\#86](https://github.com/bancorprotocol/fastlane-bot/pull/86) ([mikewcasale](https://github.com/mikewcasale))
 - Adds support for custom fee contract changes [\#84](https://github.com/bancorprotocol/fastlane-bot/pull/84) ([mikewcasale](https://github.com/mikewcasale))

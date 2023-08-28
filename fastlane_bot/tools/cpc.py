@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "2.14"
-__DATE__ = "23/May/2023"
+__VERSION__ = "3.0"
+__DATE__ = "22/Aug/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -351,10 +351,12 @@ class ConstantProductCurve:
     """
     represents a, potentially levered, constant product curve
 
-    :k:        pool constant k = xy [x=k/y, y=k/x]
+    :k:        pool invariant k (see NOTE2 below) 
     :x:        (virtual) pool state x (virtual number of base tokens for sale)
     :x_act:    actual pool state x (actual number of base tokens for sale)
     :y_act:    actual pool state y (actual number of quote tokens for sale)
+    :alpha:    weight factor alpha of token x (default = 0.5; see NOTE3 below)
+    :eta:      portfolio weight factor eta (default = 1; see NOTE3 below)
     :pair:     token pair in slash notation ("TKNB/TKNQ"); TKNB is on the x-axis, TKNQ on the y-axis
     :cid:      unique id (optional)
     :fee:      fee (optional); eg 0.01 for 1%
@@ -362,7 +364,20 @@ class ConstantProductCurve:
     :constr:   which (alternative) constructor was used (optional; user should not set)
     :params:   additional parameters (optional)
 
-    NOTE: use the alternative constructors `from_xx` rather then the canonical one
+    NOTE1: always use the alternative constructors `from_xx` rather then the 
+    canonical one; if you insist on using the canonical one then keep in mind
+    that the order of the parameters may change in future versions, so you
+    MUST use keyword arguments
+    
+    NOTE2: This class implements two distinct types of constant product curves:
+    (1) the standard constant product curve xy=k
+    (2) the weighted constant product curve x^al y^1-al = k^al
+    Note that the case alpha=0.5 is equivalent to the standard constant product curve
+    xy=k, including the value of k
+    
+    NOTE3: There are two different ways of specifying the weights of the tokens
+    (1) alpha: the weight of the x token (equal weight = 0.5), such that x^al y^1-al = k^al
+    (2) eta = alpha / (1-alpha): the relative weight (equal weight = 1; x overweight  > 1)
     """
 
     __VERSION__ = __VERSION__
@@ -372,6 +387,7 @@ class ConstantProductCurve:
     x: float
     x_act: float = None
     y_act: float = None
+    alpha: float = None
     pair: str = None
     cid: str = None
     fee: float = None
@@ -380,6 +396,16 @@ class ConstantProductCurve:
     params: AttrDict = field(default=None, repr=True, compare=False, hash=False)
 
     def __post_init__(self):
+        
+        if self.alpha is None:
+            super().__setattr__("_is_constant_product", True) 
+            super().__setattr__("alpha", 0.5) 
+        else:
+            super().__setattr__("_is_constant_product", self.alpha == 0.5) 
+            #print(f"[ConstantProductCurve] _is_constant_product = {self._is_constant_product}")
+            assert self.alpha > 0, f"alpha must be > 0 [{self.alpha}]"
+            assert self.alpha < 1, f"alpha must be < 1 [{self.alpha}]"
+    
 
         if self.constr is None:
             super().__setattr__("constr", "default")
@@ -440,6 +466,15 @@ class ConstantProductCurve:
         "short cid [last 8 characters]"
         return self.cid[-8:]
     
+    @property
+    def eta(self):
+        "portfolio weight factor eta = alpha / (1-alpha)"
+        return self.alpha / (1 - self.alpha)
+    
+    def is_constant_product(self):
+        "True iff alpha == 0.5"
+        return self._is_constant_product
+    
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
     # change this to a different scale object be creating a derived class
@@ -469,9 +504,11 @@ class ConstantProductCurve:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, d):
+    def fromdict(cls, d):
         "returns a curve from a dict representation"
         return cls(**d)
+    
+    from_dict = fromdict # DEPRECATED (use fromdict)
 
     def setcid(self, cid):
         """sets the curve id [can only be done once]"""
@@ -561,6 +598,50 @@ class ConstantProductCurve:
             constr="xy",
             params=params,
         )
+
+    @classmethod
+    def from_xyal(
+        cls,
+        x,
+        y,
+        *,
+        alpha=None,
+        eta=None,
+        x_act=None,
+        y_act=None,
+        pair=None,
+        cid=None,
+        fee=None,
+        descr=None,
+        params=None,
+    ):
+        "constructor: from x,y,alpha/eta (and x_act, y_act)"
+        if not alpha is None and not eta is None:
+            raise ValueError(f"at most one of alpha and eta must be given [{alpha}, {eta}]")
+        if not eta is None:
+            alpha = eta / (eta + 1)
+        if alpha is None:
+            alpha = 0.5
+        assert alpha > 0, f"alpha must be > 0 [{alpha}]"
+        eta_inv = (1-alpha) / alpha
+        k = x * (y**eta_inv)
+        #print(f"[from_xyal] eta_inv = {eta_inv}")
+        #print(f"[from_xyal] x={x}, y={y}, k = {k}")
+        return cls(
+            #k=(x**alpha * y**(1-alpha))**(1/alpha),
+            k=k,
+            x=x,
+            alpha=alpha,
+            x_act=x_act,
+            y_act=y_act,
+            pair=pair,
+            cid=cid,
+            fee=fee,
+            descr=descr,
+            constr="xyal",
+            params=params,
+        )
+
 
     @classmethod
     def from_pk(
@@ -915,6 +996,8 @@ class ConstantProductCurve:
 
         *at least one of dx, dy must be None
         """
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if not dx is None and not dy is None:
             raise ValueError(f"either dx or dy must be None dx={dx} dy={dy}")
 
@@ -995,6 +1078,8 @@ class ConstantProductCurve:
 
     def description(self):
         "description of the pool"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         s = ""
         s += f"cid      = {self.cid0} [{self.cid}]\n"
         s += f"primary  = {Pair.n(self.pairo.primary)} [{self.pairo.primary}]\n"
@@ -1010,15 +1095,21 @@ class ConstantProductCurve:
     @property
     def y(self):
         "(virtual) pool state x (virtual number of base tokens for sale)"
+        
         if self.k == 0:
             return 0
-        return self.k / self.x
-
+        if self.is_constant_product():
+            return self.k / self.x
+        return (self.k / self.x)**(self.eta)
+        
     @property
     def p(self):
         "pool price (in dy/dx)"
-        return self.y / self.x
-
+        if self.is_constant_product():
+            return self.y / self.x 
+        
+        return self.eta * self.y / self.x
+    
     def buysell(self, *, verbose=False, withprice=False):
         """
         returns b (buy primary tknb), s (sells primary tknb) or bs (buys and sells)
@@ -1081,6 +1172,8 @@ class ConstantProductCurve:
         :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
         :aggr:          if True, and an iterable is passed, True iff one is in the money
         """
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         try:
             itm_t = tuple(self.itm(o) for o in other)
             if not aggr:
@@ -1103,7 +1196,6 @@ class ConstantProductCurve:
         :raiseonerror:      if True, raises ValueError if tkn is not tknb or tknq
         :returns:           tvl (in tkn) or (tvl, tkn, mult) if incltkn is True
         """
-
         if tkn is None:
             tkn = self.tknq
         if not tkn in {self.tknb, self.tknq}:
@@ -1145,12 +1237,21 @@ class ConstantProductCurve:
 
     @property
     def kbar(self):
-        "kbar = sqrt(k); kbar scales linearly with the pool size"
-        return sqrt(self.k)
+        """
+        kbar is pool invariant the scales linearly with the pool size
+        
+        kbar = sqrt(k) for constant product
+        kbar = k^alpha for general curves
+        """
+        if self.is_constant_product():
+            return sqrt(self.k)
+        return self.k**self.alpha
 
     @property
     def x_min(self):
         "minimum (virtual) x value"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         return self.x - self.x_act
 
     @property
@@ -1179,11 +1280,15 @@ class ConstantProductCurve:
     @property
     def y_min(self):
         "minimum (virtual) y value"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         return self.y - self.y_act
 
     @property
     def x_max(self):
         "maximum (virtual) x value"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if self.y_min > 0:
             return self.k / self.y_min
         else:
@@ -1192,6 +1297,8 @@ class ConstantProductCurve:
     @property
     def y_max(self):
         "maximum (virtual) y value"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if self.x_min > 0:
             return self.k / self.x_min
         else:
@@ -1200,6 +1307,8 @@ class ConstantProductCurve:
     @property
     def p_max(self):
         "maximum pool price (in dy/dx; None if unlimited) = y_max/x_min"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if not self.x_min is None and self.x_min > 0:
             return self.y_max / self.x_min
         else:
@@ -1214,6 +1323,8 @@ class ConstantProductCurve:
     @property
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if not self.x_max is None and self.x_max > 0:
             return self.y_min / self.x_max
         else:
@@ -1227,6 +1338,8 @@ class ConstantProductCurve:
     
     def format(self, *, heading=False, formatid=None):
         """returns info about the curve as a formatted string"""
+        assert self.is_constant_product(), "only implemented for constant product curves"
+        
         if formatid is None:
             formatid = 0
         assert formatid in [0], "only formatid in [0] is supported"
@@ -1244,20 +1357,34 @@ class ConstantProductCurve:
         return s
 
     def xyfromp_f(self, p=None, *, ignorebounds=False, withunits=False):
-        """
-        returns x,y for a given marginal price p (stuck at the boundaries if ignorebounds=False)
+        r"""
+        returns x,y,p for a given marginal price p (stuck at the boundaries if ignorebounds=False)
 
         :p:                 marginal price (in dy/dx)
         :ignorebounds:      if True, ignore x_act and y_act; if False, return the x,y values where
                             x_act and y_act are at zero (i.e. the pool is empty in this direction)
         :withunits:         if False, return x,y,p; if True, also return tknx, tkny, pair
+        
+        
+        $$
+        x(p) = \left( \frac{\eta}{p}   \right) ^ {1-\alpha} k^\alpha
+        y(p) = \left( \frac{p}{\eta}   \right) ^ \alpha     k^\alpha
+        $$     
         """
         if p is None:
             p = self.p
-        sqrt_p = sqrt(p)
-        sqrt_k = self.kbar
-        x = sqrt_k / sqrt_p
-        y = sqrt_k * sqrt_p
+            
+        if self.is_constant_product():
+            sqrt_p = sqrt(p)
+            sqrt_k = self.kbar
+            x = sqrt_k / sqrt_p
+            y = sqrt_k * sqrt_p
+        else:
+            eta = self.eta
+            alpha = self.alpha
+            x = (eta/p)**(1-alpha) * self.kbar
+            y = (p/eta)**alpha * self.kbar
+        
         if not ignorebounds:
             if not self.x_min is None:
                 if x < self.x_min:
@@ -1278,7 +1405,7 @@ class ConstantProductCurve:
         return x, y, p
 
     def dxdyfromp_f(self, p=None, *, ignorebounds=False, withunits=False):
-        """like xyfromp_f, but returns dx,dy instead of x,y"""
+        """like xyfromp_f, but returns dx,dy,p instead of x,y,p"""
         x, y, p = self.xyfromp_f(p, ignorebounds=ignorebounds)
         dx = x - self.x
         dy = y - self.y
@@ -1288,7 +1415,11 @@ class ConstantProductCurve:
 
     def yfromx_f(self, x, *, ignorebounds=False):
         "y value for given x value (if in range; None otherwise)"
-        y = self.k / x
+        if self.is_constant_product():
+            y = self.k / x
+        else:
+            y = (self.k / x) ** self.eta
+        
         if ignorebounds:
             return y
         if not self.inrange(y, self.y_min, self.y_max):
@@ -1297,7 +1428,10 @@ class ConstantProductCurve:
 
     def xfromy_f(self, y, *, ignorebounds=False):
         "x value for given y value (if in range; None otherwise)"
-        x = self.k / y
+        if self.is_constant_product():
+            x = self.k / y
+        else:
+            x = self.k / (y ** (1/self.eta))
         if ignorebounds:
             return x
         if not self.inrange(x, self.x_min, self.x_max):

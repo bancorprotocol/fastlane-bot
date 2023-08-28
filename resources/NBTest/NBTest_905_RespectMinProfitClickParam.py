@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.7
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -94,7 +94,6 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test Minimum Profit BNT Is Respected
 
-# + is_executing=true
 expected_log_line = "Bot successfully updated min profit"
 arb_mode = "multi"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)

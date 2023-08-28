@@ -214,7 +214,11 @@ class MargPOptimizer(CPCArbOptimizer):
 
                 sum_by_tkn = {t: 0 for t in alltokens_s}
                 for pair, (tknb, tknq) in zip(pairs, pairs_t):
-                    price = get(p, tokens_ix.get(tknb)) / get(p, tokens_ix.get(tknq))
+                    if get(p, tokens_ix.get(tknq)) > 0:
+                        price = get(p, tokens_ix.get(tknb)) / get(p, tokens_ix.get(tknq))
+                    else:
+                        #print(f"[dtknfromp_f] warning: price for {pair} is unknown, using 1 instead")
+                        price = 1
                     curves = curves_by_pair[pair]
                     c0 = curves[0]
                     dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
