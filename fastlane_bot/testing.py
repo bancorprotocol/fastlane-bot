@@ -67,7 +67,7 @@ class VersionRequirementNotMetError(RuntimeError): pass
 
 def _split_version_str(vstr):
     """splits version mumber string into tuple (int, int, int, ...)"""
-    m = _re.match("^([0-9\.]*)", vstr.strip())
+    m = _re.match(r"^([0-9\.]*)", vstr.strip())
     if m is None:
         raise ValueError("Invalid version number string", vstr)
     vlst = tuple(int(x) for x in m.group(0).split("."))

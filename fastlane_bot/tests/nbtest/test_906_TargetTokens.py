@@ -1,20 +1,15 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.13.1
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_906_TargetTokens.py`
+# ------------------------------------------------------------
+# source file   = NBTest_906_TargetTokens.py
+# test id       = 906
+# test comment  = TargetTokens
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
-This module contains the tests which ensure the the flashloan_tokens parameter is respected when using the b3_two_hop and bancor_v3 arb modes.
+This module contains the tests which ensure the target_tokens parameter is respected.
 """
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -34,9 +29,10 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
-# # Setup
 
-# +
+from fastlane_bot.tools.cpc import T
+
+
 def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
@@ -72,16 +68,15 @@ def run_command(mode):
         "python",
         main_script_path,
         f"--arb_mode={mode}",
-        "--default_min_profit_bnt=60",
-        "--limit_bancor3_flashloan_tokens=True",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=45"
+        "--timeout=45",
+        f"--target_tokens={T.WETH},{T.DAI}"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
-    expected_log_line = "limiting flashloan_tokens to ["
+    expected_log_line = "Limiting pools by target_tokens. Removed "
     found = False
     result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
 
@@ -93,8 +88,14 @@ def run_command(mode):
         pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
 
 
-# -
 
-# ## Test Flashloan Tokens b3_two_hop
 
-run_command("b3_two_hop")
+# ------------------------------------------------------------
+# Test      906
+# File      test_906_TargetTokens.py
+# Segment   Test Flashloan Tokens b3_two_hop
+# ------------------------------------------------------------
+def test_test_flashloan_tokens_b3_two_hop():
+# ------------------------------------------------------------
+    
+    run_command("single")

@@ -32,23 +32,30 @@ require("2.0", __VERSION__)
 
 # ## Optimizer pickling [NOTEST]
 
-N=5
-curves = [
-    CPC.from_xy(x=1, y=2000, pair="ETH/USDC"),
-    CPC.from_xy(x=1, y=2200, pair="ETH/USDC"),
-    CPC.from_xy(x=1, y=2400, pair="ETH/USDC"),
-]
-# note: the below is a bit icky as the same curve objects are added multiple times
-CC = CPCContainer(curves*N)
-O = CPCArbOptimizer(CC)
-O.CC.asdf()
+pass
 
-O.pickle("delme")
-O.pickle("delme", addts=False)
+# +
+# N=5
+# curves = [
+#     CPC.from_xy(x=1, y=2000, pair="ETH/USDC"),
+#     CPC.from_xy(x=1, y=2200, pair="ETH/USDC"),
+#     CPC.from_xy(x=1, y=2400, pair="ETH/USDC"),
+# ]
+# # note: the below is a bit icky as the same curve objects are added multiple times
+# CC = CPCContainer(curves*N)
+# O = CPCArbOptimizer(CC)
+# O.CC.asdf()
 
-# !ls *.pickle
+# +
+# O.pickle("delme")
+# O.pickle("delme", addts=False)
 
-O.unpickle("delme")
+# +
+# # !ls *.pickle
+
+# +
+# O.unpickle("delme")
+# -
 
 # ## Creating curves
 #
@@ -86,6 +93,7 @@ assert c.asdict() == {
     'x': 100,
     'x_act': 100,
     'y_act': 100,
+    'alpha': 0.5,
     'pair': 'TKNB/TKNQ',
     'cid': "1",
     'fee': 0,
@@ -258,7 +266,7 @@ CC
 
 df = CC.asdf()
 assert len(df) == 3
-assert tuple(df.reset_index().columns) == ('cid', 'k', 'x', 'x_act', 'y_act', 
+assert tuple(df.reset_index().columns) == ('cid', 'k', 'x', 'x_act', 'y_act', 'alpha',
                                            'pair', 'fee', 'descr', 'constr', 'params')
 assert tuple(df["k"]) == (2000, 8040, 1970)
 assert CPCContainer.from_df(df) == CC
@@ -363,6 +371,8 @@ df_pickle[:3]
 #print(f"{len(df_xlsx)} curves")
 print(f"                         {len(cc_json)}              .curves.json", )
 # !ls -l .curves*
+
+
 
 
 
