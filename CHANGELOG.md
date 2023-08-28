@@ -2,9 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.11...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.12...HEAD)
 
+- Broken tests [\#92](https://github.com/bancorprotocol/fastlane-bot/issues/92)
 - test\_902\_ValidatorSlow non-recurrent \(?\) issue [\#25](https://github.com/bancorprotocol/fastlane-bot/issues/25)
+
+- Add flashloan token liquidity check. [\#80](https://github.com/bancorprotocol/fastlane-bot/issues/80)
+- Add Support for Bancor V2 Exchange [\#69](https://github.com/bancorprotocol/fastlane-bot/issues/69)
+- Improve Repo History Lineage Lost During Codebase Overwrite from v1.0 to v2.0 [\#34](https://github.com/bancorprotocol/fastlane-bot/issues/34)
+- 69 add support for bancor v2 exchange [\#91](https://github.com/bancorprotocol/fastlane-bot/pull/91) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.12](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.12) (2023-08-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.11...v2.7.12)
+
 - fix issue in which validator test could randomly fail [\#90](https://github.com/bancorprotocol/fastlane-bot/pull/90) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.11](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.11) (2023-08-27)
