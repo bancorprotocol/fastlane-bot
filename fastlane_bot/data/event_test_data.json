@@ -221,10 +221,10 @@
   },
   "bancor_v2_event": {
     "args": {
-      "_token1": "0xB2607CB158bc222DD687e4D794c607B5ce983Ce2",
-      "_token2": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
-      "_rateN": 701296523896722535,
-      "_rateD": 124447579392500555356},
+      "_token1": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      "_token2": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+      "_rateN": 5698079648237338312679700,
+      "_rateD": 1404376232459809237924},
     "event": "TokenRateUpdate",
     "logIndex": 106,
     "transactionIndex": 22,
