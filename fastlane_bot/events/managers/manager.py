@@ -245,6 +245,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     ]
                 ):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
+                    if "ERC721:" not in str(e):
+                        raise e
                     break
                 else:
                     time.sleep(rate_limiter)

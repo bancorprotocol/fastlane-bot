@@ -32,7 +32,12 @@ class PoolManager(BaseManager):
             The pool key.
 
         """
-        if pool_info["exchange_name"] in ["uniswap_v2", "sushiswap_v2", "uniswap_v3"]:
+        if pool_info["exchange_name"] in [
+            "uniswap_v2",
+            "sushiswap_v2",
+            "uniswap_v3",
+            "bancor_v2",
+        ]:
             return pool_info["address"]
         elif pool_info["exchange_name"] == "carbon_v1":
             return pool_info["cid"]
@@ -357,7 +362,9 @@ class PoolManager(BaseManager):
             The pool.
         """
         key = self.pool_key_from_info(pool_info)
+
         pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
+
         if not pool:
             self.add_pool_to_exchange(pool_info)
             key = self.pool_key_from_info(pool_info)
