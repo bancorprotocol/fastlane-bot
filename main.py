@@ -12,8 +12,8 @@ with open(".env", "r") as file:
 
 with open(".env", "w") as file:
     for line in lines:
-        if line.startswith(f"{env_var}="):
-            continue
+        if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
+            line = f"{env_var}="
         file.write(line)
 
 import time
