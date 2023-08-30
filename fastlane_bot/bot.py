@@ -837,6 +837,9 @@ class CarbonBot(CarbonBotBase):
             calculated_trade_instructions
         )
 
+        flashloan_struct = tx_route_handler.generate_flashloan_struct(
+            trade_instructions_objects=calculated_trade_instructions)
+
         # Get the flashloan token
         fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
 
@@ -844,17 +847,9 @@ class CarbonBot(CarbonBotBase):
         if fl_token == T.WETH:
             fl_token = T.NATIVE_ETH
 
-        # Calculate the profit
-        # best_profit_old = flashloan_tkn_profit = (
-        #     calculated_trade_instructions[-1].amtout
-        #     - calculated_trade_instructions[0].amtin
-        # )
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
 
-        # self.ConfigObj.logger.info(
-        #     f"Opportunity with profit: {num_format(best_profit)} vs old profit {best_profit_old}."
-        # )
         # Use helper function to calculate profit
         best_profit, flt_per_bnt, profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, fl_token_with_weth
@@ -967,6 +962,7 @@ class CarbonBot(CarbonBotBase):
                 safety_override=False,
                 verbose=True,
                 log_object=log_dict,
+                flashloan_struct=flashloan_struct
             ),
             cids,
         )
@@ -1069,6 +1065,7 @@ class CarbonBot(CarbonBotBase):
         route_struct: List[RouteStruct],
         src_address: str,
         src_amount: int,
+        flashloan_struct: {}
     ):
         """
         Validate and submit the transaction tenderly
@@ -1099,7 +1096,7 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         self.ConfigObj.logger.debug("src_address", src_address)
         tx = tx_submit_handler.submit_transaction_tenderly(
-            route_struct=route_struct, src_address=src_address, src_amount=src_amount
+            route_struct=route_struct, src_address=src_address, src_amount=src_amount, flashloan_struct=flashloan_struct
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
 

@@ -288,7 +288,8 @@ class TxHelpers:
         result: str = None,
         verbose: bool = False,
         safety_override: bool = False,
-        log_object: {} = None
+        log_object: {} = None,
+        flashloan_struct: {} = None
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -328,7 +329,8 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
-            test_fake_gas=True if result is not None else False
+            test_fake_gas=True if result is not None else False,
+            flashloan_struct=flashloan_struct
         )
         if result == self.XS_TRANSACTION:
             return arb_tx
@@ -473,23 +475,6 @@ class TxHelpers:
         """
         return self.web3.eth.estimate_gas(transaction=transaction)
 
-    def build_transaction_tenderly(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        nonce: int,
-    ):
-        self.ConfigObj.logger.info(f"Attempting to submit trade on Tenderly")
-        return self.web3.eth.wait_for_transaction_receipt(
-            self.arb_contract.functions.execute(routes, src_amt).transact(
-                {
-                    "maxFeePerGas": 0,
-                    "gas": self.ConfigObj.DEFAULT_GAS,
-                    "from": self.wallet_address,
-                    "nonce": nonce,
-                }
-            )
-        )
     def get_access_list(self, transaction_data, expected_gas, eth_input=None):
         expected_gas = hex(expected_gas)
         json_data = {
@@ -524,6 +509,44 @@ class TxHelpers:
         else:
             access_list = json.loads(response.text)['result']['accessList']
             return access_list
+
+    def construct_contract_function(self,
+        routes: List[Dict[str, Any]],
+        src_amt: int,
+        src_address: str,
+        gas_price: int,
+        max_priority: int,
+        nonce: int,
+        flashloan_struct = None
+    ):
+        """
+        Builds the transaction using the Arb Contract function. This version can generate transactions using flashloanAndArb and flashloanAndArbV2.
+
+        routes: the routes to be used in the transaction
+        src_amt: the amount of the source token to be sent to the transaction
+        gas_price: the gas price to be used in the transaction
+
+        returns: the transaction function ready to be submitted
+        """
+        print(f"flashloan_struct: {flashloan_struct} \nroutes: {routes}")
+        if flashloan_struct is None:
+            transaction = self.arb_contract.functions.flashloanAndArb(
+                routes, src_address, src_amt
+            ).build_transaction(
+                self.build_tx(
+                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                )
+            )
+        else:
+            transaction = self.arb_contract.functions.flashloanAndArbV2(
+                flashloan_struct, routes
+            ).build_transaction(
+                self.build_tx(
+                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                )
+            )
+        return transaction
+
     def build_transaction_with_gas(
         self,
         routes: List[Dict[str, Any]],
@@ -533,7 +556,8 @@ class TxHelpers:
         max_priority: int,
         nonce: int,
         access_list: bool = True,
-        test_fake_gas: bool = False
+        test_fake_gas: bool = False,
+        flashloan_struct = None
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -546,15 +570,16 @@ class TxHelpers:
         """
 
         try:
-            transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
-            )
+            transaction = self.construct_contract_function(
+                routes=routes,
+                src_amt=src_amt,
+                src_address=src_address,
+                gas_price=gas_price,
+                max_priority=max_priority,
+                nonce=nonce,
+                flashloan_struct=flashloan_struct)
         except Exception as e:
-
+            print(f"failed to build transaction due to error {e}")
             self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
@@ -563,14 +588,16 @@ class TxHelpers:
                     split2 = split1.split(' baseFee: ')
                     split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
                     split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                    transaction = self.arb_contract.functions.flashloanAndArb(
-                        routes, src_address, src_amt
-                    ).build_transaction(
-                        self.build_tx(
-                            base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
-                        )
-                    )
+                    transaction = self.construct_contract_function(
+                        routes=routes,
+                        src_amt=src_amt,
+                        src_address=src_address,
+                        gas_price=split_baseFee,
+                        max_priority=split_maxPriorityFeePerGas,
+                        nonce=nonce,
+                        flashloan_struct=flashloan_struct)
                 except Exception as e:
+                    print(f"failed to build transaction SECOND TIME due to error {e}")
                     self.ConfigObj.logger.debug(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
