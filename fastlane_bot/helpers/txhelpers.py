@@ -528,7 +528,6 @@ class TxHelpers:
 
         returns: the transaction function ready to be submitted
         """
-        print(f"flashloan_struct: {flashloan_struct} \nroutes: {routes}")
         if flashloan_struct is None:
             transaction = self.arb_contract.functions.flashloanAndArb(
                 routes, src_address, src_amt
@@ -579,7 +578,6 @@ class TxHelpers:
                 nonce=nonce,
                 flashloan_struct=flashloan_struct)
         except Exception as e:
-            print(f"failed to build transaction due to error {e}")
             self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
@@ -597,7 +595,6 @@ class TxHelpers:
                         nonce=nonce,
                         flashloan_struct=flashloan_struct)
                 except Exception as e:
-                    print(f"failed to build transaction SECOND TIME due to error {e}")
                     self.ConfigObj.logger.debug(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
