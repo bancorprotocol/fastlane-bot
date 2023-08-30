@@ -2,13 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.12...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.13...HEAD)
+
+- Jupytext does not exist for automated tests [\#89](https://github.com/bancorprotocol/fastlane-bot/issues/89)
+- Add jupytext dependency for automated test script [\#93](https://github.com/bancorprotocol/fastlane-bot/pull/93) ([mikewcasale](https://github.com/mikewcasale))
+
+- Add Support for Trader Joe Exchange [\#71](https://github.com/bancorprotocol/fastlane-bot/issues/71)
+- Add Support for Bancor V2 Exchange [\#69](https://github.com/bancorprotocol/fastlane-bot/issues/69)
+
+## [v2.7.13](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.13) (2023-08-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.12...v2.7.13)
 
 - Broken tests [\#92](https://github.com/bancorprotocol/fastlane-bot/issues/92)
 - test\_902\_ValidatorSlow non-recurrent \(?\) issue [\#25](https://github.com/bancorprotocol/fastlane-bot/issues/25)
 
 - Add flashloan token liquidity check. [\#80](https://github.com/bancorprotocol/fastlane-bot/issues/80)
-- Add Support for Bancor V2 Exchange [\#69](https://github.com/bancorprotocol/fastlane-bot/issues/69)
 - Improve Repo History Lineage Lost During Codebase Overwrite from v1.0 to v2.0 [\#34](https://github.com/bancorprotocol/fastlane-bot/issues/34)
 - 69 add support for bancor v2 exchange [\#91](https://github.com/bancorprotocol/fastlane-bot/pull/91) ([mikewcasale](https://github.com/mikewcasale))
 
