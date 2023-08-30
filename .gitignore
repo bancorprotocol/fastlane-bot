@@ -68,3 +68,4 @@ latest_event_data.json
 latest_pool_data.json
 missing_events.json
 *.log
+logs/*
