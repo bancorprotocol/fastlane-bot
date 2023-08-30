@@ -706,7 +706,7 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
     """
     # read data from the json file latest_event_data.json
     mgr.cfg.logger.info("Using cached events")
-    path = f"{logging_path}latest_event_data.json"
+    path = "fastlane_bot/data/latest_event_data.json".replace("./logs", "logs")
     os.path.isfile(path)
     with open(path, "r") as f:
         latest_events = json.load(f)
