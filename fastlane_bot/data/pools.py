@@ -23,4 +23,5 @@ uniswap_v3_pools = [
     for idx in range(len(static_data))
     if static_data[idx]["exchange_name"] == "uniswap_v3"
 ]
+
 del static_data  # clear static data to save memory

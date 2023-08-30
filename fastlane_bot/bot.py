@@ -511,22 +511,22 @@ class CarbonBot(CarbonBotBase):
         -------
         tuple or None
         """
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb_opp
 
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
         if arb_mode == "bancor_v3" or arb_mode == "b3_two_hop":
+            (
+                best_profit,
+                best_trade_instructions_df,
+                best_trade_instructions_dic,
+                best_src_token,
+                best_trade_instructions,
+            ) = arb_opp
 
+            (
+                ordered_trade_instructions_dct,
+                tx_in_count,
+            ) = self._simple_ordering_by_src_token(
+                best_trade_instructions_dic, best_src_token
+            )
             cids = []
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]

@@ -6,20 +6,20 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
-# + is_executing=true
+# +
 import json
 
 import pytest
 
 from fastlane_bot import Bot
-from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
+from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, BancorV2Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -29,6 +29,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2Pool))
 from fastlane_bot.testing import *
 
 #plt.style.use('seaborn-dark')
@@ -45,6 +46,16 @@ with open('fastlane_bot/data/event_test_data.json', 'r') as f:
 uniswap_v2_pool = UniswapV2Pool()
 uniswap_v2_pool.update_from_event(setup_data['uniswap_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'sushiswap_v2', 'reserve0': setup_data['uniswap_v2_event']['args']['reserve0'], 'reserve1': setup_data['uniswap_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (uniswap_v2_pool.state['tkn0_balance'] == setup_data['uniswap_v2_event']['args']['reserve0'])
+
+# ## test_bancor_v2_pool
+
+bancor_v2_pool = BancorV2Pool()
+bancor_v2_pool.state['tkn0_address'] = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+bancor_v2_pool.state['tkn1_address'] = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'
+bancor_v2_pool.state['anchor']= '0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533'
+bancor_v2_pool.update_from_event(setup_data['bancor_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'bancor_v2'})
+assert (bancor_v2_pool.state['tkn0_balance'] == setup_data['bancor_v2_event']['args']['_rateN']), f"expected {bancor_v2_pool.state['tkn0_balance']}, found {setup_data['bancor_v2_event']['args']['_rateN']}"
+assert (bancor_v2_pool.state['tkn1_balance'] == setup_data['bancor_v2_event']['args']['_rateD']), f"expected {bancor_v2_pool.state['tkn1_balance']}, found {setup_data['bancor_v2_event']['args']['_rateD']}"
 
 # ## test_sushiswap_v2_pool
 
@@ -107,3 +118,7 @@ assert (carbon_v1_pool.state['B_0'] == 0)
 assert (carbon_v1_pool.state['y_1'] == 0)
 assert (carbon_v1_pool.state['z_1'] == 0)
 assert (carbon_v1_pool.state['A_1'] == 0)
+
+
+
+

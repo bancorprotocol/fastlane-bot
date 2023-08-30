@@ -705,7 +705,7 @@ class BaseManager:
         """
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
-        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
+        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3", "bancor_v2"}:
             return "address", addr
         if ex_name == "bancor_v3":
             value = (

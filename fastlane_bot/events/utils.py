@@ -867,7 +867,7 @@ def handle_initial_iteration(
 
     """
     if last_block == 0:
-        mgr.get_rows_to_update(start_block)
+        rows_to_update = mgr.get_rows_to_update(start_block)
 
         # Construct rows_to_update for "bancor_v3"
         bancor_v3_rows = [
@@ -877,7 +877,7 @@ def handle_initial_iteration(
         ]
 
         if backdate_pools:
-            rows_to_update = bancor_v3_rows
+            rows_to_update += bancor_v3_rows
 
             # Remove duplicates
             rows_to_update = list(set(rows_to_update))
