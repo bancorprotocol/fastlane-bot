@@ -47,6 +47,7 @@ from fastlane_bot.events.utils import (
     delete_tenderly_forks,
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
+    handle_replay_from_block,
 )
 from fastlane_bot.tools.cpc import T
 
@@ -175,7 +176,8 @@ load_dotenv()
     "--replay_from_block",
     default=None,
     type=int,
-    help="Set to a block number to replay from that block. (For debugging / testing)",
+    help="Set to a block number to replay from that block. (For debugging / testing). A valid Tenderly account and "
+    "configuration is required.",
 )
 def main(
     cache_latest_only: bool,
@@ -230,6 +232,11 @@ def main(
         replay_from_block (int): The block number to replay from. (For debugging / testing)
 
     """
+
+    if replay_from_block:
+        polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
+            polling_interval
+        )
 
     # Set config
     loglevel = get_loglevel(loglevel)

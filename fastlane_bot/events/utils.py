@@ -1462,3 +1462,27 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
             )
     target_token_addresses = list(set(target_token_addresses))
     return target_token_addresses
+
+
+def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
+    """
+    Handle the replay from block flag.
+
+    Parameters
+    ----------
+    replay_from_block : int
+        The block number to replay from.
+
+    Returns
+    -------
+    polling_interval : int
+        The time interval at which the bot polls for new events.
+
+    """
+    assert (
+        replay_from_block > 0
+    ), "The block number to replay from must be greater than 0."
+    reorg_delay = 0
+    use_cached_events = False
+    polling_interval = 0
+    return polling_interval, reorg_delay, use_cached_events
