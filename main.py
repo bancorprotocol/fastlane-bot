@@ -224,6 +224,41 @@ def main(
     # Format the exchanges
     exchanges = handle_exchanges(cfg, exchanges)
 
+    # Log the run configuration
+    cfg.logger.info(
+        f"""
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+        Starting fastlane bot with the following configuration:
+        
+        cache_latest_only: {cache_latest_only}
+        backdate_pools: {backdate_pools}
+        arb_mode: {arb_mode}
+        flashloan_tokens: {flashloan_tokens}
+        config: {config}
+        n_jobs: {n_jobs}
+        exchanges: {exchanges}
+        polling_interval: {polling_interval}
+        alchemy_max_block_fetch: {alchemy_max_block_fetch}
+        static_pool_data_filename: {static_pool_data_filename}
+        reorg_delay: {reorg_delay}
+        logging_path: {logging_path}
+        loglevel: {loglevel}
+        static_pool_data_sample_sz: {static_pool_data_sample_sz}
+        use_cached_events: {use_cached_events}
+        run_data_validator: {run_data_validator}
+        randomizer: {randomizer}
+        limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
+        default_min_profit_bnt: {default_min_profit_bnt}
+        timeout: {timeout}
+        target_tokens: {target_tokens}
+        
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        """
+    )
+
     # Get the static pool data, tokens and uniswap v2 event mappings
     static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
         cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
@@ -402,6 +437,19 @@ def run(
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
+
+            if loop_idx == 1:
+                mgr.cfg.logger.info(
+                    """
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    
+                    Finished first iteration of data sync. Now starting main loop arbitrage search.
+                    
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    """
+                )
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
