@@ -81,7 +81,7 @@ class BaseManager:
     SUPPORTED_EXCHANGES: List[str] = None
     _fee_pairs: Dict[Tuple[str, str], int] = field(default_factory=dict)
     carbon_inititalized: bool = None
-    is_replay_mode: bool = False
+    replay_from_block: int = None
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -245,8 +245,18 @@ class BaseManager:
         )
         return tkns or (None, None)
 
-    def multicall(self, address):
-        return brownie.multicall(address)
+    def multicall(self, address: str):
+        """
+
+        Parameters
+        ----------
+        address : str
+            The address of the contract to call.
+        """
+        if self.replay_from_block:
+            return brownie.multicall(address, block_identifier=self.replay_from_block)
+        else:
+            return brownie.multicall(address)
 
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
@@ -419,7 +429,7 @@ class BaseManager:
         """
         if (
             self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]
-            and not self.is_replay_mode
+            and not self.replay_from_block
         ):
             return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
 
@@ -437,7 +447,9 @@ class BaseManager:
         return carbon_controller
 
     def get_strats_by_contract(
-        self, pairs: List[Tuple[str, str, int, int]], carbon_controller: BrownieContract
+        self,
+        pairs: List[Tuple[str, str, int, int]],
+        carbon_controller: BrownieContract,
     ) -> List[List[Any]]:
         """
         Get the strategies by contract.
@@ -455,7 +467,9 @@ class BaseManager:
             The strategies.
 
         """
-        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+        with self.multicall(
+            address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+        ):
             # Fetch strategies for each pair from the CarbonController contract object
             strategies_by_pair = [
                 carbon_controller.strategiesByPair(*pair) for pair in pairs
@@ -545,7 +559,9 @@ class BaseManager:
         return (
             self.get_strats_by_state(pairs)
             if self.carbon_inititalized
-            else self.get_strats_by_contract(pairs, carbon_controller)
+            else self.get_strats_by_contract(
+                pairs, carbon_controller
+            )
         )
 
     def get_fees_by_pair(

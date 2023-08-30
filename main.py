@@ -313,7 +313,7 @@ def main(
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
-        is_replay_mode=replay_from_block is not None,
+        replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,
     )
 
