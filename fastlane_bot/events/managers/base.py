@@ -559,9 +559,7 @@ class BaseManager:
         return (
             self.get_strats_by_state(pairs)
             if self.carbon_inititalized
-            else self.get_strats_by_contract(
-                pairs, carbon_controller
-            )
+            else self.get_strats_by_contract(pairs, carbon_controller)
         )
 
     def get_fees_by_pair(
