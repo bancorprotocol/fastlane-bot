@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.16...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.17...HEAD)
 
 -  list index out of range \[main loop\] [\#101](https://github.com/bancorprotocol/fastlane-bot/issues/101)
+
+Merged pull requests
+
+- Balancer2 [\#88](https://github.com/bancorprotocol/fastlane-bot/pull/88) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.7.17](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.17) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.16...v2.7.17)
 
 Merged pull requests
 
