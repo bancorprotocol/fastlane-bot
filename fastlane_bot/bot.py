@@ -425,6 +425,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str = None,
         randomizer=int,
         data_validator=True,
+        replay_mode: bool = False
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.
@@ -482,7 +483,9 @@ class CarbonBot(CarbonBotBase):
                     "Math validation eliminated arb opportunity, restarting."
                 )
                 return None
-            if self.validate_pool_data(arb_opp=r):
+            if replay_mode:
+                pass
+            elif self.validate_pool_data(arb_opp=r):
                 self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
             else:
                 self.ConfigObj.logger.info(
@@ -1290,6 +1293,7 @@ class CarbonBot(CarbonBotBase):
                 arb_mode=arb_mode,
                 data_validator=run_data_validator,
                 randomizer=randomizer,
+                replay_mode=replay_mode
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
