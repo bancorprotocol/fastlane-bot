@@ -519,10 +519,10 @@ def run(
                 break
 
             # Delete all Tenderly forks except the most recent one
-            forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
-
             if replay_from_block:
+                forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
                 break
+
             if loop_idx == 1:
                 mgr.cfg.logger.info(
                     """
