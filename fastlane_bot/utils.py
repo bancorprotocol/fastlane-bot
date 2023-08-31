@@ -5,8 +5,11 @@ Utility functions for FastLane project
 Licensed under MIT
 """
 import datetime
+import glob
+import logging
 import math
 import os.path
+import time
 from _decimal import Decimal
 from dataclasses import dataclass
 from typing import Tuple, List, Dict, Any
@@ -34,22 +37,25 @@ def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
         decimals = Decimal("1")
     return int(Decimal(tkn_amt * 10**decimals))
 
+
 def num_format(number):
     try:
-        return '{0:.4f}'.format(number)
+        return "{0:.4f}".format(number)
     except Exception as e:
         return number
 
+
 def num_format_float(number):
     try:
-        return float('{0:.4f}'.format(number))
+        return float("{0:.4f}".format(number))
     except Exception as e:
         return number
+
 
 def log_format(log_data: {}, log_name: str = "new"):
     now = datetime.datetime.now()
     time_ts = str(int(now.timestamp()))  # timestamp (epoch)
-    time_iso = now.isoformat().split('.')[0]
+    time_iso = now.isoformat().split(".")[0]
     # print(time_ts)
     # print(time_iso)
 
@@ -216,7 +222,7 @@ class EncodedOrder:
     @property
     def descr(self):
         s = self
-        return f"selling {s.token} @ ({1/s.p_start}..{1/s.p_end})  [TKNwei] per {s.token}wei"
+        return f"selling {s.token} @ ({1 / s.p_start}..{1 / s.p_end})  [TKNwei] per {s.token}wei"
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -476,3 +482,27 @@ class UniV3Helper:
     def __post_init__(self):
         self._sqrt_price_q96_upper_bound = self.tick_to_sqrt_price_q96(self.upper_tick)
         self._sqrt_price_q96_lower_bound = self.tick_to_sqrt_price_q96(self.lower_tick)
+
+
+def find_latest_timestamped_folder(logging_path=None):
+    """
+    Find the latest timestamped folder in the given directory or the default directory.
+
+    Args:
+        logging_path (str, optional): The custom logging path where the timestamped folders are. Defaults to None.
+
+    Returns:
+        str: Path to the latest timestamped folder, or None if no folder is found.
+    """
+    search_path = logging_path if logging_path else "."
+    search_path = os.path.join(search_path, "logs/*")
+    list_of_folders = glob.glob(search_path)
+
+    if not list_of_folders:
+        return None
+
+    list_of_folders.sort(reverse=True)  # Sort the folders in descending order
+    return list_of_folders[0]  # The first one is the latest
+
+
+#%%

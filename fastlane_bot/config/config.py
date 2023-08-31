@@ -63,7 +63,7 @@ class Config():
     w3 = connection.web3
 
     @classmethod
-    def new(cls, *, config=None, loglevel=None, **kwargs):
+    def new(cls, *, config=None, loglevel=None, logging_path=None, **kwargs):
         """
         Alternative constructor: create and return new Config object
         
@@ -75,7 +75,8 @@ class Config():
 
         if loglevel is None:
             loglevel = cls.LOGLEVEL_INFO
-        C_log = logger_.ConfigLogger.new(loglevel=loglevel)
+
+        C_log = logger_.ConfigLogger.new(loglevel=loglevel, logging_path=logging_path)
 
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)

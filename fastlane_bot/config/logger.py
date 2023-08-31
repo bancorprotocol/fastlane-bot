@@ -4,6 +4,9 @@ Fastlane bot config -- logger
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
 
+import os
+import time
+
 from .base import ConfigBase
 from . import selectors as S
 import logging
@@ -25,13 +28,16 @@ class ConfigLogger(ConfigBase):
     LOGLEVEL_WARNING = S.LOGLEVEL_WARNING
     LOGLEVEL_ERROR = S.LOGLEVEL_ERROR
     LOGLEVEL = S.LOGLEVEL_INFO
-    
-    def get_logger(self, loglevel: str) -> logging.Logger:
+
+    _log_path = None
+
+    def get_logger(self, loglevel: str, logging_path: str = None) -> logging.Logger:
         """
         Returns a logger with the specified logging level
 
         Args:
             loglevel (str): The desired logging level.
+            logging_path (str): The path to the logging directory.
 
         Returns:
             logging.Logger: A logger object with the specified logging level.
@@ -39,15 +45,46 @@ class ConfigLogger(ConfigBase):
         log_level = getattr(logging, loglevel.upper())
         logger = logging.getLogger("fastlane")
         logger.setLevel(log_level)
-        #print(f"[get_logger] {loglevel} {log_level}")
-        handler = logging.StreamHandler()
+
+        # Generate timestamped directory
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        if logging_path is not None and logging_path != "":
+            log_directory = f"{logging_path}/logs/{timestamp}"
+        else:
+            log_directory = f"logs/{timestamp}"
+
+        os.makedirs(log_directory, exist_ok=True)
+
+        # Create a file handler to write to a .txt file in the timestamped directory
+        log_filename = os.path.join(log_directory, "bot.log")
+        self._log_path = log_filename  # Store the log file path for later use
+        handler = logging.FileHandler(log_filename)
+
+        # Create a stream handler to write to the terminal
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(log_level)
+
         handler.setLevel(log_level)
         formatter = logging.Formatter(
             "%(asctime)s [%(name)s:%(levelname)s] - %(message)s"
         )
         handler.setFormatter(formatter)
+        stream_handler.setFormatter(formatter)
         logger.addHandler(handler)
+        logger.addHandler(stream_handler)
+
+        logger.info("")
+        logger.info("**********************************************")
+        logger.info(f"The logging path is set to: {self._log_path}")
+        logger.info("**********************************************")
+        logger.info("")
+
         return logger
+
+    @property
+    def log_path(self):
+        """Returns the path to the log file"""
+        return self._log_path
     
     @property
     def logger(self):
@@ -70,7 +107,7 @@ class ConfigLogger(ConfigBase):
         return self.logger.error(*args, **kwargs)
     
     @classmethod
-    def new(cls, *, logger=None, loglevel=None, **kwargs):
+    def new(cls, *, logger=None, loglevel=None, logging_path=None, **kwargs):
         """
         Return a new ConfigLogger.
         """
@@ -78,11 +115,11 @@ class ConfigLogger(ConfigBase):
             logger = S.LOGGER_DEFAULT
         
         if logger == S.LOGGER_DEFAULT:
-            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, **kwargs)
+            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, logging_path=logging_path, **kwargs)
         else:
             raise ValueError(f"Unknown logger: {logger}")
         
-    def __init__(self, loglevel=None, **kwargs):
+    def __init__(self, loglevel=None, logging_path=None, **kwargs):
         super().__init__(**kwargs)
         #print("[ConfigLogger]", loglevel, self.LOGLEVEL)
         if not loglevel is None:
@@ -93,7 +130,7 @@ class ConfigLogger(ConfigBase):
                 self.LOGLEVEL_ERROR
             }, f"unknown loglevel {loglevel}"
             self.LOGLEVEL = loglevel
-        self._logger = self.get_logger(self.LOGLEVEL)
+        self._logger = self.get_logger(self.LOGLEVEL, logging_path=logging_path)
 
 
 class _ConfigLoggerDefault(ConfigLogger):
