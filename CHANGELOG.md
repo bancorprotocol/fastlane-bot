@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.15...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.16...HEAD)
+
+-  list index out of range \[main loop\] [\#101](https://github.com/bancorprotocol/fastlane-bot/issues/101)
+
+Merged pull requests
+
+- fixes a bug from replay mode that impacts when running non-replay modes [\#102](https://github.com/bancorprotocol/fastlane-bot/pull/102) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.16](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.16) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.15...v2.7.16)
 
 - 61 implement replay mode [\#96](https://github.com/bancorprotocol/fastlane-bot/pull/96) ([mikewcasale](https://github.com/mikewcasale))
 
