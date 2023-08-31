@@ -1276,6 +1276,9 @@ def set_network_to_tenderly_if_replay(
     forked_from_block : int
         The block number the Tenderly fork was created from.
     """
+    if not replay_from_block:
+        return mgr, tenderly_uri, None
+
     if replay_from_block and last_block == 0:
         mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
         mgr, forked_from_block = set_network_connection_to_tenderly(
