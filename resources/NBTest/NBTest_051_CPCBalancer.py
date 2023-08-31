@@ -15,11 +15,11 @@
 # ---
 
 # +
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveBase
 from fastlane_bot.testing import *
+# from flbtools.cpc import ConstantProductCurve as CPC, CurveBase
+# from flbtesting import *
 
-#from flbtools.cpc import ConstantProductCurve as CPC
-#from flbtesting import *
 from math import sqrt
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 # from fastlane_bot import __VERSION__
@@ -33,6 +33,10 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 c0 = CPC.from_xy(100, 200)
 assert c0.tknx == "TKNB"
 assert c0.tkny == "TKNQ"
+k0 = c0.invariant()
+assert iseq(k0, sqrt(100*200))
+k1, k2 = c0.invariant(include_target=True)
+assert iseq(k0, k1, k2)
 
 x,y,_ = c0.xyfromp_f(c0.p)
 xvec = c0.xvecfrompvec_f({c0.tknx: c0.p, c0.tkny: 1} )
@@ -40,6 +44,7 @@ assert iseq(x, 100)
 assert iseq(y, 200)
 assert iseq(xvec[c0.tknx], x)
 assert iseq(xvec[c0.tkny], y)
+assert iseq(c0.invariant(), c0.invariant(xvec))
 assert raises(c0.xvecfrompvec_f, {c0.tknx: c0.p} ).startswith("pvec must contain")
 assert raises(c0.xvecfrompvec_f, {c0.tkny: 1} ).startswith("pvec must contain")
 
@@ -54,6 +59,7 @@ assert iseq(x, 81.64965809277261)
 assert iseq(y, 244.9489742783178)
 assert iseq(xvec[c0.tknx], x)
 assert iseq(xvec[c0.tkny], y)
+assert iseq(c0.invariant(), c0.invariant(xvec))
 
 dx,dy,_ = c0.dxdyfromp_f(c0.p)
 dxvec = c0.dxvecfrompvec_f({c0.tknx: c0.p, c0.tkny: 1} )
@@ -75,6 +81,39 @@ assert iseq(dx, -18.35034190722739)
 assert iseq(dy, 44.94897427831779)
 assert iseq(dxvec[c0.tknx], dx)
 assert iseq(dxvec[c0.tkny], dy)
+
+
+# ## CurveBase
+
+# Checking that `CurveBase` can only instantiate with all functions defined
+
+# +
+class CB1(CurveBase):
+    pass
+
+class CB2(CurveBase):
+    def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        pass
+
+class CB3(CurveBase):
+    def xvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        pass
+
+class CB4(CurveBase):
+    def xvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        pass
+    def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
+        pass
+    def invariant(self, xvec=None, *, include_target=False):
+        pass
+    
+assert raises(CB1).startswith("Can't instantiate abstract class")
+assert raises(CB2).startswith("Can't instantiate abstract class")
+assert raises(CB3).startswith("Can't instantiate abstract class")
+assert not raises(CB4)
+# -
+
+assert isinstance(CPC.from_xy(100, 200), CurveBase)
 
 # ## Constant product constructor
 
@@ -152,14 +191,18 @@ assert c0.y == c0.y_act
 assert c0.alpha == 0.5
 assert c0.eta == 1
 assert c0.constr == "xy"
+assert iseq(c0.invariant(), c0.kbar)
 assert c0.is_constant_product() == True
 c0
+
+
 
 c1 = CPC.from_xyal(100, 200)
 assert c1.constr == "xyal"
 assert c1.is_constant_product() == True
 assert c1 == c0
 assert c1.asdict()["alpha"] == 0.5
+assert iseq(c1.invariant(), c1.kbar)
 c1
 
 c2 = CPC.from_xyal(100, 200, alpha=0.25)
@@ -168,6 +211,7 @@ assert c2.is_constant_product() == False
 assert c2.alpha == 0.25
 assert c2.asdict()["alpha"] == 0.25
 assert iseq(c2.eta, 0.25/0.75)
+assert iseq(c2.invariant(), c2.kbar)
 assert c2 != c0
 assert c2 != c1
 c2
@@ -178,6 +222,7 @@ assert c3.is_constant_product() == False
 assert iseq(c3.alpha, 0.8)
 assert c3.asdict()["alpha"] == 0.8
 assert iseq(c3.eta, 0.8/0.2)
+assert iseq(c3.invariant(), c3.kbar)
 assert c3 != c0
 assert c3 != c1
 assert c3 != c2
