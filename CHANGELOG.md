@@ -2,13 +2,57 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.12...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.17...HEAD)
+
+-  list index out of range \[main loop\] [\#101](https://github.com/bancorprotocol/fastlane-bot/issues/101)
+
+Merged pull requests
+
+- Balancer2 [\#88](https://github.com/bancorprotocol/fastlane-bot/pull/88) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.7.17](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.17) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.16...v2.7.17)
+
+Merged pull requests
+
+- fixes a bug from replay mode that impacts when running non-replay modes [\#102](https://github.com/bancorprotocol/fastlane-bot/pull/102) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.16](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.16) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.15...v2.7.16)
+
+- 61 implement replay mode [\#96](https://github.com/bancorprotocol/fastlane-bot/pull/96) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- More verbose info on startup [\#26](https://github.com/bancorprotocol/fastlane-bot/issues/26)
+
+## [v2.7.15](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.15) (2023-08-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.14...v2.7.15)
+
+- Jupytext does not exist for automated tests [\#89](https://github.com/bancorprotocol/fastlane-bot/issues/89)
+
+- Adds complete runtime configuration to startup logs. Adds logging to … [\#94](https://github.com/bancorprotocol/fastlane-bot/pull/94) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.14](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.14) (2023-08-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.13...v2.7.14)
+
+- Add jupytext dependency for automated test script [\#93](https://github.com/bancorprotocol/fastlane-bot/pull/93) ([mikewcasale](https://github.com/mikewcasale))
+
+- Add Support for Trader Joe Exchange [\#71](https://github.com/bancorprotocol/fastlane-bot/issues/71)
+- Add Support for Bancor V2 Exchange [\#69](https://github.com/bancorprotocol/fastlane-bot/issues/69)
+
+## [v2.7.13](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.13) (2023-08-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.12...v2.7.13)
 
 - Broken tests [\#92](https://github.com/bancorprotocol/fastlane-bot/issues/92)
 - test\_902\_ValidatorSlow non-recurrent \(?\) issue [\#25](https://github.com/bancorprotocol/fastlane-bot/issues/25)
 
 - Add flashloan token liquidity check. [\#80](https://github.com/bancorprotocol/fastlane-bot/issues/80)
-- Add Support for Bancor V2 Exchange [\#69](https://github.com/bancorprotocol/fastlane-bot/issues/69)
 - Improve Repo History Lineage Lost During Codebase Overwrite from v1.0 to v2.0 [\#34](https://github.com/bancorprotocol/fastlane-bot/issues/34)
 - 69 add support for bancor v2 exchange [\#91](https://github.com/bancorprotocol/fastlane-bot/pull/91) ([mikewcasale](https://github.com/mikewcasale))
 

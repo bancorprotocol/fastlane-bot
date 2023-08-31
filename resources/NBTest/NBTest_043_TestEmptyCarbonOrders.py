@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -220,7 +220,7 @@ calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
 encoded_trade_instructions = tx_route_handler.custom_data_encoder(
             calculated_trade_instructions
         )
-deadline = bot._get_deadline()
+deadline = bot._get_deadline(1)
 
 # Get the route struct
 route_struct = [
@@ -235,3 +235,6 @@ for route in route_struct:
         encoded_trades = [encoded_trade[i:i+64] for i in range(0, len(encoded_trade), 64)]
         for trade in encoded_trades:
             assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
+# -
+
+

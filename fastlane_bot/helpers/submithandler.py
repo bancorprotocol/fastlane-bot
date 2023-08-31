@@ -5,7 +5,7 @@ Submit handler for the Fastlane project.
 Licensed under MIT
 """
 __VERSION__ = "1.0"
-__DATE__="01/May/2023"
+__DATE__ = "01/May/2023"
 
 import json
 from dataclasses import dataclass, asdict
@@ -20,16 +20,18 @@ from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
 
-#import fastlane_bot.config as c
+# import fastlane_bot.config as c
 from .routehandler import RouteStruct
-from ..data.abi import ERC20_ABI
+from ..data.abi import ERC20_ABI, FAST_LANE_CONTRACT_ABI
 from fastlane_bot.config import Config
+
 
 @dataclass
 class TxSubmitHandlerBase:
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
+
 @dataclass
 class TxSubmitHandler(TxSubmitHandlerBase):
     """
@@ -56,16 +58,14 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         Gets the transaction receipt for a given transaction with a timeout.
 
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
+
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
     ConfigObj: Config
     route_struct: List[RouteStruct] = None
     src_address: str = None
     src_amount: int = None
-
-
-
 
     def __post_init__(self):
         self.w3 = self.ConfigObj.w3
@@ -76,7 +76,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         #     address=self.src_address,
         #     abi=ERC20_ABI,
         # )
-        self.token_contract = self.ConfigObj.w3.eth.contract(address=self.src_address, abi=ERC20_ABI)
+        self.token_contract = self.ConfigObj.w3.eth.contract(
+            address=self.src_address, abi=ERC20_ABI
+        )
 
     def _get_deadline(self) -> int:
         """
@@ -199,7 +201,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         int
             The gas price for the transaction.
         """
-        return int(self.ConfigObj.w3.eth.gas_price * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+        return int(
+            self.ConfigObj.w3.eth.gas_price * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+        )
 
     def _get_gas(self, tx_function: ContractFunction, address: str) -> int:
         """
@@ -279,13 +283,26 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             The transaction hash.
         """
         # route_struct = [asdict(r) for r in route_struct]
-        #for r in route_struct:
-            #print(r)
+        # for r in route_struct:
+        # print(r)
         #     print("\n")
         # print(
         #     f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
-        #)
-        address = self.ConfigObj.w3.toChecksumAddress(self.ConfigObj.BINANCE14_WALLET_ADDRESS)
+        # )
+        print(f"self.ConfigObj.network: {self.ConfigObj.network}")
+
+        self.arb_contract = self.w3.eth.contract(
+            address=self.w3.toChecksumAddress(
+                self.ConfigObj.network.FASTLANE_CONTRACT_ADDRESS
+            ),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
+        print(
+            f"Submitting transaction to Tenderly with endpoint_uri: {self.ConfigObj.w3.provider.endpoint_uri}"
+        )
+        address = self.ConfigObj.w3.toChecksumAddress(
+            self.ConfigObj.BINANCE14_WALLET_ADDRESS
+        )
         return self.arb_contract.functions.flashloanAndArb(
             route_struct, src_address, src_amount
         ).transact(
@@ -355,7 +372,11 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             The transaction hash.
         """
         return self.ConfigObj.w3.eth.send_raw_transaction(
-            to_hex(self.ConfigObj.w3.eth.account.sign_transaction(tx_details, key).rawTransaction)
+            to_hex(
+                self.ConfigObj.w3.eth.account.sign_transaction(
+                    tx_details, key
+                ).rawTransaction
+            )
         )
 
     def _get_nonce(self, address: str) -> int:

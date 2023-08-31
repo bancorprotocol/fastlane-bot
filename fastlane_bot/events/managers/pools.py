@@ -170,9 +170,7 @@ class PoolManager(BaseManager):
 
         """
         pool_info = {
-            "last_updated_block": block_number
-            if block_number is not None
-            else self.web3.eth.blockNumber,
+            "last_updated_block": block_number,
             "address": address,
             "exchange_name": exchange_name,
             "tkn0_address": tkn0_address,

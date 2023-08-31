@@ -80,6 +80,12 @@ class QueryInterface:
             f"Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
         )
 
+        # Log the total number of pools remaining for each exchange
+        self.ConfigObj.logger.info("Pools remaining per exchange:")
+        for exchange_name in self.exchanges:
+            pools = self.filter_pools(exchange_name)
+            self.log_pool_numbers(pools, exchange_name)
+
     def remove_unsupported_exchanges(self) -> None:
         initial_state = self.state.copy()
         self.state = [
