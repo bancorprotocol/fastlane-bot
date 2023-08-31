@@ -2,15 +2,21 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.14...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.15...HEAD)
 
-- Jupytext does not exist for automated tests [\#89](https://github.com/bancorprotocol/fastlane-bot/issues/89)
-
-- Adds complete runtime configuration to startup logs. Adds logging to … [\#94](https://github.com/bancorprotocol/fastlane-bot/pull/94) ([mikewcasale](https://github.com/mikewcasale))
+- 61 implement replay mode [\#96](https://github.com/bancorprotocol/fastlane-bot/pull/96) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
 - More verbose info on startup [\#26](https://github.com/bancorprotocol/fastlane-bot/issues/26)
+
+## [v2.7.15](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.15) (2023-08-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.14...v2.7.15)
+
+- Jupytext does not exist for automated tests [\#89](https://github.com/bancorprotocol/fastlane-bot/issues/89)
+
+- Adds complete runtime configuration to startup logs. Adds logging to … [\#94](https://github.com/bancorprotocol/fastlane-bot/pull/94) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.7.14](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.14) (2023-08-30)
 

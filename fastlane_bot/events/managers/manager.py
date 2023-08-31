@@ -98,9 +98,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
         current_block : int, optional
             The current block, by default None.
         """
-        pool_info["last_updated_block"] = (
-            self.web3.eth.blockNumber if current_block is None else current_block
-        )
+
+        pool_info["last_updated_block"] = current_block
         contract = (
             self.pool_contracts[pool_info["exchange_name"]].get(
                 pool_info["address"],
@@ -161,9 +160,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         if not pool_info:
             return
 
-        pool_info["last_updated_block"] = (
-            block_number if block_number is not None else self.web3.eth.blockNumber
-        )
+        pool_info["last_updated_block"] = block_number
         if contract is None:
             contract = self.pool_contracts[pool_info["exchange_name"]].get(
                 pool_info["address"],

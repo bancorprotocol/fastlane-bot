@@ -66,6 +66,7 @@ class BaseManager:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
+    target_tokens: List[str] = field(default_factory=list)
 
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -80,6 +81,7 @@ class BaseManager:
     SUPPORTED_EXCHANGES: List[str] = None
     _fee_pairs: Dict[Tuple[str, str], int] = field(default_factory=dict)
     carbon_inititalized: bool = None
+    replay_from_block: int = None
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -118,7 +120,6 @@ class BaseManager:
         Set the carbon v1 fee pairs.
         """
         if "carbon_v1" in self.exchanges:
-
             # Create or get CarbonController contract object
             carbon_controller = self.create_or_get_carbon_controller()
 
@@ -244,8 +245,18 @@ class BaseManager:
         )
         return tkns or (None, None)
 
-    def multicall(self, address):
-        return brownie.multicall(address)
+    def multicall(self, address: str):
+        """
+
+        Parameters
+        ----------
+        address : str
+            The address of the contract to call.
+        """
+        if self.replay_from_block:
+            return brownie.multicall(address, block_identifier=self.replay_from_block)
+        else:
+            return brownie.multicall(address)
 
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
@@ -264,7 +275,7 @@ class BaseManager:
         """
 
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
-            self.update_carbon()
+            self.update_carbon(update_from_contract_block)
 
         return [
             i
@@ -273,9 +284,14 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
-    def update_carbon(self):
+    def update_carbon(self, current_block: int):
         """
         Update the carbon pools.
+
+        Parameters
+        ----------
+        current_block : int
+            The current block number.
 
         Returns
         -------
@@ -290,13 +306,15 @@ class BaseManager:
         carbon_controller = self.create_or_get_carbon_controller()
 
         # Create a list of pairs from the CarbonController contract object
-        pairs = self.get_carbon_pairs(carbon_controller)
+        pairs = self.get_carbon_pairs(carbon_controller, self.target_tokens)
 
         # Create a list of strategies for each pair
         strategies_by_pair = self.get_strategies(pairs, carbon_controller)
 
         # Get the fee for each pair
         if not self.fee_pairs:
+            # Log that the fee pairs are being set
+            self.cfg.logger.info("Setting carbon fee pairs...")
             self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
 
         # Log the time taken for the above operations
@@ -305,7 +323,6 @@ class BaseManager:
         )
 
         start_time = time.time()
-        current_block = self.web3.eth.blockNumber
 
         # Create pool info for each strategy
         for strategy in strategies_by_pair:
@@ -315,6 +332,7 @@ class BaseManager:
                     block_number=current_block,
                     cfg=self.cfg,
                     func=self.add_pool_info,
+                    carbon_controller=carbon_controller,
                 )
 
         # Log the time taken for the above operations
@@ -323,7 +341,7 @@ class BaseManager:
         )
 
     def get_carbon_pairs(
-        self, carbon_controller: Contract
+        self, carbon_controller: Contract, target_tokens: List[str] = None
     ) -> List[Tuple[str, str, int, int]]:
         """
         Get the carbon pairs.
@@ -332,6 +350,8 @@ class BaseManager:
         ----------
         carbon_controller : Contract
             The CarbonController contract object.
+        target_tokens : List[str], optional
+            The target tokens, by default None
 
         Returns
         -------
@@ -344,7 +364,22 @@ class BaseManager:
             if self.carbon_inititalized
             else self.get_carbon_pairs_by_contract(carbon_controller)
         )
-        return [(pair[0], pair[1], 0, 5000) for pair in pairs]
+        # Log whether the carbon pairs were retrieved from the state or the contract
+        self.cfg.logger.info(
+            f"Retrieved {len(pairs)} carbon pairs from {'state' if self.carbon_inititalized else 'contract'}"
+        )
+        if target_tokens is None or target_tokens == []:
+            target_tokens = []
+            for pair in pairs:
+                if pair[0] not in target_tokens:
+                    target_tokens.append(pair[0])
+                if pair[1] not in target_tokens:
+                    target_tokens.append(pair[1])
+        return [
+            (pair[0], pair[1], 0, 5000)
+            for pair in pairs
+            if pair[0] in target_tokens and pair[1] in target_tokens
+        ]
 
     @staticmethod
     def get_carbon_pairs_by_contract(
@@ -392,7 +427,10 @@ class BaseManager:
             The CarbonController contract object.
 
         """
-        if self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]:
+        if (
+            self.cfg.CARBON_CONTROLLER_ADDRESS in self.pool_contracts["carbon_v1"]
+            and not self.replay_from_block
+        ):
             return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
 
         # Create a CarbonController contract object
@@ -409,7 +447,9 @@ class BaseManager:
         return carbon_controller
 
     def get_strats_by_contract(
-        self, pairs: List[Tuple[str, str, int, int]], carbon_controller: BrownieContract
+        self,
+        pairs: List[Tuple[str, str, int, int]],
+        carbon_controller: BrownieContract,
     ) -> List[List[Any]]:
         """
         Get the strategies by contract.
@@ -427,13 +467,18 @@ class BaseManager:
             The strategies.
 
         """
-        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
+        with self.multicall(
+            address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+        ):
             # Fetch strategies for each pair from the CarbonController contract object
             strategies_by_pair = [
                 carbon_controller.strategiesByPair(*pair) for pair in pairs
             ]
 
         self.carbon_inititalized = True
+
+        # Log that Carbon is initialized
+        self.cfg.logger.info(f"Carbon is initialized {self.carbon_inititalized}")
 
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
@@ -461,7 +506,6 @@ class BaseManager:
         ]
         strategies = []
         for cid in cids:
-
             pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
 
             # Constructing the orders based on the values from the pool_data dictionary
@@ -508,6 +552,10 @@ class BaseManager:
             The strategies.
 
         """
+        # Log whether the carbon strats were retrieved from the state or the contract
+        self.cfg.logger.info(
+            f"Retrieving carbon strategies from {'state' if self.carbon_inititalized else 'contract'}"
+        )
         return (
             self.get_strats_by_state(pairs)
             if self.carbon_inititalized

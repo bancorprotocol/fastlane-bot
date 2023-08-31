@@ -125,12 +125,6 @@ class CarbonBotBase:
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
 
-        if self.TxSubmitHandler is None:
-            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        assert issubclass(
-            self.TxSubmitHandler.__class__, TxSubmitHandlerBase
-        ), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
-
         if self.TxReceiptHandlerClass is None:
             self.TxReceiptHandlerClass = TxReceiptHandler
         assert issubclass(
@@ -394,7 +388,7 @@ class CarbonBot(CarbonBotBase):
         def r(self):
             return self.result
 
-    def _get_deadline(self) -> int:
+    def _get_deadline(self, block_number) -> int:
         """
         Gets the deadline for a transaction.
 
@@ -404,7 +398,7 @@ class CarbonBot(CarbonBotBase):
             The deadline (as UNIX epoch).
         """
         return (
-            self.ConfigObj.w3.eth.getBlock(self.ConfigObj.w3.eth.block_number).timestamp
+            self.ConfigObj.w3.eth.getBlock(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
@@ -432,6 +426,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str = None,
         randomizer=int,
         data_validator=True,
+        replay_mode: bool = False
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.
@@ -489,7 +484,9 @@ class CarbonBot(CarbonBotBase):
                     "Math validation eliminated arb opportunity, restarting."
                 )
                 return None
-            if self.validate_pool_data(arb_opp=r):
+            if replay_mode:
+                pass
+            elif self.validate_pool_data(arb_opp=r):
                 self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
             else:
                 self.ConfigObj.logger.info(
@@ -810,7 +807,12 @@ class CarbonBot(CarbonBotBase):
         return log_dict
 
     def _handle_trade_instructions(
-        self, CCm: CPCContainer, arb_mode: str, r: Any, result: str
+        self,
+        CCm: CPCContainer,
+        arb_mode: str,
+        r: Any,
+        result: str,
+        block_number: int = None,
     ) -> Any:
         """
         Handles the trade instructions.
@@ -825,6 +827,8 @@ class CarbonBot(CarbonBotBase):
             The result.
         result: str
             The result type.
+        block_number: int
+            The block number.
 
         Returns
         -------
@@ -947,7 +951,8 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the deadline
-        deadline = self._get_deadline()
+        deadline = self._get_deadline(self.replay_from_block)
+        print(f"deadline: {deadline}")
 
         # Get the route struct
         route_struct = [
@@ -1259,6 +1264,8 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str,
         run_data_validator: bool,
         randomizer: int,
+        replay_mode: bool = False,
+        tenderly_fork: str = None,
     ):
         """
         Run the bot in single mode.
@@ -1268,17 +1275,26 @@ class CarbonBot(CarbonBotBase):
         flashloan_tokens: List[str]
             The flashloan tokens
         CCm: CPCContainer
-            The CPCContainer object
+            The complete market data container
         arb_mode: bool
             The arb mode
+        replay_mode: bool
+            Whether to run in replay mode
+        tenderly_fork: str
+            The Tenderly fork ID
+
         """
         try:
+            if replay_mode:
+                self._ensure_connection(tenderly_fork)
+
             tx_hash = self._run(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 arb_mode=arb_mode,
                 data_validator=run_data_validator,
                 randomizer=randomizer,
+                replay_mode=replay_mode
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
@@ -1295,6 +1311,35 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.error(f"[bot:run:single] {e}")
             raise
 
+    def _ensure_connection(self, tenderly_fork: str):
+        """
+        Ensures connection to Tenderly fork.
+
+        Parameters
+        ----------
+        tenderly_fork: str
+            The Tenderly fork ID
+
+        """
+        from fastlane_bot.config.connect import EthereumNetwork
+
+        tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork}"
+        connection = EthereumNetwork(
+            network_id="tenderly",
+            network_name="Tenderly (Alchemy)",
+            provider_url=tenderly_uri,
+            provider_name="alchemy",
+        )
+        connection.connect_network()
+        self.db.cfg.w3 = connection.web3
+        self.ConfigObj.w3 = connection.web3
+
+        assert (
+            self.db.cfg.w3.provider.endpoint_uri
+            == self.ConfigObj.w3.provider.endpoint_uri
+            == tenderly_uri
+        ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {self.db.cfg.w3.provider.endpoint_uri} instead"
+
     def run(
         self,
         *,
@@ -1306,6 +1351,9 @@ class CarbonBot(CarbonBotBase):
         run_data_validator: bool = False,
         randomizer: int = 0,
         logging_path: str = None,
+        replay_mode: bool = False,
+        tenderly_fork: str = None,
+        replay_from_block: int = None,
     ):
         """
         Runs the bot.
@@ -1328,6 +1376,12 @@ class CarbonBot(CarbonBotBase):
             the randomizer (default: 0)
         logging_path: str
             the logging path (default: None)
+        replay_mode: bool
+            whether to run in replay mode (default: False)
+        tenderly_fork: str
+            the Tenderly fork ID (default: None)
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         Returns
         -------
@@ -1340,6 +1394,13 @@ class CarbonBot(CarbonBotBase):
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
+        self.replay_from_block = replay_from_block
+
+        if self.TxSubmitHandler is None:
+            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
+        assert issubclass(
+            self.TxSubmitHandler.__class__, TxSubmitHandlerBase
+        ), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
 
         if arb_mode in {"bancor_v3", "b3_two_hop"}:
             run_data_validator = True
@@ -1354,5 +1415,11 @@ class CarbonBot(CarbonBotBase):
             )
         else:
             self.run_single_mode(
-                flashloan_tokens, CCm, arb_mode, run_data_validator, randomizer
+                flashloan_tokens,
+                CCm,
+                arb_mode,
+                run_data_validator,
+                randomizer,
+                replay_mode,
+                tenderly_fork,
             )

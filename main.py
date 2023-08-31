@@ -5,6 +5,17 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+
+env_var = "TENDERLY_FORK_ID"
+with open(".env", "r") as file:
+    lines = file.readlines()
+
+with open(".env", "w") as file:
+    for line in lines:
+        if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
+            line = f"{env_var}="
+        file.write(line)
+
 import time
 from typing import List
 
@@ -30,7 +41,13 @@ from fastlane_bot.events.utils import (
     handle_initial_iteration,
     get_latest_events,
     get_start_block,
+    set_network_to_mainnet_if_replay,
+    set_network_to_tenderly_if_replay,
+    append_fork_for_cleanup,
+    delete_tenderly_forks,
     verify_min_bnt_is_respected,
+    handle_target_token_addresses,
+    handle_replay_from_block,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -66,7 +83,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.WETH},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
+    default=f"{T.WBTC},{T.BNT},{T.NATIVE_ETH},{T.USDC},{T.USDT},{T.WETH},{T.LINK}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -156,6 +173,13 @@ load_dotenv()
     help="A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to "
     "target only the flashloan tokens.",
 )
+@click.option(
+    "--replay_from_block",
+    default=None,
+    type=int,
+    help="Set to a block number to replay from that block. (For debugging / testing). A valid Tenderly account and "
+    "configuration is required.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -178,6 +202,7 @@ def main(
     default_min_profit_bnt: int,
     timeout: int,
     target_tokens: str,
+    replay_from_block: int,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -205,8 +230,14 @@ def main(
         default_min_profit_bnt (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
+        replay_from_block (int): The block number to replay from. (For debugging / testing)
 
     """
+
+    if replay_from_block:
+        polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
+            polling_interval
+        )
 
     # Set config
     loglevel = get_loglevel(loglevel)
@@ -272,6 +303,10 @@ def main(
         cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
     )
 
+    target_token_addresses = handle_target_token_addresses(
+        static_pool_data, target_tokens
+    )
+
     # Break if timeout is hit to test the bot flags
     if timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
@@ -286,6 +321,8 @@ def main(
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
+        replay_from_block=replay_from_block,
+        target_tokens=target_token_addresses,
     )
 
     # Add initial pool data to the manager
@@ -316,6 +353,7 @@ def main(
         randomizer,
         timeout,
         target_tokens,
+        replay_from_block,
     )
 
 
@@ -335,6 +373,7 @@ def run(
     randomizer: int,
     timeout: int,
     target_tokens: List[str] or None,
+    replay_from_block: int or None,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -355,11 +394,14 @@ def run(
         randomizer (bool): Whether to randomize the polling interval or not.
         timeout (int): The timeout for the polling interval.
         target_tokens (List[str]): List of tokens that the bot will target for arbitrage.
+        replay_from_block (int): The block number to replay from. (For debugging / testing)
     """
 
-    bot = None
+    bot = tenderly_uri = forked_from_block = None
     loop_idx = last_block = 0
     start_timeout = time.time()
+    mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
+    forks_to_cleanup = []
     while True:
         try:
 
@@ -368,15 +410,30 @@ def run(
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block = get_start_block(
-                alchemy_max_block_fetch, last_block, mgr, reorg_delay
+                alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
             )
 
             # Get all events from the last block to the current block
-            current_block = mgr.web3.eth.blockNumber - reorg_delay
+            if not replay_from_block:
+                current_block = mgr.web3.eth.blockNumber - reorg_delay
+            elif last_block == 0:
+                current_block = replay_from_block - reorg_delay
+            else:
+                current_block = last_block + 1
 
             # Log the current start, end and last block
             mgr.cfg.logger.info(
                 f"Fetching events from {start_block} to {current_block}... {last_block}"
+            )
+
+            # Set the network connection to Mainnet if replaying from a block
+            mgr = set_network_to_mainnet_if_replay(
+                last_block,
+                loop_idx,
+                mainnet_uri,
+                mgr,
+                replay_from_block,
+                use_cached_events,
             )
 
             # Get the events
@@ -397,6 +454,20 @@ def run(
             # Update the pools from the latest events
             update_pools_from_events(n_jobs, mgr, latest_events)
 
+            # Set the network connection to Tenderly if replaying from a block
+            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+                last_block,
+                loop_idx,
+                mgr,
+                replay_from_block,
+                tenderly_uri,
+                use_cached_events,
+                current_block,
+            )
+
+            # Append the fork to the list of forks to clean up if replaying from a block
+            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
+
             # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
             handle_initial_iteration(
                 backdate_pools, current_block, last_block, mgr, n_jobs, start_block
@@ -413,6 +484,9 @@ def run(
 
             # Delete the bot (if it exists) to avoid memory leaks
             del bot
+
+            # Append the fork to the list of forks to clean up if replaying from a block
+            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
 
             # Re-initialize the bot
             bot = init_bot(mgr)
@@ -434,19 +508,30 @@ def run(
                 target_tokens,
                 loop_idx,
                 logging_path,
+                replay_from_block,
+                tenderly_uri,
+                forks_to_cleanup,
+                mgr,
+                forked_from_block,
             )
 
             # Increment the loop index
             loop_idx += 1
 
             # Sleep for the polling interval
-            time.sleep(polling_interval)
+            if not replay_from_block:
+                time.sleep(polling_interval)
 
             # Check if timeout has been hit, and if so, break the loop for tests
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
 
+            # Delete all Tenderly forks except the most recent one
+            forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
+
+            if replay_from_block:
+                break
             if loop_idx == 1:
                 mgr.cfg.logger.info(
                     """
