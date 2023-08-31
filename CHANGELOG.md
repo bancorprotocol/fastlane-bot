@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.17...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.18...HEAD)
+
+- Add Non-Overwriting Logging for Successful Transactions [\#36](https://github.com/bancorprotocol/fastlane-bot/issues/36)
+- Adds advanced logging infrastructure for multiple bot instance loggin… [\#95](https://github.com/bancorprotocol/fastlane-bot/pull/95) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.18](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.18) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.17...v2.7.18)
 
 -  list index out of range \[main loop\] [\#101](https://github.com/bancorprotocol/fastlane-bot/issues/101)
 
