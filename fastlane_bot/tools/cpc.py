@@ -25,6 +25,7 @@ import collections as cl
 from sys import float_info
 from hashlib import md5 as digest
 import time
+from .cpcbase import CurveBase
 
 try:
     dataclass_ = dataclass(frozen=True, kw_only=True)
@@ -347,7 +348,7 @@ TOKENS_NOETH = {
 
 
 @dataclass_
-class ConstantProductCurve:
+class ConstantProductCurve(CurveBase):
     """
     represents a, potentially levered, constant product curve
 
@@ -1247,6 +1248,25 @@ class ConstantProductCurve:
             return sqrt(self.k)
         return self.k**self.alpha
 
+    def invariant(self, xvec=None, *, include_target=False):
+        """
+        returns the actual invariant of the curve (eg x*y for constant product)
+        
+        :xvec:              vector of x values (default: current)
+        :include_target:    if True, the target invariant returned in addition to the actual invariant
+        :returns:           invariant, or (invariant, target)
+        """
+        if xvec is None: 
+            xvec = {self.tknx: self.x, self.tkny: self.y}
+        x,y = xvec[self.tknx], xvec[self.tkny]
+        if self.is_constant_product():
+            invariant = sqrt(x * y)
+        else:
+            invariant = x**self.alpha * y**(1-self.alpha)
+        if not include_target:
+            return invariant
+        return (invariant, self.kbar)
+        
     @property
     def x_min(self):
         "minimum (virtual) x value"
@@ -1406,7 +1426,7 @@ class ConstantProductCurve:
 
     def xvecfrompvec_f(self, pvec, *, ignorebounds=False):
         """
-        altertnative API to xyfromp_f
+        alternative API to xyfromp_f
         
         :pvec:      a dict containing all prices; the dict must contain the keys
                     for tknx and for tkny and the associated value must be the respective
@@ -1430,7 +1450,7 @@ class ConstantProductCurve:
     
     def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
         """
-        altertnative API to dxdyfromp_f
+        alternative API to dxdyfromp_f
         
         :pvec:      a dict containing all prices; the dict must contain the keys
                     for tknx and for tkny and the associated value must be the respective
