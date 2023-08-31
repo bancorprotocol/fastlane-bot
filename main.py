@@ -6,15 +6,18 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 
-env_var = "TENDERLY_FORK_ID"
-with open(".env", "r") as file:
-    lines = file.readlines()
+try:
+    env_var = "TENDERLY_FORK_ID"
+    with open(".env", "r") as file:
+        lines = file.readlines()
 
-with open(".env", "w") as file:
-    for line in lines:
-        if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
-            line = f"{env_var}="
-        file.write(line)
+    with open(".env", "w") as file:
+        for line in lines:
+            if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
+                line = f"{env_var}="
+            file.write(line)
+except:
+    pass
 
 import time
 from typing import List
