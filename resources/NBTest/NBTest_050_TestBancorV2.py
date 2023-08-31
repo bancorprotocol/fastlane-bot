@@ -293,7 +293,7 @@ encoded_trade_instructions = tx_route_handler.custom_data_encoder(
 )
 
 # Get the deadline
-deadline = bot._get_deadline()
+deadline = bot._get_deadline(1)
 
 # Get the route struct
 route_struct = [
@@ -307,3 +307,6 @@ assert len(r) == 31, f"[NBTest_50_TestBancorV2] Expected 31 arb opps, found {len
 assert len(arb_with_bancor_v2) == 4, f"[NBTest_50_TestBancorV2] Expected 4 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
 assert encoded_trade_instructions[0].amtin * 10 ** 18 == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount"
 assert route_struct[0]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533" or route_struct[1]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533", f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: 0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533 for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
+# -
+
+
