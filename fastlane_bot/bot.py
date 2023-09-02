@@ -48,6 +48,7 @@ import random
 import time
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
+from datetime import datetime
 from typing import List, Dict, Tuple, Any, Callable
 from typing import Optional
 
@@ -1294,6 +1295,13 @@ class CarbonBot(CarbonBotBase):
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+
+                # Write the tx hash to a file in the logging_path directory
+                if self.logging_path:
+                    filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+                    with open(f"{self.logging_path}/{filename}", "w") as f:
+                        f.write(tx_hash[0])
+
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
         except Exception as e:
@@ -1339,6 +1347,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str = None,
         run_data_validator: bool = False,
         randomizer: int = 0,
+        logging_path: str = None,
         replay_mode: bool = False,
         tenderly_fork: str = None,
         replay_from_block: int = None,
@@ -1362,6 +1371,8 @@ class CarbonBot(CarbonBotBase):
             whether to run the data validator (default: False)
         randomizer: int
             the randomizer (default: 0)
+        logging_path: str
+            the logging path (default: None)
         replay_mode: bool
             whether to run in replay mode (default: False)
         tenderly_fork: str
@@ -1379,6 +1390,7 @@ class CarbonBot(CarbonBotBase):
         self.setup_polling_interval(polling_interval)
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
+        self.logging_path = logging_path
         self.replay_from_block = replay_from_block
 
         if self.TxSubmitHandler is None:

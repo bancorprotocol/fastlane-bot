@@ -375,6 +375,7 @@ def get_config(
     default_min_profit_bnt: int or Decimal,
     limit_bancor3_flashloan_tokens: bool,
     loglevel: str,
+    logging_path: str,
 ) -> Config:
     """
     Gets the config object.
@@ -389,6 +390,8 @@ def get_config(
         Whether to limit the flashloan tokens to Bancor v3 pools.
     loglevel : str
         The log level.
+    logging_path : str
+        The logging path.
 
     Returns
     -------
@@ -399,10 +402,14 @@ def get_config(
     default_min_profit_bnt = Decimal(str(default_min_profit_bnt))
 
     if config and config == "tenderly":
-        cfg = Config.new(config=Config.CONFIG_TENDERLY, loglevel=loglevel)
+        cfg = Config.new(
+            config=Config.CONFIG_TENDERLY, loglevel=loglevel, logging_path=logging_path
+        )
         cfg.logger.info("Using Tenderly config")
     else:
-        cfg = Config.new(config=Config.CONFIG_MAINNET, loglevel=loglevel)
+        cfg = Config.new(
+            config=Config.CONFIG_MAINNET, loglevel=loglevel, logging_path=logging_path
+        )
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_BNT = Decimal(str(default_min_profit_bnt))
@@ -519,7 +526,7 @@ def save_events_to_json(
         The current block number.
     """
     if cache_latest_only:
-        path = f"{logging_path}latest_event_data.json"
+        path = f"{logging_path}/latest_event_data.json"
     else:
         if not os.path.isdir("event_data"):
             os.mkdir("event_data")
@@ -573,7 +580,7 @@ def write_pool_data_to_disk(
         The current block number.
     """
     if cache_latest_only:
-        path = f"{logging_path}latest_pool_data.json"
+        path = f"{logging_path}/latest_pool_data.json"
     else:
         if not os.path.isdir("pool_data"):
             os.mkdir("pool_data")
@@ -712,7 +719,7 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
     """
     # read data from the json file latest_event_data.json
     mgr.cfg.logger.info("Using cached events")
-    path = f"{logging_path}latest_event_data.json"
+    path = "fastlane_bot/data/latest_event_data.json".replace("./logs", "logs")
     os.path.isfile(path)
     with open(path, "r") as f:
         latest_events = json.load(f)
@@ -731,6 +738,7 @@ def handle_subsequent_iterations(
     run_data_validator: bool,
     target_tokens: List[str] = None,
     loop_idx: int = 0,
+    logging_path: str = None,
     replay_from_block: int = None,
     tenderly_uri: str = None,
     forks_to_cleanup: List[str] = None,
@@ -758,6 +766,8 @@ def handle_subsequent_iterations(
         A list of target tokens, by default None
     loop_idx : int, optional
         The loop index, by default 0
+    logging_path : str, optional
+        The logging path, by default None
     replay_from_block : int, optional
         The block number to replay from, by default None
     tenderly_uri : str, optional
@@ -796,6 +806,7 @@ def handle_subsequent_iterations(
             arb_mode=arb_mode,
             run_data_validator=run_data_validator,
             randomizer=randomizer,
+            logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
             tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
             replay_from_block=forked_from_block,

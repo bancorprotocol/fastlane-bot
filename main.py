@@ -53,6 +53,7 @@ from fastlane_bot.events.utils import (
     handle_replay_from_block,
 )
 from fastlane_bot.tools.cpc import T
+from fastlane_bot.utils import find_latest_timestamped_folder
 
 load_dotenv()
 
@@ -246,11 +247,18 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        config, default_min_profit_bnt, limit_bancor3_flashloan_tokens, loglevel
+        config,
+        default_min_profit_bnt,
+        limit_bancor3_flashloan_tokens,
+        loglevel,
+        logging_path,
     )
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+
+    # Search the logging directory for the latest timestamped folder
+    logging_path = find_latest_timestamped_folder(logging_path)
 
     # Format the target tokens
     target_tokens = handle_target_tokens(cfg, flashloan_tokens, target_tokens)
@@ -502,6 +510,7 @@ def run(
                 run_data_validator,
                 target_tokens,
                 loop_idx,
+                logging_path,
                 replay_from_block,
                 tenderly_uri,
                 forks_to_cleanup,
