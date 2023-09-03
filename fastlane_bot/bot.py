@@ -948,7 +948,6 @@ class CarbonBot(CarbonBotBase):
 
         # Get the deadline
         deadline = self._get_deadline(self.replay_from_block)
-        print(f"deadline: {deadline}")
 
         # Get the route struct
         route_struct = [
@@ -1109,10 +1108,10 @@ class CarbonBot(CarbonBotBase):
     def _validate_and_submit_transaction_tenderly(
         self,
         ConfigObj: Config,
-        route_struct: [],
+        route_struct: [RouteStruct],
         src_address: str,
         src_amount: int,
-        flashloan_struct: []
+        flashloan_struct: [{}]
     ):
         """
         Validate and submit the transaction tenderly
@@ -1127,7 +1126,8 @@ class CarbonBot(CarbonBotBase):
             The source address
         src_amount: int
             The source amount
-
+        flashloan_struct: List[Dict]
+            This is a list containing dicts that have Flashloan instructions
         Returns
         -------
         Any

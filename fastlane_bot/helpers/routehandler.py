@@ -326,7 +326,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
 
-    def _get_flashloan_platform_id(self, tkn) -> int:
+    def _get_flashloan_platform_id(self, tkn: str) -> int:
         """
         Returns the platform ID to take the flashloan from
         :param tkn: str
@@ -367,7 +367,14 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return flashloans
 
-    def weth_to_eth(self, tkn):
+    def weth_to_eth(self, tkn: str):
+        """
+        Checks if a Token is WETH and converts it to ETH
+        :param tkn: the token address
+
+        returns:
+        the token address
+        """
         if tkn in ["WETH-6Cc2", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]:
             return "ETH-EEeE" if tkn == "WETH-6Cc2" else "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
         else:
