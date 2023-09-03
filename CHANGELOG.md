@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.18...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.19...HEAD)
 
+- block number fix in bot.py \_get\_deadline function [\#105](https://github.com/bancorprotocol/fastlane-bot/pull/105) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Various Optimizations [\#99](https://github.com/bancorprotocol/fastlane-bot/issues/99)
 - Add Non-Overwriting Logging for Successful Transactions [\#36](https://github.com/bancorprotocol/fastlane-bot/issues/36)
+
+## [v2.7.19](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.19) (2023-08-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.18...v2.7.19)
+
 - Adds advanced logging infrastructure for multiple bot instance loggin… [\#95](https://github.com/bancorprotocol/fastlane-bot/pull/95) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.7.18](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.18) (2023-08-31)
