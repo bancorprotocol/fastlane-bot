@@ -289,7 +289,7 @@ class TxHelpers:
         verbose: bool = False,
         safety_override: bool = False,
         log_object: {} = None,
-        flashloan_struct: {} = None
+        flashloan_struct: List[Dict[str, int or str]] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -556,7 +556,7 @@ class TxHelpers:
         nonce: int,
         access_list: bool = True,
         test_fake_gas: bool = False,
-        flashloan_struct = None
+        flashloan_struct: List[Dict[str, int or str]]= None
     ):
         """
         Builds the transaction to be submitted to the blockchain.

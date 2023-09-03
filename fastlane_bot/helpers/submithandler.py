@@ -266,7 +266,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         }
 
     def submit_transaction_tenderly(
-        self, route_struct: List[RouteStruct], src_address: str, src_amount: int, flashloan_struct: [{}] = None
+        self, route_struct: List[RouteStruct], src_address: str, src_amount: int, flashloan_struct: List[Dict[str, int or str]] = None
     ) -> Any:
         """
         Submits a transaction to the network.

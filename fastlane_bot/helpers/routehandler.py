@@ -247,13 +247,6 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
 
-        # When using v2 arb function, include the target min return
-        # if source_amount is not None:
-        #     override_min_target_amount = False
-
-        # if override_min_target_amount:
-        #     min_target_amount = 1
-        #     source_amount = 0
         source_token = self.weth_to_eth(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
 
@@ -335,7 +328,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             int
         """
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in ["0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "0x514910771AF9Ca656af840dff83E8264EcF986CA", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "0xdAC17F958D2ee523a2206206994597C13D831ec7", "BNT-FF1C", "ETH-EEeE", "WBTC-2c599", "USDC-eB48", "LINK-86CA", "USDT-1ec7"]:
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.USDC_ADDRESS, self.ConfigObj.USDT_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.USDC_KEY, self.ConfigObj.LINK_KEY, self.ConfigObj.USDT_KEY]:
             return 2
         else:
             return 7

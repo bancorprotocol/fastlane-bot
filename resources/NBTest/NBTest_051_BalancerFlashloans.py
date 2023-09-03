@@ -47,7 +47,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Balancer Flashloan Support [NBTest049]
+# # Balancer Flashloan Support [NBTest051]
 
 # +
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
