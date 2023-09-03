@@ -397,6 +397,7 @@ class CarbonBot(CarbonBotBase):
         int
             The deadline (as UNIX epoch).
         """
+        block_number = self.ConfigObj.w3.eth.block_number if block_number is None else block_number
         return (
             self.ConfigObj.w3.eth.getBlock(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
@@ -968,6 +969,7 @@ class CarbonBot(CarbonBotBase):
             return (
                 self._validate_and_submit_transaction_tenderly(
                     ConfigObj=self.ConfigObj,
+                    flashloan_struct=flashloan_struct,
                     route_struct=route_struct,
                     src_amount=flashloan_amount,
                     src_address=flashloan_token_address,
@@ -1107,10 +1109,10 @@ class CarbonBot(CarbonBotBase):
     def _validate_and_submit_transaction_tenderly(
         self,
         ConfigObj: Config,
-        route_struct: List[RouteStruct],
+        route_struct: [],
         src_address: str,
         src_amount: int,
-        flashloan_struct: {}
+        flashloan_struct: []
     ):
         """
         Validate and submit the transaction tenderly
@@ -1135,6 +1137,7 @@ class CarbonBot(CarbonBotBase):
         tx_submit_handler = TxSubmitHandler(
             ConfigObj=ConfigObj,
             route_struct=route_struct,
+            flashloan_struct=flashloan_struct,
             src_address=src_address,
             src_amount=src_amount,
         )
