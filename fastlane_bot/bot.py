@@ -397,6 +397,7 @@ class CarbonBot(CarbonBotBase):
         int
             The deadline (as UNIX epoch).
         """
+        block_number = self.ConfigObj.w3.eth.block_number if block_number is None else block_number
         return (
             self.ConfigObj.w3.eth.getBlock(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
