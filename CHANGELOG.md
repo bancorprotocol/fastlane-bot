@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.19...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.20...HEAD)
+
+- Add support for Balancer flashloans. [\#77](https://github.com/bancorprotocol/fastlane-bot/issues/77)
+- Balancer Flashloans now supported & used automatically when needed [\#97](https://github.com/bancorprotocol/fastlane-bot/pull/97) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.20](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.20) (2023-09-03)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.19...v2.7.20)
 
 - block number fix in bot.py \_get\_deadline function [\#105](https://github.com/bancorprotocol/fastlane-bot/pull/105) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
