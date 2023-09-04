@@ -17,6 +17,7 @@ import pandas as pd
 
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
+from ..tools.cpc import T
 
 
 @dataclass
@@ -51,9 +52,12 @@ class RouteStruct:
     XCID_SUSHISWAP_V2 = 4
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
+    XCID_BALANCER = 7
 
     platformId: int  # TODO: WHY IS THIS AN INT?
+    sourceToken: str
     targetToken: str
+    sourceAmount: int
     minTargetAmount: int
     deadline: int
     customAddress: str
@@ -205,6 +209,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee_float: Any = None,
         customData: Any = None,
         override_min_target_amount: bool = True,
+        source_token: str = None,
+        source_amount: Decimal = None,
+
     ) -> RouteStruct:
         """
         Converts the trade instructions into the variables needed to instantiate the `TxSubmitHandler` class.
@@ -227,7 +234,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             The custom data.
         override_min_target_amount: bool
             Whether to override the minimum target amount.
-
+        sourceToken: str
+            The source token of the trade. V2 routes only.
+        sourceAmount: float,
+            The source token amount for the trade. V2 routes only.
         Returns
         -------
         RouteStruct
@@ -238,20 +248,19 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
 
-        if override_min_target_amount:
-            min_target_amount = 1
-
+        source_token = self.weth_to_eth(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
 
         return RouteStruct(
             platformId=exchange_id,
             targetToken=target_address,
+            sourceToken=source_token,
+            sourceAmount=int(source_amount),
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
             customAddress=custom_address,
             customInt=fee_customInt_specifier,
             customData=customData,
-
         )
 
     def get_route_structs(
@@ -295,9 +304,103 @@ class TxRouteHandler(TxRouteHandlerBase):
                 fee_float=fee_float[idx],
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
+                source_token=trade_instructions[idx].tknin_address,
+                source_amount=Decimal(str(trade_instructions[idx].amtin_wei)),
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
+
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+        """
+        Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
+        :param trade_instructions_objects: a list of TradeInstruction objects
+
+        :return:
+            int
+        """
+        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
+
+    def _get_flashloan_platform_id(self, tkn: str) -> int:
+        """
+        Returns the platform ID to take the flashloan from
+        :param tkn: str
+
+        :return:
+            int
+        """
+        # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.USDC_ADDRESS, self.ConfigObj.USDT_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.USDC_KEY, self.ConfigObj.LINK_KEY, self.ConfigObj.USDT_KEY]:
+            return 2
+        else:
+            return 7
+
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+        """
+        Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
+        :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
+        """
+        flash_tokens = self._extract_flashloan_tokens(trade_instructions=trade_instructions_objects)
+        flashloans = []
+        balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
+        has_balancer = False
+        for tkn in flash_tokens.keys():
+            platform_id = self._get_flashloan_platform_id(tkn)
+            source_token = flash_tokens[tkn]["tkn"]
+            source_amounts = TradeInstruction._convert_to_wei(abs(flash_tokens[tkn]["flash_amt"]),
+                                                              flash_tokens[tkn]["decimals"])
+            if platform_id == 7:
+                has_balancer = True
+                balancer["sourceTokens"].append(source_token)
+                balancer["sourceAmounts"].append(source_amounts)
+            else:
+                source_token = self.weth_to_eth(source_token)
+                flashloans.append(
+                    {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]})
+        if has_balancer:
+            flashloans.append(balancer)
+
+        return flashloans
+
+    def weth_to_eth(self, tkn: str):
+        """
+        Checks if a Token is WETH and converts it to ETH
+        :param tkn: the token address
+
+        returns:
+        the token address
+        """
+        if tkn in [T.WETH, self.ConfigObj.WETH_ADDRESS]:
+            return T.NATIVE_ETH if tkn == T.WETH else self.ConfigObj.ETH_ADDRESS
+        else:
+            return tkn
+
+    def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
+        """
+        Generate a list of the flashloan tokens and amounts.
+        :param trade_instructions: A list of trade instruction objects
+        """
+        token_change = {}
+        flash_tokens = {}
+        for trade in trade_instructions:
+            tknin_key = self.weth_to_eth(trade.tknin_key)
+            tknout_key = self.weth_to_eth(trade.tknout_key)
+
+            token_change[tknin_key] = {"tkn": tknin_key, "amtin": 0, "amtout": 0, "balance": 0}
+            token_change[tknout_key] = {"tkn": tknout_key, "amtin": 0, "amtout": 0, "balance": 0}
+
+        for trade in trade_instructions:
+            tknin_key = self.weth_to_eth(trade.tknin_key)
+            tknout_key = self.weth_to_eth(trade.tknout_key)
+
+            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + trade.amtin
+            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - trade.amtin
+            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + trade.amtout
+            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + trade.amtout
+
+            if token_change[tknin_key]["balance"] < 0:
+                flash_tokens[tknin_key] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_key]["amtin"],
+                                           "decimals": trade.tknin_decimals}
+        return flash_tokens
 
     def get_arb_contract_args(
         self, trade_instructions: List[TradeInstruction], deadline: int

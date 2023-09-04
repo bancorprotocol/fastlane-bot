@@ -64,6 +64,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
     ConfigObj: Config
     route_struct: List[RouteStruct] = None
+    flashloan_struct: List = None
     src_address: str = None
     src_amount: int = None
 
@@ -265,17 +266,17 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         }
 
     def submit_transaction_tenderly(
-        self, route_struct: List[RouteStruct], src_address: str, src_amount: int
+        self, route_struct: List[RouteStruct], src_address: str, src_amount: int, flashloan_struct: List[Dict[str, int or str]] = None
     ) -> Any:
         """
         Submits a transaction to the network.
 
         Parameters
         ----------
-        tx_details: TxParams
-            The transaction details.
-        key: str
-            The private key.
+        route_struct: the list of RouteStruct objects
+        flashloan_struct: The list of objects containing Flashloan instructions
+        src_amount: DEPRECATED. Source amount used in function flashloanAndArb
+        src_address: DEPRECATED Source token address used in function flashloanAndArb
 
         Returns
         -------
@@ -306,6 +307,15 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return self.arb_contract.functions.flashloanAndArb(
             route_struct, src_address, src_amount
         ).transact(
+            {
+                "gas": self.ConfigObj.DEFAULT_GAS,
+                "from": address,
+                "nonce": self._get_nonce(address),
+                "gasPrice": 0,
+            }
+        ) if flashloan_struct is None else self.arb_contract.functions.flashloanAndArbV2(
+                flashloan_struct, route_struct
+            ).transact(
             {
                 "gas": self.ConfigObj.DEFAULT_GAS,
                 "from": address,

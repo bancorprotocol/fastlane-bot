@@ -37,7 +37,14 @@ class ConfigNetwork(ConfigBase):
     WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
     ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    BNT_KEY = "BNT-FF1C"
+    ETH_KEY = "ETH-EEeE"
+    WBTC_KEY = "WBTC-2c599"
+    USDC_KEY = "USDC-eB48"
+    LINK_KEY = "LINK-86CA"
+    USDT_KEY = "USDT-1ec7"
 
     # ACCOUNTS SECTION
     #######################################################################################
