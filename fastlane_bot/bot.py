@@ -1111,7 +1111,7 @@ class CarbonBot(CarbonBotBase):
         route_struct: [RouteStruct],
         src_address: str,
         src_amount: int,
-        flashloan_struct: [{}]
+        flashloan_struct: [Dict[str, Any]]
     ):
         """
         Validate and submit the transaction tenderly

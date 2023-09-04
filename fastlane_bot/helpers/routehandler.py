@@ -17,6 +17,7 @@ import pandas as pd
 
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
+from ..tools.cpc import T
 
 
 @dataclass
@@ -368,8 +369,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         returns:
         the token address
         """
-        if tkn in ["WETH-6Cc2", "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"]:
-            return "ETH-EEeE" if tkn == "WETH-6Cc2" else "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+        if tkn in [T.WETH, self.ConfigObj.WETH_ADDRESS]:
+            return T.NATIVE_ETH if tkn == T.WETH else self.ConfigObj.ETH_ADDRESS
         else:
             return tkn
 
