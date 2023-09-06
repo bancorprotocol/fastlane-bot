@@ -2,9 +2,18 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.20...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.21...HEAD)
 
+- Deleted strategy breaks Carbon initial multicall [\#107](https://github.com/bancorprotocol/fastlane-bot/issues/107)
+- move strategy deleted event to be with other Carbon events [\#108](https://github.com/bancorprotocol/fastlane-bot/pull/108) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Change default settings to `--backdate_pools=True` for `bancor_v2` support [\#103](https://github.com/bancorprotocol/fastlane-bot/issues/103)
 - Add support for Balancer flashloans. [\#77](https://github.com/bancorprotocol/fastlane-bot/issues/77)
+
+## [v2.7.21](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.21) (2023-09-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.20...v2.7.21)
+
 - Balancer Flashloans now supported & used automatically when needed [\#97](https://github.com/bancorprotocol/fastlane-bot/pull/97) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.20](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.20) (2023-09-03)
