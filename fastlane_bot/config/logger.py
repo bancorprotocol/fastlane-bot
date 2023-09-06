@@ -22,12 +22,21 @@ class ConfigLogger(ConfigBase):
     """
     __VERSION__=__VERSION__
     __DATE__=__DATE__
+
+    # Adding custom log level
+    BANCOR_V2_LEVEL_NUM = 35
+    logging.addLevelName(BANCOR_V2_LEVEL_NUM, "BANCOR_V2")
+
+    def bancor_v2(self, message, *args, **kws):
+        self._logger.log(self.BANCOR_V2_LEVEL_NUM, message, *args, **kws)
+
     LOGGER_DEFAULT = S.LOGGER_DEFAULT
     LOGLEVEL_DEBUG = S.LOGLEVEL_DEBUG
     LOGLEVEL_INFO = S.LOGLEVEL_INFO
     LOGLEVEL_WARNING = S.LOGLEVEL_WARNING
     LOGLEVEL_ERROR = S.LOGLEVEL_ERROR
     LOGLEVEL = S.LOGLEVEL_INFO
+    LOGLEVEL_BANCOR_V2 = S.LOGLEVEL_BANCOR_V2
 
     _log_path = None
 
@@ -42,7 +51,7 @@ class ConfigLogger(ConfigBase):
         Returns:
             logging.Logger: A logger object with the specified logging level.
         """
-        log_level = getattr(logging, loglevel.upper())
+        log_level = self.BANCOR_V2_LEVEL_NUM if loglevel == "BANCOR_V2" else getattr(logging, loglevel.upper())
         logger = logging.getLogger("fastlane")
         logger.setLevel(log_level)
 
@@ -127,7 +136,8 @@ class ConfigLogger(ConfigBase):
                 self.LOGLEVEL_DEBUG, 
                 self.LOGLEVEL_INFO, 
                 self.LOGLEVEL_WARNING, 
-                self.LOGLEVEL_ERROR
+                self.LOGLEVEL_ERROR,
+                self.LOGLEVEL_BANCOR_V2
             }, f"unknown loglevel {loglevel}"
             self.LOGLEVEL = loglevel
         self._logger = self.get_logger(self.LOGLEVEL, logging_path=logging_path)
