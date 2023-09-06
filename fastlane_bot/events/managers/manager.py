@@ -55,6 +55,16 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ) or self.add_pool_info_from_contract(
             address=addr, event=event, exchange_name=ex_name
         )
+        if ex_name == "bancor_v2":
+            self.cfg.logger.bancor_v2(
+                "\n\n"
+                "***************** EVENT ***************** \n"
+                f"{event} \n"
+                "\n"
+                "***************** POOL INFO ***************** \n"
+                f"{pool_info}"
+                "\n\n"
+            )
         if not pool_info:
             return
 
@@ -114,7 +124,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
         )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(contract, cfg=self.cfg)
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -170,7 +180,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ),
             )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(contract, cfg=self.cfg)
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -218,12 +228,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 rate_limiter = 0
             try:
                 if event:
+                    self.cfg.logger.debug("update from event")
                     self.update_from_event(event=event, block_number=block_number)
                 elif address:
+                    self.cfg.logger.debug("update from address")
                     self.update_from_contract(
                         address, contract, block_number=block_number
                     )
                 elif pool_info:
+                    self.cfg.logger.debug("update from pool info")
                     self.update_from_pool_info(
                         pool_info=pool_info, current_block=block_number
                     )

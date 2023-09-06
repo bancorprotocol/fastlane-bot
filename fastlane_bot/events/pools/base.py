@@ -12,6 +12,8 @@ from typing import Dict, Any
 
 from web3.contract import Contract
 
+from fastlane_bot import Config
+
 
 @dataclass
 class Pool(ABC):
@@ -74,7 +76,9 @@ class Pool(ABC):
         pass
 
     @abstractmethod
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, cfg: Config = None
+    ) -> Dict[str, Any]:
         """
         Update the pool state from a contract.
 
@@ -82,6 +86,8 @@ class Pool(ABC):
         ----------
         contract : Contract
             The contract.
+        cfg : Config, optional
+            The configuration object used for logging.
 
         Returns
         -------

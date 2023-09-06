@@ -11,6 +11,7 @@ from typing import Dict, Any, Tuple, List
 from web3.contract import Contract
 
 from .base import Pool
+from ... import Config
 
 
 @dataclass
@@ -111,7 +112,9 @@ class CarbonV1Pool(Pool):
             order1 = [0, 0, 0, 0]
         return order0, order1
 
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, cfg: Config = None
+    ) -> Dict[str, Any]:
         """
         See base class.
         """

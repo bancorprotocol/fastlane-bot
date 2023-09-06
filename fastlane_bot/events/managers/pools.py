@@ -5,7 +5,7 @@ Contains the manager class for pools. This class is responsible for handling poo
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import List, Dict, Any, Callable, Optional
+from typing import List, Dict, Any, Callable, Optional, Tuple
 
 from web3 import Web3
 from web3.contract import Contract
@@ -269,7 +269,10 @@ class PoolManager(BaseManager):
         assert pool, f"Pool not found in {exchange_name} pools"
 
         if contract:
-            pool_info.update(pool.update_from_contract(contract))
+            try:
+                pool_info.update(pool.update_from_contract(contract, cfg=self.cfg))
+            except TypeError:
+                return None
 
         self.pool_data.append(pool_info)
         return pool_info
@@ -316,6 +319,27 @@ class PoolManager(BaseManager):
         """
         if ex_name == "sushiswap_v2":
             ex_name = "uniswap_v2"
+
+        if ex_name == "bancor_v2":
+            key0, key1 = key
+            key_value0, key_value1 = key_value
+            p = None
+            for pool in self.pool_data:
+                if (
+                    pool[key0] == key_value0
+                    and pool[key1] == key_value1
+                    and pool["exchange_name"] == ex_name
+                ):
+                    p = pool
+                    print(
+                        "\n"
+                        f"found pool "
+                        f"{pool[key0]}, {key_value0}"
+                        f"{pool[key1]}, {key_value1}"
+                        "\n"
+                    )
+                    break
+            return p
 
         if key == "address":
             key_value = self.web3.toChecksumAddress(key_value)
