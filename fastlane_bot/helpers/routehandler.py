@@ -1212,7 +1212,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 tkn_0_key=tkn0_key,
                 tkn_1_key=tkn1_key
             )
-        elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME:
+        elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME or curve.exchange_name == self.ConfigObj.BANCOR_POL_NAME:
             amount_in, amount_out = self._calc_carbon_output(
                 curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
             )

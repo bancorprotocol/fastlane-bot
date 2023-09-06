@@ -44,6 +44,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         addr = self.web3.toChecksumAddress(event["address"])
+
+        if event["event"] == "TradingEnabled":
+            ##TODO
+            addr = event["token"]
+
         ex_name = self.exchange_name_from_event(event)
 
         if not ex_name:
@@ -175,10 +180,47 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info[key] = value
         return pool_info
 
+    def update_from_erc20_balance(
+        self,
+        token_address: str = None,
+        current_block: int = None,
+        pool_info: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Update the state from the contract (instead of events).
+
+        Parameters
+        ----------
+        contract : Optional[Contract], optional
+            The contract, by default None.
+        pool_info : Optional[Dict[str, Any]], optional
+            The pool info, by default None.
+        current_block : int, optional
+            The block number, by default None.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The pool info.
+                """
+        pool = self.get_or_init_pool(pool_info)
+
+        contract = self.get_or_create_token_contracts(web3=self.web3, erc20_contracts=self.erc20_contracts,
+                                                      address=token_address)
+        params = pool.update_erc20_balance(token_contract=contract, address=pool["address"])
+
+        params["current_block"] = current_block
+
+        for key, value in params.items():
+            pool_info[key] = value
+
+        self.update_pool_data(pool_info=pool_info, data=params)
+
     def update(
         self,
         event: Dict[str, Any] = None,
         address: str = None,
+        token_address: bool = False,
         pool_info: Dict[str, Any] = None,
         contract: Contract = None,
         limiter: bool = True,
@@ -193,6 +235,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The event, by default None.
         address : str, optional
             The address, by default None.
+        token_address: str, optional
+            If the balance should be updated using an ERC20 contract.
         pool_info : Dict[str, Any], optional
             The pool info, by default None.
         contract : Contract, optional
@@ -225,6 +269,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     )
                 elif pool_info:
                     self.update_from_pool_info(
+                        pool_info=pool_info, current_block=block_number
+                    )
+                elif token_address:
+                    self.update_from_erc20_balance(
                         pool_info=pool_info, current_block=block_number
                     )
                 else:

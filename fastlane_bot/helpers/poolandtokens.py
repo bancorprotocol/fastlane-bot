@@ -142,7 +142,7 @@ class PoolAndTokens:
         self.fee = float(Decimal(self.fee))
         if self.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             out = self._univ3_to_cpc()
-        elif self.exchange_name == self.ConfigObj.CARBON_V1_NAME:
+        elif self.exchange_name in [self.ConfigObj.CARBON_V1_NAME, self.ConfigObj.BANCOR_POL_NAME]:
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()

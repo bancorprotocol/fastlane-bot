@@ -59,6 +59,7 @@ class ConfigNetwork(ConfigBase):
     UNISWAP_V3_NAME = "uniswap_v3"
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     CARBON_V1_NAME = "carbon_v1"
+    BANCOR_POL_NAME = "bancor_pol"
     EXCHANGE_IDS = {
         CARBON_V1_NAME: 6,
         UNISWAP_V2_NAME: 3,
@@ -66,9 +67,14 @@ class ConfigNetwork(ConfigBase):
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,
         SUSHISWAP_V2_NAME: 5,
+        BANCOR_POL_NAME: 8,
     }
     UNIV2_FORKS = [UNISWAP_V2_NAME, SUSHISWAP_V2_NAME]
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
+    MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME]
+    # BANCOR POL
+    # TODO ADD BLOCK CONTRACT WAS CREATED
+    BANCOR_POL_START_BLOCK = 20202020
 
     # CARBON EVENTS
     #######################################################################################
@@ -150,7 +156,8 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-
+    #TODO
+    BANCOR_POL_ADDRESS = ""
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
@@ -176,6 +183,8 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+    # TODO
+    BANCOR_POL_ADDRESS = ""
 
     def shellcommand(self, chain_id=1):
         """

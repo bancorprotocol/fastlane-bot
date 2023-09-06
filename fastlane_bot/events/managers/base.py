@@ -340,6 +340,7 @@ class BaseManager:
             f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
         )
 
+
     def get_carbon_pairs(
         self, carbon_controller: Contract, target_tokens: List[str] = None
     ) -> List[Tuple[str, str, int, int]]:
@@ -782,3 +783,66 @@ class BaseManager:
             return event["args"]["token1"]
 
     print_events = []
+
+    def get_bancor_pol_pools(self, current_block: int):
+        """
+        Update the Bancor Pol pools.
+
+        Parameters
+        ----------
+        current_block : int
+            The current block number.
+
+        Returns
+        -------
+        List[int]
+            The rows to update.
+
+        """
+        start_time = time.time()
+        self.cfg.logger.info("Updating Bancor POL pools")
+
+        # Create or get CarbonController contract object
+        bancor_pol = self.create_or_get_bancor_pol_contract()
+
+        trading_enable_events = bancor_pol.events.TradingEnabled.get_logs(fromBlock=self.cfg.BANCOR_POL_START_BLOCK)
+
+        # Create pool info for each token
+        for event in trading_enable_events:
+            self.exchanges["bancor_pol"].save_strategy(
+                token=event[0],
+                block_number=current_block,
+                cfg=self.cfg,
+                func=self.add_pool_info,
+            )
+
+
+
+    def create_or_get_bancor_pol_contract(self):
+        """
+        Create or get the BancorPol contract object.
+
+        Returns
+        -------
+        bancor_pol : Contract
+            The Bancor Pol contract object.
+
+        """
+        if (
+            self.cfg.BANCOR_POL_ADDRESS in self.pool_contracts["bancor_pol"]
+            and not self.replay_from_block
+        ):
+            return self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS]
+
+        # Create a CarbonController contract object
+        bancor_pol = brownie.Contract.from_abi(
+            address=self.cfg.BANCOR_POL_ADDRESS,
+            abi=self.exchanges["bancor_pol"].get_abi(),
+            name="BancorPol",
+        )
+
+        # Store the contract object in pool_contracts
+        self.pool_contracts["bancor_pol"][
+            self.cfg.BANCOR_POL_ADDRESS
+        ] = bancor_pol
+        return bancor_pol

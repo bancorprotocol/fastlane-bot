@@ -50,7 +50,7 @@ from fastlane_bot.events.utils import (
     delete_tenderly_forks,
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
-    handle_replay_from_block,
+    handle_replay_from_block, multicall_every_iteration,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -97,7 +97,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_v2",
+    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_v2,bancor_pol",
     help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
 )
 @click.option(
@@ -475,6 +475,8 @@ def run(
             handle_initial_iteration(
                 backdate_pools, current_block, last_block, mgr, n_jobs, start_block
             )
+
+            multicall_every_iteration(current_block, mgr, n_jobs)
 
             # Update the last block number
             last_block = current_block
