@@ -70,6 +70,7 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
+from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
@@ -417,6 +418,8 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleSingleBancor3
         elif arb_mode in {"b3_two_hop"}:
             return ArbitrageFinderTriangleBancor3TwoHop
+        elif arb_mode in {"multi_pairwise_pol"}:
+            return FindArbitrageMultiPairwisePol
 
     def _run(
         self,

@@ -987,29 +987,27 @@ def get_tenderly_events(
         forked_from_block=current_block,
     )
     mgr.cfg.w3.provider.endpoint_uri = tenderly_fork_uri
-
     contract = mgr.cfg.w3.eth.contract(
-        abi=BANCOR_POL_ABI, address=mgr.cfg.BANCOR_POL_ADDRESS
+        abi=BANCOR_POL_ABI, address=mgr.cfg.w3.toChecksumAddress(mgr.cfg.BANCOR_POL_ADDRESS)
     )
 
-    print(f"contract.events.TokenTraded: {contract.events.TokenTraded}")
+    # event_filters = Parallel(n_jobs=n_jobs, backend="threading")(
+    #     delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
+    #     for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
+    # )
+    # event_filters = [event.createFilter(fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
 
-    event_filters = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
-        for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
-    )
-
-    tenderly_events = [
-        complex_handler(event)
-        for event in [
-            complex_handler(event)
-            for event in get_all_events(
-                n_jobs,
-                event_filters,
-            )
-        ]
-    ]
-
+    tenderly_events = [event.getLogs(fromBlock=start_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
+    # tenderly_events = [
+    #     complex_handler(event)
+    #     for event in [
+    #         complex_handler(event)
+    #         for event in get_all_events(
+    #             n_jobs,
+    #             event_filters,
+    #         )
+    #     ]
+    # ]
     # Set connection back to mainnet
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events

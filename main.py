@@ -83,7 +83,7 @@ load_dotenv()
     default="multi",
     help="See arb_mode in bot.py",
     type=click.Choice(
-        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop"]
+        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop", "multi_pairwise_pol"]
     ),
 )
 @click.option(
@@ -98,7 +98,7 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_v2,bancor_pol",
+    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_pol",
     help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
 )
 @click.option(
@@ -339,13 +339,6 @@ def main(
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
 
-    # check the number of bancor v2 pools
-    num_bancor_v2_pools = len(
-        [pool for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"]
-    )
-    if num_bancor_v2_pools == 0:
-        cfg.logger.error("No bancor v2 pools found. Exiting...")
-        return
 
     # Run the main loop
     run(
