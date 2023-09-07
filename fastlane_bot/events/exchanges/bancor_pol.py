@@ -15,6 +15,7 @@ from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 from fastlane_bot import Config
 
+
 @dataclass
 class BancorPol(Exchange):
     """
@@ -24,6 +25,7 @@ class BancorPol(Exchange):
     exchange_name: str = "bancor_pol"
     BNT_ADDRESS: str = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
     def add_pool(self, pool: Pool):
         self.pools[self.exchange_name + "_" + pool.state["tkn0_address"]] = pool
 
@@ -31,13 +33,15 @@ class BancorPol(Exchange):
         return BANCOR_POL_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.TokenTraded, contract.events.TradingEnabled]
+        # TODO: uncomment when POL contract added to mainnet
+        # return [contract.events.TokenTraded, contract.events.TradingEnabled]
+        return []
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        #TODO CHECK IF THIS IS CORRECT EVENT FORMAT
+        # TODO CHECK IF THIS IS CORRECT EVENT FORMAT
         return address
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:

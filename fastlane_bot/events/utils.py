@@ -27,6 +27,7 @@ from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
@@ -963,6 +964,57 @@ def multicall_every_iteration(
         )
 
 
+def get_tenderly_events(
+    mgr,
+    n_jobs,
+    reorg_delay,
+    start_block,
+    current_block,
+    logging_path,
+    cache_latest_only,
+    tenderly_fork_id,
+    mainnet_uri,
+):
+    # connect to the Tenderly fork
+    mgr.cfg.logger.info(f"Connecting to Tenderly fork: {tenderly_fork_id}")
+    tenderly_fork_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
+
+    mgr, forked_from_block = set_network_connection_to_tenderly(
+        mgr=mgr,
+        use_cached_events=False,
+        replay_from_block=current_block,
+        tenderly_uri=tenderly_fork_uri,
+        forked_from_block=current_block,
+    )
+    mgr.cfg.w3.provider.endpoint_uri = tenderly_fork_uri
+
+    contract = mgr.cfg.w3.eth.contract(
+        abi=BANCOR_POL_ABI, address=mgr.cfg.BANCOR_POL_ADDRESS
+    )
+
+    print(f"contract.events.TokenTraded: {contract.events.TokenTraded}")
+
+    event_filters = Parallel(n_jobs=n_jobs, backend="threading")(
+        delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
+        for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
+    )
+
+    tenderly_events = [
+        complex_handler(event)
+        for event in [
+            complex_handler(event)
+            for event in get_all_events(
+                n_jobs,
+                event_filters,
+            )
+        ]
+    ]
+
+    # Set connection back to mainnet
+    mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
+    return tenderly_events
+
+
 def get_latest_events(
     current_block: int,
     mgr: Any,
@@ -971,6 +1023,8 @@ def get_latest_events(
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
+    tenderly_fork_id: str = None,
+    mainnet_uri: str = None,
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -991,12 +1045,31 @@ def get_latest_events(
         Whether to cache the latest events only.
     logging_path : str
         The logging path.
+    tenderly_fork_id : str, optional
+        The Tenderly fork ID, by default None
 
     Returns
     -------
     List[Any]
         A list of the latest events.
     """
+    carbon_pol_events = []
+
+    if (
+        tenderly_fork_id
+    ):  # TODO: remove this extra function once carbon POL launches on mainnet
+        carbon_pol_events = get_tenderly_events(
+            mgr=mgr,
+            n_jobs=n_jobs,
+            reorg_delay=reorg_delay,
+            start_block=start_block,
+            current_block=current_block,
+            logging_path=logging_path,
+            cache_latest_only=cache_latest_only,
+            tenderly_fork_id=tenderly_fork_id,
+            mainnet_uri=mainnet_uri,
+        )
+
     # Get all event filters, events, and flatten them
     events = [
         complex_handler(event)
@@ -1008,6 +1081,9 @@ def get_latest_events(
             )
         ]
     ]
+
+    events = events + carbon_pol_events
+
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
     mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
@@ -1287,6 +1363,9 @@ def set_network_connection_to_mainnet(
     if mgr.cfg.connection.network.is_connected:
         with contextlib.suppress(Exception):
             mgr.cfg.connection.network.disconnect()
+
+    importlib.reload(sys.modules["fastlane_bot.config.connect"])
+    from fastlane_bot.config.connect import EthereumNetwork
 
     connection = EthereumNetwork(
         network_id="mainnet",
