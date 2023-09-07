@@ -27,7 +27,7 @@ class BancorPol(Exchange):
     ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
     def add_pool(self, pool: Pool):
-        self.pools[self.exchange_name + "_" + pool.state["tkn0_address"]] = pool
+        self.pools[pool.state["tkn0_address"]] = pool
 
     def get_abi(self):
         return BANCOR_POL_ABI

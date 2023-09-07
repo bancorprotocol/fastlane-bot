@@ -25,7 +25,7 @@ class BancorPolPool(Pool):
         """
         see base class.
         """
-        return "cid"
+        return "token"
 
     @classmethod
     def event_matches_format(cls, event: Dict[str, Any]) -> bool:
@@ -58,13 +58,17 @@ class BancorPolPool(Pool):
         """
 
         event_type = event_args["event"]
-        assert event_type not in "TradingEnabled", (
-            "This event should not be " "handled by this class."
-        )
+        if event_type  in "TradingEnabled":
+            print(f"TradingEnabled state: {self.state}")
+            data["tkn0_address"] = event_args["token"]
+            data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
+
         if event_args["token"] == self.state["tkn0_address"]:
             data["tkn0_balance"] = self.state["tkn0_balance"] - event_args["amount"]
         for key, value in data.items():
             self.state[key] = value
+
         data["cid"] = self.state["cid"]
         data["fee"] = 0
         data["fee_float"] = 0
@@ -78,11 +82,12 @@ class BancorPolPool(Pool):
 
         This only updates the current price, not the balance.
         """
-
+        print("UPDATE FROM CONTRACT FIRED")
         tkn0 = self.state["tkn0_address"]
 
+        print(f"CONTRACT ADDRESS: {contract.address}, {type(contract)}")
         # Use ERC20 token contract to get balance of POL contract
-        tkn, eth = contract.functions.tokenPrice(self.state["tkn0_address"]).call()
+        tkn, eth = contract.caller.tokenPrice(self.state["tkn0_address"])
         #TODO is this the correct direction?
         token_price = tkn / eth
 

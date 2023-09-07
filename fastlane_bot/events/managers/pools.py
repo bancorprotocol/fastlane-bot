@@ -43,6 +43,8 @@ class PoolManager(BaseManager):
             return pool_info["cid"]
         elif pool_info["exchange_name"] == "bancor_v3":
             return pool_info["tkn1_address"]
+        elif pool_info["exchange_name"] == "bancor_pol":
+            return pool_info["tkn0_address"]
 
     @staticmethod
     def pool_type_from_exchange_name(exchange_name: str) -> Callable:
@@ -263,7 +265,8 @@ class PoolManager(BaseManager):
         # Update cid if necessary
         if exchange_name != "carbon_v1":
             pool_info["cid"] = self.pool_cid_from_descr(self.web3, pool_info["descr"])
-
+        if exchange_name == "bancor_pol":
+            print(pool_info)
         # Add pool to exchange if necessary
         pool = self.get_or_init_pool(pool_info)
         assert pool, f"Pool not found in {exchange_name} pools"
@@ -320,6 +323,9 @@ class PoolManager(BaseManager):
         if key == "address":
             key_value = self.web3.toChecksumAddress(key_value)
 
+        if ex_name == "bancor_pol":
+            key = "tkn0_address"
+
         return next(
             (
                 self.validate_pool_info(key_value, event, pool, key)
@@ -362,7 +368,6 @@ class PoolManager(BaseManager):
         key = self.pool_key_from_info(pool_info)
 
         pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
-
         if not pool:
             self.add_pool_to_exchange(pool_info)
             key = self.pool_key_from_info(pool_info)

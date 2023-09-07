@@ -995,19 +995,19 @@ def get_tenderly_events(
     #     delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
     #     for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
     # )
-    # event_filters = [event.createFilter(fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
+    #event_filters = [event.createFilter(fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
 
     tenderly_events = [event.getLogs(fromBlock=start_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
-    # tenderly_events = [
-    #     complex_handler(event)
-    #     for event in [
-    #         complex_handler(event)
-    #         for event in get_all_events(
-    #             n_jobs,
-    #             event_filters,
-    #         )
-    #     ]
-    # ]
+    tenderly_events = [event for event in tenderly_events if len(event) > 0]
+    tenderly_events = [
+        complex_handler(event)
+        for event in [
+            complex_handler(event)
+            for event in tenderly_events
+        ]
+    ]
+
+    print(tenderly_events)
     # Set connection back to mainnet
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events
@@ -1206,7 +1206,7 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     tenderly_project = os.getenv("TENDERLY_PROJECT")
 
     # Base URL for Tenderly's API
-    base_url = "https://api.tenderly.co/api/v1"
+    base_url = "https://api.tenderly.co/api/v2"
 
     # Define the headers for the request
     headers = {"X-Access-Key": tenderly_access_key, "Content-Type": "application/json"}

@@ -50,7 +50,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         if event["event"] == "TradingEnabled":
             ##TODO
-            addr = event["token"]
+            # addr = event["args"]["token"]
+            addr = self.cfg.BANCOR_POL_ADDRESS
 
         ex_name = self.exchange_name_from_event(event)
 
