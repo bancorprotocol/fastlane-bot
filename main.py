@@ -123,7 +123,7 @@ load_dotenv()
 @click.option(
     "--loglevel",
     default="INFO",
-    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "BANCOR_V2"]),
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
 )
 @click.option(

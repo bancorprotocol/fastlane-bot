@@ -58,16 +58,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ) or self.add_pool_info_from_contract(
             address=addr, event=event, exchange_name=ex_name
         )
-        if ex_name == "bancor_v2":
-            self.cfg.logger.bancor_v2(
-                "\n\n"
-                "***************** EVENT ***************** \n"
-                f"{event} \n"
-                "\n"
-                "***************** POOL INFO ***************** \n"
-                f"{pool_info}"
-                "\n\n"
-            )
         if not pool_info:
             return
 
@@ -75,7 +65,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info) or {}
         )
-
 
         self.update_pool_data(pool_info, data)
 

@@ -110,7 +110,7 @@ class BancorV2Pool(Pool):
             return params
 
         except web3.exceptions.ContractLogicError:
-            cfg.logger.bancor_v2(
+            cfg.logger.warning(
                 "\n"
                 "*****************"
                 f"[events.pools.update_from_contract] \n"
