@@ -50,7 +50,9 @@ from fastlane_bot.events.utils import (
     delete_tenderly_forks,
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
-    handle_replay_from_block, multicall_every_iteration,
+    multicall_every_iteration,
+    handle_replay_from_block,
+    get_tenderly_block_number,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -93,7 +95,6 @@ load_dotenv()
     "the search space is decreased for all modes, including the b3_two_hop mode (assuming that "
     "--limit_bancor3_flashloan_tokens=True).",
 )
-@click.option("--config", default=None, type=str, help="See config in config/*")
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
@@ -183,12 +184,17 @@ load_dotenv()
     help="Set to a block number to replay from that block. (For debugging / testing). A valid Tenderly account and "
     "configuration is required.",
 )
+@click.option(
+    "--tenderly_fork_id",
+    default=None,
+    type=str,
+    help="Set to a Tenderly fork id. (For debugging / testing). A valid Tenderly account and configuration is required.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
     arb_mode: str,
     flashloan_tokens: str,
-    config: str,
     n_jobs: int,
     exchanges: str,
     polling_interval: int,
@@ -206,6 +212,7 @@ def main(
     timeout: int,
     target_tokens: str,
     replay_from_block: int,
+    tenderly_fork_id: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -216,7 +223,6 @@ def main(
         backdate_pools (bool): Whether to backdate pools or not. Set to False for quicker testing runs.
         arb_mode (str): The arbitrage mode to use.
         flashloan_tokens (str): Comma seperated list of tokens that the bot can use for flash loans.
-        config (str): The name of the configuration to use.
         n_jobs (int): The number of jobs to run in parallel.
         exchanges (str): A comma-separated string of exchanges to include.
         polling_interval (int): The time interval at which the bot polls for new events.
@@ -234,10 +240,11 @@ def main(
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
+        tenderly_fork_id (str): The Tenderly fork id. (For debugging / testing)
 
     """
 
-    if replay_from_block:
+    if replay_from_block or tenderly_fork_id:
         polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
             polling_interval
         )
@@ -247,11 +254,11 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        config,
         default_min_profit_bnt,
         limit_bancor3_flashloan_tokens,
         loglevel,
         logging_path,
+        tenderly_fork_id,
     )
 
     # Format the flashloan tokens
@@ -278,7 +285,6 @@ def main(
         backdate_pools: {backdate_pools}
         arb_mode: {arb_mode}
         flashloan_tokens: {flashloan_tokens}
-        config: {config}
         n_jobs: {n_jobs}
         exchanges: {exchanges}
         polling_interval: {polling_interval}
@@ -295,6 +301,8 @@ def main(
         default_min_profit_bnt: {default_min_profit_bnt}
         timeout: {timeout}
         target_tokens: {target_tokens}
+        replay_from_block: {replay_from_block}
+        tenderly_fork_id: {tenderly_fork_id}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -357,6 +365,7 @@ def main(
         timeout,
         target_tokens,
         replay_from_block,
+        tenderly_fork_id,
     )
 
 
@@ -377,6 +386,7 @@ def run(
     timeout: int,
     target_tokens: List[str] or None,
     replay_from_block: int or None,
+    tenderly_fork_id: str or None,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -398,6 +408,7 @@ def run(
         timeout (int): The timeout for the polling interval.
         target_tokens (List[str]): List of tokens that the bot will target for arbitrage.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
+        tenderly_fork_id (str): The Tenderly fork id. (For debugging / testing)
     """
 
     bot = tenderly_uri = forked_from_block = None
@@ -412,15 +423,22 @@ def run(
             initial_state = mgr.pool_data.copy()
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            start_block = get_start_block(
-                alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
+            start_block, replay_from_block = get_start_block(
+                alchemy_max_block_fetch,
+                last_block,
+                mgr,
+                reorg_delay,
+                replay_from_block,
+                tenderly_fork_id,
             )
 
             # Get all events from the last block to the current block
-            if not replay_from_block:
+            if not replay_from_block and not tenderly_fork_id:
                 current_block = mgr.web3.eth.blockNumber - reorg_delay
             elif last_block == 0:
                 current_block = replay_from_block - reorg_delay
+            elif tenderly_fork_id:
+                current_block = get_tenderly_block_number(tenderly_fork_id)
             else:
                 current_block = last_block + 1
 
@@ -437,6 +455,7 @@ def run(
                 mgr,
                 replay_from_block,
                 use_cached_events,
+                tenderly_fork_id,
             )
 
             # Get the events
@@ -458,6 +477,7 @@ def run(
             update_pools_from_events(n_jobs, mgr, latest_events)
 
             # Set the network connection to Tenderly if replaying from a block
+            print(f"tenderly_uri: {tenderly_uri}")
             mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
                 last_block,
                 loop_idx,
@@ -466,10 +486,9 @@ def run(
                 tenderly_uri,
                 use_cached_events,
                 current_block,
+                tenderly_fork_id,
             )
-
-            # Append the fork to the list of forks to clean up if replaying from a block
-            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
+            print(f"tenderly_uri: {tenderly_uri}")
 
             # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
             handle_initial_iteration(
@@ -489,9 +508,6 @@ def run(
 
             # Delete the bot (if it exists) to avoid memory leaks
             del bot
-
-            # Append the fork to the list of forks to clean up if replaying from a block
-            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
 
             # Re-initialize the bot
             bot = init_bot(mgr)
@@ -533,8 +549,7 @@ def run(
                 break
 
             # Delete all Tenderly forks except the most recent one
-            if replay_from_block:
-                forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
+            if replay_from_block and not tenderly_fork_id:
                 break
 
             if loop_idx == 1:

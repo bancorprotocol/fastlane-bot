@@ -42,6 +42,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
         if event["event"] == "PairCreated":
             self.handle_pair_created(event)
             return
+        if event["event"] == "StrategyDeleted":
+            self.handle_strategy_deleted(event)
+            return
 
         addr = self.web3.toChecksumAddress(event["address"])
 
@@ -68,9 +71,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             event or {}, pool.get_common_data(event, pool_info) or {}
         )
 
-        if event["event"] == "StrategyDeleted":
-            self.handle_strategy_deleted(event)
-            return
 
         self.update_pool_data(pool_info, data)
 
