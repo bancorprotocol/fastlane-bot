@@ -331,14 +331,6 @@ def main(
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
 
-    # check the number of bancor v2 pools
-    num_bancor_v2_pools = len(
-        [pool for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"]
-    )
-    if num_bancor_v2_pools == 0:
-        cfg.logger.error("No bancor v2 pools found. Exiting...")
-        return
-
     # Run the main loop
     run(
         cache_latest_only,
@@ -457,20 +449,6 @@ def run(
             # Update the pools from the latest events
             update_pools_from_events(n_jobs, mgr, latest_events)
 
-            # Set the network connection to Tenderly if replaying from a block
-            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
-                last_block,
-                loop_idx,
-                mgr,
-                replay_from_block,
-                tenderly_uri,
-                use_cached_events,
-                current_block,
-            )
-
-            # Append the fork to the list of forks to clean up if replaying from a block
-            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
-
             # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
             handle_initial_iteration(
                 backdate_pools, current_block, last_block, mgr, n_jobs, start_block
@@ -485,11 +463,19 @@ def run(
             # Handle/remove duplicates in the pool data
             handle_duplicates(mgr)
 
+            # Set the network connection to Tenderly if replaying from a block
+            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+                last_block,
+                loop_idx,
+                mgr,
+                replay_from_block,
+                tenderly_uri,
+                use_cached_events,
+                current_block,
+            )
+
             # Delete the bot (if it exists) to avoid memory leaks
             del bot
-
-            # Append the fork to the list of forks to clean up if replaying from a block
-            forks_to_cleanup = append_fork_for_cleanup(forks_to_cleanup, tenderly_uri)
 
             # Re-initialize the bot
             bot = init_bot(mgr)
@@ -531,9 +517,9 @@ def run(
                 break
 
             # Delete all Tenderly forks except the most recent one
-            if replay_from_block:
-                forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
-                break
+            # if replay_from_block:
+            #     forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
+            #     break
 
             if loop_idx == 1:
                 mgr.cfg.logger.info(

@@ -10,6 +10,7 @@ from typing import Dict, Any
 
 from web3.contract import Contract
 
+from fastlane_bot import Config
 from fastlane_bot.data.pools import uniswap_v3_pools
 from fastlane_bot.events.pools.base import Pool
 
@@ -63,7 +64,9 @@ class UniswapV3Pool(Pool):
             print(f"[pools.update_from_event] Exception: {e}")
         return data
 
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, cfg: Config = None
+    ) -> Dict[str, Any]:
         """
         See base class.
         """

@@ -1195,6 +1195,9 @@ def set_network_connection_to_mainnet(
         with contextlib.suppress(Exception):
             mgr.cfg.connection.network.disconnect()
 
+    importlib.reload(sys.modules["fastlane_bot.config.connect"])
+    from fastlane_bot.config.connect import EthereumNetwork
+
     connection = EthereumNetwork(
         network_id="mainnet",
         network_name="Ethereum Mainnet",

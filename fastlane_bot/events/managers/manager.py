@@ -66,7 +66,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             event or {}, pool.get_common_data(event, pool_info) or {}
         )
 
-
         self.update_pool_data(pool_info, data)
 
     def handle_pair_created(self, event: Dict[str, Any]):
@@ -114,7 +113,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
         )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(contract, cfg=self.cfg)
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -170,7 +169,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ),
             )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(contract, cfg=self.cfg)
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -218,12 +217,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 rate_limiter = 0
             try:
                 if event:
+                    self.cfg.logger.debug("update from event")
                     self.update_from_event(event=event, block_number=block_number)
                 elif address:
+                    self.cfg.logger.debug("update from address")
                     self.update_from_contract(
                         address, contract, block_number=block_number
                     )
                 elif pool_info:
+                    self.cfg.logger.debug("update from pool info")
                     self.update_from_pool_info(
                         pool_info=pool_info, current_block=block_number
                     )
