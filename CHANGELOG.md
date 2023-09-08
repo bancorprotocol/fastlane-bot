@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.21...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.22...HEAD)
 
+- Bancor V2 bug when exchange not included, or address not found [\#110](https://github.com/bancorprotocol/fastlane-bot/issues/110)
 - Deleted strategy breaks Carbon initial multicall [\#107](https://github.com/bancorprotocol/fastlane-bot/issues/107)
+- 110 bancor v2 bug when exchange not included or address not found [\#111](https://github.com/bancorprotocol/fastlane-bot/pull/111) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.22](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.22) (2023-09-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.21...v2.7.22)
+
 - move strategy deleted event to be with other Carbon events [\#108](https://github.com/bancorprotocol/fastlane-bot/pull/108) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Change default settings to `--backdate_pools=True` for `bancor_v2` support [\#103](https://github.com/bancorprotocol/fastlane-bot/issues/103)
