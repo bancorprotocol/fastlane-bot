@@ -175,9 +175,11 @@ class QueryInterface:
             "bancor_v2",
             "bancor_v3",
             "carbon_v1",
+            "bancor_pol",
         ]
         keys = [
             "liquidity",
+            "tkn0_balance",
             "tkn0_balance",
             "tkn0_balance",
             "tkn0_balance",
