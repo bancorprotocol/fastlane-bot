@@ -42,7 +42,7 @@ class BancorPol(Exchange):
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         # TODO CHECK IF THIS IS CORRECT EVENT FORMAT
-        return address
+        return event["args"]["token"]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return self.ETH_ADDRESS

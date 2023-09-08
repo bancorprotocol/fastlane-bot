@@ -988,26 +988,25 @@ def get_tenderly_events(
     )
     mgr.cfg.w3.provider.endpoint_uri = tenderly_fork_uri
     contract = mgr.cfg.w3.eth.contract(
-        abi=BANCOR_POL_ABI, address=mgr.cfg.w3.toChecksumAddress(mgr.cfg.BANCOR_POL_ADDRESS)
+        abi=BANCOR_POL_ABI,
+        address=mgr.cfg.w3.toChecksumAddress(mgr.cfg.BANCOR_POL_ADDRESS),
     )
 
-    # event_filters = Parallel(n_jobs=n_jobs, backend="threading")(
-    #     delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
-    #     for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
-    # )
-    #event_filters = [event.createFilter(fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
+    # event_filters = Parallel(n_jobs=n_jobs, backend="threading")( delayed(event.createFilter)(
+    # fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded,
+    # contract.events.TradingEnabled] ) event_filters = [event.createFilter(fromBlock=start_block,
+    # toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
 
-    tenderly_events = [event.getLogs(fromBlock=start_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
+    tenderly_events = [
+        event.getLogs(fromBlock=start_block)
+        for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
+    ]
     tenderly_events = [event for event in tenderly_events if len(event) > 0]
     tenderly_events = [
         complex_handler(event)
-        for event in [
-            complex_handler(event)
-            for event in tenderly_events
-        ]
+        for event in [complex_handler(event) for event in tenderly_events]
     ]
 
-    print(tenderly_events)
     # Set connection back to mainnet
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events
@@ -1080,10 +1079,16 @@ def get_latest_events(
         ]
     ]
 
-    events = events + carbon_pol_events
+    print(f"len carbon_pol_events: {len(carbon_pol_events)}")
+    print(f"len events: {len(events)}")
+
+    events += carbon_pol_events
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
+    latest_pol_events = [i for i in latest_events if "token" in i["args"]]
+    print(f"len latest_pol_events: {len(latest_pol_events)}")
+    print(f"pol events: {latest_pol_events}")
     mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
     # Save the latest events to disk
@@ -1680,3 +1685,6 @@ def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
     use_cached_events = False
     polling_interval = 0
     return polling_interval, reorg_delay, use_cached_events
+
+
+#%%

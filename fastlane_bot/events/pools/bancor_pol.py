@@ -8,9 +8,11 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import Dict, Any
 
+import web3
 from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
+
 
 @dataclass
 class BancorPolPool(Pool):
@@ -58,14 +60,17 @@ class BancorPolPool(Pool):
         """
 
         event_type = event_args["event"]
-        if event_type  in "TradingEnabled":
+        if event_type in "TradingEnabled":
             print(f"TradingEnabled state: {self.state}")
-            data["tkn0_address"] = event_args["token"]
+            data["tkn0_address"] = event_args["args"]["token"]
             data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
+        if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
+            "TokenTraded"
+        ]:
+            # TODO: check if this is correct (if tkn0_balance - amount, can be negative if amount > tkn0_balance)
+            data["tkn0_balance"] = event_args["args"]["amount"]
 
-        if event_args["token"] == self.state["tkn0_address"]:
-            data["tkn0_balance"] = self.state["tkn0_balance"] - event_args["amount"]
         for key, value in data.items():
             self.state[key] = value
 
@@ -74,7 +79,6 @@ class BancorPolPool(Pool):
         data["fee_float"] = 0
         data["exchange_name"] = self.state["exchange_name"]
         return data
-
 
     def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
         """
@@ -87,11 +91,19 @@ class BancorPolPool(Pool):
 
         print(f"CONTRACT ADDRESS: {contract.address}, {type(contract)}")
         # Use ERC20 token contract to get balance of POL contract
-        tkn, eth = contract.caller.tokenPrice(self.state["tkn0_address"])
-        #TODO is this the correct direction?
-        token_price = tkn / eth
+        tkn0_balance = 0
+        tkn1_balance = 0
+        try:
+            tkn0_balance, tkn1_balance = contract.functions.tokenPrice(
+                self.state["tkn0_address"]
+            ).call()
+        except web3.exceptions.BadFunctionCallOutput:
+            print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
 
-        #TODO is this necessary?
+        # TODO is this the correct direction?
+        token_price = tkn0_balance / tkn1_balance
+
+        # TODO is this necessary?
         token_price = self.encode_token_price(token_price)
 
         params = {
@@ -101,17 +113,17 @@ class BancorPolPool(Pool):
             "tkn1_balance": 0,
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
-            "y_0": self.state["tkn0_balance"],
-            "z_0": self.state["tkn0_balance"],
+            "y_0": tkn0_balance,
+            "z_0": tkn0_balance,
             "A_0": token_price,
-            "B_0": token_price
+            "B_0": token_price,
         }
         for key, value in params.items():
             self.state[key] = value
         return params
 
     def encode_token_price(self, Pa):
-        #TODO encode this to the format of a Carbon Order
+        # TODO encode this to the format of a Carbon Order
         return Pa
         pass
 
@@ -123,7 +135,7 @@ class BancorPolPool(Pool):
         Uses ERC20 contracts to get the number of tokens held by the POL contract
         """
 
-        #TODO Initialize and save ERC20 contract in managers/base.py and pass it into this function: erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
+        # TODO Initialize and save ERC20 contract in managers/base.py and pass it into this function: erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
 
         balance = token_contract.caller.balanceOf(address)
         params = {

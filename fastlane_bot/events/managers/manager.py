@@ -48,12 +48,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         addr = self.web3.toChecksumAddress(event["address"])
 
-        if event["event"] == "TradingEnabled":
-            ##TODO
-            # addr = event["args"]["token"]
-            addr = self.cfg.BANCOR_POL_ADDRESS
+        # if event["event"] == "TradingEnabled":
+        #     addr = self.cfg.BANCOR_POL_ADDRESS
 
         ex_name = self.exchange_name_from_event(event)
+
+        if ex_name == "bancor_pol":
+            print(f"update from event: {ex_name}")
 
         if not ex_name:
             return
@@ -64,6 +65,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ) or self.add_pool_info_from_contract(
             address=addr, event=event, exchange_name=ex_name
         )
+        if ex_name == "bancor_pol":
+            print(f"pool_info: {pool_info}")
+
         if not pool_info:
             return
 
@@ -71,7 +75,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info) or {}
         )
-
 
         self.update_pool_data(pool_info, data)
 
@@ -203,12 +206,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
         -------
         Dict[str, Any]
             The pool info.
-                """
+        """
         pool = self.get_or_init_pool(pool_info)
 
-        contract = self.get_or_create_token_contracts(web3=self.web3, erc20_contracts=self.erc20_contracts,
-                                                      address=token_address)
-        params = pool.update_erc20_balance(token_contract=contract, address=pool["address"])
+        contract = self.get_or_create_token_contracts(
+            web3=self.web3, erc20_contracts=self.erc20_contracts, address=token_address
+        )
+        params = pool.update_erc20_balance(
+            token_contract=contract, address=pool["address"]
+        )
 
         params["current_block"] = current_block
 
@@ -263,6 +269,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 rate_limiter = 0
             try:
                 if event:
+                    if "token" in event["args"]:
+                        print(f"update from event: {event}")
                     self.update_from_event(event=event, block_number=block_number)
                 elif address:
                     self.update_from_contract(

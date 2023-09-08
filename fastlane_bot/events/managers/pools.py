@@ -258,6 +258,9 @@ class PoolManager(BaseManager):
             block_number,
         )
 
+        if exchange_name == "bancor_pol":
+            print(f"pool_info: {pool_info}")
+
         # Add other args if necessary
         if other_args:
             pool_info.update(other_args)
@@ -267,6 +270,7 @@ class PoolManager(BaseManager):
             pool_info["cid"] = self.pool_cid_from_descr(self.web3, pool_info["descr"])
         if exchange_name == "bancor_pol":
             print(pool_info)
+
         # Add pool to exchange if necessary
         pool = self.get_or_init_pool(pool_info)
         assert pool, f"Pool not found in {exchange_name} pools"

@@ -67,6 +67,7 @@ class BaseManager:
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
+    tenderly_fork_id: str = None
 
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -339,7 +340,6 @@ class BaseManager:
         self.cfg.logger.info(
             f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
         )
-
 
     def get_carbon_pairs(
         self, carbon_controller: Contract, target_tokens: List[str] = None
@@ -807,7 +807,9 @@ class BaseManager:
         # Create or get CarbonController contract object
         bancor_pol = self.create_or_get_bancor_pol_contract()
 
-        trading_enable_events = bancor_pol.events.TradingEnabled.get_logs(fromBlock=self.cfg.BANCOR_POL_START_BLOCK)
+        trading_enable_events = bancor_pol.events.TradingEnabled.get_logs(
+            fromBlock=self.cfg.BANCOR_POL_START_BLOCK
+        )
 
         # Create pool info for each token
         for event in trading_enable_events:
@@ -817,8 +819,6 @@ class BaseManager:
                 cfg=self.cfg,
                 func=self.add_pool_info,
             )
-
-
 
     def create_or_get_bancor_pol_contract(self):
         """
@@ -844,7 +844,5 @@ class BaseManager:
         )
 
         # Store the contract object in pool_contracts
-        self.pool_contracts["bancor_pol"][
-            self.cfg.BANCOR_POL_ADDRESS
-        ] = bancor_pol
+        self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS] = bancor_pol
         return bancor_pol

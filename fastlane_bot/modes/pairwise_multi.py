@@ -21,7 +21,13 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
     arb_mode = "multi_pairwise"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -45,8 +51,11 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             if len(CC) < 2:
                 continue
             carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            # not_carbon_curves = [
+            #     x for x in CC.curves if x.params.exchange != "carbon_v1"
+            # ]
             not_carbon_curves = [
-                x for x in CC.curves if x.params.exchange != "carbon_v1"
+                x for x in CC.curves if x.params.exchange == "bancor_pol"
             ]
             curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
 
@@ -57,12 +66,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                     continue
 
                 try:
-                    (
-                        O,
-                        profit_src,
-                        r,
-                        trade_instructions_df,
-                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                    (O, profit_src, r, trade_instructions_df,) = self.run_main_flow(
+                        curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1
+                    )
 
                     non_carbon_cids = [
                         curve.cid
@@ -77,16 +83,17 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
                     if non_carbon_cids and len(wrong_direction_cids) > 0:
                         filtered_curves = self.process_wrong_direction_pools(
-                            curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
+                            curve_combo=curve_combo,
+                            wrong_direction_cids=wrong_direction_cids,
                         )
                         if len(filtered_curves) < 2:
                             continue
-                        (
-                            O,
-                            profit_src,
-                            r,
-                            trade_instructions_df,
-                        ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                        (O, profit_src, r, trade_instructions_df,) = self.run_main_flow(
+                            curves=filtered_curves,
+                            src_token=src_token,
+                            tkn0=tkn0,
+                            tkn1=tkn1,
+                        )
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
 

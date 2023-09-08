@@ -5,6 +5,7 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os
 from typing import Dict, Any, Tuple, Optional
 
 import brownie
@@ -136,16 +137,27 @@ class ContractsManager(BaseManager):
 
         """
         if exchange_name in self.exchanges:
-            default_contract = self.web3.eth.contract(
-                address=address, abi=self.exchanges[exchange_name].get_abi()
-            )
+            w3 = self.web3
+            if exchange_name == "bancor_pol":
+                # TODO: Remove this once we have a better solution
+                w3 = Web3(
+                    Web3.HTTPProvider(
+                        f"https://rpc.tenderly.co/fork/{self.tenderly_fork_id}"
+                    )
+                )
+
             contract_key = (
                 self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
                 if exchange_name == "bancor_v3"
+                else self.cfg.BANCOR_POL_ADDRESS
+                if exchange_name == "bancor_pol"
                 else address
             )
             return self.pool_contracts[exchange_name].get(
-                contract_key, default_contract
+                contract_key,
+                w3.eth.contract(
+                    address=contract_key, abi=self.exchanges[exchange_name].get_abi()
+                ),
             )
         else:
             return None

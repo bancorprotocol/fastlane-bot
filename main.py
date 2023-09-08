@@ -83,7 +83,15 @@ load_dotenv()
     default="multi",
     help="See arb_mode in bot.py",
     type=click.Choice(
-        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop", "multi_pairwise_pol"]
+        [
+            "single",
+            "multi",
+            "triangle",
+            "multi_triangle",
+            "bancor_v3",
+            "b3_two_hop",
+            "multi_pairwise_pol",
+        ]
     ),
 )
 @click.option(
@@ -334,11 +342,11 @@ def main(
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,
+        tenderly_fork_id=tenderly_fork_id,
     )
 
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
-
 
     # Run the main loop
     run(
