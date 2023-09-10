@@ -1,17 +1,18 @@
 __VERSION__ = "1.2"
-__DATE__="05/May/2023"
+__DATE__ = "05/May/2023"
 
 from typing import Dict, Any, List, Union
 
 from _decimal import Decimal
 from dataclasses import dataclass
 
-#from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
+# from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import UniV3Helper, EncodedOrder
 
 from fastlane_bot.config import Config
+
 
 @dataclass
 class PoolAndTokens:
@@ -82,9 +83,10 @@ class PoolAndTokens:
         The decimals of token 1
 
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
+
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
     ConfigObj: Config
     id: int
     cid: str
@@ -121,7 +123,6 @@ class PoolAndTokens:
     tkn1_key: str = None
     ADDRDEC = None
 
-    
     def __post_init__(self):
         self.tkn0_key = self.tkn0
         self.tkn1_key = self.tkn1
@@ -133,7 +134,7 @@ class PoolAndTokens:
         self.y_0 = self.y_0 or 0
         self.z_1 = self.z_1 or 0
         self.y_1 = self.y_1 or 0
-    
+
     def to_cpc(self) -> Union[ConstantProductCurve, List[Any]]:
         """
         converts self into an instance of the ConstantProductCurve class.
@@ -142,7 +143,10 @@ class PoolAndTokens:
         self.fee = float(Decimal(self.fee))
         if self.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
             out = self._univ3_to_cpc()
-        elif self.exchange_name in [self.ConfigObj.CARBON_V1_NAME, self.ConfigObj.BANCOR_POL_NAME]:
+        elif self.exchange_name in [
+            self.ConfigObj.CARBON_V1_NAME,
+            self.ConfigObj.BANCOR_POL_NAME,
+        ]:
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
@@ -157,14 +161,14 @@ class PoolAndTokens:
         creates the parameter dict for the ConstantProductCurve class
         """
         return {
-                "exchange": str(self.exchange_name),
-                "tknx_dec": int(self.tkn0_decimals),
-                "tkny_dec": int(self.tkn1_decimals),
-                "tknx_addr": str(self.tkn0_address),
-                "tkny_addr": str(self.tkn1_address),
-                "blocklud": int(self.last_updated_block),
+            "exchange": str(self.exchange_name),
+            "tknx_dec": int(self.tkn0_decimals),
+            "tkny_dec": int(self.tkn1_decimals),
+            "tknx_addr": str(self.tkn0_address),
+            "tkny_addr": str(self.tkn1_address),
+            "blocklud": int(self.last_updated_block),
         }
-        
+
     def _other_to_cpc(self) -> List[Any]:
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
@@ -176,7 +180,7 @@ class PoolAndTokens:
         *exactly one of k,x,y must be None; all other parameters must not be None;
         a reminder that x is TKNB and y is TKNQ
         """
-        
+
         # convert tkn0_balance and tkn1_balance to Decimal from wei
         tkn0_balance = self.convert_decimals(self.tkn0_balance, self.tkn0_decimals)
         tkn1_balance = self.convert_decimals(self.tkn1_balance, self.tkn1_decimals)
@@ -189,12 +193,13 @@ class PoolAndTokens:
             "fee": self.fee,
             "cid": self.cid,
             "descr": self.descr,
-            "params":  self._params,
+            "params": self._params,
         }
         return [ConstantProductCurve.from_univ2(**self._convert_to_float(typed_args))]
 
-    class DoubleInvalidCurveError(ValueError): pass
-    
+    class DoubleInvalidCurveError(ValueError):
+        pass
+
     def _carbon_to_cpc(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
@@ -222,7 +227,7 @@ class PoolAndTokens:
         lst = []
         errors = []
         for i in [0, 1]:
-            #pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
+            # pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
@@ -254,15 +259,15 @@ class PoolAndTokens:
             p_start = Decimal(encoded_order.p_start) * decimal_converter
             p_end = Decimal(encoded_order.p_end) * decimal_converter
             yint = Decimal(yint) / (
-                    Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
+                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
             )
             y = Decimal(y) / (
-                    Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
+                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
             )
 
             tkny = 1 if i == 0 else 0
             typed_args = {
-                "cid": f"{self.cid}-{i}",
+                "cid": f"{self.cid}-{i}" if self.self.exchange_name == "carbon" else self.cid,
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
@@ -274,11 +279,15 @@ class PoolAndTokens:
                 "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,
-                "params": self._params
+                "params": self._params,
             }
             try:
                 if typed_args["y"] > 0:
-                    lst.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
+                    lst.append(
+                        ConstantProductCurve.from_carbon(
+                            **self._convert_to_float(typed_args)
+                        )
+                    )
                 # else:
                 #     self.ConfigObj.logger.debug(f"empty carbon pool [{typed_args['cid']}]")
             except Exception as e:
@@ -286,19 +295,15 @@ class PoolAndTokens:
                 self.ConfigObj.logger.debug(errmsg)
                 errors += [errmsg]
 
-        # if not len(lst) > 0:
-        #     errmsg = f"[_carbon_to_cpc] error in BOTH curves {errors}\n\n"
-        #     self.ConfigObj.logger.warning(errmsg)
-        #     raise self.DoubleInvalidCurveError(errmsg)
-            
         return lst
-    
+
     FEE_LOOKUP = {
         0.0001: Univ3Calculator.FEE100,
         0.0005: Univ3Calculator.FEE500,
         0.0030: Univ3Calculator.FEE3000,
         0.01: Univ3Calculator.FEE10000,
     }
+
     def _univ3_to_cpc(self) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.
@@ -313,15 +318,23 @@ class PoolAndTokens:
             :fee:      fee (optional); eg 0.01 for 1%
             :descr:    description (optional; eg. "UniV3 0.1%")
             :params:   additional parameters (optional)
- 
+
         """
-        args = {"token0": self.tkn0_key, "token1": self.tkn1_key, "sqrt_price_q96": self.sqrt_price_q96, "tick": self.tick, "liquidity": self.liquidity}
+        args = {
+            "token0": self.tkn0_key,
+            "token1": self.tkn1_key,
+            "sqrt_price_q96": self.sqrt_price_q96,
+            "tick": self.tick,
+            "liquidity": self.liquidity,
+        }
         feeconst = self.FEE_LOOKUP.get(float(self.fee_float))
         if feeconst is None:
-            raise ValueError(f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{self.FEE_LOOKUP}]]")
+            raise ValueError(
+                f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{self.FEE_LOOKUP}]]"
+            )
         uni3 = Univ3Calculator.from_dict(args, feeconst, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()
-        #print("u3params", params)
+        # print("u3params", params)
         if params["uniL"] == 0:
             self.ConfigObj.logger.debug(f"empty univ3 pool [{self.cid}]")
             return []
@@ -336,7 +349,12 @@ class PoolAndTokens:
         Converts wei balance to token balance (returns a Decimal)
         """
         # TODO: why Decimal?!?
-        return Decimal(str(Decimal(str(tkn_balance_wei)) / (Decimal("10") ** Decimal(str(tkn_decimals)))))
+        return Decimal(
+            str(
+                Decimal(str(tkn_balance_wei))
+                / (Decimal("10") ** Decimal(str(tkn_decimals)))
+            )
+        )
 
     @staticmethod
     def _convert_to_float(typed_args: Dict[str, Any]) -> Dict[str, Any]:
@@ -345,7 +363,7 @@ class PoolAndTokens:
         """
         convert = lambda x: float(x) if isinstance(x, Decimal) else x
         return {k: convert(v) for k, v in typed_args.items()}
-        # MIKE: this code converted the dict in place AND returned it; 
+        # MIKE: this code converted the dict in place AND returned it;
         # that may work but is ugly...
         # for key, value in typed_args.items():
         #     if isinstance(value, (Decimal, float)):
