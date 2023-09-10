@@ -1320,7 +1320,7 @@ class CarbonBot(CarbonBotBase):
                         # if isinstance(tx_hash[0], AttributeDict):
                         #     f.write(str(tx_hash[0]))
                         # else:
-                        f.write(str(tx_hash[0]))
+                        f.write(str(tx_hash))
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
