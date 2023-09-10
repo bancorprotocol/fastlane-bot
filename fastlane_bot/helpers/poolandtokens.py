@@ -267,7 +267,9 @@ class PoolAndTokens:
 
             tkny = 1 if i == 0 else 0
             typed_args = {
-                "cid": f"{self.cid}-{i}" if self.self.exchange_name == "carbon" else self.cid,
+                "cid": f"{self.cid}-{i}"
+                if self.exchange_name == "carbon"
+                else self.cid,
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
