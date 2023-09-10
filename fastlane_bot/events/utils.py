@@ -687,7 +687,7 @@ def update_pools_from_contracts(
                 pool_info=mgr.pool_data[idx],
                 limiter=not_multicall,
                 block_number=current_block,
-                token_address=token_address
+                token_address=token_address,
             )
             for idx in rows_to_update
         )
@@ -873,6 +873,7 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
         if pool["exchange_name"] == exchange
     ]
 
+
 def handle_initial_iteration(
     backdate_pools: bool,
     current_block: int,
@@ -950,6 +951,7 @@ def multicall_every_iteration(
         The number of jobs to run in parallel.
 
     """
+    print("MULTICALLING...")
     multicallable_pool_rows = [
         list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
         for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES
@@ -1013,6 +1015,7 @@ def get_tenderly_events(
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events
 
+
 def get_erc_20_balances_tenderly(
     current_block,
     mgr,
@@ -1036,19 +1039,23 @@ def get_erc_20_balances_tenderly(
         forked_from_block=current_block,
     )
 
-
     if mgr.cfg.BANCOR_POL_NAME in mgr.exchanges:
         update_pools_from_contracts(
             mgr,
             n_jobs=n_jobs,
-            rows_to_update=[i for i, pool_info in enumerate(mgr.pool_data) if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME],
+            rows_to_update=[
+                i
+                for i, pool_info in enumerate(mgr.pool_data)
+                if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
+            ],
             current_block=current_block,
-            token_address=True
+            token_address=True,
         )
 
     # Set connection back to mainnet
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return None
+
 
 def get_latest_events(
     current_block: int,

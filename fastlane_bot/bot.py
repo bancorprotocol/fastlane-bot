@@ -981,6 +981,7 @@ class CarbonBot(CarbonBotBase):
                     src_address=flashloan_token_address,
                 ),
                 cids,
+                route_struct,
             )
 
         # Log the route_struct
@@ -1018,6 +1019,7 @@ class CarbonBot(CarbonBotBase):
                 flashloan_struct=flashloan_struct,
             ),
             cids,
+            route_struct,
         )
 
     def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
@@ -1250,7 +1252,7 @@ class CarbonBot(CarbonBotBase):
                     )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-                tx_hash, cids = self._run(
+                tx_hash, cids, route_struct = self._run(
                     flashloan_tokens,
                     CCm,
                     arb_mode=arb_mode,
@@ -1315,10 +1317,10 @@ class CarbonBot(CarbonBotBase):
                     print(f"Writing tx_hash hash {tx_hash} to {filename}")
                     with open(f"{self.logging_path}/{filename}", "w") as f:
 
-                        if isinstance(tx_hash[0], AttributeDict):
-                            f.write(str(tx_hash[0]))
-                        else:
-                            f.write(tx_hash[0])
+                        # if isinstance(tx_hash[0], AttributeDict):
+                        #     f.write(str(tx_hash[0]))
+                        # else:
+                        f.write(str(tx_hash[0]))
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
