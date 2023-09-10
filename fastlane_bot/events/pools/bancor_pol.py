@@ -12,6 +12,7 @@ import web3
 from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
+from _decimal import Decimal
 
 
 @dataclass
@@ -21,7 +22,7 @@ class BancorPolPool(Pool):
     """
 
     exchange_name: str = "bancor_pol"
-
+    ONE = 2 ** 48
     @staticmethod
     def unique_key() -> str:
         """
@@ -101,10 +102,9 @@ class BancorPolPool(Pool):
             print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
 
         # TODO is this the correct direction?
-        token_price = tkn0_balance / tkn1_balance
+        token_price = Decimal(tkn0_balance) / Decimal(tkn1_balance)
 
-        # TODO is this necessary?
-        token_price = self.encode_token_price(token_price)
+        tkn0_balance = self.state["tkn0_balance"] if "tkn0_balance" in self.state else 0
 
         params = {
             "fee": "0.000",
@@ -115,28 +115,38 @@ class BancorPolPool(Pool):
             "address": self.state["address"],
             "y_0": tkn0_balance,
             "z_0": tkn0_balance,
-            "A_0": token_price,
-            "B_0": token_price,
+            "A_0": 0,
+            "B_0": int(str(self.encode_token_price(token_price))),
         }
         for key, value in params.items():
             self.state[key] = value
         return params
 
-    def encode_token_price(self, Pa):
-        # TODO encode this to the format of a Carbon Order
-        return Pa
-        pass
+    @staticmethod
+    def bitLength(value):
+        return len(bin(value).lstrip('0b')) if value > 0 else 0
 
-    def update_erc20_balance(self, token_contract, address) -> int:
+    def encodeFloat(self, value):
+        exponent = self.bitLength(value // self.ONE)
+        mantissa = value >> exponent
+        return mantissa | (exponent * self.ONE)
+
+    def encodeRate(self, value):
+        data = int(value.sqrt() * self.ONE)
+        length = self.bitLength(data // self.ONE)
+        return (data >> length) << length
+
+    def encode_token_price(self, price):
+        return self.encodeFloat(self.encodeRate((price)))
+
+    def update_erc20_balance(self, token_contract, address) -> dict:
         """
-        :param cfg: the Config object
-
         returns: the current balance held by the POL contract
         Uses ERC20 contracts to get the number of tokens held by the POL contract
         """
 
         # TODO Initialize and save ERC20 contract in managers/base.py and pass it into this function: erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
-
+        print(f"erc20 call address = {address}, contract address = {token_contract.address}")
         balance = token_contract.caller.balanceOf(address)
         params = {
             "y_0": balance,

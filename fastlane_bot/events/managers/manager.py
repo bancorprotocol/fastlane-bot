@@ -53,9 +53,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         ex_name = self.exchange_name_from_event(event)
 
-        if ex_name == "bancor_pol":
-            print(f"update from event: {ex_name}")
-
         if not ex_name:
             return
 
@@ -209,13 +206,17 @@ class Manager(PoolManager, EventManager, ContractsManager):
         """
         pool = self.get_or_init_pool(pool_info)
 
+        if pool.state["exchange_name"] == "bancor_pol":
+            token_address = pool.state["tkn0_address"]
+
         contract = self.get_or_create_token_contracts(
             web3=self.web3, erc20_contracts=self.erc20_contracts, address=token_address
         )
+        print(f"updating ERC20 balance: \nTKN: {token_address}, contract address: {contract.address}")
         params = pool.update_erc20_balance(
-            token_contract=contract, address=pool["address"]
+            token_contract=contract, address=pool.state["address"]
         )
-
+        print(f"params= {params}")
         params["current_block"] = current_block
 
         for key, value in params.items():
@@ -276,12 +277,12 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     self.update_from_contract(
                         address, contract, block_number=block_number
                     )
-                elif pool_info:
-                    self.update_from_pool_info(
-                        pool_info=pool_info, current_block=block_number
-                    )
                 elif token_address:
                     self.update_from_erc20_balance(
+                        pool_info=pool_info, current_block=block_number
+                    )
+                elif pool_info:
+                    self.update_from_pool_info(
                         pool_info=pool_info, current_block=block_number
                     )
                 else:

@@ -661,6 +661,7 @@ def update_pools_from_contracts(
     n_jobs: int,
     rows_to_update: List[int],
     not_multicall: bool = True,
+    token_address: bool = False,
     current_block: int = None,
 ) -> None:
     """
@@ -686,6 +687,7 @@ def update_pools_from_contracts(
                 pool_info=mgr.pool_data[idx],
                 limiter=not_multicall,
                 block_number=current_block,
+                token_address=token_address
             )
             for idx in rows_to_update
         )
@@ -871,16 +873,6 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
         if pool["exchange_name"] == exchange
     ]
 
-
-def get_bancor_pol_balances(pools, n_jobs, mgr: Manager):
-    # 2 functions - create initial list of pools then get balances from ERC 20 contract
-
-    # for token in tokens:
-    #     mgr.get_erc20_balance
-
-    pass
-
-
 def handle_initial_iteration(
     backdate_pools: bool,
     current_block: int,
@@ -928,6 +920,16 @@ def handle_initial_iteration(
                     rows_to_update=rows,
                     current_block=current_block,
                 )
+
+        # TODO THIS NEEDS TO BE UNCOMMENTED FOR MAINNET
+        # if mgr.cfg.BANCOR_POL_NAME in mgr.exchanges:
+        #     update_pools_from_contracts(
+        #         mgr,
+        #         n_jobs=n_jobs,
+        #         rows_to_update=[i for i, pool_info in enumerate(mgr.pool_data) if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME],
+        #         current_block=current_block,
+        #         token_address=True
+        #     )
 
 
 def multicall_every_iteration(
@@ -1011,6 +1013,42 @@ def get_tenderly_events(
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events
 
+def get_erc_20_balances_tenderly(
+    current_block,
+    mgr,
+    n_jobs,
+    reorg_delay,
+    start_block,
+    logging_path,
+    cache_latest_only,
+    tenderly_fork_id,
+    mainnet_uri,
+):
+    # connect to the Tenderly fork
+    mgr.cfg.logger.info(f"Connecting to Tenderly fork: {tenderly_fork_id}")
+    tenderly_fork_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
+
+    mgr, forked_from_block = set_network_connection_to_tenderly(
+        mgr=mgr,
+        use_cached_events=False,
+        replay_from_block=current_block,
+        tenderly_uri=tenderly_fork_uri,
+        forked_from_block=current_block,
+    )
+
+
+    if mgr.cfg.BANCOR_POL_NAME in mgr.exchanges:
+        update_pools_from_contracts(
+            mgr,
+            n_jobs=n_jobs,
+            rows_to_update=[i for i, pool_info in enumerate(mgr.pool_data) if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME],
+            current_block=current_block,
+            token_address=True
+        )
+
+    # Set connection back to mainnet
+    mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
+    return None
 
 def get_latest_events(
     current_block: int,
@@ -1100,6 +1138,20 @@ def get_latest_events(
         start_block,
         current_block,
     )
+    if (
+        tenderly_fork_id
+    ):  # TODO: remove this extra function once carbon POL launches on mainnet
+        get_erc_20_balances_tenderly(
+            mgr=mgr,
+            n_jobs=n_jobs,
+            reorg_delay=reorg_delay,
+            start_block=start_block,
+            current_block=current_block,
+            logging_path=logging_path,
+            cache_latest_only=cache_latest_only,
+            tenderly_fork_id=tenderly_fork_id,
+            mainnet_uri=mainnet_uri,
+        )
     return latest_events
 
 
