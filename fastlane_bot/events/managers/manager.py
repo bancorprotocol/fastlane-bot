@@ -9,8 +9,10 @@ import random
 import time
 from typing import Dict, Any, Optional
 
+from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
@@ -210,9 +212,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
             token_address = pool.state["tkn0_address"]
 
         contract = self.get_or_create_token_contracts(
-            web3=self.web3, erc20_contracts=self.erc20_contracts, address=token_address
+            web3=self.web3,
+            erc20_contracts=self.erc20_contracts,
+            address=token_address,
+            tenderly_fork_id=self.tenderly_fork_id,
+            exchange_name=pool.state["exchange_name"],
         )
-        print(f"updating ERC20 balance: \nTKN: {token_address}, contract address: {contract.address}")
+        print(
+            f"updating ERC20 balance: \nTKN: {token_address}, contract address: {contract.address}"
+        )
         params = pool.update_erc20_balance(
             token_contract=contract, address=pool.state["address"]
         )

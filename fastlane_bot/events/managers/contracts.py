@@ -37,7 +37,11 @@ class ContractsManager(BaseManager):
 
     @staticmethod
     def get_or_create_token_contracts(
-        web3: Web3, erc20_contracts: Dict[str, Contract], address: str
+        web3: Web3,
+        erc20_contracts: Dict[str, Contract],
+        address: str,
+        exchange_name: str = None,
+        tenderly_fork_id: str = None,
     ) -> Contract:
         """
         Get or create the token contracts.
@@ -50,6 +54,10 @@ class ContractsManager(BaseManager):
             The ERC20 contracts.
         address : str
             The address.
+        exchange_name : str, optional
+            The exchange name.
+        tenderly_fork_id : str, optional
+            The tenderly fork id.
 
         Returns
         -------
@@ -57,7 +65,12 @@ class ContractsManager(BaseManager):
             The token contract.
 
         """
-        if address in erc20_contracts:
+        if exchange_name == "bancor_pol" and tenderly_fork_id:
+            w3 = Web3(
+                Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
+            )
+            contract = w3.eth.contract(abi=ERC20_ABI, address=address)
+        elif address in erc20_contracts:
             contract = erc20_contracts[address]
         else:
             contract = web3.eth.contract(address=address, abi=ERC20_ABI)
