@@ -982,6 +982,7 @@ class CarbonBot(CarbonBotBase):
                 ),
                 cids,
                 route_struct,
+                log_dict,
             )
 
         # Log the route_struct
@@ -1020,6 +1021,7 @@ class CarbonBot(CarbonBotBase):
             ),
             cids,
             route_struct,
+            log_dict,
         )
 
     def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
@@ -1320,7 +1322,9 @@ class CarbonBot(CarbonBotBase):
                         # if isinstance(tx_hash[0], AttributeDict):
                         #     f.write(str(tx_hash[0]))
                         # else:
-                        f.write(str(tx_hash))
+                        for record in tx_hash:
+                            f.write("\n")
+                            f.write(str(record))
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
