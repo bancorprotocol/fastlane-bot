@@ -111,7 +111,9 @@ class CarbonV1Pool(Pool):
             order1 = [0, 0, 0, 0]
         return order0, order1
 
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> Dict[str, Any]:
         """
         See base class.
         """

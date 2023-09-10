@@ -276,7 +276,7 @@ class PoolManager(BaseManager):
         assert pool, f"Pool not found in {exchange_name} pools"
 
         if contract:
-            pool_info.update(pool.update_from_contract(contract))
+            pool_info.update(pool.update_from_contract(contract, self.tenderly_fork_id))
 
         self.pool_data.append(pool_info)
         return pool_info

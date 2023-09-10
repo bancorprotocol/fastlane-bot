@@ -9,8 +9,10 @@ from dataclasses import dataclass
 from typing import Dict, Any
 
 import web3
+from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.pools.base import Pool
 from _decimal import Decimal
 
@@ -22,7 +24,8 @@ class BancorPolPool(Pool):
     """
 
     exchange_name: str = "bancor_pol"
-    ONE = 2 ** 48
+    ONE = 2**48
+
     @staticmethod
     def unique_key() -> str:
         """
@@ -81,7 +84,9 @@ class BancorPolPool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> Dict[str, Any]:
         """
         See base class.
 
@@ -91,20 +96,21 @@ class BancorPolPool(Pool):
         tkn0 = self.state["tkn0_address"]
 
         print(f"CONTRACT ADDRESS: {contract.address}, {type(contract)}")
+
         # Use ERC20 token contract to get balance of POL contract
-        tkn0_balance = 0
-        tkn1_balance = 0
+        p0 = 0
+        p1 = 0
+
+        # TODO: handle differently for mainnet
+        tkn_balance = self.get_erc20_tkn_balance(contract, tenderly_fork_id, tkn0)
+
         try:
-            tkn0_balance, tkn1_balance = contract.functions.tokenPrice(
-                self.state["tkn0_address"]
-            ).call()
+            p0, p1 = contract.functions.tokenPrice(self.state["tkn0_address"]).call()
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
 
         # TODO is this the correct direction?
-        token_price = Decimal(tkn0_balance) / Decimal(tkn1_balance)
-
-        tkn0_balance = self.state["tkn0_balance"] if "tkn0_balance" in self.state else 0
+        token_price = Decimal(p0) / Decimal(p1)
 
         params = {
             "fee": "0.000",
@@ -113,8 +119,8 @@ class BancorPolPool(Pool):
             "tkn1_balance": 0,
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
-            "y_0": tkn0_balance,
-            "z_0": tkn0_balance,
+            "y_0": tkn_balance,
+            "z_0": tkn_balance,
             "A_0": 0,
             "B_0": int(str(self.encode_token_price(token_price))),
         }
@@ -123,8 +129,34 @@ class BancorPolPool(Pool):
         return params
 
     @staticmethod
+    def get_erc20_tkn_balance(
+        contract: Contract, tenderly_fork_id: str, tkn0: str
+    ) -> int:
+        """
+        Get the ERC20 token balance of the POL contract
+
+        Parameters
+        ----------
+        contract: Contract
+            The contract object
+        tenderly_fork_id: str
+            The tenderly fork id
+        tkn0: str
+            The token address
+
+        Returns
+        -------
+        int
+            The token balance
+
+        """
+        w3 = Web3(Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"))
+        erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
+        return erc20_contract.functions.balanceOf(contract.address).call()
+
+    @staticmethod
     def bitLength(value):
-        return len(bin(value).lstrip('0b')) if value > 0 else 0
+        return len(bin(value).lstrip("0b")) if value > 0 else 0
 
     def encodeFloat(self, value):
         exponent = self.bitLength(value // self.ONE)
@@ -146,7 +178,9 @@ class BancorPolPool(Pool):
         """
 
         # TODO Initialize and save ERC20 contract in managers/base.py and pass it into this function: erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
-        print(f"erc20 call address = {address}, contract address = {token_contract.address}")
+        print(
+            f"erc20 call address = {address}, contract address = {token_contract.address}"
+        )
         balance = token_contract.caller.balanceOf(address)
         params = {
             "y_0": balance,

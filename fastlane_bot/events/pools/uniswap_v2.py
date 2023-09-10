@@ -55,7 +55,9 @@ class UniswapV2Pool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    def update_from_contract(self, contract: Contract) -> Dict[str, Any]:
+    def update_from_contract(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> Dict[str, Any]:
         """
         See base class.
         """
