@@ -958,7 +958,6 @@ def multicall_every_iteration(
         The number of jobs to run in parallel.
 
     """
-    print(f"MULTICALLING... {current_block}")
     multicallable_pool_rows = [
         list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
         for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES
@@ -1131,16 +1130,13 @@ def get_latest_events(
         ]
     ]
 
-    print(f"len carbon_pol_events: {len(carbon_pol_events)}")
-    print(f"len events: {len(events)}")
 
     events += carbon_pol_events
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
     latest_pol_events = [i for i in latest_events if "token" in i["args"]]
-    print(f"len latest_pol_events: {len(latest_pol_events)}")
-    print(f"pol events: {latest_pol_events}")
+
     mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
 
     # Save the latest events to disk

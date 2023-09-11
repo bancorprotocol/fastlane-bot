@@ -64,8 +64,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ) or self.add_pool_info_from_contract(
             address=addr, event=event, exchange_name=ex_name
         )
-        if ex_name == "bancor_pol":
-            print(f"pool_info: {pool_info}")
 
         if not pool_info:
             return
@@ -218,9 +216,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             tenderly_fork_id=self.tenderly_fork_id,
             exchange_name=pool.state["exchange_name"],
         )
-        print(
-            f"updating ERC20 balance: \nTKN: {token_address}, contract address: {contract.address}"
-        )
         # params = pool.update_erc20_balance(
         #     token_contract=contract, address=pool.state["address"]
         # )
@@ -230,7 +225,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         params = pool.update_from_contract(
             contract=pool_contract, tenderly_fork_id=self.tenderly_fork_id
         )
-        print(f"params= {params}")
         params["last_updated_block"] = current_block
 
         for key, value in params.items():
@@ -284,8 +278,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 rate_limiter = 0
             try:
                 if event:
-                    if "token" in event["args"]:
-                        print(f"update from event: {event}")
                     self.update_from_event(event=event, block_number=block_number)
                 elif address:
                     self.update_from_contract(

@@ -57,15 +57,13 @@ class BancorPolPool(Pool):
         self, event_args: Dict[str, Any], data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-
-        # TODO
+        This updates the pool balance from TokenTraded events.
 
         See base class.
         """
 
         event_type = event_args["event"]
         if event_type in "TradingEnabled":
-            print(f"TradingEnabled state: {self.state}")
             data["tkn0_address"] = event_args["args"]["token"]
             data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
@@ -73,7 +71,7 @@ class BancorPolPool(Pool):
             "TokenTraded"
         ]:
             # TODO: check if this is correct (if tkn0_balance - amount, can be negative if amount > tkn0_balance)
-            data["tkn0_balance"] = event_args["args"]["amount"]
+            data["tkn0_balance"] = self.state["tkn0_balance"] - event_args["args"]["amount"]
 
         for key, value in data.items():
             self.state[key] = value
@@ -92,16 +90,12 @@ class BancorPolPool(Pool):
 
         This only updates the current price, not the balance.
         """
-        print("UPDATE FROM CONTRACT FIRED")
         tkn0 = self.state["tkn0_address"]
-
-        print(f"CONTRACT ADDRESS: {contract.address}, {type(contract)}")
 
         # Use ERC20 token contract to get balance of POL contract
         p0 = 0
         p1 = 0
 
-        # TODO: handle differently for mainnet
         tkn_balance = self.get_erc20_tkn_balance(contract, tenderly_fork_id, tkn0)
 
         try:
@@ -109,7 +103,6 @@ class BancorPolPool(Pool):
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
 
-        # TODO is this the correct direction?
         token_price = Decimal(p1) / Decimal(p0)
 
         params = {
@@ -177,10 +170,6 @@ class BancorPolPool(Pool):
         Uses ERC20 contracts to get the number of tokens held by the POL contract
         """
 
-        # TODO Initialize and save ERC20 contract in managers/base.py and pass it into this function: erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
-        print(
-            f"erc20 call address = {address}, contract address = {token_contract.address}"
-        )
         balance = token_contract.caller.balanceOf(address)
         params = {
             "y_0": balance,
