@@ -8,7 +8,7 @@ Licensed under MIT
 from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
-
+import itertools
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer
@@ -29,7 +29,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         if candidates is None:
             candidates = []
 
-        all_tokens, combos = self.get_combos(self.CCm, self.flashloan_tokens)
+        all_tokens, combos = self.get_combos_pol(self.CCm, self.flashloan_tokens)
         if self.result == self.AO_TOKENS:
             return all_tokens, combos
 
@@ -179,3 +179,35 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
             curve for curve in curve_combo if curve.cid not in wrong_direction_cids
         ]
         return new_curves
+
+    def get_combos_pol(self,
+        CCm: CPCContainer, flashloan_tokens: List[str]
+    ) -> Tuple[List[Any], List[Any]]:
+        """
+        Get combos for pairwise arbitrage specific to Bancor POL
+
+        Parameters
+        ----------
+        CCm : CPCContainer
+            Container for all the curves
+        flashloan_tokens : list
+            List of flashloan tokens
+
+        Returns
+        -------
+        all_tokens : list
+            List of all tokens
+
+        """
+
+        bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
+        bancor_pol_tkns = [tkn for tkn in bancor_pol_tkns if tkn not in ["WETH-6Cc2", "ETH-EEeE"]]
+
+        combos = [
+            (tkn0, tkn1)
+            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, ["WETH-6Cc2", "ETH-EEeE"])
+            # tkn1 is always the token being flash loaned
+            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
+            if tkn0 != tkn1
+        ]
+        return bancor_pol_tkns, combos
