@@ -224,8 +224,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
         # params = pool.update_erc20_balance(
         #     token_contract=contract, address=pool.state["address"]
         # )
+        pool_contract = self.pool_contracts[pool.state["exchange_name"]].get(
+            pool.state["address"], None
+        )
         params = pool.update_from_contract(
-            contract=contract, tenderly_fork_id=self.tenderly_fork_id
+            contract=pool_contract, tenderly_fork_id=self.tenderly_fork_id
         )
         print(f"params= {params}")
         params["last_updated_block"] = current_block
