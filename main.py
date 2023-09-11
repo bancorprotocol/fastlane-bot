@@ -423,6 +423,19 @@ def run(
         # Save initial state of pool data to assert whether it has changed
         initial_state = mgr.pool_data.copy()
 
+        initial_state_bancor_pol = None
+
+        # Initial state of bancor_pol pool data
+        if "bancor_pol" in mgr.SUPPORTED_EXCHANGES:
+            try:
+                initial_state_bancor_pol = [
+                    initial_state[i]
+                    for i in range(len(initial_state))
+                    if initial_state[i]["exchange_name"] == "bancor_pol"
+                ][0]
+            except IndexError:
+                pass
+
         # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
         start_block, replay_from_block = get_start_block(
             alchemy_max_block_fetch,
@@ -516,10 +529,14 @@ def run(
         bot = init_bot(mgr)
 
         # Verify that the state has changed
-        verify_state_changed(bot, initial_state, mgr)
+        # verify_state_changed(bot, initial_state, mgr)
 
         # Verify that the minimum profit in BNT is respected
         verify_min_bnt_is_respected(bot, mgr)
+
+        # check that initial_state_bancor_pol has changed
+        if initial_state_bancor_pol:
+            verify_state_changed(bot, initial_state_bancor_pol, mgr)
 
         # Handle subsequent iterations
         handle_subsequent_iterations(

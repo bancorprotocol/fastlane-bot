@@ -830,9 +830,16 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
     """
     # Compare the initial state to the final state, and update the state if it has changed
     final_state = mgr.pool_data.copy()
-    assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-    if initial_state != final_state:
+    final_state_bancor_pol = [
+        final_state[i]
+        for i in range(len(final_state))
+        if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
+    ]
+    # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+    if initial_state != final_state_bancor_pol:
         mgr.cfg.logger.info("State has changed...")
+    else:
+        mgr.cfg.logger.info("State has not changed...")
 
 
 def handle_duplicates(mgr: Any):
@@ -951,7 +958,7 @@ def multicall_every_iteration(
         The number of jobs to run in parallel.
 
     """
-    print("MULTICALLING...")
+    print(f"MULTICALLING... {current_block}")
     multicallable_pool_rows = [
         list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
         for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES

@@ -221,11 +221,14 @@ class Manager(PoolManager, EventManager, ContractsManager):
         print(
             f"updating ERC20 balance: \nTKN: {token_address}, contract address: {contract.address}"
         )
-        params = pool.update_erc20_balance(
-            token_contract=contract, address=pool.state["address"]
+        # params = pool.update_erc20_balance(
+        #     token_contract=contract, address=pool.state["address"]
+        # )
+        params = pool.update_from_contract(
+            contract=contract, tenderly_fork_id=self.tenderly_fork_id
         )
         print(f"params= {params}")
-        params["current_block"] = current_block
+        params["last_updated_block"] = current_block
 
         for key, value in params.items():
             pool_info[key] = value

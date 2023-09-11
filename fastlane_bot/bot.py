@@ -1324,6 +1324,7 @@ class CarbonBot(CarbonBotBase):
                         # else:
                         for record in tx_hash:
                             f.write("\n")
+                            f.write("\n")
                             f.write(str(record))
 
         except self.NoArbAvailable as e:
