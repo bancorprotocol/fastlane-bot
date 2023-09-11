@@ -110,7 +110,7 @@ class BancorPolPool(Pool):
             print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
 
         # TODO is this the correct direction?
-        token_price = Decimal(p0) / Decimal(p1)
+        token_price = Decimal(p1) / Decimal(p0)
 
         params = {
             "fee": "0.000",
