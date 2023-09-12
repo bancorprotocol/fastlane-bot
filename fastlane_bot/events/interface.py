@@ -174,8 +174,8 @@ class QueryInterface:
             "uniswap_v2",
             "bancor_v2",
             "bancor_v3",
-            "carbon_v1",
             "bancor_pol",
+            "carbon_v1",
         ]
         keys = [
             "liquidity",
