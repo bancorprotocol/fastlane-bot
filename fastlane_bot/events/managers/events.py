@@ -5,10 +5,10 @@ Contains the events manager module for handling event related functionality of d
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import Dict, Any, List, Type, Tuple
+from typing import List, Type
 
-from web3.contract import Contract
 from brownie.network.contract import Contract as BrownieContract
+from web3.contract import Contract
 
 from fastlane_bot.events.managers.base import BaseManager
 
@@ -28,6 +28,6 @@ class EventManager(BaseManager):
             event
             for exchange in self.exchanges.values()
             for event in exchange.get_events(
-                self.event_contracts[exchange.exchange_name]
+                self.event_contracts[exchange.exchange_name], self.tenderly_fork_id
             )
         ]

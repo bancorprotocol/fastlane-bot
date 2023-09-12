@@ -67,7 +67,9 @@ class Exchange(ABC):
         pass
 
     @abstractmethod
-    def get_events(self, contract: Contract) -> List[Type[Contract]]:
+    def get_events(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> List[Type[Contract]]:
         """
         Get the events of the exchange
 
@@ -75,6 +77,8 @@ class Exchange(ABC):
         ----------
         contract : Contract
             The contract object
+        tenderly_fork_id : str
+            The tenderly fork id
 
         Returns
         -------

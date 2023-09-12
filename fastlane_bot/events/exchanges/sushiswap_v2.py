@@ -29,7 +29,9 @@ class SushiswapV2(Exchange):
     def get_abi(self):
         return SUSHISWAP_POOLS_ABI
 
-    def get_events(self, contract: Contract) -> List[Type[Contract]]:
+    def get_events(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> List[Type[Contract]]:
         return [contract.events.Sync]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:

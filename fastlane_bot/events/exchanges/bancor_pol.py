@@ -14,6 +14,7 @@ from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 from fastlane_bot import Config
+from fastlane_bot.tools.cpc import T
 
 
 @dataclass
@@ -24,7 +25,7 @@ class BancorPol(Exchange):
 
     exchange_name: str = "bancor_pol"
     BNT_ADDRESS: str = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-    ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    ETH_ADDRESS: str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["tkn0_address"]] = pool
@@ -32,16 +33,17 @@ class BancorPol(Exchange):
     def get_abi(self):
         return BANCOR_POL_ABI
 
-    def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        # TODO: uncomment when POL contract added to mainnet
-        # return [contract.events.TokenTraded, contract.events.TradingEnabled]
+    def get_events(
+        self, contract: Contract, tenderly_fork_id: str = None
+    ) -> List[Type[Contract]]:
+        if not tenderly_fork_id:
+            return [contract.events.TokenTraded, contract.events.TradingEnabled]
         return []
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        # TODO CHECK IF THIS IS CORRECT EVENT FORMAT
         return event["args"]["token"]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
@@ -67,8 +69,6 @@ class BancorPol(Exchange):
             The config.
         func : Callable
             The function to call.
-        carbon_controller : BrownieContract
-            The carbon controller contract.
 
         Returns
         -------
@@ -76,23 +76,17 @@ class BancorPol(Exchange):
             The pool info.
 
         """
-        cid = self.exchange_name + "_" + token
+        cid = f"{self.exchange_name}_{token}"
         tkn0_address = cfg.w3.toChecksumAddress(token)
         tkn1_address = cfg.w3.toChecksumAddress(cfg.ETH_ADDRESS)
 
         return func(
             address=cfg.BANCOR_POL_ADDRESS,
             exchange_name="bancor_pol",
-            fee=f"0",
+            fee="0",
             fee_float=0,
             tkn0_address=tkn0_address,
             tkn1_address=tkn1_address,
             cid=cid,
-            # other_args=dict(
-            #     y_0=0,
-            #     z_0=0,
-            #     A_0=0,
-            #     B_0=0,
-            # ),
             block_number=block_number,
         )

@@ -12,6 +12,7 @@ import web3
 from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot import Config
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.pools.base import Pool
 from _decimal import Decimal
@@ -49,7 +50,6 @@ class BancorPolPool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        # TODO CHECK THIS WORKS
         event_args = event["args"]
         return "token" in event_args and "token0" not in event_args
 
@@ -65,13 +65,15 @@ class BancorPolPool(Pool):
         event_type = event_args["event"]
         if event_type in "TradingEnabled":
             data["tkn0_address"] = event_args["args"]["token"]
-            data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+            data["tkn1_address"] = Config.ETH_ADDRESS
 
         if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
             "TokenTraded"
         ]:
             # TODO: check if this is correct (if tkn0_balance - amount, can be negative if amount > tkn0_balance)
-            data["tkn0_balance"] = self.state["tkn0_balance"] - event_args["args"]["amount"]
+            data["tkn0_balance"] = (
+                self.state["tkn0_balance"] - event_args["args"]["amount"]
+            )
 
         for key, value in data.items():
             self.state[key] = value
@@ -83,25 +85,21 @@ class BancorPolPool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None
+        self, contract: Contract, tenderly_fork_id: str = None, cfg: Config = None
     ) -> Dict[str, Any]:
         """
         See base class.
-
-        This only updates the current price, not the balance.
         """
         tkn0 = self.state["tkn0_address"]
 
         # Use ERC20 token contract to get balance of POL contract
-        p0 = 0
-        p1 = 0
-
+        p0 = p1 = 0
         tkn_balance = self.get_erc20_tkn_balance(contract, tenderly_fork_id, tkn0)
 
         try:
-            p0, p1 = contract.functions.tokenPrice(self.state["tkn0_address"]).call()
+            p0, p1 = contract.functions.tokenPrice(tkn0).call()
         except web3.exceptions.BadFunctionCallOutput:
-            print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
+            cfg.logger.warning(f"BadFunctionCallOutput: {tkn0}")
 
         token_price = Decimal(p1) / Decimal(p0)
 
@@ -123,7 +121,7 @@ class BancorPolPool(Pool):
 
     @staticmethod
     def get_erc20_tkn_balance(
-        contract: Contract, tenderly_fork_id: str, tkn0: str
+        contract: Contract, tenderly_fork_id: str, tkn0: str, cfg: Config = None
     ) -> int:
         """
         Get the ERC20 token balance of the POL contract
@@ -136,6 +134,8 @@ class BancorPolPool(Pool):
             The tenderly fork id
         tkn0: str
             The token address
+        cfg: Config
+            The config object
 
         Returns
         -------
@@ -143,37 +143,108 @@ class BancorPolPool(Pool):
             The token balance
 
         """
-        w3 = Web3(Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"))
-        erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
+        if tenderly_fork_id:
+            w3 = Web3(
+                Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
+            )
+            erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
+        else:
+            erc20_contract = cfg.w3.eth.contract(abi=ERC20_ABI, address=tkn0)
         return erc20_contract.functions.balanceOf(contract.address).call()
 
     @staticmethod
-    def bitLength(value):
+    def bit_length(value: int) -> int:
+        """
+        Get the bit length of a value
+
+        Parameters
+        ----------
+        value: int
+            The value
+
+        Returns
+        -------
+        int
+            The bit length
+
+        """
         return len(bin(value).lstrip("0b")) if value > 0 else 0
 
-    def encodeFloat(self, value):
-        exponent = self.bitLength(value // self.ONE)
+    def encode_float(self, value: int) -> int:
+        """
+        Encode the float value
+
+        Parameters
+        ----------
+        value: int
+            The float value
+
+        Returns
+        -------
+        int
+            The encoded float value
+
+        """
+        exponent = self.bit_length(value // self.ONE)
         mantissa = value >> exponent
         return mantissa | (exponent * self.ONE)
 
-    def encodeRate(self, value):
+    def encode_rate(self, value: Decimal) -> int:
+        """
+        Encode the rate
+
+        Parameters
+        ----------
+        value: Decimal
+            The rate
+
+        Returns
+        -------
+        int
+            The encoded rate
+
+        """
         data = int(value.sqrt() * self.ONE)
-        length = self.bitLength(data // self.ONE)
+        length = self.bit_length(data // self.ONE)
         return (data >> length) << length
 
-    def encode_token_price(self, price):
-        return self.encodeFloat(self.encodeRate((price)))
-
-    def update_erc20_balance(self, token_contract, address) -> dict:
+    def encode_token_price(self, price: Decimal) -> int:
         """
-        returns: the current balance held by the POL contract
-        Uses ERC20 contracts to get the number of tokens held by the POL contract
+        Encode the token price
+
+        Parameters
+        ----------
+        price: Decimal
+            The token price
+
+        Returns
+        -------
+        int
+            The encoded token price
+
+        """
+        return self.encode_float(self.encode_rate(price))
+
+    @staticmethod
+    def update_erc20_balance(token_contract: Contract, address: str) -> Dict[str, Any]:
+        """
+        Update the ERC20 token balance of the POL contract
+
+        Parameters
+        ----------
+        token_contract: Contract
+            The contract object
+        address: str
+            The token address
+
+        Returns
+        -------
+        Dict[str, Any]
+            The updated pool data.
         """
 
         balance = token_contract.caller.balanceOf(address)
-        params = {
+        return {
             "y_0": balance,
             "z_0": balance,
         }
-
-        return params

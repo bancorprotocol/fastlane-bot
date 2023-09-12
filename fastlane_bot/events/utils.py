@@ -1130,7 +1130,6 @@ def get_latest_events(
         ]
     ]
 
-
     events += carbon_pol_events
 
     # Filter out the latest events per pool, save them to disk, and update the pools
@@ -1325,8 +1324,6 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     # Create the provider you can use throughout the rest of your project
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{fork_id}")
 
-    print(f"Forking from block_number: {block_number}, for fork_id: {fork_id}")
-
     return provider.endpoint_uri, block_number
 
 
@@ -1372,7 +1369,6 @@ def set_network_connection_to_tenderly(
     elif not tenderly_uri and tenderly_fork_id:
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
         forked_from_block = None
-        print(f"Using Tenderly fork id: {tenderly_fork_id} at {tenderly_uri}")
 
     if mgr.cfg.connection.network.is_connected:
         with contextlib.suppress(Exception):
