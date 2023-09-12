@@ -2,9 +2,18 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.22...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.23...HEAD)
 
+- Bug where a deleted carbon strategy event breaks the main.py loop. [\#114](https://github.com/bancorprotocol/fastlane-bot/issues/114)
 - Bancor V2 bug when exchange not included, or address not found [\#110](https://github.com/bancorprotocol/fastlane-bot/issues/110)
+- Fix for strategy deleted event [\#120](https://github.com/bancorprotocol/fastlane-bot/pull/120) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Implement Replay Mode to Recreate Historical Ethereum Scenarios Using Tenderly Forks [\#61](https://github.com/bancorprotocol/fastlane-bot/issues/61)
+
+## [v2.7.23](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.23) (2023-09-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.22...v2.7.23)
+
 - Deleted strategy breaks Carbon initial multicall [\#107](https://github.com/bancorprotocol/fastlane-bot/issues/107)
 - 110 bancor v2 bug when exchange not included or address not found [\#111](https://github.com/bancorprotocol/fastlane-bot/pull/111) ([mikewcasale](https://github.com/mikewcasale))
 
