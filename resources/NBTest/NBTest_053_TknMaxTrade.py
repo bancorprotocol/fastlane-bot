@@ -112,16 +112,16 @@ customInt=3000,
 customData="0x")
 
 instructions = [ti1, ti2]
-instructions2 = [ti3, ti4, ti5]
+instructions2 = [asdict(ti3), asdict(ti4), asdict(ti5)]
  
 max_trade_route_struct = maximize_last_trade_per_tkn(instructions)
 max_trade_route_struct2 = maximize_last_trade_per_tkn(instructions2)
 
 assert max_trade_route_struct[0].sourceAmount == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct[0].sourceAmount}"
 assert max_trade_route_struct[1].sourceAmount == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct[1].sourceAmount}"
-assert max_trade_route_struct2[0].sourceAmount == 62211456000000000000, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[0].sourceAmount}"
-assert max_trade_route_struct2[1].sourceAmount == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[1].sourceAmount}"
-assert max_trade_route_struct2[2].sourceAmount == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[2].sourceAmount}"
+assert max_trade_route_struct2[0]["sourceAmount"] == 62211456000000000000, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[0]['sourceAmount']}"
+assert max_trade_route_struct2[1]["sourceAmount"] == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[1]['sourceAmount']}"
+assert max_trade_route_struct2[2]["sourceAmount"] == 0, f"[NBTest_053] sourceAmount expected 0, actual: {max_trade_route_struct2[2]['sourceAmount']}"
 
 # -
 

@@ -70,7 +70,7 @@ class TxRouteHandlerBase:
     __DATE__=__DATE__
 
 
-def maximize_last_trade_per_tkn(route_struct: List[RouteStruct]) -> List[RouteStruct]:
+def maximize_last_trade_per_tkn(route_struct: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
 
@@ -84,11 +84,18 @@ def maximize_last_trade_per_tkn(route_struct: List[RouteStruct]) -> List[RouteSt
     tkns_traded = []
     for j, trade in enumerate(reversed(route_struct)):
         idx = len(route_struct) - 1 - j
-        if trade.sourceToken in tkns_traded:
-            continue
-        else:
-            route_struct[idx].sourceAmount = 0
-            tkns_traded.append(trade.sourceToken)
+        if type(trade) == dict:
+            if trade["sourceToken"] in tkns_traded:
+                continue
+            else:
+                route_struct[idx]["sourceAmount"] = 0
+                tkns_traded.append(trade["sourceToken"])
+        elif type(trade) == RouteStruct:
+            if trade.sourceToken in tkns_traded:
+                continue
+            else:
+                route_struct[idx].sourceAmount = 0
+                tkns_traded.append(trade.sourceToken)
 
     return route_struct
 
