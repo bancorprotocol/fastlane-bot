@@ -183,8 +183,8 @@ class QueryInterface:
             "tkn0_balance",
             "tkn0_balance",
             "tkn0_balance",
-            "tkn0_balance",
-            "",
+            "y_0",
+            "y_0",
         ]
 
         self.state = [
