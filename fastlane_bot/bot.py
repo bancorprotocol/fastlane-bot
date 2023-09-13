@@ -957,7 +957,7 @@ class CarbonBot(CarbonBotBase):
                 encoded_trade_instructions, deadline
             )
         ]
-        route_struct = maximize_last_trade_per_tkn
+        route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 
