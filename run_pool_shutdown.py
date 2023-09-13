@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-This is the main file for configuring the bot and running the fastlane bot.
+Runs the fastlane bot in pool shutdown mode.
 
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
@@ -20,45 +20,25 @@ try:
 except:
     pass
 
-import time
-from typing import List
-
 import click
 from dotenv import load_dotenv
 
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.utils import (
-    add_initial_pool_data,
     get_static_data,
     handle_exchanges,
     handle_target_tokens,
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    update_pools_from_events,
-    write_pool_data_to_disk,
-    init_bot,
-    get_cached_events,
-    handle_subsequent_iterations,
-    verify_state_changed,
-    handle_duplicates,
-    handle_initial_iteration,
-    get_latest_events,
-    get_start_block,
-    set_network_to_mainnet_if_replay,
-    set_network_to_tenderly_if_replay,
-    verify_min_bnt_is_respected,
     handle_target_token_addresses,
-    handle_replay_from_block,
 )
-from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
 
 load_dotenv()
 
 
 @click.command()
-
 @click.option("--config", default=None, type=str, help="See config in config/*")
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
@@ -66,7 +46,6 @@ load_dotenv()
     default=12,
     help="Polling interval in seconds",
 )
-
 @click.option(
     "--logging_path",
     default="",
@@ -78,39 +57,28 @@ load_dotenv()
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
 )
-
 def main(
-        logging_path: str,
-        loglevel: str,
-        polling_interval: int,
-        config: str,
-        n_jobs: int,
-        cache_latest_only: bool = False,
-        backdate_pools: bool = False,
-        arb_mode: str = "multi",
-        flashloan_tokens: str = "ETH",
-        exchanges: str = "bancor_v3",
-        alchemy_max_block_fetch: int= 20,
-        static_pool_data_filename: str = "static_pool_data",
-        reorg_delay: int = 0,
-        static_pool_data_sample_sz: str = "max",
-        use_cached_events: bool = False,
-        run_data_validator: bool = False,
-        randomizer: int = 0,
-        limit_bancor3_flashloan_tokens: bool = False,
-        default_min_profit_bnt: int = 0,
-        timeout: int = 0,
-        target_tokens: str = None,
-        replay_from_block: int = None,
+    logging_path: str,
+    loglevel: str,
+    polling_interval: int,
+    config: str,
+    n_jobs: int,
+    flashloan_tokens: str = "ETH",
+    exchanges: str = "bancor_v3",
+    alchemy_max_block_fetch: int = 20,
+    static_pool_data_filename: str = "static_pool_data",
+    static_pool_data_sample_sz: str = "max",
+    limit_bancor3_flashloan_tokens: bool = False,
+    default_min_profit_bnt: int = 0,
+    timeout: int = 0,
+    target_tokens: str = None,
+    replay_from_block: int = None,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
     adds initial pools to the Base and then calls the `run` function.
 
     Args:
-        cache_latest_only (bool): Whether to cache only the latest events or not.
-        backdate_pools (bool): Whether to backdate pools or not. Set to False for quicker testing runs.
-        arb_mode (str): The arbitrage mode to use.
         flashloan_tokens (str): Comma seperated list of tokens that the bot can use for flash loans.
         config (str): The name of the configuration to use.
         n_jobs (int): The number of jobs to run in parallel.
@@ -118,13 +86,9 @@ def main(
         polling_interval (int): The time interval at which the bot polls for new events.
         alchemy_max_block_fetch (int): The maximum number of blocks to fetch in a single request.
         static_pool_data_filename (str): The filename of the static pool data to read from.
-        reorg_delay (int): The number of blocks to wait to avoid reorgs.
         logging_path (str): The logging path.
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
-        use_cached_events (bool): Whether to use cached events or not.
-        run_data_validator (bool): Whether to run the data validator or not.
-        randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
         default_min_profit_bnt (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
