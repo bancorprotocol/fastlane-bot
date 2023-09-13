@@ -140,7 +140,8 @@ class CarbonV1(Exchange):
         id : str (alias for cid)
             The id of the strategy to delete
         """
-        self.pools.pop(id)
+        if id in self.pools:
+            self.pools.pop(id)
 
     def save_strategy(
         self,
