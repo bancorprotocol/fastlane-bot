@@ -27,7 +27,7 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.modes.pool_shutdown import AutomaticPoolShutdown
+from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 from joblib import Parallel, delayed
 import pytest
 import math
@@ -140,16 +140,9 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 
 
-arb_mode = "pool_shutdown"
 
-if arb_mode == "pool_shutdown":
-    pool_shutdown = AutomaticPoolShutdown(mgr=mgr)
-
-# +
-## Test Arb Mode
+pool_shutdown = AutomaticPoolShutdown(mgr=mgr, polling_interval=12)
 # -
-
-assert pool_shutdown.arb_mode == arb_mode, f"[NB054 Automatic Shutdown] wrong arb mode, expected {pool_shutdown.arb_mode}, received {arb_mode}"
 
 # ## Test White List
 

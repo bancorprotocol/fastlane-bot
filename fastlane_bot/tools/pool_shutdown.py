@@ -17,8 +17,9 @@ class AutomaticPoolShutdown:
     poll_time: int = 12
     arb_mode = "pool_shutdown"
 
-    def __init__(self, mgr: Manager):
+    def __init__(self, mgr: Manager, polling_interval: int):
         self.mgr = mgr
+        self.poll_time = polling_interval
         self.__post_init__()
 
     def __post_init__(self):

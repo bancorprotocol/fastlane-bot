@@ -5,7 +5,6 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from fastlane_bot.modes.pool_shutdown import AutomaticPoolShutdown
 
 try:
     env_var = "TENDERLY_FORK_ID"
@@ -82,7 +81,7 @@ load_dotenv()
     default="multi",
     help="See arb_mode in bot.py",
     type=click.Choice(
-        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop", "pool_shutdown"]
+        ["single", "multi", "triangle", "multi_triangle", "bancor_v3", "b3_two_hop"]
     ),
 )
 @click.option(
@@ -329,9 +328,6 @@ def main(
         target_tokens=target_token_addresses,
     )
 
-    if arb_mode == "pool_shutdown":
-        pool_shutdown = AutomaticPoolShutdown(mgr=mgr)
-        pool_shutdown.main_loop()
 
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
