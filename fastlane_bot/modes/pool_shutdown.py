@@ -44,7 +44,7 @@ class AutomaticPoolShutdown:
         3: if a token is found in surplus, submits a TX to shut the pool down
 
         """
-        self.mgr.cfg.logger.info(f"Running AutomaticPoolShutdown main sequence.")
+        self.mgr.cfg.logger.info(f"\n\nRunning AutomaticPoolShutdown main sequence.")
         self.parse_active_pools()
         self.mgr.cfg.logger.info(f"Pool data collected, checking vault token balances and comparing.")
         tkn_to_shutdown = self.iterate_active_pools()
