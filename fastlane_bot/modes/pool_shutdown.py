@@ -15,6 +15,7 @@ class AutomaticPoolShutdown:
     shutdown_whitelist: [] = None
     active_pools = {}
     poll_time: int = 12
+    arb_mode = "pool_shutdown"
 
     def __init__(self, mgr: Manager):
         self.mgr = mgr
@@ -67,14 +68,9 @@ class AutomaticPoolShutdown:
         with self.mgr.multicall(address=self.mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
             for tkn in self.shutdown_whitelist:
                 pool_token, trading_fee_PPM, trading_enabled, depositing_enabled, average_rate, tkn_pool_liquidity = self.pool_collection_contract.functions.poolData(tkn).call()
-                #if trading_enabled:
-                tkn_results = [x for x in tkn_pool_liquidity]  # contains bntTradingLiquidity, baseTokenTradingLiquidity,stakedBalance,
+                tkn_results = [x for x in tkn_pool_liquidity]
                 bnt_trading_liquidity, tkn_trading_liquidity, staked_balance = tkn_results
-
                 self.active_pools[tkn] = staked_balance
-                # else:
-                #     if tkn in self.active_pools:
-                #         del self.active_pools[tkn]
 
     def iterate_active_pools(self):
         """
