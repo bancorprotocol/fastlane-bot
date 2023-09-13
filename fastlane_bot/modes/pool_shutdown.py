@@ -1,10 +1,11 @@
 import time
+from typing import Any
 
 from web3 import Web3
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.helpers.txhelpers import TxHelpers
 
-from fastlane_bot.data.abi import BANCOR_NETWORK_ABI, BANCOR_V3_NETWORK_SETTINGS, BANCOR_V3_POOL_COLLECTION_ABI
+from fastlane_bot.data.abi import BANCOR_V3_NETWORK_ABI, BANCOR_V3_NETWORK_SETTINGS, BANCOR_V3_POOL_COLLECTION_ABI
 
 class AutomaticPoolShutdown:
     """
@@ -21,7 +22,7 @@ class AutomaticPoolShutdown:
 
     def __post_init__(self):
         self.tx_helpers = TxHelpers(ConfigObj=self.mgr.cfg)
-        self.bancor_network_contract = self.mgr.web3.eth.contract(address=self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_NETWORK_ADDRESS), abi=BANCOR_NETWORK_ABI)
+        self.bancor_network_contract = self.mgr.web3.eth.contract(address=self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_NETWORK_ADDRESS), abi=BANCOR_V3_NETWORK_ABI)
         self.bancor_settings_contract = self.mgr.web3.eth.contract(address=self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_NETWORK_SETTINGS), abi=BANCOR_V3_NETWORK_SETTINGS)
         self.pool_collection_contract = self.mgr.web3.eth.contract(address=self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_POOL_COLLECTOR_ADDRESS), abi=BANCOR_V3_POOL_COLLECTION_ABI)
         self.get_whitelist()
@@ -53,6 +54,10 @@ class AutomaticPoolShutdown:
             self.mgr.cfg.logger.info(f"No pools found to shut down. Waiting and restarting sequence.")
         time.sleep(self.poll_time)
     def get_whitelist(self):
+        """
+        This function gets the token whitelist from the Bancor V3 Network Settings contract.
+
+        """
         self.shutdown_whitelist = self.bancor_settings_contract.caller.tokenWhitelistForPOL()
 
     def parse_active_pools(self):
@@ -62,14 +67,14 @@ class AutomaticPoolShutdown:
         with self.mgr.multicall(address=self.mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
             for tkn in self.shutdown_whitelist:
                 pool_token, trading_fee_PPM, trading_enabled, depositing_enabled, average_rate, tkn_pool_liquidity = self.pool_collection_contract.functions.poolData(tkn).call()
-                if trading_enabled:
-                    tkn_results = [x for x in tkn_pool_liquidity]  # contains bntTradingLiquidity, baseTokenTradingLiquidity,stakedBalance,
-                    bnt_trading_liquidity, tkn_trading_liquidity, staked_balance = tkn_results
+                #if trading_enabled:
+                tkn_results = [x for x in tkn_pool_liquidity]  # contains bntTradingLiquidity, baseTokenTradingLiquidity,stakedBalance,
+                bnt_trading_liquidity, tkn_trading_liquidity, staked_balance = tkn_results
 
-                    self.active_pools[tkn] = staked_balance
-                else:
-                    if tkn in self.active_pools:
-                        del self.active_pools[tkn]
+                self.active_pools[tkn] = staked_balance
+                # else:
+                #     if tkn in self.active_pools:
+                #         del self.active_pools[tkn]
 
     def iterate_active_pools(self):
         """
@@ -77,10 +82,13 @@ class AutomaticPoolShutdown:
         """
         for tkn in self.active_pools.keys():
             if tkn == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-                continue
-            print(f"vault balance = {self.get_vault_balance_of_tkn(tkn)}, staked balance = {self.active_pools[tkn]}")
-            if self.get_vault_balance_of_tkn(tkn) > self.active_pools[tkn]:
-                return tkn
+                eth_balance = self.mgr.web3.eth.get_balance(self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_VAULT))
+                if eth_balance > 0 and eth_balance > self.active_pools[tkn]:
+                    return tkn
+            else:
+                tkn_balance = self.get_vault_balance_of_tkn(tkn)
+                if tkn_balance > 0 and tkn_balance > self.active_pools[tkn]:
+                    return tkn
         return None
 
 
@@ -127,11 +135,12 @@ class AutomaticPoolShutdown:
         returns:
             Returns a transaction ready to be submitted
         """
+
         try:
             return self.bancor_network_contract.functions.withdrawPOL(self.mgr.web3.toChecksumAddress(tkn)).build_transaction(self.tx_helpers.build_tx(
-                        base_gas_price=gas_price, max_priority_fee=max_priority_gas, nonce=nonce
+                            base_gas_price=gas_price, max_priority_fee=max_priority_gas, nonce=nonce
+                        )
                     )
-                )
         except Exception as e:
             self.mgr.cfg.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
@@ -152,4 +161,3 @@ class AutomaticPoolShutdown:
                     self.mgr.cfg.logger.debug(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
                     return None
-
