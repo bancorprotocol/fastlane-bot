@@ -189,24 +189,18 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
     def update_from_erc20_balance(
         self,
-        token_address: str = None,
         current_block: int = None,
         pool_info: Optional[Dict[str, Any]] = None,
-        w3_tenderly: Web3 = None,
-    ) -> Dict[str, Any]:
+    ):
         """
         Update the state from the contract (instead of events).
 
         Parameters
         ----------
-        token_address : str, optional
-            The token address, by default None.
         current_block : int, optional
             The block number, by default None.
         pool_info : Optional[Dict[str, Any]], optional
             The pool info, by default None.
-        w3_tenderly : Web3, optional
-            The tenderly web3 object, by default None.
 
         Returns
         -------
@@ -221,7 +215,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         params = pool.update_from_contract(
             contract=pool_contract,
             tenderly_fork_id=self.tenderly_fork_id,
-            w3_tenderly=w3_tenderly,
+            w3_tenderly=self.w3_tenderly,
         )
         params["last_updated_block"] = current_block
 
@@ -239,7 +233,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         contract: Contract = None,
         limiter: bool = True,
         block_number: int = None,
-        w3_tenderly: Web3 = None,
     ) -> None:
         """
         Update the state.
@@ -260,8 +253,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             Whether to use the rate limiter, by default True.
         block_number : int, optional
             The block number, by default None.
-        w3_tenderly : Web3, optional
-            The tenderly web3 object, by default None.
 
 
         Raises
@@ -288,7 +279,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     self.update_from_erc20_balance(
                         pool_info=pool_info,
                         current_block=block_number,
-                        w3_tenderly=w3_tenderly,
                     )
                 elif pool_info:
                     self.update_from_pool_info(

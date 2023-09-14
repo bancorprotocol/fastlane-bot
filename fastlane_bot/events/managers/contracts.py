@@ -28,9 +28,7 @@ class ContractsManager(BaseManager):
                 raise NotImplementedError(
                     f"Exchange {exchange_name} not supported for tenderly"
                 )
-            address = self.cfg.BANCOR_POL_ADDRESS
-            print(f"Using address {address} for {exchange_name}")
-            if address:
+            if address := self.cfg.BANCOR_POL_ADDRESS:
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
