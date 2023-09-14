@@ -505,7 +505,6 @@ def run(
                     current_block,
                     mgr,
                     n_jobs,
-                    reorg_delay,
                     start_block,
                     cache_latest_only,
                     logging_path,

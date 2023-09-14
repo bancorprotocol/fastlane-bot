@@ -446,7 +446,7 @@ def get_loglevel(loglevel: str) -> Any:
 
 
 def get_event_filters(
-    n_jobs: int, mgr: Any, start_block: int, current_block: int, reorg_delay: int
+    n_jobs: int, mgr: Any, start_block: int, current_block: int
 ) -> Any:
     """
     Creates event filters for the specified block range.
@@ -461,17 +461,12 @@ def get_event_filters(
         The starting block number of the event filters.
     current_block : int
         The current block number of the event filters.
-    reorg_delay : int
-        The reorg delay.
 
     Returns
     -------
     Any
         A list of event filters.
     """
-    # if reorg_delay == 0:
-    #     current_block = "latest"
-
     return Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
@@ -1017,51 +1012,10 @@ def get_tenderly_pol_events(
     return tenderly_events
 
 
-# def get_erc_20_balances_tenderly(
-#     current_block,
-#     mgr,
-#     n_jobs,
-#     reorg_delay,
-#     start_block,
-#     logging_path,
-#     cache_latest_only,
-#     tenderly_fork_id,
-#     mainnet_uri,
-# ):
-#     # connect to the Tenderly fork
-#     mgr.cfg.logger.info(f"Connecting to Tenderly fork: {tenderly_fork_id}")
-#     tenderly_fork_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
-#
-#     mgr, forked_from_block = set_network_connection_to_tenderly(
-#         mgr=mgr,
-#         use_cached_events=False,
-#         tenderly_uri=tenderly_fork_uri,
-#         forked_from_block=current_block,
-#     )
-#
-#     if mgr.cfg.BANCOR_POL_NAME in mgr.exchanges:
-#         update_pools_from_contracts(
-#             mgr,
-#             n_jobs=n_jobs,
-#             rows_to_update=[
-#                 i
-#                 for i, pool_info in enumerate(mgr.pool_data)
-#                 if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
-#             ],
-#             current_block=current_block,
-#             token_address=True,
-#         )
-#
-#     # Set connection back to mainnet
-#     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
-#     return None
-
-
 def get_latest_events(
     current_block: int,
     mgr: Any,
     n_jobs: int,
-    reorg_delay: int,
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
@@ -1077,8 +1031,6 @@ def get_latest_events(
         The manager object.
     n_jobs : int
         The number of jobs to run in parallel.
-    reorg_delay : int
-        The reorg delay.
     start_block : int
         The starting block number.
     cache_latest_only : bool
@@ -1109,7 +1061,7 @@ def get_latest_events(
             complex_handler(event)
             for event in get_all_events(
                 n_jobs,
-                get_event_filters(n_jobs, mgr, start_block, current_block, reorg_delay),
+                get_event_filters(n_jobs, mgr, start_block, current_block),
             )
         ]
     ]
