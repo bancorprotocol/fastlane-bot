@@ -2,9 +2,40 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.21...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.25...HEAD)
+
+- Always submit max amountIn for last trade per-tkn [\#121](https://github.com/bancorprotocol/fastlane-bot/issues/121)
+- Add support for automatic pool shutdown [\#115](https://github.com/bancorprotocol/fastlane-bot/issues/115)
+- Add a function that changes sourceAmount to 0 for the last trade per TKN [\#122](https://github.com/bancorprotocol/fastlane-bot/pull/122) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.25](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.25) (2023-09-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.24...v2.7.25)
+
+- Bug where a deleted carbon strategy event breaks the main.py loop. [\#114](https://github.com/bancorprotocol/fastlane-bot/issues/114)
+
+- 115 add support for automatic pool shutdown [\#123](https://github.com/bancorprotocol/fastlane-bot/pull/123) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.24](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.24) (2023-09-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.23...v2.7.24)
+
+- Bancor V2 bug when exchange not included, or address not found [\#110](https://github.com/bancorprotocol/fastlane-bot/issues/110)
+- Fix for strategy deleted event [\#120](https://github.com/bancorprotocol/fastlane-bot/pull/120) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Implement Replay Mode to Recreate Historical Ethereum Scenarios Using Tenderly Forks [\#61](https://github.com/bancorprotocol/fastlane-bot/issues/61)
+
+## [v2.7.23](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.23) (2023-09-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.22...v2.7.23)
 
 - Deleted strategy breaks Carbon initial multicall [\#107](https://github.com/bancorprotocol/fastlane-bot/issues/107)
+- 110 bancor v2 bug when exchange not included or address not found [\#111](https://github.com/bancorprotocol/fastlane-bot/pull/111) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.22](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.22) (2023-09-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.21...v2.7.22)
+
 - move strategy deleted event to be with other Carbon events [\#108](https://github.com/bancorprotocol/fastlane-bot/pull/108) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Change default settings to `--backdate_pools=True` for `bancor_v2` support [\#103](https://github.com/bancorprotocol/fastlane-bot/issues/103)

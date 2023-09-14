@@ -85,27 +85,27 @@ class ConfigLogger(ConfigBase):
     def log_path(self):
         """Returns the path to the log file"""
         return self._log_path
-    
+
     @property
     def logger(self):
         return self._logger
-    
+
     def debug(self, *args, **kwargs):
         """calls logger.debug()"""
         return self.logger.debug(*args, **kwargs)
-    
+
     def info(self, *args, **kwargs):
         """calls logger.info()"""
         return self.logger.info(*args, **kwargs)
-    
+
     def warning(self, *args, **kwargs):
         """calls logger.warning()"""
         return self.logger.warning(*args, **kwargs)
-    
+
     def error(self, *args, **kwargs):
         """calls logger.error()"""
         return self.logger.error(*args, **kwargs)
-    
+
     @classmethod
     def new(cls, *, logger=None, loglevel=None, logging_path=None, **kwargs):
         """
@@ -113,20 +113,20 @@ class ConfigLogger(ConfigBase):
         """
         if logger is None:
             logger = S.LOGGER_DEFAULT
-        
+
         if logger == S.LOGGER_DEFAULT:
             return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, logging_path=logging_path, **kwargs)
         else:
             raise ValueError(f"Unknown logger: {logger}")
-        
+
     def __init__(self, loglevel=None, logging_path=None, **kwargs):
         super().__init__(**kwargs)
         #print("[ConfigLogger]", loglevel, self.LOGLEVEL)
         if not loglevel is None:
             assert loglevel in {
-                self.LOGLEVEL_DEBUG, 
-                self.LOGLEVEL_INFO, 
-                self.LOGLEVEL_WARNING, 
+                self.LOGLEVEL_DEBUG,
+                self.LOGLEVEL_INFO,
+                self.LOGLEVEL_WARNING,
                 self.LOGLEVEL_ERROR
             }, f"unknown loglevel {loglevel}"
             self.LOGLEVEL = loglevel
@@ -138,6 +138,6 @@ class _ConfigLoggerDefault(ConfigLogger):
     Fastlane bot config -- logger
     """
     pass
-        
+
 
     
