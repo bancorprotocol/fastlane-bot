@@ -64,7 +64,7 @@ class UniswapV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Any = None
     ) -> Dict[str, Any]:
         """
         See base class.

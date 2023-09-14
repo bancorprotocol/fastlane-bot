@@ -12,7 +12,7 @@ import web3
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import ERC20_ABI
+from fastlane_bot.data.abi import ERC20_ABI, BANCOR_POL_ABI
 from fastlane_bot.events.pools.base import Pool
 from _decimal import Decimal
 
@@ -71,7 +71,9 @@ class BancorPolPool(Pool):
             "TokenTraded"
         ]:
             # TODO: check if this is correct (if tkn0_balance - amount, can be negative if amount > tkn0_balance)
-            data["tkn0_balance"] = self.state["tkn0_balance"] - event_args["args"]["amount"]
+            data["tkn0_balance"] = (
+                self.state["tkn0_balance"] - event_args["args"]["amount"]
+            )
 
         for key, value in data.items():
             self.state[key] = value
@@ -83,7 +85,7 @@ class BancorPolPool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.
@@ -96,12 +98,17 @@ class BancorPolPool(Pool):
         p0 = 0
         p1 = 0
 
-        tkn_balance = self.get_erc20_tkn_balance(contract, tenderly_fork_id, tkn0)
+        tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly)
+
+        if tenderly_fork_id:
+            contract = w3_tenderly.eth.contract(
+                abi=BANCOR_POL_ABI, address=contract.address
+            )
 
         try:
-            p0, p1 = contract.functions.tokenPrice(self.state["tkn0_address"]).call()
+            p0, p1 = contract.functions.tokenPrice(tkn0).call()
         except web3.exceptions.BadFunctionCallOutput:
-            print(f"BadFunctionCallOutput: {self.state['tkn0_address']}")
+            print(f"BadFunctionCallOutput: {tkn0}")
 
         token_price = Decimal(p1) / Decimal(p0)
 
@@ -123,7 +130,7 @@ class BancorPolPool(Pool):
 
     @staticmethod
     def get_erc20_tkn_balance(
-        contract: Contract, tenderly_fork_id: str, tkn0: str
+        contract: Contract, tkn0: str, w3_tenderly: Web3 = None
     ) -> int:
         """
         Get the ERC20 token balance of the POL contract
@@ -132,10 +139,10 @@ class BancorPolPool(Pool):
         ----------
         contract: Contract
             The contract object
-        tenderly_fork_id: str
-            The tenderly fork id
         tkn0: str
             The token address
+        w3_tenderly: Web3
+            The tenderly web3 object
 
         Returns
         -------
@@ -143,8 +150,7 @@ class BancorPolPool(Pool):
             The token balance
 
         """
-        w3 = Web3(Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"))
-        erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
+        erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
         return erc20_contract.functions.balanceOf(contract.address).call()
 
     @staticmethod

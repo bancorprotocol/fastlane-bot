@@ -120,7 +120,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
         )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(
+            contract, self.tenderly_fork_id, self.w3_tenderly
+        )
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -176,7 +178,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ),
             )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract)
+        params = pool.update_from_contract(
+            contract,
+            tenderly_fork_id=self.tenderly_fork_id,
+            w3_tenderly=self.w3_tenderly,
+        )
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -186,18 +192,21 @@ class Manager(PoolManager, EventManager, ContractsManager):
         token_address: str = None,
         current_block: int = None,
         pool_info: Optional[Dict[str, Any]] = None,
+        w3_tenderly: Web3 = None,
     ) -> Dict[str, Any]:
         """
         Update the state from the contract (instead of events).
 
         Parameters
         ----------
-        contract : Optional[Contract], optional
-            The contract, by default None.
-        pool_info : Optional[Dict[str, Any]], optional
-            The pool info, by default None.
+        token_address : str, optional
+            The token address, by default None.
         current_block : int, optional
             The block number, by default None.
+        pool_info : Optional[Dict[str, Any]], optional
+            The pool info, by default None.
+        w3_tenderly : Web3, optional
+            The tenderly web3 object, by default None.
 
         Returns
         -------
@@ -206,24 +215,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
         """
         pool = self.get_or_init_pool(pool_info)
 
-        if pool.state["exchange_name"] == "bancor_pol":
-            token_address = pool.state["tkn0_address"]
-
-        contract = self.get_or_create_token_contracts(
-            web3=self.web3,
-            erc20_contracts=self.erc20_contracts,
-            address=token_address,
-            tenderly_fork_id=self.tenderly_fork_id,
-            exchange_name=pool.state["exchange_name"],
-        )
-        # params = pool.update_erc20_balance(
-        #     token_contract=contract, address=pool.state["address"]
-        # )
         pool_contract = self.pool_contracts[pool.state["exchange_name"]].get(
             pool.state["address"], None
         )
         params = pool.update_from_contract(
-            contract=pool_contract, tenderly_fork_id=self.tenderly_fork_id
+            contract=pool_contract,
+            tenderly_fork_id=self.tenderly_fork_id,
+            w3_tenderly=w3_tenderly,
         )
         params["last_updated_block"] = current_block
 
@@ -241,6 +239,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         contract: Contract = None,
         limiter: bool = True,
         block_number: int = None,
+        w3_tenderly: Web3 = None,
     ) -> None:
         """
         Update the state.
@@ -261,6 +260,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             Whether to use the rate limiter, by default True.
         block_number : int, optional
             The block number, by default None.
+        w3_tenderly : Web3, optional
+            The tenderly web3 object, by default None.
 
 
         Raises
@@ -285,7 +286,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     )
                 elif token_address:
                     self.update_from_erc20_balance(
-                        pool_info=pool_info, current_block=block_number
+                        pool_info=pool_info,
+                        current_block=block_number,
+                        w3_tenderly=w3_tenderly,
                     )
                 elif pool_info:
                     self.update_from_pool_info(

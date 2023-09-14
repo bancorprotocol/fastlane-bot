@@ -17,6 +17,27 @@ from fastlane_bot.events.managers.base import BaseManager
 
 
 class ContractsManager(BaseManager):
+    def init_tenderly_event_contracts(self):
+        """
+        Initialize the tenderly event contracts.
+        """
+
+        for exchange_name in self.tenderly_event_exchanges:
+            address = None
+            if exchange_name != "bancor_pol":
+                raise NotImplementedError(
+                    f"Exchange {exchange_name} not supported for tenderly"
+                )
+            address = self.cfg.BANCOR_POL_ADDRESS
+            print(f"Using address {address} for {exchange_name}")
+            if address:
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=address,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+
     def init_exchange_contracts(self):
         """
         Initialize the exchange contracts.

@@ -59,6 +59,11 @@ class BaseManager:
     cfg: Config
     pool_data: List[Dict[str, Any]]
     alchemy_max_block_fetch: int
+    tenderly_event_contracts: Dict[str, Contract or Type[Contract]] = field(
+        default_factory=dict
+    )
+    tenderly_event_exchanges: List[str] = field(default_factory=list)
+    w3_tenderly: Web3 = None
     event_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     pool_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
@@ -115,6 +120,7 @@ class BaseManager:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
+        self.init_tenderly_event_contracts()
 
     def set_carbon_v1_fee_pairs(self):
         """
