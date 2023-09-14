@@ -2,11 +2,18 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.24...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.25...HEAD)
+
+- Always submit max amountIn for last trade per-tkn [\#121](https://github.com/bancorprotocol/fastlane-bot/issues/121)
+- Add support for automatic pool shutdown [\#115](https://github.com/bancorprotocol/fastlane-bot/issues/115)
+- Add a function that changes sourceAmount to 0 for the last trade per TKN [\#122](https://github.com/bancorprotocol/fastlane-bot/pull/122) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.25](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.25) (2023-09-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.24...v2.7.25)
 
 - Bug where a deleted carbon strategy event breaks the main.py loop. [\#114](https://github.com/bancorprotocol/fastlane-bot/issues/114)
 
-- Add support for automatic pool shutdown [\#115](https://github.com/bancorprotocol/fastlane-bot/issues/115)
 - 115 add support for automatic pool shutdown [\#123](https://github.com/bancorprotocol/fastlane-bot/pull/123) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.24](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.24) (2023-09-12)
