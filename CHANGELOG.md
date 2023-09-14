@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.23...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.24...HEAD)
 
 - Bug where a deleted carbon strategy event breaks the main.py loop. [\#114](https://github.com/bancorprotocol/fastlane-bot/issues/114)
+
+- Add support for automatic pool shutdown [\#115](https://github.com/bancorprotocol/fastlane-bot/issues/115)
+- 115 add support for automatic pool shutdown [\#123](https://github.com/bancorprotocol/fastlane-bot/pull/123) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.24](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.24) (2023-09-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.23...v2.7.24)
+
 - Bancor V2 bug when exchange not included, or address not found [\#110](https://github.com/bancorprotocol/fastlane-bot/issues/110)
 - Fix for strategy deleted event [\#120](https://github.com/bancorprotocol/fastlane-bot/pull/120) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
