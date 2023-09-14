@@ -12,22 +12,19 @@ import os
 import sys
 import time
 from _decimal import Decimal
-from typing import Any, Union, Dict, Set, List, Tuple, Hashable
+from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
 import brownie
 import pandas as pd
 import requests
-from web3 import Web3
-
-from fastlane_bot.config.connect import EthereumNetwork
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
+from web3 import Web3
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
@@ -701,7 +698,6 @@ def update_pools_from_contracts(
                     limiter=not_multicall,
                     block_number=current_block,
                     token_address=token_address,
-                    w3_tenderly=w3_tenderly,
                 )
 
 
