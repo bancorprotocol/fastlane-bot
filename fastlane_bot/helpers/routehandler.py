@@ -70,7 +70,7 @@ class TxRouteHandlerBase:
     __DATE__=__DATE__
 
 
-def maximize_last_trade_per_tkn(route_struct: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def maximize_last_trade_per_tkn(route_struct):
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
 
