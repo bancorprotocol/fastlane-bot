@@ -25,35 +25,7 @@ import collections as cl
 from sys import float_info
 from hashlib import md5 as digest
 import time
-from .cpcbase import CurveBase
-
-try:
-    dataclass_ = dataclass(frozen=True, kw_only=True)
-except:
-    dataclass_ = dataclass(frozen=True)
-
-
-class AttrDict(dict):
-    """
-    A dictionary that allows for attribute-style access
-
-    see https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-@dataclass_
-class DAttrDict:
-    """attribute-style access to a dictionary with default value"""
-
-    dct: dict = field(default_factory=dict)
-    default: any = None
-
-    def __getattr__(self, name):
-        return self.dct.get(name, self.default)
+from .cpcbase import CurveBase, AttrDict, DAttrDict, dataclass_
 
 
 AD = DAttrDict
