@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.1"
-__DATE__ = "25/Aug/2023"
+__VERSION__ = "3.2"
+__DATE__ = "15/Sep/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -2743,6 +2743,13 @@ class CPCInverter:
     @property
     def p(self):
         return 1 / self.curve.p
+    
+    def P(self, *args, **kwargs):
+        return self.curve.P(*args, **kwargs)
+    
+    @property
+    def fee(self):
+        return self.curve.fee
 
     def p_convention(self):
         """price convention for p (dy/dx)"""
