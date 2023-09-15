@@ -467,10 +467,18 @@ def get_event_filters(
     Any
         A list of event filters.
     """
-    return Parallel(n_jobs=n_jobs, backend="threading")(
+    bancor_pol_events = ["TradingEnabled", "TokenTraded"]
+    by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
+        if event.__name__ not in bancor_pol_events
     )
+    max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
+        delayed(event.createFilter)(fromBlock=0)
+        for event in mgr.events
+        if event.__name__ in bancor_pol_events
+    )
+    return by_block_events + max_num_events
 
 
 def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
@@ -1000,8 +1008,9 @@ def get_tenderly_pol_events(
         f"Connecting to Tenderly fork: {tenderly_fork_id}, current_block: {current_block}, start_block: {start_block}"
     )
     contract = mgr.tenderly_event_contracts["bancor_pol"]
+
     tenderly_events = [
-        event.getLogs(fromBlock=start_block, toBlock=current_block)
+        event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
         for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
     ]
     tenderly_events = [event for event in tenderly_events if len(event) > 0]
