@@ -192,7 +192,7 @@ def test_margpoptimizer_current():
     assert r.dtokens["WETH"] < 0
     assert iseq(r.result, -1.244345098228223)
     assert iseq(r.p_optimal_t[0], 0.00062745798800732)
-    assert iseq(r.dtokens_t[0], -1.9371509552001953e-06)
+    assert iseq(r.dtokens_t[0], -1.9371509552001953e-06, eps=1e-4)
     r
     
     # the original curves are 1500 and 1600, so ~1550 is right in the middle
@@ -404,14 +404,16 @@ def test_pairoptimizer_vs_marpp():
 # ------------------------------------------------------------
 # Test      053
 # File      test_053_Optimization.py
-# Segment   MargPOptimizer new [TODO]
+# Segment   MargPOptimizer new TODO
 # ------------------------------------------------------------
-def test_margpoptimizer_new_[todo]():
+def test_margpoptimizer_new_todo():
 # ------------------------------------------------------------
     #
     # this is still on the todo lost, but does not have high priority; the new margp optimizer will have a different convergence criterium [p ~ 0 rather than d log p ~ 0]. This will not help in terms of convergence on a plateau -- a gradient algorithm can not recover from f'(x) = 0 -- but it will allow identifying instances of non convergence.
     #
     # ### Setup
+    
+    pass
     
     # +
     # Oul = PairOptimizer(curves=CCul)

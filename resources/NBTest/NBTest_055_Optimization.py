@@ -212,7 +212,7 @@ assert r.tokens_t == ('DAI',)
 assert r.dtokens["WETH"] < 0
 assert iseq(r.result, -1.244345098228223)
 assert iseq(r.p_optimal_t[0], 0.00062745798800732)
-assert iseq(r.dtokens_t[0], -1.9371509552001953e-06, eps=1e-4)
+assert iseq(r.dtokens_t[0], -1.9371509552001953e-06)
 r
 
 # the original curves are 1500 and 1600, so ~1550 is right in the middle
