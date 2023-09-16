@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.26...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.27...HEAD)
 
 - Remove python 3.8 incompatible type-hints [\#126](https://github.com/bancorprotocol/fastlane-bot/issues/126)
+
+- Change tests to use python 3.8 [\#128](https://github.com/bancorprotocol/fastlane-bot/issues/128)
+- Update tests to run python 3.8 [\#129](https://github.com/bancorprotocol/fastlane-bot/pull/129) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.27](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.27) (2023-09-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.26...v2.7.27)
+
 - Bugfix for python 3.8 type-hints [\#127](https://github.com/bancorprotocol/fastlane-bot/pull/127) ([mikewcasale](https://github.com/mikewcasale))
 
 - Always submit max amountIn for last trade per-tkn [\#121](https://github.com/bancorprotocol/fastlane-bot/issues/121)
