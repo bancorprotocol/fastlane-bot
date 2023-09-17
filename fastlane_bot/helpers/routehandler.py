@@ -7,6 +7,7 @@ Licensed under MIT
 __VERSION__ = "1.1.1"
 __DATE__="02/May/2023"
 
+import decimal
 import math
 from _decimal import Decimal
 from dataclasses import dataclass
@@ -70,7 +71,7 @@ class TxRouteHandlerBase:
     __DATE__=__DATE__
 
 
-def maximize_last_trade_per_tkn(route_struct: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
 
@@ -1322,8 +1323,12 @@ class TxRouteHandler(TxRouteHandlerBase):
 
 
                 for tx in data:
-                    tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
-                    # total_percent += tx["amtin"]/expected_in
+                    try:
+                        tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
+                    except decimal.InvalidOperation:
+                        tx["percent_in"] = 0
+                        # total_percent += tx["amtin"]/expected_in
+                        self.ConfigObj.logger.warning(f"[calculate_trade_outputs] Invalid operation: {tx['amtin']}/{expected_in}")
 
                 for tx in data:
                     cid = tx["cid"]
