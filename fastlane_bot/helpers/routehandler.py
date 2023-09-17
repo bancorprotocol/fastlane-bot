@@ -7,6 +7,7 @@ Licensed under MIT
 __VERSION__ = "1.1.1"
 __DATE__="02/May/2023"
 
+import decimal
 import math
 from _decimal import Decimal
 from dataclasses import dataclass
@@ -1322,8 +1323,12 @@ class TxRouteHandler(TxRouteHandlerBase):
 
 
                 for tx in data:
-                    tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
-                    # total_percent += tx["amtin"]/expected_in
+                    try:
+                        tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
+                    except decimal.InvalidOperation:
+                        tx["percent_in"] = 0
+                        # total_percent += tx["amtin"]/expected_in
+                        self.ConfigObj.logger.warning(f"[calculate_trade_outputs] Invalid operation: {tx['amtin']}/{expected_in}")
 
                 for tx in data:
                     cid = tx["cid"]
