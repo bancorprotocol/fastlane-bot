@@ -59,6 +59,11 @@ class BaseManager:
     cfg: Config
     pool_data: List[Dict[str, Any]]
     alchemy_max_block_fetch: int
+    tenderly_event_contracts: Dict[str, Contract or Type[Contract]] = field(
+        default_factory=dict
+    )
+    tenderly_event_exchanges: List[str] = field(default_factory=list)
+    w3_tenderly: Web3 = None
     event_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     pool_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
@@ -115,6 +120,7 @@ class BaseManager:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
+        self.init_tenderly_event_contracts()
 
     def set_carbon_v1_fee_pairs(self):
         """
@@ -255,7 +261,9 @@ class BaseManager:
             The address of the contract to call.
         """
         if self.replay_from_block:
-            return brownie.multicall(address, block_identifier=self.replay_from_block)
+            return brownie.multicall(
+                address=address, block_identifier=self.replay_from_block
+            )
         else:
             return brownie.multicall(address)
 
@@ -468,13 +476,17 @@ class BaseManager:
             The strategies.
 
         """
+        strategies_by_pair = []
+
         with self.multicall(
             address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
         ):
-            # Fetch strategies for each pair from the CarbonController contract object
-            strategies_by_pair = [
-                carbon_controller.strategiesByPair(*pair) for pair in pairs
-            ]
+            for pair in pairs:
+                try:
+                    # Fetch strategies for each pair from the CarbonController contract object
+                    strategies_by_pair.append(carbon_controller.strategiesByPair(*pair))
+                except ValueError:
+                    print(f"Error fetching strategiesByPair {pair}")
 
         self.carbon_inititalized = True
 
@@ -681,6 +693,7 @@ class BaseManager:
 
         """
         if key != "cid" and (pool_info is None or not pool_info):
+            # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
                 address=addr, event=event, block_number=event["blockNumber"]
             )
@@ -722,8 +735,13 @@ class BaseManager:
             return "token", "bancor_pol_" + event["args"]["token"]
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
-        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3", "bancor_v2"}:
+        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
             return "address", addr
+        if ex_name == "bancor_v2":
+            return ("tkn0_address", "tkn1_address"), (
+                event["args"]["_token1"],
+                event["args"]["_token2"],
+            )
         if ex_name == "bancor_v3":
             value = (
                 event["args"]["tkn_address"]

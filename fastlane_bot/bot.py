@@ -68,6 +68,7 @@ from fastlane_bot.helpers import (
     Univ3Calculator,
     RouteStruct,
 )
+from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .events.interface import QueryInterface
@@ -963,7 +964,7 @@ class CarbonBot(CarbonBotBase):
                 encoded_trade_instructions, deadline
             )
         ]
-
+        route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 

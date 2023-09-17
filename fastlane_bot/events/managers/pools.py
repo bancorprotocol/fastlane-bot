@@ -258,7 +258,6 @@ class PoolManager(BaseManager):
             block_number,
         )
 
-
         # Add other args if necessary
         if other_args:
             pool_info.update(other_args)
@@ -272,7 +271,11 @@ class PoolManager(BaseManager):
         assert pool, f"Pool not found in {exchange_name} pools"
 
         if contract:
-            pool_info.update(pool.update_from_contract(contract, self.tenderly_fork_id))
+            pool_info.update(
+                pool.update_from_contract(
+                    contract, self.tenderly_fork_id, self.w3_tenderly
+                )
+            )
 
         self.pool_data.append(pool_info)
         return pool_info

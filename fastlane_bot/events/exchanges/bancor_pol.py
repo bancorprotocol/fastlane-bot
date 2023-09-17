@@ -14,7 +14,6 @@ from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 from fastlane_bot import Config
-from fastlane_bot.tools.cpc import T
 
 
 @dataclass
@@ -25,7 +24,7 @@ class BancorPol(Exchange):
 
     exchange_name: str = "bancor_pol"
     BNT_ADDRESS: str = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-    ETH_ADDRESS: str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["tkn0_address"]] = pool
@@ -33,12 +32,8 @@ class BancorPol(Exchange):
     def get_abi(self):
         return BANCOR_POL_ABI
 
-    def get_events(
-        self, contract: Contract, tenderly_fork_id: str = None
-    ) -> List[Type[Contract]]:
-        if not tenderly_fork_id:
-            return [contract.events.TokenTraded, contract.events.TradingEnabled]
-        return []
+    def get_events(self, contract: Contract) -> List[Type[Contract]]:
+        return [contract.events.TokenTraded, contract.events.TradingEnabled]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000

@@ -18,6 +18,7 @@ LOGLEVEL_DEBUG = "debug"
 LOGLEVEL_INFO = "info"
 LOGLEVEL_WARNING = "warning"
 LOGLEVEL_ERROR = "error"
+LOGLEVEL_BANCOR_V2 = "bancor_v2"
 
 PROVIDER_DEFAULT = "default"  # the default provider for network
 PROVIDER_INFURA = "infura"

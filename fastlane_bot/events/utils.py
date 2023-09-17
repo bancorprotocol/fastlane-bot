@@ -12,22 +12,19 @@ import os
 import sys
 import time
 from _decimal import Decimal
-from typing import Any, Union, Dict, Set, List, Tuple, Hashable
+from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
 import brownie
 import pandas as pd
 import requests
-from web3 import Web3
-
-from fastlane_bot.config.connect import EthereumNetwork
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
+from web3 import Web3
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
@@ -449,7 +446,7 @@ def get_loglevel(loglevel: str) -> Any:
 
 
 def get_event_filters(
-    n_jobs: int, mgr: Any, start_block: int, current_block: int, reorg_delay: int
+    n_jobs: int, mgr: Any, start_block: int, current_block: int
 ) -> Any:
     """
     Creates event filters for the specified block range.
@@ -464,21 +461,24 @@ def get_event_filters(
         The starting block number of the event filters.
     current_block : int
         The current block number of the event filters.
-    reorg_delay : int
-        The reorg delay.
 
     Returns
     -------
     Any
         A list of event filters.
     """
-    # if reorg_delay == 0:
-    #     current_block = "latest"
-
-    return Parallel(n_jobs=n_jobs, backend="threading")(
+    bancor_pol_events = ["TradingEnabled", "TokenTraded"]
+    by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
+        if event.__name__ not in bancor_pol_events
     )
+    max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
+        delayed(event.createFilter)(fromBlock=0)
+        for event in mgr.events
+        if event.__name__ in bancor_pol_events
+    )
+    return by_block_events + max_num_events
 
 
 def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
@@ -677,6 +677,8 @@ def update_pools_from_contracts(
         A list of rows to update.
     not_multicall : bool, optional
         Whether the pools are not Bancor v3 pools, by default True
+    token_address : bool, optional
+        Whether to update the token address, by default False
     current_block : int, optional
         The current block number, by default None
 
@@ -693,11 +695,12 @@ def update_pools_from_contracts(
         )
     else:
         with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
-            for idx, pool in enumerate(rows_to_update):
+            for idx in rows_to_update:
                 mgr.update(
                     pool_info=mgr.pool_data[idx],
                     limiter=not_multicall,
                     block_number=current_block,
+                    token_address=token_address,
                 )
 
 
@@ -974,41 +977,40 @@ def multicall_every_iteration(
         )
 
 
-def get_tenderly_events(
+def get_tenderly_pol_events(
     mgr,
-    n_jobs,
-    reorg_delay,
     start_block,
     current_block,
-    logging_path,
-    cache_latest_only,
     tenderly_fork_id,
-    mainnet_uri,
 ):
+    """
+    Gets the Tenderly POL events.
+
+    Parameters
+    ----------
+    mgr: Any
+        The manager object.
+    start_block: int
+        The starting block number.
+    current_block: int
+        The current block number.
+    tenderly_fork_id: str
+        The Tenderly fork ID.
+
+    Returns
+    -------
+    List[Any]
+        A list of Tenderly POL events.
+
+    """
     # connect to the Tenderly fork
-    mgr.cfg.logger.info(f"Connecting to Tenderly fork: {tenderly_fork_id}")
-    tenderly_fork_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
-
-    mgr, forked_from_block = set_network_connection_to_tenderly(
-        mgr=mgr,
-        use_cached_events=False,
-        replay_from_block=current_block,
-        tenderly_uri=tenderly_fork_uri,
-        forked_from_block=current_block,
+    mgr.cfg.logger.info(
+        f"Connecting to Tenderly fork: {tenderly_fork_id}, current_block: {current_block}, start_block: {start_block}"
     )
-    mgr.cfg.w3.provider.endpoint_uri = tenderly_fork_uri
-    contract = mgr.cfg.w3.eth.contract(
-        abi=BANCOR_POL_ABI,
-        address=mgr.cfg.w3.toChecksumAddress(mgr.cfg.BANCOR_POL_ADDRESS),
-    )
-
-    # event_filters = Parallel(n_jobs=n_jobs, backend="threading")( delayed(event.createFilter)(
-    # fromBlock=start_block, toBlock=current_block) for event in [contract.events.TokenTraded,
-    # contract.events.TradingEnabled] ) event_filters = [event.createFilter(fromBlock=start_block,
-    # toBlock=current_block) for event in [contract.events.TokenTraded, contract.events.TradingEnabled]]
+    contract = mgr.tenderly_event_contracts["bancor_pol"]
 
     tenderly_events = [
-        event.getLogs(fromBlock=start_block)
+        event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
         for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
     ]
     tenderly_events = [event for event in tenderly_events if len(event) > 0]
@@ -1016,63 +1018,16 @@ def get_tenderly_events(
         complex_handler(event)
         for event in [complex_handler(event) for event in tenderly_events]
     ]
-
-    # Set connection back to mainnet
-    mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
     return tenderly_events
-
-
-def get_erc_20_balances_tenderly(
-    current_block,
-    mgr,
-    n_jobs,
-    reorg_delay,
-    start_block,
-    logging_path,
-    cache_latest_only,
-    tenderly_fork_id,
-    mainnet_uri,
-):
-    # connect to the Tenderly fork
-    mgr.cfg.logger.info(f"Connecting to Tenderly fork: {tenderly_fork_id}")
-    tenderly_fork_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
-
-    mgr, forked_from_block = set_network_connection_to_tenderly(
-        mgr=mgr,
-        use_cached_events=False,
-        replay_from_block=current_block,
-        tenderly_uri=tenderly_fork_uri,
-        forked_from_block=current_block,
-    )
-
-    if mgr.cfg.BANCOR_POL_NAME in mgr.exchanges:
-        update_pools_from_contracts(
-            mgr,
-            n_jobs=n_jobs,
-            rows_to_update=[
-                i
-                for i, pool_info in enumerate(mgr.pool_data)
-                if pool_info["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
-            ],
-            current_block=current_block,
-            token_address=True,
-        )
-
-    # Set connection back to mainnet
-    mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
-    return None
 
 
 def get_latest_events(
     current_block: int,
     mgr: Any,
     n_jobs: int,
-    reorg_delay: int,
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
-    tenderly_fork_id: str = None,
-    mainnet_uri: str = None,
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -1085,16 +1040,12 @@ def get_latest_events(
         The manager object.
     n_jobs : int
         The number of jobs to run in parallel.
-    reorg_delay : int
-        The reorg delay.
     start_block : int
         The starting block number.
     cache_latest_only : bool
         Whether to cache the latest events only.
     logging_path : str
         The logging path.
-    tenderly_fork_id : str, optional
-        The Tenderly fork ID, by default None
 
     Returns
     -------
@@ -1103,20 +1054,14 @@ def get_latest_events(
     """
     carbon_pol_events = []
 
-    if (
-        tenderly_fork_id
-    ):  # TODO: remove this extra function once carbon POL launches on mainnet
-        carbon_pol_events = get_tenderly_events(
+    if mgr.tenderly_fork_id:
+        carbon_pol_events = get_tenderly_pol_events(
             mgr=mgr,
-            n_jobs=n_jobs,
-            reorg_delay=reorg_delay,
             start_block=start_block,
             current_block=current_block,
-            logging_path=logging_path,
-            cache_latest_only=cache_latest_only,
-            tenderly_fork_id=tenderly_fork_id,
-            mainnet_uri=mainnet_uri,
+            tenderly_fork_id=mgr.tenderly_fork_id,
         )
+        mgr.cfg.logger.info(f"carbon_pol_events: {len(carbon_pol_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1125,7 +1070,7 @@ def get_latest_events(
             complex_handler(event)
             for event in get_all_events(
                 n_jobs,
-                get_event_filters(n_jobs, mgr, start_block, current_block, reorg_delay),
+                get_event_filters(n_jobs, mgr, start_block, current_block),
             )
         ]
     ]
@@ -1134,9 +1079,10 @@ def get_latest_events(
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
-    latest_pol_events = [i for i in latest_events if "token" in i["args"]]
-
-    mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+    carbon_pol_events = [event for event in latest_events if "token" in event["args"]]
+    mgr.cfg.logger.info(
+        f"Found {len(latest_events)} new events, {len(carbon_pol_events)} carbon_pol_events"
+    )
 
     # Save the latest events to disk
     save_events_to_json(
@@ -1147,20 +1093,6 @@ def get_latest_events(
         start_block,
         current_block,
     )
-    if (
-        tenderly_fork_id
-    ):  # TODO: remove this extra function once carbon POL launches on mainnet
-        get_erc_20_balances_tenderly(
-            mgr=mgr,
-            n_jobs=n_jobs,
-            reorg_delay=reorg_delay,
-            start_block=start_block,
-            current_block=current_block,
-            logging_path=logging_path,
-            cache_latest_only=cache_latest_only,
-            tenderly_fork_id=tenderly_fork_id,
-            mainnet_uri=mainnet_uri,
-        )
     return latest_events
 
 
@@ -1170,7 +1102,6 @@ def get_start_block(
     mgr: Any,
     reorg_delay: int,
     replay_from_block: int,
-    tenderly_fork_id: str = None,
 ) -> Tuple[int, int]:
     """
     Gets the starting block number.
@@ -1187,8 +1118,6 @@ def get_start_block(
         The reorg delay.
     replay_from_block : int
         The block number to replay from.
-    tenderly_fork_id : str, optional
-        The Tenderly fork ID, by default None
 
     Returns
     -------
@@ -1202,15 +1131,14 @@ def get_start_block(
             if last_block != 0
             else replay_from_block - reorg_delay - alchemy_max_block_fetch
         ), replay_from_block
-    elif tenderly_fork_id:
+    elif mgr.tenderly_fork_id:
         # connect to the Tenderly fork and get the latest block number
-        from_block = get_tenderly_block_number(tenderly_fork_id)
+        from_block = mgr.w3_tenderly.eth.blockNumber
         return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
             else from_block - reorg_delay - alchemy_max_block_fetch
         ), from_block
-
     else:
         current_block = mgr.web3.eth.blockNumber
         return (
@@ -1324,13 +1252,16 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     # Create the provider you can use throughout the rest of your project
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{fork_id}")
 
+    mgr.cfg.logger.info(
+        f"Forking from block_number: {block_number}, for fork_id: {fork_id}"
+    )
+
     return provider.endpoint_uri, block_number
 
 
 def set_network_connection_to_tenderly(
     mgr: Any,
     use_cached_events: bool,
-    replay_from_block: int,
     tenderly_uri: str,
     forked_from_block: int = None,
     tenderly_fork_id: str = None,
@@ -1344,8 +1275,6 @@ def set_network_connection_to_tenderly(
         The manager object.
     use_cached_events: bool
         Whether to use cached events.
-    replay_from_block: int
-        The block number to replay from.
     tenderly_uri: str
         The Tenderly URI.
     forked_from_block: int
@@ -1366,9 +1295,12 @@ def set_network_connection_to_tenderly(
         tenderly_uri, forked_from_block = setup_replay_from_block(
             mgr, forked_from_block
         )
-    elif not tenderly_uri and tenderly_fork_id:
+    elif not tenderly_uri:
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
         forked_from_block = None
+        mgr.cfg.logger.info(
+            f"Using Tenderly fork id: {tenderly_fork_id} at {tenderly_uri}"
+        )
 
     if mgr.cfg.connection.network.is_connected:
         with contextlib.suppress(Exception):
@@ -1526,12 +1458,11 @@ def set_network_to_tenderly_if_replay(
     if not replay_from_block and not tenderly_fork_id:
         return mgr, tenderly_uri, None
 
-    if (replay_from_block or tenderly_fork_id) and last_block == 0:
+    if last_block == 0:
         mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
-            replay_from_block=replay_from_block,
             tenderly_uri=tenderly_uri,
             forked_from_block=forked_from_block,
             tenderly_fork_id=tenderly_fork_id,
@@ -1545,7 +1476,6 @@ def set_network_to_tenderly_if_replay(
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
-            replay_from_block=replay_from_block,
             tenderly_uri=tenderly_uri,
             forked_from_block=forked_from_block,
         )
@@ -1562,7 +1492,6 @@ def set_network_to_mainnet_if_replay(
     mgr: Any,
     replay_from_block: int,
     use_cached_events: bool,
-    tenderly_fork_id: str = None,
 ):
     """
     Set the network connection to Mainnet if replaying from a block
@@ -1581,8 +1510,6 @@ def set_network_to_mainnet_if_replay(
         The block to replay from
     use_cached_events : bool
         Whether to use cached events
-    tenderly_fork_id : str
-        The Tenderly fork id
 
     Returns
     -------
@@ -1591,7 +1518,7 @@ def set_network_to_mainnet_if_replay(
 
     """
     if (
-        (replay_from_block or tenderly_fork_id)
+        (replay_from_block or mgr.tenderly_fork_id)
         and mgr.cfg.NETWORK != "mainnet"
         and last_block != 0
     ):
