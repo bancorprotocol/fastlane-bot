@@ -32,7 +32,9 @@ class BancorPol(Exchange):
     def get_abi(self):
         return BANCOR_POL_ABI
 
-    def get_events(self, contract: Contract) -> List[Type[Contract]]:
+    def get_events(self, contract: Contract, tenderly_fork_id: str = None) -> List[Type[Contract]]:
+        if tenderly_fork_id:
+            return []
         return [contract.events.TokenTraded, contract.events.TradingEnabled]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:

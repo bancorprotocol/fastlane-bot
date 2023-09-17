@@ -32,7 +32,7 @@ class UniswapV3(Exchange):
     def get_events(
         self, contract: Contract, tenderly_fork_id: str = None
     ) -> List[Type[Contract]]:
-        return [contract.events.Swap]
+        return [] if tenderly_fork_id else [contract.events.Swap]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         pool = self.get_pool(address)

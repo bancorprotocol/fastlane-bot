@@ -8,11 +8,10 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any, Dict, Callable
 
-import web3
-from fastlane_bot import Config
-from web3.contract import Contract
 from brownie.network.contract import Contract as BrownieContract
+from web3.contract import Contract
 
+from fastlane_bot import Config
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
@@ -55,6 +54,8 @@ class CarbonV1(Exchange):
     def get_events(
         self, contract: Contract, tenderly_fork_id: str = None
     ) -> List[Type[Contract]]:
+        if tenderly_fork_id:
+            return []
         return [
             contract.events.StrategyCreated,
             contract.events.StrategyUpdated,
