@@ -12,9 +12,9 @@ import json
 
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3, BancorV2
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI
 from unittest.mock import Mock
 import pytest
 
@@ -25,6 +25,8 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2))
+
 from fastlane_bot.testing import *
 
 #plt.style.use('seaborn-dark')
@@ -38,6 +40,9 @@ with open('fastlane_bot/data/event_test_data.json', 'r') as f:
 mocked_contract = Mock()
 mocked_contract.functions.token0.return_value.call.return_value = 'token0'
 mocked_contract.functions.token1.return_value.call.return_value = 'token1'
+mocked_contract.functions._token0.return_value.call.return_value = 'token0'
+mocked_contract.functions._token1.return_value.call.return_value = 'token1'
+mocked_contract.functions.conversionFee.return_value.call.return_value = 3000
 mocked_contract.functions.fee.return_value.call.return_value = 3000
 mocked_contract.functions.tradingFeePPM.return_value.call.return_value = 2000
 
@@ -96,6 +101,20 @@ def test_test_bancor_v3_exchange():
     assert (bancor_v3_exchange.get_abi() == BANCOR_V3_POOL_COLLECTION_ABI)
     assert (bancor_v3_exchange.get_fee('', mocked_contract) == ('0.000', 0.0))
     assert (bancor_v3_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v3_event']) == bancor_v3_exchange.BNT_ADDRESS)
+    
+
+# ------------------------------------------------------------
+# Test      037
+# File      test_037_Exchanges.py
+# Segment   test_bancor_v2_exchange
+# ------------------------------------------------------------
+def test_test_bancor_v2_exchange():
+# ------------------------------------------------------------
+    
+    bancor_v2_exchange = BancorV2()
+    assert (bancor_v2_exchange.get_abi() == BANCOR_V2_CONVERTER_ABI)
+    assert (bancor_v2_exchange.get_fee('', mocked_contract) == (3000, 0.003))
+    assert (bancor_v2_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v2_event']) == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
     
 
 # ------------------------------------------------------------
