@@ -16,6 +16,7 @@ from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, Car
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
     BANCOR_V3_POOL_COLLECTION_ABI, \
     CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI
+
 from unittest.mock import Mock
 import pytest
 

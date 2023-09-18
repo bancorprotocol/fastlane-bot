@@ -1312,7 +1312,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         for idx, trade in enumerate(trade_instructions):
             raw_txs_lst = []
             # total_percent = 0
-
+            if trade.amtin <=0:
+                trade_instructions.pop(idx)
+                continue
             if trade.raw_txs != "[]":
                 data = eval(trade.raw_txs)
                 total_out = 0

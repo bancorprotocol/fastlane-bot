@@ -162,7 +162,6 @@ def test_test_carbon_v1_pool_delete():
     assert (carbon_v1_pool.state['z_1'] == 0)
     assert (carbon_v1_pool.state['A_1'] == 0)
     
-    #
     
 
 # ------------------------------------------------------------
@@ -210,3 +209,4 @@ def test_test_bancor_pol_trading_enabled_event():
                                        'tkn1_symbol': 'tkn1'}
                                       )
     assert (bancor_pol_pool.state['tkn0_address'] == setup_data['bancor_pol_trading_enabled_event']['args']['token'])
+
