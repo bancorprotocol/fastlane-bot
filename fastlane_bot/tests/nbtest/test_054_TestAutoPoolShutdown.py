@@ -1,9 +1,9 @@
 # ------------------------------------------------------------
-# Auto generated test file `test_043_TestEmptyCarbonOrders.py`
+# Auto generated test file `test_054_TestAutoPoolShutdown.py`
 # ------------------------------------------------------------
-# source file   = NBTest_043_TestEmptyCarbonOrders.py
-# test id       = 043
-# test comment  = TestEmptyCarbonOrders
+# source file   = NBTest_054_TestAutoPoolShutdown.py
+# test id       = 054
+# test comment  = TestAutoPoolShutdown
 # ------------------------------------------------------------
 
 
@@ -21,8 +21,8 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
+from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 from joblib import Parallel, delayed
-from dataclasses import dataclass, asdict, field
 import pytest
 import math
 import json
@@ -127,108 +127,73 @@ def init_bot(mgr: Manager) -> CarbonBot:
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
     return bot
-bot = init_bot(mgr)
-bot.db.handle_token_key_cleanup()
-bot.db.remove_unmapped_uniswap_v2_pools()
-bot.db.remove_zero_liquidity_pools()
-bot.db.remove_unsupported_exchanges()
-tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
-pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
+
+
+pool_shutdown = AutomaticPoolShutdown(mgr=mgr, polling_interval=12)
 
 
 # ------------------------------------------------------------
-# Test      043
-# File      test_043_TestEmptyCarbonOrders.py
-# Segment   Test_Empty_Carbon_Orders_Removed
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test White List
 # ------------------------------------------------------------
-def test_test_empty_carbon_orders_removed():
+def test_test_white_list():
+# ------------------------------------------------------------
+    
+    assert len(pool_shutdown.shutdown_whitelist) > 0, f"[NB054 Automatic Shutdown] failed to retrieve pool whitelist"
+    
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test parse_active_pools
+# ------------------------------------------------------------
+def test_test_parse_active_pools():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    pool_shutdown.parse_active_pools()
     
-    (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r[11]
-            
-    best_trade_instructions_dic
-    # Check that this gets filtered out
-    test_trade = [{'cid': '0x36445535fc762f6c53277a667500a41e31b51bec800e76aab33dafab75da4eaa',
-      'tknin': 'WBTC-C599',
-      'amtin': 0.008570336169213988,
-      'tknout': 'WETH-6Cc2',
-      'amtout': -0.13937506393995136,
-      'error': None},
-     {'cid': '9187623906865338513511114400657741709420-1',
-      'tknin': 'WETH-6Cc2',
-      'amtin': 0,
-      'tknout': 'WBTC-C599',
-      'amtout': 0,
-      'error': None},
-     {'cid': '9187623906865338513511114400657741709458-1',
-      'tknin': 'WETH-6Cc2',
-      'amtin': 0.13937506393995136,
-      'tknout': 'WBTC-C599',
-      'amtout': 0.008870336169213988,
-      'error': None}]
+    for pool in pool_shutdown.active_pools:
+        assert type(pool_shutdown.active_pools[pool]) == int
+        assert pool_shutdown.active_pools[pool] >= 0
+    # -
     
-    (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    test_trade, best_src_token
-    )
-    ordered_scaled_dcts = bot._basic_scaling(
-                ordered_trade_instructions_dct, best_src_token
-            )
-    ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
-    tx_route_handler = bot.TxRouteHandlerClass(
-                trade_instructions=ordered_trade_instructions_objects
-            )
-    agg_trade_instructions = (
-                tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-                if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
-                else ordered_trade_instructions_objects
-            )
-    # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-        agg_trade_instructions
-    )
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-                calculated_trade_instructions
-            )
-    deadline = bot._get_deadline(1)
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test iterate_active_pools
+# ------------------------------------------------------------
+def test_test_iterate_active_pools():
+# ------------------------------------------------------------
     
-    # Get the route struct
-    route_struct = [
-        asdict(rs)
-        for rs in tx_route_handler.get_route_structs(
-            encoded_trade_instructions, deadline
-        )
-    ]
-    for route in route_struct:
-        if route["platformId"] == 6:
-            encoded_trade = route["customData"].split("0x")[1]
-            encoded_trades = [encoded_trade[i:i+64] for i in range(0, len(encoded_trade), 64)]
-            for trade in encoded_trades:
-                assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
+    # +
+    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    pool_shutdown.active_pools = {}
+    pool_shutdown.active_pools[ETH] = 100000000000000000
+    tkn = pool_shutdown.iterate_active_pools()
+    
+    assert tkn == ETH
+    # -
+    
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test iterate_active_pools_two
+# ------------------------------------------------------------
+def test_test_iterate_active_pools_two():
+# ------------------------------------------------------------
+    
+    # +
+    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    pool_shutdown.active_pools = {}
+    pool_shutdown.active_pools[ETH] = 100000000000000000000000
+    tkn = pool_shutdown.iterate_active_pools()
+    
+    assert tkn == None
     # -
     
     

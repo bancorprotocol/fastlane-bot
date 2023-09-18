@@ -162,7 +162,7 @@ def test_test_randomizer():
     #arb_opp = r[0]
     
     
-    assert len(r) == 22, f"[NB047 Randomizer], expected 22 arbs, found {len(r)}"
+    assert len(r) == 25, f"[NB047 Randomizer], expected 25 arbs, found {len(r)}"
     
     
     arb_opp_0 = bot.randomize(arb_opps=r, randomizer=0)
