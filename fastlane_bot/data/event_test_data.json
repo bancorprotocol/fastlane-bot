@@ -232,5 +232,26 @@
     "address": "0xADd45B18153382D69AB5A13c44d1782B8f3aDEEc",
     "blockHash": "0x45f34d791644169219b806ebdf60341fb5e62e4ed49e9da225e34d82e17f1f8b",
     "blockNumber": 18005932
+  },
+  "bancor_pol_trading_enabled_event": {
+    "args": {
+      "token": "0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83",
+      "price": [11371711775732, 1000000000000000000]
+    },
+    "event": "TradingEnabled", "logIndex": 0, "transactionIndex": 0, "transactionHash": "0x47ca9288a8924d1728cbb1551b7a93ba92fb1cbbff317b2c95a89124b3864faf", "address": "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46", "blockHash": "0x2f6d52f57be7062bf09a2a714e86c87e00b31d63133b1529e9eb304aa1539621", "blockNumber": 18137602
+  },
+  "bancor_pol_token_traded_event": {
+    "args": {
+      "caller": "0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB",
+      "token": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "amount": 4913114339236985831, "ethReceived": 2766999999999999
+    },
+    "event": "TokenTraded",
+    "logIndex": 2,
+    "transactionIndex": 0,
+    "transactionHash": "0xaa7bc078cb2e785dc5df61b5d429190539dca47bba3e263683e0e90356805906",
+    "address": "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46",
+    "blockHash": "0x3ce386e131db4763ec18cd67a7dedabd68b0b693400b33f98dfb8ad441085004",
+    "blockNumber": 18137708
   }
 }
