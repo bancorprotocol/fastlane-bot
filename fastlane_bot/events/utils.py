@@ -290,7 +290,7 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
 
     """
     # Set external exchanges
-    exchanges = exchanges.split(",")
+    exchanges = exchanges.split(",") if exchanges else []
     cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
     return exchanges
 
