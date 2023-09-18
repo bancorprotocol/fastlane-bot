@@ -799,7 +799,7 @@ def handle_subsequent_iterations(
         # Log the forked_from_block
         if forked_from_block:
             mgr.cfg.logger.info(
-                f"Submitting bot.run with forked_from_block: {forked_from_block}"
+                f"Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
             )
 
         # Run the bot
@@ -812,7 +812,9 @@ def handle_subsequent_iterations(
             randomizer=randomizer,
             logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
-            tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
+            tenderly_fork=tenderly_uri.split("/")[-1]
+            if tenderly_uri
+            else None,
             replay_from_block=forked_from_block,
         )
 
@@ -1292,9 +1294,7 @@ def set_network_connection_to_tenderly(
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
     if not tenderly_uri and not tenderly_fork_id:
-        tenderly_uri, forked_from_block = setup_replay_from_block(
-            mgr, forked_from_block
-        )
+        return mgr, forked_from_block
     elif not tenderly_uri:
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
         forked_from_block = None
@@ -1456,7 +1456,7 @@ def set_network_to_tenderly_if_replay(
         The block number the Tenderly fork was created from.
     """
     if not replay_from_block and not tenderly_fork_id:
-        return mgr, tenderly_uri, None
+        return mgr, None, None
 
     if last_block == 0:
         mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
