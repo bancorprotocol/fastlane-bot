@@ -168,26 +168,44 @@ class OptimizerBase(ABC):
     def findmin_gd(cls, func, x0, *, learning_rate=0.1, N=100):
         """
         finds the minimum of `func` using gradient descent starting at `x0`
+        
+        :func:              function to optimize (must take one parameter)
+        :x0:                starting point
+        :learning_rate:     learning rate parameter
+        :N:                 number of iterations; always goes full length here
+                            there is no convergence check
         """
         x = x0
         for _ in range(N):
             x -= learning_rate * cls.deriv(func, x)
-        return cls.SimpleResult(result=x, method="findmin_gd")
+        return cls.SimpleResult(result=x, method="gradient-min")
 
     @classmethod
     def findmax_gd(cls, func, x0, *, learning_rate=0.1, N=100):
         """
         finds the maximum of `func` using gradient descent, starting at `x0`
+        
+        :func:              function to optimize (must take one parameter)
+        :x0:                starting point
+        :learning_rate:     learning rate parameter
+        :N:                 number of iterations; always goes full length here
+                            there is no convergence check
         """
         x = x0
         for _ in range(N):
             x += learning_rate * cls.deriv(func, x)
-        return cls.SimpleResult(result=x, method="findmax_gd")
+        return cls.SimpleResult(result=x, method="gradient-max")
 
     @classmethod
     def findminmax_nr(cls, func, x0, *, N=20):
         """
         finds the minimum or maximum of func using Newton Raphson, starting at x0
+        
+        :func:      the function to optimize (must take one parameter)
+        :x0L        the starting point
+        :N:         the number of iterations; note that the algo will always go to
+                    the full length here; there is no convergence check
+        :returns:   the result of the optimization as SimpleResult
         """
         x = x0
         for _ in range(N):
@@ -198,9 +216,9 @@ class OptimizerBase(ABC):
                 return cls.SimpleResult(
                     result=None,
                     errormsg=f"Newton Raphson failed: {e} [x={x}, x0={x0}]",
-                    method="findminmax_nr",
+                    method="newtonraphson",
                 )
-        return cls.SimpleResult(result=x, method="findminmax_nr")
+        return cls.SimpleResult(result=x, method="newtonraphson")
 
     findmin = findminmax_nr
     findmax = findminmax_nr
@@ -208,18 +226,25 @@ class OptimizerBase(ABC):
     GOALSEEKEPS = 1e-6
 
     @classmethod
-    def goalseek(cls, func, a, b):
+    def goalseek(cls, func, a, b, *, eps=None):
         """
-        finds the value of `x` where `func(x)` x is zero, using binary search between a,b
+        finds the value of `x` where `func(x)` x is zero, using a bisection between a,b
+        
+        :func:      function for which to find the zero (must take one parameter)
+        :a, b:      bounds; we must have func(a) * func(b) < 0
+        :eps:       desired accuracy
+        :returns:   the result as SimpleResult
         """
+        if eps is None: 
+            eps = cls.GOALSEEKEPS
         if func(a) * func(b) > 0:
-            cls.SimpleResult(
+            return cls.SimpleResult(
                 result=None,
                 errormsg=f"function must have different signs at a,b [{a}, {b}, {func(a)} {func(b)}]",
-                method="findminmax_nr",
+                method="bisection",
             )
-            raise ValueError("function must have different signs at a,b")
-        while (b - a) > cls.GOALSEEKEPS:
+            #raise ValueError("function must have different signs at a,b")
+        while (b - a) > eps:
             c = (a + b) / 2
             if func(c) == 0:
                 return c
@@ -227,7 +252,7 @@ class OptimizerBase(ABC):
                 b = c
             else:
                 a = c
-        return cls.SimpleResult(result=(a + b) / 2, method="findminmax_nr")
+        return cls.SimpleResult(result=(a + b) / 2, method="bisection")
 
     @staticmethod
     def posx(vector):

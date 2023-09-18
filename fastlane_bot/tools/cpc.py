@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.1"
-__DATE__ = "25/Aug/2023"
+__VERSION__ = "3.2"
+__DATE__ = "15/Sep/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -25,35 +25,7 @@ import collections as cl
 from sys import float_info
 from hashlib import md5 as digest
 import time
-from .cpcbase import CurveBase
-
-try:
-    dataclass_ = dataclass(frozen=True, kw_only=True)
-except:
-    dataclass_ = dataclass(frozen=True)
-
-
-class AttrDict(dict):
-    """
-    A dictionary that allows for attribute-style access
-
-    see https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-@dataclass_
-class DAttrDict:
-    """attribute-style access to a dictionary with default value"""
-
-    dct: dict = field(default_factory=dict)
-    default: any = None
-
-    def __getattr__(self, name):
-        return self.dct.get(name, self.default)
+from .cpcbase import CurveBase, AttrDict, DAttrDict, dataclass_
 
 
 AD = DAttrDict
@@ -2771,6 +2743,13 @@ class CPCInverter:
     @property
     def p(self):
         return 1 / self.curve.p
+    
+    def P(self, *args, **kwargs):
+        return self.curve.P(*args, **kwargs)
+    
+    @property
+    def fee(self):
+        return self.curve.fee
 
     def p_convention(self):
         """price convention for p (dy/dx)"""

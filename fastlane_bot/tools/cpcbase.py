@@ -11,6 +11,39 @@ NOTE: this class is not part of the API of the Carbon protocol, and you must exp
 changes even in minor version updates. Use at your own risk.
 """
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, asdict, InitVar
+
+try:
+    dataclass_ = dataclass(frozen=True, kw_only=True)
+except:
+    dataclass_ = dataclass(frozen=True)
+
+
+class AttrDict(dict):
+    """
+    A dictionary that allows for attribute-style access
+
+    see https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
+@dataclass_
+class DAttrDict:
+    """
+    attribute-style access to a dictionary with default values
+    """
+
+    dct: dict = field(default_factory=dict)
+    default: any = None
+
+    def __getattr__(self, name):
+        return self.dct.get(name, self.default)
+
+    
 class CurveBase(ABC):
     """
     base class for representing a generic curve in the context of the optimizer
