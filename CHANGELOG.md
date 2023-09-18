@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.30...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.31...HEAD)
 
 - Bug that causes invalid TX [\#132](https://github.com/bancorprotocol/fastlane-bot/issues/132)
+
+- Implement new PairOptimizer for pairwise arbitrage modes [\#134](https://github.com/bancorprotocol/fastlane-bot/issues/134)
+- Add support for tenderly testing without replay mode [\#112](https://github.com/bancorprotocol/fastlane-bot/issues/112)
+- change optimizer class and method for pairwise modes [\#135](https://github.com/bancorprotocol/fastlane-bot/pull/135) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.31](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.31) (2023-09-18)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.30...v2.7.31)
 
 Merged pull requests
 
