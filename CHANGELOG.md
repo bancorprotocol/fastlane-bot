@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.29...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.30...HEAD)
+
+- Bug that causes invalid TX [\#132](https://github.com/bancorprotocol/fastlane-bot/issues/132)
+
+Merged pull requests
+
+- Patch to handle removal of 0-input trades [\#133](https://github.com/bancorprotocol/fastlane-bot/pull/133) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.30](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.30) (2023-09-18)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.29...v2.7.30)
 
 Closed issues
 
