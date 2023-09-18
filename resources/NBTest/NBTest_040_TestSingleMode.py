@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -188,7 +188,7 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) == 22, f"[TestSingleMode] Expected 22 arbs, found {len(r)}"
+assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
 r
