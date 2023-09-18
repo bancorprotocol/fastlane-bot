@@ -14,8 +14,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "5.1"
-__DATE__ = "25/Aug/2023"
+__VERSION__ = "5.2"
+__DATE__ = "15/Sep/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -36,6 +36,8 @@ class MargPOptimizer(CPCArbOptimizer):
     """
     implements the marginal price optimization method
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
     
     @property
     def kind(self):
@@ -78,7 +80,7 @@ class MargPOptimizer(CPCArbOptimizer):
     class ConvergenceError(OptimizationError): pass
     class ParameterError(OptimizationError): pass
 
-    def margp_optimizer(self, sfc=None, result=None, *, params=None):
+    def optimize(self, sfc=None, result=None, *, params=None):
         """
         optimal transactions across all curves in the optimizer, extracting targettkn*
 
@@ -416,3 +418,5 @@ class MargPOptimizer(CPCArbOptimizer):
                 n_iterations=None,
                 errormsg=e,
             )
+    margp_optimizer = optimize # margp_optimizer is deprecated
+

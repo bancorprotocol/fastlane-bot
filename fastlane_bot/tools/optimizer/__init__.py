@@ -23,6 +23,6 @@ only needs to be connected and properly parameterized
 """
 
 from .cpcarboptimizer import *
-from .simpleoptimizer import SimpleOptimizer
+from .pairoptimizer import PairOptimizer
 from .margpoptimizer import MargPOptimizer
 from .convexoptimizer import ConvexOptimizer

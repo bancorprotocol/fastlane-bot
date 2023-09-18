@@ -2,15 +2,23 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.28...HEAD)
-
-- Fixed a division by zero bug. [\#131](https://github.com/bancorprotocol/fastlane-bot/pull/131) ([mikewcasale](https://github.com/mikewcasale))
-
-- Change tests to use python 3.8 [\#128](https://github.com/bancorprotocol/fastlane-bot/issues/128)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.29...HEAD)
 
 Closed issues
 
 - Error in main loop: \[\<class 'decimal.DivisionUndefined'\>\] [\#130](https://github.com/bancorprotocol/fastlane-bot/issues/130)
+
+Merged pull requests
+
+- Optimization [\#124](https://github.com/bancorprotocol/fastlane-bot/pull/124) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.7.29](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.29) (2023-09-17)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.28...v2.7.29)
+
+- Fixed a division by zero bug. [\#131](https://github.com/bancorprotocol/fastlane-bot/pull/131) ([mikewcasale](https://github.com/mikewcasale))
+
+- Change tests to use python 3.8 [\#128](https://github.com/bancorprotocol/fastlane-bot/issues/128)
 
 ## [v2.7.28](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.28) (2023-09-16)
 

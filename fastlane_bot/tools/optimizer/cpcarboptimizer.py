@@ -7,8 +7,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "5.0"
-__DATE__ = "26/Jul/2023"
+__VERSION__ = "5.1"
+__DATE__ = "15/Sep/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -51,12 +51,25 @@ TIF_DFPG8 = "dfgain8"
 class CPCArbOptimizer(OptimizerBase):
     """
     intermediate class for CPC arbitrage optimization
+    
+    :curves:         the CPCContainer object (or the curves therein) the optimizer is using
+    
+    NOTE
+    the old argument name `curve_container` is still supported but deprecated
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
-    def __init__(self, curve_container):
-        if not isinstance(curve_container, CPCContainer):
-            curve_container = CPCContainer(curve_container)
-        self._curve_container = curve_container
+    def __init__(self, curves=None, *, curve_container=None):
+        if not curve_container is None:
+            if not curves is None:
+                raise ValueError("must not uses curves and curve_container at the same time")
+            curves = curve_container
+        if curves is None:
+            raise ValueError("must provide curves")
+        if not isinstance(curves, CPCContainer):
+            curve_container = CPCContainer(curves)
+        self._curve_container = curves
         
     @property
     def curve_container(self):
@@ -64,6 +77,7 @@ class CPCArbOptimizer(OptimizerBase):
         return self._curve_container
 
     CC = curve_container
+    curves = curve_container
 
     @property
     def tokens(self):
@@ -502,9 +516,12 @@ class CPCArbOptimizer(OptimizerBase):
         dtokens_t: tuple = field(repr=True, default=None)
         tokens_t: tuple = field(repr=True, default=None)
         errormsg: str = field(repr=True, default=None)
+        method: str = field(repr=True, default=None)
 
         def __post_init__(self, *args, **kwargs):
+            #print(f"[MargpOptimizerResult] method = {self.method} [1]")
             super().__post_init__(*args, **kwargs)
+            #print(f"[MargpOptimizerResult] method = {self.method} [2]")
             # #print("[MargpOptimizerResult] post_init")
             assert (
                 self.p_optimal_t is not None or self.errormsg is not None
@@ -518,6 +535,7 @@ class CPCArbOptimizer(OptimizerBase):
                     
             if self.method is None:
                 self.method = CPCArbOptimizer.METHOD_MARGP
+            #print(f"[MargpOptimizerResult] method = {self.method} [3]")
             self.raiseonerror = False
 
         @property
@@ -544,11 +562,9 @@ class CPCArbOptimizer(OptimizerBase):
 
         def dxdyvalues(self, asdict=False):
             """
-            returns a vector of (dx, dy) values for each curve
+            returns a vector of (dx, dy) values for each curve (see also dxvecvalues)
             """
-            assert (
-                self.curves is not None
-            ), "curves must be set [do not use minimal results]"
+            assert not self.curves is None, "curves must be set [do not use minimal results]"
             assert self.is_error is False, "cannot get this data from an error result"
             result = (
                 (c.cid, c.dxdyfromp_f(self.price(c.tknb, c.tknq))[0:2])
@@ -557,6 +573,20 @@ class CPCArbOptimizer(OptimizerBase):
             if asdict:
                 return {cid: dxdy for cid, dxdy in result}
             return tuple(dxdy for cid, dxdy in result)
+
+        def dxvecvalues(self, asdict=False):
+            """
+            returns a dict {tkn: dtknk} of changes for each curve (see also dxdyvalues)
+            """
+            assert not self.curves is None, "curves must be set [do not use minimal results]"
+            assert self.is_error is False, "cannot get this data from an error result"
+            result = (
+                (c.cid, c.dxvecfrompvec_f(self.p_optimal))
+                for c in self.curves
+            )
+            if asdict:
+                return {cid: dxvec for cid, dxvec in result}
+            return tuple(dxvec for cid, dxvec in result)
 
         @property
         def dxvalues(self):
@@ -638,4 +668,3 @@ class CPCArbOptimizer(OptimizerBase):
         see help(CPCContainer.format) for details
         """
         return self.curve_container.format(*args, **kwargs)
-
