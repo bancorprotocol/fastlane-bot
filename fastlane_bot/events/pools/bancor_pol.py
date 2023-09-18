@@ -49,7 +49,6 @@ class BancorPolPool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        # TODO CHECK THIS WORKS
         event_args = event["args"]
         return "token" in event_args and "token0" not in event_args
 
@@ -70,7 +69,6 @@ class BancorPolPool(Pool):
         if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
             "TokenTraded"
         ]:
-            # TODO: check if this is correct (if tkn0_balance - amount, can be negative if amount > tkn0_balance)
             data["tkn0_balance"] = (
                 self.state["tkn0_balance"] - event_args["args"]["amount"]
             )
