@@ -244,7 +244,7 @@ class OptimizerBase(ABC):
                 method="bisection",
             )
             #raise ValueError("function must have different signs at a,b")
-        while (b - a) > eps:
+        while (b/a-1) > eps:
             c = (a + b) / 2
             if func(c) == 0:
                 return c
