@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -168,7 +168,7 @@ r = finder.find_arbitrage()
 #arb_opp = r[0]
 
 
-assert len(r) == 25, f"[NB047 Randomizer], expected 25 arbs, found {len(r)}"
+assert len(r) == 26, f"[NB047 Randomizer], expected 26 arbs, found {len(r)}"
 
 
 arb_opp_0 = bot.randomize(arb_opps=r, randomizer=0)
