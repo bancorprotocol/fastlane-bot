@@ -7,4 +7,4 @@ abi = [
 class Coin2(Coin):
     def __init__(self, address: str):
         super().__init__(address, abi)
-        self.exchange_rate = self.contract.functions.exchangeRateCurrent().call()
+        self.exchangeRateCurrent = self.contract.functions.exchangeRateCurrent().call()

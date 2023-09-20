@@ -3,7 +3,7 @@ from .Coin import Coin
 abi = [
     {"name":"exchangeRateStored","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"},
     {"name":"supplyRatePerBlock","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"},
-    {"name":"accrualBlockNumber","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"},
+    {"name":"accrualBlockNumber","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
 ]
 
 class Coin4(Coin):

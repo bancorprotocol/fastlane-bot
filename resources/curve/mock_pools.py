@@ -209,7 +209,7 @@ mock_pools = {
             {
                 "symbol": "renBTC",
                 "decimals": 8,
-                "exchange_rate": 1000000000000000000
+                "exchangeRateCurrent": 1000000000000000000
             },
             {
                 "symbol": "WBTC",
@@ -232,7 +232,7 @@ mock_pools = {
             {
                 "symbol": "renBTC",
                 "decimals": 8,
-                "exchange_rate": 1000000000000000000
+                "exchangeRateCurrent": 1000000000000000000
             },
             {
                 "symbol": "WBTC",
@@ -260,17 +260,17 @@ mock_pools = {
             {
                 "symbol": "ycDAI",
                 "decimals": 18,
-                "share_price": 1020147121254659758
+                "pricePerFullShare": 1020147121254659758
             },
             {
                 "symbol": "ycUSDC",
                 "decimals": 6,
-                "share_price": 1037872427544813427
+                "pricePerFullShare": 1037872427544813427
             },
             {
                 "symbol": "ycUSDT",
                 "decimals": 6,
-                "share_price": 48950247396
+                "pricePerFullShare": 48950247396
             },
             {
                 "symbol": "USDP",

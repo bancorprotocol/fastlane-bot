@@ -12,7 +12,7 @@ class Pool6(Pool):
         self.balances = [self.contract.functions.balances(n).call() for n in range(len(coins))]
 
     def _get_factors(self, default: int) -> list[int]:
-        return [getattr(coin, 'exchange_rate', default) for coin in self.coins]
+        return [getattr(coin, 'exchangeRateCurrent', default) for coin in self.coins]
 
     A_PREC = 1
     D_FLAG = 0

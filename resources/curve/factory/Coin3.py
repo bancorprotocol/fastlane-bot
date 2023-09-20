@@ -7,4 +7,4 @@ abi = [
 class Coin3(Coin):
     def __init__(self, address: str):
         super().__init__(address, abi)
-        self.share_price = self.contract.functions.getPricePerFullShare().call()
+        self.pricePerFullShare = self.contract.functions.getPricePerFullShare().call()
