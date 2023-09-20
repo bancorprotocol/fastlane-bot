@@ -468,13 +468,17 @@ def get_event_filters(
         A list of event filters.
     """
     bancor_pol_events = ["TradingEnabled", "TokenTraded"]
+
+    # Get for exchanges except POL contract
     by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
         if event.__name__ not in bancor_pol_events
     )
+
+    # Get all events since the beginning of time for Bancor POL contract
     max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=0)
+        delayed(event.createFilter)(fromBlock=0, toBlock="latest")
         for event in mgr.events
         if event.__name__ in bancor_pol_events
     )
