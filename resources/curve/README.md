@@ -1,6 +1,6 @@
 ## Abstract
 
-This module supports calculating swap output on each one of [these pools](factory/Main.py#L16-L40), in each one of the following manners:
+This module supports calculating swap output on each one of [these pools](factory/Main.py#L18-L44), in each one of the following manners:
 1. Before submitting swap-calculation requests, the user provides the current state of the pool (i.e., no onchain interactions)
 2. Before submitting swap-calculation requests, the module fetches the current state of the pool (i.e., one onchain interaction)
 3. For every swap-calculation request, the module calls the contract function onchain (i.e., one onchain interaction per request)

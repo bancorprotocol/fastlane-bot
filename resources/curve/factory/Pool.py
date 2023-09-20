@@ -1,4 +1,3 @@
-from .Contract import Contract
 from .Host import Host
 
 PRECISION: int = 10 ** 18
@@ -13,9 +12,9 @@ abi = [
     {"name":"get_dy","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"int128","name":""},{"type":"int128","name":""},{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
 ]
 
-class Pool(Contract):
+class Pool:
     def __init__(self, address: str, abi_ex: list[dict]):
-        super().__init__(address, abi + abi_ex)
+        self.contract = Host.web3.eth.contract(address = address, abi = abi + abi_ex)
         self.fee = self.contract.functions.fee().call()
         self.initial_A = self.contract.functions.initial_A().call()
         self.future_A = self.contract.functions.future_A().call()
@@ -32,9 +31,10 @@ class Pool(Contract):
         return self._get_dy(indexes[sourceToken], indexes[targetToken], sourceAmount)
 
     def _get_dy(self, i: int, j: int, dx: int) -> int:
+        coins: list[any] = self._get_coins()
         balances: list[int] = self._get_balances()
         factors: list[int] = self._get_factors(PRECISION)
-        rates: list[int] = self._get_rates([PRECISION // 10 ** coin.decimals * factor for coin, factor in zip(self.coins, factors)])
+        rates: list[int] = self._get_rates([PRECISION // 10 ** coin.decimals * factor for coin, factor in zip(coins, factors)])
         xp: list[int] = [balance * rate // PRECISION for balance, rate in zip(balances, rates)]
         x: int = xp[i] + dx * rates[i] // PRECISION
         y: int = self._get_y(xp, i, j, x)
@@ -108,6 +108,9 @@ class Pool(Contract):
 
     def _get_balances(self) -> list[int]:
         return self.balances
+
+    def _get_coins(self) -> list[any]:
+        return self.coins
 
     def _get_fee_mul(self) -> int:
         return 0
