@@ -1,4 +1,4 @@
-from .Host import Host
+from .Contract import Contract
 
 PRECISION: int = 10 ** 18
 FEE_DENOM: int = 10 ** 10
@@ -12,15 +12,15 @@ abi = [
     {"name":"get_dy","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"int128","name":""},{"type":"int128","name":""},{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
 ]
 
-class Pool:
+class Pool(Contract):
     def __init__(self, address: str, abi_ex: list[dict]):
-        self.contract = Host.web3.eth.contract(address = address, abi = abi + abi_ex)
+        super().__init__(address, abi + abi_ex)
         self.fee = self.contract.functions.fee().call()
         self.initial_A = self.contract.functions.initial_A().call()
         self.future_A = self.contract.functions.future_A().call()
         self.initial_A_time = self.contract.functions.initial_A_time().call()
         self.future_A_time = self.contract.functions.future_A_time().call()
-        self.timestamp = Host.web3.eth.get_block('latest')['timestamp']
+        self.timestamp = self.contract.w3.eth.get_block('latest')['timestamp']
 
     def swap_read(self, sourceToken: str, targetToken: str, sourceAmount: int) -> int:
         indexes = {self.coins[n].symbol: n for n in range(len(self.coins))}

@@ -1,5 +1,4 @@
 from .Pool import Pool
-from .Host import Host
 from .BaseCoin import BaseCoin
 
 abi = [
@@ -14,7 +13,7 @@ class Pool8(Pool):
         self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
         self.balances = [self.contract.functions.balances(n).call() for n in range(len(coins))]
         self.underlying_coins = [BaseCoin(self.contract.functions.underlying_coins(n).call()) for n in range(len(coins))]
-        self.block_number = Host.web3.eth.get_block('latest')['number']
+        self.block_number = self.contract.w3.eth.get_block('latest')['number']
 
     def _get_factors(self, default: int) -> list[int]:
         return [coin.exchangeRateStored + coin.exchangeRateStored * coin.supplyRatePerBlock * (self.block_number - coin.accrualBlockNumber) // default for coin in self.coins]
