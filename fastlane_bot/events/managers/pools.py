@@ -344,6 +344,16 @@ class PoolManager(BaseManager):
         if key == "address":
             key_value = self.web3.toChecksumAddress(key_value)
 
+        if ex_name == "bancor_v2":
+            return next(
+                (
+                    self.validate_pool_info(key_value, event, pool, key)
+                    for pool in self.pool_data
+                    if pool[key[0]] == key_value[0] and pool[key[1]] == key_value[1] and pool["exchange_name"] == ex_name
+                ),
+                None,
+            )
+
         return next(
             (
                 self.validate_pool_info(key_value, event, pool, key)
