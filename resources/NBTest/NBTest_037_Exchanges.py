@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: fastlane-bot-38
+#     display_name: Python 3
 #     language: python
-#     name: fastlane-bot-38
+#     name: python3
 # ---
 
 # +
@@ -18,10 +18,9 @@ import json
 
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3, BancorV2, BancorPol
-from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
-    BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3, BancorV2
+from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI
 from unittest.mock import Mock
 import pytest
 
@@ -108,10 +107,3 @@ assert (carbon_v1_exchange.get_tkn0('', mocked_contract, setup_data['carbon_v1_e
 carbon_v1_exchange = CarbonV1()
 assert (carbon_v1_exchange.get_abi() == CARBON_CONTROLLER_ABI)
 cid = setup_data['carbon_v1_event_delete']['args']['id']
-
-# test_bancor_pol_exchange
-
-bancor_pol_exchange = BancorPol()
-assert (bancor_pol_exchange.get_abi() == BANCOR_POL_ABI)
-assert (bancor_pol_exchange.get_fee('', mocked_contract) == ('0.000', 0.0))
-assert (bancor_pol_exchange.get_tkn0('', mocked_contract, setup_data['bancor_pol_trading_enabled_event']) == "0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83")

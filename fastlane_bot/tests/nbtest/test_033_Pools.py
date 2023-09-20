@@ -13,8 +13,7 @@ import json
 import pytest
 
 from fastlane_bot import Bot
-from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
-    BancorV2Pool, BancorPolPool
+from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, BancorV2Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -162,51 +161,6 @@ def test_test_carbon_v1_pool_delete():
     assert (carbon_v1_pool.state['z_1'] == 0)
     assert (carbon_v1_pool.state['A_1'] == 0)
     
-    #
     
-
-# ------------------------------------------------------------
-# Test      033
-# File      test_033_Pools.py
-# Segment   test_bancor_pol_token_traded_event
-# ------------------------------------------------------------
-def test_test_bancor_pol_token_traded_event():
-# ------------------------------------------------------------
     
-    bancor_pol_pool = BancorPolPool()
-    bancor_pol_pool.state['tkn0_address'] = setup_data['bancor_pol_token_traded_event']['args']['token']
-    bancor_pol_pool.state['tkn0_balance'] = 10 + setup_data['bancor_pol_token_traded_event']['args']['amount']
-    bancor_pol_pool.update_from_event(setup_data['bancor_pol_token_traded_event'], 
-                      {'cid': '0x', 
-                       'fee': '0.000', 
-                       'fee_float': 0.0, 
-                       'exchange_name': 'bancor_pol', 
-                       'token': setup_data['bancor_pol_token_traded_event']['args']['token'], 
-                       'amount': setup_data['bancor_pol_token_traded_event']['args']['amount'], 
-                       'ethReceived': setup_data['bancor_pol_token_traded_event']['args']['ethReceived'], 
-                       'tkn0_symbol': 'tkn0', 
-                       'tkn1_symbol': 'tkn1',}
-    )
-    assert (bancor_pol_pool.state['tkn0_balance'] == 10)
     
-
-# ------------------------------------------------------------
-# Test      033
-# File      test_033_Pools.py
-# Segment   test_bancor_pol_trading_enabled_event
-# ------------------------------------------------------------
-def test_test_bancor_pol_trading_enabled_event():
-# ------------------------------------------------------------
-    
-    bancor_pol_pool = BancorPolPool()
-    bancor_pol_pool.state['tkn0_address'] = None
-    bancor_pol_pool.update_from_event(setup_data['bancor_pol_trading_enabled_event'],
-                                      {'cid': '0x',
-                                       'fee': '0.000',
-                                       'fee_float': 0.0,
-                                       'exchange_name': 'bancor_pol',
-                                       'token': setup_data['bancor_pol_trading_enabled_event']['args']['token'],
-                                       'tkn0_symbol': 'tkn0',
-                                       'tkn1_symbol': 'tkn1'}
-                                      )
-    assert (bancor_pol_pool.state['tkn0_address'] == setup_data['bancor_pol_trading_enabled_event']['args']['token'])
