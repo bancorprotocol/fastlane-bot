@@ -980,7 +980,7 @@ assert iseq(dy,dy2)
 assert iseq(p,p2)
 
 
-# ## simple_optimizer
+# ## PairOptimizer
 
 CC = CPCContainer(CPC.from_pk(p=2000+i*10, k=10*20000, pair=f"{T.ETH}/{T.USDC}") for i in range(11))
 c0 = CC.curves[0]
@@ -1061,6 +1061,8 @@ assert iseq(float(r), float(r_))
 assert abs(sum(r.dyvalues) < 1e-6)
 assert sum(r.dxvalues) < 0
 assert iseq(float(r),sum(r.dxvalues))
+
+sum(r.dyvalues)
 
 r = O.optimize(targettkn=T.USDC)
 assert abs(sum(r.dxvalues) < 1e-6)
@@ -1185,7 +1187,7 @@ tild[0]
 
 tildf
 
-# ## margp_optimizer
+# ## MargPOptimizer
 
 # ### no arbitrage possible
 
