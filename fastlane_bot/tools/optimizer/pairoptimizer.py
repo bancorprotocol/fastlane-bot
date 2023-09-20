@@ -12,8 +12,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "6.0"
-__DATE__ = "15/Sep/2023"
+__VERSION__ = "6.1"
+__DATE__ = "20/Sep/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -166,6 +166,7 @@ class PairOptimizer(CPCArbOptimizer):
     #         assert ti_format != CPCArbOptimizer.TIF_DFPG, "TIF_DFPG not implemented for convex optimization"
     #         return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format=ti_format)
 
+    PAIROPTIMIZEREPS = 1e-12
 
     SO_DXDYVECFUNC = "dxdyvecfunc"
     SO_DXDYSUMFUNC = "dxdysumfunc"
@@ -250,7 +251,7 @@ class PairOptimizer(CPCArbOptimizer):
         elif result == self.SO_TARGETTKN:
             p_min = np.min([c.p for c in curves_t])
             p_max = np.max([c.p for c in curves_t])
-            eps = params.get("eps", 1e-10)
+            eps = params.get("eps", self.PAIROPTIMIZEREPS)
             
             assert targettkn in {c0.tknx, c0.tkny,}, f"targettkn {targettkn} not in {c0.tknx}, {c0.tkny}"
             
