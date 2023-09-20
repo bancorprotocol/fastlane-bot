@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -95,7 +95,10 @@ assert event['args']['liquidity'] == [pool['liquidity'] for pool in manager.pool
 # ## test_update_from_event_carbon_v1_update
 
 # +
+event_create_for_update = event_data['carbon_v1_event_create_for_update']
 event = event_data['carbon_v1_event_update']
+
+manager.update_from_event(event_create_for_update)
 assert event['args']['order0'][0] != [pool['y_0'] for pool in manager.pool_data if pool['cid'] == event['args']['id']][0]
 
 manager.update_from_event(event)
