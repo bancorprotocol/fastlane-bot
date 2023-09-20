@@ -1,4 +1,4 @@
-from .Contract import Contract
+from .Host import Host
 
 PRECISION: int = 10 ** 18
 FEE_DENOM: int = 10 ** 10
@@ -12,9 +12,9 @@ abi = [
     {"name":"get_dy","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"int128","name":""},{"type":"int128","name":""},{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
 ]
 
-class Pool(Contract):
+class Pool:
     def __init__(self, address: str, abi_ex: list[dict]):
-        super().__init__(address, abi + abi_ex)
+        self.contract = Host.contract(address, abi + abi_ex)
         self.fee = self.contract.functions.fee().call()
         self.initial_A = self.contract.functions.initial_A().call()
         self.future_A = self.contract.functions.future_A().call()
