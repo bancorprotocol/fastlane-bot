@@ -732,7 +732,7 @@ class BaseManager:
 
         """
         if ex_name == "bancor_pol":
-            return "token", "bancor_pol_" + event["args"]["token"]
+            return "token", event["args"]["token"]
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
         if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
