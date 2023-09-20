@@ -21,6 +21,7 @@ class Univ3Calculator():
 
     FEE100      = 100
     FEE500      = 500
+    FEE2500     = 2500
     FEE3000     = 3000
     FEE10000    = 10000
 
