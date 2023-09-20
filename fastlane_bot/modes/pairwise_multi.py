@@ -11,7 +11,7 @@ import pandas as pd
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer
+from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
 
 
 class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
@@ -162,11 +162,11 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         Run main flow to find arbitrage.
         """
         CC_cc = CPCContainer(curves)
-        O = MargPOptimizer(CC_cc)
+        O = PairOptimizer(CC_cc)
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
         }  # this intentionally selects the non_carbon curve
-        r = O.margp_optimizer(src_token, params=dict(pstart=pstart))
+        r = O.optimize(src_token, params=dict(pstart=pstart))
         profit_src = -r.result
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df

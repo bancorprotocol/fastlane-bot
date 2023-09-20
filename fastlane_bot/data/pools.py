@@ -30,4 +30,5 @@ pancakeswap_v2_pools = [
     for idx in range(len(static_data))
     if static_data[idx]["exchange_name"] == "pancakeswap_v2"
 ]
+
 del static_data  # clear static data to save memory

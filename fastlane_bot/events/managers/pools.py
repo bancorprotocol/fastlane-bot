@@ -5,7 +5,7 @@ Contains the manager class for pools. This class is responsible for handling poo
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import List, Dict, Any, Callable, Optional
+from typing import List, Dict, Any, Callable, Optional, Tuple
 
 from web3 import Web3
 from web3.contract import Contract
@@ -37,6 +37,7 @@ class PoolManager(BaseManager):
             "sushiswap_v2",
             "uniswap_v3",
             "pancakeswap_v2",
+            "bancor_v2",
         ]:
             return pool_info["address"]
         elif pool_info["exchange_name"] == "carbon_v1":
@@ -170,9 +171,7 @@ class PoolManager(BaseManager):
 
         """
         pool_info = {
-            "last_updated_block": block_number
-            if block_number is not None
-            else self.web3.eth.blockNumber,
+            "last_updated_block": block_number,
             "address": address,
             "exchange_name": exchange_name,
             "tkn0_address": tkn0_address,
@@ -271,7 +270,10 @@ class PoolManager(BaseManager):
         assert pool, f"Pool not found in {exchange_name} pools"
 
         if contract:
-            pool_info.update(pool.update_from_contract(contract))
+            try:
+                pool_info.update(pool.update_from_contract(contract, cfg=self.cfg))
+            except TypeError:
+                return None
 
         self.pool_data.append(pool_info)
         return pool_info
@@ -319,6 +321,27 @@ class PoolManager(BaseManager):
         if ex_name == "sushiswap_v2":
             ex_name = "uniswap_v2"
 
+        if ex_name == "bancor_v2":
+            key0, key1 = key
+            key_value0, key_value1 = key_value
+            p = None
+            for pool in self.pool_data:
+                if (
+                    pool[key0] == key_value0
+                    and pool[key1] == key_value1
+                    and pool["exchange_name"] == ex_name
+                ):
+                    p = pool
+                    print(
+                        "\n"
+                        f"found pool "
+                        f"{pool[key0]}, {key_value0}"
+                        f"{pool[key1]}, {key_value1}"
+                        "\n"
+                    )
+                    break
+            return p
+
         if key == "address":
             key_value = self.web3.toChecksumAddress(key_value)
 
@@ -362,7 +385,9 @@ class PoolManager(BaseManager):
             The pool.
         """
         key = self.pool_key_from_info(pool_info)
+
         pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
+
         if not pool:
             self.add_pool_to_exchange(pool_info)
             key = self.pool_key_from_info(pool_info)

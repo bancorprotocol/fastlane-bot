@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.7
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -17,14 +17,14 @@
 #from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
 from fastlane_bot.tools.analyzer import CPCAnalyzer
-from fastlane_bot.tools.optimizer import SimpleOptimizer, MargPOptimizer, ConvexOptimizer
+from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
 from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
 from fastlane_bot.tools.arbgraphs import ArbGraph
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(OptimizerBase))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimpleOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ConvexOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
@@ -133,11 +133,11 @@ assert raises(CPCArbOptimizer).startswith("Can't instantiate abstract class")
 assert raises(CPCArbOptimizer.OptimizerResult).startswith("Can't instantiate abstract class")
 
 assert not raises(MargPOptimizer, CCm)
-assert not raises(SimpleOptimizer, CCm)
+assert not raises(PairOptimizer, CCm)
 assert not raises(ConvexOptimizer, CCm)
 
 assert MargPOptimizer(CCm).kind == "margp"
-assert SimpleOptimizer(CCm).kind == "simple"
+assert PairOptimizer(CCm).kind == "pair"
 assert ConvexOptimizer(CCm).kind == "convex"
 
 CPCArbOptimizer.MargpOptimizerResult(None, time=0,errormsg="err", optimizer=None)
@@ -559,7 +559,7 @@ assert raises(r.trade_instructions, ti_format=O.TIF_DFPG).startswith("TIF_DFPG n
 pair = f"{T.ETH}/{T.USDC}"
 CCs  = CCm.bypairs(pair)
 CA   = CPCAnalyzer(CCs)
-O = SimpleOptimizer(CCs)
+O = PairOptimizer(CCs)
 #ArbGraph.from_cc(CCs).plot()._
 
 CA.count_by_tokens()
@@ -570,15 +570,15 @@ CA.count_by_tokens()
 
 # #### simple optimizer
 
-r = O.simple_optimizer(T.USDC)
+r = O.optimize(T.USDC)
 r
 
 # #### result
 
-assert type(r) == SimpleOptimizer.SimpleOptimizerResult
-assert round(r.result,5) <= -1217.28494
+assert type(r) == PairOptimizer.MargpOptimizerResult
+assert round(r.result, 5) == -1217.2442
 assert r.time < 0.1
-assert r.method == "simple-targettkn"
+assert r.method == "margp-pair"
 assert r.errormsg is None
 
 round(r.result,5)
@@ -586,7 +586,7 @@ round(r.result,5)
 # #### trade instructions
 
 ti = r.trade_instructions()
-assert type(ti[0]) == SimpleOptimizer.TradeInstruction
+assert type(ti[0]) == PairOptimizer.TradeInstruction
 
 assert r.trade_instructions() == r.trade_instructions(ti_format=O.TIF_OBJECTS)
 ti = r.trade_instructions(ti_format=O.TIF_OBJECTS)
@@ -598,11 +598,11 @@ assert len(ti0)==1
 ti0=ti0[0]
 assert ti0.cid == ti0.curve.cid
 assert type(ti0).__name__ == "TradeInstruction"
-assert type(ti[0]) == SimpleOptimizer.TradeInstruction
+assert type(ti[0]) == PairOptimizer.TradeInstruction
 assert ti0.tknin == f"{T.USDC}"
 assert ti0.tknout == f"{T.WETH}"
-assert round(ti0.amtin, 8)  == 48153.80713493
-assert round(ti0.amtout, 8) == -26.18299611
+assert round(ti0.amtin, 5)  == 48153.80865
+assert round(ti0.amtout, 5) == -26.18300
 assert ti0.error is None
 ti[:2]
 
@@ -615,10 +615,12 @@ assert len(tid0)==1
 tid0=tid0[0]
 assert tid0["tknin"] == f"{T.USDC}"
 assert tid0["tknout"] == f"{T.WETH}"
-assert round(tid0["amtin"], 8)  == 48153.80713493
-assert round(tid0["amtout"], 8) == -26.18299611
+assert round(tid0["amtin"], 5)  == 48153.80865
+assert round(tid0["amtout"], 5) == -26.183
 assert tid0["error"] is None
 tid[:2]
+
+# trade instructions of format `TIF_DFRAW` (same as `TIF_DF`): raw dataframe
 
 df = r.trade_instructions(ti_format=O.TIF_DF).fillna("")
 assert tuple(df.index) == cids
@@ -634,8 +636,36 @@ assert tif0[tif0["tknin"]] == tid0["amtin"]
 assert tif0[tif0["tknout"]] == tid0["amtout"]
 df[:2]
 
-assert raises(r.trade_instructions, ti_format=O.TIF_DFAGGR).startswith("TIF_DFAGGR not implemented for")
-assert raises(r.trade_instructions, ti_format=O.TIF_DFPG).startswith("TIF_DFPG not implemented for")
+# trade instructions of format `TIF_DFAGGR` (aggregated data frame)
+
+df = r.trade_instructions(ti_format=O.TIF_DFAGGR)
+assert len(df) == 16 
+assert tuple(df.index[-4:]) == ('PRICE', 'AMMIn', 'AMMOut', 'TOTAL NET')
+assert tuple(df.columns) == ('USDC-eB48', 'WETH-6Cc2')
+df
+
+
+
+# prices and gains analysis data frame `TIF_DFPG`
+
+df = r.trade_instructions(ti_format=O.TIF_DFPG)
+assert len(df) == 12
+assert set(x[0] for x in tuple(df.index)) == {'carbon_v1', 'sushiswap_v2', 'uniswap_v2', 'uniswap_v3'}
+assert max(df["margp"]) == min(df["margp"]) 
+assert tuple(df.index.names) == ('exch', 'cid')
+assert tuple(df.columns) == (
+    'fee',
+    'pair',
+    'amt_tknq',
+    'tknq',
+    'margp0',
+    'effp',
+    'margp',
+    'gain_r',
+    'gain_tknq',
+    'gain_ttkn'
+)
+df
 
 # ## Analysis by pair
 

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -188,7 +188,7 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) == 22, f"[TestMultiMode] Expected 22 arbs, found {len(r)}"
+assert len(r) == 25, f"[TestMultiMode] Expected 25 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
 # ## Test_Multiple_Curves_Used
@@ -240,9 +240,4 @@ O, profit_src, r, trade_instructions_df = finder.run_main_flow(curves=curves_exp
 assert len(curves_before) - len(wrong_direction_cids) == len(test_process_wrong_direction_pools), f"[TestMultiMode] Wrong direction CIDs not removed correctly, started with {len(curves_before)}, removing {len(wrong_direction_cids)}, expected {len(curves_before) - len(wrong_direction_cids)} got {len(test_process_wrong_direction_pools)}"
 for curve in test_process_wrong_direction_pools:
     assert curve.cid not in wrong_direction_cids, f"[TestMultiMode] Failed to remove curve {curve.cid} from list of wrong direction pools"
-assert iseq(profit_src, -0.059102630716552085)
-# -
-
-
-
-
+assert iseq(profit_src, 2.905623487869935e-05)

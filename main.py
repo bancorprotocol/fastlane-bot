@@ -5,26 +5,55 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import json
-import os
+
+try:
+    env_var = "TENDERLY_FORK_ID"
+    with open(".env", "r") as file:
+        lines = file.readlines()
+
+    with open(".env", "w") as file:
+        for line in lines:
+            if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
+                line = f"{env_var}="
+            file.write(line)
+except:
+    pass
+
 import time
-from _decimal import Decimal
-from typing import List, Any, Tuple, Hashable
+from typing import List
 
 import click
-import pandas as pd
 from dotenv import load_dotenv
-from joblib import Parallel, delayed
 
-from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config import Config
-from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.utils import (
-    complex_handler,
-    filter_latest_events,
+    add_initial_pool_data,
+    get_static_data,
+    handle_exchanges,
+    handle_target_tokens,
+    handle_flashloan_tokens,
+    get_config,
+    get_loglevel,
+    update_pools_from_events,
+    write_pool_data_to_disk,
+    init_bot,
+    get_cached_events,
+    handle_subsequent_iterations,
+    verify_state_changed,
+    handle_duplicates,
+    handle_initial_iteration,
+    get_latest_events,
+    get_start_block,
+    set_network_to_mainnet_if_replay,
+    set_network_to_tenderly_if_replay,
+    append_fork_for_cleanup,
+    delete_tenderly_forks,
+    verify_min_bnt_is_respected,
+    handle_target_token_addresses,
+    handle_replay_from_block,
 )
 from fastlane_bot.tools.cpc import T
+from fastlane_bot.utils import find_latest_timestamped_folder
 
 load_dotenv()
 
@@ -57,15 +86,18 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.WETH},{T.USDC},{T.USDT},{T.WBTC},{T.BNT},{T.NATIVE_ETH}",
+    default=f"{T.WBTC},{T.BNT},{T.NATIVE_ETH},{T.USDC},{T.USDT},{T.WETH},{T.LINK}",
     type=str,
-    help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, the search space is decreased for all modes, including the b3_two_hop mode (assuming that --limit_bancor3_flashloan_tokens=True).",
+    help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
+    "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
+    "the search space is decreased for all modes, including the b3_two_hop mode (assuming that "
+    "--limit_bancor3_flashloan_tokens=True).",
 )
 @click.option("--config", default=None, type=str, help="See config in config/*")
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,pancakeswap_v2",
+    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_v2, pancakeswap_v2",
     help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
 )
 @click.option(
@@ -122,7 +154,8 @@ load_dotenv()
     "--limit_bancor3_flashloan_tokens",
     default=True,
     type=bool,
-    help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens parameter to be overwritten as all tokens supported by Bancor v3.",
+    help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`. Set to False to allow the flashloan_tokens "
+    "parameter to be overwritten as all tokens supported by Bancor v3.",
 )
 @click.option(
     "--default_min_profit_bnt",
@@ -140,7 +173,15 @@ load_dotenv()
     "--target_tokens",
     default=None,
     type=str,
-    help="A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.",
+    help="A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to "
+    "target only the flashloan tokens.",
+)
+@click.option(
+    "--replay_from_block",
+    default=None,
+    type=int,
+    help="Set to a block number to replay from that block. (For debugging / testing). A valid Tenderly account and "
+    "configuration is required.",
 )
 def main(
     cache_latest_only: bool,
@@ -164,6 +205,7 @@ def main(
     default_min_profit_bnt: int,
     timeout: int,
     target_tokens: str,
+    replay_from_block: int,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -181,123 +223,97 @@ def main(
         alchemy_max_block_fetch (int): The maximum number of blocks to fetch in a single request.
         static_pool_data_filename (str): The filename of the static pool data to read from.
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
-        logging_path (str): The Databricks logging path.
+        logging_path (str): The logging path.
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
+        run_data_validator (bool): Whether to run the data validator or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
         default_min_profit_bnt (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
+        replay_from_block (int): The block number to replay from. (For debugging / testing)
 
     """
-    start_time = time.time()
+
+    if replay_from_block:
+        polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
+            polling_interval
+        )
 
     # Set config
-    loglevel = (
-        Config.LOGLEVEL_DEBUG
-        if loglevel == "DEBUG"
-        else Config.LOGLEVEL_INFO
-        if loglevel == "INFO"
-        else Config.LOGLEVEL_WARNING
-        if loglevel == "WARNING"
-        else Config.LOGLEVEL_ERROR
-        if loglevel == "ERROR"
-        else Config.LOGLEVEL_INFO
+    loglevel = get_loglevel(loglevel)
+
+    # Initialize the config object
+    cfg = get_config(
+        config,
+        default_min_profit_bnt,
+        limit_bancor3_flashloan_tokens,
+        loglevel,
+        logging_path,
     )
 
-    default_min_profit_bnt = Decimal(default_min_profit_bnt)
+    # Format the flashloan tokens
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
 
-    if config and config == "tenderly":
-        cfg = Config.new(config=Config.CONFIG_TENDERLY, loglevel=loglevel)
-        cfg.logger.info("Using Tenderly config")
-    else:
-        cfg = Config.new(config=Config.CONFIG_MAINNET, loglevel=loglevel)
-        cfg.logger.info("Using mainnet config")
+    # Search the logging directory for the latest timestamped folder
+    logging_path = find_latest_timestamped_folder(logging_path)
 
-    cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
-    cfg.DEFAULT_MIN_PROFIT_BNT = Decimal(str(default_min_profit_bnt))
-    cfg.DEFAULT_MIN_PROFIT = Decimal(str(default_min_profit_bnt))
+    # Format the target tokens
+    target_tokens = handle_target_tokens(cfg, flashloan_tokens, target_tokens)
 
-    # Log the flashloan tokens
-    flashloan_tokens = flashloan_tokens.split(",")
-    flashloan_tokens = [
-        QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
-    ]
+    # Format the exchanges
+    exchanges = handle_exchanges(cfg, exchanges)
+
+    # Log the run configuration
     cfg.logger.info(
-        f"Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
+        f"""
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+        Starting fastlane bot with the following configuration:
+        
+        cache_latest_only: {cache_latest_only}
+        backdate_pools: {backdate_pools}
+        arb_mode: {arb_mode}
+        flashloan_tokens: {flashloan_tokens}
+        config: {config}
+        n_jobs: {n_jobs}
+        exchanges: {exchanges}
+        polling_interval: {polling_interval}
+        alchemy_max_block_fetch: {alchemy_max_block_fetch}
+        static_pool_data_filename: {static_pool_data_filename}
+        reorg_delay: {reorg_delay}
+        logging_path: {logging_path}
+        loglevel: {loglevel}
+        static_pool_data_sample_sz: {static_pool_data_sample_sz}
+        use_cached_events: {use_cached_events}
+        run_data_validator: {run_data_validator}
+        randomizer: {randomizer}
+        limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
+        default_min_profit_bnt: {default_min_profit_bnt}
+        timeout: {timeout}
+        target_tokens: {target_tokens}
+        
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        """
     )
 
-    if target_tokens:
-        if target_tokens == "flashloan_tokens":
-            target_tokens = flashloan_tokens
-        else:
-            target_tokens = target_tokens.split(",")
-            target_tokens = [
-                QueryInterface.cleanup_token_key(token) for token in target_tokens
-            ]
+    # Get the static pool data, tokens and uniswap v2 event mappings
+    static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
+        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+    )
 
-            # Ensure that the target tokens are a subset of the flashloan tokens
-            for token in flashloan_tokens:
-                if token not in target_tokens:
-                    cfg.logger.warning(
-                        f"Falshloan token {token} not in target tokens. Adding it to target tokens."
-                    )
-                    target_tokens.append(token)
+    target_token_addresses = handle_target_token_addresses(
+        static_pool_data, target_tokens
+    )
 
-        cfg.logger.info(
-            f"Target tokens are set as: {target_tokens}, {type(target_tokens)}"
-        )
-
-    # Set external exchanges
-    exchanges = exchanges.split(",")
-    cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
-
-    # Check if CSV file exists
-    if not os.path.isfile(f"fastlane_bot/data/{static_pool_data_filename}.csv"):
-        cfg.logger.error("CSV file does not exist")
-        raise FileNotFoundError("CSV file does not exist")
-
-    # Read static pool data from CSV
-    try:
-        static_pool_data = pd.read_csv(
-            f"fastlane_bot/data/{static_pool_data_filename}.csv", low_memory=False
-        )
-        static_pool_data = static_pool_data[
-            static_pool_data["exchange_name"].isin(exchanges)
-        ]
-        if static_pool_data_sample_sz != "max":
-            bancor3_pool_data = static_pool_data[
-                static_pool_data["exchange_name"] == "bancor_v3"
-            ]
-            non_bancor3_pool_data = static_pool_data[
-                static_pool_data["exchange_name"] != "bancor_v3"
-            ]
-            non_bancor3_pool_data = non_bancor3_pool_data.sample(
-                n=int(static_pool_data_sample_sz)
-            )
-            static_pool_data = pd.concat([bancor3_pool_data, non_bancor3_pool_data])
-        uniswap_v2_event_mappings = pd.read_csv(
-            "fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False
-        )
-        uniswap_v2_event_mappings = dict(
-            uniswap_v2_event_mappings[["address", "exchange"]].values
-        )
-        tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
-    except pd.errors.ParserError:
-        cfg.logger.error("Error parsing the CSV file")
-        raise
-
+    # Break if timeout is hit to test the bot flags
     if timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
         return
-
-    # Initialize web3
-    static_pool_data["cid"] = [
-        cfg.w3.keccak(text=f"{row['descr']}").hex()
-        for index, row in static_pool_data.iterrows()
-    ]
 
     # Initialize data fetch manager
     mgr = Manager(
@@ -308,14 +324,13 @@ def main(
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
+        replay_from_block=replay_from_block,
+        target_tokens=target_token_addresses,
     )
 
-    # Add initial pools for each row in the static_pool_data
-    start_time = time.time()
-    Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
-    )
-    cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
+
+    # Add initial pool data to the manager
+    add_initial_pool_data(cfg, mgr, n_jobs)
 
     # Run the main loop
     run(
@@ -334,6 +349,7 @@ def main(
         randomizer,
         timeout,
         target_tokens,
+        replay_from_block,
     )
 
 
@@ -353,6 +369,7 @@ def run(
     randomizer: int,
     timeout: int,
     target_tokens: List[str] or None,
+    replay_from_block: int or None,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -373,197 +390,14 @@ def run(
         randomizer (bool): Whether to randomize the polling interval or not.
         timeout (int): The timeout for the polling interval.
         target_tokens (List[str]): List of tokens that the bot will target for arbitrage.
+        replay_from_block (int): The block number to replay from. (For debugging / testing)
     """
 
-    def get_event_filters(
-        start_block: int, current_block: int, reorg_delay: int
-    ) -> Any:
-        """
-        Creates event filters for the specified block range.
-
-        Args:
-            start_block (int): The starting block number for the event filters.
-            current_block (int): The current block number for the event filters.
-            reorg_delay (int): The number of blocks to wait to avoid reorgs.
-
-        Returns:
-            Any: A list of event filters.
-        """
-        if reorg_delay == 0:
-            current_block = "latest"
-
-        return Parallel(n_jobs=n_jobs, backend="threading")(
-            delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
-            for event in mgr.events
-        )
-
-    def get_all_events(event_filters: Any) -> List[Any]:
-        """
-        Fetches all events using the given event filters.
-
-        Args:
-            event_filters (Any): A list of event filters to use.
-
-        Returns:
-            List[Any]: A nested list of all fetched events.
-        """
-        return Parallel(n_jobs=n_jobs, backend="threading")(
-            delayed(event_filter.get_all_entries)() for event_filter in event_filters
-        )
-
-    def save_events_to_json(
-        latest_events: List[Any], start_block: int, current_block: int
-    ) -> None:
-        """
-        Saves the given events to a JSON file.
-
-        Args:
-            latest_events (List[Any]): A list of the latest events to save.
-            start_block (int): The starting block number of the events.
-            current_block (int): The current block number of the events.
-        """
-        if cache_latest_only:
-            path = f"{logging_path}latest_event_data.json"
-        else:
-            if not os.path.isdir("event_data"):
-                os.mkdir("event_data")
-            path = f"event_data/{mgr.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
-        try:
-            with open(path, "w") as f:
-                latest_events = [
-                    _["args"].pop("contextId", None) for _ in latest_events
-                ] and latest_events
-                f.write(json.dumps(latest_events))
-        except Exception as e:
-            mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
-
-        mgr.cfg.logger.info(f"Saved events to {path}")
-
-    def update_pools_from_events(latest_events: List[Any]) -> None:
-        """
-        Updates the pools with the given events.
-
-        Args:
-            latest_events (List[Any]): A list of the latest events.
-        """
-        Parallel(n_jobs=n_jobs, backend="threading")(
-            delayed(mgr.update)(event=event) for event in latest_events
-        )
-
-    def write_pool_data_to_disk(current_block: int) -> None:
-        """
-        Writes the pool data to disk.
-
-        Args:
-            current_block (int): The current block number.
-        """
-        if cache_latest_only:
-            path = f"{logging_path}latest_pool_data.json"
-        else:
-            if not os.path.isdir("pool_data"):
-                os.mkdir("pool_data")
-            path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
-        try:
-            with open(path, "w") as f:
-                f.write(json.dumps(mgr.pool_data))
-        except Exception as e:
-            mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
-
-    def parse_bancor3_rows_to_update(
-        rows_to_update: List[Hashable],
-    ) -> Tuple[List[Hashable], List[Hashable]]:
-        """
-        Parses the rows to update for Bancor v3 pools.
-
-        Args:
-            rows_to_update (List[int]): A list of indices of rows to update.
-
-        Returns:
-            Tuple[List[str], List[str]]: A tuple of lists of Bancor v3 pool addresses and other pool addresses.
-        """
-        bancor3_pool_rows = [
-            idx
-            for idx in rows_to_update
-            if mgr.pool_data[idx]["exchange_name"] == "bancor_v3"
-        ]
-        other_pool_rows = [
-            idx
-            for idx in rows_to_update
-            if mgr.pool_data[idx]["exchange_name"] != "bancor_v3"
-        ]
-        return bancor3_pool_rows, other_pool_rows
-
-    def init_bot(mgr: Manager) -> CarbonBot:
-        """
-        Initializes the bot.
-
-        Parameters
-        ----------
-        mgr : Base
-            The manager object.
-
-        Returns
-        -------
-        CarbonBot
-            The bot object.
-        """
-        mgr.cfg.logger.info("Initializing the bot...")
-        db = QueryInterface(
-            mgr=mgr,
-            ConfigObj=mgr.cfg,
-            state=mgr.pool_data,
-            uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings,
-            exchanges=mgr.exchanges,
-        )
-        bot = CarbonBot(ConfigObj=mgr.cfg)
-        bot.db = db
-        assert isinstance(
-            bot.db, QueryInterface
-        ), "QueryInterface not initialized correctly"
-        return bot
-
-    def update_pools_from_contracts(
-        n_jobs,
-        rows_to_update: List[int],
-        not_bancor_v3: bool = True,
-        current_block: int = None,
-    ) -> None:
-        """
-        Updates the pools with the given indices by calling the contracts.
-
-        Parameters
-        ----------
-        n_jobs : int
-            The number of jobs to run in parallel.
-        rows_to_update : List[int]
-            A list of indices of rows to update.
-        not_bancor_v3 : bool, optional
-            Whether to update pools that are not Bancor v3 pools, by default True
-        current_block : int, optional
-            The current block number, by default None
-
-        """
-        if not_bancor_v3:
-            Parallel(n_jobs=n_jobs, backend="threading")(
-                delayed(mgr.update)(
-                    pool_info=mgr.pool_data[idx],
-                    limiter=not_bancor_v3,
-                    block_number=current_block,
-                )
-                for idx in rows_to_update
-            )
-        else:
-            with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
-                for idx, pool in enumerate(rows_to_update):
-                    mgr.update(
-                        pool_info=mgr.pool_data[idx],
-                        limiter=not_bancor_v3,
-                        block_number=current_block,
-                    )
-
-    bot = None
+    bot = tenderly_uri = forked_from_block = None
     loop_idx = last_block = 0
     start_timeout = time.time()
+    mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
+    forks_to_cleanup = []
     while True:
         try:
 
@@ -571,152 +405,135 @@ def run(
             initial_state = mgr.pool_data.copy()
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-            start_block = (
-                max(block["last_updated_block"] for block in mgr.pool_data)
-                - reorg_delay
-                if last_block != 0
-                else mgr.web3.eth.blockNumber - reorg_delay - alchemy_max_block_fetch
+            start_block = get_start_block(
+                alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
             )
 
             # Get all events from the last block to the current block
-            current_block = mgr.web3.eth.blockNumber - reorg_delay
+            if not replay_from_block:
+                current_block = mgr.web3.eth.blockNumber - reorg_delay
+            elif last_block == 0:
+                current_block = replay_from_block - reorg_delay
+            else:
+                current_block = last_block + 1
 
+            # Log the current start, end and last block
             mgr.cfg.logger.info(
                 f"Fetching events from {start_block} to {current_block}... {last_block}"
             )
 
-            if not use_cached_events:
+            # Set the network connection to Mainnet if replaying from a block
+            mgr = set_network_to_mainnet_if_replay(
+                last_block,
+                loop_idx,
+                mainnet_uri,
+                mgr,
+                replay_from_block,
+                use_cached_events,
+            )
 
-                # Get all event filters, events, and flatten them
-                events = [
-                    complex_handler(event)
-                    for event in [
-                        complex_handler(event)
-                        for event in get_all_events(
-                            get_event_filters(start_block, current_block, reorg_delay)
-                        )
-                    ]
-                ]
-
-                # Filter out the latest events per pool, save them to disk, and update the pools
-                latest_events = filter_latest_events(mgr, events)
-                mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
-
-                # Save the latest events to disk
-                save_events_to_json(latest_events, start_block, current_block)
-
-            else:
-                # read data from the json file latest_event_data.json
-                mgr.cfg.logger.info("Using cached events")
-                path = f"{logging_path}latest_event_data.json"
-                os.path.isfile(path)
-                with open(path, "r") as f:
-                    latest_events = json.load(f)
-                if not latest_events or len(latest_events) == 0:
-                    raise ValueError("No events found in the json file")
-                mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+            # Get the events
+            latest_events = (
+                get_cached_events(mgr, logging_path)
+                if use_cached_events
+                else get_latest_events(
+                    current_block,
+                    mgr,
+                    n_jobs,
+                    reorg_delay,
+                    start_block,
+                    cache_latest_only,
+                    logging_path,
+                )
+            )
 
             # Update the pools from the latest events
-            update_pools_from_events(latest_events)
+            update_pools_from_events(n_jobs, mgr, latest_events)
 
-            # If this is the first iteration, update all pools without a recent event from the contracts
-            if last_block == 0 and backdate_pools:
-                rows_to_update = mgr.get_rows_to_update(start_block)
-                rows_to_update += [
-                    idx
-                    for idx, pool in enumerate(mgr.pool_data)
-                    if pool["exchange_name"] == "bancor_v3"
-                ]
+            # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
+            handle_initial_iteration(
+                backdate_pools, current_block, last_block, mgr, n_jobs, start_block
+            )
 
-                # Remove duplicates
-                rows_to_update = list(set(rows_to_update))
-                # Because we use Bancor3 pools for pricing, we want to update them all on the initial pass.
-                bancor3_pool_rows, other_pool_rows = parse_bancor3_rows_to_update(
-                    rows_to_update
-                )
-
-                for rows_to_update in [bancor3_pool_rows, other_pool_rows]:
-                    update_pools_from_contracts(
-                        n_jobs=n_jobs,
-                        rows_to_update=rows_to_update,
-                        current_block=current_block,
-                    )
-
-            elif last_block == 0 and "bancor_v3" in mgr.exchanges:
-                # Update the pool data on disk
-                mgr.get_rows_to_update(start_block)
-                rows_to_update = [
-                    idx
-                    for idx, pool in enumerate(mgr.pool_data)
-                    if pool["exchange_name"] == "bancor_v3"
-                ]
-                update_pools_from_contracts(
-                    n_jobs=n_jobs,
-                    rows_to_update=rows_to_update,
-                    not_bancor_v3=False,
-                    current_block=current_block,
-                )
-            elif last_block == 0 and "carbon_v1" in mgr.exchanges:
-                # Update the pool data on disk
-                mgr.get_rows_to_update(start_block)
-
-            # Update the last block and write the pool data to disk for debugging, and to backup the state
+            # Update the last block number
             last_block = current_block
-            write_pool_data_to_disk(current_block)
 
-            # check if any duplicate cid's exist in the pool data
-            mgr.deduplicate_pool_data()
-            cids = [pool["cid"] for pool in mgr.pool_data]
-            assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
+            # Write the pool data to disk
+            write_pool_data_to_disk(cache_latest_only, logging_path, mgr, current_block)
 
-            # Delete and re-initialize the bot (ensures that the bot is using the latest pool data)
+            # Handle/remove duplicates in the pool data
+            handle_duplicates(mgr)
+
+            # Set the network connection to Tenderly if replaying from a block
+            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+                last_block,
+                loop_idx,
+                mgr,
+                replay_from_block,
+                tenderly_uri,
+                use_cached_events,
+                current_block,
+            )
+
+            # Delete the bot (if it exists) to avoid memory leaks
             del bot
+
+            # Re-initialize the bot
             bot = init_bot(mgr)
 
-            assert (
-                bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
-            ), "bot failed to update min profit"
-            mgr.cfg.logger.debug("Bot successfully updated min profit")
+            # Verify that the state has changed
+            verify_state_changed(bot, initial_state, mgr)
 
-            # Compare the initial state to the final state, and update the state if it has changed
-            final_state = mgr.pool_data.copy()
-            assert (
-                bot.db.state == final_state
-            ), "\n *** bot failed to update state *** \n"
-            if initial_state != final_state:
-                mgr.cfg.logger.info("State has changed...")
+            # Verify that the minimum profit in BNT is respected
+            verify_min_bnt_is_respected(bot, mgr)
 
-            bot.db.handle_token_key_cleanup()
-            bot.db.remove_unmapped_uniswap_v2_pools()
-
-            # Remove zero liquidity pools
-            if loop_idx > 0:
-                bot.db.remove_zero_liquidity_pools()
-                bot.db.remove_unsupported_exchanges()
-
-                # Filter the target tokens
-                if target_tokens:
-                    bot.db.filter_target_tokens(target_tokens)
-
-                # Run the bot
-                bot.run(
-                    polling_interval=polling_interval,
-                    flashloan_tokens=flashloan_tokens,
-                    mode="single",
-                    arb_mode=arb_mode,
-                    run_data_validator=run_data_validator,
-                    randomizer=randomizer,
-                )
+            # Handle subsequent iterations
+            handle_subsequent_iterations(
+                arb_mode,
+                bot,
+                flashloan_tokens,
+                polling_interval,
+                randomizer,
+                run_data_validator,
+                target_tokens,
+                loop_idx,
+                logging_path,
+                replay_from_block,
+                tenderly_uri,
+                forks_to_cleanup,
+                mgr,
+                forked_from_block,
+            )
 
             # Increment the loop index
             loop_idx += 1
 
             # Sleep for the polling interval
-            time.sleep(polling_interval)
+            if not replay_from_block:
+                time.sleep(polling_interval)
 
+            # Check if timeout has been hit, and if so, break the loop for tests
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
+
+            # Delete all Tenderly forks except the most recent one
+            # if replay_from_block:
+            #     forks_to_cleanup = delete_tenderly_forks(forks_to_cleanup, mgr)
+            #     break
+
+            if loop_idx == 1:
+                mgr.cfg.logger.info(
+                    """
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    
+                    Finished first iteration of data sync. Now starting main loop arbitrage search.
+                    
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    """
+                )
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
@@ -725,3 +542,5 @@ def run(
 
 if __name__ == "__main__":
     main()
+
+#%%

@@ -196,17 +196,7 @@ for pool in first_check_pools:
     assert pool.cid in pool_cids, f"[test_bancor_v3] Validation missing pool.cid {pool.cid} in {pool_cids}"
 optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, 'BNT-FF1C')
 assert type(optimal_arb) == float, f"[test_bancor_v3] Optimal arb calculation type is {type(optimal_arb)} not float"
-assert iseq(optimal_arb, 5003.2368760578265), f"[test_bancor_v3] Optimal arb calculation type is {optimal_arb}, expected 5003.2368760578265"
-
-
-
-
-
-
-
-
-
-
+assert iseq(optimal_arb, 4051.1611717583105), f"[test_bancor_v3] Optimal arb calculation type is {optimal_arb}, expected 4051.1611717583105"
 
 # ------------------------------------------------------------
 # Test      038
@@ -282,7 +272,7 @@ def test_test_get_fee_safe():
             )
     ext_fee = finder.get_fee_safe(first_check_pools[1].fee)
     assert type(ext_fee) == float, f"[test_bancor_v3] Testing external pool, fee type is {type(ext_fee)} not float"
-    assert iseq(ext_fee, 0.003), f"[test_bancor_v3] Testing external pool, fee amt is {ext_fee} not 0.003"
+    assert iseq(ext_fee, 0.0005), f"[test_bancor_v3] Testing external pool, fee amt is {ext_fee} not 0.0005"
     
 
 # ------------------------------------------------------------

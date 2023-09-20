@@ -5,7 +5,7 @@ Brownie-related transaction handlers for the Fastlane project.
 Licensed under MIT
 """
 __VERSION__ = "1.0"
-__DATE__="01/May/2023"
+__DATE__ = "01/May/2023"
 
 # import itertools
 # import random
@@ -29,9 +29,9 @@ from web3.exceptions import TimeExhausted
 from web3.types import TxParams, TxReceipt
 
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-#from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
+# from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 # from fastlane_bot.db.models import Token, Pool
-#import fastlane_bot.config as c
+# import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
 from fastlane_bot.utils import num_format, log_format, num_format_float
@@ -49,19 +49,19 @@ class TxHelper:
     gas_price_multiplier : float
         The gas price multiplier.
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
-    ConfigObj: Config
-    usd_gas_limit: float = 20 #TODO this needs to be dynamic
-    gas_price_multiplier: float = 1.2
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
+    ConfigObj: Config
+    usd_gas_limit: float = 20  # TODO this needs to be dynamic
+    gas_price_multiplier: float = 1.2
 
     def __post_init__(self):
         self.PRIVATE_KEY: str = self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         self.COINGECKO_URL: str = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true'
         self.arb_contract: Any = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
         self.w3: Web3 = self.ConfigObj.w3
+
     @property
     def wallet_address(self) -> str:
         """Get the wallet address.
@@ -156,7 +156,7 @@ class TxHelper:
                                 flashloan_token_address: str,
                                 flashloan_amount: int or float,
                                 verbose: bool = True,
-                                result = None) -> str:
+                                result=None) -> str:
         """Submit a flashloan arbitrage transaction.
 
         Parameters
@@ -209,7 +209,6 @@ class TxHelper:
         if result == self.XS_TRANSACTION:
             return transaction
 
-
         # Sign the transaction
         signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
             transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
@@ -244,18 +243,18 @@ class TxHelper:
               f"{balance} Wei \n"
               f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether")
 
+
 @dataclass
 class TxHelpers:
     """
     This class is used to organize web3/brownie transaction tools.
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
     ConfigObj: Config
     # This is used for the Alchemy SDK
     network = Network.ETH_MAINNET
-
 
     def __post_init__(self):
 
@@ -272,23 +271,23 @@ class TxHelpers:
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
-
-
     XS_API_CALLS = "various_api_calls"
     XS_TRANSACTION = "transaction_built"
     XS_GAS_IN_BNT = "gas_in_bnt"
     XS_MIN_PROFIT_CHECK = "min_profit_check"
+
     def validate_and_submit_transaction(
-        self,
-        route_struct: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        expected_profit: Decimal,
-        bnt_eth: Tuple,
-        result: str = None,
-        verbose: bool = False,
-        safety_override: bool = False,
-        log_object: {} = None
+            self,
+            route_struct: List[Dict[str, Any]],
+            src_amt: int,
+            src_address: str,
+            expected_profit: Decimal,
+            bnt_eth: Tuple,
+            result: str = None,
+            verbose: bool = False,
+            safety_override: bool = False,
+            log_object: Dict[str, Any] = None,
+            flashloan_struct: List[Dict[str, int or str]] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -311,7 +310,8 @@ class TxHelpers:
                 f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
-        current_max_priority_gas = int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+        current_max_priority_gas = int(
+            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
 
         # Get current block number
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -328,7 +328,8 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
-            test_fake_gas=True if result is not None else False
+            test_fake_gas=True if result is not None else False,
+            flashloan_struct=flashloan_struct
         )
         if result == self.XS_TRANSACTION:
             return arb_tx
@@ -366,14 +367,19 @@ class TxHelpers:
             gas_cost_usd = "Coingecko_api_failed"
             uni_v3_cost_usd = "Coingecko_api_failed"
 
-        transaction_log = {"block_number": block_number, "gas": gas_estimate, "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]), "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price, "gas_cost_bnt": num_format_float(gas_in_src), "gas_cost_eth": num_format_float(gas_cost_eth), "gas_cost_usd": + num_format_float(gas_cost_usd), "uni_v3_trade_cost_eth": num_format_float(gas_cost_eth_uni_v3), "uni_v3_trade_cost_usd": num_format_float(uni_v3_cost_usd)}
+        transaction_log = {"block_number": block_number, "gas": gas_estimate,
+                           "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]),
+                           "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price,
+                           "gas_cost_bnt": num_format_float(gas_in_src), "gas_cost_eth": num_format_float(gas_cost_eth),
+                           "gas_cost_usd": + num_format_float(gas_cost_usd),
+                           "uni_v3_trade_cost_eth": num_format_float(gas_cost_eth_uni_v3),
+                           "uni_v3_trade_cost_usd": num_format_float(uni_v3_cost_usd)}
 
         log_json = {**log_object, **transaction_log}
 
         self.ConfigObj.logger.info(log_format(log_data=log_json, log_name='arb_with_gas'))
         if result == self.XS_MIN_PROFIT_CHECK:
             return adjusted_reward, gas_in_src
-
 
         if adjusted_reward > gas_in_src or safety_override:
             self.ConfigObj.logger.info(
@@ -391,6 +397,7 @@ class TxHelpers:
                 f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!\n\n"
             )
             return None
+
     def get_eth_price(self):
         """
         Returns ETH Price using Coingecko API
@@ -406,7 +413,6 @@ class TxHelpers:
         else:
             return None
 
-
     def get_gas_price(self) -> int:
         """
         Returns the current gas price
@@ -418,7 +424,8 @@ class TxHelpers:
         Return the current liquidity of the Bancor V3 BNT + ETH pool
         """
         pool = (
-            self.ConfigObj.db.get_pool(exchange_name = self.ConfigObj.BANCOR_V3_NAME, tkn1_address = self.ConfigObj.ETH_ADDRESS)
+            self.ConfigObj.db.get_pool(exchange_name=self.ConfigObj.BANCOR_V3_NAME,
+                                       tkn1_address=self.ConfigObj.ETH_ADDRESS)
         )
         return pool.tkn0_balance, pool.tkn1_balance
 
@@ -434,12 +441,12 @@ class TxHelpers:
 
         returns: the maximum gas price which can be used without causing a fiscal loss
         """
-        profit_wei = int(bnt_profit * 10**18)
+        profit_wei = int(bnt_profit * 10 ** 18)
         return profit_wei * eth // (gas_estimate * bnt)
 
     @staticmethod
     def estimate_gas_in_bnt(
-        gas_price: int, gas_estimate: int, bnt: int, eth: int
+            gas_price: int, gas_estimate: int, bnt: int, eth: int
     ) -> Decimal:
         """
         Converts the expected cost of the transaction into BNT.
@@ -454,11 +461,11 @@ class TxHelpers:
         returns: the expected cost of the transaction in BNT
         """
         eth_cost = gas_price * gas_estimate
-        return Decimal(eth_cost * bnt) / (eth * 10**18)
+        return Decimal(eth_cost * bnt) / (eth * 10 ** 18)
 
     @staticmethod
     def estimate_gas_in_src(
-        gas_price: int, gas_estimate: int, src: int, eth: int
+            gas_price: int, gas_estimate: int, src: int, eth: int
     ) -> Decimal:
         eth_cost = gas_price * gas_estimate
         return Decimal(eth_cost * src / eth)
@@ -473,23 +480,6 @@ class TxHelpers:
         """
         return self.web3.eth.estimate_gas(transaction=transaction)
 
-    def build_transaction_tenderly(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        nonce: int,
-    ):
-        self.ConfigObj.logger.info(f"Attempting to submit trade on Tenderly")
-        return self.web3.eth.wait_for_transaction_receipt(
-            self.arb_contract.functions.execute(routes, src_amt).transact(
-                {
-                    "maxFeePerGas": 0,
-                    "gas": self.ConfigObj.DEFAULT_GAS,
-                    "from": self.wallet_address,
-                    "nonce": nonce,
-                }
-            )
-        )
     def get_access_list(self, transaction_data, expected_gas, eth_input=None):
         expected_gas = hex(expected_gas)
         json_data = {
@@ -524,16 +514,54 @@ class TxHelpers:
         else:
             access_list = json.loads(response.text)['result']['accessList']
             return access_list
+
+    def construct_contract_function(self,
+                                    routes: List[Dict[str, Any]],
+                                    src_amt: int,
+                                    src_address: str,
+                                    gas_price: int,
+                                    max_priority: int,
+                                    nonce: int,
+                                    flashloan_struct=None
+                                    ):
+        """
+        Builds the transaction using the Arb Contract function. This version can generate transactions using flashloanAndArb and flashloanAndArbV2.
+
+        routes: the routes to be used in the transaction
+        src_amt: the amount of the source token to be sent to the transaction
+        gas_price: the gas price to be used in the transaction
+
+        returns: the transaction function ready to be submitted
+        """
+        if flashloan_struct is None:
+            transaction = self.arb_contract.functions.flashloanAndArb(
+                routes, src_address, src_amt
+            ).build_transaction(
+                self.build_tx(
+                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                )
+            )
+        else:
+            transaction = self.arb_contract.functions.flashloanAndArbV2(
+                flashloan_struct, routes
+            ).build_transaction(
+                self.build_tx(
+                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
+                )
+            )
+        return transaction
+
     def build_transaction_with_gas(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        gas_price: int,
-        max_priority: int,
-        nonce: int,
-        access_list: bool = True,
-        test_fake_gas: bool = False
+            self,
+            routes: List[Dict[str, Any]],
+            src_amt: int,
+            src_address: str,
+            gas_price: int,
+            max_priority: int,
+            nonce: int,
+            access_list: bool = True,
+            test_fake_gas: bool = False,
+            flashloan_struct: List[Dict[str, int or str]] = None
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -546,15 +574,15 @@ class TxHelpers:
         """
 
         try:
-            transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
-            )
+            transaction = self.construct_contract_function(
+                routes=routes,
+                src_amt=src_amt,
+                src_address=src_address,
+                gas_price=gas_price,
+                max_priority=max_priority,
+                nonce=nonce,
+                flashloan_struct=flashloan_struct)
         except Exception as e:
-
             self.ConfigObj.logger.debug(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
@@ -563,15 +591,17 @@ class TxHelpers:
                     split2 = split1.split(' baseFee: ')
                     split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
                     split_maxPriorityFeePerGas = int(int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-                    transaction = self.arb_contract.functions.flashloanAndArb(
-                        routes, src_address, src_amt
-                    ).build_transaction(
-                        self.build_tx(
-                            base_gas_price=split_baseFee, max_priority_fee=split_maxPriorityFeePerGas, nonce=nonce
-                        )
-                    )
+                    transaction = self.construct_contract_function(
+                        routes=routes,
+                        src_amt=src_amt,
+                        src_address=src_address,
+                        gas_price=split_baseFee,
+                        max_priority=split_maxPriorityFeePerGas,
+                        nonce=nonce,
+                        flashloan_struct=flashloan_struct)
                 except Exception as e:
-                    self.ConfigObj.logger.debug(f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
+                    self.ConfigObj.logger.debug(
+                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
         if test_fake_gas:
@@ -580,8 +610,8 @@ class TxHelpers:
 
         try:
             estimated_gas = (
-                self.web3.eth.estimate_gas(transaction=transaction)
-                + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                    self.web3.eth.estimate_gas(transaction=transaction)
+                    + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
             if access_list:
                 access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
@@ -594,7 +624,8 @@ class TxHelpers:
                             self.web3.eth.estimate_gas(transaction=transaction_after)
                             + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
                     )
-                    self.ConfigObj.logger.debug(f"gas before access list: {estimated_gas}, after access list: {estimated_gas_after}")
+                    self.ConfigObj.logger.debug(
+                        f"gas before access list: {estimated_gas}, after access list: {estimated_gas_after}")
                     if estimated_gas_after is not None:
                         if estimated_gas_after < estimated_gas:
                             transaction = transaction_after
@@ -616,10 +647,10 @@ class TxHelpers:
         return self.web3.eth.get_transaction_count(self.wallet_address)
 
     def build_tx(
-        self,
-        nonce: int,
-        base_gas_price: int = 0,
-        max_priority_fee: int = 0,
+            self,
+            nonce: int,
+            base_gas_price: int = 0,
+            max_priority_fee: int = 0,
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -706,6 +737,7 @@ class TxHelpers:
         else:
             self.ConfigObj.logger.info(f"Failed to submit transaction to Flashbots RPC")
             return None
+
     def cancel_private_transaction(self, arb_tx, block_number: int):
         self.ConfigObj.logger.info(f"Attempting to cancel tx to Flashbots, please hold.")
         arb_tx["data"] = ""
