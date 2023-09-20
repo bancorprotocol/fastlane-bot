@@ -540,6 +540,10 @@ assert len(edges2) == 1
 assert [e.p_outperin for e in edges] == [2000.0, 2040.0, 2080.0, 2120.0, 2160.0]
 assert edges2[0].p_outperin == np.mean([e.p_outperin for e in edges])
 
+#     AttributeError: module 'scipy.sparse' has no attribute 'coo_array'
+#         
+# I had this one before -- I believe this is a version issue; unfortunately I do not quite remember how I fixed it at the time
+
 # ## Interaction with CPC
 
 c1  = CPC.from_univ2(x_tknb=1, y_tknq=2000, pair="ETH/USDC", fee=0, cid="1", descr="UniV2")
