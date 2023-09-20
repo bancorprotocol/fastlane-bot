@@ -51,7 +51,7 @@ from fastlane_bot.events.utils import (
     handle_target_token_addresses,
     multicall_every_iteration,
     handle_replay_from_block,
-    update_pools_from_contracts,
+    update_pools_from_contracts, get_current_block,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -473,14 +473,7 @@ def run(
         )
 
         # Get all events from the last block to the current block
-        if not replay_from_block and not tenderly_fork_id:
-            current_block = mgr.web3.eth.blockNumber - reorg_delay
-        elif last_block == 0 and replay_from_block:
-            current_block = replay_from_block - reorg_delay
-        elif tenderly_fork_id:
-            current_block = mgr.w3_tenderly.eth.blockNumber
-        else:
-            current_block = last_block + 1
+        current_block = get_current_block(last_block, mgr, reorg_delay, replay_from_block, tenderly_fork_id)
 
         # Log the current start, end and last block
         mgr.cfg.logger.info(
@@ -529,28 +522,33 @@ def run(
 
         # Set the network connection to Tenderly if replaying from a block
         mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
-            last_block,
-            loop_idx,
-            mgr,
-            replay_from_block,
-            tenderly_uri,
-            use_cached_events,
-            current_block,
-            tenderly_fork_id,
+            last_block=last_block,
+            loop_idx=loop_idx,
+            mgr=mgr,
+            replay_from_block=replay_from_block,
+            tenderly_uri=tenderly_uri,
+            use_cached_events=use_cached_events,
+            tenderly_fork_id=tenderly_fork_id,
         )
 
         # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
         handle_initial_iteration(
-            backdate_pools, current_block, last_block, mgr, n_jobs, start_block
+            backdate_pools=backdate_pools,
+            current_block=current_block,
+            last_block=last_block,
+            mgr=mgr,
+            n_jobs=n_jobs,
+            start_block=start_block
         )
 
-        multicall_every_iteration(current_block, mgr, n_jobs)
+        # Run multicall every iteration
+        multicall_every_iteration(current_block=current_block, mgr=mgr, n_jobs=n_jobs)
 
         # Update the last block number
         last_block = current_block
 
         # Write the pool data to disk
-        write_pool_data_to_disk(cache_latest_only, logging_path, mgr, current_block)
+        write_pool_data_to_disk(cache_latest_only=cache_latest_only, logging_path=logging_path, mgr=mgr, current_block=current_block)
 
         # Handle/remove duplicates in the pool data
         handle_duplicates(mgr)
@@ -562,27 +560,27 @@ def run(
         bot = init_bot(mgr)
 
         # Verify that the state has changed
-        verify_state_changed(bot, initial_state, mgr)
+        verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
 
         # Verify that the minimum profit in BNT is respected
-        verify_min_bnt_is_respected(bot, mgr)
+        verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
         # Handle subsequent iterations
         handle_subsequent_iterations(
-            arb_mode,
-            bot,
-            flashloan_tokens,
-            polling_interval,
-            randomizer,
-            run_data_validator,
-            target_tokens,
-            loop_idx,
-            logging_path,
-            replay_from_block,
-            tenderly_uri,
-            forks_to_cleanup,
-            mgr,
-            forked_from_block,
+            arb_mode=arb_mode,
+            bot=bot,
+            flashloan_tokens=flashloan_tokens,
+            polling_interval=polling_interval,
+            randomizer=randomizer,
+            run_data_validator=run_data_validator,
+            target_tokens=target_tokens,
+            loop_idx=loop_idx,
+            logging_path=logging_path,
+            replay_from_block=replay_from_block,
+            tenderly_uri=tenderly_uri,
+            forks_to_cleanup=forks_to_cleanup,
+            mgr=mgr,
+            forked_from_block=forked_from_block,
         )
 
         # Increment the loop index
