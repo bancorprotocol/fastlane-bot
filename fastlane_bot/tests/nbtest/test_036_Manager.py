@@ -104,7 +104,10 @@ def test_test_update_from_event_carbon_v1_update():
 # ------------------------------------------------------------
     
     # +
+    event_create_for_update = event_data['carbon_v1_event_create_for_update']
     event = event_data['carbon_v1_event_update']
+    
+    manager.update_from_event(event_create_for_update)
     assert event['args']['order0'][0] != [pool['y_0'] for pool in manager.pool_data if pool['cid'] == event['args']['id']][0]
     
     manager.update_from_event(event)
