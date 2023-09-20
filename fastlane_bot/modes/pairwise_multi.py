@@ -51,11 +51,8 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             if len(CC) < 2:
                 continue
             carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
-            # not_carbon_curves = [
-            #     x for x in CC.curves if x.params.exchange != "carbon_v1"
-            # ]
             not_carbon_curves = [
-                x for x in CC.curves if x.params.exchange == "bancor_pol"
+                x for x in CC.curves if x.params.exchange != "carbon_v1"
             ]
             curve_combos = [[curve] + carbon_curves for curve in not_carbon_curves]
 
