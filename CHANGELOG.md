@@ -2,11 +2,39 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.31...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.34...HEAD)
+
+- bancor v2 pool key bug [\#142](https://github.com/bancorprotocol/fastlane-bot/issues/142)
+
+Closed issues
+
+- need a more comprehensive list of univ2 event mappings [\#140](https://github.com/bancorprotocol/fastlane-bot/issues/140)
+
+Merged pull requests
+
+- Update uniswap\_v2\_event\_mappings.csv [\#141](https://github.com/bancorprotocol/fastlane-bot/pull/141) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.34](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.34) (2023-09-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.33...v2.7.34)
+
+- Fix manager tests [\#144](https://github.com/bancorprotocol/fastlane-bot/issues/144)
+- bugfix for b2 key value [\#143](https://github.com/bancorprotocol/fastlane-bot/pull/143) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.33](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.33) (2023-09-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.32...v2.7.33)
+
+- Update event\_test\_data.json [\#145](https://github.com/bancorprotocol/fastlane-bot/pull/145) ([mikewcasale](https://github.com/mikewcasale))
+
+- Implement new PairOptimizer for pairwise arbitrage modes [\#134](https://github.com/bancorprotocol/fastlane-bot/issues/134)
+
+## [v2.7.32](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.32) (2023-09-18)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.31...v2.7.32)
 
 - Bug that causes invalid TX [\#132](https://github.com/bancorprotocol/fastlane-bot/issues/132)
 
-- Implement new PairOptimizer for pairwise arbitrage modes [\#134](https://github.com/bancorprotocol/fastlane-bot/issues/134)
 - Add support for tenderly testing without replay mode [\#112](https://github.com/bancorprotocol/fastlane-bot/issues/112)
 - change optimizer class and method for pairwise modes [\#135](https://github.com/bancorprotocol/fastlane-bot/pull/135) ([mikewcasale](https://github.com/mikewcasale))
 
