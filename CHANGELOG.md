@@ -2,10 +2,23 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.33...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.34...HEAD)
+
+- bancor v2 pool key bug [\#142](https://github.com/bancorprotocol/fastlane-bot/issues/142)
+
+Closed issues
+
+- need a more comprehensive list of univ2 event mappings [\#140](https://github.com/bancorprotocol/fastlane-bot/issues/140)
+
+Merged pull requests
+
+- Update uniswap\_v2\_event\_mappings.csv [\#141](https://github.com/bancorprotocol/fastlane-bot/pull/141) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.34](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.34) (2023-09-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.33...v2.7.34)
 
 - Fix manager tests [\#144](https://github.com/bancorprotocol/fastlane-bot/issues/144)
-- bancor v2 pool key bug [\#142](https://github.com/bancorprotocol/fastlane-bot/issues/142)
 - bugfix for b2 key value [\#143](https://github.com/bancorprotocol/fastlane-bot/pull/143) ([mikewcasale](https://github.com/mikewcasale))
 
 ## [v2.7.33](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.33) (2023-09-20)
