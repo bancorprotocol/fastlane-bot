@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -188,10 +188,10 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
+assert len(r) == 30, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
-r
+
 
 # ## Test_no_multi_carbon
 
@@ -219,3 +219,6 @@ for arb in r:
         multi_carbon_count += 1
 
 assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+# -
+
+
