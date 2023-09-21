@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -283,53 +283,53 @@ assert raises(c1.format).startswith("only implemented for")
 # leverage related functions (primary)
 
 assert not raises(lambda: c0.p_max)
-assert raises(lambda: c1.p_max).startswith("only implemented for")
+assert not raises(lambda: c1.p_max)
 
 assert not raises(lambda: c0.p_min)
-assert raises(lambda: c1.p_min).startswith("only implemented for")
+assert not raises(lambda: c1.p_min)
 
 assert not raises(lambda: c0.x_min)
-assert raises(lambda: c1.x_min).startswith("only implemented for")
+assert not raises(lambda: c1.x_min)
 
 assert not raises(lambda: c0.x_max)
-assert raises(lambda: c1.x_max).startswith("only implemented for")
+assert not raises(lambda: c1.x_max)
 
 assert not raises(lambda: c0.y_min)
-assert raises(lambda: c1.y_min).startswith("only implemented for")
+assert not raises(lambda: c1.y_min)
 
 assert not raises(lambda: c0.y_max)
-assert raises(lambda: c1.y_max).startswith("only implemented for")
+assert not raises(lambda: c1.y_max)
 
 # leverage related functions (secondary, ie calling primary ones)
 
 assert not raises(c0.p_max_primary)
-assert raises(c1.p_max_primary).startswith("only implemented for")
+assert not raises(c1.p_max_primary)
 
 assert not raises(c0.p_min_primary)
-assert raises(c1.p_min_primary).startswith("only implemented for")
+assert not raises(c1.p_min_primary)
 
 assert not raises(lambda: c0.at_xmin)
-assert raises(lambda: c1.at_xmin).startswith("only implemented for")
+assert not raises(lambda: c1.at_xmin)
 
 assert not raises(lambda: c0.at_xmax)
-assert raises(lambda: c1.at_xmax).startswith("only implemented for")
+assert not raises(lambda: c1.at_xmax)
 
 assert not raises(lambda: c0.at_ymin)
-assert raises(lambda: c1.at_ymin).startswith("only implemented for")
+assert not raises(lambda: c1.at_ymin)
 
 assert not raises(lambda: c0.at_ymax)
-assert raises(lambda: c1.at_ymax).startswith("only implemented for")
+assert not raises(lambda: c1.at_ymax)
 
 assert not raises(lambda: c0.at_boundary)
-assert raises(lambda: c1.at_boundary).startswith("only implemented for")
+assert not raises(lambda: c1.at_boundary)
 
 # todo
 
 assert not raises(c0.xyfromp_f)
-assert raises(c1.xyfromp_f).startswith("only implemented for")
+assert not raises(c1.xyfromp_f)
 
 assert not raises(c0.dxdyfromp_f)
-assert raises(c1.dxdyfromp_f).startswith("only implemented for")
+assert not raises(c1.dxdyfromp_f)
 
 # #### Implemented functions
 
@@ -347,19 +347,19 @@ assert not raises(c1.tvl)
 
 assert not raises(c0.yfromx_f, 110)
 assert not raises(c1.yfromx_f, 110, ignorebounds=True)
-assert raises(c1.yfromx_f, 110, ignorebounds=False)
+assert not raises(c1.yfromx_f, 110, ignorebounds=False)
 
 assert not raises(c0.xfromy_f, 210)
 assert not raises(c1.xfromy_f, 110, ignorebounds=True)
-assert raises(c1.xfromy_f, 110, ignorebounds=False)
+assert not raises(c1.xfromy_f, 110, ignorebounds=False)
 
 assert not raises(c0.dyfromdx_f, 1)
 assert not raises(c1.dyfromdx_f, 1, ignorebounds=True)
-assert raises(c1.dyfromdx_f, 1, ignorebounds=False)
+assert not raises(c1.dyfromdx_f, 1, ignorebounds=False)
 
 assert not raises(c0.dxfromdy_f, 1)
 assert not raises(c1.dxfromdy_f, 1, ignorebounds=True)
-assert raises(c1.dxfromdy_f, 1, ignorebounds=False)
+assert not raises(c1.dxfromdy_f, 1, ignorebounds=False)
 
 # ## Simple Tests
 
