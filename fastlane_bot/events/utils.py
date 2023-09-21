@@ -967,13 +967,14 @@ def multicall_every_iteration(
         The number of jobs to run in parallel.
 
     """
+    multicallable_exchanges = [exchange for exchange in mgr.cfg.MULTICALLABLE_EXCHANGES if exchange in mgr.exchanges]
     multicallable_pool_rows = [
         list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
         for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES
         if ex_name in mgr.exchanges
     ]
 
-    for idx, exchange in enumerate(mgr.cfg.MULTICALLABLE_EXCHANGES):
+    for idx, exchange in enumerate(multicallable_exchanges):
         update_pools_from_contracts(
             n_jobs=n_jobs,
             current_block=current_block,

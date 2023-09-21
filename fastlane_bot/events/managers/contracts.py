@@ -12,7 +12,7 @@ import brownie
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI, ERC20_ABI
+from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI, ERC20_ABI, BANCOR_POL_ABI
 from fastlane_bot.events.managers.base import BaseManager
 
 
@@ -52,6 +52,13 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
                     name="BancorNetwork",
+                )
+            elif exchange_name == "bancor_pol":
+                self.pool_contracts[exchange_name][
+                    self.cfg.BANCOR_POL_ADDRESS
+                ] = self.web3.eth.contract(
+                    address=self.cfg.BANCOR_POL_ADDRESS,
+                    abi=BANCOR_POL_ABI,
                 )
 
     @staticmethod
