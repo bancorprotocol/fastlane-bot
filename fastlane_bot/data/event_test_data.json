@@ -190,9 +190,36 @@
     "transactionIndex": 158,
     "transactionHash": "0x6e2ee77bb751644a1f0f693f4e7b2547be495d5473b378b36b58a8c72ba92421",
     "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1",
-    "blockHash": "0x898cd767e25952ae0a2de3714efb6406846702815bb8f77cdbea5824a0e1d6ff",
-    "blockNumber": 17614185
+    "blockHash": "0x452c70bd1d52430fbc2327425f1ad3e59a3e1ff5f0a84d4a6aaf757c4d3a942f",
+    "blockNumber": 18176438
+},
+"carbon_v1_event_create_for_delete": {
+  "args": {
+    "owner": "0xDdD6516Ed7e9B2dEfb2e1aE50379943cC9eE2b73",
+    "token0": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+    "token1": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "id": 2381976568446569244243622252022377480690,
+    "order0": [
+      1221000000000000000000,
+      1221000000000000000000,
+      0,
+      6111054486652827
+    ],
+    "order1": [
+      464234783,
+      464234783,
+      0,
+      173512828
+    ]
   },
+  "event": "StrategyCreated",
+  "logIndex": 131,
+  "transactionIndex": 88,
+  "transactionHash": "0x2e147a21fa45c76c9fa0231a52629b71dcc7293747c4fb1c96f7e0ce5f058c9a",
+  "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1",
+  "blockHash": "0x452c70bd1d52430fbc2327425f1ad3e59a3e1ff5f0a84d4a6aaf757c4d3a942f",
+  "blockNumber": 18176438
+},
   "carbon_v1_event_pair_created": {
     "args": {
       "pairId": 1234,

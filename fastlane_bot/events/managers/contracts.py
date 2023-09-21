@@ -5,7 +5,8 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import Dict, Any, Tuple
+import os
+from typing import Dict, Any, Tuple, Optional
 
 import brownie
 from web3 import Web3
@@ -16,6 +17,25 @@ from fastlane_bot.events.managers.base import BaseManager
 
 
 class ContractsManager(BaseManager):
+    def init_tenderly_event_contracts(self):
+        """
+        Initialize the tenderly event contracts.
+        """
+
+        for exchange_name in self.tenderly_event_exchanges:
+            address = None
+            if exchange_name != "bancor_pol":
+                raise NotImplementedError(
+                    f"Exchange {exchange_name} not supported for tenderly"
+                )
+            if address := self.cfg.BANCOR_POL_ADDRESS:
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=address,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+
     def init_exchange_contracts(self):
         """
         Initialize the exchange contracts.
@@ -36,7 +56,11 @@ class ContractsManager(BaseManager):
 
     @staticmethod
     def get_or_create_token_contracts(
-        web3: Web3, erc20_contracts: Dict[str, Contract], address: str
+        web3: Web3,
+        erc20_contracts: Dict[str, Contract],
+        address: str,
+        exchange_name: str = None,
+        tenderly_fork_id: str = None,
     ) -> Contract:
         """
         Get or create the token contracts.
@@ -49,6 +73,10 @@ class ContractsManager(BaseManager):
             The ERC20 contracts.
         address : str
             The address.
+        exchange_name : str, optional
+            The exchange name.
+        tenderly_fork_id : str, optional
+            The tenderly fork id.
 
         Returns
         -------
@@ -56,7 +84,12 @@ class ContractsManager(BaseManager):
             The token contract.
 
         """
-        if address in erc20_contracts:
+        if exchange_name == "bancor_pol" and tenderly_fork_id:
+            w3 = Web3(
+                Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
+            )
+            contract = w3.eth.contract(abi=ERC20_ABI, address=address)
+        elif address in erc20_contracts:
             contract = erc20_contracts[address]
         else:
             contract = web3.eth.contract(address=address, abi=ERC20_ABI)
@@ -136,16 +169,27 @@ class ContractsManager(BaseManager):
 
         """
         if exchange_name in self.exchanges:
-            default_contract = self.web3.eth.contract(
-                address=address, abi=self.exchanges[exchange_name].get_abi()
-            )
+            w3 = self.web3
+            if exchange_name == "bancor_pol":
+                # TODO: Remove this once we have a better solution
+                w3 = Web3(
+                    Web3.HTTPProvider(
+                        f"https://rpc.tenderly.co/fork/{self.tenderly_fork_id}"
+                    )
+                )
+
             contract_key = (
                 self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
                 if exchange_name == "bancor_v3"
+                else self.cfg.BANCOR_POL_ADDRESS
+                if exchange_name == "bancor_pol"
                 else address
             )
             return self.pool_contracts[exchange_name].get(
-                contract_key, default_contract
+                contract_key,
+                w3.eth.contract(
+                    address=contract_key, abi=self.exchanges[exchange_name].get_abi()
+                ),
             )
         else:
             return None

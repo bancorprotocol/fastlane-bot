@@ -18,7 +18,7 @@ from fastlane_bot.events.exchanges import (
     CarbonV1,
     BancorV3,
 )
-from fastlane_bot.events.managers.base import Manager
+from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
