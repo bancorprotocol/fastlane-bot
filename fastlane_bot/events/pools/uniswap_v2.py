@@ -8,9 +8,9 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import Dict, Any
 
+from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot import Config
 from fastlane_bot.data.pools import uniswap_v2_pools
 from fastlane_bot.events.pools.base import Pool
 
@@ -57,7 +57,7 @@ class UniswapV2Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, cfg: Config = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.

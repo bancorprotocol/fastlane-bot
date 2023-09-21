@@ -52,6 +52,8 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Any, Callable
 from typing import Optional
 
+from web3.datastructures import AttributeDict
+
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxSubmitHandler,
@@ -71,6 +73,7 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
+from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
@@ -398,7 +401,9 @@ class CarbonBot(CarbonBotBase):
         int
             The deadline (as UNIX epoch).
         """
-        block_number = self.ConfigObj.w3.eth.block_number if block_number is None else block_number
+        block_number = (
+            self.ConfigObj.w3.eth.block_number if block_number is None else block_number
+        )
         return (
             self.ConfigObj.w3.eth.getBlock(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
@@ -418,6 +423,8 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleSingleBancor3
         elif arb_mode in {"b3_two_hop"}:
             return ArbitrageFinderTriangleBancor3TwoHop
+        elif arb_mode in {"multi_pairwise_pol"}:
+            return FindArbitrageMultiPairwisePol
 
     def _run(
         self,
@@ -428,7 +435,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str = None,
         randomizer=int,
         data_validator=True,
-        replay_mode: bool = False
+        replay_mode: bool = False,
     ) -> Optional[Tuple[str, List[Any]]]:
         """
         Runs the bot.
@@ -886,7 +893,8 @@ class CarbonBot(CarbonBotBase):
         )
 
         flashloan_struct = tx_route_handler.generate_flashloan_struct(
-            trade_instructions_objects=calculated_trade_instructions)
+            trade_instructions_objects=calculated_trade_instructions
+        )
 
         # Get the flashloan token
         fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
@@ -894,7 +902,6 @@ class CarbonBot(CarbonBotBase):
         # If the flashloan token is WETH, then use ETH
         if fl_token == T.WETH:
             fl_token = T.NATIVE_ETH
-
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -975,6 +982,8 @@ class CarbonBot(CarbonBotBase):
                     src_address=flashloan_token_address,
                 ),
                 cids,
+                route_struct,
+                log_dict,
             )
 
         # Log the route_struct
@@ -1009,9 +1018,11 @@ class CarbonBot(CarbonBotBase):
                 safety_override=False,
                 verbose=True,
                 log_object=log_dict,
-                flashloan_struct=flashloan_struct
+                flashloan_struct=flashloan_struct,
             ),
             cids,
+            route_struct,
+            log_dict,
         )
 
     def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
@@ -1112,7 +1123,7 @@ class CarbonBot(CarbonBotBase):
         route_struct: [RouteStruct],
         src_address: str,
         src_amount: int,
-        flashloan_struct: [Dict[str, Any]]
+        flashloan_struct: [Dict[str, Any]],
     ):
         """
         Validate and submit the transaction tenderly
@@ -1145,7 +1156,10 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
         self.ConfigObj.logger.debug("src_address", src_address)
         tx = tx_submit_handler.submit_transaction_tenderly(
-            route_struct=route_struct, src_address=src_address, src_amount=src_amount, flashloan_struct=flashloan_struct
+            route_struct=route_struct,
+            src_address=src_address,
+            src_amount=src_amount,
+            flashloan_struct=flashloan_struct,
         )
         return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
 
@@ -1241,7 +1255,7 @@ class CarbonBot(CarbonBotBase):
                     )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-                tx_hash, cids = self._run(
+                tx_hash, cids, route_struct = self._run(
                     flashloan_tokens,
                     CCm,
                     arb_mode=arb_mode,
@@ -1295,7 +1309,7 @@ class CarbonBot(CarbonBotBase):
                 arb_mode=arb_mode,
                 data_validator=run_data_validator,
                 randomizer=randomizer,
-                replay_mode=replay_mode
+                replay_mode=replay_mode,
             )
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
@@ -1303,8 +1317,16 @@ class CarbonBot(CarbonBotBase):
                 # Write the tx hash to a file in the logging_path directory
                 if self.logging_path:
                     filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+                    print(f"Writing tx_hash hash {tx_hash} to {filename}")
                     with open(f"{self.logging_path}/{filename}", "w") as f:
-                        f.write(tx_hash[0])
+
+                        # if isinstance(tx_hash[0], AttributeDict):
+                        #     f.write(str(tx_hash[0]))
+                        # else:
+                        for record in tx_hash:
+                            f.write("\n")
+                            f.write("\n")
+                            f.write(str(record))
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")

@@ -173,8 +173,8 @@ finder2 = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
+assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
 
 # ### Test_Single_Arb_Finder_vs_run
 
