@@ -37,6 +37,7 @@ class PoolManager(BaseManager):
             "sushiswap_v2",
             "uniswap_v3",
             "pancakeswap_v2",
+            "pancakeswap_v3",
             "bancor_v2",
         ]:
             return pool_info["address"]
@@ -321,7 +322,7 @@ class PoolManager(BaseManager):
         Optional[Dict[str, Any]]
             The pool info.
         """
-        if ex_name == "sushiswap_v2":
+        if ex_name in self.cfg.UNIV2_FORKS:
             ex_name = "uniswap_v2"
 
         if key == "address":

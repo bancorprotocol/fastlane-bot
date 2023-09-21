@@ -16,7 +16,7 @@ from fastlane_bot.events.pools.base import Pool
 
 
 @dataclass
-class PancakeSwapV3Pool(Pool):
+class PancakeswapV3Pool(Pool):
     """
     Class representing a Uniswap v3 pool.
     """
