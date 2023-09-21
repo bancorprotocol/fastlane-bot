@@ -141,7 +141,7 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(self.fee))
-        if self.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
+        if self.exchange_name in [self.ConfigObj.UNISWAP_V3_NAME, self.ConfigObj.PANCAKESWAP_V3_NAME]:
             out = self._univ3_to_cpc()
         elif self.exchange_name in [
             self.ConfigObj.CARBON_V1_NAME,

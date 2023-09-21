@@ -221,7 +221,7 @@ def get_static_data(
     exchanges: List[str],
     static_pool_data_filename: str,
     static_pool_data_sample_sz: int or str,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str]]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
 
@@ -260,6 +260,12 @@ def get_static_data(
         uniswap_v2_event_mappings_df[["address", "exchange"]].values
     )
 
+    uniswap_v3_filepath = os.path.join(base_path, "uniswap_v3_event_mappings.csv")
+    uniswap_v3_event_mappings_df = read_csv_file(uniswap_v2_filepath)
+    uniswap_v3_event_mappings = dict(
+        uniswap_v2_event_mappings_df[["address", "exchange"]].values
+    )
+
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     tokens = read_csv_file(tokens_filepath)
 
@@ -269,7 +275,7 @@ def get_static_data(
         for index, row in static_pool_data.iterrows()
     ]
 
-    return static_pool_data, tokens, uniswap_v2_event_mappings
+    return static_pool_data, tokens, uniswap_v2_event_mappings, uniswap_v3_event_mappings
 
 
 def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
@@ -647,6 +653,7 @@ def init_bot(mgr: Any) -> CarbonBot:
         ConfigObj=mgr.cfg,
         state=mgr.pool_data,
         uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings,
+        uniswap_v3_event_mappings=mgr.uniswap_v3_event_mappings,
         exchanges=mgr.exchanges,
     )
     bot = CarbonBot(ConfigObj=mgr.cfg)

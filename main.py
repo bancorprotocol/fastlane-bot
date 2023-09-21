@@ -347,7 +347,7 @@ def main(
     )
 
     # Get the static pool data, tokens and uniswap v2 event mappings
-    static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
+    static_pool_data, tokens, uniswap_v2_event_mappings, uniswap_v3_event_mappings = get_static_data(
         cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
     )
 
@@ -375,6 +375,7 @@ def main(
         SUPPORTED_EXCHANGES=exchanges,
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
+        uniswap_v3_event_mappings=uniswap_v3_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,

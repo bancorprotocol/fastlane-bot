@@ -54,6 +54,7 @@ class QueryInterface:
     state: List[Dict[str, Any]] = field(default_factory=list)
     ConfigObj: Config = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
 
     @property
@@ -223,8 +224,27 @@ class QueryInterface:
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v2"
             or (
-                pool["exchange_name"] in ["uniswap_v2", "sushiswap_v2"]
+                pool["exchange_name"] in self.cfg.UNIV2_FORKS
                 and pool["address"] in self.uniswap_v2_event_mappings
+            )
+        ]
+        self.cfg.logger.info(
+            f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
+        )
+        self.log_umapped_pools_by_exchange(initial_state)
+
+    def remove_unmapped_uniswap_v3_pools(self) -> None:
+        """
+        Remove unmapped uniswap_v2 pools
+        """
+        initial_state = self.state.copy()
+        self.state = [
+            pool
+            for pool in self.state
+            if pool["exchange_name"] != "uniswap_v3"
+            or (
+                pool["exchange_name"] in self.cfg.UNIV3_FORKS
+                and pool["address"] in self.uniswap_v3_event_mappings
             )
         ]
         self.cfg.logger.info(
