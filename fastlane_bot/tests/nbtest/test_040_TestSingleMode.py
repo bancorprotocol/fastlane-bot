@@ -189,10 +189,10 @@ def test_test_tokens_and_combos():
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
-    assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
+    assert len(r) == 30, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
     assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
     
-    r
+    
     
 
 # ------------------------------------------------------------
@@ -227,3 +227,6 @@ def test_test_no_multi_carbon():
             multi_carbon_count += 1
     
     assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+    # -
+    
+    

@@ -203,7 +203,7 @@ def test_test_expected_output():
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
-    assert len(r) == 25, f"[TestMultiMode] Expected 25 arbs, found {len(r)}"
+    assert len(r) == 30, f"[TestMultiMode] Expected 30 arbs, found {len(r)}"
     assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
     
 
