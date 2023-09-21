@@ -41,132 +41,6 @@ class PairOptimizer(CPCArbOptimizer):
     def kind(self):
         return "pair"
     
-    # @dataclass
-    # class PairOptimizerResult(OptimizerBase.OptimizerResult):
-    #     """
-    #     results of the pairs optimizer
-
-    #     :curves:            list of curves used in the optimization, possibly wrapped in CPCInverter objects*
-    #     :dxdyfromp_vec_f:   vector of tuples (dx, dy), as a function of p
-    #     :dxdyfromp_sum_f:   sum of the above, also as a function of p
-    #     :dxdyfromp_valx_f:  valx = dy/p + dx, also as a function of p
-    #     :dxdyfromp_valy_f:  valy = dy + p*dx/p, also as a function of p
-    #     :p_optimal:         optimal p value
-
-    #     *the CPCInverter object ensures that all curves in the list correspond to the same quote
-    #     conventions, according to the primary direction of the pair (as determined by the Pair
-    #     object). Accordingly, tknx and tkny are always the same for all curves in the list, regardless
-    #     of the quote direction of the pair. The CPCInverter object abstracts this away, but of course
-    #     only for functions that are accessible through it.
-    #     """
-
-    #     NONEFUNC = lambda x: None
-
-    #     curves: list = field(repr=False, default=None)
-    #     dxdyfromp_vec_f: any = field(repr=False, default=NONEFUNC)
-    #     dxdyfromp_sum_f: any = field(repr=False, default=NONEFUNC)
-    #     dxdyfromp_valx_f: any = field(repr=False, default=NONEFUNC)
-    #     dxdyfromp_valy_f: any = field(repr=False, default=NONEFUNC)
-    #     p_optimal: float = field(repr=False, default=None)
-    #     errormsg: str = field(repr=True, default=None)
-
-    #     def __post_init__(self, *args, **kwargs):
-    #         super().__post_init__(*args, **kwargs)
-    #         # print("[PairOptimizerResult] post_init")
-    #         assert (
-    #             self.p_optimal is not None or self.errormsg is not None
-    #         ), "p_optimal must be set unless errormsg is set"
-    #         if self.method is None:
-    #             self.method = "pair"
-
-    #     @property
-    #     def is_error(self):
-    #         return self.errormsg is not None
-
-    #     def detailed_error(self):
-    #         return self.errormsg
-
-    #     def status(self):
-    #         return "error" if self.is_error else "converged"
-
-    #     def dxdyfromp_vecs_f(self, p):
-    #         """returns dx, dy as separate vectors instead as a vector of tuples"""
-    #         return tuple(zip(*self.dxdyfromp_vec_f(p)))
-
-    #     @property
-    #     def tknx(self):
-    #         return self.curves[0].tknx
-
-    #     @property
-    #     def tkny(self):
-    #         return self.curves[0].tkny
-
-    #     @property
-    #     def tknxp(self):
-    #         return self.curves[0].tknxp
-
-    #     @property
-    #     def tknyp(self):
-    #         return self.curves[0].tknyp
-
-    #     @property
-    #     def pair(self):
-    #         return self.curves[0].pair
-
-    #     @property
-    #     def pairp(self):
-    #         return self.curves[0].pairp
-
-    #     @property
-    #     def dxdy_vecs(self):
-    #         return self.dxdyfromp_vecs_f(self.p_optimal)
-
-    #     @property
-    #     def dxvalues(self):
-    #         return self.dxdy_vecs[0]
-
-    #     dxv = dxvalues
-
-    #     @property
-    #     def dyvalues(self):
-    #         return self.dxdy_vecs[1]
-
-    #     dyv = dyvalues
-
-    #     @property
-    #     def dxdy_vec(self):
-    #         return self.dxdyfromp_vec_f(self.p_optimal)
-
-    #     @property
-    #     def dxdy_sum(self):
-    #         return self.dxdyfromp_sum_f(self.p_optimal)
-
-    #     @property
-    #     def dxdy_valx(self):
-    #         return self.dxdyfromp_valx_f(self.p_optimal)
-
-    #     valx = dxdy_valx
-
-    #     @property
-    #     def dxdy_valy(self):
-    #         return self.dxdyfromp_valy_f(self.p_optimal)
-
-    #     valy = dxdy_valy
-
-    #     def trade_instructions(self, ti_format=None):
-    #         """returns list of TradeInstruction objects"""
-    #         result = (
-    #             CPCArbOptimizer.TradeInstruction.new(
-    #                 curve_or_cid=c, tkn1=self.tknx, amt1=dx, tkn2=self.tkny, amt2=dy
-    #             )
-    #             for c, dx, dy in zip(self.curves, self.dxvalues, self.dyvalues)
-    #             if dx != 0 or dy != 0
-    #         )
-    #         assert ti_format != CPCArbOptimizer.TIF_DFAGGR, "TIF_DFAGGR not implemented for convex optimization"
-    #         assert ti_format != CPCArbOptimizer.TIF_DFPG, "TIF_DFPG not implemented for convex optimization"
-    #         return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format=ti_format)
-
-
     SO_DXDYVECFUNC = "dxdyvecfunc"
     SO_DXDYSUMFUNC = "dxdysumfunc"
     SO_DXDYVALXFUNC = "dxdyvalxfunc"
@@ -278,19 +152,6 @@ class PairOptimizer(CPCArbOptimizer):
             # allows to mask certain long portions of the result if desired, the same way
             # the main margpoptimizer does it; however, this not currently considered necessary
         if p_optimal.is_error:
-            # return self.PairOptimizerResult(
-            #     result=None,
-            #     time=time.time() - start_time,
-            #     curves=curves_t,
-            #     dxdyfromp_vec_f=dxdyfromp_vec_f,
-            #     dxdyfromp_sum_f=dxdyfromp_sum_f,
-            #     dxdyfromp_valx_f=dxdyfromp_valx_f,
-            #     dxdyfromp_valy_f=dxdyfromp_valy_f,
-            #     p_optimal=None,
-            #     errormsg=p_optimal.errormsg,
-            #     method=method,
-            #     optimizer=self,
-            # )
             return self.MargpOptimizerResult(
                 method=method,
                 optimizer=NOMR(self),
@@ -305,18 +166,7 @@ class PairOptimizer(CPCArbOptimizer):
                 n_iterations=None,
                 errormsg="bisection did not converge",
             )
-        # return self.PairOptimizerResult(
-        #     result=full_result,
-        #     time=time.time() - start_time,
-        #     curves=curves_t,
-        #     dxdyfromp_vec_f=dxdyfromp_vec_f,
-        #     dxdyfromp_sum_f=dxdyfromp_sum_f,
-        #     dxdyfromp_valx_f=dxdyfromp_valx_f,
-        #     dxdyfromp_valy_f=dxdyfromp_valy_f,
-        #     p_optimal=float(p_optimal),
-        #     method=method,
-        #     optimizer=self,
-        # )
+
         return self.MargpOptimizerResult(
             method=method,
             optimizer=NOMR(self),
