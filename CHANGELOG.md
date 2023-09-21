@@ -2,13 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.34...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.35...HEAD)
 
-- bancor v2 pool key bug [\#142](https://github.com/bancorprotocol/fastlane-bot/issues/142)
+- Checklist for Adding Tests to Bancor POL Contract Support [\#116](https://github.com/bancorprotocol/fastlane-bot/issues/116)
+- 109 pol and tenderly cleanup [\#136](https://github.com/bancorprotocol/fastlane-bot/pull/136) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
 - need a more comprehensive list of univ2 event mappings [\#140](https://github.com/bancorprotocol/fastlane-bot/issues/140)
+
+## [v2.7.35](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.35) (2023-09-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.34...v2.7.35)
+
+- bancor v2 pool key bug [\#142](https://github.com/bancorprotocol/fastlane-bot/issues/142)
 
 Merged pull requests
 

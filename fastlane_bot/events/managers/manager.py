@@ -9,8 +9,10 @@ import random
 import time
 from typing import Dict, Any, Optional
 
+from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
@@ -47,6 +49,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         addr = self.web3.toChecksumAddress(event["address"])
+
+        # if event["event"] == "TradingEnabled":
+        #     addr = self.cfg.BANCOR_POL_ADDRESS
+
         ex_name = self.exchange_name_from_event(event)
 
         if not ex_name:
@@ -58,6 +64,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ) or self.add_pool_info_from_contract(
             address=addr, event=event, exchange_name=ex_name
         )
+
         if not pool_info:
             return
 
@@ -113,7 +120,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
         )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract, cfg=self.cfg)
+        params = pool.update_from_contract(
+            contract, self.tenderly_fork_id, self.w3_tenderly
+        )
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -169,15 +178,57 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ),
             )
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(contract, cfg=self.cfg)
+        params = pool.update_from_contract(
+            contract,
+            tenderly_fork_id=self.tenderly_fork_id,
+            w3_tenderly=self.w3_tenderly,
+        )
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
+
+    def update_from_erc20_balance(
+        self,
+        current_block: int = None,
+        pool_info: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Update the state from the contract (instead of events).
+
+        Parameters
+        ----------
+        current_block : int, optional
+            The block number, by default None.
+        pool_info : Optional[Dict[str, Any]], optional
+            The pool info, by default None.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The pool info.
+        """
+        pool = self.get_or_init_pool(pool_info)
+
+        pool_contract = self.pool_contracts[pool.state["exchange_name"]].get(
+            pool.state["address"], None
+        )
+        params = pool.update_from_contract(
+            contract=pool_contract,
+            tenderly_fork_id=self.tenderly_fork_id,
+            w3_tenderly=self.w3_tenderly,
+        )
+        params["last_updated_block"] = current_block
+
+        for key, value in params.items():
+            pool_info[key] = value
+
+        self.update_pool_data(pool_info=pool_info, data=params)
 
     def update(
         self,
         event: Dict[str, Any] = None,
         address: str = None,
+        token_address: bool = False,
         pool_info: Dict[str, Any] = None,
         contract: Contract = None,
         limiter: bool = True,
@@ -192,6 +243,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The event, by default None.
         address : str, optional
             The address, by default None.
+        token_address: str, optional
+            If the balance should be updated using an ERC20 contract.
         pool_info : Dict[str, Any], optional
             The pool info, by default None.
         contract : Contract, optional
@@ -217,15 +270,17 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 rate_limiter = 0
             try:
                 if event:
-                    self.cfg.logger.debug("update from event")
                     self.update_from_event(event=event, block_number=block_number)
                 elif address:
-                    self.cfg.logger.debug("update from address")
                     self.update_from_contract(
                         address, contract, block_number=block_number
                     )
+                elif token_address:
+                    self.update_from_erc20_balance(
+                        pool_info=pool_info,
+                        current_block=block_number,
+                    )
                 elif pool_info:
-                    self.cfg.logger.debug("update from pool info")
                     self.update_from_pool_info(
                         pool_info=pool_info, current_block=block_number
                     )

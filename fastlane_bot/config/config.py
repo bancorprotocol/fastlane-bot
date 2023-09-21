@@ -52,7 +52,7 @@ class Config():
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
-    SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2']
+    SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2', 'bancor_pol']
     connection = EthereumNetwork(
         network_id=NETWORK_ID,
         network_name=NETWORK_NAME,
