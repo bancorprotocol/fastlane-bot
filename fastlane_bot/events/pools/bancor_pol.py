@@ -25,6 +25,7 @@ class BancorPolPool(Pool):
 
     exchange_name: str = "bancor_pol"
     ONE = 2**48
+    contract: Contract = None
 
     @staticmethod
     def unique_key() -> str:
@@ -83,7 +84,7 @@ class BancorPolPool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.
@@ -96,13 +97,13 @@ class BancorPolPool(Pool):
         p0 = 0
         p1 = 0
 
-        tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly)
+        tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly, w3)
 
         if tenderly_fork_id:
             contract = w3_tenderly.eth.contract(
                 abi=BANCOR_POL_ABI, address=contract.address
             )
-
+            
         try:
             p0, p1 = contract.functions.tokenPrice(tkn0).call()
         except web3.exceptions.BadFunctionCallOutput:
@@ -128,7 +129,7 @@ class BancorPolPool(Pool):
 
     @staticmethod
     def get_erc20_tkn_balance(
-        contract: Contract, tkn0: str, w3_tenderly: Web3 = None
+        contract: Contract, tkn0: str, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> int:
         """
         Get the ERC20 token balance of the POL contract
@@ -141,6 +142,8 @@ class BancorPolPool(Pool):
             The token address
         w3_tenderly: Web3
             The tenderly web3 object
+        w3: Web3
+            The web3 object
 
         Returns
         -------
@@ -148,7 +151,10 @@ class BancorPolPool(Pool):
             The token balance
 
         """
-        erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
+        if w3_tenderly:
+            erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
+        else:
+            erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
         return erc20_contract.functions.balanceOf(contract.address).call()
 
     @staticmethod

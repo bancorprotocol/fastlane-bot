@@ -57,7 +57,7 @@ class SushiswapV2Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.

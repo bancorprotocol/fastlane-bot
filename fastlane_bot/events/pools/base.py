@@ -76,7 +76,7 @@ class Pool(ABC):
 
     @abstractmethod
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> Dict[str, Any]:
         """
         Update the pool state from a contract.
@@ -89,6 +89,8 @@ class Pool(ABC):
             The tenderly fork id, by default None
         w3_tenderly : Web3, optional
             The tenderly web3 instance, by default None
+        w3 : Web3, optional
+            The web3 instance, by default None
 
         Returns
         -------
