@@ -12,8 +12,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "6.1"
-__DATE__ = "20/Sep/2023"
+__VERSION__ = "6.0.1"
+__DATE__ = "21/Sep/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -204,7 +204,7 @@ class PairOptimizer(CPCArbOptimizer):
         curves_t = CPCInverter.wrap(self.curve_container)
         assert len(curves_t) > 0, "no curves found"
         c0 = curves_t[0]
-        print("[PairOptimizer.optimize] curves_t", curves_t[0].pair)
+        #print("[PairOptimizer.optimize] curves_t", curves_t[0].pair)
         pairs = set(c.pair for c in curves_t)
         assert (len(pairs) == 1), f"pair_optimizer only works on curves of exactly one pair [{pairs}]"
         assert not (targettkn is None and result == self.SO_TARGETTKN), "targettkn must be set if result==SO_TARGETTKN"
@@ -269,7 +269,7 @@ class PairOptimizer(CPCArbOptimizer):
                 p_optimal_t = (float(p_optimal),)
                 full_result = dxdyfromp_sum_f(float(p_optimal))
                 opt_result = full_result[1]
-            print("[PairOptimizer.optimize] p_optimal", p_optimal, "full_result", full_result)
+            #print("[PairOptimizer.optimize] p_optimal", p_optimal, "full_result", full_result)
             method = "margp-pair"
         
         else:
@@ -279,19 +279,6 @@ class PairOptimizer(CPCArbOptimizer):
             # allows to mask certain long portions of the result if desired, the same way
             # the main margpoptimizer does it; however, this not currently considered necessary
         if p_optimal.is_error:
-            # return self.PairOptimizerResult(
-            #     result=None,
-            #     time=time.time() - start_time,
-            #     curves=curves_t,
-            #     dxdyfromp_vec_f=dxdyfromp_vec_f,
-            #     dxdyfromp_sum_f=dxdyfromp_sum_f,
-            #     dxdyfromp_valx_f=dxdyfromp_valx_f,
-            #     dxdyfromp_valy_f=dxdyfromp_valy_f,
-            #     p_optimal=None,
-            #     errormsg=p_optimal.errormsg,
-            #     method=method,
-            #     optimizer=self,
-            # )
             return self.MargpOptimizerResult(
                 method=method,
                 optimizer=NOMR(self),
@@ -306,18 +293,7 @@ class PairOptimizer(CPCArbOptimizer):
                 n_iterations=None,
                 errormsg="bisection did not converge",
             )
-        # return self.PairOptimizerResult(
-        #     result=full_result,
-        #     time=time.time() - start_time,
-        #     curves=curves_t,
-        #     dxdyfromp_vec_f=dxdyfromp_vec_f,
-        #     dxdyfromp_sum_f=dxdyfromp_sum_f,
-        #     dxdyfromp_valx_f=dxdyfromp_valx_f,
-        #     dxdyfromp_valy_f=dxdyfromp_valy_f,
-        #     p_optimal=float(p_optimal),
-        #     method=method,
-        #     optimizer=self,
-        # )
+
         return self.MargpOptimizerResult(
             method=method,
             optimizer=NOMR(self),
@@ -327,7 +303,7 @@ class PairOptimizer(CPCArbOptimizer):
             curves=NOMR(curves_t),
             p_optimal_t=p_optimal_t,
             dtokens={c0.tknx:full_result[0], c0.tkny:full_result[1]},
-            dtokens_t=(full_result[0] if targettkn==c0.tknx else full_result[1],),
+            dtokens_t=(full_result[1] if targettkn==c0.tknx else full_result[0],),
             tokens_t=(c0.tknx if targettkn==c0.tkny else c0.tkny,),
             n_iterations=None, # not available
         )

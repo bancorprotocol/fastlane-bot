@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.13.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -249,14 +249,14 @@ CAt = CPCAnalyzer(CCt)
 r = CAt.price_ranges(result=CAt.PR_TUPLE)
 assert len(r) == len(CCt)
 assert r[0] == (
-    'WETH/USDC',
-    '16dd65c110',
-    'sushiswap_v2',
-    'b',
-    's',
-    None,
-    None,
-    1833.9007005259564
+    'WETH/USDC',        # pair
+    '16dd65c110',       # cid
+    'sushiswap_v2',     # exchange
+    'b',                # buy
+    's',                # sell
+    0,                  # min_primary
+    None,               # max_primary
+    1833.9007005259564  # pp
 )
 assert r[1] == (
     'WETH/USDC',
@@ -275,7 +275,7 @@ assert r[0] == (
     'sushiswap_v2',
     'b',
     's',
-    None,
+    0,
     None,
     1833.9007005259564
 )
@@ -287,7 +287,7 @@ assert r['6c988ffdc9e74acd97ccfb16dd65c110'] == (
     'sushiswap_v2',
     'b',
     's',
-    None,
+    0,
     None,
     1833.9007005259564
 )
