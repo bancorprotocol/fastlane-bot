@@ -22,7 +22,7 @@ forge_pool - - - - > connect
 
 The optional modes of operation described above are:
 1. forge_pool --> config --> swap_calc
-2. forge_pool --> connect --> sync -> swap_calc
+2. forge_pool --> connect --> sync --> swap_calc
 3. forge_pool --> connect --> swap_read
 
 An example implementation of option 1 can be found in [test_offchain.py](test_offchain.py).
