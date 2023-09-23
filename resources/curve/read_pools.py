@@ -1,11 +1,11 @@
 from sys import argv
 from json import dumps
-from factory.Host import Host
-from factory.Main import poolNames
-from factory.Main import createPool
+from factory import connect
+from factory import pool_names
+from factory import forge_pool
 
 if len(argv) > 1:
-    Host.connect(argv[1])
+    connect(argv[1])
 else:
     exit('HTTP Provider URL Required')
 
@@ -18,4 +18,4 @@ def parse(obj: any) -> any:
         return {key: parse(val) for key, val in obj.items() if key != 'contract'}
     return parse(vars(obj))
 
-print(dumps({poolName: parse(createPool(poolName)) for poolName in poolNames()}, indent=4))
+print(dumps({pool_name: parse(forge_pool(pool_name, connect=True, sync=True)) for pool_name in pool_names}, indent=4))

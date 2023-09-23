@@ -1,9 +1,29 @@
 ## Abstract
 
-This module supports calculating swap output on each one of [these pools](factory/Main.py#L18-L44), in each one of the following manners:
+This module supports calculating swap output on each one of [these pools](factory/Main.py#L17-L43), in each one of the following manners:
 1. Before submitting swap-calculation requests, the user provides the current state of the pool (i.e., no onchain interactions)
 2. Before submitting swap-calculation requests, the module fetches the current state of the pool (i.e., one onchain interaction)
 3. For every swap-calculation request, the module calls the contract function onchain (i.e., one onchain interaction per request)
+
+The following diagram illustrates the various different ways in which this module can be used (onchain interactions are marked `*`):
+```
+forge_pool - - - - > connect
+     |                  |   \
+     |                  |    \
+     |                  |     \
+     v                  v      \
+  config             * sync *   \
+        \             /         |
+         \           /          |
+          \         /           |
+           v       v            v
+           swap_calc      * swap_read *
+```
+
+The optional modes of operation described above are:
+1. forge_pool --> config --> swap_calc
+2. forge_pool --> connect --> sync -> swap_calc
+3. forge_pool --> connect --> swap_read
 
 An example implementation of option 1 can be found in [test_offchain.py](test_offchain.py).
 

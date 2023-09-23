@@ -1,14 +1,13 @@
 from .Pool import Pool
 
-abi = [
-    {"name":"coins","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
-    {"name":"admin_balances","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
-]
-
 class Pool2(Pool):
-    def __init__(self, address: str, coins: list[any]):
-        super().__init__(address, abi)
-        self.coins = [coins[n](self.contract.functions.coins(n).call(), address) for n in range(len(coins))]
+    abi = [
+        {"name":"coins","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
+        {"name":"admin_balances","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
+    ]
+
+    def _sync(self, coins: list[any]):
+        self.coins = [coins[n](self.contract.functions.coins(n).call(), self.contract.address) for n in range(len(coins))]
         self.admin_balances = [self.contract.functions.admin_balances(n).call() for n in range(len(coins))]
 
     def _get_balances(self) -> list[int]:

@@ -12,9 +12,8 @@ from .Coin2 import Coin2
 from .Coin3 import Coin3
 from .Coin4 import Coin4
 from .Coin5 import Coin5
-from .Object import Object
 
-factory = {
+params = {
     'link'    : {'type': Pool1, 'address': '0xF178C0b5Bb7e7aBF4e12A4838C7b7c5bA2C623c0', 'coins': [Coin1, Coin1]},
     'seth'    : {'type': Pool1, 'address': '0xc5424B857f758E906013F3555Dad202e4bdB4567', 'coins': [Coin1, Coin1]},
     'steth'   : {'type': Pool2, 'address': '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022', 'coins': [Coin1, Coin1]},
@@ -44,15 +43,27 @@ factory = {
     'ust'     : {'type': Pool9, 'address': '0x890f4e345B1dAED0367A877a1612f86A1f86985f', 'coins': [Coin1, Coin1]},
 }
 
-def poolNames() -> list[str]:
-    return factory.keys()
-
-def createPool(poolName: str) -> any:
-    template = factory[poolName]
-    return template['type'](template['address'], template['coins'])
-
-def createMockPool(poolName: str, poolData: dict) -> any:
-    class MockPool(factory[poolName]['type'], Object):
-        def __init__(self, poolData: dict):
-            Object.__init__(self, poolData)
-    return MockPool(poolData)
+def forge_pool(pool_name: str, connect=False, sync=False, data={}) -> any:
+    class Pool(params[pool_name]['type']):
+        def connect(self):
+            super().connect(params[pool_name]['address'])
+        def sync(self):
+            super().sync(params[pool_name]['coins'])
+        def config(self, data: dict):
+            def get(val: any) -> any:
+                if type(val) is dict:
+                    return Object(val)
+                if type(val) is list:
+                    return [get(v) for v in val]
+                return val
+            class Object:
+                def __init__(self, data: dict):
+                    for key, val in data.items():
+                        setattr(self, key, get(val))
+            for key, val in data.items():
+                setattr(self, key, get(val))
+    pool = Pool()
+    if connect: pool.connect()
+    if sync: pool.sync()
+    if data: pool.config(data)
+    return pool

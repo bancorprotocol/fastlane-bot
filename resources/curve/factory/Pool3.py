@@ -1,15 +1,14 @@
 from .Pool import Pool
 
-abi = [
-    {"name":"coins","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
-    {"name":"admin_balances","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
-    {"name":"offpeg_fee_multiplier","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
-]
-
 class Pool3(Pool):
-    def __init__(self, address: str, coins: list[any]):
-        super().__init__(address, abi)
-        self.coins = [coins[n](self.contract.functions.coins(n).call(), address) for n in range(len(coins))]
+    abi = [
+        {"name":"coins","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
+        {"name":"admin_balances","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"},
+        {"name":"offpeg_fee_multiplier","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
+    ]
+
+    def _sync(self, coins: list[any]):
+        self.coins = [coins[n](self.contract.functions.coins(n).call(), self.contract.address) for n in range(len(coins))]
         self.admin_balances = [self.contract.functions.admin_balances(n).call() for n in range(len(coins))]
         self.offpeg_fee_multiplier = self.contract.functions.offpeg_fee_multiplier().call()
 
