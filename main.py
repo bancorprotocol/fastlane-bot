@@ -622,6 +622,9 @@ def run(
                 params = [w3.toHex(increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
 
+        except RuntimeError as e:
+            raise e
+
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
             time.sleep(polling_interval)

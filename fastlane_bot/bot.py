@@ -1328,6 +1328,9 @@ class CarbonBot(CarbonBotBase):
                             f.write("\n")
                             f.write(str(record))
 
+                if arb_mode == 'bancor_pol':
+                    raise RuntimeError('bancor_pol executed successfully')
+
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
         except Exception as e:
