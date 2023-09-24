@@ -11,27 +11,23 @@ forge_pool - - - - > connect
      |                  |   \
      |                  |    \
      |                  |     \
-     v                  v      \
-  config             * sync *   \
-        \             /         |
-         \           /          |
-          \         /           |
-           v       v            v
-           swap_calc      * swap_read *
+     v                  v      v
+  config             * sync *  config
+        \             /           |
+         \           /            |
+          \         /             |
+           v       v              v
+           swap_calc        * swap_read *
 ```
 
 The optional modes of operation described above are:
-1. forge_pool --> config --> swap_calc
-2. forge_pool --> connect --> sync --> swap_calc
-3. forge_pool --> connect --> swap_read
-
-An example implementation of option 1 can be found in [test_offchain.py](test_offchain.py).
-
-An example implementation of options 2 and 3 can be found in [test_onchain.py](test_onchain.py).
+1. `forge_pool --> config --> swap_calc` (see an example in [test1.py](test1.py))
+2. `forge_pool --> connect --> sync --> swap_calc` (see an example in [test2.py](test2.py))
+3. `forge_pool --> connect --> config --> swap_read` (see an example in [test3.py](test3.py))
 
 In order to use option 1, some level of acquaintance with the internal details of Curve Pools is required.
 
-An example of these details can be found in [mock_pools.py](mock_pools.py) and fetched using [read_pools.py](read_pools.py).
+An example of these details can be found in [example.py](example.py) and fetched using [read_pools.py](read_pools.py).
 
 ## Prerequisites
 
@@ -40,8 +36,9 @@ An example of these details can be found in [mock_pools.py](mock_pools.py) and f
 
 ## Testing Pools
 
-- `python test_offchain.py`
-- `python test_onchain.py <HTTP Provider URL>`
+- `python test1.py`
+- `python test2.py <HTTP Provider URL>`
+- `python test3.py <HTTP Provider URL>`
 
 ## Reading Pools
 
