@@ -59,6 +59,11 @@ class BaseManager:
     cfg: Config
     pool_data: List[Dict[str, Any]]
     alchemy_max_block_fetch: int
+    tenderly_event_contracts: Dict[str, Contract or Type[Contract]] = field(
+        default_factory=dict
+    )
+    tenderly_event_exchanges: List[str] = field(default_factory=list)
+    w3_tenderly: Web3 = None
     event_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     pool_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
@@ -67,6 +72,7 @@ class BaseManager:
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
+    tenderly_fork_id: str = None
 
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -114,6 +120,7 @@ class BaseManager:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
+        self.init_tenderly_event_contracts()
 
     def set_carbon_v1_fee_pairs(self):
         """
@@ -724,6 +731,8 @@ class BaseManager:
             The key and value.
 
         """
+        if ex_name == "bancor_pol":
+            return "token", event["args"]["token"]
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
         if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
@@ -794,3 +803,64 @@ class BaseManager:
             return event["args"]["token1"]
 
     print_events = []
+
+    def get_bancor_pol_pools(self, current_block: int):
+        """
+        Update the Bancor Pol pools.
+
+        Parameters
+        ----------
+        current_block : int
+            The current block number.
+
+        Returns
+        -------
+        List[int]
+            The rows to update.
+
+        """
+        start_time = time.time()
+        self.cfg.logger.info("Updating Bancor POL pools")
+
+        # Create or get CarbonController contract object
+        bancor_pol = self.create_or_get_bancor_pol_contract()
+
+        trading_enable_events = bancor_pol.events.TradingEnabled.get_logs(
+            fromBlock=self.cfg.BANCOR_POL_START_BLOCK
+        )
+
+        # Create pool info for each token
+        for event in trading_enable_events:
+            self.exchanges["bancor_pol"].save_strategy(
+                token=event[0],
+                block_number=current_block,
+                cfg=self.cfg,
+                func=self.add_pool_info,
+            )
+
+    def create_or_get_bancor_pol_contract(self):
+        """
+        Create or get the BancorPol contract object.
+
+        Returns
+        -------
+        bancor_pol : Contract
+            The Bancor Pol contract object.
+
+        """
+        if (
+            self.cfg.BANCOR_POL_ADDRESS in self.pool_contracts["bancor_pol"]
+            and not self.replay_from_block
+        ):
+            return self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS]
+
+        # Create a CarbonController contract object
+        bancor_pol = brownie.Contract.from_abi(
+            address=self.cfg.BANCOR_POL_ADDRESS,
+            abi=self.exchanges["bancor_pol"].get_abi(),
+            name="BancorPol",
+        )
+
+        # Store the contract object in pool_contracts
+        self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS] = bancor_pol
+        return bancor_pol

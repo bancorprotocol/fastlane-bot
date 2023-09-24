@@ -8,10 +8,10 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import Dict, Any
 
+from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
-from ... import Config
 
 
 @dataclass
@@ -70,12 +70,13 @@ class BancorV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, cfg: Config = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.
         """
         pool_balances = contract.tradingLiquidity(self.state["tkn1_address"])
+
         params = {
             "fee": "0.000",
             "fee_float": 0.000,

@@ -10,7 +10,6 @@ from typing import Dict, Any
 
 from web3.contract import Contract
 
-from fastlane_bot import Config
 from fastlane_bot.data.pools import uniswap_v3_pools
 from fastlane_bot.events.pools.base import Pool
 
@@ -65,7 +64,7 @@ class UniswapV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, cfg: Config = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Any = None, w3: Any = None
     ) -> Dict[str, Any]:
         """
         See base class.
