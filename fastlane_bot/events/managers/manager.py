@@ -9,9 +9,12 @@ import random
 import time
 from typing import Dict, Any, Optional
 
+import brownie
+import web3
 from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
@@ -92,7 +95,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.fee_pairs.update(fee_pairs)
 
     def update_from_pool_info(
-        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
+        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None, multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None
     ) -> Dict[str, Any]:
         """
         Update the pool info.
@@ -103,22 +106,19 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The pool info, by default None.
         current_block : int, optional
             The current block, by default None.
+        multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract, optional
+            The multicall contract, by default None.
         """
 
         pool_info["last_updated_block"] = current_block
-        contract = (
-            self.pool_contracts[pool_info["exchange_name"]].get(
-                pool_info["address"],
-                self.web3.eth.contract(
-                    address=pool_info["address"],
-                    abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
-                ),
-            )
-            if pool_info["exchange_name"] != "bancor_v3"
-            else self.pool_contracts[pool_info["exchange_name"]].get(
-                self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
-            )
+        contract = multicall_contract or self.pool_contracts[pool_info["exchange_name"]].get(
+            pool_info["address"],
+            self.web3.eth.contract(
+                address=pool_info["address"],
+                abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
+            ),
         )
+
         pool = self.get_or_init_pool(pool_info)
         params = pool.update_from_contract(
             contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
@@ -233,8 +233,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
         token_address: bool = False,
         pool_info: Dict[str, Any] = None,
         contract: Contract = None,
-        limiter: bool = True,
         block_number: int = None,
+        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
     ) -> None:
         """
         Update the state.
@@ -251,10 +251,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The pool info, by default None.
         contract : Contract, optional
             The contract, by default None.
-        limiter : bool, optional
-            Whether to use the rate limiter, by default True.
         block_number : int, optional
             The block number, by default None.
+        multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract, optional
+            The multicall contract, by default None.
 
 
         Raises
@@ -264,6 +264,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             If no event or pool info is provided.
             If the pool info is invalid.
         """
+        limiter = bool(multicall_contract)
+
         while True:
             if limiter:
                 rate_limiter = 0.1 + 0.9 * random.random()
@@ -284,7 +286,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     )
                 elif pool_info:
                     self.update_from_pool_info(
-                        pool_info=pool_info, current_block=block_number
+                        pool_info=pool_info, current_block=block_number, multicall_contract=multicall_contract
                     )
                 else:
                     self.cfg.logger.debug(

@@ -48,10 +48,9 @@ class ContractsManager(BaseManager):
             if exchange_name == "bancor_v3":
                 self.pool_contracts[exchange_name][
                     self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
-                ] = brownie.Contract.from_abi(
+                ] = self.web3.eth.contract(
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
-                    name="BancorNetwork",
                 )
             elif exchange_name == "bancor_pol":
                 self.pool_contracts[exchange_name][
@@ -59,6 +58,13 @@ class ContractsManager(BaseManager):
                 ] = self.web3.eth.contract(
                     address=self.cfg.BANCOR_POL_ADDRESS,
                     abi=BANCOR_POL_ABI,
+                )
+            elif exchange_name == 'carbon_v1':
+                self.pool_contracts[exchange_name][
+                    self.cfg.CARBON_CONTROLLER_ADDRESS
+                ] = self.web3.eth.contract(
+                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
                 )
 
     @staticmethod

@@ -15,6 +15,7 @@ from web3.contract import Contract
 from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot import Config
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools import pool_factory
@@ -252,20 +253,20 @@ class BaseManager:
         )
         return tkns or (None, None)
 
-    def multicall(self, address: str):
-        """
-
-        Parameters
-        ----------
-        address : str
-            The address of the contract to call.
-        """
-        if self.replay_from_block:
-            return brownie.multicall(
-                address=address, block_identifier=self.replay_from_block
-            )
-        else:
-            return brownie.multicall(address)
+    # def multicall(self, address: str):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     address : str
+    #         The address of the contract to call.
+    #     """
+    #     if self.replay_from_block:
+    #         return brownie.multicall(
+    #             address=address, block_identifier=self.replay_from_block
+    #         )
+    #     else:
+    #         return brownie.multicall(address)
 
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
@@ -393,6 +394,7 @@ class BaseManager:
     @staticmethod
     def get_carbon_pairs_by_contract(
         carbon_controller: Contract,
+        replay_from_block: int or str = None
     ) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs by contract.
@@ -401,6 +403,8 @@ class BaseManager:
         ----------
         carbon_controller : Contract
             The CarbonController contract object.
+        replay_from_block : int or str, optional
+            The block number to replay from, by default 'latest'
 
         Returns
         -------
@@ -408,7 +412,7 @@ class BaseManager:
             The carbon pairs.
 
         """
-        return [(second, first) for first, second in carbon_controller.pairs()]
+        return [(second, first) for first, second in carbon_controller.functions.pairs().call(block_identifier=replay_from_block or "latest")]
 
     def get_carbon_pairs_by_state(self) -> List[Tuple[str, str]]:
         """
@@ -476,23 +480,26 @@ class BaseManager:
             The strategies.
 
         """
-        strategies_by_pair = []
+        multicaller = MultiCaller(contract=carbon_controller, block_identifier=self.replay_from_block or "latest")
 
-        with self.multicall(
-            address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-        ):
+        with multicaller as mc:
             for pair in pairs:
                 try:
-                    # Fetch strategies for each pair from the CarbonController contract object
-                    strategies_by_pair.append(carbon_controller.strategiesByPair(*pair))
+                    # Loading the strategies for each pair without executing the calls yet
+                    mc.add_call(carbon_controller.functions.strategiesByPair, pair[0], pair[1], pair[2], pair[3])
                 except ValueError:
                     print(f"Error fetching strategiesByPair {pair}")
+
+            # Fetch strategies for each pair from the CarbonController contract object
+            strategies_by_pair = mc.multicall()
 
         self.carbon_inititalized = True
 
         # Log that Carbon is initialized
         self.cfg.logger.info(f"Carbon is initialized {self.carbon_inititalized}")
-
+        self.cfg.logger.info(f"Retrieved {len(strategies_by_pair)} carbon strategies")
+        self.cfg.logger.info(f"Example strat {strategies_by_pair[0]}")
+        # return strategies_by_pair
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:
@@ -594,13 +601,13 @@ class BaseManager:
             The fees by pair.
 
         """
-        with self.multicall(address=self.cfg.MULTICALL_CONTRACT_ADDRESS):
-            # Fetch strategies for each pair from the CarbonController contract object
-            fees_by_pair = [
-                carbon_controller.pairTradingFeePPM(pair[0], pair[1])
-                for pair in all_pairs
-            ]
-        return fees_by_pair
+        multicaller = MultiCaller(contract=carbon_controller, block_identifier=self.replay_from_block or "latest")
+
+        with multicaller as mc:
+            for pair in all_pairs:
+                mc.add_call(carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1])
+
+        return multicaller.multicall()
 
     def get_tkn_symbol_and_decimals(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str

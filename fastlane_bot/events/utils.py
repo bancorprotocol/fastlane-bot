@@ -18,6 +18,7 @@ from typing import List
 import brownie
 import pandas as pd
 import requests
+import web3
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3 import Web3
@@ -25,6 +26,7 @@ from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
@@ -664,7 +666,7 @@ def update_pools_from_contracts(
     mgr: Any,
     n_jobs: int,
     rows_to_update: List[int],
-    not_multicall: bool = True,
+    multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
     token_address: bool = False,
     current_block: int = None,
 ) -> None:
@@ -679,33 +681,33 @@ def update_pools_from_contracts(
         The number of jobs to run in parallel.
     rows_to_update : List[int]
         A list of rows to update.
-    not_multicall : bool, optional
-        Whether the pools are not Bancor v3 pools, by default True
+    multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract
+        The multicall contract.
     token_address : bool, optional
         Whether to update the token address, by default False
     current_block : int, optional
         The current block number, by default None
 
     """
-    if not_multicall:
+    if multicall_contract:
+        for idx, pool in enumerate(rows_to_update):
+            mgr.update(
+                pool_info=mgr.pool_data[idx],
+                block_number=current_block,
+                token_address=token_address,
+                multicall_contract=multicall_contract,
+            )
+    else:
         Parallel(n_jobs=n_jobs, backend="threading")(
             delayed(mgr.update)(
                 pool_info=mgr.pool_data[idx],
-                limiter=not_multicall,
                 block_number=current_block,
                 token_address=token_address,
+                multicall_contract=multicall_contract,
             )
             for idx in rows_to_update
         )
-    else:
-        with mgr.multicall(address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
-            for idx in rows_to_update:
-                mgr.update(
-                    pool_info=mgr.pool_data[idx],
-                    limiter=not_multicall,
-                    block_number=current_block,
-                    token_address=token_address,
-                )
+
 
 
 def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
@@ -975,12 +977,27 @@ def multicall_every_iteration(
     ]
 
     for idx, exchange in enumerate(multicallable_exchanges):
+        if exchange == "bancor_v3":
+            multicall_contract = mgr.pool_contracts[exchange][
+                mgr.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
+            ]
+        elif exchange == "bancor_pol":
+            multicall_contract = mgr.pool_contracts[exchange][
+                mgr.cfg.BANCOR_POL_ADDRESS
+            ]
+        elif exchange == 'carbon_v1':
+            multicall_contract = mgr.pool_contracts[exchange][
+                mgr.cfg.CARBON_CONTROLLER_ADDRESS
+            ]
+        else:
+            raise ValueError(f"Exchange {exchange} not supported for multicall. Add contract to [managers.contract.init_exchange_contracts]")
+
         update_pools_from_contracts(
             n_jobs=n_jobs,
             current_block=current_block,
             mgr=mgr,
             rows_to_update=multicallable_pool_rows[idx],
-            not_multicall=False,
+            multicall_contract=multicall_contract,
         )
 
 
