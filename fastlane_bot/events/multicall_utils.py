@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+This is the multicaller utils module.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from decimal import Decimal
 from typing import Dict, Any
 from typing import List, Tuple

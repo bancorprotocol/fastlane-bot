@@ -1,3 +1,10 @@
+# coding=utf-8
+"""
+This is the multicaller module.
+
+(c) Copyright Bprotocol foundation 2023.
+Licensed under MIT
+"""
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 
@@ -8,6 +15,7 @@ from eth_abi import decode_abi
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
 
+
 def cast(typ, val):
     """Cast a value to a type.
 
@@ -17,6 +25,7 @@ def cast(typ, val):
     to be as fast as possible).
     """
     return val
+
 
 def collapse_if_tuple(abi: Dict[str, Any]) -> str:
     """
@@ -51,20 +60,36 @@ def collapse_if_tuple(abi: Dict[str, Any]) -> str:
 
     return collapsed
 
-def get_output_types_from_abi(abi, function_name):
+
+def get_output_types_from_abi(abi: List[Dict[str, Any]], function_name: str) -> List[str]:
+    """
+    Get the output types from an ABI.
+
+    Parameters
+    ----------
+    abi : List[Dict[str, Any]]
+        The ABI
+    function_name : str
+        The function name
+
+    Returns
+    -------
+    List[str]
+        The output types
+
+    """
     for item in abi:
         if item['type'] == 'function' and item['name'] == function_name:
             return [collapse_if_tuple(cast(Dict[str, Any], item)) for item in item['outputs']]
     raise ValueError(f"No function named {function_name} found in ABI.")
 
-def tuple_to_list(value):
-    if isinstance(value, tuple):
-        return [tuple_to_list(v) for v in value]
-    return value
 
 class ContractMethodWrapper:
-    __DATE__ = "2022-09-24"
-    __VERSION__ = "0.0.1"
+    """
+    Wraps a contract method to be used with multicall.
+    """
+    __DATE__ = "2022-09-26"
+    __VERSION__ = "0.0.2"
 
     def __init__(self, original_method, multicaller):
         self.original_method = original_method
@@ -77,11 +102,15 @@ class ContractMethodWrapper:
 
 
 class MultiCaller(ContextManager):
-    __DATE__ = "2022-09-24"
-    __VERSION__ = "0.0.1"
+    """
+    Context manager for multicalls.
+    """
+    __DATE__ = "2022-09-26"
+    __VERSION__ = "0.0.2"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
 
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract, block_identifier: Any = 'latest'):
+    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract,
+                 block_identifier: Any = 'latest'):
         self._contract_calls: List[Callable] = []
         self.contract = contract
         self.block_identifier = block_identifier
@@ -120,61 +149,8 @@ class MultiCaller(ContextManager):
 
         encoded_data = encoded_data[1]
         decoded_data_list = []
-        # print(f"output_types_list: {output_types_list}")
         for output_types, encoded_output in zip(output_types_list, encoded_data):
             decoded_data = decode_abi(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
         return [i[0] for i in decoded_data_list]
-
-
-#
-# class ContractMethodWrapper:
-#     __DATE__ = "2022-09-24"
-#     __VERSION__ = "0.0.1"
-#
-#     def __init__(self, original_method, multicaller):
-#         self.original_method = original_method
-#         self.multicaller = multicaller
-#
-#     def __call__(self, *args, **kwargs):
-#         contract_call = self.original_method(*args, **kwargs)
-#         self.multicaller.add_call(contract_call)
-#         return contract_call
-#
-#
-# class MultiCaller(ContextManager):
-#     __DATE__ = "2022-09-24"
-#     __VERSION__ = "0.0.1"
-#     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-#
-#     def __init__(self, contract: MultiProviderContractWrapper, block_identifier: Any = 'latest'):
-#         self._contract_calls: List[Callable] = []
-#         self.contract = contract
-#         self.block_identifier = block_identifier
-#
-#     def __enter__(self) -> 'MultiCaller':
-#         return self
-#
-#     def __exit__(self, exc_type, exc_val, exc_tb):
-#         if exc_type is None:
-#             self.multicall()
-#
-#     def add_call(self, fn: Callable, *args, **kwargs) -> None:
-#         self._contract_calls.append(partial(fn, *args, **kwargs))
-#
-#     def multicall(self) -> Any:
-#         calls_for_aggregate = [
-#             {
-#                 'target': self.contract.address,
-#                 'callData': fn()._encode_transaction_data()
-#             }
-#             for fn in self._contract_calls
-#         ]
-#         w3 = self.contract.web3
-#         return w3.eth.contract(
-#             abi=MULTICALL_ABI,
-#             address=self.MULTICALL_CONTRACT_ADDRESS
-#         ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
-
-
