@@ -7,9 +7,8 @@ class Pool3(Pool):
         {"name":"offpeg_fee_multiplier","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, coins: list[any]):
-        self.coins = [coins[n](self.contract.functions.coins(n).call(), self.contract.address) for n in range(len(coins))]
-        self.admin_balances = [self.contract.functions.admin_balances(n).call() for n in range(len(coins))]
+    def _sync(self):
+        self.admin_balances = [self.contract.functions.admin_balances(n).call() for n in range(len(self.coins))]
         self.offpeg_fee_multiplier = self.contract.functions.offpeg_fee_multiplier().call()
 
     def _get_balances(self) -> list[int]:

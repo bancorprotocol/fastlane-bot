@@ -6,8 +6,8 @@ abi = [
 ]
 
 class Coin:
-    def __init__(self, address: str, abi_ex: list[dict]):
-        self.contract = Host.contract(address, abi + abi_ex)
+    def __init__(self, address: str):
+        self.contract = Host.contract(address, abi + self.abi)
         if self.is_eth():
             self.symbol = 'ETH'
             self.decimals = 18

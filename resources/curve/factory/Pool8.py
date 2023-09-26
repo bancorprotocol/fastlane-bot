@@ -8,10 +8,9 @@ class Pool8(Pool):
         {"name":"underlying_coins","outputs":[{"type":"address","name":""}],"inputs":[{"type":"uint256","name":""}],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, coins: list[any]):
-        self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
-        self.balances = [self.contract.functions.balances(n).call() for n in range(len(coins))]
-        self.underlying_coins = [BaseCoin(self.contract.functions.underlying_coins(n).call()) for n in range(len(coins))]
+    def _sync(self):
+        self.balances = [self.contract.functions.balances(n).call() for n in range(len(self.coins))]
+        self.underlying_coins = [BaseCoin(self.contract.functions.underlying_coins(n).call()) for n in range(len(self.coins))]
         self.block_number = self.contract.w3.eth.get_block('latest')['number']
 
     def _get_factors(self, default: int) -> list[int]:

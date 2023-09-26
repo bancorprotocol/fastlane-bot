@@ -1,10 +1,9 @@
 from .Coin import Coin
 
-abi = [
-    {"name":"exchangeRateCurrent","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
-]
-
 class Coin2(Coin):
-    def __init__(self, address: str):
-        super().__init__(address, abi)
+    abi = [
+        {"name":"exchangeRateCurrent","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
+    ]
+
+    def _sync(self, _):
         self.exchangeRateCurrent = self.contract.functions.exchangeRateCurrent().call()

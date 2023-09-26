@@ -6,9 +6,8 @@ class Pool7(Pool):
         {"name":"balances","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"int128","name":""}],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, coins: list[any]):
-        self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
-        self.balances = [self.contract.functions.balances(n).call() for n in range(len(coins))]
+    def _sync(self):
+        self.balances = [self.contract.functions.balances(n).call() for n in range(len(self.coins))]
 
     def _get_factors(self, default: int) -> list[int]:
         return [getattr(coin, 'pricePerFullShare', default) for coin in self.coins]

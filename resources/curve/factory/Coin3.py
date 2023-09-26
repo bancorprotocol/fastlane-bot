@@ -1,10 +1,9 @@
 from .Coin import Coin
 
-abi = [
-    {"name":"getPricePerFullShare","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
-]
-
 class Coin3(Coin):
-    def __init__(self, address: str):
-        super().__init__(address, abi)
+    abi = [
+        {"name":"getPricePerFullShare","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
+    ]
+
+    def _sync(self, _):
         self.pricePerFullShare = self.contract.functions.getPricePerFullShare().call()

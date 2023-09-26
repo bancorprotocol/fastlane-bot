@@ -2,17 +2,16 @@ from sys import argv
 from decimal import Decimal
 from factory import connect
 from factory import forge_pool
-from example import pool_params
+from factory import pool_names
 
 if len(argv) > 1:
     connect(argv[1])
 else:
     exit('HTTP Provider URL Required')
 
-for pool_name in pool_params:
+for pool_name in pool_names:
     print(f'{pool_name}:')
-    data = {"coins": [{key: coin[key] for key in ["symbol", "decimals"]} for coin in pool_params[pool_name]["coins"]]}
-    pool = forge_pool(pool_name, connect=True, data=data)
+    pool = forge_pool(pool_name, connect=True)
     for s, t in [(s, t) for s in pool.coins for t in pool.coins if s != t]:
         s_amount = int(Decimal('123.456') * 10 ** s.decimals)
         t_amount = pool.swap_read(s.symbol, t.symbol, s_amount)

@@ -7,23 +7,23 @@ This module supports calculating swap output on each one of [these pools](factor
 
 The following diagram illustrates the various different ways in which this module can be used (onchain interactions are marked `*`):
 ```
-forge_pool - - - - > connect
+forge_pool - - - - > connect *
      |                  |   \
      |                  |    \
      |                  |     \
-     v                  v      v
-  config             * sync *  config
-        \             /           |
-         \           /            |
-          \         /             |
-           v       v              v
-           swap_calc        * swap_read *
+     v                  v      \
+  config               sync *   \
+        \             /          \
+         \           /            \
+          \         /              \
+           v       v                v
+           swap_calc            swap_read *
 ```
 
 The optional modes of operation described above are:
 1. `forge_pool --> config --> swap_calc` (see an example in [test1.py](test1.py))
 2. `forge_pool --> connect --> sync --> swap_calc` (see an example in [test2.py](test2.py))
-3. `forge_pool --> connect --> config --> swap_read` (see an example in [test3.py](test3.py))
+3. `forge_pool --> connect --> swap_read` (see an example in [test3.py](test3.py))
 
 In order to use option 1, some level of acquaintance with the internal details of Curve Pools is required.
 

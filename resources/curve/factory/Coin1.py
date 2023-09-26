@@ -1,12 +1,11 @@
 from .Coin import Coin
 
-abi = [
-    {"name":"balanceOf","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":""}],"stateMutability":"view","type":"function"}
-]
-
 class Coin1(Coin):
-    def __init__(self, address: str, pool_address: str):
-        super().__init__(address, abi)
+    abi = [
+        {"name":"balanceOf","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":""}],"stateMutability":"view","type":"function"}
+    ]
+
+    def _sync(self, pool_address: str):
         if self.is_eth():
             self.pool_balance = self.contract.w3.eth.get_balance(pool_address)
         else:

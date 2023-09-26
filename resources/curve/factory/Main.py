@@ -46,9 +46,9 @@ params = {
 def forge_pool(pool_name: str, connect=False, sync=False, data={}) -> any:
     class Pool(params[pool_name]['type']):
         def connect(self):
-            super().connect(params[pool_name]['address'])
+            super().connect(params[pool_name]['address'], params[pool_name]['coins'])
         def sync(self):
-            super().sync(params[pool_name]['coins'])
+            super().sync()
         def config(self, data: dict):
             def get(val: any) -> any:
                 if type(val) is dict:

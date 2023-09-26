@@ -12,9 +12,8 @@ class Pool9(Pool):
         {"name":"base_pool","outputs":[{"type":"address","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, coins: list[any]):
-        self.coins = [coins[n](self.contract.functions.coins(n).call(), self.contract.address) for n in range(len(coins))]
-        self.balances = [self.contract.functions.balances(n).call() for n in range(len(coins))]
+    def _sync(self):
+        self.balances = [self.contract.functions.balances(n).call() for n in range(len(self.coins))]
         self.base_cache_updated = self.contract.functions.base_cache_updated().call()
         self.base_virtual_price = self.contract.functions.base_virtual_price().call()
         self.base_pool = BasePool(self.contract.functions.base_pool().call())

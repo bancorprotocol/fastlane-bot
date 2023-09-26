@@ -1,8 +1,8 @@
 from sys import argv
 from json import dumps
 from factory import connect
-from factory import pool_names
 from factory import forge_pool
+from factory import pool_names
 
 if len(argv) > 1:
     connect(argv[1])
