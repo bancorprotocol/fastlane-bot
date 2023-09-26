@@ -56,7 +56,6 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
-
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -177,6 +176,8 @@ class QueryInterface:
             "bancor_v3",
             "bancor_pol",
             "carbon_v1",
+            "pancakeswap_v2",
+            "pancakeswap_v3",
         ]
         keys = [
             "liquidity",
@@ -186,6 +187,8 @@ class QueryInterface:
             "tkn0_balance",
             "y_0",
             "y_0",
+            "tkn0_balance",
+            "liquidity",
         ]
 
         self.state = [
@@ -257,10 +260,10 @@ class QueryInterface:
         self.ConfigObj.logger.info("Unmapped uniswap_v2/sushi pools:")
         unmapped_pools = [pool for pool in initial_state if pool not in self.state]
         assert len(unmapped_pools) == len(initial_state) - len(self.state)
-        uniswap_v3_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
-        ]
-        self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        # uniswap_v3_unmapped = [
+        #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
+        # ]
+        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
         uniswap_v2_unmapped = [
             pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
         ]
@@ -269,6 +272,9 @@ class QueryInterface:
             pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
+
+
+
 
     def remove_faulty_token_pools(self) -> None:
         """

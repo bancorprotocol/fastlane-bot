@@ -8,6 +8,7 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import Dict, Any
 
+from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot import Config
@@ -36,7 +37,7 @@ class PancakeswapV3Pool(Pool):
         Check if an event matches the format of a Uniswap v3 event.
         """
         event_args = event["args"]
-        return "sqrtPriceX96" in event_args and event["address"] in pancakeswap_v3_pools
+        return "protocolFeesToken0" in event_args and event["address"] in pancakeswap_v3_pools
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -65,7 +66,7 @@ class PancakeswapV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, cfg: Config = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> Dict[str, Any]:
         """
         See base class.

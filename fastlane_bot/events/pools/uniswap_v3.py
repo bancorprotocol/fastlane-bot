@@ -35,7 +35,7 @@ class UniswapV3Pool(Pool):
         Check if an event matches the format of a Uniswap v3 event.
         """
         event_args = event["args"]
-        return "sqrtPriceX96" in event_args and event["address"] in uniswap_v3_pools
+        return "sqrtPriceX96" in event_args and event["address"] in uniswap_v3_pools and "protocolFeesToken0" not in event_args
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]

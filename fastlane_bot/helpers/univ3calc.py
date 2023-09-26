@@ -25,7 +25,7 @@ class Univ3Calculator():
     FEE3000     = 3000
     FEE10000    = 10000
 
-    TICKSZ = {FEE100: 1, FEE500: 10, FEE3000: 60, FEE10000: 200}
+    TICKSZ = {FEE100: 1, FEE500: 10, FEE2500: 50, FEE3000: 60, FEE10000: 200}
 
     Q96 = 2**96
     Q192 = 2**192
@@ -108,7 +108,7 @@ class Univ3Calculator():
         super().__setattr__('tick', int(self.tick)) 
         super().__setattr__('liquidity', int(self.liquidity)) 
         super().__setattr__('fee_const', int(self.fee_const)) 
-        assert self.fee_const in {self.FEE100, self.FEE500, self.FEE3000, self.FEE10000}, "fee not one of the FEEXXX constants {self.fee_const}"
+        assert self.fee_const in {self.FEE100, self.FEE500, self.FEE2500, self.FEE3000, self.FEE10000}, "fee not one of the FEEXXX constants {self.fee_const}"
         assert not self.tkn0dec is None, "tkn0dec is None"
         assert not self.tkn1dec is None, "tkn1dec is None"
 

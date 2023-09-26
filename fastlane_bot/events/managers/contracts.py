@@ -177,13 +177,6 @@ class ContractsManager(BaseManager):
         """
         if exchange_name in self.exchanges:
             w3 = self.web3
-            if exchange_name == "bancor_pol":
-                # TODO: Remove this once we have a better solution
-                w3 = Web3(
-                    Web3.HTTPProvider(
-                        f"https://rpc.tenderly.co/fork/{self.tenderly_fork_id}"
-                    )
-                )
 
             contract_key = (
                 self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS

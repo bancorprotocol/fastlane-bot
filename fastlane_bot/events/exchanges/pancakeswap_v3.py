@@ -10,7 +10,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI
+from fastlane_bot.data.abi import PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -27,7 +27,7 @@ class PancakeswapV3(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI
+        return PANCAKESWAP_V3_POOL_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap]

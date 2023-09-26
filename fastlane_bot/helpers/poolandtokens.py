@@ -302,6 +302,7 @@ class PoolAndTokens:
     FEE_LOOKUP = {
         0.0001: Univ3Calculator.FEE100,
         0.0005: Univ3Calculator.FEE500,
+        0.0025: Univ3Calculator.FEE2500,
         0.0030: Univ3Calculator.FEE3000,
         0.01: Univ3Calculator.FEE10000,
     }
