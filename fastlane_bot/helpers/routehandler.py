@@ -54,6 +54,9 @@ class RouteStruct:
     XCID_SUSHISWAP_V1 = 5
     XCID_CARBON_V1 = 6
     XCID_BALANCER = 7
+    XCID_CARBON_POL = 8
+    XCID_PANCAKESWAP_V2 = 9
+    XCID_PANCAKESWAP_V3 = 10
 
     platformId: int  # TODO: WHY IS THIS AN INT?
     sourceToken: str
@@ -1231,7 +1234,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
-        if curve.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
+        if curve.exchange_name in self.ConfigObj.UNIV3_FORKS:
             amount_out = self._calc_uniswap_v3_output(
                 tkn_in=trade.tknin_key,
                 tkn_out=trade.tknout_key,
