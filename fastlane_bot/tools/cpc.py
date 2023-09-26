@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.2"
-__DATE__ = "15/Sep/2023"
+__VERSION__ = "3.3"
+__DATE__ = "21/Sep/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -371,11 +371,11 @@ class ConstantProductCurve(CurveBase):
     def __post_init__(self):
         
         if self.alpha is None:
-            super().__setattr__("_is_constant_product", True) 
+            super().__setattr__("_is_symmetric", True) 
             super().__setattr__("alpha", 0.5) 
         else:
-            super().__setattr__("_is_constant_product", self.alpha == 0.5) 
-            #print(f"[ConstantProductCurve] _is_constant_product = {self._is_constant_product}")
+            super().__setattr__("_is_symmetric", self.alpha == 0.5) 
+            #print(f"[ConstantProductCurve] _is_symmetric = {self._is_symmetric}")
             assert self.alpha > 0, f"alpha must be > 0 [{self.alpha}]"
             assert self.alpha < 1, f"alpha must be < 1 [{self.alpha}]"
     
@@ -445,8 +445,24 @@ class ConstantProductCurve(CurveBase):
         return self.alpha / (1 - self.alpha)
     
     def is_constant_product(self):
+        "True iff alpha == 0.5 (deprecated; use `is_symmetric`)"
+        return self.is_symmetric()
+    
+    def is_symmetric(self):
         "True iff alpha == 0.5"
-        return self._is_constant_product
+        return self._is_symmetric
+    
+    def is_asymmetric(self):
+        "True iff alpha != 0.5"
+        return not self.is_symmetric()
+    
+    def is_levered(self):
+        "True iff x!=x_act or y!=y_act"
+        return not self.is_unlevered()
+    
+    def is_unlevered(self):
+        "True iff x==x_act and y==y_act"
+        return self.x == self.x_act and self.y == self.y_act
     
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
@@ -1242,6 +1258,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def x_min(self):
         "minimum (virtual) x value"
+        if self.is_unlevered():
+            return 0
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         return self.x - self.x_act
@@ -1272,6 +1290,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def y_min(self):
         "minimum (virtual) y value"
+        if self.is_unlevered():
+            return 0
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         return self.y - self.y_act
@@ -1279,6 +1299,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def x_max(self):
         "maximum (virtual) x value"
+        if self.is_unlevered():
+            return None
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         if self.y_min > 0:
@@ -1289,6 +1311,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def y_max(self):
         "maximum (virtual) y value"
+        if self.is_unlevered():
+            return None
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         if self.x_min > 0:
@@ -1299,6 +1323,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def p_max(self):
         "maximum pool price (in dy/dx; None if unlimited) = y_max/x_min"
+        if self.is_unlevered():
+            return None
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         if not self.x_min is None and self.x_min > 0:
@@ -1308,6 +1334,8 @@ class ConstantProductCurve(CurveBase):
         
     def p_max_primary(self, swap=True):
         "p_max in the native quote of the curve Pair object (swap=True: p_min)"
+        if self.is_unlevered():
+            return None
         p = self.p_max if not (swap and not self.isprimary) else self.p_min
         if p is None: return None
         return p if self.isprimary else 1/p
@@ -1315,6 +1343,8 @@ class ConstantProductCurve(CurveBase):
     @property
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
+        if self.is_unlevered():
+            return 0
         assert self.is_constant_product(), "only implemented for constant product curves"
         
         if not self.x_max is None and self.x_max > 0:
@@ -1324,6 +1354,8 @@ class ConstantProductCurve(CurveBase):
     
     def p_min_primary(self, swap=True):
         "p_min in the native quote of the curve Pair object (swap=True: p_max)"
+        if self.is_unlevered():
+            return 0
         p = self.p_min if not (swap and not self.isprimary) else self.p_max
         if p is None: return None
         return p if self.isprimary else 1/p

@@ -275,7 +275,7 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly
+                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
                 )
             )
 

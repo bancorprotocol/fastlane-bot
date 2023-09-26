@@ -2,9 +2,35 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.35...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.38...HEAD)
+
+- Fix block start number for POL contract [\#149](https://github.com/bancorprotocol/fastlane-bot/issues/149)
+- Update BANCOR\_POL\_START\_BLOCK to correct value [\#150](https://github.com/bancorprotocol/fastlane-bot/pull/150) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add support for POL Contract [\#109](https://github.com/bancorprotocol/fastlane-bot/issues/109)
+
+## [v2.7.38](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.38) (2023-09-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.37...v2.7.38)
+
+- pol merge bug on mainnet [\#147](https://github.com/bancorprotocol/fastlane-bot/issues/147)
+
+Merged pull requests
+
+- Optimizer tests [\#146](https://github.com/bancorprotocol/fastlane-bot/pull/146) ([sklbancor](https://github.com/sklbancor))
+
+## [v2.7.37](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.37) (2023-09-21)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.36...v2.7.37)
+
+- bugfix for POL on mainnet [\#148](https://github.com/bancorprotocol/fastlane-bot/pull/148) ([mikewcasale](https://github.com/mikewcasale))
 
 - Checklist for Adding Tests to Bancor POL Contract Support [\#116](https://github.com/bancorprotocol/fastlane-bot/issues/116)
+
+## [v2.7.36](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.36) (2023-09-21)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.35...v2.7.36)
+
 - 109 pol and tenderly cleanup [\#136](https://github.com/bancorprotocol/fastlane-bot/pull/136) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues

@@ -121,7 +121,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         pool = self.get_or_init_pool(pool_info)
         params = pool.update_from_contract(
-            contract, self.tenderly_fork_id, self.w3_tenderly
+            contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
         )
         for key, value in params.items():
             pool_info[key] = value
@@ -182,6 +182,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             contract,
             tenderly_fork_id=self.tenderly_fork_id,
             w3_tenderly=self.w3_tenderly,
+            w3=self.web3,
         )
         for key, value in params.items():
             pool_info[key] = value
@@ -216,6 +217,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             contract=pool_contract,
             tenderly_fork_id=self.tenderly_fork_id,
             w3_tenderly=self.w3_tenderly,
+            w3=self.web3,
         )
         params["last_updated_block"] = current_block
 
