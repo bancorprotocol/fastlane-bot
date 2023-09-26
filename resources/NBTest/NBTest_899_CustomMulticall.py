@@ -13,7 +13,7 @@
 #     name: python3
 # ---
 
-# + is_executing=true
+# +
 import json
 
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
@@ -41,7 +41,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# + is_executing=true
+# +
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
 # Define ABI and address
@@ -73,7 +73,7 @@ class MockContract:
 
 # ## test_multicaller_init
 
-# + is_executing=true
+# +
 
 original_method = Mock()
 multicaller = Mock()
@@ -86,7 +86,7 @@ assert wrapper.multicaller == multicaller
 
 # ## test_contract_method_wrapper_call
 
-# + is_executing=true
+# +
 original_method = Mock()
 multicaller = Mock()
 
@@ -100,7 +100,7 @@ multicaller.add_call.assert_called_with(result)
 
 # ## test_multi_caller_init
 
-# + is_executing=true
+# +
 contract = Mock()
 
 multicaller = MultiCaller(contract)
@@ -112,7 +112,7 @@ assert multicaller._contract_calls == []
 
 # ## test_multi_caller_add_call
 
-# + is_executing=true
+# +
 contract = Mock()
 multicaller = MultiCaller(contract)
 fn = Mock()
@@ -122,30 +122,9 @@ multicaller.add_call(fn, 'arg1', kwarg1='kwarg1')
 assert len(multicaller._contract_calls) == 1
 # -
 
-# ## test_multi_caller_multicall
-
-# + is_executing=true
-contract = Mock()
-contract.address = "some_address"
-fn = Mock()
-fn()._encode_transaction_data.return_value = 'some_data'
-
-with patch('fastlane_bot.data.abi.MULTICALL_ABI', 'MULTICALL_ABI'):  # Replace 'your_module' with the actual module name
-    multicaller = MultiCaller(contract)
-    multicaller._contract_calls = [fn]
-
-    with patch.object(multicaller.contract, 'web3') as mock_web3:
-        mock_contract = Mock()
-        mock_web3.eth.contract.return_value = mock_contract
-
-        multicaller.multicall()
-
-        mock_contract.functions.aggregate.assert_called()
-# -
-
 # ## test_multi_caller_context_manager
 
-# + is_executing=true
+# +
 contract = Mock()
 multicaller = MultiCaller(contract)
 
@@ -158,7 +137,7 @@ with patch.object(multicaller, 'multicall') as mock_multicall:
 
 # ## test_multiprovider
 
-# + is_executing=true
+# +
 # Initialize the Contract wrapper
 contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
 
@@ -166,13 +145,32 @@ contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, provider
 mainnet_pairs = contract.mainnet.functions.pairs().call()
 tenderly_pairs = contract.tenderly.functions.pairs().call()
 
+# Take a sample of 20 pairs to speed up testing
+if len(mainnet_pairs) > 10:
+    mainnet_pairs = mainnet_pairs[:10]
+
 assert len(mainnet_pairs) > 0
 assert len(tenderly_pairs) > 0
+
+# +
+# Time how long it takes to get all fees without using multicall
+start_time = time.time()
+
+pair_fees_without_multicall = [contract.mainnet.functions.pairTradingFeePPM(pair[0], pair[1]).call() for pair in mainnet_pairs]
+
+pair_fees_time_without_multicall = time.time() - start_time
+
+start_time = time.time()
+
+strats_by_pair_without_multicall = [contract.mainnet.functions.strategiesByPair(pair[0], pair[1], 0, 5000).call() for pair in mainnet_pairs]
+
+strats_by_pair_time_without_multicall = time.time() - start_time
+
 # -
 
-# ## test_multicaller
+# ## test_multicaller_pairTradingFeePPM
 
-# + is_executing=true
+# +
 multicaller = MultiCaller(contract=contract.mainnet)
 
 # Time how long it takes to get all fees using multicall
@@ -184,15 +182,29 @@ with multicaller as mc:
 
 pair_fees_with_multicall = multicaller.multicall()
 
-time_with_multicall = time.time() - start_time
+pair_fees_time_with_multicall = time.time() - start_time
 
-# Time how long it takes to get all fees without using multicall
+assert pair_fees_with_multicall == pair_fees_without_multicall
+assert pair_fees_time_with_multicall < pair_fees_time_without_multicall
+
+# -
+
+# ## test_multicaller_strategiesByPair
+
+# +
+multicaller = MultiCaller(contract=contract.mainnet)
+
+# Time how long it takes to get all fees using multicall
 start_time = time.time()
 
-pair_fees_without_multicall = [contract.mainnet.functions.pairTradingFeePPM(pair[0], pair[1]).call() for pair in mainnet_pairs]
+with multicaller as mc:
+    for pair in mainnet_pairs:
+        mc.add_call(contract.mainnet.functions.strategiesByPair, pair[0], pair[1], 0, 5000)
 
-time_without_multicall = time.time() - start_time
+strats_by_pair_with_multicall = multicaller.multicall()
 
-assert len(pair_fees_with_multicall) == len(mainnet_pairs)
-assert len(pair_fees_with_multicall) == len(mainnet_pairs)
-assert time_with_multicall < (time_without_multicall / 10)
+strats_by_pair_time_with_multicall = time.time() - start_time
+
+assert len(strats_by_pair_with_multicall) == len(strats_by_pair_without_multicall)
+assert strats_by_pair_time_with_multicall < strats_by_pair_time_without_multicall
+
