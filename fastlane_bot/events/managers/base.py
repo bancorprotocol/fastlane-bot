@@ -67,6 +67,7 @@ class BaseManager:
     w3_tenderly: Web3 = None
     event_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     pool_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
+    token_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
@@ -498,8 +499,6 @@ class BaseManager:
         # Log that Carbon is initialized
         self.cfg.logger.info(f"Carbon is initialized {self.carbon_inititalized}")
         self.cfg.logger.info(f"Retrieved {len(strategies_by_pair)} carbon strategies")
-        self.cfg.logger.info(f"Example strat {strategies_by_pair[0]}")
-        # return strategies_by_pair
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:

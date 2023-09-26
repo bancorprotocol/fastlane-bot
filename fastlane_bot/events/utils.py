@@ -22,17 +22,22 @@ import web3
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3 import Web3
+from web3.contract import Contract
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
+from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
+from fastlane_bot.events.multicall_utils import encode_token_price
+from fastlane_bot.events.pools import CarbonV1Pool
 
 
 def filter_latest_events(
-    mgr: Manager, events: List[List[AttributeDict]]
+        mgr: Manager, events: List[List[AttributeDict]]
 ) -> List[AttributeDict]:
     """
     This function filters out the latest events for each pool. Given a nested list of events, it iterates through all events
@@ -74,20 +79,20 @@ def filter_latest_events(
             if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
                 latest_entry_per_pool[unique_key] = event
             elif (
-                event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
+                    event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
             ):
                 if (
-                    event["transactionIndex"]
-                    == latest_entry_per_pool[unique_key]["transactionIndex"]
+                        event["transactionIndex"]
+                        == latest_entry_per_pool[unique_key]["transactionIndex"]
                 ):
                     if (
-                        event["logIndex"]
-                        > latest_entry_per_pool[unique_key]["logIndex"]
+                            event["logIndex"]
+                            > latest_entry_per_pool[unique_key]["logIndex"]
                     ):
                         latest_entry_per_pool[unique_key] = event
                 elif (
-                    event["transactionIndex"]
-                    > latest_entry_per_pool[unique_key]["transactionIndex"]
+                        event["transactionIndex"]
+                        > latest_entry_per_pool[unique_key]["transactionIndex"]
                 ):
                     latest_entry_per_pool[unique_key] = event
                 else:
@@ -188,7 +193,7 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
 
 
 def filter_static_pool_data(
-    pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
+        pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
 ) -> pd.DataFrame:
     """Helper function to filter static pool data.
 
@@ -212,17 +217,17 @@ def filter_static_pool_data(
         bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
         non_bancor_data = filtered_data[
             filtered_data["exchange_name"] != "bancor_v3"
-        ].sample(n=sample_size)
+            ].sample(n=sample_size)
         filtered_data = pd.concat([bancor_data, non_bancor_data])
 
     return filtered_data
 
 
 def get_static_data(
-    cfg: Config,
-    exchanges: List[str],
-    static_pool_data_filename: str,
-    static_pool_data_sample_sz: int or str,
+        cfg: Config,
+        exchanges: List[str],
+        static_pool_data_filename: str,
+        static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -298,9 +303,9 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
 
 
 def handle_target_tokens(
-    cfg: Config,
-    flashloan_tokens: List[str],
-    target_tokens: str,
+        cfg: Config,
+        flashloan_tokens: List[str],
+        target_tokens: str,
 ) -> List[str]:
     """
     Handles the target tokens parameter.
@@ -373,11 +378,11 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
 
 
 def get_config(
-    default_min_profit_bnt: int or Decimal,
-    limit_bancor3_flashloan_tokens: bool,
-    loglevel: str,
-    logging_path: str,
-    tenderly_fork_id: str = None,
+        default_min_profit_bnt: int or Decimal,
+        limit_bancor3_flashloan_tokens: bool,
+        loglevel: str,
+        logging_path: str,
+        tenderly_fork_id: str = None,
 ) -> Config:
     """
     Gets the config object.
@@ -448,7 +453,7 @@ def get_loglevel(loglevel: str) -> Any:
 
 
 def get_event_filters(
-    n_jobs: int, mgr: Any, start_block: int, current_block: int
+        n_jobs: int, mgr: Any, start_block: int, current_block: int
 ) -> Any:
     """
     Creates event filters for the specified block range.
@@ -509,12 +514,12 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
 
 
 def save_events_to_json(
-    cache_latest_only,
-    logging_path,
-    mgr,
-    latest_events: List[Any],
-    start_block: int,
-    current_block: int,
+        cache_latest_only,
+        logging_path,
+        mgr,
+        latest_events: List[Any],
+        start_block: int,
+        current_block: int,
 ) -> None:
     """
     Saves the given events to a JSON file.
@@ -545,8 +550,8 @@ def save_events_to_json(
     try:
         with open(path, "w") as f:
             latest_events = [
-                _["args"].pop("contextId", None) for _ in latest_events
-            ] and latest_events
+                                _["args"].pop("contextId", None) for _ in latest_events
+                            ] and latest_events
             f.write(json.dumps(latest_events))
     except Exception as e:
         mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
@@ -572,7 +577,7 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
 
 
 def write_pool_data_to_disk(
-    cache_latest_only: bool, logging_path: str, mgr: Any, current_block: int
+        cache_latest_only: bool, logging_path: str, mgr: Any, current_block: int
 ) -> None:
     """
     Writes the pool data to disk.
@@ -602,8 +607,8 @@ def write_pool_data_to_disk(
 
 
 def parse_non_multicall_rows_to_update(
-    mgr: Any,
-    rows_to_update: List[Hashable],
+        mgr: Any,
+        rows_to_update: List[Hashable],
 ) -> List[Hashable]:
     """
     Parses the rows to update for Bancor v3 pools.
@@ -663,12 +668,12 @@ def init_bot(mgr: Any) -> CarbonBot:
 
 
 def update_pools_from_contracts(
-    mgr: Any,
-    n_jobs: int,
-    rows_to_update: List[int],
-    multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
-    token_address: bool = False,
-    current_block: int = None,
+        mgr: Any,
+        n_jobs: int,
+        rows_to_update: List[int],
+        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
+        token_address: bool = False,
+        current_block: int = None,
 ) -> None:
     """
     Updates the pools with the given indices by calling the contracts.
@@ -689,25 +694,15 @@ def update_pools_from_contracts(
         The current block number, by default None
 
     """
-    if multicall_contract:
-        for idx, pool in enumerate(rows_to_update):
-            mgr.update(
-                pool_info=mgr.pool_data[idx],
-                block_number=current_block,
-                token_address=token_address,
-                multicall_contract=multicall_contract,
-            )
-    else:
-        Parallel(n_jobs=n_jobs, backend="threading")(
-            delayed(mgr.update)(
-                pool_info=mgr.pool_data[idx],
-                block_number=current_block,
-                token_address=token_address,
-                multicall_contract=multicall_contract,
-            )
-            for idx in rows_to_update
+    Parallel(n_jobs=n_jobs, backend="threading")(
+        delayed(mgr.update)(
+            pool_info=mgr.pool_data[idx],
+            block_number=current_block,
+            token_address=token_address,
+            multicall_contract=multicall_contract,
         )
-
+        for idx in rows_to_update
+    )
 
 
 def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
@@ -740,20 +735,20 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
 
 
 def handle_subsequent_iterations(
-    arb_mode: str,
-    bot: CarbonBot,
-    flashloan_tokens: List[str],
-    polling_interval: int,
-    randomizer: int,
-    run_data_validator: bool,
-    target_tokens: List[str] = None,
-    loop_idx: int = 0,
-    logging_path: str = None,
-    replay_from_block: int = None,
-    tenderly_uri: str = None,
-    forks_to_cleanup: List[str] = None,
-    mgr: Any = None,
-    forked_from_block: int = None,
+        arb_mode: str,
+        bot: CarbonBot,
+        flashloan_tokens: List[str],
+        polling_interval: int,
+        randomizer: int,
+        run_data_validator: bool,
+        target_tokens: List[str] = None,
+        loop_idx: int = 0,
+        logging_path: str = None,
+        replay_from_block: int = None,
+        tenderly_uri: str = None,
+        forks_to_cleanup: List[str] = None,
+        mgr: Any = None,
+        forked_from_block: int = None,
 ):
     """
     Handles the subsequent iterations of the bot.
@@ -893,12 +888,12 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
 
 
 def handle_initial_iteration(
-    backdate_pools: bool,
-    current_block: int,
-    last_block: int,
-    mgr: Any,
-    n_jobs: int,
-    start_block: int,
+        backdate_pools: bool,
+        current_block: int,
+        last_block: int,
+        mgr: Any,
+        n_jobs: int,
+        start_block: int,
 ):
     """
     Handles the initial iteration of the bot.
@@ -950,62 +945,214 @@ def handle_initial_iteration(
         #         token_address=True
         #     )
 
+#
+# def get_erc20_tkn_balance(
+#         contract: Contract, tkn0: str, w3_tenderly: Web3 = None, w3: Web3 = None
+# ) -> int:
+#     """
+#     Get the ERC20 token balance of the POL contract
+#
+#     Parameters
+#     ----------
+#     contract: Contract
+#         The contract object
+#     tkn0: str
+#         The token address
+#     w3_tenderly: Web3
+#         The tenderly web3 object
+#     w3: Web3
+#         The web3 object
+#
+#     Returns
+#     -------
+#     int
+#         The token balance
+#
+#     """
+#     if w3_tenderly:
+#         erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
+#     else:
+#         erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
+#     return erc20_contract.functions.balanceOf(contract.address).call()
+# #
+#
+# ONE = 2 ** 48
+#
+#
+# @staticmethod
+# def bitLength(value):
+#     return len(bin(value).lstrip("0b")) if value > 0 else 0
+#
+#
+# def encodeFloat(value):
+#     exponent = bitLength(value // ONE)
+#     mantissa = value >> exponent
+#     return mantissa | (exponent * ONE)
+#
+#
+# def encodeRate(value):
+#     data = int(value.sqrt() * ONE)
+#     length = bitLength(data // ONE)
+#     return (data >> length) << length
+#
+#
+# def encode_token_price(price):
+#     return encodeFloat(encodeRate((price)))
 
-def multicall_every_iteration(
-    current_block: int,
-    mgr: Any,
-    n_jobs: int,
-):
-    """
-    Handles the initial iteration of the bot.
-
-    Parameters
-    ----------
-    current_block : int
-        The current block number.
-    mgr : Any
-        The manager object.
-    n_jobs : int
-        The number of jobs to run in parallel.
-
-    """
-    multicallable_exchanges = [exchange for exchange in mgr.cfg.MULTICALLABLE_EXCHANGES if exchange in mgr.exchanges]
-    multicallable_pool_rows = [
-        list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
-        for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES
-        if ex_name in mgr.exchanges
-    ]
-
-    for idx, exchange in enumerate(multicallable_exchanges):
-        if exchange == "bancor_v3":
-            multicall_contract = mgr.pool_contracts[exchange][
-                mgr.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
-            ]
-        elif exchange == "bancor_pol":
-            multicall_contract = mgr.pool_contracts[exchange][
-                mgr.cfg.BANCOR_POL_ADDRESS
-            ]
-        elif exchange == 'carbon_v1':
-            multicall_contract = mgr.pool_contracts[exchange][
-                mgr.cfg.CARBON_CONTROLLER_ADDRESS
-            ]
-        else:
-            raise ValueError(f"Exchange {exchange} not supported for multicall. Add contract to [managers.contract.init_exchange_contracts]")
-
-        update_pools_from_contracts(
-            n_jobs=n_jobs,
-            current_block=current_block,
-            mgr=mgr,
-            rows_to_update=multicallable_pool_rows[idx],
-            multicall_contract=multicall_contract,
-        )
+#
+# def multicall_every_iteration(
+#         current_block: int,
+#         mgr: Any,
+#         n_jobs: int,
+# ):
+#     """
+#     Handles the initial iteration of the bot.
+#
+#     Parameters
+#     ----------
+#     current_block : int
+#         The current block number.
+#     mgr : Any
+#         The manager object.
+#     n_jobs : int
+#         The number of jobs to run in parallel.
+#
+#     """
+#     multicallable_exchanges = [exchange for exchange in mgr.cfg.MULTICALLABLE_EXCHANGES if exchange in mgr.exchanges]
+#     multicallable_pool_rows = [
+#         list(set(get_pools_for_exchange(mgr=mgr, exchange=ex_name)))
+#         for ex_name in mgr.cfg.MULTICALLABLE_EXCHANGES
+#         if ex_name in mgr.exchanges
+#     ]
+#
+#     for idx, exchange in enumerate(multicallable_exchanges):
+#         multicall_contract = None
+#         rows_to_update = multicallable_pool_rows[idx]
+#
+#         if exchange == "bancor_v3":
+#             multicall_contract = mgr.pool_contracts[exchange][
+#                 mgr.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
+#             ]
+#             multicaller = MultiCaller(contract=multicall_contract)
+#             with multicaller as mc:
+#                 for row in rows_to_update:
+#                     pool_info = mgr.pool_data[row]
+#                     pool_info["last_updated_block"] = current_block
+#                     mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
+#                 pool_balance_list = mc.multicall()
+#                 for row, pool_balances in zip(rows_to_update, pool_balance_list):
+#                     pool_info = mgr.pool_data[row]
+#                     params = {
+#                         "fee": "0.000",
+#                         "fee_float": 0.000,
+#                         "tkn0_balance": pool_balances[0],
+#                         "tkn1_balance": pool_balances[1],
+#                         "exchange_name": exchange,
+#                         "address": pool_info["address"],
+#                     }
+#                     try:
+#                         pool = mgr.get_or_init_pool(pool_info)
+#                     except Exception as e:
+#                         print(f"pool_info: {pool_info}")
+#                         raise e
+#                     for key, value in params.items():
+#                         pool_info[key] = value
+#                         pool.state[key] = value
+#                     mgr.pool_data[row] = pool_info
+#                     unique_key = pool.unique_key()
+#                     unique_key_value = pool_info[unique_key]
+#                     exchange_pool_idx = [idx for idx in range(len(mgr.exchanges[exchange].pools)) if
+#                                          mgr.exchanges[exchange].pools[unique_key_value].state[unique_key] == pool_info[unique_key]][0]
+#                     mgr.exchanges[exchange].pools[exchange_pool_idx] = pool
+#
+#         elif exchange == "bancor_pol":
+#             multicall_contract = mgr.pool_contracts[exchange][
+#                 mgr.cfg.BANCOR_POL_ADDRESS
+#             ]
+#             multicaller = MultiCaller(contract=multicall_contract)
+#             with multicaller as mc:
+#                 for row in rows_to_update:
+#                     pool_info = mgr.pool_data[row]
+#                     pool_info["last_updated_block"] = current_block
+#                     mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
+#                 prices_list = mc.multicall()
+#                 for row, prices in zip(rows_to_update, prices_list):
+#                     pool_info = mgr.pool_data[row]
+#                     p0, p1 = prices
+#                     token_price = Decimal(p1) / Decimal(p0)
+#                     tkn0_address = pool_info["tkn0_address"]
+#                     tkn_contract = mgr.token_contracts.get(tkn0_address,
+#                                                            mgr.w3.eth.contract(abi=ERC20_ABI, address=tkn0_address)
+#                                                            )
+#                     if tkn0_address not in mgr.token_contracts:
+#                         mgr.token_contracts[tkn0_address] = tkn_contract
+#                     tkn_balance = tkn_contract.functions.balanceOf(tkn0_address).call()
+#                     params = {
+#                         "fee": "0.000",
+#                         "fee_float": 0.000,
+#                         "tkn0_balance": 0,
+#                         "tkn1_balance": 0,
+#                         "exchange_name": pool_info["exchange_name"],
+#                         "address": pool_info["address"],
+#                         "y_0": tkn_balance,
+#                         "z_0": tkn_balance,
+#                         "A_0": 0,
+#                         "B_0": int(str(encode_token_price(token_price))),
+#                     }
+#                     pool = mgr.get_or_init_pool(pool_info)
+#                     for key, value in params.items():
+#                         pool_info[key] = value
+#                         pool.state[key] = value
+#                     mgr.pool_data[row] = pool_info
+#                     unique_key = pool.unique_key()
+#                     unique_key_value = pool_info[unique_key]
+#                     exchange_pool_idx = [idx for idx in range(len(mgr.exchanges[exchange].pools)) if
+#                                          mgr.exchanges[exchange].pools[unique_key_value].state[unique_key] == pool_info[unique_key]][0]
+#                     mgr.exchanges[exchange].pools[exchange_pool_idx] = pool
+#         elif exchange == 'carbon_v1':
+#             multicall_contract = mgr.pool_contracts[exchange][
+#                 mgr.cfg.CARBON_CONTROLLER_ADDRESS
+#             ]
+#             multicaller = MultiCaller(contract=multicall_contract)
+#             with multicaller as mc:
+#                 for row in rows_to_update:
+#                     pool_info = mgr.pool_data[row]
+#                     pool_info["last_updated_block"] = current_block
+#                     mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
+#                 strategy_list = mc.multicall()
+#                 for row, strategy in zip(rows_to_update, strategy_list):
+#                     pool_info = mgr.pool_data[row]
+#                     fake_event = {
+#                         "args": {
+#                             "id": strategy[0],
+#                             "order0": strategy[3][0],
+#                             "order1": strategy[3][1],
+#                         }
+#                     }
+#                     pool = mgr.get_or_init_pool(pool_info)
+#
+#                     params = CarbonV1Pool.parse_event(pool.state, fake_event, "None")
+#                     params["exchange_name"] = exchange
+#
+#                     for key, value in params.items():
+#                         pool_info[key] = value
+#                         pool.state[key] = value
+#                     mgr.pool_data[row] = pool_info
+#                     unique_key = pool.unique_key()
+#                     unique_key_value = pool_info[unique_key]
+#                     exchange_pool_idx = [idx for idx in range(len(mgr.exchanges[exchange].pools)) if
+#                                          mgr.exchanges[exchange].pools[unique_key_value].state[unique_key] == pool_info[unique_key]][0]
+#                     mgr.exchanges[exchange].pools[exchange_pool_idx] = pool
+#         else:
+#             raise ValueError(f"Exchange {exchange} not supported for multicall. Add contract to ["
+#                              f"managers.contract.init_exchange_contracts]")
 
 
 def get_tenderly_pol_events(
-    mgr,
-    start_block,
-    current_block,
-    tenderly_fork_id,
+        mgr,
+        start_block,
+        current_block,
+        tenderly_fork_id,
 ):
     """
     Gets the Tenderly POL events.
@@ -1046,12 +1193,12 @@ def get_tenderly_pol_events(
 
 
 def get_latest_events(
-    current_block: int,
-    mgr: Any,
-    n_jobs: int,
-    start_block: int,
-    cache_latest_only: bool,
-    logging_path: str,
+        current_block: int,
+        mgr: Any,
+        n_jobs: int,
+        start_block: int,
+        cache_latest_only: bool,
+        logging_path: str,
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -1121,11 +1268,11 @@ def get_latest_events(
 
 
 def get_start_block(
-    alchemy_max_block_fetch: int,
-    last_block: int,
-    mgr: Any,
-    reorg_delay: int,
-    replay_from_block: int,
+        alchemy_max_block_fetch: int,
+        last_block: int,
+        mgr: Any,
+        reorg_delay: int,
+        replay_from_block: int,
 ) -> Tuple[int, int or None]:
     """
     Gets the starting block number.
@@ -1284,11 +1431,11 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
 
 
 def set_network_connection_to_tenderly(
-    mgr: Any,
-    use_cached_events: bool,
-    tenderly_uri: str,
-    forked_from_block: int = None,
-    tenderly_fork_id: str = None,
+        mgr: Any,
+        use_cached_events: bool,
+        tenderly_uri: str,
+        forked_from_block: int = None,
+        tenderly_fork_id: str = None,
 ) -> Any:
     """
     Set the network connection to Tenderly.
@@ -1345,7 +1492,7 @@ def set_network_connection_to_tenderly(
         forked_from_block = mgr.cfg.w3.eth.blockNumber
 
     assert (
-        mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
+            mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
     ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
     mgr.cfg.logger.info(f"Successfully connected to Tenderly fork at {tenderly_uri}")
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
@@ -1353,7 +1500,7 @@ def set_network_connection_to_tenderly(
 
 
 def set_network_connection_to_mainnet(
-    mgr: Any, use_cached_events: bool, mainnet_uri: str
+        mgr: Any, use_cached_events: bool, mainnet_uri: str
 ) -> Any:
     """
     Set the network connection to Mainnet.
@@ -1394,7 +1541,7 @@ def set_network_connection_to_mainnet(
     brownie.network.web3.provider.endpoint_uri = mainnet_uri
 
     assert (
-        mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
+            mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
     ), f"Failed to connect to Mainnet at {mainnet_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
     mgr.cfg.logger.info("Successfully connected to Mainnet")
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
@@ -1402,10 +1549,10 @@ def set_network_connection_to_mainnet(
 
 
 def handle_limit_pairs_for_replay_mode(
-    cfg: Config,
-    limit_pairs_for_replay: str,
-    replay_from_block: int,
-    static_pool_data: pd.DataFrame,
+        cfg: Config,
+        limit_pairs_for_replay: str,
+        replay_from_block: int,
+        static_pool_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """
     Splits, validates, and logs the `limit_pairs_for_replay` for replay mode.
@@ -1437,14 +1584,14 @@ def handle_limit_pairs_for_replay_mode(
 
 
 def set_network_to_tenderly_if_replay(
-    last_block: int,
-    loop_idx: int,
-    mgr: Any,
-    replay_from_block: int,
-    tenderly_uri: str,
-    use_cached_events: bool,
-    forked_from_block: int = None,
-    tenderly_fork_id: str = None,
+        last_block: int,
+        loop_idx: int,
+        mgr: Any,
+        replay_from_block: int,
+        tenderly_uri: str,
+        use_cached_events: bool,
+        forked_from_block: int = None,
+        tenderly_fork_id: str = None,
 ) -> Tuple[Any, str or None, int or None]:
     """
     Set the network connection to Tenderly if replaying from a block
@@ -1509,12 +1656,12 @@ def set_network_to_tenderly_if_replay(
 
 
 def set_network_to_mainnet_if_replay(
-    last_block: int,
-    loop_idx: int,
-    mainnet_uri: str,
-    mgr: Any,
-    replay_from_block: int,
-    use_cached_events: bool,
+        last_block: int,
+        loop_idx: int,
+        mainnet_uri: str,
+        mgr: Any,
+        replay_from_block: int,
+        use_cached_events: bool,
 ):
     """
     Set the network connection to Mainnet if replaying from a block
@@ -1541,9 +1688,9 @@ def set_network_to_mainnet_if_replay(
 
     """
     if (
-        (replay_from_block or mgr.tenderly_fork_id)
-        and mgr.cfg.NETWORK != "mainnet"
-        and last_block != 0
+            (replay_from_block or mgr.tenderly_fork_id)
+            and mgr.cfg.NETWORK != "mainnet"
+            and last_block != 0
     ):
         mgr.cfg.logger.info(f"Setting network connection to Mainnet idx: {loop_idx}")
         mgr = set_network_connection_to_mainnet(
@@ -1629,7 +1776,7 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
     """
     # Verify MIN_PROFIT_BNT is set and respected
     assert (
-        bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+            bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
 
@@ -1656,16 +1803,16 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     if target_tokens:
         for token in target_tokens:
             target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn0_key"] == token][
-                    "tkn0_address"
-                ].tolist()
+                    target_token_addresses
+                    + static_pool_data[static_pool_data["tkn0_key"] == token][
+                        "tkn0_address"
+                    ].tolist()
             )
             target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn1_key"] == token][
-                    "tkn1_address"
-                ].tolist()
+                    target_token_addresses
+                    + static_pool_data[static_pool_data["tkn1_key"] == token][
+                        "tkn1_address"
+                    ].tolist()
             )
     target_token_addresses = list(set(target_token_addresses))
     return target_token_addresses
@@ -1687,7 +1834,7 @@ def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
 
     """
     assert (
-        replay_from_block > 0
+            replay_from_block > 0
     ), "The block number to replay from must be greater than 0."
     reorg_delay = 0
     use_cached_events = False
@@ -1695,8 +1842,9 @@ def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
     return polling_interval, reorg_delay, use_cached_events
 
 
-#%%
-def get_current_block(last_block: int, mgr: Any, reorg_delay: int, replay_from_block: int, tenderly_fork_id: str) -> int:
+# %%
+def get_current_block(last_block: int, mgr: Any, reorg_delay: int, replay_from_block: int,
+                      tenderly_fork_id: str) -> int:
     """
     Get the current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
 

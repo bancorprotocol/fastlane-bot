@@ -95,7 +95,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.fee_pairs.update(fee_pairs)
 
     def update_from_pool_info(
-        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None, multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None
+        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
     ) -> Dict[str, Any]:
         """
         Update the pool info.
@@ -106,12 +106,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The pool info, by default None.
         current_block : int, optional
             The current block, by default None.
-        multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract, optional
-            The multicall contract, by default None.
         """
 
         pool_info["last_updated_block"] = current_block
-        contract = multicall_contract or self.pool_contracts[pool_info["exchange_name"]].get(
+        contract = self.pool_contracts[pool_info["exchange_name"]].get(
             pool_info["address"],
             self.web3.eth.contract(
                 address=pool_info["address"],
@@ -120,9 +118,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
 
         pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(
-            contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
-        )
+        try:
+            params = pool.update_from_contract(
+                contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
+            )
+        except Exception as e:
+            self.cfg.logger.error(f"Error updating pool: {e} {pool_info}")
+            raise e
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -188,44 +190,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info[key] = value
         return pool_info
 
-    def update_from_erc20_balance(
-        self,
-        current_block: int = None,
-        pool_info: Optional[Dict[str, Any]] = None,
-    ):
-        """
-        Update the state from the contract (instead of events).
-
-        Parameters
-        ----------
-        current_block : int, optional
-            The block number, by default None.
-        pool_info : Optional[Dict[str, Any]], optional
-            The pool info, by default None.
-
-        Returns
-        -------
-        Dict[str, Any]
-            The pool info.
-        """
-        pool = self.get_or_init_pool(pool_info)
-
-        pool_contract = self.pool_contracts[pool.state["exchange_name"]].get(
-            pool.state["address"], None
-        )
-        params = pool.update_from_contract(
-            contract=pool_contract,
-            tenderly_fork_id=self.tenderly_fork_id,
-            w3_tenderly=self.w3_tenderly,
-            w3=self.web3,
-        )
-        params["last_updated_block"] = current_block
-
-        for key, value in params.items():
-            pool_info[key] = value
-
-        self.update_pool_data(pool_info=pool_info, data=params)
-
     def update(
         self,
         event: Dict[str, Any] = None,
@@ -234,7 +198,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         pool_info: Dict[str, Any] = None,
         contract: Contract = None,
         block_number: int = None,
-        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
     ) -> None:
         """
         Update the state.
@@ -253,8 +216,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The contract, by default None.
         block_number : int, optional
             The block number, by default None.
-        multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract, optional
-            The multicall contract, by default None.
 
 
         Raises
@@ -264,14 +225,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             If no event or pool info is provided.
             If the pool info is invalid.
         """
-        limiter = bool(multicall_contract)
 
         while True:
-            if limiter:
-                rate_limiter = 0.1 + 0.9 * random.random()
-                time.sleep(rate_limiter)
-            else:
-                rate_limiter = 0
+            rate_limiter = 0.1 + 0.9 * random.random()
+            time.sleep(rate_limiter)
             try:
                 if event:
                     self.update_from_event(event=event, block_number=block_number)
@@ -279,14 +236,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     self.update_from_contract(
                         address, contract, block_number=block_number
                     )
-                elif token_address:
-                    self.update_from_erc20_balance(
-                        pool_info=pool_info,
-                        current_block=block_number,
-                    )
                 elif pool_info:
                     self.update_from_pool_info(
-                        pool_info=pool_info, current_block=block_number, multicall_contract=multicall_contract
+                        pool_info=pool_info, current_block=block_number
                     )
                 else:
                     self.cfg.logger.debug(
