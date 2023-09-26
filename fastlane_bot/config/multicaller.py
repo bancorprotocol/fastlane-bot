@@ -1,5 +1,5 @@
 from functools import partial
-from typing import List, Callable, ContextManager, Any
+from typing import List, Callable, ContextManager, Any, Dict
 
 import brownie
 import web3
@@ -8,12 +8,59 @@ from eth_abi import decode_abi
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
 
+def cast(typ, val):
+    """Cast a value to a type.
+
+    This returns the value unchanged.  To the type checker this
+    signals that the return value has the designated type, but at
+    runtime we intentionally don't check anything (we want this
+    to be as fast as possible).
+    """
+    return val
+
+def collapse_if_tuple(abi: Dict[str, Any]) -> str:
+    """
+    Converts a tuple from a dict to a parenthesized list of its types.
+
+    >>> from eth_utils.abi import collapse_if_tuple
+    >>> collapse_if_tuple(
+    ...     {
+    ...         'components': [
+    ...             {'name': 'anAddress', 'type': 'address'},
+    ...             {'name': 'anInt', 'type': 'uint256'},
+    ...             {'name': 'someBytes', 'type': 'bytes'},
+    ...         ],
+    ...         'type': 'tuple',
+    ...     }
+    ... )
+    '(address,uint256,bytes)'
+    """
+    typ = abi["type"]
+    if not isinstance(typ, str):
+        raise TypeError(
+            "The 'type' must be a string, but got %r of type %s" % (typ, type(typ))
+        )
+    elif not typ.startswith("tuple"):
+        return typ
+
+    delimited = ",".join(collapse_if_tuple(c) for c in abi["components"])
+    # Whatever comes after "tuple" is the array dims.  The ABI spec states that
+    # this will have the form "", "[]", or "[k]".
+    array_dim = typ[5:]
+    collapsed = "({}){}".format(delimited, array_dim)
+
+    return collapsed
+
 def get_output_types_from_abi(abi, function_name):
     for item in abi:
         if item['type'] == 'function' and item['name'] == function_name:
-            return [output['type'] for output in item['outputs']]
+            return [collapse_if_tuple(cast(Dict[str, Any], item)) for item in item['outputs']]
     raise ValueError(f"No function named {function_name} found in ABI.")
 
+def tuple_to_list(value):
+    if isinstance(value, tuple):
+        return [tuple_to_list(v) for v in value]
+    return value
 
 class ContractMethodWrapper:
     __DATE__ = "2022-09-24"
@@ -55,7 +102,6 @@ class MultiCaller(ContextManager):
 
         for fn in self._contract_calls:
             fn_name = str(fn).split('functools.partial(<Function ')[1].split('>')[0]
-            print(f"fn_name: {fn_name}")
             calls_for_aggregate.append({
                 'target': self.contract.address,
                 'callData': fn()._encode_transaction_data()
@@ -74,8 +120,61 @@ class MultiCaller(ContextManager):
 
         encoded_data = encoded_data[1]
         decoded_data_list = []
+        # print(f"output_types_list: {output_types_list}")
         for output_types, encoded_output in zip(output_types_list, encoded_data):
             decoded_data = decode_abi(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
-        return decoded_data_list
+        return [i[0] for i in decoded_data_list]
+
+
+#
+# class ContractMethodWrapper:
+#     __DATE__ = "2022-09-24"
+#     __VERSION__ = "0.0.1"
+#
+#     def __init__(self, original_method, multicaller):
+#         self.original_method = original_method
+#         self.multicaller = multicaller
+#
+#     def __call__(self, *args, **kwargs):
+#         contract_call = self.original_method(*args, **kwargs)
+#         self.multicaller.add_call(contract_call)
+#         return contract_call
+#
+#
+# class MultiCaller(ContextManager):
+#     __DATE__ = "2022-09-24"
+#     __VERSION__ = "0.0.1"
+#     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+#
+#     def __init__(self, contract: MultiProviderContractWrapper, block_identifier: Any = 'latest'):
+#         self._contract_calls: List[Callable] = []
+#         self.contract = contract
+#         self.block_identifier = block_identifier
+#
+#     def __enter__(self) -> 'MultiCaller':
+#         return self
+#
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if exc_type is None:
+#             self.multicall()
+#
+#     def add_call(self, fn: Callable, *args, **kwargs) -> None:
+#         self._contract_calls.append(partial(fn, *args, **kwargs))
+#
+#     def multicall(self) -> Any:
+#         calls_for_aggregate = [
+#             {
+#                 'target': self.contract.address,
+#                 'callData': fn()._encode_transaction_data()
+#             }
+#             for fn in self._contract_calls
+#         ]
+#         w3 = self.contract.web3
+#         return w3.eth.contract(
+#             abi=MULTICALL_ABI,
+#             address=self.MULTICALL_CONTRACT_ADDRESS
+#         ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
+
+
