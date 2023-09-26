@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.37...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.38...HEAD)
+
+- Fix block start number for POL contract [\#149](https://github.com/bancorprotocol/fastlane-bot/issues/149)
+- Update BANCOR\_POL\_START\_BLOCK to correct value [\#150](https://github.com/bancorprotocol/fastlane-bot/pull/150) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add support for POL Contract [\#109](https://github.com/bancorprotocol/fastlane-bot/issues/109)
+
+## [v2.7.38](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.38) (2023-09-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.37...v2.7.38)
 
 - pol merge bug on mainnet [\#147](https://github.com/bancorprotocol/fastlane-bot/issues/147)
 
