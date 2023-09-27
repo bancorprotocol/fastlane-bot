@@ -1,19 +1,13 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py:light
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.15.2
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_054_TestAutoPoolShutdown.py`
+# ------------------------------------------------------------
+# source file   = NBTest_054_TestAutoPoolShutdown.py
+# test id       = 054
+# test comment  = TestAutoPoolShutdown
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
 This module contains the tests for the exchanges classes
 """
@@ -27,6 +21,7 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
+from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 from joblib import Parallel, delayed
 import pytest
 import math
@@ -45,9 +40,8 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Single Mode [NB038]
 
-# +
+
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 C.DEFAULT_MIN_PROFIT_BNT = 0.02
 C.DEFAULT_MIN_PROFIT = 0.02
@@ -85,7 +79,6 @@ static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
-# Filter out pools that are not in the supported exchanges
 static_pool_data = [
     row for index, row in static_pool_data.iterrows()
     if row["exchange_name"] in exchanges
@@ -93,7 +86,6 @@ static_pool_data = [
 
 static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
-# Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
     cfg=cfg,
@@ -104,14 +96,12 @@ mgr = Manager(
     tokens=tokens.to_dict(orient="records"),
 )
 
-# Add initial pools for each row in the static_pool_data
 start_time = time.time()
 Parallel(n_jobs=-1, backend="threading")(
     delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
 )
 cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
 
-# check if any duplicate cid's exist in the pool data
 mgr.deduplicate_pool_data()
 cids = [pool["cid"] for pool in mgr.pool_data]
 assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
@@ -137,88 +127,73 @@ def init_bot(mgr: Manager) -> CarbonBot:
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
     return bot
-bot = init_bot(mgr)
-# add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
-bot.db.remove_unmapped_uniswap_v2_pools()
-bot.db.remove_zero_liquidity_pools()
-bot.db.remove_unsupported_exchanges()
-tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
-pools = db.get_pool_data_with_tokens()
-
-arb_mode = "single"
-# -
-
-assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
 
 
 
-# ## Test_arb_mode_class
-
-arb_finder = bot._get_arb_finder("single")
-assert arb_finder.__name__ == "FindArbitrageSinglePairwise", f"[TestSingleMode] Expected arb_finder class name name = FindArbitrageSinglePairwise, found {arb_finder.__name__}"
-
-# ## Test_tokens_and_combos
-
-arb_finder = bot._get_arb_finder("single")
-finder2 = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_TOKENS,
-            ConfigObj=bot.ConfigObj,
-        )
-all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
-
-# ### Test_Single_Arb_Finder_vs_run
-
-run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
-assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-
-r
-
-# ## Test_no_multi_carbon
-
-# +
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-multi_carbon_count = 0
-
-for arb in r:
-    (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb
-    if len(best_trade_instructions_dic) > 2:
-        multi_carbon_count += 1
-
-assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
-# -
+pool_shutdown = AutomaticPoolShutdown(mgr=mgr, polling_interval=12)
 
 
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test White List
+# ------------------------------------------------------------
+def test_test_white_list():
+# ------------------------------------------------------------
+    
+    assert len(pool_shutdown.shutdown_whitelist) > 0, f"[NB054 Automatic Shutdown] failed to retrieve pool whitelist"
+    
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test parse_active_pools
+# ------------------------------------------------------------
+def test_test_parse_active_pools():
+# ------------------------------------------------------------
+    
+    # +
+    pool_shutdown.parse_active_pools()
+    
+    for pool in pool_shutdown.active_pools:
+        assert type(pool_shutdown.active_pools[pool]) == int
+        assert pool_shutdown.active_pools[pool] >= 0
+    # -
+    
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test iterate_active_pools
+# ------------------------------------------------------------
+def test_test_iterate_active_pools():
+# ------------------------------------------------------------
+    
+    # +
+    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    pool_shutdown.active_pools = {}
+    pool_shutdown.active_pools[ETH] = 100000000000000000
+    tkn = pool_shutdown.iterate_active_pools()
+    
+    assert tkn == ETH
+    # -
+    
+
+# ------------------------------------------------------------
+# Test      054
+# File      test_054_TestAutoPoolShutdown.py
+# Segment   Test iterate_active_pools_two
+# ------------------------------------------------------------
+def test_test_iterate_active_pools_two():
+# ------------------------------------------------------------
+    
+    # +
+    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    pool_shutdown.active_pools = {}
+    pool_shutdown.active_pools[ETH] = 100000000000000000000000
+    tkn = pool_shutdown.iterate_active_pools()
+    
+    assert tkn == None
+    # -
+    
+    

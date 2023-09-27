@@ -68,6 +68,29 @@ class MockWeb3:
 class MockContract:
     pass
 
+# Time how long it takes to get all fees without using multicall
+start_time = time.time()
+
+# Initialize the Contract wrapper
+contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
+
+# Execute contract calls
+mainnet_pairs = contract.mainnet.functions.pairs().call()
+tenderly_pairs = contract.tenderly.functions.pairs().call()
+
+# Take a sample of 20 pairs to speed up testing
+if len(mainnet_pairs) > 10:
+    mainnet_pairs = mainnet_pairs[:10]
+
+pair_fees_without_multicall = [contract.mainnet.functions.pairTradingFeePPM(pair[0], pair[1]).call() for pair in mainnet_pairs]
+
+pair_fees_time_without_multicall = time.time() - start_time
+
+start_time = time.time()
+
+strats_by_pair_without_multicall = [contract.mainnet.functions.strategiesByPair(pair[0], pair[1], 0, 5000).call() for pair in mainnet_pairs]
+
+strats_by_pair_time_without_multicall = time.time() - start_time
 
 # -
 
@@ -135,42 +158,11 @@ with patch.object(multicaller, 'multicall') as mock_multicall:
     mock_multicall.assert_called_once()
 # -
 
-# ## test_multiprovider
-
-# +
-# Initialize the Contract wrapper
-contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
-
-# Execute contract calls
-mainnet_pairs = contract.mainnet.functions.pairs().call()
-tenderly_pairs = contract.tenderly.functions.pairs().call()
-
-# Take a sample of 20 pairs to speed up testing
-if len(mainnet_pairs) > 10:
-    mainnet_pairs = mainnet_pairs[:10]
-
-assert len(mainnet_pairs) > 0
-assert len(tenderly_pairs) > 0
-
-# +
-# Time how long it takes to get all fees without using multicall
-start_time = time.time()
-
-pair_fees_without_multicall = [contract.mainnet.functions.pairTradingFeePPM(pair[0], pair[1]).call() for pair in mainnet_pairs]
-
-pair_fees_time_without_multicall = time.time() - start_time
-
-start_time = time.time()
-
-strats_by_pair_without_multicall = [contract.mainnet.functions.strategiesByPair(pair[0], pair[1], 0, 5000).call() for pair in mainnet_pairs]
-
-strats_by_pair_time_without_multicall = time.time() - start_time
-
-# -
-
 # ## test_multicaller_pairTradingFeePPM
 
 # +
+contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
+
 multicaller = MultiCaller(contract=contract.mainnet)
 
 # Time how long it takes to get all fees using multicall
@@ -192,6 +184,8 @@ assert pair_fees_time_with_multicall < pair_fees_time_without_multicall
 # ## test_multicaller_strategiesByPair
 
 # +
+contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
+
 multicaller = MultiCaller(contract=contract.mainnet)
 
 # Time how long it takes to get all fees using multicall
@@ -207,4 +201,7 @@ strats_by_pair_time_with_multicall = time.time() - start_time
 
 assert len(strats_by_pair_with_multicall) == len(strats_by_pair_without_multicall)
 assert strats_by_pair_time_with_multicall < strats_by_pair_time_without_multicall
+
+# -
+
 

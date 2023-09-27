@@ -1,19 +1,13 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py:light
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.15.2
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
+# ------------------------------------------------------------
+# Auto generated test file `test_043_TestEmptyCarbonOrders.py`
+# ------------------------------------------------------------
+# source file   = NBTest_043_TestEmptyCarbonOrders.py
+# test id       = 043
+# test comment  = TestEmptyCarbonOrders
+# ------------------------------------------------------------
 
-# coding=utf-8
+
+
 """
 This module contains the tests for the exchanges classes
 """
@@ -28,6 +22,7 @@ from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHand
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
+from dataclasses import dataclass, asdict, field
 import pytest
 import math
 import json
@@ -45,9 +40,8 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-# # Single Mode [NB038]
 
-# +
+
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
 C.DEFAULT_MIN_PROFIT_BNT = 0.02
 C.DEFAULT_MIN_PROFIT = 0.02
@@ -85,7 +79,6 @@ static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
-# Filter out pools that are not in the supported exchanges
 static_pool_data = [
     row for index, row in static_pool_data.iterrows()
     if row["exchange_name"] in exchanges
@@ -93,7 +86,6 @@ static_pool_data = [
 
 static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
-# Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
     cfg=cfg,
@@ -104,14 +96,12 @@ mgr = Manager(
     tokens=tokens.to_dict(orient="records"),
 )
 
-# Add initial pools for each row in the static_pool_data
 start_time = time.time()
 Parallel(n_jobs=-1, backend="threading")(
     delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
 )
 cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
 
-# check if any duplicate cid's exist in the pool data
 mgr.deduplicate_pool_data()
 cids = [pool["cid"] for pool in mgr.pool_data]
 assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
@@ -138,7 +128,6 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-# add data cleanup steps from main.py
 bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
@@ -149,76 +138,97 @@ flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "single"
-# -
-
-assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+arb_mode = "multi"
 
 
-
-# ## Test_arb_mode_class
-
-arb_finder = bot._get_arb_finder("single")
-assert arb_finder.__name__ == "FindArbitrageSinglePairwise", f"[TestSingleMode] Expected arb_finder class name name = FindArbitrageSinglePairwise, found {arb_finder.__name__}"
-
-# ## Test_tokens_and_combos
-
-arb_finder = bot._get_arb_finder("single")
-finder2 = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_TOKENS,
-            ConfigObj=bot.ConfigObj,
-        )
-all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
-
-# ### Test_Single_Arb_Finder_vs_run
-
-run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
-assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-
-r
-
-# ## Test_no_multi_carbon
-
-# +
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-multi_carbon_count = 0
-
-for arb in r:
+# ------------------------------------------------------------
+# Test      043
+# File      test_043_TestEmptyCarbonOrders.py
+# Segment   Test_Empty_Carbon_Orders_Removed
+# ------------------------------------------------------------
+def test_test_empty_carbon_orders_removed():
+# ------------------------------------------------------------
+    
+    # +
+    arb_finder = bot._get_arb_finder("multi")
+    finder = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=arb_finder.AO_CANDIDATES,
+                ConfigObj=bot.ConfigObj,
+            )
+    r = finder.find_arbitrage()
+    
     (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb
-    if len(best_trade_instructions_dic) > 2:
-        multi_carbon_count += 1
-
-assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
-# -
-
-
+                best_profit,
+                best_trade_instructions_df,
+                best_trade_instructions_dic,
+                best_src_token,
+                best_trade_instructions,
+            ) = r[11]
+            
+    best_trade_instructions_dic
+    # Check that this gets filtered out
+    test_trade = [{'cid': '0x36445535fc762f6c53277a667500a41e31b51bec800e76aab33dafab75da4eaa',
+      'tknin': 'WBTC-C599',
+      'amtin': 0.008570336169213988,
+      'tknout': 'WETH-6Cc2',
+      'amtout': -0.13937506393995136,
+      'error': None},
+     {'cid': '9187623906865338513511114400657741709420-1',
+      'tknin': 'WETH-6Cc2',
+      'amtin': 0,
+      'tknout': 'WBTC-C599',
+      'amtout': 0,
+      'error': None},
+     {'cid': '9187623906865338513511114400657741709458-1',
+      'tknin': 'WETH-6Cc2',
+      'amtin': 0.13937506393995136,
+      'tknout': 'WBTC-C599',
+      'amtout': 0.008870336169213988,
+      'error': None}]
+    
+    (
+    ordered_trade_instructions_dct,
+    tx_in_count,
+    ) = bot._simple_ordering_by_src_token(
+    test_trade, best_src_token
+    )
+    ordered_scaled_dcts = bot._basic_scaling(
+                ordered_trade_instructions_dct, best_src_token
+            )
+    ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
+    tx_route_handler = bot.TxRouteHandlerClass(
+                trade_instructions=ordered_trade_instructions_objects
+            )
+    agg_trade_instructions = (
+                tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+                if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+                else ordered_trade_instructions_objects
+            )
+    # Calculate the trade instructions
+    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
+        agg_trade_instructions
+    )
+    encoded_trade_instructions = tx_route_handler.custom_data_encoder(
+                calculated_trade_instructions
+            )
+    deadline = bot._get_deadline(1)
+    
+    # Get the route struct
+    route_struct = [
+        asdict(rs)
+        for rs in tx_route_handler.get_route_structs(
+            encoded_trade_instructions, deadline
+        )
+    ]
+    for route in route_struct:
+        if route["platformId"] == 6:
+            encoded_trade = route["customData"].split("0x")[1]
+            encoded_trades = [encoded_trade[i:i+64] for i in range(0, len(encoded_trade), 64)]
+            for trade in encoded_trades:
+                assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
+    # -
+    
+    
