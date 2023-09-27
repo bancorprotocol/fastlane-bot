@@ -269,6 +269,7 @@ class ContractsManager(BaseManager):
             "address": addr,
             "decimals": decimals
         }
+        self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
         row = pd.DataFrame(new_data, index=max(token_data.index) + 1, columns=token_data.columns)
         token_data = pd.concat([token_data, row])
         token_data.to_csv(tokens_filepath)
