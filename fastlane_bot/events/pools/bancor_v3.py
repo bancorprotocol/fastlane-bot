@@ -75,7 +75,7 @@ class BancorV3Pool(Pool):
         """
         See base class.
         """
-        pool_balances = contract.functions.tradingLiquidity(self.state["tkn1_address"]).call()
+        pool_balances = contract.caller.tradingLiquidity(self.state["tkn1_address"]).call()
 
         params = {
             "fee": "0.000",
