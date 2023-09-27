@@ -43,12 +43,15 @@ params = {
     'ust'     : {'type': Pool9, 'address': '0x890f4e345B1dAED0367A877a1612f86A1f86985f', 'coins': [Coin1, Coin1]},
 }
 
-def forge_pool(pool_name: str, connect=False, sync=False, data={}) -> any:
+def forge_pool(pool_name: str, connect_modes=[], config_data={}) -> any:
     class Pool(params[pool_name]['type']):
         def connect(self):
-            super().connect(params[pool_name]['address'], params[pool_name]['coins'])
-        def sync(self):
-            super().sync()
+            super().connect(params[pool_name]['address'])
+        def read(self, modes: list):
+            if 'init' in modes:
+                super().init(params[pool_name]['coins'])
+            if 'sync' in modes:
+                super().sync()
         def config(self, data: dict):
             def get(val: any) -> any:
                 if type(val) is dict:
@@ -63,7 +66,9 @@ def forge_pool(pool_name: str, connect=False, sync=False, data={}) -> any:
             for key, val in data.items():
                 setattr(self, key, get(val))
     pool = Pool()
-    if connect: pool.connect()
-    if sync: pool.sync()
-    if data: pool.config(data)
+    if connect_modes:
+        pool.connect()
+        pool.read(connect_modes)
+    if config_data:
+        pool.config(config_data)
     return pool

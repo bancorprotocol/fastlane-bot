@@ -13,8 +13,10 @@ abi = [
 ]
 
 class Pool:
-    def connect(self, address: str, coins: list[any]):
+    def connect(self, address: str):
         self.contract = Host.contract(address, abi + self.abi)
+
+    def init(self, coins: list[any]):
         self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
 
     def sync(self):

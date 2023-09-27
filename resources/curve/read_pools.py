@@ -18,4 +18,4 @@ def parse(obj: any) -> any:
         return {key: parse(val) for key, val in obj.items() if key != 'contract'}
     return parse(vars(obj))
 
-print(dumps({pool_name: parse(forge_pool(pool_name, connect=True, sync=True)) for pool_name in pool_names}, indent=4))
+print(dumps({pool_name: parse(forge_pool(pool_name, connect_modes=['init','sync'])) for pool_name in pool_names}, indent=4))
