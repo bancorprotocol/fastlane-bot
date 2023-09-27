@@ -9,13 +9,8 @@ import random
 import time
 from typing import Dict, Any, Optional
 
-import brownie
-import web3
-from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
-from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager

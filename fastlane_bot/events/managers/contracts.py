@@ -5,10 +5,8 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import os
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
-import brownie
 from web3 import Web3
 from web3.contract import Contract
 

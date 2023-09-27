@@ -37,7 +37,6 @@ else
     exit 1
 fi
 
-# Run setup.py to configure brownie
 if [ -f setup.py ]; then
     python setup.py install
 else

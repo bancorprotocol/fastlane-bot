@@ -1,5 +1,5 @@
 """
-Brownie-related transaction handlers for the Fastlane project.
+Transaction handlers for the Fastlane project.
 
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
@@ -7,33 +7,28 @@ Licensed under MIT
 __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
 
+from _decimal import Decimal
 # import itertools
 # import random
 # import time
-from dataclasses import dataclass, asdict
-from typing import List, Union, Any, Dict, Tuple, Optional
+from dataclasses import dataclass
+from typing import List, Any, Dict, Tuple, Optional
 
 # import eth_abi
 # import math
 # import pandas as pd
 import requests
-from _decimal import Decimal
 from alchemy import Network, Alchemy
-from brownie.network.transaction import TransactionReceipt
-from eth_utils import to_hex
 from web3 import Web3
-from web3._utils.threads import Timeout
-from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
-from web3.types import TxParams, TxReceipt
+from web3.types import TxReceipt
 
-from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 # from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 # from fastlane_bot.db.models import Token, Pool
 # import fastlane_bot.config as c
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
+from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.utils import num_format, log_format, num_format_float
 
 
@@ -247,7 +242,7 @@ class TxHelper:
 @dataclass
 class TxHelpers:
     """
-    This class is used to organize web3/brownie transaction tools.
+    This class is used to organize web3 transaction tools.
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__

@@ -12,7 +12,6 @@ from dataclasses import dataclass, asdict
 from typing import List, Any, Dict
 
 import requests
-from brownie.network.transaction import TransactionReceipt
 from eth_utils import to_hex
 from web3._utils.threads import Timeout
 from web3._utils.transactions import fill_nonce
@@ -52,9 +51,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         Gets the deadline for a transaction.
     _get_transaction(self, tx_details: TxParams) -> TxParams:
         Gets the transaction details for a given transaction.
-    _get_transaction_receipt(self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT) -> TransactionReceipt:
+    _get_transaction_receipt(self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT) -> :
         Gets the transaction receipt for a given transaction.
-    _get_transaction_receipt_with_timeout(self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT) -> TransactionReceipt:
+    _get_transaction_receipt_with_timeout(self, tx_hash: str, timeout: int = DEFAULT_TIMEOUT) -> :
         Gets the transaction receipt for a given transaction with a timeout.
 
     """
@@ -113,7 +112,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
     def _get_transaction_receipt(
         self, tx_hash: str, timeout: int
-    ) -> TransactionReceipt:
+    ):
         """
         Gets the transaction receipt for a given transaction hash.
 
@@ -126,14 +125,13 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
         Returns
         -------
-        TransactionReceipt
             The transaction receipt.
         """
         return self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=timeout)
 
     def _get_transaction_receipt_with_timeout(
         self, tx_hash: str, timeout: int, poll_latency: int = 0.1
-    ) -> TransactionReceipt:
+    ):
         """
         Gets the transaction receipt for a given transaction hash.
 
@@ -148,7 +146,6 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
         Returns
         -------
-        TransactionReceipt
             The transaction receipt.
         """
         with Timeout(timeout) as _timeout:
@@ -164,7 +161,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         timeout: int,
         poll_latency: int = 0.1,
         retries: int = 5,
-    ) -> TransactionReceipt:
+    ):
         """
         Gets the transaction receipt for a given transaction hash.
 
@@ -181,7 +178,6 @@ class TxSubmitHandler(TxSubmitHandlerBase):
 
         Returns
         -------
-        TransactionReceipt
             The transaction receipt.
         """
         for _ in range(retries):

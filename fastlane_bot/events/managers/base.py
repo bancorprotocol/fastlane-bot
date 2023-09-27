@@ -9,10 +9,8 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
-import brownie
 from web3 import Web3
 from web3.contract import Contract
-from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
@@ -254,21 +252,6 @@ class BaseManager:
         )
         return tkns or (None, None)
 
-    # def multicall(self, address: str):
-    #     """
-    #
-    #     Parameters
-    #     ----------
-    #     address : str
-    #         The address of the contract to call.
-    #     """
-    #     if self.replay_from_block:
-    #         return brownie.multicall(
-    #             address=address, block_identifier=self.replay_from_block
-    #         )
-    #     else:
-    #         return brownie.multicall(address)
-
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
         Get the rows to update.
@@ -448,10 +431,9 @@ class BaseManager:
             return self.pool_contracts["carbon_v1"][self.cfg.CARBON_CONTROLLER_ADDRESS]
 
         # Create a CarbonController contract object
-        carbon_controller = brownie.Contract.from_abi(
+        carbon_controller = self.cfg.w3.eth.contract(
             address=self.cfg.CARBON_CONTROLLER_ADDRESS,
             abi=self.exchanges["carbon_v1"].get_abi(),
-            name="CarbonController",
         )
 
         # Store the contract object in pool_contracts
@@ -463,7 +445,7 @@ class BaseManager:
     def get_strats_by_contract(
         self,
         pairs: List[Tuple[str, str, int, int]],
-        carbon_controller: BrownieContract,
+        carbon_controller: Contract,
     ) -> List[List[Any]]:
         """
         Get the strategies by contract.
@@ -472,7 +454,7 @@ class BaseManager:
         ----------
         pairs : List[Tuple[str, str, int, int]]
             The pairs.
-        carbon_controller : BrownieContract
+        carbon_controller : Contract
             The CarbonController contract object.
 
         Returns
@@ -582,7 +564,7 @@ class BaseManager:
         )
 
     def get_fees_by_pair(
-        self, all_pairs: List[Tuple[str, str]], carbon_controller: BrownieContract
+        self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
     ):
         """
         Get the fees by pair.
@@ -591,7 +573,7 @@ class BaseManager:
         ----------
         all_pairs : List[Tuple[str, str]]
             The pairs.
-        carbon_controller : BrownieContract
+        carbon_controller : Contract
             The carbon controller contract object.
 
         Returns
@@ -861,10 +843,9 @@ class BaseManager:
             return self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS]
 
         # Create a CarbonController contract object
-        bancor_pol = brownie.Contract.from_abi(
+        bancor_pol = self.cfg.w3.eth.contract(
             address=self.cfg.BANCOR_POL_ADDRESS,
             abi=self.exchanges["bancor_pol"].get_abi(),
-            name="BancorPol",
         )
 
         # Store the contract object in pool_contracts

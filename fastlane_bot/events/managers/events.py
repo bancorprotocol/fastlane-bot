@@ -8,14 +8,13 @@ Licensed under MIT
 from typing import Dict, Any, List, Type, Tuple
 
 from web3.contract import Contract
-from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot.events.managers.base import BaseManager
 
 
 class EventManager(BaseManager):
     @property
-    def events(self) -> List[Contract or BrownieContract]:
+    def events(self) -> List[Contract]:
         """
         Get the events from the exchanges.
 

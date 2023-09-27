@@ -8,7 +8,6 @@ Licensed under MIT
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 
-import brownie
 import web3
 from eth_abi import decode_abi
 
@@ -109,7 +108,7 @@ class MultiCaller(ContextManager):
     __VERSION__ = "0.0.2"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
 
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract,
+    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
                  block_identifier: Any = 'latest'):
         self._contract_calls: List[Callable] = []
         self.contract = contract

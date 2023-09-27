@@ -15,7 +15,6 @@ from _decimal import Decimal
 from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
-import brownie
 import pandas as pd
 import requests
 import web3
@@ -671,7 +670,7 @@ def update_pools_from_contracts(
         mgr: Any,
         n_jobs: int,
         rows_to_update: List[int],
-        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract = None,
+        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract = None,
         token_address: bool = False,
         current_block: int = None,
 ) -> None:
@@ -686,7 +685,7 @@ def update_pools_from_contracts(
         The number of jobs to run in parallel.
     rows_to_update : List[int]
         A list of rows to update.
-    multicall_contract : MultiProviderContractWrapper or web3.contract.Contract or brownie.Contract
+    multicall_contract : MultiProviderContractWrapper or web3.contract.Contract
         The multicall contract.
     token_address : bool, optional
         Whether to update the token address, by default False
@@ -1486,7 +1485,6 @@ def set_network_connection_to_tenderly(
     )
     connection.connect_network()
     mgr.cfg.w3 = connection.web3
-    brownie.network.web3.provider.endpoint_uri = tenderly_uri
 
     if tenderly_fork_id and not forked_from_block:
         forked_from_block = mgr.cfg.w3.eth.blockNumber
@@ -1537,8 +1535,6 @@ def set_network_connection_to_mainnet(
     )
     connection.connect_network()
     mgr.cfg.w3 = connection.web3
-
-    brownie.network.web3.provider.endpoint_uri = mainnet_uri
 
     assert (
             mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
