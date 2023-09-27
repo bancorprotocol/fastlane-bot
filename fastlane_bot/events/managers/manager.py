@@ -11,6 +11,7 @@ from typing import Dict, Any, Optional
 
 from web3.contract import Contract
 
+from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
@@ -110,8 +111,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 address=pool_info["address"],
                 abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
             ),
-        )
-
+        ) if pool_info["exchange_name"] != self.cfg.BANCOR_V3_NAME else self.pool_contracts[pool_info["exchange_name"]].get(
+                    self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                    self.web3.eth.contract(
+                        address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                        abi=BANCOR_V3_NETWORK_INFO_ABI,
+                    ),
+                )
         pool = self.get_or_init_pool(pool_info)
         try:
             params = pool.update_from_contract(
@@ -222,8 +228,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         """
 
         while True:
-            rate_limiter = 0.1 + 0.9 * random.random()
-            time.sleep(rate_limiter)
             try:
                 if event:
                     self.update_from_event(event=event, block_number=block_number)
@@ -254,6 +258,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
                         raise e
                     break
                 else:
+                    rate_limiter = 0.1 + 0.9 * random.random()
                     time.sleep(rate_limiter)
 
     def handle_pair_trading_fee_updated(
