@@ -1245,6 +1245,7 @@ def set_network_connection_to_tenderly(
         The manager object.
 
     """
+    print(f"\n ***^^^^ [set_network_connection_to_tenderly] tenderly_uri: {tenderly_uri}, forked_from_block: {forked_from_block}, tenderly_fork_id: {tenderly_fork_id}")
     assert (
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
@@ -1256,6 +1257,9 @@ def set_network_connection_to_tenderly(
         mgr.cfg.logger.info(
             f"Using Tenderly fork id: {tenderly_fork_id} at {tenderly_uri}"
         )
+        mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+    elif tenderly_uri:
+        mgr.cfg.logger.info(f"Connecting to Tenderly fork at {tenderly_uri}")
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     if tenderly_fork_id and not forked_from_block:
