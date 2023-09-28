@@ -263,16 +263,17 @@ class ContractsManager(BaseManager):
         decimals = contract.functions.decimals().call()
         key = self.get_tkn_key(symbol=symbol, addr=addr)
         new_data = {
-            "key": key,
-            "symbol": symbol,
-            "name": symbol,
-            "address": addr,
-            "decimals": decimals
+            "id": [len(token_data) + 1],
+            "key": [key],
+            "symbol": [symbol],
+            "name": [symbol],
+            "address": [addr],
+            "decimals": [decimals]
         }
         self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
-        row = pd.DataFrame(new_data, index=max(token_data.index) + 1, columns=token_data.columns)
-        token_data = pd.concat([token_data, row])
-        token_data.to_csv(tokens_filepath)
+        row = pd.DataFrame(new_data)
+        token_data = pd.concat([token_data, row], ignore_index=True)
+        token_data.to_csv(tokens_filepath, index=False)
 
         return (
             symbol, decimals
