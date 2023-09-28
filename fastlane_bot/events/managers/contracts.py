@@ -228,14 +228,25 @@ class ContractsManager(BaseManager):
         """
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
         tokens_filepath = 'fastlane_bot/data/tokens.csv'
-        token_data = pd.read_csv(tokens_filepath)
+        token_data = pd.read_csv(tokens_filepath, index_col=[0])
 
         try:
             return self._get_and_save_token_info_from_contract(
                 contract=contract, addr=addr, token_data=token_data, tokens_filepath=tokens_filepath
             )
-        except Exception as e:
-            self.cfg.logger.debug(f"Failed to get symbol and decimals for {addr} {e}")
+        except self.FailedToGetTokenDetailsException as e:
+            self.cfg.logger.debug(f"{e}")
+
+    class FailedToGetTokenDetailsException(Exception):
+        """
+        Exception caused when token details are unable to be fetched by the contract
+        """
+
+        def __init__(self, addr):
+            self.message = f"Failed to get token symbol and decimals for token address: {addr}"
+
+        def __str__(self):
+            return self.message
 
     def _get_and_save_token_info_from_contract(self, contract: Contract, addr: str, token_data: pd.DataFrame,
                                                tokens_filepath: str) -> Tuple[str, int]:
@@ -260,21 +271,35 @@ class ContractsManager(BaseManager):
 
         """
         symbol = contract.functions.symbol().call()
-        decimals = contract.functions.decimals().call()
         key = self.get_tkn_key(symbol=symbol, addr=addr)
+
+        if key in token_data['key'].unique():
+            decimals = token_data.loc[token_data['key'] == key, 'decimals'].iloc[0]
+            return symbol, decimals
+        else:
+            decimals = contract.functions.decimals().call()
+
+        if symbol is None or decimals is None:
+            raise self.FailedToGetTokenDetailsException(addr=addr)
+
         new_data = {
-            "id": [len(token_data) + 1],
-            "key": [key],
-            "symbol": [symbol],
-            "name": [symbol],
-            "address": [addr],
-            "decimals": [decimals]
+            "key": key,
+            "symbol": symbol,
+            "name": symbol,
+            "address": addr,
+            "decimals": decimals
         }
         self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
-        row = pd.DataFrame(new_data)
-        token_data = pd.concat([token_data, row], ignore_index=True)
-        token_data.to_csv(tokens_filepath, index=False)
-
+        next_index = len(token_data.index)
+        try:
+            row = pd.DataFrame(new_data, columns=token_data.columns, index=[next_index])
+            token_data = pd.concat([token_data, row])
+            token_data.to_csv(tokens_filepath)
+        except Exception:
+            # If CSV fails to update, we still return the token symbol & decimals
+            return (
+                symbol, decimals
+            )
         return (
             symbol, decimals
         )
