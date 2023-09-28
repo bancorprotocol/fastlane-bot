@@ -278,7 +278,7 @@ def main(
 
     if replay_from_block or tenderly_fork_id:
         polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
-            polling_interval
+            replay_from_block
         )
 
     # Set config
