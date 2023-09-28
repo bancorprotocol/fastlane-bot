@@ -1033,16 +1033,16 @@ def get_latest_events(
     List[Any]
         A list of the latest events.
     """
-    carbon_pol_events = []
+    tenderly_tenderly_events = []
 
     if mgr.tenderly_fork_id:
-        carbon_pol_events = get_tenderly_pol_events(
+        tenderly_pol_events = get_tenderly_pol_events(
             mgr=mgr,
             start_block=start_block,
             current_block=current_block,
             tenderly_fork_id=mgr.tenderly_fork_id,
         )
-        mgr.cfg.logger.info(f"carbon_pol_events: {len(carbon_pol_events)}")
+        mgr.cfg.logger.info(f"carbon_pol_events: {len(tenderly_tenderly_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1056,10 +1056,23 @@ def get_latest_events(
         ]
     ]
 
-    events += carbon_pol_events
-
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
+
+    if mgr.tenderly_fork_id:
+        if tenderly_tenderly_events:
+            latest_tenderly_events = filter_latest_events(mgr, tenderly_tenderly_events)
+            latest_events += latest_tenderly_events
+
+        # remove the events from any mgr.tenderly_event_exchanges exchanges
+        for exchange in mgr.tenderly_event_exchanges:
+            if pool_type := mgr.pool_type_from_exchange_name(exchange):
+                latest_events = [
+                    event
+                    for event in latest_events
+                    if not pool_type.event_matches_format(event)
+                ]
+
     carbon_pol_events = [event for event in latest_events if "token" in event["args"]]
     mgr.cfg.logger.info(
         f"Found {len(latest_events)} new events, {len(carbon_pol_events)} carbon_pol_events"
@@ -1245,7 +1258,6 @@ def set_network_connection_to_tenderly(
         The manager object.
 
     """
-    print(f"\n ***^^^^ [set_network_connection_to_tenderly] tenderly_uri: {tenderly_uri}, forked_from_block: {forked_from_block}, tenderly_fork_id: {tenderly_fork_id}")
     assert (
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
