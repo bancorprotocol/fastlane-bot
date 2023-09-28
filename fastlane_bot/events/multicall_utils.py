@@ -135,7 +135,7 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
         The current block.
 
     """
-    multicaller = MultiCaller(contract=multicall_contract)
+    multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block)
     with multicaller as mc:
         for row in rows_to_update:
             pool_info = mgr.pool_data[row]

@@ -119,17 +119,6 @@ def initialize_contract(web3, address: str, abi=None) -> Contract:
         return initialize_contract_with_abi(address=address, abi=abi, web3=web3)
 
 
-def get_contract_from_abi(address: str, exchange_name: str) -> Contract:
-    """
-    The contract of the exchange.
-    """
-    return Contract.from_abi(
-        name=f"{address}",
-        address=f"{address}",
-        abi=get_abi_and_router(exchange_name)[0],
-    )
-
-
 def convert_decimals(amt: Decimal, n: int) -> Decimal:
     """
     Utility function to convert to Decimaling point value of a specific precision.
