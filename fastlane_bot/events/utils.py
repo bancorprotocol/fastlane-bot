@@ -300,6 +300,9 @@ def handle_tenderly_event_exchanges(cfg: Config, exchanges: str, tenderly_fork_i
     if not tenderly_fork_id:
         return []
 
+    if not exchanges or exchanges == "None":
+        return []
+
     exchanges = exchanges.split(",") if exchanges else []
     cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
     return exchanges
@@ -1033,16 +1036,16 @@ def get_latest_events(
     List[Any]
         A list of the latest events.
     """
-    tenderly_tenderly_events = []
+    tenderly_pol_events = []
 
-    if mgr.tenderly_fork_id:
+    if mgr.tenderly_fork_id and 'bancor_pol' in mgr.tenderly_event_exchanges:
         tenderly_pol_events = get_tenderly_pol_events(
             mgr=mgr,
             start_block=start_block,
             current_block=current_block,
             tenderly_fork_id=mgr.tenderly_fork_id,
         )
-        mgr.cfg.logger.info(f"carbon_pol_events: {len(tenderly_tenderly_events)}")
+        mgr.cfg.logger.info(f"carbon_pol_events: {len(tenderly_pol_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1060,8 +1063,8 @@ def get_latest_events(
     latest_events = filter_latest_events(mgr, events)
 
     if mgr.tenderly_fork_id:
-        if tenderly_tenderly_events:
-            latest_tenderly_events = filter_latest_events(mgr, tenderly_tenderly_events)
+        if tenderly_pol_events:
+            latest_tenderly_events = filter_latest_events(mgr, tenderly_pol_events)
             latest_events += latest_tenderly_events
 
         # remove the events from any mgr.tenderly_event_exchanges exchanges
