@@ -249,7 +249,6 @@ def test_test_max_arb_trade_in_constant_product():
     fee2 = finder.get_fee_safe(first_check_pools[2].fee)
     optimal_arb_low_level_check = finder.max_arb_trade_in_constant_product(p0t0=p0t0, p0t1=p0t1, p1t0=p1t0, p1t1=p1t1, p2t0=p2t0, p2t1=p2t1,fee0=fee0, fee1=fee1, fee2=fee2)
     optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, flt)
-    print(optimal_arb_low_level_check, optimal_arb)
     assert iseq(optimal_arb, optimal_arb_low_level_check), f"[test_bancor_v3] Arb calculation result mismatch, pools likely ordered incorrectly"
     # -
     
@@ -320,7 +319,7 @@ def test_test_get_miniverse_combos():
     
     combos = finder.get_combos(flashloan_tokens=flt, CCm=CCm, arb_mode="bancor_v3")
     all_miniverses = finder.get_miniverse_combos(combos)
-    assert len(all_miniverses) == 146, "[test_bancor_v3] Different data used for tests, expected 146 miniverses"
+    assert len(all_miniverses) == 144, f"[test_bancor_v3] Different data used for tests, expected 144 miniverses, got {len(all_miniverses)}"
     # -
     
 

@@ -137,18 +137,6 @@ If you encounter import errors or `ModuleNotFound` exceptions, try:
 python <absolute_path>/main.py
 ```
 
-The Fastlane Arbitrage Bot uses Brownie with Alchemy for Ethereum network calls. If you need to manually configure Brownie, follow these steps:
-
-```bash
-brownie networks update_provider alchemy https://eth-{}.alchemyapi.io/v2/$WEB3_ALCHEMY_PROJECT_ID
-brownie networks modify mainnet provider=alchemy
-brownie networks set_provider alchemy
-```
-
-For further issues, check the [Brownie documentation][bdoc].
-
-[bdoc]:https://eth-brownie.readthedocs.io/en/stable/install.html
-
 ## Change Log
 
 We follow [semantic versioning][semver] (`major.minor.patch`), updating the major number for backward incompatible API changes, minor for compatible changes, and patch for minor patches.

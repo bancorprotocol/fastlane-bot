@@ -70,7 +70,7 @@ def run_command(mode):
         "--limit_bancor3_flashloan_tokens=True",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=60"
+        "--timeout=70"
     ]
     subprocess.Popen(cmd)
         

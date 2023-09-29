@@ -11,7 +11,6 @@ from typing import List, Type, Tuple, Any, Dict, Callable
 import web3
 from fastlane_bot import Config
 from web3.contract import Contract
-from brownie.network.contract import Contract as BrownieContract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
@@ -63,7 +62,7 @@ class CarbonV1(Exchange):
         ]
 
     def get_fee(
-        self, address: str, contract: Contract or BrownieContract
+        self, address: str, contract: Contract
     ) -> Tuple[str, float]:
         """
         Get the fee from the contract.
@@ -149,7 +148,7 @@ class CarbonV1(Exchange):
         block_number: int,
         cfg: Config,
         func: Callable,
-        carbon_controller: BrownieContract,
+        carbon_controller: Contract,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the strategy.
@@ -164,7 +163,7 @@ class CarbonV1(Exchange):
             The config.
         func : Callable
             The function to call.
-        carbon_controller : BrownieContract
+        carbon_controller : Contract
             The carbon controller contract.
 
         Returns
