@@ -273,7 +273,7 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
                                            mgr.web3.eth.contract(abi=ERC20_ABI, address=tkn0_address))
     if tkn0_address not in mgr.token_contracts:
         mgr.token_contracts[tkn0_address] = tkn_contract
-    tkn_balance = tkn_contract.functions.balanceOf(tkn0_address).call()
+    tkn_balance = tkn_contract.functions.balanceOf(mgr.cfg.BANCOR_POL_ADDRESS).call()
     result = {
         "fee": "0.000",
         "fee_float": 0.000,
