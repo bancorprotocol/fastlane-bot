@@ -138,7 +138,7 @@ bancor_pol_pool.update_from_event(setup_data['bancor_pol_token_traded_event'],
                    'tkn0_symbol': 'tkn0', 
                    'tkn1_symbol': 'tkn1',}
 )
-assert (bancor_pol_pool.state['tkn0_balance'] == 10)
+assert (bancor_pol_pool.state['tkn0_balance'] == 10 + setup_data['bancor_pol_token_traded_event']['args']['amount'])
 
 # ## test_bancor_pol_trading_enabled_event
 
