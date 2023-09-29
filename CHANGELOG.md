@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.39...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.40...HEAD)
 
 - Remove Tenderly default for Bancor POL in contracts.py get\_pool\_contract [\#153](https://github.com/bancorprotocol/fastlane-bot/issues/153)
+- Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
+
+- 137 fix or replace brownie multicall functionality [\#155](https://github.com/bancorprotocol/fastlane-bot/pull/155) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.40](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.40) (2023-09-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.39...v2.7.40)
+
 - Fix block start number for POL contract [\#149](https://github.com/bancorprotocol/fastlane-bot/issues/149)
 - Remove Tenderly Web3 instantiation [\#154](https://github.com/bancorprotocol/fastlane-bot/pull/154) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
