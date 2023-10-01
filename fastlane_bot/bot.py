@@ -643,8 +643,14 @@ class CarbonBot(CarbonBotBase):
                         "Carbon pool not up to date, updating and restarting."
                     )
                     return False
-
-            elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
+            elif current_pool.exchange_name in ["balancer",]:
+                for idx, balance in enumerate(current_pool.token_balances):
+                    if balance != fetched_pool[f"tkn{idx}_balance"]:
+                        self.ConfigObj.logger.debug(
+                            "Balancer pool not up to date, updating and restarting."
+                        )
+                        return False
+            elif current_pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
                 if (
                     current_pool.liquidity != fetched_pool["liquidity"]
                     or current_pool.sqrt_price_q96 != fetched_pool["sqrt_price_q96"]

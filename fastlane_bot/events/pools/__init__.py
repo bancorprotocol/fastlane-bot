@@ -15,7 +15,7 @@ from fastlane_bot.events.pools.uniswap_v2 import UniswapV2Pool
 from fastlane_bot.events.pools.uniswap_v3 import UniswapV3Pool
 from fastlane_bot.events.pools.bancor_v2 import BancorV2Pool
 from fastlane_bot.events.pools.bancor_pol import BancorPolPool
-from fastlane_bot.events.pools.balancer import Balancer
+from fastlane_bot.events.pools.balancer import BalancerPool
 
 
 # register your pool types
@@ -26,4 +26,4 @@ pool_factory.register_format("bancor_v3", BancorV3Pool)
 pool_factory.register_format("carbon_v1", CarbonV1Pool)
 pool_factory.register_format("bancor_v2", BancorV2Pool)
 pool_factory.register_format("bancor_pol", BancorPolPool)
-pool_factory.register_format("balancer", Balancer)
+pool_factory.register_format("balancer", BalancerPool)

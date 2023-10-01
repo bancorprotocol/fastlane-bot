@@ -1213,7 +1213,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         tkn_in_balance = Decimal(str(curve.get_token_balance(tkn=tkn_in))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_in)))
         tkn_out_weight = Decimal(str(curve.get_token_weight(tkn=tkn_out)))
         tkn_out_balance = Decimal(str(curve.get_token_balance(tkn=tkn_out))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_out)))
-        print(f"[routehandler.py _calc_balancer_output] tknin {tkn_in} weight: {tkn_in_weight}, tknout {tkn_out} tknout weight: {tkn_out_weight}")
+        self.ConfigObj.logger.debug(f"[routehandler.py _calc_balancer_output] tknin {tkn_in} weight: {tkn_in_weight}, tknout {tkn_out} tknout weight: {tkn_out_weight}")
 
 
         # Extract trade fee from amount in
@@ -1254,8 +1254,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         base = divUp(balance_in, denominator)  # balanceIn.divUp(denominator);
         exponent = divDown(weight_in, weight_out)  # weightIn.divDown(weightOut);
         power = powUp(base, exponent)  # base.powUp(exponent);
-
-        print(f"denominator= {denominator}, base={base}, exponent={exponent}, power={power}, mulDown={mulDown(balance_out, complement(power))}")
 
         return mulDown(balance_out, complement(power))  # balanceOut.mulDown(power.complement());
 

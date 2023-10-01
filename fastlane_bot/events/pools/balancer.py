@@ -15,7 +15,7 @@ from .base import Pool
 from fastlane_bot import Config
 
 @dataclass
-class Balancer(Pool):
+class BalancerPool(Pool):
     """
     Class representing a Balancer weighted pool.
     """
