@@ -700,7 +700,6 @@ def update_pools_from_contracts(
         mgr: Any,
         n_jobs: int,
         rows_to_update: List[int] or List[Hashable],
-        multicall_contract: MultiProviderContractWrapper or web3.contract.Contract = None,
         token_address: bool = False,
         current_block: int = None,
 ) -> None:
@@ -728,7 +727,6 @@ def update_pools_from_contracts(
             pool_info=mgr.pool_data[idx],
             block_number=current_block,
             token_address=token_address,
-            multicall_contract=multicall_contract,
         )
         for idx in rows_to_update
     )
