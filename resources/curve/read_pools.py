@@ -1,7 +1,7 @@
 from sys import argv
 from json import dumps
 from factory import connect
-from factory import forge_pool
+from factory import make_pool
 from factory import pool_names
 
 if len(argv) > 1:
@@ -18,4 +18,4 @@ def parse(obj: any) -> any:
         return {key: parse(val) for key, val in obj.items() if key != 'contract'}
     return parse(vars(obj))
 
-print(dumps({pool_name: parse(forge_pool(pool_name, connect_modes=['init','sync'])) for pool_name in pool_names}, indent=4))
+print(dumps({pool_name: parse(make_pool(pool_name, read_init=True, read_sync=True)) for pool_name in pool_names}, indent=4))

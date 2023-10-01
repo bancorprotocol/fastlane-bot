@@ -5,7 +5,7 @@ class Coin1(Coin):
         {"name":"balanceOf","outputs":[{"type":"uint256","name":""}],"inputs":[{"type":"address","name":""}],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, pool_address: str):
+    def sync(self, pool_address: str):
         if self.is_eth():
             self.pool_balance = self.contract.w3.eth.get_balance(pool_address)
         else:

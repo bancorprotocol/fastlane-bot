@@ -7,7 +7,7 @@ class Coin4(Coin):
         {"name":"accrualBlockNumber","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, _):
+    def sync(self, _):
         self.exchangeRateStored = self.contract.functions.exchangeRateStored().call()
         self.supplyRatePerBlock = self.contract.functions.supplyRatePerBlock().call()
         self.accrualBlockNumber = self.contract.functions.accrualBlockNumber().call()

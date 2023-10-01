@@ -17,7 +17,7 @@ pool_params = {
         "future_A": 10000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734639,
+        "timestamp": 1696175639,
         "admin_balances": [
             3311376558693967447,
             2703883066980558848
@@ -28,12 +28,12 @@ pool_params = {
             {
                 "symbol": "ETH",
                 "decimals": 18,
-                "pool_balance": 2856422358797730179938
+                "pool_balance": 2830720499250566565869
             },
             {
                 "symbol": "sETH",
                 "decimals": 18,
-                "pool_balance": 3603771656957996652313
+                "pool_balance": 3604453941207679884340
             }
         ],
         "fee": 2000000,
@@ -41,10 +41,10 @@ pool_params = {
         "future_A": 25600,
         "initial_A_time": 1627923611,
         "future_A_time": 1628525830,
-        "timestamp": 1695734639,
+        "timestamp": 1696175639,
         "admin_balances": [
-            185416182843587845,
-            175071062254567796
+            187379941135496428,
+            175571522475807157
         ]
     },
     "steth": {
@@ -52,12 +52,12 @@ pool_params = {
             {
                 "symbol": "ETH",
                 "decimals": 18,
-                "pool_balance": 79029812961701947287241
+                "pool_balance": 63891688133323070547657
             },
             {
                 "symbol": "stETH",
                 "decimals": 18,
-                "pool_balance": 79219511531753702678838
+                "pool_balance": 64239677734683269683503
             }
         ],
         "fee": 1000000,
@@ -65,10 +65,10 @@ pool_params = {
         "future_A": 3000,
         "initial_A_time": 1676759639,
         "future_A_time": 1677333717,
-        "timestamp": 1695734651,
+        "timestamp": 1696175639,
         "admin_balances": [
-            511288578033938103,
-            526271231105143620
+            377379868876925440,
+            378575058992623055
         ]
     },
     "aave": {
@@ -76,17 +76,17 @@ pool_params = {
             {
                 "symbol": "aDAI",
                 "decimals": 18,
-                "pool_balance": 4874942810217172451150775
+                "pool_balance": 5646894098872404064764782
             },
             {
                 "symbol": "aUSDC",
                 "decimals": 6,
-                "pool_balance": 6283794603925
+                "pool_balance": 5383491176854
             },
             {
                 "symbol": "aUSDT",
                 "decimals": 6,
-                "pool_balance": 8694107910470
+                "pool_balance": 8837034467097
             }
         ],
         "fee": 4000000,
@@ -94,11 +94,11 @@ pool_params = {
         "future_A": 200000,
         "initial_A_time": 1627923611,
         "future_A_time": 1628525830,
-        "timestamp": 1695734651,
+        "timestamp": 1696175651,
         "admin_balances": [
-            213495925016770667270,
-            71103004,
-            555843682
+            39950130729526006770,
+            52282722,
+            416563886
         ],
         "offpeg_fee_multiplier": 20000000000
     },
@@ -107,12 +107,12 @@ pool_params = {
             {
                 "symbol": "aDAI",
                 "decimals": 18,
-                "pool_balance": 391050006685172215852055
+                "pool_balance": 391224464295882857257312
             },
             {
                 "symbol": "aSUSD",
                 "decimals": 18,
-                "pool_balance": 412351974709679286759546
+                "pool_balance": 412412910592878755673663
             }
         ],
         "fee": 4000000,
@@ -120,7 +120,7 @@ pool_params = {
         "future_A": 10000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734663,
+        "timestamp": 1696175651,
         "admin_balances": [
             53062542821498767662,
             15569268345409463747
@@ -143,10 +143,10 @@ pool_params = {
         "future_A": 10000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734663,
+        "timestamp": 1696175651,
         "balances": [
-            126123746,
-            1177900118393782029300429
+            109290558,
+            1346383407207213468139187
         ]
     },
     "3pool": {
@@ -169,11 +169,11 @@ pool_params = {
         "future_A": 2000,
         "initial_A_time": 1653559305,
         "future_A_time": 1654158027,
-        "timestamp": 1695734663,
+        "timestamp": 1696175663,
         "balances": [
-            57974084893969599671150191,
-            55396809979234,
-            101287558659501
+            71776928030379693245469454,
+            74015455475721,
+            70021009789023
         ]
     },
     "hbtc": {
@@ -192,7 +192,7 @@ pool_params = {
         "future_A": 1000,
         "initial_A_time": 1654439617,
         "future_A_time": 1655030612,
-        "timestamp": 1695734675,
+        "timestamp": 1696175663,
         "balances": [
             84213520086668443383,
             5530368129
@@ -215,10 +215,10 @@ pool_params = {
         "future_A": 1000,
         "initial_A_time": 1625237534,
         "future_A_time": 1625838701,
-        "timestamp": 1695734675,
+        "timestamp": 1696175663,
         "balances": [
-            1392458887,
-            17720990757
+            1416582883,
+            17691706917
         ]
     },
     "sbtc": {
@@ -242,11 +242,11 @@ pool_params = {
         "future_A": 100,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734675,
+        "timestamp": 1696175675,
         "balances": [
-            2606109422,
-            8250181091,
-            84047685856158633629
+            2748097292,
+            7920279437,
+            86300821214133488381
         ]
     },
     "pax": {
@@ -254,17 +254,17 @@ pool_params = {
             {
                 "symbol": "ycDAI",
                 "decimals": 18,
-                "pricePerFullShare": 1020156644986225688
+                "pricePerFullShare": 1020163979392431397
             },
             {
                 "symbol": "ycUSDC",
                 "decimals": 6,
-                "pricePerFullShare": 1038061642401635295
+                "pricePerFullShare": 1038202138943814881
             },
             {
                 "symbol": "ycUSDT",
                 "decimals": 6,
-                "pricePerFullShare": 48950247403
+                "pricePerFullShare": 48950247424
             },
             {
                 "symbol": "USDP",
@@ -276,12 +276,12 @@ pool_params = {
         "future_A": 200,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734687,
+        "timestamp": 1696175675,
         "balances": [
-            5434875474718412308341,
-            5451680272,
-            120083672821740640,
-            10250978616207300885451
+            6555398576425386043889,
+            6303002767,
+            135072573142932750,
+            7486195272889111623064
         ]
     },
     "ib": {
@@ -289,23 +289,23 @@ pool_params = {
             {
                 "symbol": "iDAI",
                 "decimals": 8,
-                "exchangeRateStored": 114875108582632682735160587,
-                "supplyRatePerBlock": 30236028130,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 114977435488519219701386557,
+                "supplyRatePerBlock": 25754153771,
+                "accrualBlockNumber": 18249862
             },
             {
                 "symbol": "iUSDC",
                 "decimals": 8,
-                "exchangeRateStored": 110940490997621,
-                "supplyRatePerBlock": 24544135913,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 111025475463726,
+                "supplyRatePerBlock": 24561403478,
+                "accrualBlockNumber": 18249862
             },
             {
                 "symbol": "iUSDT",
                 "decimals": 8,
-                "exchangeRateStored": 118667771236850,
-                "supplyRatePerBlock": 28222073397,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 118790169808048,
+                "supplyRatePerBlock": 28773860169,
+                "accrualBlockNumber": 18254662
             }
         ],
         "fee": 6000000,
@@ -313,11 +313,11 @@ pool_params = {
         "future_A": 600000,
         "initial_A_time": 1627923611,
         "future_A_time": 1628525830,
-        "timestamp": 1695734687,
+        "timestamp": 1696175687,
         "balances": [
-            12525208821809455,
-            11170116737096275,
-            36512302767738084
+            16082564130817600,
+            11172789637297743,
+            36598889634024764
         ],
         "underlying_coins": [
             {
@@ -330,30 +330,30 @@ pool_params = {
                 "decimals": 6
             }
         ],
-        "block_number": 18220232
+        "block_number": 18256709
     },
     "yv2": {
         "coins": [
             {
                 "symbol": "iDAI",
                 "decimals": 8,
-                "exchangeRateStored": 114875108582632682735160587,
-                "supplyRatePerBlock": 30236028130,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 114977435488519219701386557,
+                "supplyRatePerBlock": 25754153771,
+                "accrualBlockNumber": 18249862
             },
             {
                 "symbol": "iUSDC",
                 "decimals": 8,
-                "exchangeRateStored": 110940490997621,
-                "supplyRatePerBlock": 24544135913,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 111025475463726,
+                "supplyRatePerBlock": 24561403478,
+                "accrualBlockNumber": 18249862
             },
             {
                 "symbol": "iUSDT",
                 "decimals": 8,
-                "exchangeRateStored": 118667771236850,
-                "supplyRatePerBlock": 28222073397,
-                "accrualBlockNumber": 18218671
+                "exchangeRateStored": 118790169808048,
+                "supplyRatePerBlock": 28773860169,
+                "accrualBlockNumber": 18254662
             }
         ],
         "fee": 4000000,
@@ -361,7 +361,7 @@ pool_params = {
         "future_A": 60000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734699,
+        "timestamp": 1696175687,
         "balances": [
             71089887002368016,
             79384843918177914,
@@ -378,19 +378,19 @@ pool_params = {
                 "decimals": 6
             }
         ],
-        "block_number": 18220233
+        "block_number": 18256710
     },
     "bbtc": {
         "coins": [
             {
                 "symbol": "BBTC",
                 "decimals": 8,
-                "pool_balance": 1394791316
+                "pool_balance": 1348768635
             },
             {
                 "symbol": "crvRenWSBTC",
                 "decimals": 18,
-                "pool_balance": 5299746473072563958
+                "pool_balance": 5751165298580300727
             }
         ],
         "fee": 4000000,
@@ -398,15 +398,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734711,
+        "timestamp": 1696175699,
         "balances": [
-            1394205510,
-            5294208415159835234
+            1348100356,
+            5744915097037105261
         ],
-        "base_cache_updated": 1695626423,
-        "base_virtual_price": 1020168933826839554,
+        "base_cache_updated": 1696167323,
+        "base_virtual_price": 1020177269600789723,
         "base_pool": {
-            "virtual_price": 1020169338084577158
+            "virtual_price": 1020177285181980267
         }
     },
     "dusd": {
@@ -414,12 +414,12 @@ pool_params = {
             {
                 "symbol": "DUSD",
                 "decimals": 18,
-                "pool_balance": 48986634229225793985691
+                "pool_balance": 50085748549779433536912
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 26380640712425277234797
+                "pool_balance": 25320567281024574069541
             }
         ],
         "fee": 4000000,
@@ -427,15 +427,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734711,
+        "timestamp": 1696175699,
         "balances": [
-            48982299795060021610187,
-            26377166286909438081931
+            50080038353736383493809,
+            25315545408597783839230
         ],
-        "base_cache_updated": 1695702755,
-        "base_virtual_price": 1027456324260722058,
+        "base_cache_updated": 1696173851,
+        "base_virtual_price": 1027514652541091060,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "gusd": {
@@ -443,12 +443,12 @@ pool_params = {
             {
                 "symbol": "GUSD",
                 "decimals": 2,
-                "pool_balance": 122583840
+                "pool_balance": 165209735
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 1941779620335923531931043
+                "pool_balance": 2299008892269687464233735
             }
         ],
         "fee": 4000000,
@@ -456,15 +456,15 @@ pool_params = {
         "future_A": 100000,
         "initial_A_time": 1654421422,
         "future_A_time": 1654944987,
-        "timestamp": 1695734723,
+        "timestamp": 1696175711,
         "balances": [
-            122529121,
-            1941342094827562998864766
+            165187471,
+            2298780978696079556162040
         ],
-        "base_cache_updated": 1695673955,
-        "base_virtual_price": 1027454927613073142,
+        "base_cache_updated": 1696054019,
+        "base_virtual_price": 1027505385083866118,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "husd": {
@@ -472,12 +472,12 @@ pool_params = {
             {
                 "symbol": "HUSD",
                 "decimals": 8,
-                "pool_balance": 2849380796473
+                "pool_balance": 2807754469583
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 157239308897710894803
+                "pool_balance": 173424930905292984509
             }
         ],
         "fee": 4000000,
@@ -485,15 +485,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734723,
+        "timestamp": 1696175711,
         "balances": [
-            2844663045762,
-            104827288567113231943
+            2803028390276,
+            121012910574695321649
         ],
-        "base_cache_updated": 1688804807,
-        "base_virtual_price": 1026342441805374494,
+        "base_cache_updated": 1696027475,
+        "base_virtual_price": 1027504932321231896,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "linkusd": {
@@ -514,7 +514,7 @@ pool_params = {
         "future_A": 500,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734735,
+        "timestamp": 1696175723,
         "balances": [
             20827533998308379635031,
             13710592858282004256664
@@ -522,7 +522,7 @@ pool_params = {
         "base_cache_updated": 1695473999,
         "base_virtual_price": 1027439272493629910,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "musd": {
@@ -530,12 +530,12 @@ pool_params = {
             {
                 "symbol": "mUSD",
                 "decimals": 18,
-                "pool_balance": 617436892662259341122650
+                "pool_balance": 621892670384088746236149
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 529805381328700020863613
+                "pool_balance": 520591931242463473590303
             }
         ],
         "fee": 4000000,
@@ -543,15 +543,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734735,
+        "timestamp": 1696175723,
         "balances": [
-            617367748317604743753720,
-            529713426705791276289268
+            621823526039434148867219,
+            520498587355784259396348
         ],
-        "base_cache_updated": 1695693887,
-        "base_virtual_price": 1027455915805982946,
+        "base_cache_updated": 1696021379,
+        "base_virtual_price": 1027504275823618356,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "obtc": {
@@ -559,12 +559,12 @@ pool_params = {
             {
                 "symbol": "oBTC",
                 "decimals": 18,
-                "pool_balance": 5426646398686261146
+                "pool_balance": 5394823211315481567
             },
             {
                 "symbol": "crvRenWSBTC",
                 "decimals": 18,
-                "pool_balance": 1619197587069879519
+                "pool_balance": 1650091456487577196
             }
         ],
         "fee": 4000000,
@@ -572,15 +572,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734747,
+        "timestamp": 1696175723,
         "balances": [
-            5426585601783094484,
-            1619097454932024342
+            5394756047227967011,
+            1649991324349722019
         ],
-        "base_cache_updated": 1695252323,
-        "base_virtual_price": 1020165599411387013,
+        "base_cache_updated": 1695973823,
+        "base_virtual_price": 1020171754903081304,
         "base_pool": {
-            "virtual_price": 1020169338084577158
+            "virtual_price": 1020177285181980267
         }
     },
     "pbtc": {
@@ -588,12 +588,12 @@ pool_params = {
             {
                 "symbol": "pBTC",
                 "decimals": 18,
-                "pool_balance": 3077114177617878292
+                "pool_balance": 3026242258659110384
             },
             {
                 "symbol": "crvRenWSBTC",
                 "decimals": 18,
-                "pool_balance": 11066073372822174331
+                "pool_balance": 11116594837043405324
             }
         ],
         "fee": 4000000,
@@ -601,15 +601,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734747,
+        "timestamp": 1696175735,
         "balances": [
-            3077014018752330742,
-            11065995417412035531
+            3026131921338389011,
+            11116516881633266524
         ],
-        "base_cache_updated": 1695729599,
-        "base_virtual_price": 1020169251510624182,
+        "base_cache_updated": 1696011971,
+        "base_virtual_price": 1020172043212707365,
         "base_pool": {
-            "virtual_price": 1020169338084577158
+            "virtual_price": 1020177285181980267
         }
     },
     "rsv": {
@@ -630,7 +630,7 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734747,
+        "timestamp": 1696175735,
         "balances": [
             13474888539546545716729,
             7658247196914535925120
@@ -638,7 +638,7 @@ pool_params = {
         "base_cache_updated": 1695367655,
         "base_virtual_price": 1027425892835643028,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "tbtc": {
@@ -646,12 +646,12 @@ pool_params = {
             {
                 "symbol": "TBTC",
                 "decimals": 18,
-                "pool_balance": 5886422267689841414
+                "pool_balance": 5886418831012270980
             },
             {
                 "symbol": "crvRenWSBTC",
                 "decimals": 18,
-                "pool_balance": 54640609824610514100
+                "pool_balance": 54640733474882505975
             }
         ],
         "fee": 4000000,
@@ -659,15 +659,15 @@ pool_params = {
         "future_A": 15000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734759,
+        "timestamp": 1696175747,
         "balances": [
-            5886223283938711133,
-            54639578227704340798
+            5886191763617813078,
+            54639671887385928075
         ],
-        "base_cache_updated": 1695452387,
-        "base_virtual_price": 1020168092467896020,
+        "base_cache_updated": 1696006835,
+        "base_virtual_price": 1020171904374882863,
         "base_pool": {
-            "virtual_price": 1020169338084577158
+            "virtual_price": 1020177285181980267
         }
     },
     "usdk": {
@@ -675,12 +675,12 @@ pool_params = {
             {
                 "symbol": "USDK",
                 "decimals": 18,
-                "pool_balance": 34232229898978629834805
+                "pool_balance": 34207440645790966491206
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 68084047517009531537358
+                "pool_balance": 68108590177706666335834
             }
         ],
         "fee": 4000000,
@@ -688,15 +688,15 @@ pool_params = {
         "future_A": 20000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734759,
+        "timestamp": 1696175747,
         "balances": [
-            34231692835577343117065,
-            68083457414734271199803
+            34206821486489470652825,
+            68107924701914043889146
         ],
-        "base_cache_updated": 1695504455,
-        "base_virtual_price": 1027440880992327031,
+        "base_cache_updated": 1696170443,
+        "base_virtual_price": 1027514639787320492,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "usdn": {
@@ -704,12 +704,12 @@ pool_params = {
             {
                 "symbol": "USDN",
                 "decimals": 18,
-                "pool_balance": 4459475449875195874823051
+                "pool_balance": 4434263757925153424889385
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 22186432048251062114784
+                "pool_balance": 23924441542539118279712
             }
         ],
         "fee": 4000000,
@@ -717,15 +717,15 @@ pool_params = {
         "future_A": 25000,
         "initial_A_time": 1649327847,
         "future_A_time": 1649925962,
-        "timestamp": 1695734771,
+        "timestamp": 1696175747,
         "balances": [
-            4459271532510968612656948,
-            22186432048251062114784
+            4434059840560926162723282,
+            23924441542539118279712
         ],
-        "base_cache_updated": 1695601967,
-        "base_virtual_price": 1027444550558572800,
+        "base_cache_updated": 1696006835,
+        "base_virtual_price": 1027502812998666666,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "usdp": {
@@ -733,12 +733,12 @@ pool_params = {
             {
                 "symbol": "USDP",
                 "decimals": 18,
-                "pool_balance": 2190910111401517464538013
+                "pool_balance": 2190971752518048711451404
             },
             {
                 "symbol": "3Crv",
                 "decimals": 18,
-                "pool_balance": 399592187337153373632263
+                "pool_balance": 399534927105496855018712
             }
         ],
         "fee": 4000000,
@@ -746,15 +746,15 @@ pool_params = {
         "future_A": 10000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734771,
+        "timestamp": 1696175759,
         "balances": [
-            2190898904029170342096700,
-            399554106212338293061694
+            2190960545145701589010091,
+            399496834524052791551262
         ],
-        "base_cache_updated": 1695019079,
-        "base_virtual_price": 1027381999244607118,
+        "base_cache_updated": 1695902915,
+        "base_virtual_price": 1027485459278803298,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     },
     "ust": {
@@ -775,7 +775,7 @@ pool_params = {
         "future_A": 10000,
         "initial_A_time": 0,
         "future_A_time": 0,
-        "timestamp": 1695734783,
+        "timestamp": 1696175759,
         "balances": [
             411379440768834592154674,
             987535847286960257156
@@ -783,7 +783,7 @@ pool_params = {
         "base_cache_updated": 1695517535,
         "base_virtual_price": 1027440959417990066,
         "base_pool": {
-            "virtual_price": 1027460106491863821
+            "virtual_price": 1027514652856393244
         }
     }
 }

@@ -5,5 +5,5 @@ class Coin2(Coin):
         {"name":"exchangeRateCurrent","outputs":[{"type":"uint256","name":""}],"inputs":[],"stateMutability":"view","type":"function"}
     ]
 
-    def _sync(self, _):
+    def sync(self, _):
         self.exchangeRateCurrent = self.contract.functions.exchangeRateCurrent().call()

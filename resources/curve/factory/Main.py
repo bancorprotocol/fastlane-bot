@@ -43,16 +43,11 @@ params = {
     'ust'     : {'type': Pool9, 'address': '0x890f4e345B1dAED0367A877a1612f86A1f86985f', 'coins': [Coin1, Coin1]},
 }
 
-def forge_pool(pool_name: str, connect_modes=[], config_data={}) -> any:
+def make_pool(pool_name: str, read_init=False, read_sync=False, mock_data={}) -> any:
     class Pool(params[pool_name]['type']):
-        def connect(self):
-            super().connect(params[pool_name]['address'])
-        def read(self, modes: list):
-            if 'init' in modes:
-                super().init(params[pool_name]['coins'])
-            if 'sync' in modes:
-                super().sync()
-        def config(self, data: dict):
+        def read(self, init: bool, sync: bool):
+            self._read(params[pool_name]['address'], params[pool_name]['coins'], init, sync)
+        def mock(self, data: dict):
             def get(val: any) -> any:
                 if type(val) is dict:
                     return Object(val)
@@ -66,9 +61,6 @@ def forge_pool(pool_name: str, connect_modes=[], config_data={}) -> any:
             for key, val in data.items():
                 setattr(self, key, get(val))
     pool = Pool()
-    if connect_modes:
-        pool.connect()
-        pool.read(connect_modes)
-    if config_data:
-        pool.config(config_data)
+    pool.read(read_init, read_sync)
+    pool.mock(mock_data)
     return pool

@@ -13,21 +13,19 @@ abi = [
 ]
 
 class Pool:
-    def connect(self, address: str):
-        self.contract = Host.contract(address, abi + self.abi)
-
-    def init(self, coins: list[any]):
-        self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
-
-    def sync(self):
-        self.fee = self.contract.functions.fee().call()
-        self.initial_A = self.contract.functions.initial_A().call()
-        self.future_A = self.contract.functions.future_A().call()
-        self.initial_A_time = self.contract.functions.initial_A_time().call()
-        self.future_A_time = self.contract.functions.future_A_time().call()
-        self.timestamp = self.contract.w3.eth.get_block('latest')['timestamp']
-        [coin._sync(self.contract.address) for coin in self.coins]
-        self._sync()
+    def _read(self, address: str, coins: list[any], init: bool, sync: bool):
+        if init:
+            self.contract = Host.contract(address, abi + self.abi)
+            self.coins = [coins[n](self.contract.functions.coins(n).call()) for n in range(len(coins))]
+        if sync:
+            self.fee = self.contract.functions.fee().call()
+            self.initial_A = self.contract.functions.initial_A().call()
+            self.future_A = self.contract.functions.future_A().call()
+            self.initial_A_time = self.contract.functions.initial_A_time().call()
+            self.future_A_time = self.contract.functions.future_A_time().call()
+            self.timestamp = self.contract.w3.eth.get_block('latest')['timestamp']
+            [coin.sync(self.contract.address) for coin in self.coins]
+            self._sync()
 
     def swap_read(self, sourceToken: str, targetToken: str, sourceAmount: int) -> int:
         indexes = {self.coins[n].symbol: n for n in range(len(self.coins))}
