@@ -49,7 +49,6 @@ with open(env_file, 'a') as f:
         if os.environ[var] == '' and 'TENDERLY' not in var and 'ETHERSCAN_TOKEN' not in var:
             raise Exception(f"The {var} environment variable cannot be None. Please update the .env file. See README.md for instructions")
 
-import brownie_setup
 
 with open("fastlane_bot/__init__.py") as fd:
     version = re.search(

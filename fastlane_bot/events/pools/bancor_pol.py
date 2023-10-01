@@ -70,9 +70,12 @@ class BancorPolPool(Pool):
         if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
             "TokenTraded"
         ]:
-            data["tkn0_balance"] = (
-                self.state["tkn0_balance"] - event_args["args"]["amount"]
-            )
+            # *** Balance now updated from multicall ***
+            pass
+            # if self.state['last_updated_block'] < event_args['blockNumber']:
+            #     data["y_0"] = (
+            #         self.state["y_0"] - event_args["args"]["amount"]
+            #     )
 
         for key, value in data.items():
             self.state[key] = value

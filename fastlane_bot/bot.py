@@ -52,6 +52,7 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Any, Callable
 from typing import Optional
 
+from web3 import Web3
 from web3.datastructures import AttributeDict
 
 from fastlane_bot.config import Config
@@ -1344,24 +1345,10 @@ class CarbonBot(CarbonBotBase):
             The Tenderly fork ID
 
         """
-        from fastlane_bot.config.connect import EthereumNetwork
 
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork}"
-        connection = EthereumNetwork(
-            network_id="tenderly",
-            network_name="Tenderly (Alchemy)",
-            provider_url=tenderly_uri,
-            provider_name="alchemy",
-        )
-        connection.connect_network()
-        self.db.cfg.w3 = connection.web3
-        self.ConfigObj.w3 = connection.web3
-
-        assert (
-            self.db.cfg.w3.provider.endpoint_uri
-            == self.ConfigObj.w3.provider.endpoint_uri
-            == tenderly_uri
-        ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {self.db.cfg.w3.provider.endpoint_uri} instead"
+        self.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+        self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     def run(
         self,

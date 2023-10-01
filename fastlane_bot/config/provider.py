@@ -3,6 +3,9 @@ Fastlane bot config -- provider
 """
 __VERSION__ = "0.9.1"
 __DATE__ = "30/Apr 2023"
+
+from web3.contract import Contract
+
 from .base import ConfigBase
 from . import selectors as S
 from .network import ConfigNetwork
@@ -16,7 +19,6 @@ from ..data.abi import (
     CARBON_CONTROLLER_ABI,
     FAST_LANE_CONTRACT_ABI,
 )
-from brownie import Contract
 
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
@@ -91,13 +93,11 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.connection.connect_network()
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
-        self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
-            name=N.BANCOR_V3_NAME,
+        self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
             address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
             abi=BANCOR_V3_NETWORK_INFO_ABI,
         )
-        self.CARBON_CONTROLLER_CONTRACT = Contract.from_abi(
-            name=N.CARBON_V1_NAME,
+        self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
             address=N.CARBON_CONTROLLER_ADDRESS,
             abi=CARBON_CONTROLLER_ABI,
         )
@@ -134,13 +134,11 @@ class _ConfigProviderTenderly(ConfigProvider):
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        self.BANCOR_NETWORK_INFO_CONTRACT = Contract.from_abi(
-            name=N.BANCOR_V3_NAME,
+        self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
             address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
             abi=BANCOR_V3_NETWORK_INFO_ABI,
         )
-        self.CARBON_CONTROLLER_CONTRACT = Contract.from_abi(
-            name=N.CARBON_V1_NAME,
+        self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
             address=N.CARBON_CONTROLLER_ADDRESS,
             abi=CARBON_CONTROLLER_ABI,
         )

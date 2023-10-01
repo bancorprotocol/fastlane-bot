@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: fastlane-bot-38
 #     language: python
-#     name: python3
+#     name: fastlane-bot-38
 # ---
 
 # +
@@ -18,6 +18,7 @@ import json
 
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3, BancorV2, BancorPol, PancakeswapV2, PancakeswapV3
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
     BANCOR_V3_POOL_COLLECTION_ABI, \

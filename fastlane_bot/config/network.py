@@ -208,15 +208,5 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     PANCAKESWAP_V3_ROUTER_ADDRESS = "0x1b81D678ffb9C0263b24A97847620C99d213eB14"
     BANCOR_V3_VAULT = "0x649765821D9f64198c905eC0B2B037a4a52Bc373"
 
-
-    def shellcommand(self, chain_id=1):
-        """
-        the shell command to run to allow the bot to connect to tenderly
-        """
-        s = f'brownie networks delete {self.NETWORK_NAME}\n'
-        s += f'brownie networks add "Ethereum" "{self.NETWORK_NAME}" '
-        s += f'host=https://rpc.tenderly.co/fork/{self.TENDERLY_FORK} chainid={chain_id}'
-        return s
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

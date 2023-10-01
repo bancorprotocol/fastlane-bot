@@ -24,6 +24,7 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
+#
 
 try:
     market_df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
@@ -48,14 +49,14 @@ def test_description():
     pair     = DAI/WETH [DAI/WETH]
     tknx     =     3,967,283.591895 DAI        [virtual:        3,967,283.592]
     tkny     =         2,171.754481 WETH       [virtual:            2,171.754]
-    p        = 0.0005474159913752679 [min=None, max=None] WETH per DAI
+    p        = 0.0005474159913752679 [min=0, max=None] WETH per DAI
     fee      = 0.003
     descr    = sushiswap_v2 DAI/WETH 0.003
     """.strip().splitlines()
     d0 = [l.strip() for l in d0]
-    assert d == d0
-    for l in d0:
-        print(l)
+    for l,l0 in zip(d,d0):
+        print(f"d:  {l}\nd0: {l0}\n")
+        assert l==l0
     
 
 # ------------------------------------------------------------
@@ -993,6 +994,83 @@ def test_xyfromp_f_and_dxdyfromp_f():
     assert iseq(c.y_max/c.x_min, c.p_max)
     assert iseq(c.y_min/c.x_max, c.p_min)
     # -
+    
+
+# ------------------------------------------------------------
+# Test      002
+# File      test_002_CPCandOptimizer.py
+# Segment   Asymmetric curves and curve classifications
+# ------------------------------------------------------------
+def test_asymmetric_curves_and_curve_classifications():
+# ------------------------------------------------------------
+    #
+    # We here briefly run through asymmetric curves; we also ensure that the associated functions (is_constant_product) etc work across the board
+    
+    ETA = 3
+    cc = CPC.from_xyal(x=10, y=100/ETA*10, eta=ETA)
+    assert cc.alpha == 0.75
+    assert cc.eta == 3
+    assert iseq(cc.x, 10)
+    assert iseq(cc.y, 100/ETA*10)
+    assert iseq(cc.p, 100)
+    assert iseq(cc.x_act, cc.x)
+    assert iseq(cc.y_act, cc.y)
+    assert (cc.x_min, cc.x_max) == (0,None)
+    assert (cc.y_min, cc.y_max) == (0,None)
+    assert not cc.is_constant_product() # DEPRECATED
+    assert not cc.is_symmetric()
+    assert cc.is_asymmetric()
+    assert not cc.is_levered()
+    assert cc.is_unlevered()
+    
+    ETA = 1
+    cc = CPC.from_xyal(x=10, y=100/ETA*10, eta=ETA)
+    assert cc.alpha == 0.5
+    assert cc.eta == 1
+    assert iseq(cc.x, 10)
+    assert iseq(cc.y, 100/ETA*10)
+    assert iseq(cc.p, 100)
+    assert iseq(cc.x_act, cc.x)
+    assert iseq(cc.y_act, cc.y)
+    assert (cc.x_min, cc.x_max) == (0,None)
+    assert (cc.y_min, cc.y_max) == (0,None)
+    assert cc.is_constant_product() # DEPRECATED
+    assert cc.is_symmetric()
+    assert not cc.is_asymmetric()
+    assert not cc.is_levered()
+    assert cc.is_unlevered()
+    
+    cc = CPC.from_xy(x=10, y=100*10)
+    assert cc.alpha == 0.5
+    assert cc.eta == 1
+    assert iseq(cc.x, 10)
+    assert iseq(cc.y, 100/ETA*10)
+    assert iseq(cc.p, 100)
+    assert iseq(cc.x_act, cc.x)
+    assert iseq(cc.y_act, cc.y)
+    assert (cc.x_min, cc.x_max) == (0,None)
+    assert (cc.y_min, cc.y_max) == (0,None)
+    assert cc.is_constant_product() # DEPRECATED
+    assert cc.is_symmetric()
+    assert not cc.is_asymmetric()
+    assert not cc.is_levered()
+    assert cc.is_unlevered()
+    
+    cc = CPC.from_pkpp(p=100, k=10*100, p_min=90, p_max=110)
+    assert cc.alpha == 0.5
+    assert cc.eta == 1
+    assert iseq(cc.x, 3.1622776601683795)
+    assert iseq(cc.y, 316.2277660168379)
+    assert iseq(cc.p, 100)
+    assert not iseq(cc.x_act, cc.x)
+    assert not iseq(cc.y_act, cc.y)
+    assert not (cc.x_min, cc.x_max) == (0,None)
+    assert not (cc.y_min, cc.y_max) == (0,None)
+    assert cc.is_constant_product() # DEPRECATED
+    assert cc.is_symmetric()
+    assert not cc.is_asymmetric()
+    assert cc.is_levered()
+    assert not cc.is_unlevered()
     
 
 # ------------------------------------------------------------

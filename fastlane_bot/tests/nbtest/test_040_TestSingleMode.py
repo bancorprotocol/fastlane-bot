@@ -174,8 +174,8 @@ def test_test_tokens_and_combos():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-    assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+    assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
+    assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
     
     # ### Test_Single_Arb_Finder_vs_run
     
@@ -227,3 +227,6 @@ def test_test_no_multi_carbon():
             multi_carbon_count += 1
     
     assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+    # -
+    
+    

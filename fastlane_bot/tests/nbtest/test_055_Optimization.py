@@ -26,6 +26,12 @@ plt.rcParams['figure.figsize'] = [12,6]
 
 #
 
+#
+#
+#
+#
+#
+
 
 CURVES = [
 
@@ -104,31 +110,58 @@ PRICES = {
 PRICE0 = PRICES["WETH"]/PRICES["DAI"]
 PRICE0
 
+#
 
-c0 = CC[0]
+cnorm = CPC.from_pk(p=PRICE0, k=PRICE0*CC[0].x, pair="WETH/DAI", cid="normalizer")
+CCn = CPCContainer([c for c in CC]+[cnorm])
 
-xyp = c0.xyfromp_f(1592, withunits=True, ignorebounds=True)
-CURVES0 = deepcopy(CURVES)
-CURVES0[0]["x"] = xyp[0]
-CC0 = CPCContainer.from_dicts(CURVES0)
-xyp
-
-CC[0].p, CC0[0].p
-
+#
 
 CCul = CPCContainer([
     CPC.from_pk(p=1500, k=1500*100, pair="WETH/DAI", cid="c1500"),
     CPC.from_pk(p=1600, k=1600*100, pair="WETH/DAI", cid="c1600")
 ])
 
-cnorm = CPC.from_pk(p=PRICE0, k=PRICE0*c0.x, pair="WETH/DAI", cid="normalizer")
-CCn = CPCContainer([c for c in CC]+[cnorm])
+#
 
-c0.x, c0.tknx
+ETA25, ETA75 = 1/3, 3
+CCas2 = CPCContainer([
+    CPC.from_xyal(x=10, y=2000/ETA25*10, alpha=0.25, pair="WETH/DAI", cid="c2000-0.25"),
+    CPC.from_xyal(x=10, y=2500/ETA75*10, alpha=0.75, pair="WETH/DAI", cid="c2500-0.75"),
+])
 
-#help(CPC)
+CCas2[0].x, CCas2[0].tknx, CCas2[0].y, CCas2[0].tkny, CCas2[0].p
+
+CCas2[1].x, CCas2[1].tknx, CCas2[1].y, CCas2[1].tkny, CCas2[1].p
+
+CCas2[0].eta
 
 
+# ------------------------------------------------------------
+# Test      055
+# File      test_055_Optimization.py
+# Segment   Curve definitions
+# ------------------------------------------------------------
+def test_curve_definitions():
+# ------------------------------------------------------------
+    #
+    # Here we are asserting properties of the curves that they are meant to have; should really never fail unless something goes horribly wrong
+    
+    assert iseq(CCas2[0].x, 10)
+    assert CCas2[0].tknx == "WETH"
+    assert iseq(CCas2[0].y, 60000)
+    assert CCas2[0].tkny == "DAI"
+    assert iseq(CCas2[0].eta, ETA25)
+    assert iseq(CCas2[0].p, 2000)
+    
+    assert iseq(CCas2[1].x, 10)
+    assert CCas2[1].tknx == "WETH"
+    assert iseq(CCas2[1].y, 25000/3)
+    assert CCas2[1].tkny == "DAI"
+    assert iseq(CCas2[1].eta, ETA75)
+    assert iseq(CCas2[1].p, 2500)
+    
+    
 
 # ------------------------------------------------------------
 # Test      055
@@ -137,6 +170,8 @@ c0.x, c0.tknx
 # ------------------------------------------------------------
 def test_margpoptimizer_current():
 # ------------------------------------------------------------
+    #
+    # Uses the current margp optimizer which uses $d \log p ~ 0$ as criterium and that can fail on certain formations of levered curves (when the price ends up on no-mans land)
     # ### Setup
     
     # +
@@ -215,30 +250,24 @@ def test_margpoptimizer_current():
     v = r.dxvecvalues(asdict=True)
     v
     
-    # ### Succeeding optimization process `CC0` [TODO]
-    #
-    # note: the parameters still don't allow for convergence!
+    # ### Asymmetric curves `CCas2` and `CCas3`
     
-    O0  = MargPOptimizer(curves=CC0)
-    assert len(O0.curves) == len(CC)
+    O = MargPOptimizer(curves=CCas2)
+    assert len(O.curves) == len(CCas2)
     
-    r = O0.optimize("WETH")
+    r = O.optimize("WETH", params={"pstart": {"WETH": 2400, "DAI": 1}})
     assert r.error is None
     assert r.method == "margp"
     assert r.targettkn == "WETH"
     assert r.tokens_t == ('DAI',)
-    assert iseq(r.result, -39.42917199089061)
-    assert iseq(r.p_optimal_t[0], 0.0006273686958774544)
-    assert iseq(r.dtokens_t[0], 62760.13561845571)
-    r
-    
-    r.dtokens
-    
-    r.dxvecvalues(asdict=True)
+    assert r.dtokens["WETH"] < 0
+    assert iseq(r.result, -0.048636442623132936, eps=1e-3)
+    assert iseq(r.p_optimal_t[0], 0.0004696831634035269, eps=1e-3)
+    assert iseq(r.dtokens_t[0], -7.3569026426412165e-09, eps=0.1)
     
     # ### Failing optimization process `CC`
     
-    O   = MargPOptimizer(curves=CC)
+    O = MargPOptimizer(curves=CC)
     assert len(O.curves) == len(CC)
     
     r = O.optimize("WETH")
@@ -291,6 +320,9 @@ def test_margpoptimizer_current():
 # ------------------------------------------------------------
 def test_pairoptimizer_vs_marpp():
 # ------------------------------------------------------------
+    #
+    # PairOptimizer is a new optimization method that uses bisection instead of gradient descent. It is a bit slower, but importantly it is robust against the no-man's land problem of the gradient descent
+    #
     # ### Setup
     
     # ### Unlevered curves `CCul`
@@ -334,6 +366,38 @@ def test_pairoptimizer_vs_marpp():
     assert r.dtokens["WETH"]/rmp.dtokens["WETH"]-1 < 1e-5
     r.dtokens, rmp.dtokens, r.dtokens["WETH"]/rmp.dtokens["WETH"]-1
     
+    # ### Asymmetric curves `CCas2` and `CCas3`
+    
+    # #### `CCas2`
+    
+    O = PairOptimizer(curves=CCas2)
+    Omp = MargPOptimizer(curves=CCas2)
+    assert len(O.curves) == len(CCas2)
+    assert len(Omp.curves) == len(O.curves)
+    
+    r = O.optimize("WETH")
+    rmp = Omp.optimize("WETH")
+    assert r.error is None
+    assert r.method == "margp-pair"
+    assert r.targettkn == "WETH"
+    assert r.tokens_t == ('DAI',)
+    assert r.dtokens["WETH"] < 0
+    assert iseq(r.result, -0.048636442623132936, eps=1e-3)
+    assert iseq(r.result, rmp.result, eps=1e-3)
+    assert r.result != rmp.result # numerically should not converged to same
+    assert iseq(r.p_optimal_t[0], 0.0004696831634035269, eps=1e-3)
+    assert iseq(r.dtokens["WETH"], -0.04863644262652045, eps=1e-3)
+    assert iseq(r.dtokens["WETH"], rmp.dtokens["WETH"], eps=1e-3)
+    assert iseq(0, r.dtokens["DAI"], eps=1e-6)
+    assert iseq(0, rmp.dtokens["DAI"], eps=1e-6)
+    assert abs(r.dtokens["DAI"] - rmp.dtokens["DAI"]) < 1e-6
+    assert r.dtokens_t == (r.dtokens["DAI"],)
+    assert rmp.dtokens_t == (rmp.dtokens["DAI"],)
+    assert r.tokens_t == ('DAI',)
+    assert rmp.tokens_t == ('DAI',)
+    
+    # #### `CCas3` [TODO]
+    
     # ### Normalized curves `CCn`
     
     On = PairOptimizer(curves=CCn)
@@ -356,15 +420,6 @@ def test_pairoptimizer_vs_marpp():
     assert iseq(rmp.p_optimal_t[0], 0.00062745798800732)
     assert r.result/rmp.result-1 < 1e-5
     r, rmp, r.result/rmp.result-1
-    
-    # ### Succeeding optimization process `CC0` [TODO]
-    
-    O0  = PairOptimizer(curves=CC0)
-    O0_mp  = MargPOptimizer(curves=CC0)
-    assert len(O0.curves) == len(CC) # sic
-    
-    r = O0.optimize("WETH")
-    r
     
     # ### Optimization process `CC` (fails in full margp)
     
@@ -433,8 +488,6 @@ def test_margpoptimizer_new_todo():
     
     # ### Normalized curves `CCn`
     
-    # ### Succeeding optimization process `CC0` [TODO]
-    
     # ### Failing optimization process `CC`
     
     
@@ -451,8 +504,12 @@ def notest_charts():
     
     CCul.plot()
     
-    CC0.plot()
-    
     CCn.plot()
+    
+    CCas2.plot()
+    
+    # +
+    #CCas3.plot()
+    # -
     
     

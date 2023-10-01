@@ -175,7 +175,7 @@ def test_test_combos():
                 ConfigObj=bot.ConfigObj,
             )
     combos = finder2.get_combos(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode="multi_triangle")
-    assert len(combos) == 1370, f"[TestMultiMode] Using wrong dataset, expected 1370 combos, found {len(combos)}"
+    assert len(combos) == 1225, f"[TestMultiMode] Using wrong dataset, expected 1225 combos, found {len(combos)}"
     
     # ### Test_find_arbitrage
     
@@ -189,7 +189,7 @@ def test_test_combos():
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
-    assert len(r) == 40, f"[TestMultiMode] Expected 40 arbs, found {len(r)}"
+    assert len(r) == 58, f"[TestMultiMode] Expected 58 arbs, found {len(r)}"
     assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage: {len(r)} - to match _run: {len(run_full)}"
     
     # ### Test_multi_carbon_pools

@@ -9,7 +9,6 @@ Licensed under MIT
 import subprocess
 from abc import ABCMeta, ABC
 
-from brownie import network, Contract, accounts  # type: ignore
 from eth_typing import HexStr
 from hexbytes import HexBytes
 from web3 import Web3
@@ -17,6 +16,9 @@ from web3.types import TxReceipt
 
 import os
 from dotenv import load_dotenv
+
+from fastlane_bot.config import network
+
 load_dotenv()
 
 import logging
@@ -104,9 +106,6 @@ class EthereumNetwork(NetworkBase):
         nonce: int = 0,
     ):
         """
-        Note that Tenderly here must be configured in brownie - you can do this in the Terminal using the following command:
-        brownie networks add [environment] [id] host=[host] [KEY=VALUE, ...]. For example:
-        brownie networks add "Ethereum" "tenderly" host=https://rpc.tenderly.co/fork/7fd3f956-5409-4496-be95 chainid=1
 
         :param network_id: the name of the network to connect to
         :param network_name: the name of the network to connect to
@@ -168,28 +167,6 @@ class EthereumNetwork(NetworkBase):
         if self.is_connected:
             return
 
-        # add_tenderly = f'brownie networks add "Ethereum" "{self.network_id}" host="{self.provider_url}"'
-        # mod_tenderly = f'brownie networks modify "{self.network_id}" host="{self.provider_url}" name="{self.network_name}" chainid={self.chain_id}'
-        # set_tenderly = f'brownie networks set_provider "{self.provider_name}"'
-
-        # cmds = [add_tenderly, mod_tenderly, set_tenderly]
-        # for cmd in cmds:
-        #     p = subprocess.Popen(
-        #         cmd,
-        #         stdout=subprocess.PIPE,
-        #         stderr=subprocess.PIPE,
-        #         stdin=subprocess.PIPE,
-        #         shell=True,
-        #     )
-
-        #     stdout, stderr = p.communicate()
-
-        #     if "already exists" in stderr.decode("utf-8"):
-        #         logger.debug(f"network {self.network_id} already exists")
-
-        self.network = network
-        self.network.connect(self.network_id)
-        self._is_connected = True
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url))
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")
