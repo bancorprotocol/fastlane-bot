@@ -236,7 +236,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         min_target_amount: Decimal,
         deadline: int,
         target_address: str,
-        exchange_id: int,
+        platform_id: int,
         custom_address: str = None,
         fee_float: Any = None,
         customData: Any = None,
@@ -256,7 +256,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             The deadline.
         target_address: str
             The target address.
-        exchange_id: int
+        platform_id: int
             The exchange id.
         custom_address: str
             The custom address.
@@ -279,12 +279,11 @@ class TxRouteHandler(TxRouteHandlerBase):
             target_address = self.ConfigObj.ETH_ADDRESS
 
         target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
-
         source_token = self.weth_to_eth(source_token)
-        fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000))
+        fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
 
         return RouteStruct(
-            platformId=exchange_id,
+            platformId=platform_id,
             targetToken=target_address,
             sourceToken=source_token,
             sourceAmount=int(source_amount),
@@ -312,7 +311,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         if trade_instructions is None:
             trade_instructions = self.trade_instructions
-        
+
         assert not deadline is None, "deadline cannot be None"
 
         pools = [
@@ -329,11 +328,9 @@ class TxRouteHandler(TxRouteHandlerBase):
                 min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
-                exchange_id=trade_instructions[idx].platform_id,
-                custom_address=pools[idx].anchor if trade_instructions[idx].platform_id == 1 else trade_instructions[
-                    idx
-                ].tknout_address,  # TODO: rework for bancor 2
-                fee_float=fee_float[idx],
+                platform_id=trade_instructions[idx].platform_id,
+                custom_address=pools[idx].anchor if trade_instructions[idx].platform_id == 1 else trade_instructions[idx].tknout_address,  # TODO: rework for bancor 2
+                fee_float=fee_float[idx] if trade_instructions[idx].platform_id != 7 else pools[idx].anchor,
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
                 source_token=trade_instructions[idx].tknin_address,
@@ -1197,37 +1194,118 @@ class TxRouteHandler(TxRouteHandlerBase):
             (tokens_in * token1_amt * (1 - Decimal(fee))) / (tokens_in + token0_amt)
         )
 
+    def _calc_balancer_output(self, curve: Pool, tkn_in: str, tkn_out: str, amount_in: Decimal):
+        """
+        This is a wrapper function that extracts the necessary pool values to pass into the Balancer swap equation and passes them into the low-level function.
+        curve: Pool
+            The pool.
+        tkn_in: str
+            The token in.
+        tkn_out: str
+            The token out.
+        amount_in: Decimal
+            The amount in.
+
+        returns:
+            The number of tokens expected to be received by the trade.
+        """
+        tkn_in_weight = Decimal(str(curve.get_token_weight(tkn=tkn_in)))
+        tkn_in_balance = Decimal(str(curve.get_token_balance(tkn=tkn_in))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_in)))
+        tkn_out_weight = Decimal(str(curve.get_token_weight(tkn=tkn_out)))
+        tkn_out_balance = Decimal(str(curve.get_token_balance(tkn=tkn_out))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_out)))
+        print(f"[routehandler.py _calc_balancer_output] tknin {tkn_in} weight: {tkn_in_weight}, tknout {tkn_out} tknout weight: {tkn_out_weight}")
+
+
+        # Extract trade fee from amount in
+        fee = Decimal(str(amount_in)) * Decimal(str(curve.fee_float))
+        amount_in = amount_in - fee
+        #amount_in = (1 - Decimal(str(curve.fee_float))) * Decimal(str(amount_in))
+        return self._calc_balancer_out_given_in(balance_in=tkn_in_balance, weight_in=tkn_in_weight, balance_out=tkn_out_balance, weight_out=tkn_out_weight, amount_in=amount_in)
+
+    @staticmethod
+    def _calc_balancer_out_given_in(balance_in: Decimal,
+                                    weight_in: Decimal,
+                                    balance_out: Decimal,
+                                    weight_out: Decimal,
+                                    amount_in: Decimal) -> Decimal:
+        """
+        This function uses the Balancer swap equation to calculate the token output, given an input.
+
+        :param balance_in: the pool balance of the source token
+        :param weight_in: the pool weight of the source token
+        :param balance_out: the pool balance of the target token
+        :param weight_out: the pool weight of the target token
+        :param amount_in: the number of source tokens trading into the pool
+
+        returns:
+        The number of tokens expected to be received by the trade.
+
+        """
+
+        denominator = balance_in + amount_in
+        base = divUp(balance_in, denominator)  # balanceIn.divUp(denominator);
+        exponent = divDown(weight_in, weight_out)  # weightIn.divDown(weightOut);
+        power = powUp(base, exponent)  # base.powUp(exponent);
+
+        print(f"denominator= {denominator}, base={base}, exponent={exponent}, power={power}, mulDown={mulDown(balance_out, complement(power))}")
+
+        return mulDown(balance_out, complement(power))  # balanceOut.mulDown(power.complement());
+
+    @staticmethod
+    def _calc_balancer_input_given_output(balance_in: Decimal,
+                                          weight_in: Decimal,
+                                          balance_out: Decimal,
+                                          weight_out: Decimal,
+                                          amount_out: Decimal):
+        """
+        This function uses the Balancer swap equation to calculate the token output, given an input.
+
+        :param balance_in: the pool balance of the source token
+        :param weight_in: the pool weight of the source token
+        :param balance_out: the pool balance of the target token
+        :param weight_out: the pool weight of the target token
+        :param amount_in: the number of source tokens trading into the pool
+
+        returns:
+        The number of tokens expected to be received by the trade.
+
+        """
+
+        base = divUp(balance_out, (balance_out - amount_out))
+        exponent = divUp(weight_out, weight_in)
+        power = powUp(base, exponent)
+        ratio = power - Decimal(1)
+        result = mulUp(balance_in, ratio)
+        return result
+
     def _solve_trade_output(
         self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> Tuple[Decimal, Decimal, int, int]:
 
         if not isinstance(trade, TradeInstruction):
             raise Exception("trade in must be a TradeInstruction object.")
-        tkn0_key = curve.pair_name.split("/")[0]
-        tkn1_key = curve.pair_name.split("/")[1]
-        tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
-        tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
-        tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
-        tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (
-                    trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
-        #if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2"):
 
+        if curve.exchange_name != "balancer":
+            tkn0_key = curve.pair_name.split("/")[0]
+            tkn1_key = curve.pair_name.split("/")[1]
+            tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
+            tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
+            tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
+            tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (
+                        trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
+            #if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2"):
 
-        assert tkn0_key == trade.tknin_key or tkn0_key == trade.tknout_key, f"[_solve_trade_output] tkn0_key {tkn0_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
-        assert tkn1_key == trade.tknin_key or tkn1_key == trade.tknout_key, f"[_solve_trade_output] tkn1_key {tkn1_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
-        assert tkn0_key != tkn1_key, f"[_solve_trade_output] tkn0_key == tkn_1_key {tkn0_key}, {tkn1_key}"
+            assert tkn0_key == trade.tknin_key or tkn0_key == trade.tknout_key, f"[_solve_trade_output] tkn0_key {tkn0_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
+            assert tkn1_key == trade.tknin_key or tkn1_key == trade.tknout_key, f"[_solve_trade_output] tkn1_key {tkn1_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
+            assert tkn0_key != tkn1_key, f"[_solve_trade_output] tkn0_key == tkn_1_key {tkn0_key}, {tkn1_key}"
 
-        tkn_in_decimals = int(
-            tkn0_decimals
-            if trade.tknin_key == tkn0_key
-            else tkn1_decimals
-        )
-        tkn_out_decimals = int(
-            tkn1_decimals
-            if trade.tknout_key == tkn1_key
-            else tkn0_decimals
-        )
+        else:
+            tokens = curve.get_tokens
+            assert trade.tknin_key in tokens, f"[_solve_trade_output] trade.tknin_key {trade.tknin_key} not in Balancer curve tokens: {tokens}"
+            assert trade.tknout_key in tokens, f"[_solve_trade_output] trade.tknout_key {trade.tknout_key} not in Balancer curve tokens: {tokens}"
 
+        tkn_in_decimals = int(trade.db.get_token(key=trade.tknin_key).decimals)
+        tkn_out_decimals = int(trade.db.get_token(key=trade.tknout_key).decimals)
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
@@ -1246,8 +1324,11 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME or curve.exchange_name == self.ConfigObj.BANCOR_POL_NAME:
             amount_in, amount_out = self._calc_carbon_output(
-                curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
-            )
+                            curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
+                        )
+        elif curve.exchange_name == self.ConfigObj.BALANCER_NAME:
+            amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_key, tkn_out=trade.tknout_key, amount_in=amount_in)
+
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
@@ -1388,7 +1469,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 trade_instructions[idx]._amtout_wei = amount_out_wei
 
             next_amount_in = amount_out
-        
+
 
         return trade_instructions
 
@@ -1397,3 +1478,35 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     def _cid_to_pool(self, cid: str, db: any) -> Pool:
         return db.get_pool(cid=cid)
+
+
+def mulUp(a: Decimal, b: Decimal) -> Decimal:
+    return a * b
+
+
+def divUp(a: Decimal, b: Decimal) -> Decimal:
+    if a * b == 0:
+        return Decimal(0)
+    else:
+        return a / b
+
+
+def mulDown(a: Decimal, b: Decimal) -> Decimal:
+    return a * b
+
+
+def divDown(a: Decimal, b: Decimal) -> Decimal:
+    result = a / b
+    return result
+
+
+def complement(a: Decimal) -> Decimal:
+    return Decimal(1 - a) if a < 1 else Decimal(0)
+
+
+def powUp(a: Decimal, b: Decimal) -> Decimal:
+    return a ** b
+
+
+def powDown(a: Decimal, b: Decimal) -> Decimal:
+    return a ** b

@@ -67,6 +67,12 @@ class BancorV2Pool(Pool):
         ):
             data["tkn0_balance"] = event_args["args"]["_rateN"]
             data["tkn1_balance"] = event_args["args"]["_rateD"]
+        elif (
+                self.state["tkn0_address"] == event_args["args"]["_token2"]
+                and self.state["tkn1_address"] == event_args["args"]["_token1"]
+        ):
+            data["tkn0_balance"] = event_args["args"]["_rateD"]
+            data["tkn1_balance"] = event_args["args"]["_rateN"]
         else:
             data["tkn0_balance"] = self.state["tkn0_balance"]
             data["tkn1_balance"] = self.state["tkn1_balance"]

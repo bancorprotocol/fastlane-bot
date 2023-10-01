@@ -1,6 +1,8 @@
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 
+import itertools
+import math
 from typing import Dict, Any, List, Union
 
 from _decimal import Decimal
@@ -119,13 +121,51 @@ class PoolAndTokens:
     tkn0_decimals: int
     tkn1_address: str
     tkn1_decimals: int
+    tkn0_weight: float = None
+    tkn1_weight: float = None
+    tkn2: str = None
+    tkn2_balance: Decimal = None
+    tkn2_address: str = None
+    tkn2_decimals: int = None
+    tkn2_weight: float = None
+    tkn3: str = None
+    tkn3_balance: Decimal = None
+    tkn3_address: str = None
+    tkn3_decimals: int = None
+    tkn3_weight: float = None
+    tkn4: str = None
+    tkn4_balance: Decimal = None
+    tkn4_address: str = None
+    tkn4_decimals: int = None
+    tkn4_weight: float = None
+    tkn5: str = None
+    tkn5_balance: Decimal = None
+    tkn5_address: str = None
+    tkn5_decimals: int = None
+    tkn5_weight: float = None
+    tkn6: str = None
+    tkn6_balance: Decimal = None
+    tkn6_address: str = None
+    tkn6_decimals: int = None
+    tkn6_weight: float = None
+    tkn7: str = None
+    tkn7_balance: Decimal = None
+    tkn7_address: str = None
+    tkn7_decimals: int = None
+    tkn7_weight: float = None
+
     tkn0_key: str = None
     tkn1_key: str = None
+    tkn2_key: str = None
+    tkn3_key: str = None
+    tkn4_key: str = None
+    tkn5_key: str = None
+    tkn6_key: str = None
+    tkn7_key: str = None
     ADDRDEC = None
 
     def __post_init__(self):
-        self.tkn0_key = self.tkn0
-        self.tkn1_key = self.tkn1
+
         self.A_1 = self.A_1 or 0
         self.B_1 = self.B_1 or 0
         self.A_0 = self.A_0 or 0
@@ -134,6 +174,20 @@ class PoolAndTokens:
         self.y_0 = self.y_0 or 0
         self.z_1 = self.z_1 or 0
         self.y_1 = self.y_1 or 0
+
+        self.tokens = self.get_tokens #self.remove_nan([self.tkn0_key, self.tkn1_key, self.tkn2_key, self.tkn3_key, self.tkn4_key, self.tkn5_key, self.tkn6_key, self.tkn7_key])
+        self.token_weights = self.remove_nan([self.tkn0_weight, self.tkn1_weight, self.tkn2_weight, self.tkn3_weight, self.tkn4_weight, self.tkn5_weight, self.tkn6_weight, self.tkn7_weight])
+        self.token_balances = self.remove_nan([self.tkn0_balance, self.tkn1_balance, self.tkn2_balance, self.tkn3_balance, self.tkn4_balance, self.tkn5_balance, self.tkn6_balance, self.tkn7_balance])
+        self.token_decimals = self.remove_nan([self.tkn0_decimals, self.tkn1_decimals, self.tkn2_decimals, self.tkn3_decimals, self.tkn4_decimals, self.tkn5_decimals, self.tkn6_decimals, self.tkn7_decimals])
+
+    @property
+    def get_tokens(self):
+        """
+        returns all tokens in a curve
+        """
+        tokens = [self.tkn0_key, self.tkn1_key, self.tkn2_key, self.tkn3_key, self.tkn4_key, self.tkn5_key, self.tkn6_key, self.tkn7_key]
+        tokens = [tkn for tkn in tokens if type(tkn) == str]
+        return [tkn for tkn in tokens if tkn is not None]
 
     def to_cpc(self) -> Union[ConstantProductCurve, List[Any]]:
         """
@@ -148,6 +202,8 @@ class PoolAndTokens:
             self.ConfigObj.BANCOR_POL_NAME,
         ]:
             out = self._carbon_to_cpc()
+        elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
+            out = self._balancer_to_cpc()
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
@@ -168,6 +224,50 @@ class PoolAndTokens:
             "tkny_addr": str(self.tkn1_address),
             "blocklud": int(self.last_updated_block),
         }
+
+    def _balancer_to_cpc(self) -> List[Any]:
+        """
+        constructor: from Uniswap V2 pool (see class docstring for other parameters)
+
+        :x_tknb:    current pool liquidity in token x (base token of the pair)*
+        :y_tknq:    current pool liquidity in token y (quote token of the pair)*
+        :k:         uniswap liquidity parameter (k = xy)*
+
+        *exactly one of k,x,y must be None; all other parameters must not be None;
+        a reminder that x is TKNB and y is TKNQ
+        """
+
+        typed_args_all = []
+
+        for idx, tkn in enumerate(self.tokens):
+            for _idx, _tkn in enumerate(self.tokens[idx:], start=idx):
+                if _idx >= len(self.tokens) or tkn == _tkn:
+                    continue
+
+                # convert tkn0_balance and tkn1_balance to Decimal from wei
+                tkn0_balance = self.convert_decimals(self.token_balances[idx], self.token_decimals[idx])
+                tkn1_balance = self.convert_decimals(self.token_balances[_idx], self.token_decimals[_idx])
+                weight0 = float(str(self.token_weights[idx]))
+                weight1 = float(str(self.token_weights[_idx]))
+                eta = weight0 / weight1
+                _pair_name = tkn + "/" + _tkn
+                # create a typed-dictionary of the arguments
+                typed_args_all.append({
+                    "x": tkn0_balance,
+                    "y": tkn1_balance,
+                    "x_act": tkn0_balance,
+                    "y_act": tkn1_balance,
+                    #"alpha": weight0,
+                    "eta": eta,
+                    "pair": _pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
+                    "fee": self.fee,
+                    "cid": self.cid,
+                    "descr": self.descr,
+                    "params":  self._params,
+                })
+        return [ConstantProductCurve.from_xyal(**self._convert_to_float(typed_args)) for typed_args in typed_args_all]
+
+    class DoubleInvalidCurveError(ValueError): pass
 
     def _other_to_cpc(self) -> List[Any]:
         """
@@ -371,3 +471,51 @@ class PoolAndTokens:
         #     if isinstance(value, (Decimal, float)):
         #         typed_args[key] = float(value)
         # return typed_args
+
+    def get_token_weight(self, tkn):
+        """
+        :param tkn: the token key
+
+        This function returns the weight of a token in a Balancer pool.
+
+        """
+        idx = self._get_token_index(tkn=tkn)
+        return self.token_weights[idx]
+
+    def get_token_balance(self, tkn):
+        """
+        :param tkn: the token key
+
+        This function returns the balance of a token in a Balancer pool.
+        """
+        idx = self._get_token_index(tkn=tkn)
+        return self.token_balances[idx]
+    def get_token_decimals(self, tkn):
+        """
+        :param tkn: the token key
+
+        This function returns the balance of a token in a Balancer pool.
+        """
+        idx = self._get_token_index(tkn=tkn)
+        return self.token_decimals[idx]
+    def _get_token_index(self, tkn):
+        """
+        :param tkn: the token key
+
+        This function returns the index of a token within the pool.
+
+        """
+
+        for idx, token in enumerate(self.tokens):
+            if tkn == token:
+                return idx
+
+    @staticmethod
+    def remove_nan(item_list: List) -> List:
+        """
+        Removes empty items from a list.
+        :param item_list: List
+
+        Returns: List
+        """
+        return [item for item in item_list if item is not None and not math.isnan(item)]
