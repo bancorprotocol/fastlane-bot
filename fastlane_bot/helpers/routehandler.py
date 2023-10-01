@@ -1219,8 +1219,16 @@ class TxRouteHandler(TxRouteHandlerBase):
         # Extract trade fee from amount in
         fee = Decimal(str(amount_in)) * Decimal(str(curve.fee_float))
         amount_in = amount_in - fee
+
+        if amount_in > (tkn_in_balance * Decimal("0.3")):
+            raise BalancerInputTooLargeError("Balancer has a hard constraint that amount in must be less than 30% of the pool balance of tkn in, making this trade invalid.")
+
+        amount_out = self._calc_balancer_out_given_in(balance_in=tkn_in_balance, weight_in=tkn_in_weight, balance_out=tkn_out_balance, weight_out=tkn_out_weight, amount_in=amount_in)
+        if amount_out > (tkn_out_balance * Decimal("0.3")):
+            raise BalancerOutputTooLargeError("Balancer has a hard constraint that the amount out must be less than 30% of the pool balance of tkn out, making this trade invalid.")
+
         #amount_in = (1 - Decimal(str(curve.fee_float))) * Decimal(str(amount_in))
-        return self._calc_balancer_out_given_in(balance_in=tkn_in_balance, weight_in=tkn_in_weight, balance_out=tkn_out_balance, weight_out=tkn_out_weight, amount_in=amount_in)
+        return amount_out
 
     @staticmethod
     def _calc_balancer_out_given_in(balance_in: Decimal,
@@ -1510,3 +1518,8 @@ def powUp(a: Decimal, b: Decimal) -> Decimal:
 
 def powDown(a: Decimal, b: Decimal) -> Decimal:
     return a ** b
+
+class BalancerInputTooLargeError(AssertionError):
+    pass
+class BalancerOutputTooLargeError(AssertionError):
+    pass

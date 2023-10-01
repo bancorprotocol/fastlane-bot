@@ -50,8 +50,8 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
             ]
 
             bal_curves = [x for x in CC.curves if x.params.exchange == "balancer"]
-            curve_combos = [[curve] + [bal_curve] for curve in not_bal_curves for bal_curve in bal_curves]
-            curve_combos += [carbon_curves + [bal_curve] for bal_curve in bal_curves]
+            curve_combos = [[bal_curve] + [curve] for curve in not_bal_curves for bal_curve in bal_curves]
+            curve_combos += [[bal_curve] + carbon_curves for bal_curve in bal_curves]
             #print(bal_curves)
 
             for curve_combo in curve_combos:
