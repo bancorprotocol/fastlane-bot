@@ -2,10 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.40...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...HEAD)
+
+- Bug with new multicall method when running backdate\_pools=True [\#158](https://github.com/bancorprotocol/fastlane-bot/issues/158)
+- Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
+- 158 bug with new multicall method when running backdate pools=true [\#159](https://github.com/bancorprotocol/fastlane-bot/pull/159) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.41](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.41) (2023-09-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.40...v2.7.41)
 
 - Remove Tenderly default for Bancor POL in contracts.py get\_pool\_contract [\#153](https://github.com/bancorprotocol/fastlane-bot/issues/153)
-- Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
 
 - 137 fix or replace brownie multicall functionality [\#155](https://github.com/bancorprotocol/fastlane-bot/pull/155) ([mikewcasale](https://github.com/mikewcasale))
 
