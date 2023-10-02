@@ -224,7 +224,7 @@ assert CAM.EXCHANGE_IDS == {
     'sushiswap_v2': 5,
     'carbon_v1': 6
 }
-assert CAM.UNIV2_FORKS == ['uniswap_v2', 'sushiswap_v2']
+assert CAM.UNI_V2_FORKS == ['uniswap_v2', 'sushiswap_v2']
 assert CAM.SUPPORTED_EXCHANGES == list(CAM.EXCHANGE_IDS)
 
 # #### CARBON EVENTS
