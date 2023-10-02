@@ -5,17 +5,15 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from web3 import Web3, HTTPProvider
-
-from fastlane_bot.events.multicall_utils import multicall_every_iteration
-
 import time
 from typing import List
 
 import click
 from dotenv import load_dotenv
+from web3 import Web3, HTTPProvider
 
 from fastlane_bot.events.managers.manager import Manager
+from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
     add_initial_pool_data,
     get_static_data,
@@ -39,7 +37,7 @@ from fastlane_bot.events.utils import (
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
     handle_replay_from_block,
-    update_pools_from_contracts, get_current_block, handle_tenderly_event_exchanges,
+    get_current_block, handle_tenderly_event_exchanges,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
