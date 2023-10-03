@@ -421,10 +421,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             tknin_key = self.weth_to_eth(trade.tknin_key)
             tknout_key = self.weth_to_eth(trade.tknout_key)
 
-            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + trade.amtin
-            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - trade.amtin
-            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + trade.amtout
-            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + trade.amtout
+            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + Decimal(str(trade.amtin))
+            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - Decimal(str(trade.amtin))
+            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + Decimal(str(trade.amtout))
+            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + Decimal(str(trade.amtout))
 
             if token_change[tknin_key]["balance"] < 0:
                 flash_tokens[tknin_key] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_key]["amtin"],

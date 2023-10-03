@@ -759,7 +759,7 @@ class CarbonBot(CarbonBotBase):
 
         bnt_usdc_curve = CCm.bycid(self.BNT_ETH_CID)
         usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
-        profit_usd = best_profit * Decimal(str(usd_bnt))
+        profit_usd = Decimal(str(best_profit)) * Decimal(str(usd_bnt))
 
         return best_profit, flt_per_bnt, profit_usd
 
