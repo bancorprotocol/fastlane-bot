@@ -58,11 +58,16 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
-        pool_info = self.get_pool_info(
-            key, key_value, ex_name
-        ) or self.add_pool_info_from_contract(
-            address=addr, event=event, exchange_name=ex_name
-        )
+        if ex_name in "bancor_v2":
+            pool_info = self.get_pool_info(
+                key, key_value, ex_name
+            )
+        else:
+            pool_info = self.get_pool_info(
+                key, key_value, ex_name
+            ) or self.add_pool_info_from_contract(
+                address=addr, event=event, exchange_name=ex_name
+            )
 
         if not pool_info:
             return

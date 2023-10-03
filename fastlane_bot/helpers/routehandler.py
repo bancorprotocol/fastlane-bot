@@ -244,6 +244,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee_float: Any = None,
         customData: Any = None,
         override_min_target_amount: bool = True,
+        customInt: int = None,
         source_token: str = None,
         source_amount: Decimal = None,
 
@@ -333,9 +334,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 deadline=deadline,
                 target_address=trade_instructions[idx].tknout_address,
                 exchange_id=trade_instructions[idx].platform_id,
-                custom_address=pools[idx].anchor if trade_instructions[idx].platform_id == 1 else trade_instructions[
-                    idx
-                ].tknout_address,  # TODO: rework for bancor 2
+                custom_address=self.get_custom_address(pool=pools[idx]),
                 fee_float=fee_float[idx],
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
@@ -344,6 +343,31 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
+    def get_custom_address(
+        self,
+        pool: Pool
+        ):
+        """
+        This function gets the custom address field. For Bancor V2 this is the anchor. For Uniswap V2/V3 forks, this is the router address.
+        :param pool: Pool
+
+        returns: str
+        """
+        if pool.exchange_name == self.ConfigObj.BANCOR_V2_NAME:
+            return pool.anchor
+        elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
+            router = pool.router
+            if router is None:
+                router = self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
+            return router
+        elif pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
+            router = pool.router
+            if router is None:
+                router = self.ConfigObj.UNI_V3_ROUTER_MAPPING[pool.exchange_name]
+            return router
+        else:
+            return pool.tkn0_address
+
 
     def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
         """
@@ -1234,7 +1258,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
-        if curve.exchange_name in self.ConfigObj.UNIV3_FORKS:
+        if curve.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             amount_out = self._calc_uniswap_v3_output(
                 tkn_in=trade.tknin_key,
                 tkn_out=trade.tknout_key,

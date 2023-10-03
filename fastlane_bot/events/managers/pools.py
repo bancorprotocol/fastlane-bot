@@ -322,7 +322,7 @@ class PoolManager(BaseManager):
         Optional[Dict[str, Any]]
             The pool info.
         """
-        if ex_name in self.cfg.UNIV2_FORKS:
+        if ex_name in self.cfg.UNI_V2_FORKS:
             ex_name = "uniswap_v2"
 
         if key == "address":

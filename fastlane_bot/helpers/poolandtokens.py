@@ -119,6 +119,7 @@ class PoolAndTokens:
     tkn0_decimals: int
     tkn1_address: str
     tkn1_decimals: int
+    router: str = None
     tkn0_key: str = None
     tkn1_key: str = None
     ADDRDEC = None

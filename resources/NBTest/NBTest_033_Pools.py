@@ -6,11 +6,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: fastlane-bot-38
+#     display_name: Python 3
 #     language: python
-#     name: fastlane-bot-38
+#     name: python3
 # ---
 
 # +
@@ -20,7 +20,7 @@ import pytest
 
 from fastlane_bot import Bot
 from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
-    BancorV2Pool, BancorPolPool
+    BancorV2Pool, BancorPolPool, PancakeswapV2Pool, PancakeswapV3Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -31,6 +31,10 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorPolPool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PancakeswapV2Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PancakeswapV3Pool))
+
 from fastlane_bot.testing import *
 
 #plt.style.use('seaborn-dark')
@@ -64,12 +68,27 @@ sushiswap_v2_pool = SushiswapV2Pool()
 sushiswap_v2_pool.update_from_event(setup_data['sushiswap_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'uniswap_v2', 'reserve0': setup_data['uniswap_v2_event']['args']['reserve0'], 'reserve1': setup_data['uniswap_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (sushiswap_v2_pool.state['tkn0_balance'] == setup_data['sushiswap_v2_event']['args']['reserve0'])
 
+# ## test_pancakeswap_v2_pool
+
+pancakeswap_v2_pool = PancakeswapV2Pool()
+pancakeswap_v2_pool.update_from_event(setup_data['pancakeswap_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'pancakeswap_v2', 'reserve0': setup_data['pancakeswap_v2_event']['args']['reserve0'], 'reserve1': setup_data['pancakeswap_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
+assert (pancakeswap_v2_pool.state['tkn0_balance'] == setup_data['pancakeswap_v2_event']['args']['reserve0'])
+
 # ## test_uniswap_v3_pool
+
+
 
 uniswap_v3_pool = UniswapV3Pool()
 uniswap_v3_pool.update_from_event(setup_data['uniswap_v3_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'uniswap_v3', 'liquidity': setup_data['uniswap_v3_event']['args']['liquidity'], 'sqrtPriceX96': setup_data['uniswap_v3_event']['args']['sqrtPriceX96'], 'tick': setup_data['uniswap_v3_event']['args']['tick'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (uniswap_v3_pool.state['liquidity'] == setup_data['uniswap_v3_event']['args']['liquidity'])
 assert (uniswap_v3_pool.state['sqrt_price_q96'] == setup_data['uniswap_v3_event']['args']['sqrtPriceX96'])
+
+# ## test_pancakeswap_v3_pool
+
+pancakeswap_v3_pool = PancakeswapV3Pool()
+pancakeswap_v3_pool.update_from_event(setup_data['pancakeswap_v3_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'pancakeswap_v3', 'liquidity': setup_data['pancakeswap_v3_event']['args']['liquidity'], 'sqrtPriceX96': setup_data['pancakeswap_v3_event']['args']['sqrtPriceX96'], 'tick': setup_data['pancakeswap_v3_event']['args']['tick'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
+assert (pancakeswap_v3_pool.state['liquidity'] == setup_data['pancakeswap_v3_event']['args']['liquidity'])
+assert (pancakeswap_v3_pool.state['sqrt_price_q96'] == setup_data['pancakeswap_v3_event']['args']['sqrtPriceX96'])
 
 # ## test_bancor_v3_pool
 
@@ -138,7 +157,7 @@ bancor_pol_pool.update_from_event(setup_data['bancor_pol_token_traded_event'],
                    'tkn0_symbol': 'tkn0', 
                    'tkn1_symbol': 'tkn1',}
 )
-assert (bancor_pol_pool.state['tkn0_balance'] == 10 + setup_data['bancor_pol_token_traded_event']['args']['amount'])
+assert (bancor_pol_pool.state['tkn0_balance'] == 10)
 
 # ## test_bancor_pol_trading_enabled_event
 

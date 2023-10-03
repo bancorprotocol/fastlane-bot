@@ -227,7 +227,7 @@ class QueryInterface:
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v2"
             or (
-                pool["exchange_name"] in self.cfg.UNIV2_FORKS
+                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
                 and pool["address"] in self.uniswap_v2_event_mappings
             )
         ]
@@ -246,7 +246,7 @@ class QueryInterface:
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v3"
             or (
-                pool["exchange_name"] in self.cfg.UNIV3_FORKS
+                pool["exchange_name"] in self.cfg.UNI_V3_FORKS
                 and pool["address"] in self.uniswap_v3_event_mappings
             )
         ]

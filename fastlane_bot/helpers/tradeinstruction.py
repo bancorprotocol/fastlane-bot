@@ -145,7 +145,18 @@ class TradeInstruction:
             self._exchange_name = self.db.get_pool(cid=self.cid.split('-')[0]).exchange_name
         else:
             self._exchange_name = self.exchange_override
-        self._exchange_id = self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
+        self._exchange_id = self.get_platform_id()
+
+    def get_platform_id(self):
+        """
+        Gets the platform id. For Uni V2 & V3 forks, this is the Uniswap V2/V3 platform id.
+        """
+        if self._exchange_name in self.ConfigObj.EXCHANGE_IDS:
+            return self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
+        elif self._exchange_name in self.ConfigObj.UNI_V2_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V2_NAME]
+        elif self._exchange_name in self.ConfigObj.UNI_V3_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V3_NAME]
 
     @property
     def platform_id(self) -> int:
