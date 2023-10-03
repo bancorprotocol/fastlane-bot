@@ -2,9 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.42...HEAD)
 
 - Bug with new multicall method when running backdate\_pools=True [\#158](https://github.com/bancorprotocol/fastlane-bot/issues/158)
+- Update run\_pool\_shutdown.py [\#161](https://github.com/bancorprotocol/fastlane-bot/pull/161) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.42](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.42) (2023-10-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...v2.7.42)
+
 - Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
 - 158 bug with new multicall method when running backdate pools=true [\#159](https://github.com/bancorprotocol/fastlane-bot/pull/159) ([mikewcasale](https://github.com/mikewcasale))
 
