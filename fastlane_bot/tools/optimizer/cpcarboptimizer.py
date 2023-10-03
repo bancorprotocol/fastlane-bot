@@ -14,6 +14,8 @@ from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
 import numpy as np
 
+from ...config.profiler import lp
+
 try:
     import cvxpy as cp
 except:
@@ -215,7 +217,7 @@ class CPCArbOptimizer(OptimizerBase):
     OptimizationVar = SelfFinancingConstraints.OptimizationVar
     OV = SelfFinancingConstraints.OV
 
-    
+    @lp
     def price_estimates(self, *, tknq, tknbs, **kwargs):
         """
         convenience function to access CPCContainer.price_estimates
@@ -605,6 +607,7 @@ class CPCArbOptimizer(OptimizerBase):
             assert self.is_error is False, "cannot get this data from an error result"
             return self.optimizer.adjust_curves(dxvals=self.dxvalues)
 
+        @lp
         def trade_instructions(self, ti_format=None):
             """
             returns list of TradeInstruction objects
@@ -627,6 +630,7 @@ class CPCArbOptimizer(OptimizerBase):
                     raise
                 return None
 
+    @lp
     def adjust_curves(self, dxvals, *, verbose=False, raiseonerror=False):
         """
         returns a new curve container with the curves shifted by the given dx values

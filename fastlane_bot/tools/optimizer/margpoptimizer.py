@@ -31,6 +31,8 @@ from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
 from .dcbase import DCBase
 from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
+from ...config.profiler import lp
+
 
 class MargPOptimizer(CPCArbOptimizer):
     """
@@ -42,8 +44,9 @@ class MargPOptimizer(CPCArbOptimizer):
     @property
     def kind(self):
         return "margp"
-    
+
     @classmethod
+    @lp
     def jacobian(cls, func, x, *, eps=None):
         """
         computes the Jacobian of func at point x
@@ -80,6 +83,7 @@ class MargPOptimizer(CPCArbOptimizer):
     class ConvergenceError(OptimizationError): pass
     class ParameterError(OptimizationError): pass
 
+    @lp
     def optimize(self, sfc=None, result=None, *, params=None):
         """
         optimal transactions across all curves in the optimizer, extracting targettkn*

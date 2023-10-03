@@ -11,6 +11,7 @@ from typing import List, Any, Tuple, Union
 
 import pandas as pd
 
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.modes.base import ArbitrageFinderBase
 from fastlane_bot.tools.cpc import T
 
@@ -28,6 +29,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         pass
 
     @staticmethod
+    @lp
     def get_miniverse(
         y_match_curves_not_carbon: List[Any],
         base_exchange_curves: List[Any],
@@ -79,6 +81,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             combos += list(zip([flt] * len(miniverses), miniverses))
         return combos
 
+    @lp
     def get_combos(
         self, flashloan_tokens: List[str], CCm: Any, arb_mode: str
     ) -> Tuple[List[str], List[Any]]:
@@ -151,6 +154,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         return combos
 
     @staticmethod
+    @lp
     def get_mono_direction_carbon_curves(
         miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
     ) -> List[Any]:

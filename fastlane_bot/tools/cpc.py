@@ -26,7 +26,7 @@ from sys import float_info
 from hashlib import md5 as digest
 import time
 from .cpcbase import CurveBase, AttrDict, DAttrDict, dataclass_
-
+from ..config.profiler import lp
 
 AD = DAttrDict
 
@@ -506,8 +506,9 @@ class ConstantProductCurve(CurveBase):
         return self
 
     class CPCValidationError(ValueError): pass
-    
+
     @classmethod
+    @lp
     def from_kx(
         cls,
         k,
@@ -535,6 +536,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_ky(
         cls,
         k,
@@ -562,6 +564,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_xy(
         cls,
         x,
@@ -589,6 +592,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_xyal(
         cls,
         x,
@@ -631,8 +635,8 @@ class ConstantProductCurve(CurveBase):
             params=params,
         )
 
-
     @classmethod
+    @lp
     def from_pk(
         cls,
         p,
@@ -660,6 +664,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_px(
         cls,
         p,
@@ -687,6 +692,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_py(
         cls,
         p,
@@ -714,6 +720,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_pkpp(
         cls,
         p,
@@ -752,6 +759,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_univ2(
         cls,
         x_tknb=None,
@@ -806,6 +814,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_univ3(cls, Pmarg, uniL, uniPa, uniPb, pair, cid, fee, descr, params=None):
         """
         constructor: from Uniswap V3 pool (see class docstring for other parameters)
@@ -840,6 +849,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @classmethod
+    @lp
     def from_carbon(
         cls,
         yint=None,
@@ -973,7 +983,7 @@ class ConstantProductCurve(CurveBase):
             params=params,
         )
 
-    
+    @lp
     def execute(self, dx=None, dy=None, *, ignorebounds=False, verbose=False):
         """
         executes a transaction in the pool, returning a new curve object

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import List, Any, Dict, Optional
 
 from fastlane_bot.config import Config
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 
@@ -60,6 +61,7 @@ class QueryInterface:
     def cfg(self) -> Config:
         return self.ConfigObj
 
+    @lp
     def filter_target_tokens(self, target_tokens: List[str]):
         """
         Filter the pools to only include pools that are in the target pools list
@@ -86,6 +88,7 @@ class QueryInterface:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
 
+    @lp
     def remove_unsupported_exchanges(self) -> None:
         initial_state = self.state.copy()
         self.state = [
@@ -101,6 +104,7 @@ class QueryInterface:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
 
+    @lp
     def has_balance(self, pool: Dict[str, Any], key: str) -> bool:
         """
         Check if a pool has a balance for a given key
@@ -120,6 +124,7 @@ class QueryInterface:
         """
         return key in pool and pool[key] > 0
 
+    @lp
     def filter_pools(self, exchange_name: str, key: str = "") -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
@@ -148,6 +153,7 @@ class QueryInterface:
                 pool for pool in self.state if pool["exchange_name"] == exchange_name
             ]
 
+    @lp
     def log_pool_numbers(self, pools: List[Dict[str, Any]], exchange_name: str) -> None:
         """
         Log the number of pools for a given exchange name
@@ -162,6 +168,7 @@ class QueryInterface:
         """
         self.cfg.logger.info(f"{exchange_name}: {len(pools)}")
 
+    @lp
     def remove_zero_liquidity_pools(self) -> None:
         """
         Remove pools with zero liquidity.
@@ -213,6 +220,7 @@ class QueryInterface:
                 f"{exchange}_zero_liquidity_pools",
             )
 
+    @lp
     def remove_unmapped_uniswap_v2_pools(self) -> None:
         """
         Remove unmapped uniswap_v2 pools
@@ -232,6 +240,7 @@ class QueryInterface:
         )
         self.log_umapped_pools_by_exchange(initial_state)
 
+    @lp
     def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
         self.ConfigObj.logger.info("Unmapped uniswap_v2/sushi pools:")
@@ -250,6 +259,7 @@ class QueryInterface:
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
 
+    @lp
     def remove_faulty_token_pools(self) -> None:
         """
         Remove pools with faulty tokens
@@ -273,6 +283,7 @@ class QueryInterface:
         self.state = safe_pools
 
     @staticmethod
+    @lp
     def cleanup_token_key(token_key: str) -> str:
         """
         Cleanup token key. This renames keys that have more than 1 '-' in them.
@@ -295,6 +306,7 @@ class QueryInterface:
             else token_key
         )
 
+    @lp
     def handle_token_key_cleanup(self) -> None:
         """
         Cleanup token keys in state
@@ -306,6 +318,7 @@ class QueryInterface:
             self.state[idx]["tkn1_key"] = key1
             self.state[idx]["pair_name"] = key0 + "/" + key1
 
+    @lp
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
         Update the state.
@@ -320,12 +333,14 @@ class QueryInterface:
         if self.state == state:
             self.cfg.logger.warning("WARNING: State not updated")
 
+    @lp
     def drop_all_tables(self) -> None:
         """
         Drop all tables. Deprecated.
         """
         raise DeprecationWarning("Method not implemented")
 
+    @lp
     def get_pool_data_with_tokens(self) -> List[PoolAndTokens]:
         """
         Get pool data with tokens
@@ -335,6 +350,7 @@ class QueryInterface:
             for idx, record in enumerate(self.state)
         ]
 
+    @lp
     def create_pool_and_tokens(self, idx: int, record: Dict[str, Any]) -> PoolAndTokens:
         """
         Create a pool and tokens object from a record
@@ -399,6 +415,7 @@ class QueryInterface:
         result.tkn1_key = result.pair_name.split("/")[1]
         return result
 
+    @lp
     def get_tokens(self) -> List[Token]:
         """
         Get tokens. This method returns a list of tokens that are in the state.
@@ -414,6 +431,7 @@ class QueryInterface:
             token_set.add(self.create_token(record, "tkn1_"))
         return list(token_set)
 
+    @lp
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
         """
         Create a token from a record
@@ -438,6 +456,7 @@ class QueryInterface:
             address=record.get(f"{prefix}address"),
         )
 
+    @lp
     def get_bnt_price_from_tokens(self, price: float, tkn: Token) -> float:
         """
         Get the BNT price from tokens
@@ -457,6 +476,7 @@ class QueryInterface:
         """
         raise DeprecationWarning("Method not implemented")
 
+    @lp
     def get_token(self, key: str) -> Optional[Token]:
         """
         Get a token from the state
@@ -480,6 +500,7 @@ class QueryInterface:
         else:
             raise ValueError(f"[get_token] Invalid token: {key}")
 
+    @lp
     def get_pool(self, **kwargs) -> Optional[PoolAndTokens]:
         """
         Get a pool from the state
@@ -519,6 +540,7 @@ class QueryInterface:
                 )
         return pool
 
+    @lp
     def get_pools(self) -> List[PoolAndTokens]:
         """
         Get all pools from the state
@@ -531,6 +553,7 @@ class QueryInterface:
         """
         return self.get_pool_data_with_tokens()
 
+    @lp
     def update_recently_traded_pools(self, cids: List[str]):
         """
         Update recently traded pools. Deprecated.

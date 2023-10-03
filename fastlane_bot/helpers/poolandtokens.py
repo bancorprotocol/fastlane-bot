@@ -6,6 +6,7 @@ from typing import Dict, Any, List, Union
 from _decimal import Decimal
 from dataclasses import dataclass
 
+from fastlane_bot.config.profiler import lp
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
@@ -169,6 +170,7 @@ class PoolAndTokens:
             "blocklud": int(self.last_updated_block),
         }
 
+    @lp
     def _other_to_cpc(self) -> List[Any]:
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
@@ -200,6 +202,7 @@ class PoolAndTokens:
     class DoubleInvalidCurveError(ValueError):
         pass
 
+    @lp
     def _carbon_to_cpc(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
@@ -306,6 +309,7 @@ class PoolAndTokens:
         0.01: Univ3Calculator.FEE10000,
     }
 
+    @lp
     def _univ3_to_cpc(self) -> List[Any]:
         """
         Preprocesses a Uniswap V3 pool params in order to create a ConstantProductCurve instance for optimization.

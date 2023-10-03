@@ -22,6 +22,8 @@ import pickle
 from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
 from sys import float_info
 from .dcbase import DCBase
+from ...config.profiler import lp
+
 
 class OptimizerBase(ABC):
     """
@@ -149,6 +151,7 @@ class OptimizerBase(ABC):
     DERIVEPS = 1e-6
 
     @classmethod
+    @lp
     def deriv(cls, func, x):
         """
         computes the derivative of `func` at point `x`
@@ -157,6 +160,7 @@ class OptimizerBase(ABC):
         return (func(x + h) - func(x - h)) / (2 * h)
 
     @classmethod
+    @lp
     def deriv2(cls, func, x):
         """
         computes the second derivative of `func` at point `x`
@@ -165,6 +169,7 @@ class OptimizerBase(ABC):
         return (func(x + h) - 2 * func(x) + func(x - h)) / (h * h)
 
     @classmethod
+    @lp
     def findmin_gd(cls, func, x0, *, learning_rate=0.1, N=100):
         """
         finds the minimum of `func` using gradient descent starting at `x0`
@@ -181,6 +186,7 @@ class OptimizerBase(ABC):
         return cls.SimpleResult(result=x, method="gradient-min")
 
     @classmethod
+    @lp
     def findmax_gd(cls, func, x0, *, learning_rate=0.1, N=100):
         """
         finds the maximum of `func` using gradient descent, starting at `x0`
@@ -197,6 +203,7 @@ class OptimizerBase(ABC):
         return cls.SimpleResult(result=x, method="gradient-max")
 
     @classmethod
+    @lp
     def findminmax_nr(cls, func, x0, *, N=20):
         """
         finds the minimum or maximum of func using Newton Raphson, starting at x0
@@ -226,6 +233,7 @@ class OptimizerBase(ABC):
     GOALSEEKEPS = 1e-6
 
     @classmethod
+    @lp
     def goalseek(cls, func, a, b, *, eps=None):
         """
         finds the value of `x` where `func(x)` x is zero, using a bisection between a,b
@@ -255,6 +263,7 @@ class OptimizerBase(ABC):
         return cls.SimpleResult(result=(a + b) / 2, method="bisection")
 
     @staticmethod
+    @lp
     def posx(vector):
         """
         returns the positive elements of the vector, zeroes elsewhere
@@ -264,6 +273,7 @@ class OptimizerBase(ABC):
         return tuple(max(0, x) for x in vector)
 
     @staticmethod
+    @lp
     def negx(vector):
         """
         returns the negative elements of the vector, zeroes elsewhere
@@ -273,6 +283,7 @@ class OptimizerBase(ABC):
         return tuple(min(0, x) for x in vector)
 
     @staticmethod
+    @lp
     def a(vector):
         """helper: returns vector as np.array"""
         return np.array(vector)
@@ -283,6 +294,7 @@ class OptimizerBase(ABC):
         return tuple(vector)
 
     @staticmethod
+    @lp
     def F(func, rg):
         """helper: returns list of [func(x) for x in rg]"""
         return [func(x) for x in rg]

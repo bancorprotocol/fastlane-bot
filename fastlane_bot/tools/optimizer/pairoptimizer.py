@@ -29,6 +29,8 @@ from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
 from .dcbase import DCBase
 from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
+from ...config.profiler import lp
+
 
 class PairOptimizer(CPCArbOptimizer):
     """
@@ -48,7 +50,8 @@ class PairOptimizer(CPCArbOptimizer):
     SO_PMAX = "pmax"
     SO_GLOBALMAX = "globalmax"
     SO_TARGETTKN = "targettkn"
-    
+
+    @lp
     def optimize(self, targettkn=None, result=None, *, params=None):
         """
         a marginal price optimizer that works only on curves on one pair

@@ -10,6 +10,7 @@ from typing import Any, Tuple, Dict, List, Union
 
 import pandas as pd
 
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import num_format
 
@@ -57,6 +58,7 @@ class ArbitrageFinderBase:
         self.ConfigObj = ConfigObj
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
+    @lp
     @abc.abstractmethod
     def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
         """
@@ -80,6 +82,7 @@ class ArbitrageFinderBase:
         """
         pass
 
+    @lp
     def _set_best_ops(
         self,
         best_profit: float,
@@ -125,6 +128,7 @@ class ArbitrageFinderBase:
 
         return best_profit, ops
 
+    @lp
     def calculate_profit(
         self, src_token: str, profit_src: float, CCm: Any, cids: List[str], profit: int = 0
     ) -> float:
@@ -147,6 +151,7 @@ class ArbitrageFinderBase:
         return profit
 
     @staticmethod
+    @lp
     def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
         """
         Get the net change from the trade instructions.
@@ -156,6 +161,7 @@ class ArbitrageFinderBase:
         except Exception:
             return [500]  # an arbitrary large number
 
+    @lp
     def handle_candidates(
         self,
         best_profit: float,
@@ -205,6 +211,7 @@ class ArbitrageFinderBase:
             ]
         return []
 
+    @lp
     def find_best_operations(
         self,
         best_profit: float,
@@ -257,6 +264,7 @@ class ArbitrageFinderBase:
             )
         return best_profit, ops
 
+    @lp
     def _check_limit_flashloan_tokens_for_bancor3(self):
         """
         Limit the flashloan tokens for bancor v3.

@@ -14,6 +14,7 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools import pool_factory
@@ -139,6 +140,7 @@ class BaseManager:
             # Set the fee pairs
             self.exchanges["carbon_v1"].fee_pairs = fee_pairs
 
+    @lp
     def get_fee_pairs(
         self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
     ) -> Dict[Tuple[str, str], int]:
@@ -179,6 +181,7 @@ class BaseManager:
         return fee_pairs
 
     @staticmethod
+    @lp
     def exchange_name_from_event(event: Dict[str, Any]) -> str:
         """
         Get the exchange name from the event.
@@ -202,6 +205,7 @@ class BaseManager:
             None,
         )
 
+    @lp
     def check_forked_exchange_names(
         self, exchange_name_default: str = None, address: str = None, event: Any = None
     ) -> str:
@@ -229,6 +233,7 @@ class BaseManager:
 
         return exchange_name_default
 
+    @lp
     def get_tkn_info(self, address: str) -> Tuple[Optional[str], Optional[int]]:
         """
         Get the token info.
@@ -252,6 +257,7 @@ class BaseManager:
         )
         return tkns or (None, None)
 
+    @lp
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
         Get the rows to update.
@@ -278,6 +284,7 @@ class BaseManager:
             < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
+    @lp
     def update_carbon(self, current_block: int):
         """
         Update the carbon pools.
@@ -334,6 +341,7 @@ class BaseManager:
             f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
         )
 
+    @lp
     def get_carbon_pairs(
         self, carbon_controller: Contract, target_tokens: List[str] = None
     ) -> List[Tuple[str, str, int, int]]:
@@ -376,6 +384,7 @@ class BaseManager:
         ]
 
     @staticmethod
+    @lp
     def get_carbon_pairs_by_contract(
         carbon_controller: Contract,
         replay_from_block: int or str = None
@@ -398,6 +407,7 @@ class BaseManager:
         """
         return [(second, first) for first, second in carbon_controller.functions.pairs().call(block_identifier=replay_from_block or "latest")]
 
+    @lp
     def get_carbon_pairs_by_state(self) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs by state.
@@ -414,6 +424,7 @@ class BaseManager:
             if p["exchange_name"] == "carbon_v1"
         ]
 
+    @lp
     def create_or_get_carbon_controller(self):
         """
         Create or get the CarbonController contract object.
@@ -442,6 +453,7 @@ class BaseManager:
         ] = carbon_controller
         return carbon_controller
 
+    @lp
     def get_strats_by_contract(
         self,
         pairs: List[Tuple[str, str, int, int]],
@@ -483,6 +495,7 @@ class BaseManager:
         self.cfg.logger.info(f"Retrieved {len(strategies_by_pair)} carbon strategies")
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
+    @lp
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:
         """
         Get the strategies by state.
@@ -534,6 +547,7 @@ class BaseManager:
 
         return strategies
 
+    @lp
     def get_strategies(
         self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
     ) -> List[List[str]]:
@@ -563,6 +577,7 @@ class BaseManager:
             else self.get_strats_by_contract(pairs, carbon_controller)
         )
 
+    @lp
     def get_fees_by_pair(
         self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
     ):
@@ -590,6 +605,7 @@ class BaseManager:
 
         return multicaller.multicall()
 
+    @lp
     def get_tkn_symbol_and_decimals(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
     ) -> Tuple[str, int]:
@@ -623,6 +639,7 @@ class BaseManager:
 
         return self.get_token_info_from_contract(web3, erc20_contracts, addr)
 
+    @lp
     def get_token_info_from_config(
         self, cfg: Config, addr: str
     ) -> Optional[Tuple[str, int]]:
@@ -651,6 +668,7 @@ class BaseManager:
             None,
         )
 
+    @lp
     def validate_pool_info(
         self,
         addr: Optional[str] = None,
@@ -698,6 +716,7 @@ class BaseManager:
 
         return pool_info
 
+    @lp
     def get_key_and_value(
         self, event: Dict[str, Any], addr: str, ex_name: str
     ) -> Tuple[str, Any]:
@@ -738,6 +757,7 @@ class BaseManager:
             )
             return "tkn1_address", value
 
+    @lp
     def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
         """
         Handle the strategy deleted event.
@@ -751,6 +771,7 @@ class BaseManager:
         self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
         self.exchanges["carbon_v1"].delete_strategy(event["args"]["id"])
 
+    @lp
     def deduplicate_pool_data(self) -> None:
         """
         Deduplicate the pool data.
@@ -765,6 +786,7 @@ class BaseManager:
         self.pool_data = no_duplicates
 
     @staticmethod
+    @lp
     def pool_key_value_from_event(key: str, event: Dict[str, Any]) -> Any:
         """
         Get the pool key value from the event.
@@ -792,6 +814,7 @@ class BaseManager:
 
     print_events = []
 
+    @lp
     def get_bancor_pol_pools(self, current_block: int):
         """
         Update the Bancor Pol pools.
@@ -826,6 +849,7 @@ class BaseManager:
                 func=self.add_pool_info,
             )
 
+    @lp
     def create_or_get_bancor_pol_contract(self):
         """
         Create or get the BancorPol contract object.

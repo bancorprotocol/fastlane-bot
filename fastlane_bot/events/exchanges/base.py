@@ -11,6 +11,7 @@ from typing import Dict, List, Type, Any
 
 from web3.contract import Contract
 
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.events.pools.base import Pool
 
 
@@ -25,6 +26,7 @@ class Exchange(ABC):
 
     pools: Dict[str, Pool] = field(default_factory=dict)
 
+    @lp
     def get_pools(self) -> List[Pool]:
         """
         Get the pools of the exchange.
@@ -37,6 +39,7 @@ class Exchange(ABC):
         """
         return list(self.pools.values())
 
+    @lp
     @abstractmethod
     def add_pool(self, pool: Pool):
         """
@@ -53,6 +56,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     @abstractmethod
     def get_abi(self):
         """
@@ -66,6 +70,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     @abstractmethod
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         """
@@ -84,6 +89,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     @abstractmethod
     def get_fee(self, address: str, contract: Contract) -> float:
         """
@@ -104,6 +110,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     @abstractmethod
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         """
@@ -125,6 +132,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     @abstractmethod
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         """
@@ -147,6 +155,7 @@ class Exchange(ABC):
         """
         pass
 
+    @lp
     def get_pool(self, key: str) -> Pool:
         """
 

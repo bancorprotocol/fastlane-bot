@@ -28,13 +28,14 @@ from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import encode_token_price
 from fastlane_bot.events.pools import CarbonV1Pool
 
-
+@lp
 def filter_latest_events(
         mgr: Manager, events: List[List[AttributeDict]]
 ) -> List[AttributeDict]:
@@ -103,7 +104,7 @@ def filter_latest_events(
 
     return list(latest_entry_per_pool.values())
 
-
+@lp
 def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
     """
     This function aims to handle complex data types, such as web3.py's AttributeDict, HexBytes, and native Python collections
@@ -134,7 +135,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
     else:
         return obj
 
-
+@lp
 def add_initial_pool_data(cfg: Config, mgr: Any, n_jobs: int = -1):
     """
     Adds initial pool data to the manager.
@@ -162,7 +163,7 @@ class CSVReadError(Exception):
 
     pass
 
-
+@lp
 def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
     """Helper function to read a CSV file.
 
@@ -190,7 +191,7 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
     except pd.errors.ParserError as e:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
-
+@lp
 def filter_static_pool_data(
         pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
 ) -> pd.DataFrame:
@@ -221,7 +222,7 @@ def filter_static_pool_data(
 
     return filtered_data
 
-
+@lp
 def get_static_data(
         cfg: Config,
         exchanges: List[str],
@@ -277,7 +278,7 @@ def get_static_data(
 
     return static_pool_data, tokens, uniswap_v2_event_mappings
 
-
+@lp
 def handle_tenderly_event_exchanges(cfg: Config, exchanges: str, tenderly_fork_id: str) -> List[str]:
     """
     Handles the exchanges parameter.
@@ -307,7 +308,7 @@ def handle_tenderly_event_exchanges(cfg: Config, exchanges: str, tenderly_fork_i
     cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
     return exchanges
 
-
+@lp
 def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     Handles the exchanges parameter.
@@ -330,7 +331,7 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
     return exchanges
 
-
+@lp
 def handle_target_tokens(
         cfg: Config,
         flashloan_tokens: List[str],
@@ -378,7 +379,7 @@ def handle_target_tokens(
 
     return target_tokens
 
-
+@lp
 def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
     """
     Handles the flashloan tokens parameter.
@@ -405,7 +406,7 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
     )
     return flashloan_tokens
 
-
+@lp
 def get_config(
         default_min_profit_bnt: int or Decimal,
         limit_bancor3_flashloan_tokens: bool,
@@ -452,7 +453,7 @@ def get_config(
     cfg.DEFAULT_MIN_PROFIT = Decimal(str(default_min_profit_bnt))
     return cfg
 
-
+@lp
 def get_loglevel(loglevel: str) -> Any:
     """
     Gets the log level.
@@ -480,7 +481,7 @@ def get_loglevel(loglevel: str) -> Any:
         else Config.LOGLEVEL_INFO
     )
 
-
+@lp
 def get_event_filters(
         n_jobs: int, mgr: Any, start_block: int, current_block: int
 ) -> Any:
@@ -520,7 +521,7 @@ def get_event_filters(
     )
     return by_block_events + max_num_events
 
-
+@lp
 def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     """
     Fetches all events using the given event filters.
@@ -541,7 +542,7 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
         delayed(event_filter.get_all_entries)() for event_filter in event_filters
     )
 
-
+@lp
 def save_events_to_json(
         cache_latest_only,
         logging_path,
@@ -587,7 +588,7 @@ def save_events_to_json(
 
     mgr.cfg.logger.info(f"Saved events to {path}")
 
-
+@lp
 def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
     """
     Updates the pools with the given events.
@@ -604,7 +605,7 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
         delayed(mgr.update)(event=event) for event in latest_events
     )
 
-
+@lp
 def write_pool_data_to_disk(
         cache_latest_only: bool, logging_path: str, mgr: Any, current_block: int
 ) -> None:
@@ -634,7 +635,7 @@ def write_pool_data_to_disk(
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
-
+@lp
 def parse_non_multicall_rows_to_update(
         mgr: Any,
         rows_to_update: List[Hashable],
@@ -662,7 +663,7 @@ def parse_non_multicall_rows_to_update(
     ]
     return other_pool_rows
 
-
+@lp
 def init_bot(mgr: Any) -> CarbonBot:
     """
     Initializes the bot.
@@ -695,7 +696,7 @@ def init_bot(mgr: Any) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 
-
+@lp
 def update_pools_from_contracts(
         mgr: Any,
         n_jobs: int,
@@ -731,7 +732,7 @@ def update_pools_from_contracts(
         for idx in rows_to_update
     )
 
-
+@lp
 def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
     """
     Gets the cached events.
@@ -760,7 +761,7 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
     mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
     return latest_events
 
-
+@lp
 def handle_subsequent_iterations(
         arb_mode: str,
         bot: CarbonBot,
@@ -842,7 +843,7 @@ def handle_subsequent_iterations(
             replay_from_block=forked_from_block,
         )
 
-
+@lp
 def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mgr: Any):
     """
     Verifies that the state has changed.
@@ -870,7 +871,7 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
     else:
         mgr.cfg.logger.info("State has not changed...")
 
-
+@lp
 def handle_duplicates(mgr: Any):
     """
     Handles the duplicates in the pool data.
@@ -886,7 +887,7 @@ def handle_duplicates(mgr: Any):
     cids = [pool["cid"] for pool in mgr.pool_data]
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
 
-
+@lp
 def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
     """
     Handles the initial iteration of the bot.
@@ -909,7 +910,7 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
         if pool["exchange_name"] == exchange
     ]
 
-
+@lp
 def handle_initial_iteration(
         backdate_pools: bool,
         current_block: int,
@@ -958,7 +959,7 @@ def handle_initial_iteration(
                     current_block=current_block,
                 )
 
-
+@lp
 def get_tenderly_pol_events(
         mgr,
         start_block,
@@ -1002,7 +1003,7 @@ def get_tenderly_pol_events(
     ]
     return tenderly_events
 
-
+@lp
 def get_latest_events(
         current_block: int,
         mgr: Any,
@@ -1090,7 +1091,7 @@ def get_latest_events(
     )
     return latest_events
 
-
+@lp
 def get_start_block(
         alchemy_max_block_fetch: int,
         last_block: int,
@@ -1146,7 +1147,7 @@ def get_start_block(
             None,
         )
 
-
+@lp
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:
     """
     Gets the Tenderly block number.
@@ -1166,7 +1167,7 @@ def get_tenderly_block_number(tenderly_fork_id: str) -> int:
     web3 = Web3(provider)
     return web3.eth.blockNumber
 
-
+@lp
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     """
     Setup a Tenderly fork from a specific block number.
@@ -1229,7 +1230,7 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
 
     return provider.endpoint_uri, block_number
 
-
+@lp
 def set_network_connection_to_tenderly(
         mgr: Any,
         use_cached_events: bool,
@@ -1285,7 +1286,7 @@ def set_network_connection_to_tenderly(
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
     return mgr, forked_from_block
 
-
+@lp
 def set_network_connection_to_mainnet(
         mgr: Any, use_cached_events: bool, mainnet_uri: str
 ) -> Any:
@@ -1318,7 +1319,7 @@ def set_network_connection_to_mainnet(
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
     return mgr
 
-
+@lp
 def handle_limit_pairs_for_replay_mode(
         cfg: Config,
         limit_pairs_for_replay: str,
@@ -1353,7 +1354,7 @@ def handle_limit_pairs_for_replay_mode(
         ]
     return static_pool_data
 
-
+@lp
 def set_network_to_tenderly_if_replay(
         last_block: int,
         loop_idx: int,
@@ -1427,7 +1428,7 @@ def set_network_to_tenderly_if_replay(
         mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
         return mgr, tenderly_uri, forked_from_block
 
-
+@lp
 def set_network_to_mainnet_if_replay(
         last_block: int,
         loop_idx: int,
@@ -1473,7 +1474,7 @@ def set_network_to_mainnet_if_replay(
         )
     return mgr
 
-
+@lp
 def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):
     """
     Appends the fork to the forks_to_cleanup list if it is not None.
@@ -1495,7 +1496,7 @@ def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):
         forks_to_cleanup.append(tenderly_uri.split("/")[-1])
     return forks_to_cleanup
 
-
+@lp
 def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
     """
     Deletes the forks that were created on Tenderly.

@@ -72,6 +72,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from .config.profiler import lp
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
@@ -170,6 +171,7 @@ class CarbonBotBase:
     UDTYPE_FROM_CONTRACTS = "from_contracts"
     UDTYPE_FROM_EVENTS = "from_events"
 
+    @lp
     def get_curves(self) -> CPCContainer:
         """
         Gets the curves from the database.
@@ -253,6 +255,7 @@ class CarbonBot(CarbonBotBase):
     class NoArbAvailable(Exception):
         pass
 
+    @lp
     def _simple_ordering_by_src_token(
         self, best_trade_instructions_dic, best_src_token
     ):
@@ -281,6 +284,7 @@ class CarbonBot(CarbonBotBase):
         tx_in_count = len(src_token_instr)
         return ordered_trade_instructions_dct, tx_in_count
 
+    @lp
     def _simple_ordering_by_src_token_v2(
         self, best_trade_instructions_dic, best_src_token
     ):
@@ -301,6 +305,7 @@ class CarbonBot(CarbonBotBase):
 
         return trades, tx_in_count
 
+    @lp
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
@@ -315,12 +320,14 @@ class CarbonBot(CarbonBotBase):
         return scaled_best_trade_instructions_dic
 
     @staticmethod
+    @lp
     def _drop_error(trade_instructions_dct):
         return [
             {k: v for k, v in trade_instructions_dct[i].items() if k != "error"}
             for i in range(len(trade_instructions_dct))
         ]
 
+    @lp
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
     ) -> List[TradeInstruction]:
@@ -353,6 +360,7 @@ class CarbonBot(CarbonBotBase):
         return result
 
     @staticmethod
+    @lp
     def _check_if_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
@@ -369,6 +377,7 @@ class CarbonBot(CarbonBotBase):
         return False, "", cid
 
     @staticmethod
+    @lp
     def _check_if_not_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
@@ -393,6 +402,7 @@ class CarbonBot(CarbonBotBase):
         def r(self):
             return self.result
 
+    @lp
     def _get_deadline(self, block_number) -> int:
         """
         Gets the deadline for a transaction.
@@ -411,6 +421,7 @@ class CarbonBot(CarbonBotBase):
         )
 
     @staticmethod
+    @lp
     def _get_arb_finder(arb_mode: str) -> Callable:
         if arb_mode in {"single", "pairwise_single"}:
             return FindArbitrageSinglePairwise

@@ -9,6 +9,7 @@ import abc
 import itertools
 from typing import List, Tuple, Any, Union
 
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.modes.base import ArbitrageFinderBase
 from fastlane_bot.tools.cpc import CPCContainer
 
@@ -26,6 +27,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
         pass
 
     @staticmethod
+    @lp
     def get_combos(
         CCm: CPCContainer, flashloan_tokens: List[str]
     ) -> Tuple[List[Any], List[Any]]:
