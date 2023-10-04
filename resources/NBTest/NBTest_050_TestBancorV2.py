@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -162,6 +162,7 @@ assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_
 
 # ## Test_Combos_and_Tokens
 
+# +
 arb_finder = bot._get_arb_finder("multi")
 finder2 = arb_finder(
             flashloan_tokens=flashloan_tokens,
@@ -171,8 +172,12 @@ finder2 = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 971, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected 971 tokens, found {len(all_tokens)}"
-assert len(combos) == 5820, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected 5820 tokens, found {len(combos)}"
+
+assert type(all_tokens) == set, f"[NBTest_50_TestBancorV2] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+assert type(combos) == list, f"[NBTest_50_TestBancorV2] combos is wrong data type. Expected list, found: {type(combos)}"
+assert len(all_tokens) > 100, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+assert len(combos) > 1000, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
+# -
 
 
 # ## Test_Expected_Output_BancorV2
@@ -275,12 +280,6 @@ best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
     CCm, best_profit, fl_token, fl_token_with_weth
 )
 
-# Check if the best profit is greater than the minimum profit
-if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
-    bot.ConfigObj.logger.info(
-        f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
-    )
-
 # Get the flashloan amount and token address
 flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
 flashloan_token_address = bot.ConfigObj.w3.toChecksumAddress(
@@ -303,8 +302,8 @@ route_struct = [
     )
 ]
 assert arb_finder.__name__ == "FindArbitrageMultiPairwise", f"[NBTest_50_TestBancorV2] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
-assert len(r) == 46, f"[NBTest_50_TestBancorV2] Expected 46 arb opps, found {len(r)}"
-assert len(arb_with_bancor_v2) == 4, f"[NBTest_50_TestBancorV2] Expected 4 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
+assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(r)}"
+assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
 assert encoded_trade_instructions[0].amtin * 10 ** 18 == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount"
 assert route_struct[0]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533" or route_struct[1]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533", f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: 0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533 for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
 # -

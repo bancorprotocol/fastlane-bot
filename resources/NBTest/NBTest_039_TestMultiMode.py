@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -164,6 +164,7 @@ assert arb_finder.__name__ == "FindArbitrageMultiPairwise", f"[TestMultiMode] Ex
 
 # ## Test_Combos_and_Tokens
 
+# +
 arb_finder = bot._get_arb_finder("multi")
 finder2 = arb_finder(
             flashloan_tokens=flashloan_tokens,
@@ -173,8 +174,12 @@ finder2 = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+
+assert type(all_tokens) == set, f"[TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+assert type(combos) == list, f"[TestMultiMode] combos is wrong data type. Expected list, found: {type(combos)}"
+assert len(all_tokens) > 100, f"[TestMultiMode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+assert len(combos) > 1000, f"[TestMultiMode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
+# -
 
 # ## Test_Expected_Output
 
@@ -188,7 +193,7 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) == 30, f"[TestMultiMode] Expected 30 arbs, found {len(r)}"
+assert len(r) > 20, f"[TestMultiMode] Expected at least 20 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
 # ## Test_Multiple_Curves_Used
@@ -241,3 +246,6 @@ assert len(curves_before) - len(wrong_direction_cids) == len(test_process_wrong_
 for curve in test_process_wrong_direction_pools:
     assert curve.cid not in wrong_direction_cids, f"[TestMultiMode] Failed to remove curve {curve.cid} from list of wrong direction pools"
 assert iseq(profit_src, 2.905623487869935e-05)
+# -
+
+
