@@ -414,6 +414,7 @@ class ConstantProductCurve(CurveBase):
 
         self.set_tokenscale(self.TOKENSCALE)
 
+    @lp
     def P(self, pstr, defaultval=None):
         """
         convenience function to access parameters
@@ -435,31 +436,38 @@ class ConstantProductCurve(CurveBase):
         return val
 
     @property
+    @lp
     def cid0(self):
         "short cid [last 8 characters]"
         return self.cid[-8:]
     
     @property
+    @lp
     def eta(self):
         "portfolio weight factor eta = alpha / (1-alpha)"
         return self.alpha / (1 - self.alpha)
     
+    @lp
     def is_constant_product(self):
         "True iff alpha == 0.5 (deprecated; use `is_symmetric`)"
         return self.is_symmetric()
-    
+
+    @lp
     def is_symmetric(self):
         "True iff alpha == 0.5"
         return self._is_symmetric
-    
+
+    @lp
     def is_asymmetric(self):
         "True iff alpha != 0.5"
         return not self.is_symmetric()
-    
+
+    @lp
     def is_levered(self):
         "True iff x!=x_act or y!=y_act"
         return not self.is_unlevered()
-    
+
+    @lp
     def is_unlevered(self):
         "True iff x==x_act and y==y_act"
         return self.x == self.x_act and self.y == self.y_act
@@ -468,6 +476,7 @@ class ConstantProductCurve(CurveBase):
     # default token scale object is the trivial scale (everything one)
     # change this to a different scale object be creating a derived class
 
+    @lp
     def set_tokenscale(self, tokenscale):
         """sets the tokenscale object (returns self)"""
         # print("setting tokenscale", self.cid, tokenscale)
@@ -475,30 +484,36 @@ class ConstantProductCurve(CurveBase):
         return self
 
     @property
+    @lp
     def scalex(self):
         """returns the scale of the x-axis token"""
         return self.tokenscale.scale(self.tknx)
 
     @property
+    @lp
     def scaley(self):
         """returns the scale of the y-axis token"""
         return self.tokenscale.scale(self.tkny)
 
+    @lp
     def scale(self, tkn):
         """returns the scale of tkn"""
         return self.tokenscale.scale(tkn)
 
+    @lp
     def asdict(self):
         "returns a dict representation of the curve"
         return asdict(self)
 
     @classmethod
+    @lp
     def fromdict(cls, d):
         "returns a curve from a dict representation"
         return cls(**d)
     
     from_dict = fromdict # DEPRECATED (use fromdict)
 
+    @lp
     def setcid(self, cid):
         """sets the curve id [can only be done once]"""
         assert self.cid is None, "cid can only be set once"
@@ -1043,6 +1058,7 @@ class ConstantProductCurve(CurveBase):
         )
 
     @property
+    @lp
     def tknb(self):
         "base token"
         return self.pair.split("/")[0]
@@ -1050,6 +1066,7 @@ class ConstantProductCurve(CurveBase):
     tknx = tknb
 
     @property
+    @lp
     def tknq(self):
         "quote token"
         return self.pair.split("/")[1]
@@ -1057,6 +1074,7 @@ class ConstantProductCurve(CurveBase):
     tkny = tknq
 
     @property
+    @lp
     def tknbp(self):
         """prettified base token"""
         return Pair.n(self.tknb)
@@ -1064,6 +1082,7 @@ class ConstantProductCurve(CurveBase):
     tknxp = tknbp
 
     @property
+    @lp
     def tknqp(self):
         """prettified quote token"""
         return Pair.n(self.tknq)
@@ -1071,6 +1090,7 @@ class ConstantProductCurve(CurveBase):
     tknyp = tknqp
 
     @property
+    @lp
     def pairp(self):
         """prettified pair"""
         return f"{self.tknbp}/{self.tknqp}"
@@ -1092,6 +1112,7 @@ class ConstantProductCurve(CurveBase):
         return s
 
     @property
+    @lp
     def y(self):
         "(virtual) pool state x (virtual number of base tokens for sale)"
         
@@ -1102,6 +1123,7 @@ class ConstantProductCurve(CurveBase):
         return (self.k / self.x)**(self.eta)
         
     @property
+    @lp
     def p(self):
         "pool price (in dy/dx)"
         if self.is_constant_product():
@@ -1137,6 +1159,7 @@ class ConstantProductCurve(CurveBase):
         
     ITM_THRESHOLDPC = 0.01
     @classmethod
+    @lp
     def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
         """
         whether or not two positions are in the money against each other
@@ -1213,11 +1236,13 @@ class ConstantProductCurve(CurveBase):
         return f"{self.tknyp} per {self.tknxp}"
     
     @property
+    @lp
     def primary(self):
         "alias for self.pairo.primary"
         return self.pairo.primary
     
     @property
+    @lp
     def isprimary(self):
         "alias for self.pairo.isprimary"
         return self.pairo.isprimary
@@ -1230,11 +1255,13 @@ class ConstantProductCurve(CurveBase):
         return f"{price:.2f} {self.pairo.pp_convention}"     
     
     @property
+    @lp
     def pp(self):
         """alias for self.primaryp()"""
         return self.primaryp()
 
     @property
+    @lp
     def kbar(self):
         """
         kbar is pool invariant the scales linearly with the pool size
@@ -1266,6 +1293,7 @@ class ConstantProductCurve(CurveBase):
         return (invariant, self.kbar)
         
     @property
+    @lp
     def x_min(self):
         "minimum (virtual) x value"
         if self.is_unlevered():
@@ -1275,6 +1303,7 @@ class ConstantProductCurve(CurveBase):
         return self.x - self.x_act
 
     @property
+    @lp
     def at_xmin(self):
         """True iff x is at x_min"""
         if self.x_min == 0:
@@ -1284,6 +1313,7 @@ class ConstantProductCurve(CurveBase):
     at_ymax = at_xmin
 
     @property
+    @lp
     def at_xmax(self):
         """True iff x is at x_max"""
         if self.x_max is None:
@@ -1293,11 +1323,13 @@ class ConstantProductCurve(CurveBase):
     at_ymin = at_xmax
 
     @property
+    @lp
     def at_boundary(self):
         """True iff x is at either x_min or x_max"""
         return self.at_xmin or self.at_xmax
 
     @property
+    @lp
     def y_min(self):
         "minimum (virtual) y value"
         if self.is_unlevered():
@@ -1307,6 +1339,7 @@ class ConstantProductCurve(CurveBase):
         return self.y - self.y_act
 
     @property
+    @lp
     def x_max(self):
         "maximum (virtual) x value"
         if self.is_unlevered():
@@ -1319,6 +1352,7 @@ class ConstantProductCurve(CurveBase):
             return None
 
     @property
+    @lp
     def y_max(self):
         "maximum (virtual) y value"
         if self.is_unlevered():
@@ -1331,6 +1365,7 @@ class ConstantProductCurve(CurveBase):
             return None
 
     @property
+    @lp
     def p_max(self):
         "maximum pool price (in dy/dx; None if unlimited) = y_max/x_min"
         if self.is_unlevered():
@@ -1351,6 +1386,7 @@ class ConstantProductCurve(CurveBase):
         return p if self.isprimary else 1/p
     
     @property
+    @lp
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
         if self.is_unlevered():
@@ -1517,16 +1553,19 @@ class ConstantProductCurve(CurveBase):
         return x - self.x
 
     @property
+    @lp
     def dy_min(self):
         """minimum (=max negative) possible dy value of this pool (=-y_act)"""
         return -self.y_act
 
     @property
+    @lp
     def dx_min(self):
         """minimum (=max negative) possible dx value of this pool (=-x_act)"""
         return -self.x_act
 
     @property
+    @lp
     def dy_max(self):
         """maximum dy value of this pool (=dy(dx_min))"""
         if self.x_act < self.x:
@@ -1535,6 +1574,7 @@ class ConstantProductCurve(CurveBase):
             return None
 
     @property
+    @lp
     def dx_max(self):
         """maximum dx value of this pool (=dx(dy_min))"""
         if self.y_act < self.y:
@@ -1641,6 +1681,7 @@ class CPCContainer:
         return pd.DataFrame.from_dict(self.asdicts()).set_index("cid")
 
     @classmethod
+    @lp
     def from_dicts(cls, dicts, *, tokenscale=None):
         """alternative constructor: creates a container from a list of dictionaries"""
         return cls(
@@ -1648,6 +1689,7 @@ class CPCContainer:
         )
 
     @classmethod
+    @lp
     def from_df(cls, df, *, tokenscale=None):
         "alternative constructor: creates a container from a dataframe representation"
         if "cid" in df.columns:
@@ -1929,6 +1971,7 @@ class CPCContainer:
         return self.filter_pairs(pairs=pairs, onein=onein, anyall=anyall, **conditions)
 
     @classmethod
+    @lp
     def _record(cls, c=None):
         """returns the record (or headings, if none) for the pair c"""
         if not c is None:
@@ -2690,6 +2733,7 @@ class AF:
         return (mx - np.min(x)) / mx
 
     @classmethod
+    @lp
     def rangepc100(cls, x):
         return cls.rangepc(x) * 100
 
@@ -2698,6 +2742,7 @@ class AF:
         return np.std(x) / np.mean(x)
 
     @classmethod
+    @lp
     def sdpc100(cls, x):
         return cls.sdpc(x) * 100
 
@@ -2710,6 +2755,7 @@ class AF:
         return np.sum(x**2) / np.sum(x) ** 2
 
     @classmethod
+    @lp
     def herfindahlN(cls, x):
         return 1 / cls.herfindahl(x)
 
@@ -2723,6 +2769,7 @@ class CPCInverter:
     curve: ConstantProductCurve
 
     @classmethod
+    @lp
     def wrap(cls, curves, *, asgenerator=False):
         """
         wraps an iterable of curves in CPCInverters if needed and returns a tuple (or generator)
@@ -2737,6 +2784,7 @@ class CPCInverter:
         return tuple(result)
 
     @classmethod
+    @lp
     def unwrap(cls, wrapped_curves, *, asgenerator=False):
         """
         unwraps an iterable of curves from CPCInverters if needed and returns a tuple (or generator)
@@ -2747,42 +2795,52 @@ class CPCInverter:
         return tuple(result)
 
     @property
+    @lp
     def cid(self):
         return self.curve.cid
 
     @property
+    @lp
     def tknxp(self):
         return self.curve.tknyp
 
     @property
+    @lp
     def tknyp(self):
         return self.curve.tknxp
 
     @property
+    @lp
     def tknx(self):
         return self.curve.tkny
 
     @property
+    @lp
     def tkny(self):
         return self.curve.tknx
 
     @property
+    @lp
     def tknb(self):
         return self.curve.tknq
 
     @property
+    @lp
     def tknq(self):
         return self.curve.tknb
 
     @property
+    @lp
     def tknbp(self):
         return self.curve.tknqp
 
     @property
+    @lp
     def tknqp(self):
         return self.curve.tknbp
 
     @property
+    @lp
     def p(self):
         return 1 / self.curve.p
     
@@ -2790,6 +2848,7 @@ class CPCInverter:
         return self.curve.P(*args, **kwargs)
     
     @property
+    @lp
     def fee(self):
         return self.curve.fee
 
@@ -2798,32 +2857,39 @@ class CPCInverter:
         return f"{self.tknyp} per {self.tknxp}"
 
     @property
+    @lp
     def x(self):
         return self.curve.y
 
     @property
+    @lp
     def y(self):
         return self.curve.x
 
     @property
+    @lp
     def k(self):
         return self.curve.k
 
     @property
+    @lp
     def pair(self):
         return f"{self.tknb}/{self.tknq}"
     
     @property
+    @lp
     def primary(self):
         "alias for self.pairo.primary [pair]"
         return self.pairo.primary
     
     @property
+    @lp
     def pairp(self):
         "prety pair (without the -xxx part)"
         return f"{self.tknbp}/{self.tknqp}"
 
     @property
+    @lp
     def primaryp(self):
         "pretty primary pair (without the -xxx part)"
         tokens = self.primary.split("/")
@@ -2831,38 +2897,48 @@ class CPCInverter:
         return "/".join(tokens)
     
     @property
+    @lp
     def x_min(self):
         return self.curve.y_min
 
     @property
+    @lp
     def x_max(self):
         return self.curve.y_max
 
     @property
+    @lp
+    @lp
     def y_min(self):
         return self.curve.x_min
 
     @property
+    @lp
     def y_max(self):
         return self.curve.x_max
 
     @property
+    @lp
     def x_act(self):
         return self.curve.y_act
 
     @property
+    @lp
     def p_min(self):
         return 1 / self.curve.p_max
 
     @property
+    @lp
     def p_max(self):
         return 1 / self.curve.p_min
 
     @property
+    @lp
     def y_act(self):
         return self.curve.x_act
 
     @property
+    @lp
     def pairo(self):
         return Pair.from_tokens(tknb=self.tknb, tknq=self.tknq)
 

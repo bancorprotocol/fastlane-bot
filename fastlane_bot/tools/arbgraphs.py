@@ -18,12 +18,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import math
 
+from ..config.profiler import lp
+
 EPS = 1e-9
 
 
 class _DCBase:
     """base class for all data classes, adding some useful methods"""
 
+    @lp
     def asdict(self, *, exclude=None, include=None, dct=None):
         """
         converts this object to a dictionary
@@ -41,10 +44,12 @@ class _DCBase:
             dct = {k: dct[k] for k in dct if not k in exclude}
         return dct
 
+    @lp
     def astuple(self, **kwargs):
         """converts this object to a tuple (parameters are passed to asdict)"""
         return tuple(self.asdict(**kwargs).values())
 
+    @lp
     def asdf(self, *, index=None, **kwargs):
         """
         converts this object to a dataframe (kwargs are passed to asdict)
@@ -61,6 +66,7 @@ class _DCBase:
             return f"ERROR: {e}"
 
     @classmethod
+    @lp
     def l2df(cls, lst, **kwargs):
         """
         converts an iterable of dataclass objects to a dataframe
@@ -118,6 +124,7 @@ class TrackedStateFloat(_DCBase):
             inital_value = 0
         self.reset(inital_value, clear_history=True)
 
+    @lp
     def reset(self, value=None, clear_history=True):
         """
         sets value of the field, typically clearing history; if value is None, only clears history; returns self
@@ -129,6 +136,7 @@ class TrackedStateFloat(_DCBase):
         self.history.append(self.value)
         return self
 
+    @lp
     def set(self, value):
         """
         sets value of the field, typically clearing history; if value is None, only clears history; returns self
@@ -166,6 +174,7 @@ class Node(_DCBase):
     def __post_init__(self, amount=None):
         self.reset_state(amount)
 
+    @lp
     def reset_state(self, amount=None):
         """
         reset the state of the node
@@ -175,6 +184,7 @@ class Node(_DCBase):
         self._state = self.State(amount=amount)
 
     @property
+    @lp
     def tkn_p(self):
         """
         "pretty" version of the token name (removes the index)
@@ -195,6 +205,7 @@ class Node(_DCBase):
         self.ix = ix
 
     @classmethod
+    @lp
     def create_node_list(cls, tkn_list):
         """
         create a list of nodes from a list or comma separated string of tokens

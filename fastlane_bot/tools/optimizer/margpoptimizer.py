@@ -42,6 +42,7 @@ class MargPOptimizer(CPCArbOptimizer):
     __DATE__ = __DATE__
     
     @property
+    @lp
     def kind(self):
         return "margp"
 
@@ -195,6 +196,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 return df
             
             ## INNER FUNCTION: CALCULATE THE TARGET FUNCTION
+            @lp
             def dtknfromp_f(p, *, islog10=True, asdct=False, quiet=False):
                 """
                 calculates the aggregate change in token amounts for a given price vector

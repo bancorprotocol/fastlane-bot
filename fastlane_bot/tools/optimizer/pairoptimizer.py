@@ -40,6 +40,7 @@ class PairOptimizer(CPCArbOptimizer):
     __DATE__ = __DATE__
     
     @property
+    @lp
     def kind(self):
         return "pair"
     

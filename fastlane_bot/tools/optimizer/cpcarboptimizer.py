@@ -74,6 +74,7 @@ class CPCArbOptimizer(OptimizerBase):
         self._curve_container = curves
         
     @property
+    @lp
     def curve_container(self):
         """the curve container (CPCContainer)"""
         return self._curve_container
@@ -82,6 +83,7 @@ class CPCArbOptimizer(OptimizerBase):
     curves = curve_container
 
     @property
+    @lp
     def tokens(self):
         return self.curve_container.tokens
 
@@ -132,50 +134,60 @@ class CPCArbOptimizer(OptimizerBase):
                 ), f"constraint keys {set(self.data.keys())} > {self.tokens}"
 
         @property
+        @lp
         def optimizationvar(self):
             """optimization variable, ie the in that is set to AMMPays, AMMReceives or OptimizationVar"""
             return self._optimizationvar
 
         @property
+        @lp
         def tokens_s(self):
             """tokens as a comma-separated string"""
             return ", ".join(self.tokens_l)
 
         @property
+        @lp
         def tokens_l(self):
             """tokens as a list"""
             return sorted(list(self.tokens))
 
+        @lp
         def asdict(self, *, short=False):
             """dict representation including zero-valued tokens (unless short)"""
             if short:
                 return {**self.data}
             return {k: self.get(k) for k in self.tokens}
 
+        @lp
         def items(self, *, short=False):
             return self.asdict(short=short).items()
 
         @classmethod
+        @lp
         def new(cls, tokens, **data):
             """alternative constructor: data as kwargs"""
             return cls(data=data, tokens=tokens)
 
         @classmethod
+        @lp
         def arb(cls, targettkn):
             """alternative constructor: arbitrage constraint, ie all other constraints are zero"""
             return cls(data={targettkn: cls.OptimizationVar})
 
+        @lp
         def get(self, item):
             """gets the constraint, or 0 if not present"""
             assert item in self.tokens, f"item {item} not in {self.tokens}"
             return self.data.get(item, 0)
 
+        @lp
         def is_constraint(self, item):
             """
             returns True iff item is a constraint (ie not an optimisation variable)
             """
             return not self.is_optimizationvar(item)
 
+        @lp
         def is_optimizationvar(self, item):
             """
             returns True iff item is the optimization variable
@@ -183,6 +195,7 @@ class CPCArbOptimizer(OptimizerBase):
             assert item in self.tokens, f"item {item} not in {self.tokens}"
             return item == self.optimizationvar
 
+        @lp
         def is_arbsfc(self):
             """
             returns True iff the constraint is an arbitrage constraint
@@ -196,16 +209,19 @@ class CPCArbOptimizer(OptimizerBase):
             """alias for get"""
             return self.get(item)
 
+    @lp
     def SFC(self, **data):
         """alias for SelfFinancingConstraints.new"""
         return self.SelfFinancingConstraints.new(self.curve_container.tokens(), **data)
 
+    @lp
     def SFCd(self, data_dct):
         """alias for SelfFinancingConstraints.new, with data as a dict"""
         return self.SelfFinancingConstraints.new(
             self.curve_container.tokens(), **data_dct
         )
 
+    @lp
     def SFCa(self, targettkn):
         """alias for SelfFinancingConstraints.arb"""
         return self.SelfFinancingConstraints.arb(targettkn)
@@ -307,6 +323,7 @@ class CPCArbOptimizer(OptimizerBase):
         TIEPS = 1e-10
 
         @classmethod
+        @lp
         def new(cls, curve_or_cid, tkn1, amt1, tkn2, amt2, *, eps=None, raiseonerror=False):
             """automatically determines which is in and which is out"""
             try:
@@ -341,17 +358,20 @@ class CPCArbOptimizer(OptimizerBase):
             return newobj
 
         @property
+        @lp
         def is_empty(self):
             """returns True if this is an empty trade instruction (too close to zero)"""
             return self.amtin == 0 or self.amtout == 0
 
         @classmethod
+        @lp
         def to_dicts(cls, trade_instructions):
             """converts iterable ot TradeInstruction objects to a tuple of dicts"""
             #print("[TradeInstruction.to_dicts]")
             return tuple(ti.asdict() for ti in trade_instructions)
 
         @classmethod
+        @lp
         def to_df(cls, trade_instructions, robj, ti_format=None):
             """
             converts iterable ot TradeInstruction objects to a pandas dataframe
@@ -429,6 +449,7 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DFPG8 = TIF_DFPG8
         
         @classmethod
+        @lp
         def to_format(cls, trade_instructions, robj=None, *, ti_format=None):
             """
             converts iterable ot TradeInstruction objects to the given format
@@ -454,18 +475,21 @@ class CPCArbOptimizer(OptimizerBase):
                 raise ValueError(f"unknown format {ti_format}")
 
         @property
+        @lp
         def price_outperin(self):
             return -self.amtout / self.amtin
 
         p = price_outperin
 
         @property
+        @lp
         def price_inperout(self):
             return -self.amtin / self.amtout
 
         pr = price_inperout
 
         @property
+        @lp
         def prices(self):
             return (self.price_outperin, self.price_inperout)
 
@@ -541,20 +565,25 @@ class CPCArbOptimizer(OptimizerBase):
             self.raiseonerror = False
 
         @property
+        @lp
         def p_optimal(self):
             """the optimal price vector as dict (last entry is target token)"""
             return self._p_optimal_d
         
         @property
+        @lp
         def is_error(self):
             return self.errormsg is not None
 
+        @lp
         def detailed_error(self):
             return self.errormsg
 
+        @lp
         def status(self):
             return "error" if self.is_error else "converged"
 
+        @lp
         def price(self, tknb, tknq):
             """returns the optimal price of tknb/tknq based on p_optimal [in tknq per tknb]"""
             assert (
@@ -562,6 +591,7 @@ class CPCArbOptimizer(OptimizerBase):
             ), "p_optimal must be set [do not use minimal results]"
             return self.p_optimal.get(tknb, 1) / self.p_optimal.get(tknq, 1)
 
+        @lp
         def dxdyvalues(self, asdict=False):
             """
             returns a vector of (dx, dy) values for each curve (see also dxvecvalues)
@@ -576,6 +606,7 @@ class CPCArbOptimizer(OptimizerBase):
                 return {cid: dxdy for cid, dxdy in result}
             return tuple(dxdy for cid, dxdy in result)
 
+        @lp
         def dxvecvalues(self, asdict=False):
             """
             returns a dict {tkn: dtknk} of changes for each curve (see also dxdyvalues)
@@ -591,14 +622,17 @@ class CPCArbOptimizer(OptimizerBase):
             return tuple(dxvec for cid, dxvec in result)
 
         @property
+        @lp
         def dxvalues(self):
             return tuple(dx for dx, dy in self.dxdyvalues())
 
         @property
+        @lp
         def dyvalues(self):
             return tuple(dy for dx, dy in self.dxdyvalues())
 
         @property
+        @lp
         def curves_new(self):
             """returns a list of Curve objects the trade instructions implemented"""
             assert (
@@ -657,6 +691,7 @@ class CPCArbOptimizer(OptimizerBase):
                 # raise e
                 return None
 
+    @lp
     def plot(self, *args, **kwargs):
         """
         convenience for self.curve_container.plot()
@@ -665,6 +700,7 @@ class CPCArbOptimizer(OptimizerBase):
         """
         return self.curve_container.plot(*args, **kwargs)
 
+    @lp
     def format(self, *args, **kwargs):
         """
         convenience for self.curve_container.format()

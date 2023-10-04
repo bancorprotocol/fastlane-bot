@@ -9,18 +9,23 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 
+from fastlane_bot.config.profiler import lp
+
 
 class DCBase:
     """
     base class for all data classes, adding some useful methods
     """
 
+    @lp
     def asdict(self):
         return asdict(self)
 
+    @lp
     def astuple(self):
         return astuple(self)
 
+    @lp
     def fields(self):
         return fields(self)
 

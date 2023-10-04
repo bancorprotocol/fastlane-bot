@@ -20,9 +20,10 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot.config import config as cfg
+from fastlane_bot.config.profiler import lp
 from fastlane_bot.data.abi import *
 
-
+@lp
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """
     param: tkn_amt: the number of tokens to convert
@@ -37,21 +38,21 @@ def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
         decimals = Decimal("1")
     return int(Decimal(tkn_amt * 10**decimals))
 
-
+@lp
 def num_format(number):
     try:
         return "{0:.4f}".format(number)
     except Exception as e:
         return number
 
-
+@lp
 def num_format_float(number):
     try:
         return float("{0:.4f}".format(number))
     except Exception as e:
         return number
 
-
+@lp
 def log_format(log_data: {}, log_name: str = "new"):
     now = datetime.datetime.now()
     time_ts = str(int(now.timestamp()))  # timestamp (epoch)
@@ -63,7 +64,7 @@ def log_format(log_data: {}, log_name: str = "new"):
     return log_string
     # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
 
-
+@lp
 def get_coingecko_token_table() -> List[Dict[str, Any]]:
     """
     Get the token table from coingecko
@@ -88,6 +89,7 @@ def get_coingecko_token_table() -> List[Dict[str, Any]]:
 
 
 # Initialize Contracts
+@lp
 def initialize_contract_with_abi(address: str, abi: List[Any], web3: Web3) -> Contract:
     """
     Initialize a contract with an abi
@@ -98,13 +100,13 @@ def initialize_contract_with_abi(address: str, abi: List[Any], web3: Web3) -> Co
     """
     return web3.eth.contract(address=address, abi=abi)
 
-
+@lp
 def initialize_contract_without_abi(address: str, web3):
     abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={cfg.ETHERSCAN_TOKEN}"
     abi = json.loads(requests.get(abi_endpoint).text)
     return web3.eth.contract(address=address, abi=abi["result"])
 
-
+@lp
 def initialize_contract(web3, address: str, abi=None) -> Contract:
     """
     Initialize a contract with an abi
@@ -118,7 +120,7 @@ def initialize_contract(web3, address: str, abi=None) -> Contract:
     else:
         return initialize_contract_with_abi(address=address, abi=abi, web3=web3)
 
-
+@lp
 def convert_decimals(amt: Decimal, n: int) -> Decimal:
     """
     Utility function to convert to Decimaling point value of a specific precision.
@@ -127,7 +129,7 @@ def convert_decimals(amt: Decimal, n: int) -> Decimal:
         return Decimal("0")
     return Decimal(str(amt / (Decimal("10") ** Decimal(str(n)))))
 
-
+@lp
 def get_abi_and_router(exchange: str) -> Tuple[list, str]:
     """
     Returns the ABI and router address for the pool
@@ -205,10 +207,12 @@ class EncodedOrder:
     ONE = 2**48
 
     @classmethod
+    @lp
     def from_sdk(cls, token, order):
         return cls(token=token, **order)
 
     @property
+    @lp
     def descr(self):
         s = self
         return f"selling {s.token} @ ({1 / s.p_start}..{1 / s.p_end})  [TKNwei] per {s.token}wei"
@@ -217,21 +221,25 @@ class EncodedOrder:
         return getattr(self, item)
 
     @classmethod
+    @lp
     def decodeFloat(cls, value):
         """undoes the mantisse/exponent encoding in A,B"""
         return (value % cls.ONE) << (value // cls.ONE)
 
     @classmethod
+    @lp
     def decode(cls, value):
         """decodes A,B to float"""
         return cls.decodeFloat(int(value)) / cls.ONE
 
     @staticmethod
+    @lp
     def bitLength(value):
         "minimal number of bits needed to represent the value"
         return len(bin(value).lstrip("0b")) if value > 0 else 0
 
     @classmethod
+    @lp
     def encodeRate(cls, value):
         "encodes a rate float to an A,B (using cls.ONE for scaling)"
         data = int(math.sqrt(value) * cls.ONE)
@@ -239,6 +247,7 @@ class EncodedOrder:
         return (data >> length) << length
 
     @classmethod
+    @lp
     def encodeFloat(cls, value):
         "encodes a long int value as mantisse/exponent into a shorter integer"
         exponent = cls.bitLength(value // cls.ONE)
@@ -246,6 +255,7 @@ class EncodedOrder:
         return mantissa | (exponent * cls.ONE)
 
     @classmethod
+    @lp
     def encode(cls, y, p_start_hi, p_end_lo, p_marg=None, z=None, token=None):
         """
         alternative constructor: creates a new encoded order from the given parameters
@@ -277,6 +287,7 @@ class EncodedOrder:
         )
 
     @classmethod
+    @lp
     def encode_yzAB(cls, y, z, A, B, token=None):
         """
         encode A,B into the SDK format
@@ -306,6 +317,7 @@ class EncodedOrder:
         B: float
 
     @property
+    @lp
     def decoded(self):
         """
         returns a the order with A, B decoded as floats
@@ -313,22 +325,27 @@ class EncodedOrder:
         return self.DecodedOrder(y=self.y, z=self.z, A=self.A_, B=self.B_)
 
     @property
+    @lp
     def A_(self):
         return self.decode(self.A)
 
     @property
+    @lp
     def B_(self):
         return self.decode(self.B)
 
     @property
+    @lp
     def p_end(self):
         return self.B_ * self.B_
 
     @property
+    @lp
     def p_start(self):
         return (self.B_ + self.A_) ** 2
 
     @property
+    @lp
     def p_marg(self):
         if self.y == self.z:
             return self.p_start
@@ -363,12 +380,14 @@ class UniV3Helper:
     tick_spacing: int = None
 
     @staticmethod
+    @lp
     def dec_factor(dtkn0: int, dtkn1: int) -> Decimal:
         """
         Returns the decimal factor.
         """
         return Decimal(str(10 ** (dtkn0 - dtkn1)))
 
+    @lp
     def sqrt_price_x96_to_uint(
         self, sqrt_price_x96: Decimal, decimals_token0: int, decimals_token1: int
     ) -> Decimal:
@@ -381,6 +400,7 @@ class UniV3Helper:
         return Decimal(str(numerator1 * numerator2 // Decimal(str(2**192))))
 
     @property
+    @lp
     def Pmarg(self) -> Decimal:
         """
         Returns the margin price.
@@ -390,6 +410,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def Pa(self) -> Decimal:
         """
         Returns the price of token 0.
@@ -399,6 +420,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def Pb(self) -> Decimal:
         """
         Returns the price of token 1.
@@ -408,6 +430,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def L(self) -> Decimal:
         """
         Returns the liquidity of the pool.
@@ -417,6 +440,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def sqrt_price_q96_upper_bound(self) -> Decimal:
         """
         Returns the upper bound of the price range.
@@ -428,6 +452,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def sqrt_price_q96_lower_bound(self) -> Decimal:
         """
         Returns the lower bound of the price range.
@@ -438,6 +463,7 @@ class UniV3Helper:
             else self.tick_to_sqrt_price_q96(self.lower_tick)
         )
 
+    @lp
     def tick_to_sqrt_price_q96(self, tick: Decimal) -> Decimal:
         """returns the price given a tick"""
         return (
@@ -447,6 +473,7 @@ class UniV3Helper:
         )
 
     @property
+    @lp
     def lower_tick(self) -> Decimal:
         """
         Returns the lower tick of the pool.
@@ -459,6 +486,7 @@ class UniV3Helper:
             return Decimal(0)
 
     @property
+    @lp
     def upper_tick(self) -> Decimal:
         """
         Returns the upper tick of the pool.
@@ -472,7 +500,7 @@ class UniV3Helper:
         self._sqrt_price_q96_upper_bound = self.tick_to_sqrt_price_q96(self.upper_tick)
         self._sqrt_price_q96_lower_bound = self.tick_to_sqrt_price_q96(self.lower_tick)
 
-
+@lp
 def find_latest_timestamped_folder(logging_path=None):
     """
     Find the latest timestamped folder in the given directory or the default directory.

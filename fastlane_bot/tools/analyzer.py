@@ -21,6 +21,8 @@ import pandas as pd
 import itertools as it
 import collections as cl
 
+from ..config.profiler import lp
+
 
 class AttrDict(dict):
     """
@@ -61,30 +63,36 @@ class CPCAnalyzer(_DCBase):
         if self.CC is None:
             self.CC = CPCContainer()
         assert isinstance(self.CC, CPCContainer), "CC must be a CPCContainer object"
-    
+
+    @lp
     def pairs(self):
         """alias for CC.pairs(standardize=True)"""
         return self.CC.pairs(standardize=True)
-    
+
+    @lp
     def pairsc(self):
         """all pairs with carbon curves"""
         return {c.pairo.primary for c in self.CC if c.P("exchange")=="carbon_v1"}
-    
+
+    @lp
     def curves(self):
         """all curves"""
         return self.CC.curves
-    
+
+    @lp
     def curvesc(self, *, ascc=False):
         """all carbon curves"""
         result = [c for c in self.CC if c.P("exchange")=="carbon_v1"]
         if not ascc:
             return result
         return CPCContainer(result)
-    
+
+    @lp
     def tokens(self):
         """all tokens in the curves"""
         return self.CC.tokens()
-    
+
+    @lp
     def count_by_tokens(self, *, byexchange=True, asdict=False):
         """
         counts the number of times each token appears in the curves
@@ -112,7 +120,8 @@ class CPCAnalyzer(_DCBase):
         df = pd.DataFrame(rows,columns="token,total,carb,uni3,uni2,sushi".split(","))
         df = df.set_index("token")
         return df
-    
+
+    @lp
     def count_by_pairs(self, *, minn=None, asdf=True):
         """
         counts the number of times each pair appears in the curves
@@ -147,7 +156,8 @@ class CPCAnalyzer(_DCBase):
             self.CC = CC
             self.primary = Pair.n(self.curve.pairo.primary)
             self.cid0 = self.curve.cid[-8:]
-            
+
+        @lp
         def info(self):
             c = self.curve
             cc = self.CC
@@ -164,7 +174,8 @@ class CPCAnalyzer(_DCBase):
                 bsv = c.buysell(verbose=True, withprice=True),
             )
             return dct
-    
+
+    @lp
     def curve_data(self, curves=None, *, asdf=False):
         """return a CurveData object for the curve (or all curves of the pair if curve is None))"""
         if curves is None:
@@ -198,26 +209,30 @@ class CPCAnalyzer(_DCBase):
             self.primary = Pair.n(self.pairo.primary)
             self.ncurves = len(self.CC)
             self.ncurvesc = len(self.curves_by_exchange("carbon_v1"))
-            
+
+        @lp
         def curves_by_exchange(self, exchange=None):
             """dict exchange -> curves if exchange is None, otherwise just the curves for that exchange"""
             if exchange is None:
                 return {c.P("exchange"): c for c in self.CC}
             else:
                 return [c for c in self.CC if c.P("exchange")==exchange]
-            
+
+        @lp
         def curve_data(self, curves=None, *, asdf=False):
             """return a CurveData object for the curves (or all curves of the pair if curve is None)"""
             if curves is None:
                 curves = self.CC
             return self.analyzer.curve_data(curves, asdf=asdf)
-    
+
+    @lp
     def pair_data(self, pair=None):
         """return a PairData object for the pair (dict for all pairs if pair is None)"""
         if not pair is None:
             return self.PairData(pair, self)
         return {pair: self.PairData(pair, self) for pair in self.pairs()}
-    
+
+    @lp
     def pair_analysis(self, pair, **params):
         """
         :pair:              pair to be analyzed, eg "WETH-6Cc2/USDC-eB48"
@@ -362,8 +377,8 @@ class CPCAnalyzer(_DCBase):
             
         ## FINALLY: return the result
         return d
-    
 
+    @lp
     def _fmt_xarbval(self, xarbval, tkn):
         """format the extended arb value"""
         if xarbval.err is None:
@@ -372,6 +387,7 @@ class CPCAnalyzer(_DCBase):
             result = f"error [{Pair.n(tkn)}]"
         return result
 
+    @lp
     def pair_analysis_pp(self, data, **parameters):
         """
         pretty-print the output `d` of pair_analysis (returns string)
@@ -408,6 +424,7 @@ class CPCAnalyzer(_DCBase):
     POS_DICT = "dict"
     POS_LIST = "list"
     POS_DF = "df"
+    @lp
     def pool_arbitrage_statistics(self, result = None, *, sort_price=True, only_pairs_with_carbon=True):
         """
         returns arbirage statistics on all Carbon pairs
@@ -460,6 +477,7 @@ class CPCAnalyzer(_DCBase):
     PR_TUPLE = "tuple"
     PR_DICT = "dict"
     PR_DF = "df"
+    @lp
     def price_ranges(self, result=None, *, short=True):
             """
             returns dataframe with price information of all curves

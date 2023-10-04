@@ -43,6 +43,7 @@ class OptimizerBase(ABC):
         returns the kind of optimizer (as str)
         """
 
+    @lp
     def pickle(self, basefilename, addts=True):
         """
         pickles the object to a file
@@ -55,6 +56,7 @@ class OptimizerBase(ABC):
             pickle.dump(self, f)
 
     @classmethod
+    @lp
     def unpickle(cls, basefilename):
         """
         unpickles the object from a file
@@ -86,6 +88,7 @@ class OptimizerBase(ABC):
             # print("[OptimizerResult] post_init", optimizer)
 
         @property
+        @lp
         def optimizer(self):
             return self._optimizer
 
@@ -122,6 +125,7 @@ class OptimizerBase(ABC):
             pass
         
         @property
+        @lp
         def error(self):
             """problem error"""
             if not self.is_error:
@@ -141,10 +145,12 @@ class OptimizerBase(ABC):
             return float(self.result)
 
         @property
+        @lp
         def is_error(self):
             return not self.errormsg is None
 
         @property
+        @lp
         def context(self):
             return self.context_dct if not self.context_dct is None else {}
 
@@ -289,6 +295,7 @@ class OptimizerBase(ABC):
         return np.array(vector)
 
     @staticmethod
+    @lp
     def t(vector):
         """helper: returns vector as tuple"""
         return tuple(vector)

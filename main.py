@@ -664,6 +664,7 @@ def run(
 
 if __name__ == "__main__":
     main()
+    # cProfile.run('main()', 'profile_stats.prof')
 
 
 # %%
