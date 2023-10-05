@@ -5,10 +5,9 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import os
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 
-import brownie
+import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
@@ -48,10 +47,9 @@ class ContractsManager(BaseManager):
             if exchange_name == "bancor_v3":
                 self.pool_contracts[exchange_name][
                     self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
-                ] = brownie.Contract.from_abi(
+                ] = self.web3.eth.contract(
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
-                    name="BancorNetwork",
                 )
             elif exchange_name == "bancor_pol":
                 self.pool_contracts[exchange_name][
@@ -60,14 +58,21 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BANCOR_POL_ADDRESS,
                     abi=BANCOR_POL_ABI,
                 )
+            elif exchange_name == 'carbon_v1':
+                self.pool_contracts[exchange_name][
+                    self.cfg.CARBON_CONTROLLER_ADDRESS
+                ] = self.web3.eth.contract(
+                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
 
     @staticmethod
     def get_or_create_token_contracts(
-        web3: Web3,
-        erc20_contracts: Dict[str, Contract],
-        address: str,
-        exchange_name: str = None,
-        tenderly_fork_id: str = None,
+            web3: Web3,
+            erc20_contracts: Dict[str, Contract],
+            address: str,
+            exchange_name: str = None,
+            tenderly_fork_id: str = None,
     ) -> Contract:
         """
         Get or create the token contracts.
@@ -104,10 +109,10 @@ class ContractsManager(BaseManager):
         return contract
 
     def add_pool_info_from_contract(
-        self,
-        exchange_name: str = None,
-        address: str = None,
-        event: Any = None,
+            self,
+            exchange_name: str = None,
+            address: str = None,
+            event: Any = None,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
@@ -175,34 +180,33 @@ class ContractsManager(BaseManager):
             The pool contract.
 
         """
-        if exchange_name in self.exchanges:
-            w3 = self.web3
-            if exchange_name == "bancor_pol":
-                # TODO: Remove this once we have a better solution
-                w3 = Web3(
-                    Web3.HTTPProvider(
-                        f"https://rpc.tenderly.co/fork/{self.tenderly_fork_id}"
-                    )
-                )
-
-            contract_key = (
-                self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
-                if exchange_name == "bancor_v3"
-                else self.cfg.BANCOR_POL_ADDRESS
-                if exchange_name == "bancor_pol"
-                else address
-            )
-            return self.pool_contracts[exchange_name].get(
-                contract_key,
-                w3.eth.contract(
-                    address=contract_key, abi=self.exchanges[exchange_name].get_abi()
-                ),
-            )
-        else:
+        if exchange_name not in self.exchanges:
             return None
 
+        w3 = self.web3
+
+        contract_key = (
+            self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
+            if exchange_name == "bancor_v3"
+            else self.cfg.BANCOR_POL_ADDRESS
+            if exchange_name == "bancor_pol"
+            else address
+        )
+        return self.pool_contracts[exchange_name].get(
+            contract_key,
+            w3.eth.contract(
+                address=contract_key, abi=self.exchanges[exchange_name].get_abi()
+            ),
+        )
+
+    @staticmethod
+    def get_tkn_key(symbol: str, addr: str) -> str:
+        if symbol is None or symbol == "None" or addr is None:
+            print(addr)
+        return f"{symbol}-{addr[-4:]}"
+
     def get_token_info_from_contract(
-        self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
+            self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
     ) -> Tuple[str, int]:
         """
         Get the token info from contract.
@@ -223,10 +227,79 @@ class ContractsManager(BaseManager):
 
         """
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
+        tokens_filepath = 'fastlane_bot/data/tokens.csv'
+        token_data = pd.read_csv(tokens_filepath, index_col=[0])
+
         try:
-            return (
-                contract.functions.symbol().call(),
-                contract.functions.decimals().call(),
+            return self._get_and_save_token_info_from_contract(
+                contract=contract, addr=addr, token_data=token_data, tokens_filepath=tokens_filepath
             )
-        except Exception as e:
-            self.cfg.logger.debug(f"Failed to get symbol and decimals for {addr} {e}")
+        except self.FailedToGetTokenDetailsException as e:
+            self.cfg.logger.debug(f"{e}")
+
+    class FailedToGetTokenDetailsException(Exception):
+        """
+        Exception caused when token details are unable to be fetched by the contract
+        """
+
+        def __init__(self, addr):
+            self.message = f"Failed to get token symbol and decimals for token address: {addr}"
+
+        def __str__(self):
+            return self.message
+
+    def _get_and_save_token_info_from_contract(self, contract: Contract, addr: str, token_data: pd.DataFrame,
+                                               tokens_filepath: str) -> Tuple[str, int]:
+        """
+        Get and save the token info from contract to csv.
+
+        Parameters
+        ----------
+        contract : Contract
+            The contract.
+        addr : str
+            The address.
+        token_data : pd.DataFrame
+            The token data.
+        tokens_filepath : str
+            The tokens filepath.
+
+        Returns
+        -------
+        Tuple[str, int]
+            The token info.
+
+        """
+        symbol = contract.functions.symbol().call()
+        key = self.get_tkn_key(symbol=symbol, addr=addr)
+
+        if key in token_data['key'].unique():
+            decimals = token_data.loc[token_data['key'] == key, 'decimals'].iloc[0]
+            return symbol, decimals
+        else:
+            decimals = contract.functions.decimals().call()
+
+        if symbol is None or decimals is None:
+            raise self.FailedToGetTokenDetailsException(addr=addr)
+
+        new_data = {
+            "key": key,
+            "symbol": symbol,
+            "name": symbol,
+            "address": addr,
+            "decimals": decimals
+        }
+        self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
+        next_index = len(token_data.index)
+        try:
+            row = pd.DataFrame(new_data, columns=token_data.columns, index=[next_index])
+            token_data = pd.concat([token_data, row])
+            token_data.to_csv(tokens_filepath)
+        except Exception:
+            # If CSV fails to update, we still return the token symbol & decimals
+            return (
+                symbol, decimals
+            )
+        return (
+            symbol, decimals
+        )

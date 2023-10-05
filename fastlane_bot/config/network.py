@@ -74,7 +74,7 @@ class ConfigNetwork(ConfigBase):
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME]
     # BANCOR POL
     # TODO ADD BLOCK CONTRACT WAS CREATED
-    BANCOR_POL_START_BLOCK = 20202020
+    BANCOR_POL_START_BLOCK = 18184448
     BANCOR_POL_ADDRESS = "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46"
 
     # CARBON EVENTS
@@ -189,16 +189,6 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
     BANCOR_V3_VAULT = "0x649765821D9f64198c905eC0B2B037a4a52Bc373"
-
-
-    def shellcommand(self, chain_id=1):
-        """
-        the shell command to run to allow the bot to connect to tenderly
-        """
-        s = f'brownie networks delete {self.NETWORK_NAME}\n'
-        s += f'brownie networks add "Ethereum" "{self.NETWORK_NAME}" '
-        s += f'host=https://rpc.tenderly.co/fork/{self.TENDERLY_FORK} chainid={chain_id}'
-        return s
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

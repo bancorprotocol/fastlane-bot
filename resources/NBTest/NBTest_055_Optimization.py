@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -503,9 +503,7 @@ CC.plot()
 
 CCul.plot()
 
-# + tags=[]
 CCn.plot()
-# -
 
 CCas2.plot()
 

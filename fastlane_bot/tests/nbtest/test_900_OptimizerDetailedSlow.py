@@ -260,14 +260,14 @@ def test_general_and_specific_tests():
     r = CAt.price_ranges(result=CAt.PR_TUPLE)
     assert len(r) == len(CCt)
     assert r[0] == (
-        'WETH/USDC',
-        '16dd65c110',
-        'sushiswap_v2',
-        'b',
-        's',
-        None,
-        None,
-        1833.9007005259564
+        'WETH/USDC',        # pair
+        '16dd65c110',       # cid
+        'sushiswap_v2',     # exchange
+        'b',                # buy
+        's',                # sell
+        0,                  # min_primary
+        None,               # max_primary
+        1833.9007005259564  # pp
     )
     assert r[1] == (
         'WETH/USDC',
@@ -286,7 +286,7 @@ def test_general_and_specific_tests():
         'sushiswap_v2',
         'b',
         's',
-        None,
+        0,
         None,
         1833.9007005259564
     )
@@ -298,7 +298,7 @@ def test_general_and_specific_tests():
         'sushiswap_v2',
         'b',
         's',
-        None,
+        0,
         None,
         1833.9007005259564
     )

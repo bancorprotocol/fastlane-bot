@@ -111,23 +111,22 @@ class AutomaticPoolShutdown:
         """
         This function uses a multicall to get pool details for each Bancor V3 token. If the pool is active, it updates the dict with the current staked balance. If the pool is inactive, it removes it from the dictionary if it existed previously.
         """
-        with self.mgr.multicall(address=self.mgr.cfg.MULTICALL_CONTRACT_ADDRESS):
-            for tkn in self.shutdown_whitelist:
-                (
-                    pool_token,
-                    trading_fee_PPM,
-                    trading_enabled,
-                    depositing_enabled,
-                    average_rate,
-                    tkn_pool_liquidity,
-                ) = self.pool_collection_contract.functions.poolData(tkn).call()
-                tkn_results = list(tkn_pool_liquidity)
-                (
-                    bnt_trading_liquidity,
-                    tkn_trading_liquidity,
-                    staked_balance,
-                ) = tkn_results
-                self.active_pools[tkn] = staked_balance
+        for tkn in self.shutdown_whitelist:
+            (
+                pool_token,
+                trading_fee_PPM,
+                trading_enabled,
+                depositing_enabled,
+                average_rate,
+                tkn_pool_liquidity,
+            ) = self.pool_collection_contract.functions.poolData(tkn).call()
+            tkn_results = list(tkn_pool_liquidity)
+            (
+                bnt_trading_liquidity,
+                tkn_trading_liquidity,
+                staked_balance,
+            ) = tkn_results
+            self.active_pools[tkn] = staked_balance
 
     def iterate_active_pools(self):
         """

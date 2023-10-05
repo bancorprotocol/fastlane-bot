@@ -10,10 +10,8 @@
 
 from unittest.mock import Mock, patch, call
 
-import brownie
 import pytest
 from unittest.mock import MagicMock
-from brownie import multicall as brownie_multicall
 
 from fastlane_bot import Bot, Config
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3

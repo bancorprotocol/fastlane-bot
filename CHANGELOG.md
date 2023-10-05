@@ -2,7 +2,54 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.37...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.43...HEAD)
+
+- Update Bancor Network ABI [\#162](https://github.com/bancorprotocol/fastlane-bot/issues/162)
+
+Merged pull requests
+
+- Update Bancor Network ABI [\#163](https://github.com/bancorprotocol/fastlane-bot/pull/163) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.43](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.43) (2023-10-03)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.42...v2.7.43)
+
+- Bug with new multicall method when running backdate\_pools=True [\#158](https://github.com/bancorprotocol/fastlane-bot/issues/158)
+- Update run\_pool\_shutdown.py [\#161](https://github.com/bancorprotocol/fastlane-bot/pull/161) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.42](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.42) (2023-10-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...v2.7.42)
+
+- Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
+- 158 bug with new multicall method when running backdate pools=true [\#159](https://github.com/bancorprotocol/fastlane-bot/pull/159) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.41](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.41) (2023-09-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.40...v2.7.41)
+
+- Remove Tenderly default for Bancor POL in contracts.py get\_pool\_contract [\#153](https://github.com/bancorprotocol/fastlane-bot/issues/153)
+
+- 137 fix or replace brownie multicall functionality [\#155](https://github.com/bancorprotocol/fastlane-bot/pull/155) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.40](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.40) (2023-09-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.39...v2.7.40)
+
+- Fix block start number for POL contract [\#149](https://github.com/bancorprotocol/fastlane-bot/issues/149)
+- Remove Tenderly Web3 instantiation [\#154](https://github.com/bancorprotocol/fastlane-bot/pull/154) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.39](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.39) (2023-09-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.38...v2.7.39)
+
+- Update BANCOR\_POL\_START\_BLOCK to correct value [\#150](https://github.com/bancorprotocol/fastlane-bot/pull/150) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add support for POL Contract [\#109](https://github.com/bancorprotocol/fastlane-bot/issues/109)
+
+## [v2.7.38](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.38) (2023-09-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.37...v2.7.38)
 
 - pol merge bug on mainnet [\#147](https://github.com/bancorprotocol/fastlane-bot/issues/147)
 
