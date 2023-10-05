@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.42...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.43...HEAD)
+
+- Update Bancor Network ABI [\#162](https://github.com/bancorprotocol/fastlane-bot/issues/162)
+
+Merged pull requests
+
+- Update Bancor Network ABI [\#163](https://github.com/bancorprotocol/fastlane-bot/pull/163) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.43](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.43) (2023-10-03)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.42...v2.7.43)
 
 - Bug with new multicall method when running backdate\_pools=True [\#158](https://github.com/bancorprotocol/fastlane-bot/issues/158)
 - Update run\_pool\_shutdown.py [\#161](https://github.com/bancorprotocol/fastlane-bot/pull/161) ([mikewcasale](https://github.com/mikewcasale))
