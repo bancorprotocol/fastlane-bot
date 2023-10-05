@@ -193,7 +193,7 @@ assert pool1_processed.get_token_decimals('LUSD-8bA0') == 18, f"[NB058 BalancerI
 
 # -
 
-# ## Test_toCPC_Balancer
+# ### Test_toCPC_Balancer
 
 # +
 pool0_to_cpc = pool0_processed.to_cpc()
@@ -230,11 +230,6 @@ ti1 = TradeInstruction(
     amtout=1,
     ConfigObj=cfg,
     db = db,
-    # tknin_dec_override =  6,
-    # tknout_dec_override = 8,
-    # tknin_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    # tknout_addr_override = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-    # exchange_override = 'bancor_v3'
 )
 
 ti2 = TradeInstruction(

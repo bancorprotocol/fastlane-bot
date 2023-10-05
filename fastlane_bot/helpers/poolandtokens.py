@@ -255,8 +255,6 @@ class PoolAndTokens:
                 typed_args_all.append({
                     "x": tkn0_balance,
                     "y": tkn1_balance,
-                    "x_act": tkn0_balance,
-                    "y_act": tkn1_balance,
                     #"alpha": weight0,
                     "eta": eta,
                     "pair": _pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
