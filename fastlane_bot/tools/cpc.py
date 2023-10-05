@@ -462,7 +462,8 @@ class ConstantProductCurve(CurveBase):
     
     def is_unlevered(self):
         "True iff x==x_act and y==y_act"
-        return self.x == self.x_act and self.y == self.y_act
+        return (abs(self.x - self.x_act) <= 0.0001) and (abs(self.y - self.y_act) <= 0.0001)
+        # return self.x == self.x_act and self.y == self.y_act
     
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
