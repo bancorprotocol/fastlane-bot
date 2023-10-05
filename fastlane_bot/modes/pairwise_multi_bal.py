@@ -34,7 +34,6 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
 
         combos = self.get_balancer_combos(self.CCm, self.flashloan_tokens)
 
-        #print(f"bal combos = {len(combos), combos}")
         candidates = []
         self.ConfigObj.logger.debug(
             f"\n ************ combos: {len(combos)} ************\n"
@@ -52,55 +51,46 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
             bal_curves = [x for x in CC.curves if x.params.exchange == "balancer"]
             curve_combos = [[bal_curve] + [curve] for curve in not_bal_curves for bal_curve in bal_curves]
             curve_combos += [[bal_curve] + carbon_curves for bal_curve in bal_curves]
-            #print(bal_curves)
 
             for curve_combo in curve_combos:
                 src_token = tkn1
                 if len(curve_combo) < 2:
                     continue
-                #print(f"curve combo = {curve_combo}")
 
-                try:
+                (
+                    O,
+                    profit_src,
+                    r,
+                    trade_instructions_df,
+                ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+
+
+                non_carbon_cids = [
+                    curve.cid
+                    for curve in curve_combo
+                    if curve.params.get("exchange") != "carbon_v1"
+                ]
+                non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
+                tkn0_into_carbon = non_carbon_row[0] < 0
+                wrong_direction_cids = self.get_wrong_direction_cids(
+                    tkn0_into_carbon, trade_instructions_df
+                )
+
+                if non_carbon_cids and len(wrong_direction_cids) > 0:
+                    filtered_curves = self.process_wrong_direction_pools(
+                        curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
+                    )
+                    if len(filtered_curves) < 2:
+                        continue
                     (
                         O,
                         profit_src,
                         r,
                         trade_instructions_df,
-                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                    ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
 
-                    # if profit_src > self.ConfigObj.DEFAULT_MIN_PROFIT:
-                    #
-                    #     print(profit_src, r)
-
-                    non_carbon_cids = [
-                        curve.cid
-                        for curve in curve_combo
-                        if curve.params.get("exchange") != "carbon_v1"
-                    ]
-                    non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                    tkn0_into_carbon = non_carbon_row[0] < 0
-                    wrong_direction_cids = self.get_wrong_direction_cids(
-                        tkn0_into_carbon, trade_instructions_df
-                    )
-
-                    if non_carbon_cids and len(wrong_direction_cids) > 0:
-                        filtered_curves = self.process_wrong_direction_pools(
-                            curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
-                        )
-                        if len(filtered_curves) < 2:
-                            continue
-                        (
-                            O,
-                            profit_src,
-                            r,
-                            trade_instructions_df,
-                        ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
-
-                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                    trade_instructions = r.trade_instructions()
-
-                except Exception:
-                    continue
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                trade_instructions = r.trade_instructions()
 
                 # Get the cids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
@@ -180,8 +170,9 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df
 
+    @staticmethod
     def process_wrong_direction_pools(
-        self, curve_combo: List[Any], wrong_direction_cids: List[Hashable]
+        curve_combo: List[Any], wrong_direction_cids: List[Hashable]
     ) -> [str]:
         """
         Process curves with wrong direction pools.
@@ -193,25 +184,16 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
 
     def get_balancer_combos(self, CCm, flashloan_tokens):
         balancer_curves = CCm.byparams(exchange="balancer").curves
-        #print(f"num of bal curves: {len(balancer_curves)}")
         bal_tkns_raw = [curve.tkny for curve in balancer_curves]
         bal_tkns_raw += [curve.tknx for curve in balancer_curves]
         bal_tkns_raw = list(set(bal_tkns_raw))
-        # bal_tkns = [tkn.split("/")[0] for tkn in bal_tkns_raw]
-        # bal_tkns += [tkn.split("/")[1] for tkn in bal_tkns_raw]
+
         if "WETH-6Cc2" in flashloan_tokens:
             flashloan_tokens = ["WETH-6Cc2"]
         else:
             flashloan_tokens = [flashloan_tokens[0]]
-        #print(f"bal tkns {len(bal_tkns_raw), bal_tkns_raw}")
         combos = [(tkn0, tkn1) for tkn0, tkn1 in itertools.product(bal_tkns_raw, flashloan_tokens) if tkn0 != tkn1]
                 # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
 
-        # combos = [
-        #     (tkn0, tkn1)
-        #     for tkn0, tkn1 in itertools.product(bancor_v3_tokens, flashloan_tokens)
-        #     # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-        #     if tkn0 != tkn1
-        # ]
         return combos
 

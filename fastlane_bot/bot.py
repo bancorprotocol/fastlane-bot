@@ -564,6 +564,8 @@ class CarbonBot(CarbonBotBase):
             )
             if max_trade_in is None:
                 return None
+            if type(max_trade_in) != float or int:
+                return None
             if max_trade_in < 0.0:
                 return None
             self.ConfigObj.logger.debug(
