@@ -7,8 +7,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.3"
-__DATE__ = "21/Sep/2023"
+__VERSION__ = "3.3.1"
+__DATE__ = "05/Oct/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -616,6 +616,9 @@ class ConstantProductCurve(CurveBase):
         k = x * (y**eta_inv)
         #print(f"[from_xyal] eta_inv = {eta_inv}")
         #print(f"[from_xyal] x={x}, y={y}, k = {k}")
+        if not alpha == 0.5:
+            assert x_act is None, f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={x_act}]"
+            assert y_act is None, f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={y_act}]"
         return cls(
             #k=(x**alpha * y**(1-alpha))**(1/alpha),
             k=k,

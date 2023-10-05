@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.43...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.44...HEAD)
 
 - Update Bancor Network ABI [\#162](https://github.com/bancorprotocol/fastlane-bot/issues/162)
+
+- Add Support for Balancer Exchange [\#70](https://github.com/bancorprotocol/fastlane-bot/issues/70)
+- Add balancer [\#160](https://github.com/bancorprotocol/fastlane-bot/pull/160) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.44](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.44) (2023-10-05)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.43...v2.7.44)
 
 Merged pull requests
 

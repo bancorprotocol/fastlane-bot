@@ -168,6 +168,8 @@ def multicall_fn(exchange: str, mc: Any, multicall_contract: Any, pool_info: Dic
         mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
     elif exchange == 'carbon_v1':
         mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
+    elif exchange == 'balancer':
+        mc.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
 
@@ -240,6 +242,17 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
             "exchange_name": exchange,
             "address": pool_info["address"],
         }
+    elif exchange == "balancer":
+        pool_balances = result
+
+        params = {
+            "exchange_name": exchange,
+            "address": pool_info["address"],
+        }
+
+        for idx, bal in enumerate(pool_balances):
+            params[f"tkn{str(idx)}_balance"] = int(bal)
+
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
 
@@ -364,6 +377,8 @@ def get_multicall_contract_for_exchange(mgr: Any, exchange: str) -> str:
         return mgr.pool_contracts[exchange][mgr.cfg.BANCOR_POL_ADDRESS]
     elif exchange == "carbon_v1":
         return mgr.pool_contracts[exchange][mgr.cfg.CARBON_CONTROLLER_ADDRESS]
+    elif exchange == "balancer":
+        return mgr.pool_contracts[exchange][mgr.cfg.BALANCER_VAULT_ADDRESS]
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
 

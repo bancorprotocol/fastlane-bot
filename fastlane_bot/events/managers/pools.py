@@ -39,7 +39,7 @@ class PoolManager(BaseManager):
             "bancor_v2",
         ]:
             return pool_info["address"]
-        elif pool_info["exchange_name"] == "carbon_v1":
+        elif pool_info["exchange_name"] in ["carbon_v1", "balancer"]:
             return pool_info["cid"]
         elif pool_info["exchange_name"] == "bancor_v3":
             return pool_info["tkn1_address"]

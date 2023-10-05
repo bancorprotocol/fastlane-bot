@@ -58,11 +58,17 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
-        pool_info = self.get_pool_info(
-            key, key_value, ex_name
-        ) or self.add_pool_info_from_contract(
-            address=addr, event=event, exchange_name=ex_name
-        )
+
+        if ex_name in "bancor_v2":
+            pool_info = self.get_pool_info(
+                key, key_value, ex_name
+            )
+        else:
+            pool_info = self.get_pool_info(
+                key, key_value, ex_name
+            ) or self.add_pool_info_from_contract(
+                address=addr, event=event, exchange_name=ex_name
+            )
 
         if not pool_info:
             return
@@ -105,19 +111,31 @@ class Manager(PoolManager, EventManager, ContractsManager):
         """
 
         pool_info["last_updated_block"] = current_block
-        contract = self.pool_contracts[pool_info["exchange_name"]].get(
-            pool_info["address"],
-            self.web3.eth.contract(
-                address=pool_info["address"],
-                abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
-            ),
-        ) if pool_info["exchange_name"] != self.cfg.BANCOR_V3_NAME else self.pool_contracts[pool_info["exchange_name"]].get(
-                    self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                    self.web3.eth.contract(
-                        address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                        abi=BANCOR_V3_NETWORK_INFO_ABI,
-                    ),
-                )
+
+        if pool_info["exchange_name"] == self.cfg.BANCOR_V3_NAME:
+            contract = self.pool_contracts[pool_info["exchange_name"]].get(
+                self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                self.web3.eth.contract(
+                    address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                    abi=BANCOR_V3_NETWORK_INFO_ABI,
+                ),
+            )
+        elif pool_info["exchange_name"] == self.cfg.BALANCER_NAME:
+            contract = self.pool_contracts[pool_info["exchange_name"]].get(
+                self.cfg.BALANCER_VAULT_ADDRESS,
+                self.web3.eth.contract(
+                    address=self.cfg.BALANCER_VAULT_ADDRESS,
+                    abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
+                ),
+            )
+        else:
+            contract = self.pool_contracts[pool_info["exchange_name"]].get(
+                pool_info["address"],
+                self.web3.eth.contract(
+                    address=pool_info["address"],
+                    abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
+                ),
+            )
         pool = self.get_or_init_pool(pool_info)
         try:
             params = pool.update_from_contract(

@@ -193,10 +193,8 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) > 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
+assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-
-
 
 # ## Test_no_multi_carbon
 

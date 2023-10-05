@@ -176,6 +176,7 @@ class QueryInterface:
             "bancor_v3",
             "bancor_pol",
             "carbon_v1",
+            "balancer"
         ]
         keys = [
             "liquidity",
@@ -185,6 +186,7 @@ class QueryInterface:
             "tkn0_balance",
             "y_0",
             "y_0",
+            "tkn0_balance",
         ]
 
         self.state = [
@@ -390,6 +392,44 @@ class QueryInterface:
                     "tkn0_decimals",
                     "tkn1_address",
                     "tkn1_decimals",
+                    "tkn0_weight",
+                    "tkn1_weight",
+                    "tkn2",
+                    "tkn2_key",
+                    "tkn2_balance",
+                    "tkn2_address",
+                    "tkn2_decimals",
+                    "tkn2_weight",
+                    "tkn3",
+                    "tkn3_key",
+                    "tkn3_balance",
+                    "tkn3_address",
+                    "tkn3_decimals",
+                    "tkn3_weight",
+                    "tkn4",
+                    "tkn4_key",
+                    "tkn4_balance",
+                    "tkn4_address",
+                    "tkn4_decimals",
+                    "tkn4_weight",
+                    "tkn5",
+                    "tkn5_key",
+                    "tkn5_balance",
+                    "tkn5_address",
+                    "tkn5_decimals",
+                    "tkn5_weight",
+                    "tkn6",
+                    "tkn6_key",
+                    "tkn6_balance",
+                    "tkn6_address",
+                    "tkn6_decimals",
+                    "tkn6_weight",
+                    "tkn7",
+                    "tkn7_key",
+                    "tkn7_balance",
+                    "tkn7_address",
+                    "tkn7_decimals",
+                    "tkn7_weight"
                 ]
             },
         )
