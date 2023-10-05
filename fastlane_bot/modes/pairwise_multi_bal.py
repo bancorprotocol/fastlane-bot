@@ -125,8 +125,9 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
 
         return candidates if self.result == self.AO_CANDIDATES else ops
 
+    @staticmethod
     def get_wrong_direction_cids(
-        self, tkn0_into_carbon: bool, trade_instructions_df: pd.DataFrame
+        tkn0_into_carbon: bool, trade_instructions_df: pd.DataFrame
     ) -> List[Hashable]:
         """
         Get the cids of the wrong direction curves
@@ -182,7 +183,8 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
         ]
         return new_curves
 
-    def get_balancer_combos(self, CCm, flashloan_tokens):
+    @staticmethod
+    def get_balancer_combos(CCm, flashloan_tokens):
         balancer_curves = CCm.byparams(exchange="balancer").curves
         bal_tkns_raw = [curve.tkny for curve in balancer_curves]
         bal_tkns_raw += [curve.tknx for curve in balancer_curves]
