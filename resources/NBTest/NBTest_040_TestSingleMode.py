@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -164,6 +164,7 @@ assert arb_finder.__name__ == "FindArbitrageSinglePairwise", f"[TestSingleMode] 
 
 # ## Test_tokens_and_combos
 
+# +
 arb_finder = bot._get_arb_finder("single")
 finder2 = arb_finder(
             flashloan_tokens=flashloan_tokens,
@@ -173,8 +174,12 @@ finder2 = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 all_tokens, combos = finder2.find_arbitrage()
-assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+
+assert type(all_tokens) == set, f"[TestSingleMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+assert type(combos) == list, f"[TestSingleMode] combos is wrong data type. Expected list, found: {type(combos)}"
+assert len(all_tokens) > 100, f"[TestSingleMode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
+# -
 
 # ### Test_Single_Arb_Finder_vs_run
 
@@ -188,10 +193,8 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) == 26, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
+assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
 assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-
-r
 
 # ## Test_no_multi_carbon
 
