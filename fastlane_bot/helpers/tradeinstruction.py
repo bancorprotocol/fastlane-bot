@@ -273,7 +273,10 @@ class TradeInstruction:
         int
             The amount in wei.
         """
-        return int(amount * 10**decimals)
+        try:
+            return int(amount * 10**decimals)
+        except:
+            int(float(str(amount) * 10**decimals))
 
     @staticmethod
     def _convert_to_decimals(
