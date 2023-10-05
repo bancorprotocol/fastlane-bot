@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -576,7 +576,7 @@ r
 # #### result
 
 assert type(r) == PairOptimizer.MargpOptimizerResult
-assert round(r.result, 5) == -1217.24416
+assert round(r.result, 5) == -1217.24416, f"{round(r.result, 5)}"
 assert r.time < 0.1
 assert r.method == "margp-pair"
 assert r.errormsg is None
