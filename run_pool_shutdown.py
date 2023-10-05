@@ -102,11 +102,10 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        config,
-        default_min_profit_bnt,
-        limit_bancor3_flashloan_tokens,
-        loglevel,
-        logging_path,
+        default_min_profit_bnt=default_min_profit_bnt,
+        limit_bancor3_flashloan_tokens=limit_bancor3_flashloan_tokens,
+        loglevel=loglevel,
+        logging_path=logging_path,
     )
 
     # Format the flashloan tokens
