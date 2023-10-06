@@ -249,7 +249,7 @@ class OptimizerBase(ABC):
         while (b/a-1) > eps:
             c = (a + b) / 2
             if func(c) == 0:
-                return c
+                return cls.SimpleResult(result=c, method="bisection")
             elif func(a) * func(c) < 0:
                 b = c
             else:
