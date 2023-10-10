@@ -22,18 +22,47 @@ class ContractsManager(BaseManager):
         """
 
         for exchange_name in self.tenderly_event_exchanges:
-            address = None
-            if exchange_name != "bancor_pol":
-                raise NotImplementedError(
-                    f"Exchange {exchange_name} not supported for tenderly"
-                )
-            if address := self.cfg.BANCOR_POL_ADDRESS:
+
+            if exchange_name == "bancor_pol":
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
-                    address=address,
+                    address=self.cfg.BANCOR_POL_ADDRESS,
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
+            elif exchange_name == "bancor_v3":
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                    abi=BANCOR_V3_NETWORK_INFO_ABI,
+                )
+            elif exchange_name == 'carbon_v1':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            elif exchange_name == 'pancakeswap_v2':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.PANCAKESWAP_V2_FACTORY_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            elif exchange_name == 'pancakeswap_v3':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.PANCAKESWAP_V3_FACTORY_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            else:
+                raise NotImplementedError(
+                    f"Exchange {exchange_name} not supported for tenderly"
+                )
+
 
     def init_exchange_contracts(self):
         """

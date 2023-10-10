@@ -185,7 +185,7 @@ load_dotenv()
 )
 @click.option(
     "--tenderly_event_exchanges",
-    default="bancor_pol",
+    default="pancakeswap_v2,pancakeswap_v3",
     type=str,
     help="A comma-separated string of exchanges to include for the Tenderly event fetcher.",
 )

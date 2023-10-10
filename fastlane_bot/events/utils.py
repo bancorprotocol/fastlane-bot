@@ -966,7 +966,7 @@ def handle_initial_iteration(
                 )
 
 
-def get_tenderly_pol_events(
+def get_tenderly_events(
         mgr,
         start_block,
         current_block,
@@ -996,18 +996,23 @@ def get_tenderly_pol_events(
     mgr.cfg.logger.info(
         f"Connecting to Tenderly fork: {tenderly_fork_id}, current_block: {current_block}, start_block: {start_block}"
     )
-    contract = mgr.tenderly_event_contracts["bancor_pol"]
+    tenderly_events_all = []
+    tenderly_exchanges = mgr.tenderly_event_exchanges
+    for exchange in tenderly_exchanges:
 
-    tenderly_events = [
-        event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
-        for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
-    ]
-    tenderly_events = [event for event in tenderly_events if len(event) > 0]
-    tenderly_events = [
-        complex_handler(event)
-        for event in [complex_handler(event) for event in tenderly_events]
-    ]
-    return tenderly_events
+        contract = mgr.tenderly_event_contracts[exchange]
+
+        tenderly_events = [
+            event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
+            for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
+        ]
+        tenderly_events = [event for event in tenderly_events if len(event) > 0]
+        tenderly_events = [
+            complex_handler(event)
+            for event in [complex_handler(event) for event in tenderly_events]
+        ]
+        tenderly_events_all += tenderly_events
+    return tenderly_events_all
 
 
 def get_latest_events(
@@ -1041,16 +1046,16 @@ def get_latest_events(
     List[Any]
         A list of the latest events.
     """
-    tenderly_pol_events = []
+    tenderly_events = []
 
-    if mgr.tenderly_fork_id and 'bancor_pol' in mgr.tenderly_event_exchanges:
-        tenderly_pol_events = get_tenderly_pol_events(
+    if mgr.tenderly_fork_id and mgr.tenderly_event_exchanges:
+        tenderly_events = get_tenderly_events(
             mgr=mgr,
             start_block=start_block,
             current_block=current_block,
             tenderly_fork_id=mgr.tenderly_fork_id,
         )
-        mgr.cfg.logger.info(f"carbon_pol_events: {len(tenderly_pol_events)}")
+        mgr.cfg.logger.info(f"tenderly_events: {len(tenderly_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1068,8 +1073,8 @@ def get_latest_events(
     latest_events = filter_latest_events(mgr, events)
 
     if mgr.tenderly_fork_id:
-        if tenderly_pol_events:
-            latest_tenderly_events = filter_latest_events(mgr, tenderly_pol_events)
+        if tenderly_events:
+            latest_tenderly_events = filter_latest_events(mgr, tenderly_events)
             latest_events += latest_tenderly_events
 
         # remove the events from any mgr.tenderly_event_exchanges exchanges
