@@ -1001,11 +1001,13 @@ def get_tenderly_events(
     for exchange in tenderly_exchanges:
 
         contract = mgr.tenderly_event_contracts[exchange]
+        exchange_events = mgr.exchanges[exchange].get_events(contract)
 
         tenderly_events = [
             event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
-            for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
+            for event in exchange_events
         ]
+        
         tenderly_events = [event for event in tenderly_events if len(event) > 0]
         tenderly_events = [
             complex_handler(event)
