@@ -2,9 +2,40 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.45...HEAD)
+
+- bug when identifying wrong-direction Carbon curves in Balancer multi pair mode [\#164](https://github.com/bancorprotocol/fastlane-bot/issues/164)
+- Update pairwise\_multi\_bal.py [\#165](https://github.com/bancorprotocol/fastlane-bot/pull/165) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add Support for Balancer Exchange [\#70](https://github.com/bancorprotocol/fastlane-bot/issues/70)
+
+## [v2.7.45](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.45) (2023-10-05)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.44...v2.7.45)
+
+- Update Bancor Network ABI [\#162](https://github.com/bancorprotocol/fastlane-bot/issues/162)
+
+- Add balancer [\#160](https://github.com/bancorprotocol/fastlane-bot/pull/160) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.44](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.44) (2023-10-05)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.43...v2.7.44)
+
+Merged pull requests
+
+- Update Bancor Network ABI [\#163](https://github.com/bancorprotocol/fastlane-bot/pull/163) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.43](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.43) (2023-10-03)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.42...v2.7.43)
 
 - Bug with new multicall method when running backdate\_pools=True [\#158](https://github.com/bancorprotocol/fastlane-bot/issues/158)
+- Update run\_pool\_shutdown.py [\#161](https://github.com/bancorprotocol/fastlane-bot/pull/161) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.42](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.42) (2023-10-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.41...v2.7.42)
+
 - Fix or replace brownie multicall functionality [\#137](https://github.com/bancorprotocol/fastlane-bot/issues/137)
 - 158 bug with new multicall method when running backdate pools=true [\#159](https://github.com/bancorprotocol/fastlane-bot/pull/159) ([mikewcasale](https://github.com/mikewcasale))
 

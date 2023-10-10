@@ -74,6 +74,7 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
+from .modes.pairwise_multi_bal import FindArbitrageMultiPairwiseBalancer
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
@@ -426,6 +427,8 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleBancor3TwoHop
         elif arb_mode in {"multi_pairwise_pol"}:
             return FindArbitrageMultiPairwisePol
+        elif arb_mode in {"multi_pairwise_bal"}:
+            return FindArbitrageMultiPairwiseBalancer
 
     def _run(
         self,
@@ -561,6 +564,8 @@ class CarbonBot(CarbonBotBase):
             )
             if max_trade_in is None:
                 return None
+            if type(max_trade_in) != float or int:
+                return None
             if max_trade_in < 0.0:
                 return None
             self.ConfigObj.logger.debug(
@@ -640,8 +645,14 @@ class CarbonBot(CarbonBotBase):
                         "Carbon pool not up to date, updating and restarting."
                     )
                     return False
-
-            elif current_pool.exchange_name in ["uniswap_v3", "sushiswap_v3"]:
+            elif current_pool.exchange_name in ["balancer",]:
+                for idx, balance in enumerate(current_pool.token_balances):
+                    if balance != fetched_pool[f"tkn{idx}_balance"]:
+                        self.ConfigObj.logger.debug(
+                            "Balancer pool not up to date, updating and restarting."
+                        )
+                        return False
+            elif current_pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
                 if (
                     current_pool.liquidity != fetched_pool["liquidity"]
                     or current_pool.sqrt_price_q96 != fetched_pool["sqrt_price_q96"]
@@ -750,7 +761,7 @@ class CarbonBot(CarbonBotBase):
 
         bnt_usdc_curve = CCm.bycid(self.BNT_ETH_CID)
         usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
-        profit_usd = best_profit * Decimal(str(usd_bnt))
+        profit_usd = Decimal(str(best_profit)) * Decimal(str(usd_bnt))
 
         return best_profit, flt_per_bnt, profit_usd
 
