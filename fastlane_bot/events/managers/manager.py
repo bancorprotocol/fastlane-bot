@@ -137,13 +137,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ),
             )
         pool = self.get_or_init_pool(pool_info)
-        try:
-            params = pool.update_from_contract(
-                contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
-            )
-        except Exception as e:
-            self.cfg.logger.error(f"Error updating pool: {e} {pool_info}")
-            raise e
+        params = pool.update_from_contract(
+            contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
+        )
         for key, value in params.items():
             pool_info[key] = value
         return pool_info
@@ -264,20 +260,21 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     break
                 break
             except Exception as e:
-                if all(
-                    err_msg not in str(e)
-                    for err_msg in [
-                        "Too Many Requests for url",
-                        "format_name",
-                    ]
-                ):
+                if 'Too Many Requests for url' in str(e):
+                    time.sleep(random.random())
+                    return self.update(
+                            event,
+                            address,
+                            token_address,
+                            pool_info,
+                            contract,
+                            block_number,
+                    )
+                elif "format_name" not in str(e):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
                     if "ERC721:" not in str(e):
                         raise e
                     break
-                else:
-                    rate_limiter = 0.1 + 0.9 * random.random()
-                    time.sleep(rate_limiter)
 
     def handle_pair_trading_fee_updated(
         self,
