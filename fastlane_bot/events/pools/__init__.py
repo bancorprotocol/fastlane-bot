@@ -15,6 +15,8 @@ from fastlane_bot.events.pools.pancakeswap_v2 import PancakeswapV2Pool
 from fastlane_bot.events.pools.pancakeswap_v3 import PancakeswapV3Pool
 from fastlane_bot.events.pools.bancor_v2 import BancorV2Pool
 from fastlane_bot.events.pools.bancor_pol import BancorPolPool
+from fastlane_bot.events.pools.balancer import BalancerPool
+
 
 # register your pool types
 pool_factory.register_format("uniswap_v3", UniswapV3Pool)
@@ -27,3 +29,4 @@ pool_factory.register_format("bancor_v2", BancorV2Pool)
 pool_factory.register_format("bancor_pol", BancorPolPool)
 pool_factory.register_format("pancakeswap_v2", PancakeswapV2Pool)
 pool_factory.register_format("pancakeswap_v3", PancakeswapV3Pool)
+pool_factory.register_format("balancer", BalancerPool)

@@ -152,4 +152,6 @@ class MultiCaller(ContextManager):
             decoded_data = decode_abi(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
-        return [i[0] for i in decoded_data_list]
+        return_data = [i[0] for i in decoded_data_list if len(i) == 1]
+        return_data += [i[1] for i in decoded_data_list if len(i) > 1]
+        return return_data
