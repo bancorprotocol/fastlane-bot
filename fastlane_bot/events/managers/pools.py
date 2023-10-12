@@ -205,6 +205,7 @@ class PoolManager(BaseManager):
         other_args: Optional[Dict[str, Any]] = None,
         contract: Optional[Contract] = None,
         block_number: int = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         This is the main function for adding pool info.
@@ -275,7 +276,7 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
+                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3, tenderly_exchanges
                 )
             )
 

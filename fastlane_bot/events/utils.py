@@ -9,6 +9,7 @@ import contextlib
 import importlib
 import json
 import os
+import random
 import sys
 import time
 from _decimal import Decimal
@@ -544,8 +545,18 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     List[Any]
         A list of all events.
     """
+    def throttled_get_all_entries(event_filter):
+        try:
+            return event_filter.get_all_entries()
+        except Exception as e:
+            if 'Too Many Requests for url' in str(e):
+                time.sleep(random.random())
+                return event_filter.get_all_entries()
+            else:
+                raise e
+
     return Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event_filter.get_all_entries)() for event_filter in event_filters
+        delayed(throttled_get_all_entries)(event_filter) for event_filter in event_filters
     )
 
 
@@ -1007,7 +1018,7 @@ def get_tenderly_events(
             event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
             for event in exchange_events
         ]
-        
+
         tenderly_events = [event for event in tenderly_events if len(event) > 0]
         tenderly_events = [
             complex_handler(event)

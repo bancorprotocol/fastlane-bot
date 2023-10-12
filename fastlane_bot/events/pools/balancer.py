@@ -6,13 +6,14 @@ Contains the pool class for Carbon v1. This class is responsible for handling Ca
 Licensed under MIT
 """
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
 from fastlane_bot import Config
+
 
 @dataclass
 class BalancerPool(Pool):
@@ -48,7 +49,8 @@ class BalancerPool(Pool):
 
         return data
 
-    def update_from_contract(self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None) -> Dict[str, Any]:
+    def update_from_contract(self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None,
+                             w3: Web3 = None, tenderly_exchanges: List[str] = None) -> Dict[str, Any]:
         """
         See base class.
         """

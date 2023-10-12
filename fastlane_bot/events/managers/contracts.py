@@ -5,7 +5,7 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 
 import pandas as pd
 from web3 import Web3
@@ -149,6 +149,7 @@ class ContractsManager(BaseManager):
             exchange_name: str = None,
             address: str = None,
             event: Any = None,
+            tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
@@ -197,6 +198,7 @@ class ContractsManager(BaseManager):
             cid=event["args"]["id"] if exchange_name == "carbon_v1" else None,
             contract=pool_contract,
             block_number=block_number,
+            tenderly_exchanges=tenderly_exchanges,
         )
 
     def get_pool_contract(self, exchange_name: str, address: str) -> Contract:

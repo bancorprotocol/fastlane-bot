@@ -66,8 +66,6 @@ class ConfigNetwork(ConfigBase):
     BANCOR_POL_NAME = "bancor_pol"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
     SHIBA_V2_NAME = "shiba_v2"
-
-    BALANCER_NAME = "balancer"
     EXCHANGE_IDS = {
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,

@@ -8,7 +8,7 @@ Licensed under MIT
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from web3 import Web3
 from web3.contract import Contract
@@ -76,7 +76,8 @@ class Pool(ABC):
 
     @abstractmethod
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None,
+            tenderly_exchanges: List[str] = None
     ) -> Dict[str, Any]:
         """
         Update the pool state from a contract.
@@ -91,6 +92,8 @@ class Pool(ABC):
             The tenderly web3 instance, by default None
         w3 : Web3, optional
             The web3 instance, by default None
+        tenderly_exchanges : List[str], optional
+            The tenderly exchanges, by default None
 
         Returns
         -------
