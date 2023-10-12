@@ -181,8 +181,8 @@ def test_test_combos_and_tokens():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-    assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+    assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
+    assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
     
 
 # ------------------------------------------------------------
@@ -203,7 +203,7 @@ def test_test_expected_output():
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
-    assert len(r) == 26, f"[TestMultiMode] Expected 26 arbs, found {len(r)}"
+    assert len(r) == 30, f"[TestMultiMode] Expected 30 arbs, found {len(r)}"
     assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
     
 

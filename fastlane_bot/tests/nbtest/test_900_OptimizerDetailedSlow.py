@@ -587,7 +587,7 @@ def test_general_and_specific_tests():
     # #### result
     
     assert type(r) == PairOptimizer.MargpOptimizerResult
-    assert round(r.result, 5) == -1217.2442
+    assert round(r.result, 5) == -1217.24416
     assert r.time < 0.1
     assert r.method == "margp-pair"
     assert r.errormsg is None
