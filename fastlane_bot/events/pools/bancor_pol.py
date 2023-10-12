@@ -6,7 +6,7 @@ Contains the exchange class for BancorV3. This class is responsible for handling
 Licensed under MIT
 """
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import web3
 from web3 import Web3
@@ -87,7 +87,7 @@ class BancorPolPool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None
+        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None, tenderly_exchanges: List[str] = None
     ) -> Dict[str, Any]:
         """
         See base class.
@@ -102,7 +102,7 @@ class BancorPolPool(Pool):
 
         tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly, w3)
 
-        if tenderly_fork_id:
+        if tenderly_fork_id and 'bancor_pol' in tenderly_exchanges:
             contract = w3_tenderly.eth.contract(
                 abi=BANCOR_POL_ABI, address=contract.address
             )

@@ -9,6 +9,7 @@ import contextlib
 import importlib
 import json
 import os
+import random
 import sys
 import time
 from _decimal import Decimal
@@ -227,7 +228,7 @@ def get_static_data(
         exchanges: List[str],
         static_pool_data_filename: str,
         static_pool_data_sample_sz: int or str,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str]]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
 
@@ -266,6 +267,13 @@ def get_static_data(
         uniswap_v2_event_mappings_df[["address", "exchange"]].values
     )
 
+    # Read Uniswap v3 event mappings and tokens
+    uniswap_v3_filepath = os.path.join(base_path, "uniswap_v3_event_mappings.csv")
+    uniswap_v3_event_mappings_df = read_csv_file(uniswap_v3_filepath)
+    uniswap_v3_event_mappings = dict(
+        uniswap_v3_event_mappings_df[["address", "exchange"]].values
+    )
+
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     tokens = read_csv_file(tokens_filepath)
 
@@ -275,7 +283,7 @@ def get_static_data(
         for index, row in static_pool_data.iterrows()
     ]
 
-    return static_pool_data, tokens, uniswap_v2_event_mappings
+    return static_pool_data, tokens, uniswap_v2_event_mappings, uniswap_v3_event_mappings
 
 
 def handle_tenderly_event_exchanges(cfg: Config, exchanges: str, tenderly_fork_id: str) -> List[str]:
@@ -537,8 +545,18 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     List[Any]
         A list of all events.
     """
+    def throttled_get_all_entries(event_filter):
+        try:
+            return event_filter.get_all_entries()
+        except Exception as e:
+            if 'Too Many Requests for url' in str(e):
+                time.sleep(random.random())
+                return event_filter.get_all_entries()
+            else:
+                raise e
+
     return Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event_filter.get_all_entries)() for event_filter in event_filters
+        delayed(throttled_get_all_entries)(event_filter) for event_filter in event_filters
     )
 
 
@@ -959,7 +977,7 @@ def handle_initial_iteration(
                 )
 
 
-def get_tenderly_pol_events(
+def get_tenderly_events(
         mgr,
         start_block,
         current_block,
@@ -989,18 +1007,25 @@ def get_tenderly_pol_events(
     mgr.cfg.logger.info(
         f"Connecting to Tenderly fork: {tenderly_fork_id}, current_block: {current_block}, start_block: {start_block}"
     )
-    contract = mgr.tenderly_event_contracts["bancor_pol"]
+    tenderly_events_all = []
+    tenderly_exchanges = mgr.tenderly_event_exchanges
+    for exchange in tenderly_exchanges:
 
-    tenderly_events = [
-        event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
-        for event in [contract.events.TokenTraded, contract.events.TradingEnabled]
-    ]
-    tenderly_events = [event for event in tenderly_events if len(event) > 0]
-    tenderly_events = [
-        complex_handler(event)
-        for event in [complex_handler(event) for event in tenderly_events]
-    ]
-    return tenderly_events
+        contract = mgr.tenderly_event_contracts[exchange]
+        exchange_events = mgr.exchanges[exchange].get_events(contract)
+
+        tenderly_events = [
+            event.getLogs(fromBlock=current_block - 1000, toBlock=current_block)
+            for event in exchange_events
+        ]
+
+        tenderly_events = [event for event in tenderly_events if len(event) > 0]
+        tenderly_events = [
+            complex_handler(event)
+            for event in [complex_handler(event) for event in tenderly_events]
+        ]
+        tenderly_events_all += tenderly_events
+    return tenderly_events_all
 
 
 def get_latest_events(
@@ -1034,16 +1059,16 @@ def get_latest_events(
     List[Any]
         A list of the latest events.
     """
-    tenderly_pol_events = []
+    tenderly_events = []
 
-    if mgr.tenderly_fork_id and 'bancor_pol' in mgr.tenderly_event_exchanges:
-        tenderly_pol_events = get_tenderly_pol_events(
+    if mgr.tenderly_fork_id and mgr.tenderly_event_exchanges:
+        tenderly_events = get_tenderly_events(
             mgr=mgr,
             start_block=start_block,
             current_block=current_block,
             tenderly_fork_id=mgr.tenderly_fork_id,
         )
-        mgr.cfg.logger.info(f"carbon_pol_events: {len(tenderly_pol_events)}")
+        mgr.cfg.logger.info(f"tenderly_events: {len(tenderly_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1061,8 +1086,8 @@ def get_latest_events(
     latest_events = filter_latest_events(mgr, events)
 
     if mgr.tenderly_fork_id:
-        if tenderly_pol_events:
-            latest_tenderly_events = filter_latest_events(mgr, tenderly_pol_events)
+        if tenderly_events:
+            latest_tenderly_events = filter_latest_events(mgr, tenderly_events)
             latest_events += latest_tenderly_events
 
         # remove the events from any mgr.tenderly_event_exchanges exchanges

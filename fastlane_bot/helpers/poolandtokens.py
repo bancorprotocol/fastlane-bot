@@ -121,6 +121,7 @@ class PoolAndTokens:
     tkn0_decimals: int
     tkn1_address: str
     tkn1_decimals: int
+    router: str = None
     tkn0_weight: float = None
     tkn1_weight: float = None
     tkn2: str = None
@@ -195,7 +196,7 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(self.fee))
-        if self.exchange_name == self.ConfigObj.UNISWAP_V3_NAME:
+        if self.exchange_name in [self.ConfigObj.UNISWAP_V3_NAME, self.ConfigObj.PANCAKESWAP_V3_NAME]:
             out = self._univ3_to_cpc()
         elif self.exchange_name in [
             self.ConfigObj.CARBON_V1_NAME,
@@ -400,6 +401,7 @@ class PoolAndTokens:
     FEE_LOOKUP = {
         0.0001: Univ3Calculator.FEE100,
         0.0005: Univ3Calculator.FEE500,
+        0.0025: Univ3Calculator.FEE2500,
         0.0030: Univ3Calculator.FEE3000,
         0.01: Univ3Calculator.FEE10000,
     }

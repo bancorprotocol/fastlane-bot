@@ -36,6 +36,8 @@ class PoolManager(BaseManager):
             "uniswap_v2",
             "sushiswap_v2",
             "uniswap_v3",
+            "pancakeswap_v2",
+            "pancakeswap_v3",
             "bancor_v2",
         ]:
             return pool_info["address"]
@@ -203,6 +205,7 @@ class PoolManager(BaseManager):
         other_args: Optional[Dict[str, Any]] = None,
         contract: Optional[Contract] = None,
         block_number: int = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         This is the main function for adding pool info.
@@ -273,7 +276,7 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3
+                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3, tenderly_exchanges
                 )
             )
 
@@ -320,7 +323,7 @@ class PoolManager(BaseManager):
         Optional[Dict[str, Any]]
             The pool info.
         """
-        if ex_name == "sushiswap_v2":
+        if ex_name in self.cfg.UNI_V2_FORKS:
             ex_name = "uniswap_v2"
 
         if key == "address":

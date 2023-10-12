@@ -25,6 +25,19 @@
     "blockHash": "0xefc338e7672291a889029a206f93a50feba92ba7be9e1210f382d79cf2fc9972",
     "blockNumber": 17613685
   },
+  "pancakeswap_v2_event": {
+    "args": {
+      "reserve0": 6543521908014628725401090,
+      "reserve1": 2535973648121313922634
+    },
+    "event": "Sync",
+    "logIndex": 93,
+    "transactionIndex": 38,
+    "transactionHash": "0xc7c0560a8829fb43e05003ef07de8ce682167bb8a16a5e73d832a6a15513dace",
+    "address": "0x4A86C01d67965f8cB3d0AAA2c655705E64097C31",
+    "blockHash": "0xefc338e7672291a889029a206f93a50feba92ba7be9e1210f382d79cf2fc9972",
+    "blockNumber": 17613685
+  },
   "uniswap_v3_event": {
     "args": {
       "sender": "0x0000000000a84D1a9B0063A910315C7fFA9Cd248",
@@ -34,6 +47,26 @@
       "sqrtPriceX96": 3141136922601321808510033604,
       "liquidity": 27271279776041947233926,
       "tick": -64559
+    },
+    "event": "Swap",
+    "logIndex": 48,
+    "transactionIndex": 4,
+    "transactionHash": "0x2063e741127ec1a61b03f5c1e01a5ba83c695606e56b8b705b69f0218c6433f4",
+    "address": "0xcBcC3cBaD991eC59204be2963b4a87951E4d292B",
+    "blockHash": "0xc4c2ffbf7e0a2b94721eee92a8acaed343d2f332bcd83bf0b66d63b826d78cf6",
+    "blockNumber": 17613637
+  },
+  "pancakeswap_v3_event": {
+    "args": {
+      "sender": "0x0000000000a84D1a9B0063A910315C7fFA9Cd248",
+      "recipient": "0x0000000000a84D1a9B0063A910315C7fFA9Cd248",
+      "amount0": 100153166149054480779,
+      "amount1": -156077720804642502,
+      "sqrtPriceX96": 314113692261321808510033604,
+      "liquidity": 2727127977604947233926,
+      "tick": -64560,
+      "protocolFeesToken0": 1,
+      "protocolFeesToken1": 1
     },
     "event": "Swap",
     "logIndex": 48,

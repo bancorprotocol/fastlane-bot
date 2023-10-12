@@ -5,7 +5,7 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 
 import pandas as pd
 from web3 import Web3
@@ -22,18 +22,47 @@ class ContractsManager(BaseManager):
         """
 
         for exchange_name in self.tenderly_event_exchanges:
-            address = None
-            if exchange_name != "bancor_pol":
-                raise NotImplementedError(
-                    f"Exchange {exchange_name} not supported for tenderly"
-                )
-            if address := self.cfg.BANCOR_POL_ADDRESS:
+
+            if exchange_name == "bancor_pol":
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
-                    address=address,
+                    address=self.cfg.BANCOR_POL_ADDRESS,
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
+            elif exchange_name == "bancor_v3":
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                    abi=BANCOR_V3_NETWORK_INFO_ABI,
+                )
+            elif exchange_name == 'carbon_v1':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            elif exchange_name == 'pancakeswap_v2':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.PANCAKESWAP_V2_FACTORY_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            elif exchange_name == 'pancakeswap_v3':
+                self.tenderly_event_contracts[
+                    exchange_name
+                ] = self.w3_tenderly.eth.contract(
+                    address=self.cfg.PANCAKESWAP_V3_FACTORY_ADDRESS,
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+            else:
+                raise NotImplementedError(
+                    f"Exchange {exchange_name} not supported for tenderly"
+                )
+
 
     def init_exchange_contracts(self):
         """
@@ -120,6 +149,7 @@ class ContractsManager(BaseManager):
             exchange_name: str = None,
             address: str = None,
             event: Any = None,
+            tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
@@ -168,6 +198,7 @@ class ContractsManager(BaseManager):
             cid=event["args"]["id"] if exchange_name == "carbon_v1" else None,
             contract=pool_contract,
             block_number=block_number,
+            tenderly_exchanges=tenderly_exchanges,
         )
 
     def get_pool_contract(self, exchange_name: str, address: str) -> Contract:
@@ -205,6 +236,7 @@ class ContractsManager(BaseManager):
                 address=contract_key, abi=self.exchanges[exchange_name].get_abi()
             ),
         )
+
 
     @staticmethod
     def get_tkn_key(symbol: str, addr: str) -> str:
