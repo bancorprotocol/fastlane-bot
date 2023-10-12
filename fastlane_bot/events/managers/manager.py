@@ -67,7 +67,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info = self.get_pool_info(
                 key, key_value, ex_name
             ) or self.add_pool_info_from_contract(
-                address=addr, event=event, exchange_name=ex_name
+                address=addr, event=event, exchange_name=ex_name, tenderly_exchanges=self.tenderly_event_exchanges
             )
 
         if not pool_info:
@@ -275,6 +275,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     if "ERC721:" not in str(e):
                         raise e
                     break
+                else:
+                    rate_limiter = 0.1 + 0.9 * random.random()
+                    time.sleep(random.random())
+
 
     def handle_pair_trading_fee_updated(
         self,

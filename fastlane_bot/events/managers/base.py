@@ -69,6 +69,7 @@ class BaseManager:
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
@@ -723,7 +724,7 @@ class BaseManager:
             return "token", event["args"]["token"]
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
-        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3"}:
+        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3", "pancakeswap_v2", "pancakeswap_v3"}:
             return "address", addr
         if ex_name == "bancor_v2":
             return ("tkn0_address", "tkn1_address"), (
