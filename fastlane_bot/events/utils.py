@@ -81,7 +81,14 @@ def filter_latest_events(
         unique_key = event[key] if key in event else event["args"][key]
 
         # Skip events for Bancor v2 anchors
-        if key == "address" and unique_key in bancor_v2_anchor_addresses:
+        if (
+            key == "address"
+            and "_token1" in event["args"]
+            and (
+                event["args"]["_token1"] in bancor_v2_anchor_addresses
+                or event["args"]["_token2"] in bancor_v2_anchor_addresses
+            )
+        ):
             continue
 
         if unique_key in latest_entry_per_pool:
