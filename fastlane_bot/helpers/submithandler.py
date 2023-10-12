@@ -349,7 +349,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             "gasPrice": self._get_gas_price(),
             "value": tx_params.get("value", 0),
             "nonce": tx_params.get("nonce", None),
-            "chainId": self.w3.eth.chain_id,
+            "chainId": 1,
         }
 
     def _get_transaction_hash(self, tx_details: TxParams, key: str) -> str:

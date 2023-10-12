@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.45...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.46...HEAD)
 
 - bug when identifying wrong-direction Carbon curves in Balancer multi pair mode [\#164](https://github.com/bancorprotocol/fastlane-bot/issues/164)
+
+- Rate limiter for free alchemy accounts [\#166](https://github.com/bancorprotocol/fastlane-bot/issues/166)
+- adds rate limiter and removes unnecessary alchemy calls for chain\_id [\#167](https://github.com/bancorprotocol/fastlane-bot/pull/167) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.46](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.46) (2023-10-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.45...v2.7.46)
+
 - Update pairwise\_multi\_bal.py [\#165](https://github.com/bancorprotocol/fastlane-bot/pull/165) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Add Support for Balancer Exchange [\#70](https://github.com/bancorprotocol/fastlane-bot/issues/70)
