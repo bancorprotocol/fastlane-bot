@@ -7,8 +7,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "5.0"
-__DATE__ = "26/Jul/2023"
+__VERSION__ = "5.1"
+__DATE__ = "20/Sep/2023"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 from abc import ABC, abstractmethod, abstractproperty
@@ -223,7 +223,7 @@ class OptimizerBase(ABC):
     findmin = findminmax_nr
     findmax = findminmax_nr
 
-    GOALSEEKEPS = 1e-6
+    GOALSEEKEPS = 1e-12 # double has 15 digits
 
     @classmethod
     def goalseek(cls, func, a, b, *, eps=None):
@@ -237,6 +237,7 @@ class OptimizerBase(ABC):
         """
         if eps is None: 
             eps = cls.GOALSEEKEPS
+        #print(f"[goalseek] eps = {eps}, GOALSEEKEPS = {cls.GOALSEEKEPS}")
         if func(a) * func(b) > 0:
             return cls.SimpleResult(
                 result=None,
@@ -244,14 +245,18 @@ class OptimizerBase(ABC):
                 method="bisection",
             )
             #raise ValueError("function must have different signs at a,b")
-        while (b - a) > eps:
+        counter = 0
+        while (b/a-1) > eps:
             c = (a + b) / 2
             if func(c) == 0:
-                return c
+                return cls.SimpleResult(result=c, method="bisection")
             elif func(a) * func(c) < 0:
                 b = c
             else:
                 a = c
+            counter += 1
+            if counter > 100:
+                raise ValueError(f"goalseek did not converge; possible epsilon too small [{eps}]")
         return cls.SimpleResult(result=(a + b) / 2, method="bisection")
 
     @staticmethod
