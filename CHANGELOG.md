@@ -2,10 +2,18 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.47...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.48...HEAD)
+
+- goalseek should use eps as a ratio [\#138](https://github.com/bancorprotocol/fastlane-bot/issues/138)
+- modified the goalseek to use eps as a ratio [\#139](https://github.com/bancorprotocol/fastlane-bot/pull/139) ([NIXBNT](https://github.com/NIXBNT))
+
+- Add Support for Pancakeswap \(on Ethereum\) Exchange [\#81](https://github.com/bancorprotocol/fastlane-bot/issues/81)
+
+## [v2.7.48](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.48) (2023-10-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.47...v2.7.48)
 
 - Rate limiter for free alchemy accounts [\#166](https://github.com/bancorprotocol/fastlane-bot/issues/166)
-- Add Support for Pancakeswap \(on Ethereum\) Exchange [\#81](https://github.com/bancorprotocol/fastlane-bot/issues/81)
 - 81 add support for pancakeswap on ethereum exchange [\#156](https://github.com/bancorprotocol/fastlane-bot/pull/156) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.47](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.47) (2023-10-12)
