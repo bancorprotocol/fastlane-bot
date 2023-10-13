@@ -8,7 +8,7 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -42,6 +42,8 @@ require("3.0", __VERSION__)
 # +
 
 class MockManager():
+
+    pool_data = pd.DataFrame({'anchor': ['0xabc', '0xdef'], 'exchange_name': ['bancor_v2', 'bancor_v2']}).to_dict('records')
 
     def pool_type_from_exchange_name(self, exchange_name):
 

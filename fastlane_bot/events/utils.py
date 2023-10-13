@@ -37,7 +37,7 @@ from fastlane_bot.events.pools import CarbonV1Pool
 
 
 def filter_latest_events(
-        mgr: Manager, events: List[List[AttributeDict]]
+    mgr: Manager, events: List[List[AttributeDict]]
 ) -> List[AttributeDict]:
     """
     This function filters out the latest events for each pool. Given a nested list of events, it iterates through all events
@@ -58,6 +58,10 @@ def filter_latest_events(
     # Handles the case where multiple pools are created in the same block
     all_events.reverse()
 
+    bancor_v2_anchor_addresses = {
+        pool["anchor"] for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"
+    }
+
     for event in all_events:
         pool_type = mgr.pool_type_from_exchange_name(
             mgr.exchange_name_from_event(event)
@@ -73,26 +77,38 @@ def filter_latest_events(
                 key = "pool"
             else:
                 key = "tkn_address"
+
         unique_key = event[key] if key in event else event["args"][key]
+
+        # Skip events for Bancor v2 anchors
+        if (
+            key == "address"
+            and "_token1" in event["args"]
+            and (
+                event["args"]["_token1"] in bancor_v2_anchor_addresses
+                or event["args"]["_token2"] in bancor_v2_anchor_addresses
+            )
+        ):
+            continue
 
         if unique_key in latest_entry_per_pool:
             if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
                 latest_entry_per_pool[unique_key] = event
             elif (
-                    event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
+                event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
             ):
                 if (
-                        event["transactionIndex"]
-                        == latest_entry_per_pool[unique_key]["transactionIndex"]
+                    event["transactionIndex"]
+                    == latest_entry_per_pool[unique_key]["transactionIndex"]
                 ):
                     if (
-                            event["logIndex"]
-                            > latest_entry_per_pool[unique_key]["logIndex"]
+                        event["logIndex"]
+                        > latest_entry_per_pool[unique_key]["logIndex"]
                     ):
                         latest_entry_per_pool[unique_key] = event
                 elif (
-                        event["transactionIndex"]
-                        > latest_entry_per_pool[unique_key]["transactionIndex"]
+                    event["transactionIndex"]
+                    > latest_entry_per_pool[unique_key]["transactionIndex"]
                 ):
                     latest_entry_per_pool[unique_key] = event
                 else:
@@ -193,7 +209,7 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
 
 
 def filter_static_pool_data(
-        pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
+    pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
 ) -> pd.DataFrame:
     """Helper function to filter static pool data.
 
@@ -217,17 +233,17 @@ def filter_static_pool_data(
         bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
         non_bancor_data = filtered_data[
             filtered_data["exchange_name"] != "bancor_v3"
-            ].sample(n=sample_size)
+        ].sample(n=sample_size)
         filtered_data = pd.concat([bancor_data, non_bancor_data])
 
     return filtered_data
 
 
 def get_static_data(
-        cfg: Config,
-        exchanges: List[str],
-        static_pool_data_filename: str,
-        static_pool_data_sample_sz: int or str,
+    cfg: Config,
+    exchanges: List[str],
+    static_pool_data_filename: str,
+    static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -283,10 +299,17 @@ def get_static_data(
         for index, row in static_pool_data.iterrows()
     ]
 
-    return static_pool_data, tokens, uniswap_v2_event_mappings, uniswap_v3_event_mappings
+    return (
+        static_pool_data,
+        tokens,
+        uniswap_v2_event_mappings,
+        uniswap_v3_event_mappings,
+    )
 
 
-def handle_tenderly_event_exchanges(cfg: Config, exchanges: str, tenderly_fork_id: str) -> List[str]:
+def handle_tenderly_event_exchanges(
+    cfg: Config, exchanges: str, tenderly_fork_id: str
+) -> List[str]:
     """
     Handles the exchanges parameter.
 
@@ -340,9 +363,9 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
 
 
 def handle_target_tokens(
-        cfg: Config,
-        flashloan_tokens: List[str],
-        target_tokens: str,
+    cfg: Config,
+    flashloan_tokens: List[str],
+    target_tokens: str,
 ) -> List[str]:
     """
     Handles the target tokens parameter.
@@ -415,11 +438,11 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
 
 
 def get_config(
-        default_min_profit_bnt: int or Decimal,
-        limit_bancor3_flashloan_tokens: bool,
-        loglevel: str,
-        logging_path: str,
-        tenderly_fork_id: str = None,
+    default_min_profit_bnt: int or Decimal,
+    limit_bancor3_flashloan_tokens: bool,
+    loglevel: str,
+    logging_path: str,
+    tenderly_fork_id: str = None,
 ) -> Config:
     """
     Gets the config object.
@@ -490,7 +513,7 @@ def get_loglevel(loglevel: str) -> Any:
 
 
 def get_event_filters(
-        n_jobs: int, mgr: Any, start_block: int, current_block: int
+    n_jobs: int, mgr: Any, start_block: int, current_block: int
 ) -> Any:
     """
     Creates event filters for the specified block range.
@@ -545,28 +568,30 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     List[Any]
         A list of all events.
     """
+
     def throttled_get_all_entries(event_filter):
         try:
             return event_filter.get_all_entries()
         except Exception as e:
-            if 'Too Many Requests for url' in str(e):
+            if "Too Many Requests for url" in str(e):
                 time.sleep(random.random())
                 return event_filter.get_all_entries()
             else:
                 raise e
 
     return Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(throttled_get_all_entries)(event_filter) for event_filter in event_filters
+        delayed(throttled_get_all_entries)(event_filter)
+        for event_filter in event_filters
     )
 
 
 def save_events_to_json(
-        cache_latest_only,
-        logging_path,
-        mgr,
-        latest_events: List[Any],
-        start_block: int,
-        current_block: int,
+    cache_latest_only,
+    logging_path,
+    mgr,
+    latest_events: List[Any],
+    start_block: int,
+    current_block: int,
 ) -> None:
     """
     Saves the given events to a JSON file.
@@ -597,8 +622,8 @@ def save_events_to_json(
     try:
         with open(path, "w") as f:
             latest_events = [
-                                _["args"].pop("contextId", None) for _ in latest_events
-                            ] and latest_events
+                _["args"].pop("contextId", None) for _ in latest_events
+            ] and latest_events
             f.write(json.dumps(latest_events))
     except Exception as e:
         mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
@@ -624,7 +649,7 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
 
 
 def write_pool_data_to_disk(
-        cache_latest_only: bool, logging_path: str, mgr: Any, current_block: int
+    cache_latest_only: bool, logging_path: str, mgr: Any, current_block: int
 ) -> None:
     """
     Writes the pool data to disk.
@@ -654,8 +679,8 @@ def write_pool_data_to_disk(
 
 
 def parse_non_multicall_rows_to_update(
-        mgr: Any,
-        rows_to_update: List[Hashable],
+    mgr: Any,
+    rows_to_update: List[Hashable],
 ) -> List[Hashable]:
     """
     Parses the rows to update for Bancor v3 pools.
@@ -715,11 +740,11 @@ def init_bot(mgr: Any) -> CarbonBot:
 
 
 def update_pools_from_contracts(
-        mgr: Any,
-        n_jobs: int,
-        rows_to_update: List[int] or List[Hashable],
-        token_address: bool = False,
-        current_block: int = None,
+    mgr: Any,
+    n_jobs: int,
+    rows_to_update: List[int] or List[Hashable],
+    token_address: bool = False,
+    current_block: int = None,
 ) -> None:
     """
     Updates the pools with the given indices by calling the contracts.
@@ -780,19 +805,19 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
 
 
 def handle_subsequent_iterations(
-        arb_mode: str,
-        bot: CarbonBot,
-        flashloan_tokens: List[str],
-        polling_interval: int,
-        randomizer: int,
-        run_data_validator: bool,
-        target_tokens: List[str] = None,
-        loop_idx: int = 0,
-        logging_path: str = None,
-        replay_from_block: int = None,
-        tenderly_uri: str = None,
-        mgr: Any = None,
-        forked_from_block: int = None,
+    arb_mode: str,
+    bot: CarbonBot,
+    flashloan_tokens: List[str],
+    polling_interval: int,
+    randomizer: int,
+    run_data_validator: bool,
+    target_tokens: List[str] = None,
+    loop_idx: int = 0,
+    logging_path: str = None,
+    replay_from_block: int = None,
+    tenderly_uri: str = None,
+    mgr: Any = None,
+    forked_from_block: int = None,
 ):
     """
     Handles the subsequent iterations of the bot.
@@ -854,9 +879,7 @@ def handle_subsequent_iterations(
             randomizer=randomizer,
             logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
-            tenderly_fork=tenderly_uri.split("/")[-1]
-            if tenderly_uri
-            else None,
+            tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
             replay_from_block=forked_from_block,
         )
 
@@ -929,12 +952,12 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
 
 
 def handle_initial_iteration(
-        backdate_pools: bool,
-        current_block: int,
-        last_block: int,
-        mgr: Any,
-        n_jobs: int,
-        start_block: int,
+    backdate_pools: bool,
+    current_block: int,
+    last_block: int,
+    mgr: Any,
+    n_jobs: int,
+    start_block: int,
 ):
     """
     Handles the initial iteration of the bot.
@@ -978,10 +1001,10 @@ def handle_initial_iteration(
 
 
 def get_tenderly_events(
-        mgr,
-        start_block,
-        current_block,
-        tenderly_fork_id,
+    mgr,
+    start_block,
+    current_block,
+    tenderly_fork_id,
 ):
     """
     Gets the Tenderly POL events.
@@ -1010,7 +1033,6 @@ def get_tenderly_events(
     tenderly_events_all = []
     tenderly_exchanges = mgr.tenderly_event_exchanges
     for exchange in tenderly_exchanges:
-
         contract = mgr.tenderly_event_contracts[exchange]
         exchange_events = mgr.exchanges[exchange].get_events(contract)
 
@@ -1029,12 +1051,12 @@ def get_tenderly_events(
 
 
 def get_latest_events(
-        current_block: int,
-        mgr: Any,
-        n_jobs: int,
-        start_block: int,
-        cache_latest_only: bool,
-        logging_path: str,
+    current_block: int,
+    mgr: Any,
+    n_jobs: int,
+    start_block: int,
+    cache_latest_only: bool,
+    logging_path: str,
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -1117,11 +1139,11 @@ def get_latest_events(
 
 
 def get_start_block(
-        alchemy_max_block_fetch: int,
-        last_block: int,
-        mgr: Any,
-        reorg_delay: int,
-        replay_from_block: int,
+    alchemy_max_block_fetch: int,
+    last_block: int,
+    mgr: Any,
+    reorg_delay: int,
+    replay_from_block: int,
 ) -> Tuple[int, int or None]:
     """
     Gets the starting block number.
@@ -1256,11 +1278,11 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
 
 
 def set_network_connection_to_tenderly(
-        mgr: Any,
-        use_cached_events: bool,
-        tenderly_uri: str,
-        forked_from_block: int = None,
-        tenderly_fork_id: str = None,
+    mgr: Any,
+    use_cached_events: bool,
+    tenderly_uri: str,
+    forked_from_block: int = None,
+    tenderly_fork_id: str = None,
 ) -> Any:
     """
     Set the network connection to Tenderly.
@@ -1304,15 +1326,17 @@ def set_network_connection_to_tenderly(
         forked_from_block = mgr.cfg.w3.eth.blockNumber
 
     assert (
-            mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
+        mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
     ), f"Failed to connect to Tenderly fork at {tenderly_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
-    mgr.cfg.logger.info(f"Successfully connected to Tenderly fork at {tenderly_uri}, forked from block: {forked_from_block}")
+    mgr.cfg.logger.info(
+        f"Successfully connected to Tenderly fork at {tenderly_uri}, forked from block: {forked_from_block}"
+    )
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
     return mgr, forked_from_block
 
 
 def set_network_connection_to_mainnet(
-        mgr: Any, use_cached_events: bool, mainnet_uri: str
+    mgr: Any, use_cached_events: bool, mainnet_uri: str
 ) -> Any:
     """
     Set the network connection to Mainnet.
@@ -1337,7 +1361,7 @@ def set_network_connection_to_mainnet(
     mgr.cfg.w3 = Web3(Web3.HTTPProvider(mainnet_uri))
 
     assert (
-            mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
+        mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
     ), f"Failed to connect to Mainnet at {mainnet_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
     mgr.cfg.logger.info("Successfully connected to Mainnet")
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
@@ -1345,10 +1369,10 @@ def set_network_connection_to_mainnet(
 
 
 def handle_limit_pairs_for_replay_mode(
-        cfg: Config,
-        limit_pairs_for_replay: str,
-        replay_from_block: int,
-        static_pool_data: pd.DataFrame,
+    cfg: Config,
+    limit_pairs_for_replay: str,
+    replay_from_block: int,
+    static_pool_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """
     Splits, validates, and logs the `limit_pairs_for_replay` for replay mode.
@@ -1380,14 +1404,14 @@ def handle_limit_pairs_for_replay_mode(
 
 
 def set_network_to_tenderly_if_replay(
-        last_block: int,
-        loop_idx: int,
-        mgr: Any,
-        replay_from_block: int,
-        tenderly_uri: str or None,
-        use_cached_events: bool,
-        forked_from_block: int = None,
-        tenderly_fork_id: str = None,
+    last_block: int,
+    loop_idx: int,
+    mgr: Any,
+    replay_from_block: int,
+    tenderly_uri: str or None,
+    use_cached_events: bool,
+    forked_from_block: int = None,
+    tenderly_fork_id: str = None,
 ) -> Tuple[Any, str or None, int or None]:
     """
     Set the network connection to Tenderly if replaying from a block
@@ -1448,18 +1472,20 @@ def set_network_to_tenderly_if_replay(
         return mgr, tenderly_uri, forked_from_block
 
     else:
-        tenderly_uri, forked_from_block = setup_replay_from_block(mgr=mgr, block_number=replay_from_block)
+        tenderly_uri, forked_from_block = setup_replay_from_block(
+            mgr=mgr, block_number=replay_from_block
+        )
         mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
         return mgr, tenderly_uri, forked_from_block
 
 
 def set_network_to_mainnet_if_replay(
-        last_block: int,
-        loop_idx: int,
-        mainnet_uri: str,
-        mgr: Any,
-        replay_from_block: int,
-        use_cached_events: bool,
+    last_block: int,
+    loop_idx: int,
+    mainnet_uri: str,
+    mgr: Any,
+    replay_from_block: int,
+    use_cached_events: bool,
 ):
     """
     Set the network connection to Mainnet if replaying from a block
@@ -1486,9 +1512,9 @@ def set_network_to_mainnet_if_replay(
 
     """
     if (
-            (replay_from_block or mgr.tenderly_fork_id)
-            and mgr.cfg.NETWORK != "mainnet"
-            and last_block != 0
+        (replay_from_block or mgr.tenderly_fork_id)
+        and mgr.cfg.NETWORK != "mainnet"
+        and last_block != 0
     ):
         mgr.cfg.logger.info(f"Setting network connection to Mainnet idx: {loop_idx}")
         mgr = set_network_connection_to_mainnet(
@@ -1574,7 +1600,7 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
     """
     # Verify MIN_PROFIT_BNT is set and respected
     assert (
-            bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+        bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
 
@@ -1601,16 +1627,16 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     if target_tokens:
         for token in target_tokens:
             target_token_addresses = (
-                    target_token_addresses
-                    + static_pool_data[static_pool_data["tkn0_key"] == token][
-                        "tkn0_address"
-                    ].tolist()
+                target_token_addresses
+                + static_pool_data[static_pool_data["tkn0_key"] == token][
+                    "tkn0_address"
+                ].tolist()
             )
             target_token_addresses = (
-                    target_token_addresses
-                    + static_pool_data[static_pool_data["tkn1_key"] == token][
-                        "tkn1_address"
-                    ].tolist()
+                target_token_addresses
+                + static_pool_data[static_pool_data["tkn1_key"] == token][
+                    "tkn1_address"
+                ].tolist()
             )
     target_token_addresses = list(set(target_token_addresses))
     return target_token_addresses
@@ -1633,7 +1659,7 @@ def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
     """
     if replay_from_block:
         assert (
-                replay_from_block > 0
+            replay_from_block > 0
         ), "The block number to replay from must be greater than 0."
     reorg_delay = 0
     use_cached_events = False
@@ -1642,8 +1668,13 @@ def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
 
 
 # %%
-def get_current_block(last_block: int, mgr: Any, reorg_delay: int, replay_from_block: int,
-                      tenderly_fork_id: str) -> int:
+def get_current_block(
+    last_block: int,
+    mgr: Any,
+    reorg_delay: int,
+    replay_from_block: int,
+    tenderly_fork_id: str,
+) -> int:
     """
     Get the current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
 
