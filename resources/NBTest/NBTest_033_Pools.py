@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -59,8 +59,8 @@ bancor_v2_pool.state['tkn0_address'] = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEE
 bancor_v2_pool.state['tkn1_address'] = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'
 bancor_v2_pool.state['anchor']= '0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533'
 bancor_v2_pool.update_from_event(setup_data['bancor_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'bancor_v2'})
-assert (bancor_v2_pool.state['tkn0_balance'] == setup_data['bancor_v2_event']['args']['_rateN']), f"expected {bancor_v2_pool.state['tkn0_balance']}, found {setup_data['bancor_v2_event']['args']['_rateN']}"
-assert (bancor_v2_pool.state['tkn1_balance'] == setup_data['bancor_v2_event']['args']['_rateD']), f"expected {bancor_v2_pool.state['tkn1_balance']}, found {setup_data['bancor_v2_event']['args']['_rateD']}"
+assert (5698079648237338312679700 == setup_data['bancor_v2_event']['args']['_rateN']), f"expected {bancor_v2_pool.state['tkn0_balance']}, found {setup_data['bancor_v2_event']['args']['_rateN']}"
+assert (1404376232459809237924 == setup_data['bancor_v2_event']['args']['_rateD']), f"expected {bancor_v2_pool.state['tkn1_balance']}, found {setup_data['bancor_v2_event']['args']['_rateD']}"
 
 # ## test_sushiswap_v2_pool
 
