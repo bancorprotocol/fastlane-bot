@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.48...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.49...HEAD)
 
+- Bancor V2 Events Filtering Issue [\#168](https://github.com/bancorprotocol/fastlane-bot/issues/168)
 - goalseek should use eps as a ratio [\#138](https://github.com/bancorprotocol/fastlane-bot/issues/138)
+- Update event filtering to remove Bancor V2 anchors [\#169](https://github.com/bancorprotocol/fastlane-bot/pull/169) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.49](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.49) (2023-10-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.48...v2.7.49)
+
 - modified the goalseek to use eps as a ratio [\#139](https://github.com/bancorprotocol/fastlane-bot/pull/139) ([NIXBNT](https://github.com/NIXBNT))
 
 - Add Support for Pancakeswap \(on Ethereum\) Exchange [\#81](https://github.com/bancorprotocol/fastlane-bot/issues/81)
