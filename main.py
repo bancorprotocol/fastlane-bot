@@ -203,6 +203,27 @@ load_dotenv()
     type=int,
     help="If tenderly_fork_id is set, this is the number of blocks to increment the block number by for each iteration.",
 )
+
+@click.option(
+    "--blockchain",
+    default="ethereum",
+    help="Select a blockchain from ethereum, coinbase_base, or arbitrum_one.",
+    type=click.Choice(
+        [
+            "ethereum",
+            "coinbase_base",
+            "arbitrum_one",
+        ]
+    ),
+)
+
+@click.option(
+    "--pool_data_update_frequency",
+    default=100,
+    type=int,
+    help="How frequently pool data should be updated, in main loop iterations.",
+)
+
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -229,6 +250,8 @@ def main(
     tenderly_event_exchanges: str,
     increment_time: int,
     increment_blocks: int,
+    blockchain: str,
+    pool_data_update_frequency: int
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -260,7 +283,8 @@ def main(
         tenderly_event_exchanges (str): A comma-separated string of exchanges to include for the Tenderly event fetcher.
         increment_time (int): If tenderly_fork_id is set, this is the number of seconds to increment the fork time by for each iteration.
         increment_blocks (int): If tenderly_fork_id is set, this is the number of blocks to increment the block number by for each iteration.
-
+        blockchain (str): the name of the blockchain for which to run
+        pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -279,9 +303,9 @@ def main(
         logging_path,
         tenderly_fork_id,
     )
-
+    # TODO
     # Format the flashloan tokens
-    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, blockchain=blockchain)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
