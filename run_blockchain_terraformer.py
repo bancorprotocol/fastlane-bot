@@ -1085,6 +1085,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
 
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
+
     assert web3.isConnected(), f"Web3 is not connected for network: {network_name}"
 
     token_addr_lookup = get_all_token_details(web3, network=network_name)

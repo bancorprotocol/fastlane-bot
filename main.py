@@ -218,7 +218,7 @@ load_dotenv()
 )
 @click.option(
     "--pool_data_update_frequency",
-    default=100,
+    default=2,
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
@@ -642,6 +642,11 @@ def run(
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
 
             if loop_idx % pool_data_update_frequency == 0:
+                sblock = (
+                    (current_block - pool_data_update_frequency)
+                    if loop_idx > 1
+                    else None
+                )
                 (
                     static_pool_data,
                     uniswap_v2_event_mappings,
@@ -649,7 +654,7 @@ def run(
                 ) = terraform_blockchain(
                     network_name=blockchain,
                     web3=mgr.web3,
-                    start_block=current_block - pool_data_update_frequency,
+                    start_block=sblock,
                 )
                 mgr.pool_data = static_pool_data.to_dict(orient="records")
                 mgr.uniswap_v2_event_mappings = uniswap_v2_event_mappings
