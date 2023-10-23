@@ -643,6 +643,7 @@ def run(
             w3.provider.make_request(method="evm_increaseBlocks", params=params)
 
         if loop_idx % pool_data_update_frequency == 0:
+            mgr.cfg.logger.info(f"Terraforming {blockchain}. Standby for oxygen levels.")
             sblock = (
                 (current_block - pool_data_update_frequency) if loop_idx > 1 else None
             )

@@ -1095,7 +1095,6 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     :param web3: the Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
-    print(f"Terraforming {network_name}. Standby for oxygen.")
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
 
@@ -1142,6 +1141,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             print(
                 f"Terraformer: No factory contract address for exchange: {exchange_name}"
             )
+            continue
+        elif address == "TBD":
             continue
         if fork in "uniswap_v2":
             if fee == "TBD":
@@ -1204,11 +1205,10 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
         exchange_df = pd.concat([exchange_df, u_df])
-        
     exchange_df.to_csv((write_path + "/static_pool_data.csv"))
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"))
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"))
     return exchange_df, univ2_mapdf, univ3_mapdf
 
 
-# terraform_blockchain(network_name=ETHEREUM)
+terraform_blockchain(network_name=ETHEREUM)
