@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 # load static data
 static_data = pd.read_csv("fastlane_bot/data/static_pool_data.csv").to_dict("records")
 
