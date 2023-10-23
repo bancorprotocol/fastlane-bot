@@ -202,7 +202,8 @@ def get_token_details_from_contract(
     elif token == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
         symbol = "ETH"
         decimals = 18
-
+    if token.lower() in skip_token_list:
+        return None, None
     else:
         try:
             contract = web3.eth.contract(
@@ -683,7 +684,7 @@ def organize_pool_details_solidly_v2(
 
 
 def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3
+    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
 ) -> list:
     """
     This function retrieves Uniswap V3 pool generation events
@@ -691,12 +692,12 @@ def get_uni_pool_creation_events_v3(
     :param factory_contract: the initialized Factory contract
     :param block_number: the block number from which to start
     :param web3: the Web3 object
-
+    :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
     events = []
-    block_chunk_size = 50000
+
     for idx in range(int((current_block - block_number) / block_chunk_size)):
         from_block = block_number + idx * block_chunk_size
         to_block = (
@@ -711,7 +712,7 @@ def get_uni_pool_creation_events_v3(
 
 
 def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3
+    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
 ) -> list:
     """
     This function retrieves Uniswap V2 pool generation events
@@ -719,12 +720,11 @@ def get_uni_pool_creation_events_v2(
     :param factory_contract: the initialized Factory contract
     :param block_number: the block number from which to start
     :param web3: the Web3 object
-
+    :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
     events = []
-    block_chunk_size = 50000
     for idx in range(int((current_block - block_number) / block_chunk_size)):
         from_block = block_number + idx * block_chunk_size
         to_block = (
@@ -739,7 +739,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3
+    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
 ) -> list:
     """
     This function retrieves Solidly pool generation events
@@ -747,12 +747,11 @@ def get_solidly_pool_creation_events_v2(
     :param factory_contract: the initialized Factory contract
     :param block_number: the block number from which to start
     :param web3: the Web3 object
-
+    :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
     events = []
-    block_chunk_size = 50000
     for idx in range(int((current_block - block_number) / block_chunk_size)):
         from_block = block_number + idx * block_chunk_size
         to_block = (
@@ -1197,4 +1196,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     return exchange_df, univ2_mapdf, univ3_mapdf
 
 
-# terraform_blockchain(ETHEREUM)
+terraform_blockchain(network_name=ETHEREUM)
