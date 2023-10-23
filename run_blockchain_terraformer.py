@@ -1094,12 +1094,13 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         f"{PROJECT_PATH}/fastlane_bot/data/blockchain_data/{network_name}"
     )
     path_exists = os.path.exists(write_path + "/static_pool_data.csv")
-
+    data_exists = os.path.exists(write_path)
     fresh_data = False
 
     if not path_exists:
         print(f"Terraformer: generating folder: {write_path}")
         os.makedirs(write_path)
+    if not data_exists:
         exchange_df = pd.DataFrame(columns=dataframe_key)
         univ2_mapdf = pd.DataFrame(columns=["exchange", "address"])
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
