@@ -35,7 +35,9 @@ class BancorPolPool(Pool):
         return "token"
 
     @classmethod
-    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
         """
         Check if an event matches the format of a Bancor pol event.
 
@@ -87,7 +89,12 @@ class BancorPolPool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None, tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         See base class.
@@ -102,11 +109,11 @@ class BancorPolPool(Pool):
 
         tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly, w3)
 
-        if tenderly_fork_id and 'bancor_pol' in tenderly_exchanges:
+        if tenderly_fork_id and "bancor_pol" in tenderly_exchanges:
             contract = w3_tenderly.eth.contract(
                 abi=BANCOR_POL_ABI, address=contract.address
             )
-            
+
         try:
             p0, p1 = contract.functions.tokenPrice(tkn0).call()
         except web3.exceptions.BadFunctionCallOutput:

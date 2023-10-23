@@ -30,7 +30,9 @@ class BancorV3Pool(Pool):
         return "tkn1_address"
 
     @classmethod
-    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
         """
         Check if an event matches the format of a Bancor v3 event.
 
@@ -70,7 +72,12 @@ class BancorV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None, tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         See base class.

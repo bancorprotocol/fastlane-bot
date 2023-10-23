@@ -30,6 +30,29 @@ class Pool(ABC):
 
     state: Dict[str, Any] = field(default_factory=dict)
 
+    @classmethod
+    @abstractmethod
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
+        """
+        Check if an event matches the format for a given pool type.
+
+        Parameters
+        ----------
+        event : Dict[str, Any]
+            The event arguments.
+        static_pools : Dict[str, Any]
+            The static pools.
+
+        Returns
+        -------
+        bool
+            True if the event matches the format of a Bancor v3 event, False otherwise.
+
+        """
+        pass
+
     @staticmethod
     def get_common_data(
         event: Dict[str, Any], pool_info: Dict[str, Any]
@@ -76,8 +99,12 @@ class Pool(ABC):
 
     @abstractmethod
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None,
-            tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         Update the pool state from a contract.

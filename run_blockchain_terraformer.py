@@ -178,11 +178,19 @@ def get_all_token_details(web3: Web3, network: str) -> dict:
         address = web3.toChecksumAddress(token.get("address"))
         symbol = token.get("symbol")
         decimals = token.get("decimals")
-        address_first[address] = {
-            "symbol": symbol,
-            "decimals": decimals,
-            "address": address,
-        }
+        try:
+            # try to write to csv
+            pd.DataFrame(
+                {"token": [address], "symbol": [symbol], "decimals": [decimals]}
+            ).to_csv("token_details.csv")
+            address_first[address] = {
+                "symbol": symbol,
+                "decimals": decimals,
+                "address": address,
+            }
+        except Exception as e:
+            print(f"Failed to get token details for token: {address} with error: {e}")
+            continue
     return address_first
 
 
@@ -211,8 +219,13 @@ def get_token_details_from_contract(
             )
             decimals = contract.caller.decimals()
             symbol = contract.caller.symbol()
-        except:
-            print(f"Failed to get token details for token: {token}")
+
+            # attempt to write to csv
+            pd.DataFrame(
+                {"token": [token], "symbol": [symbol], "decimals": [decimals]}
+            ).to_csv("token_details.csv")
+        except Exception as e:
+            print(f"Failed to get token details for token: {token} with error: {e}")
             skip_token_list.append(token.lower())
             return None, None
     return symbol, decimals
@@ -684,7 +697,7 @@ def organize_pool_details_solidly_v2(
 
 
 def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> list:
     """
     This function retrieves Uniswap V3 pool generation events
@@ -712,7 +725,7 @@ def get_uni_pool_creation_events_v3(
 
 
 def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> list:
     """
     This function retrieves Uniswap V2 pool generation events
@@ -739,7 +752,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size = 50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> list:
     """
     This function retrieves Solidly pool generation events
@@ -973,6 +986,7 @@ pools(
 }
 """
 
+
 # function to use requests.post to make an API call to the subgraph url
 def run_query(subgraph_query: str, subgraph_url: str) -> json:
     """
@@ -1099,7 +1113,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
 
     if not path_exists:
         print(f"Terraformer: generating folder: {write_path}")
-        os.makedirs(write_path)
+        if not os.path.exists(write_path):
+            os.makedirs(write_path)
         exchange_df = pd.DataFrame(columns=dataframe_key)
         univ2_mapdf = pd.DataFrame(columns=["exchange", "address"])
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
@@ -1196,4 +1211,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     return exchange_df, univ2_mapdf, univ3_mapdf
 
 
-terraform_blockchain(network_name=ETHEREUM)
+# terraform_blockchain(network_name=ETHEREUM)

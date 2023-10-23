@@ -30,7 +30,9 @@ class BancorV2Pool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
         """
         Check if an event matches the format of a Bancor v2 event.
 
@@ -57,10 +59,6 @@ class BancorV2Pool(Pool):
         The one we want is the one where _token1 and _token2 match the token addresses of the pool.
         """
 
-        # if "tkn0_address" not in self.state:
-        #     self.state["tkn0_address"] = event_args["args"]["_token1"]
-        #     self.state["tkn1_address"] = event_args["args"]["_token2"]
-
         if (
             self.state["tkn0_address"] == event_args["args"]["_token1"]
             and self.state["tkn1_address"] == event_args["args"]["_token2"]
@@ -68,8 +66,8 @@ class BancorV2Pool(Pool):
             data["tkn0_balance"] = event_args["args"]["_rateD"]
             data["tkn1_balance"] = event_args["args"]["_rateN"]
         elif (
-                self.state["tkn0_address"] == event_args["args"]["_token2"]
-                and self.state["tkn1_address"] == event_args["args"]["_token1"]
+            self.state["tkn0_address"] == event_args["args"]["_token2"]
+            and self.state["tkn1_address"] == event_args["args"]["_token1"]
         ):
             data["tkn0_balance"] = event_args["args"]["_rateN"]
             data["tkn1_balance"] = event_args["args"]["_rateD"]
@@ -80,9 +78,6 @@ class BancorV2Pool(Pool):
         for key, value in data.items():
             self.state[key] = value
 
-        # if "anchor" not in self.state:
-        #     self.state["anchor"] = event_args["address"]
-
         data["anchor"] = self.state["anchor"]
         data["cid"] = self.state["cid"]
         data["fee"] = self.state["fee"]
@@ -91,7 +86,12 @@ class BancorV2Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None, tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         See base class.

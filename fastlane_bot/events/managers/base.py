@@ -9,6 +9,7 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
+import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
@@ -90,6 +91,59 @@ class BaseManager:
     carbon_inititalized: bool = None
     replay_from_block: int = None
 
+    _uniswap_v2_pools: pd.DataFrame = None
+    _sushiswap_v2_pools: pd.DataFrame = None
+    _uniswap_v3_pools: pd.DataFrame = None
+    _pancakeswap_v2_pools: pd.DataFrame = None
+    _pancakeswap_v3_pools: pd.DataFrame = None
+    forked_exchanges: List[str] = None
+    static_pools: Dict[str, pd.DataFrame] = None
+
+    def __post_init__(self):
+        for exchange_name in self.SUPPORTED_EXCHANGES:
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
+        self.init_exchange_contracts()
+        self.set_carbon_v1_fee_pairs()
+        self.init_tenderly_event_contracts()
+        self.set_forked_pools()
+
+    def set_forked_pools(self):
+        """
+        Set the forked pools.
+        """
+        forked_exchanges = self.forked_exchanges
+        self.static_pools = {}
+        for exchange in forked_exchanges:
+            attr_name = f"_{exchange}_pools"
+            setattr(self, attr_name, None)
+
+            def get_property(exchange=exchange, attr_name=attr_name):
+                def inner(self):
+                    if getattr(self, attr_name) is None:
+                        setattr(
+                            self,
+                            attr_name,
+                            pd.DataFrame(self.pool_data)[
+                                pd.DataFrame(self.pool_data)["exchange_name"]
+                                == exchange
+                            ],
+                        )
+                    return getattr(self, attr_name)
+
+                return inner
+
+            def set_property(exchange=exchange, attr_name=attr_name):
+                def inner(self, value):
+                    setattr(self, attr_name, value)
+
+                return inner
+
+            prop = property(get_property())
+            prop = prop.setter(set_property())
+            setattr(self.__class__, f"{exchange}_pools", prop)
+
+            self.static_pools[f"{exchange}_pools"] = getattr(self, f"{exchange}_pools")
+
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
         """
@@ -115,13 +169,6 @@ class BaseManager:
 
         """
         self._fee_pairs = value
-
-    def __post_init__(self):
-        for exchange_name in self.SUPPORTED_EXCHANGES:
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
-        self.init_exchange_contracts()
-        self.set_carbon_v1_fee_pairs()
-        self.init_tenderly_event_contracts()
 
     def set_carbon_v1_fee_pairs(self):
         """
@@ -179,8 +226,7 @@ class BaseManager:
         )
         return fee_pairs
 
-    @staticmethod
-    def exchange_name_from_event(event: Dict[str, Any]) -> str:
+    def exchange_name_from_event(self, event: Dict[str, Any]) -> str:
         """
         Get the exchange name from the event.
 
@@ -198,7 +244,7 @@ class BaseManager:
             (
                 exchange_name
                 for exchange_name, pool_class in pool_factory._creators.items()
-                if pool_class.event_matches_format(event)
+                if pool_class.event_matches_format(event, self.static_pools)
             ),
             None,
         )
@@ -378,8 +424,7 @@ class BaseManager:
 
     @staticmethod
     def get_carbon_pairs_by_contract(
-        carbon_controller: Contract,
-        replay_from_block: int or str = None
+        carbon_controller: Contract, replay_from_block: int or str = None
     ) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs by contract.
@@ -397,7 +442,12 @@ class BaseManager:
             The carbon pairs.
 
         """
-        return [(second, first) for first, second in carbon_controller.functions.pairs().call(block_identifier=replay_from_block or "latest")]
+        return [
+            (second, first)
+            for first, second in carbon_controller.functions.pairs().call(
+                block_identifier=replay_from_block or "latest"
+            )
+        ]
 
     def get_carbon_pairs_by_state(self) -> List[Tuple[str, str]]:
         """
@@ -464,13 +514,22 @@ class BaseManager:
             The strategies.
 
         """
-        multicaller = MultiCaller(contract=carbon_controller, block_identifier=self.replay_from_block or "latest")
+        multicaller = MultiCaller(
+            contract=carbon_controller,
+            block_identifier=self.replay_from_block or "latest",
+        )
 
         with multicaller as mc:
             for pair in pairs:
                 try:
                     # Loading the strategies for each pair without executing the calls yet
-                    mc.add_call(carbon_controller.functions.strategiesByPair, pair[0], pair[1], pair[2], pair[3])
+                    mc.add_call(
+                        carbon_controller.functions.strategiesByPair,
+                        pair[0],
+                        pair[1],
+                        pair[2],
+                        pair[3],
+                    )
                 except ValueError:
                     print(f"Error fetching strategiesByPair {pair}")
 
@@ -583,11 +642,16 @@ class BaseManager:
             The fees by pair.
 
         """
-        multicaller = MultiCaller(contract=carbon_controller, block_identifier=self.replay_from_block or "latest")
+        multicaller = MultiCaller(
+            contract=carbon_controller,
+            block_identifier=self.replay_from_block or "latest",
+        )
 
         with multicaller as mc:
             for pair in all_pairs:
-                mc.add_call(carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1])
+                mc.add_call(
+                    carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
+                )
 
         return multicaller.multicall()
 
@@ -724,7 +788,13 @@ class BaseManager:
             return "token", event["args"]["token"]
         if ex_name == "carbon_v1":
             return "cid", event["args"]["id"]
-        if ex_name in {"uniswap_v2", "sushiswap_v2", "uniswap_v3", "pancakeswap_v2", "pancakeswap_v3"}:
+        if ex_name in {
+            "uniswap_v2",
+            "sushiswap_v2",
+            "uniswap_v3",
+            "pancakeswap_v2",
+            "pancakeswap_v3",
+        }:
             return "address", addr
         if ex_name == "bancor_v2":
             return ("tkn0_address", "tkn1_address"), (
