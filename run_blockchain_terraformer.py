@@ -1207,7 +1207,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     try:
         os.remove(write_path + "/static_pool_data.csv")
         os.remove(write_path + "/uniswap_v2_event_mappings.csv")
-        os.remove(write_path + "//uniswap_v3_event_mappings.csv")
+        os.remove(write_path + "/uniswap_v3_event_mappings.csv")
     except FileNotFoundError:
         pass
     exchange_df.to_csv((write_path + "/static_pool_data.csv"))
