@@ -648,7 +648,7 @@ def run(
                     uniswap_v3_event_mappings,
                 ) = terraform_blockchain(
                     network_name=blockchain,
-                    web3=mgr.w3,
+                    web3=mgr.web3,
                     start_block=current_block - pool_data_update_frequency,
                 )
                 mgr.pool_data = static_pool_data.to_dict(orient="records")
