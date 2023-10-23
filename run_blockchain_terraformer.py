@@ -1095,7 +1095,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     :param web3: the Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
-
+    print(f"Terraforming {network_name}. Standby for oxygen.")
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
 
@@ -1107,8 +1107,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     write_path = os.path.normpath(
         f"{PROJECT_PATH}/fastlane_bot/data/blockchain_data/{network_name}"
     )
-    path_exists = os.path.exists(write_path + "/static_pool_data.csv")
-    data_exists = os.path.exists(write_path)
+    path_exists = os.path.exists(write_path)
+    data_exists = os.path.exists(write_path + "/static_pool_data.csv")
     fresh_data = False
 
     if not path_exists:
