@@ -289,8 +289,7 @@ class ConfigNetwork(ConfigBase):
     BANCOR_V3_FEE = Decimal("0.0")
     DEFAULT_REWARD_PERCENT = Decimal("0.5")
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
-    DEFAULT_MIN_PROFIT_BNT = Decimal("80")
-    DEFAULT_MIN_PROFIT = Decimal("80")
+    DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
     # SUNDRY SECTION
     #######################################################################################

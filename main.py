@@ -157,10 +157,10 @@ load_dotenv()
     "parameter to be overwritten as all tokens supported by Bancor v3.",
 )
 @click.option(
-    "--default_min_profit_bnt",
-    default=80,
-    type=int,
-    help="Set to the default minimum profit in BNT. This should be reasonably high to avoid losses from gas fees.",
+    "--default_min_profit_gas_token",
+    default="0.02",
+    type=str,
+    help="Set to the default minimum profit in gas token. This should be reasonably high to avoid losses from gas fees.",
 )
 @click.option(
     "--timeout",
@@ -249,7 +249,7 @@ def main(
     run_data_validator: bool,
     randomizer: int,
     limit_bancor3_flashloan_tokens: bool,
-    default_min_profit_bnt: int,
+    default_min_profit_gas_token: str,
     timeout: int,
     target_tokens: str,
     replay_from_block: int,
@@ -283,7 +283,7 @@ def main(
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
-        default_min_profit_bnt (int): The default minimum profit in BNT.
+        default_min_profit_gas_token (str): The default minimum profit in the native gas token.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
@@ -306,7 +306,7 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        default_min_profit_bnt,
+        default_min_profit_gas_token,
         limit_bancor3_flashloan_tokens,
         loglevel,
         logging_path,
@@ -356,7 +356,7 @@ def main(
         run_data_validator: {run_data_validator}
         randomizer: {randomizer}
         limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
-        default_min_profit_bnt: {default_min_profit_bnt}
+        default_min_profit_gas_token: {default_min_profit_gas_token}
         timeout: {timeout}
         target_tokens: {target_tokens}
         replay_from_block: {replay_from_block}

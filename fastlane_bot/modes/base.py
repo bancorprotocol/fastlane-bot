@@ -131,20 +131,42 @@ class ArbitrageFinderBase:
         """
         Calculate profit based on the source token.
         """
-        if src_token == T.BNT:
-            profit = profit_src
-        else:
+
+        print("modes/base, calculate_profit")
+        best_profit_fl_token = profit_src
+        print(best_profit_fl_token, src_token)
+
+        if src_token not in [T.ETH, T.WETH, T.NATIVE_ETH]: # TODO generalize to native gas token
+            if src_token == T.NATIVE_ETH:
+                fl_token_with_weth = T.WETH
+            else:
+                fl_token_with_weth = src_token
+
             try:
-                price_src_per_bnt = (
-                    CCm.bypair(pair=f"{T.BNT}/{src_token}")
-                    .byparams(exchange="bancor_v3")[0]
-                    .p
-                )
-                profit = profit_src / price_src_per_bnt
-            except Exception as e:
-                self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
-        self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
-        return profit
+                fltkn_eth_conversion_rate = CCm.bytknb(f"{T.WETH}").bytknq(f"{fl_token_with_weth}")[0].p
+                print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
+                best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+                print(best_profit_eth, "ETH")
+            except:
+                try:
+                    fltkn_eth_conversion_rate = 1/CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{T.WETH}")[0].p
+                    print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
+                    best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+                    print(best_profit_eth, "ETH")
+                except Exception as e:
+                    print(str(e))
+        else:
+            best_profit_eth = best_profit_fl_token
+
+        usd_eth_conversion_rate = CCm.bypair(pair=f"{T.WETH}/{T.USDC}")[0].p ## TODO dependency on USDC
+        print("usd_eth_conversion_rate is", usd_eth_conversion_rate)
+        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
+        print(best_profit_usd, 'USD')
+        if best_profit_eth>0 and best_profit_usd>0:
+            assert best_profit_usd>best_profit_eth
+        print("\n")
+        
+        return best_profit_eth
 
     @staticmethod
     def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
@@ -192,7 +214,7 @@ class ArbitrageFinderBase:
         condition_zeros_one_token = max(netchange) < 1e-4
 
         if (
-            condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT
+            condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
         ):  # candidate regardless if profitable
             return [
                 (

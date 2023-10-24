@@ -389,7 +389,7 @@ class CarbonBot(CarbonBotBase):
 
         result: any
         constains_carbon: bool = None
-        profit_usd: float = None
+        best_profit_usd: float = None
 
         @property
         def r(self):
@@ -753,26 +753,38 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        flt_per_bnt = Decimal(1)
-        if fl_token_with_weth != T.BNT:
-            bnt_flt_curves = CCm.bypair(pair=f"{T.BNT}/{fl_token_with_weth}")
-            bnt_flt = [
-                x for x in bnt_flt_curves if x.params["exchange"] == "bancor_v3"
-            ][0]
-            flt_per_bnt = Decimal(str(bnt_flt.x_act / bnt_flt.y_act))
-            best_profit = Decimal(str(flt_per_bnt * best_profit))
+        print("bot, calculate_profit")
+        best_profit_fl_token = best_profit
+        print(best_profit_fl_token, fl_token_with_weth)
+        if fl_token_with_weth != T.WETH: # TODO generalize to native gas token
+            try:
+                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{T.WETH}").bytknq(f"{fl_token_with_weth}")[0].p))
+                print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
+                best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+                print(best_profit_eth, "ETH")
+            except:
+                try:
+                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{T.WETH}")[0].p))
+                    print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
+                    best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+                    print(best_profit_eth, "ETH")
+                except Exception as e:
+                    print(str(e))
+        else:
+            best_profit_eth = best_profit_fl_token
 
-        bnt_usdc_curve = CCm.bycid(self.BNT_ETH_CID)
-        usd_bnt = bnt_usdc_curve.y / bnt_usdc_curve.x
-        profit_usd = Decimal(str(best_profit)) * Decimal(str(usd_bnt))
+        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{T.WETH}/{T.USDC}")[0].p))  ## TODO dependency on USDC
+        print("usd_eth_conversion_rate is", usd_eth_conversion_rate)
+        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
+        print(best_profit_usd, 'USD')
 
-        return best_profit, flt_per_bnt, profit_usd
+        return best_profit_fl_token, best_profit_eth, best_profit_usd
 
     @staticmethod
     def update_log_dict(
         arb_mode: str,
-        best_profit: Decimal,
-        profit_usd: Decimal,
+        best_profit_eth: Decimal,
+        best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
         fl_token: str,
@@ -786,7 +798,7 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         best_profit: Decimal
             The best profit.
-        profit_usd: Decimal
+        best_profit_usd: Decimal
             The profit in USD.
         flashloan_tkn_profit: Decimal
             The profit from flashloan token.
@@ -809,8 +821,8 @@ class CarbonBot(CarbonBotBase):
         ]
         log_dict = {
             "type": arb_mode,
-            "profit_bnt": num_format_float(best_profit),
-            "profit_usd": num_format_float(profit_usd),
+            "profit_gas_token": num_format_float(best_profit_eth),
+            "profit_usd": num_format_float(best_profit_usd),
             "flashloan": flashloans,
             "trades": [],
         }
@@ -918,25 +930,36 @@ class CarbonBot(CarbonBotBase):
         if fl_token == T.WETH:
             fl_token = T.NATIVE_ETH
 
+        print("bot, fl_token", fl_token)
+        print("best profit before exact calc",best_profit, "GAS TOKEN")
+
+
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
 
+        print("best profit after exact calc", best_profit, fl_token)
+
         # Use helper function to calculate profit
-        best_profit, flt_per_bnt, profit_usd = self.calculate_profit(
+        best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, fl_token_with_weth
         )
 
+        print("Profit conversion complete")
+        print("best_profit_usd", best_profit_usd, "USD")
+        print("best_profit_fl_token", best_profit_fl_token, fl_token)
+        print("best_profit_eth", best_profit_eth, "ETH")
+
         # Log the best trade instructions
         self.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit  # The log id
+            1, best_profit=best_profit_eth  # The log id
         )
 
         # Use helper function to update the log dict
         log_dict = self.update_log_dict(
             arb_mode,
-            best_profit,
-            profit_usd,
+            best_profit_eth,
+            best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
             fl_token,
@@ -946,9 +969,9 @@ class CarbonBot(CarbonBotBase):
         self.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
 
         # Check if the best profit is greater than the minimum profit
-        if best_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
+        if best_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
-                f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
+                f"Opportunity with profit: {num_format(best_profit_eth)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
             return None, None
 
@@ -1010,15 +1033,6 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
-        # Get the bnt_eth pool
-        pool = self.db.get_pool(
-            exchange_name=self.ConfigObj.BANCOR_V3_NAME,
-            pair_name=f"{T.BNT}/{T.NATIVE_ETH}",
-        )
-
-        # Get the bnt_eth price
-        bnt_eth = (int(pool.tkn0_balance), int(pool.tkn1_balance))
-
         # Get the tx helpers class
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
 
@@ -1028,8 +1042,8 @@ class CarbonBot(CarbonBotBase):
                 route_struct=route_struct,
                 src_amt=flashloan_amount,
                 src_address=flashloan_token_address,
-                bnt_eth=bnt_eth,
-                expected_profit=best_profit,
+                expected_profit_eth=best_profit_eth,
+                expected_profit_usd=best_profit_usd,
                 safety_override=False,
                 verbose=True,
                 log_object=log_dict,
