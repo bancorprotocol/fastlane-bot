@@ -709,25 +709,19 @@ def get_uni_pool_creation_events_v3(
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
+    events = []
 
-    with parallel_backend(n_jobs=-1, backend="threading"):
-        events = Parallel(n_jobs=-1)(
-            delayed(factory_contract.events.PoolCreated.getLogs)(fromBlock=(block_number + idx * block_chunk_size), toBlock=(
-                (block_number + idx * block_chunk_size) + block_chunk_size
-                if (block_number + idx * block_chunk_size) + block_chunk_size < current_block
-                else current_block
-            )
-                                            )
-            for idx in range(int((current_block - block_number) / block_chunk_size))
-
+    for idx in range(int((current_block - block_number) / block_chunk_size)):
+        from_block = block_number + idx * block_chunk_size
+        to_block = (
+            from_block + block_chunk_size
+            if from_block + block_chunk_size < current_block
+            else current_block
         )
-
-    pool_data = []
-    for pools in events:
-        for pool in pools:
-            pool_data.append(pool)
-
-    return pool_data
+        events += factory_contract.events.PoolCreated.getLogs(
+            fromBlock=from_block, toBlock=to_block
+        )
+    return events
 
 
 def get_uni_pool_creation_events_v2(
@@ -743,23 +737,18 @@ def get_uni_pool_creation_events_v2(
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
-    with parallel_backend(n_jobs=-1, backend="threading"):
-        events = Parallel(n_jobs=-1)(
-            delayed(factory_contract.events.PairCreated.getLogs)(fromBlock=(block_number + idx * block_chunk_size), toBlock=(
-                (block_number + idx * block_chunk_size) + block_chunk_size
-                if (block_number + idx * block_chunk_size) + block_chunk_size < current_block
-                else current_block
-            )
-                                            )
-            for idx in range(int((current_block - block_number) / block_chunk_size))
-
+    events = []
+    for idx in range(int((current_block - block_number) / block_chunk_size)):
+        from_block = block_number + idx * block_chunk_size
+        to_block = (
+            from_block + block_chunk_size
+            if from_block + block_chunk_size < current_block
+            else current_block
         )
-    pool_data = []
-    for pools in events:
-        for pool in pools:
-            pool_data.append(pool)
-
-    return pool_data
+        events += factory_contract.events.PairCreated.getLogs(
+            fromBlock=from_block, toBlock=to_block
+        )
+    return events
 
 
 def get_solidly_pool_creation_events_v2(
@@ -775,23 +764,18 @@ def get_solidly_pool_creation_events_v2(
     returns: a list of raw pool creation events
     """
     current_block = web3.eth.blockNumber
-    with parallel_backend(n_jobs=-1, backend="threading"):
-        events = Parallel(n_jobs=-1)(
-            delayed(factory_contract.events.PoolCreated.getLogs)(fromBlock=(block_number + idx * block_chunk_size), toBlock=(
-                (block_number + idx * block_chunk_size) + block_chunk_size
-                if (block_number + idx * block_chunk_size) + block_chunk_size < current_block
-                else current_block
-            )
-                                            )
-            for idx in range(int((current_block - block_number) / block_chunk_size))
-
+    events = []
+    for idx in range(int((current_block - block_number) / block_chunk_size)):
+        from_block = block_number + idx * block_chunk_size
+        to_block = (
+            from_block + block_chunk_size
+            if from_block + block_chunk_size < current_block
+            else current_block
         )
-    pool_data = []
-    for pools in events:
-        for pool in pools:
-            pool_data.append(pool)
-
-    return pool_data
+        events += factory_contract.events.PoolCreated.getLogs(
+            fromBlock=from_block, toBlock=to_block
+        )
+    return events
 
 
 def get_uni_v3_pools(
@@ -1220,4 +1204,3 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"))
     return exchange_df, univ2_mapdf, univ3_mapdf
 
-terraform_blockchain(network_name="ethereum")
