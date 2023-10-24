@@ -438,7 +438,7 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
 
 
 def get_config(
-    default_min_profit_bnt: int or Decimal,
+    default_min_profit_gas_token: str,
     limit_bancor3_flashloan_tokens: bool,
     loglevel: str,
     logging_path: str,
@@ -466,7 +466,7 @@ def get_config(
         The config object.
 
     """
-    default_min_profit_bnt = Decimal(str(default_min_profit_bnt))
+    default_min_profit_gas_token = Decimal(default_min_profit_gas_token)
 
     if tenderly_fork_id:
         cfg = Config.new(
@@ -479,8 +479,7 @@ def get_config(
         )
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
-    cfg.DEFAULT_MIN_PROFIT_BNT = Decimal(str(default_min_profit_bnt))
-    cfg.DEFAULT_MIN_PROFIT = Decimal(str(default_min_profit_bnt))
+    cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     return cfg
 
 
@@ -1600,7 +1599,7 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
     """
     # Verify MIN_PROFIT_BNT is set and respected
     assert (
-        bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
 
