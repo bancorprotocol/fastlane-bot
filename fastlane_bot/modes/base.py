@@ -132,10 +132,7 @@ class ArbitrageFinderBase:
         Calculate profit based on the source token.
         """
 
-        print("modes/base, calculate_profit")
         best_profit_fl_token = profit_src
-        print(best_profit_fl_token, src_token)
-
         if src_token not in [T.ETH, T.WETH, T.NATIVE_ETH]: # TODO generalize to native gas token
             if src_token == T.NATIVE_ETH:
                 fl_token_with_weth = T.WETH
@@ -144,28 +141,15 @@ class ArbitrageFinderBase:
 
             try:
                 fltkn_eth_conversion_rate = CCm.bytknb(f"{T.WETH}").bytknq(f"{fl_token_with_weth}")[0].p
-                print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                print(best_profit_eth, "ETH")
             except:
                 try:
                     fltkn_eth_conversion_rate = 1/CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{T.WETH}")[0].p
-                    print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                    print(best_profit_eth, "ETH")
                 except Exception as e:
-                    print(str(e))
+                    raise str(e)
         else:
             best_profit_eth = best_profit_fl_token
-
-        usd_eth_conversion_rate = CCm.bypair(pair=f"{T.WETH}/{T.USDC}")[0].p ## TODO dependency on USDC
-        print("usd_eth_conversion_rate is", usd_eth_conversion_rate)
-        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
-        print(best_profit_usd, 'USD')
-        if best_profit_eth>0 and best_profit_usd>0:
-            assert best_profit_usd>best_profit_eth
-        print("\n")
-        
         return best_profit_eth
 
     @staticmethod
