@@ -222,6 +222,15 @@ load_dotenv()
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
+
+@click.option(
+    "--use_specific_exchange_for_target_tokens",
+    default="None",
+    type=str,
+    help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
+)
+
+
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -250,6 +259,7 @@ def main(
     increment_blocks: int,
     blockchain: str,
     pool_data_update_frequency: int,
+    use_specific_exchange_for_target_tokens: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -283,6 +293,7 @@ def main(
         increment_blocks (int): If tenderly_fork_id is set, this is the number of blocks to increment the block number by for each iteration.
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
+        use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -354,6 +365,7 @@ def main(
         increment_blocks: {increment_blocks}
         blockchain: {blockchain}
         pool_data_update_frequency: {pool_data_update_frequency}
+        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -430,6 +442,7 @@ def main(
         increment_blocks,
         blockchain,
         pool_data_update_frequency,
+        use_specific_exchange_for_target_tokens,
     )
 
 
@@ -455,6 +468,8 @@ def run(
     increment_blocks: int,
     blockchain: str,
     pool_data_update_frequency: int,
+    use_specific_exchange_for_target_tokens: str,
+
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -481,6 +496,7 @@ def run(
         increment_blocks (int): If tenderly_fork_id is set, this is the number of blocks to increment the block number by for each iteration.
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
+        use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
     """
 
     bot = tenderly_uri = forked_from_block = None
@@ -488,6 +504,8 @@ def run(
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     forks_to_cleanup = []
+    last_block_queried = 0
+
     while True:
         # try:
 
@@ -586,6 +604,10 @@ def run(
         # Verify that the minimum profit in BNT is respected
         verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
+        if use_specific_exchange_for_target_tokens is not None:
+            target_tokens = bot.get_tokens_in_exchange(exchange_name=use_specific_exchange_for_target_tokens)
+            mgr.cfg.logger.info(f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens")
+
         # Handle subsequent iterations
         handle_subsequent_iterations(
             arb_mode=arb_mode,
@@ -631,7 +653,7 @@ def run(
               +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
               """
             )
-
+            last_block_queried = current_block
         if tenderly_fork_id:
             w3 = Web3(HTTPProvider(tenderly_uri))
 
@@ -642,10 +664,10 @@ def run(
             params = [w3.toHex(increment_blocks)]  # number of blocks
             w3.provider.make_request(method="evm_increaseBlocks", params=params)
 
-        if loop_idx % pool_data_update_frequency == 0:
+        if loop_idx % pool_data_update_frequency == 0 and pool_data_update_frequency != -1:
             mgr.cfg.logger.info(f"Terraforming {blockchain}. Standby for oxygen levels.")
             sblock = (
-                (current_block - pool_data_update_frequency) if loop_idx > 1 else None
+                (current_block - (current_block - last_block_queried)) if loop_idx > 1 else None
             )
             (
                 static_pool_data,
@@ -660,7 +682,7 @@ def run(
             mgr.uniswap_v2_event_mappings = uniswap_v2_event_mappings
             mgr.uniswap_v3_event_mappings = uniswap_v3_event_mappings
             mgr.set_forked_pools()
-
+            last_block_queried = current_block
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")
         #     time.sleep(polling_interval)

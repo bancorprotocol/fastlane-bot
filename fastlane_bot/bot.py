@@ -1361,6 +1361,16 @@ class CarbonBot(CarbonBotBase):
         self.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
         self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
+    def get_tokens_in_exchange(
+            self,
+            exchange_name: str,
+    ) -> list[str]:
+        """
+        Gets all tokens that exist in pools on the specified exchange.
+        :param exchange_name: the exchange name
+        """
+        return self.db.get_tokens_from_exchange(exchange_name=exchange_name)
+
     def run(
         self,
         *,

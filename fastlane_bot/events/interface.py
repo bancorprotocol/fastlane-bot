@@ -120,6 +120,33 @@ class QueryInterface:
         """
         return key in pool and pool[key] > 0
 
+    def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
+        """
+        This token gets all tokens that exist in pools on the specified exchange.
+        Parameters
+        ----------
+        exchange_name: str
+            The exchange from which to get tokens.
+
+        Returns
+        -------
+        list[str]
+            Returns a list of token keys.
+        """
+        pools = self.filter_pools(exchange_name=exchange_name)
+        tokens = []
+        for pool in pools:
+            for idx in range(8):
+                try:
+                    tkn = pool[f"tkn{idx}_key"]
+                    if type(tkn) == str:
+                        tokens.append(tkn)
+                except KeyError:
+                    # Out of bounds
+                    break
+        tokens = list(set(tokens))
+        return tokens
+
     def filter_pools(self, exchange_name: str, key: str = "") -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
