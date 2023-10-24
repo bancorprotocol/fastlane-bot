@@ -750,31 +750,22 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        print("bot, calculate_profit")
         best_profit_fl_token = best_profit
-        print(best_profit_fl_token, fl_token_with_weth)
         if fl_token_with_weth != T.WETH: # TODO generalize to native gas token
             try:
                 fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{T.WETH}").bytknq(f"{fl_token_with_weth}")[0].p))
-                print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                print(best_profit_eth, "ETH")
             except:
                 try:
                     fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{T.WETH}")[0].p))
-                    print("flt_eth_conversion_rate is", fltkn_eth_conversion_rate)
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                    print(best_profit_eth, "ETH")
                 except Exception as e:
-                    print(str(e))
+                    raise str(e)
         else:
             best_profit_eth = best_profit_fl_token
 
         usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{T.WETH}/{T.USDC}")[0].p))  ## TODO dependency on USDC
-        print("usd_eth_conversion_rate is", usd_eth_conversion_rate)
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
-        print(best_profit_usd, 'USD')
-
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
     @staticmethod
@@ -927,25 +918,14 @@ class CarbonBot(CarbonBotBase):
         if fl_token == T.WETH:
             fl_token = T.NATIVE_ETH
 
-        print("bot, fl_token", fl_token)
-        print("best profit before exact calc",best_profit, "GAS TOKEN")
-
-
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
-
-        print("best profit after exact calc", best_profit, fl_token)
 
         # Use helper function to calculate profit
         best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, fl_token_with_weth
         )
-
-        print("Profit conversion complete")
-        print("best_profit_usd", best_profit_usd, "USD")
-        print("best_profit_fl_token", best_profit_fl_token, fl_token)
-        print("best_profit_eth", best_profit_eth, "ETH")
 
         # Log the best trade instructions
         self.handle_logging_for_trade_instructions(
