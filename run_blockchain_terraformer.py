@@ -813,12 +813,11 @@ def get_uni_v3_pools(
 
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    df = df.set_index("cid")
     pool_mapping = [
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.set_index("exchange")
+    #mapdf = mapdf.set_index("exchange")
     return df, mapdf
 
 
@@ -858,13 +857,11 @@ def get_uni_v2_pools(
         )
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    df = df.set_index("cid")
     pool_mapping = [
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.set_index("exchange")
     return df, mapdf
 
 
@@ -903,13 +900,11 @@ def get_solidly_v2_pools(
         )
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    df = df.set_index("cid")
     pool_mapping = [
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.set_index("exchange")
     return df, mapdf
 
 
@@ -1032,7 +1027,6 @@ def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
         )
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    df = df.set_index("cid")
     return df
 
 
@@ -1133,7 +1127,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         address = row[1][4]
         fee = row[1][5]
 
-        if fresh_data:
+        if fresh_data and not start_block:
             start_block = int(row[1][6]) if not math.isnan(row[1][6]) else 0
         if start_block is None:
             start_block = get_last_block_updated(df=exchange_df, exchange=exchange_name)
@@ -1162,7 +1156,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 web3=web3,
             )
 
-            univ2_mapdf = pd.concat([univ2_mapdf, m_df])
+            univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif fork in "uniswap_v3":
             if fee == "TBD":
                 continue
@@ -1177,7 +1171,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
-            univ3_mapdf = pd.concat([univ3_mapdf, m_df])
+            univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             if fee == "TBD":
                 continue
@@ -1193,7 +1187,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
-            univ2_mapdf = pd.concat([univ2_mapdf, m_df])
+            univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif "balancer" in fork:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
@@ -1204,11 +1198,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         else:
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
-        exchange_df = pd.concat([exchange_df, u_df])
+        exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
     exchange_df.to_csv((write_path + "/static_pool_data.csv"))
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"))
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"))
     return exchange_df, univ2_mapdf, univ3_mapdf
 
-
-terraform_blockchain(network_name=ETHEREUM)
