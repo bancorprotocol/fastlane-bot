@@ -12,7 +12,6 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot import Config
-from fastlane_bot.data.pools import pancakeswap_v3_pools
 from fastlane_bot.events.pools.base import Pool
 
 
@@ -32,12 +31,17 @@ class PancakeswapV3Pool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.
         """
         event_args = event["args"]
-        return "protocolFeesToken0" in event_args and event["address"] in pancakeswap_v3_pools
+        return (
+            "protocolFeesToken0" in event_args
+            and event["address"] in static_pools["pancakeswap_v3_pools"]
+        )
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -66,7 +70,12 @@ class PancakeswapV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Web3 = None, w3: Web3 = None, tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         See base class.

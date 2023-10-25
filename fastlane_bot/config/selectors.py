@@ -5,6 +5,15 @@ Fastlane bot configuration object -- selector constants
 NETWORK_ETHEREUM = "ethereum"
 NETWORK_MAINNET = NETWORK_ETHEREUM
 NETWORK_TENDERLY = "tenderly"
+NETWORK_BASE = "coinbase_base"
+NETWORK_ARBITRUM = "arbitrum_one"
+NETWORK_OPTIMISM = "optimism"
+NETWORK_CANTO = "canto"
+NETWORK_FANTOM = "fantom"
+NETWORK_MANTLE = "mantle"
+NETWORK_SCROLL = "scroll"
+NETWORK_BSC = "binance_smart_chain"
+
 
 DATABASE_SQLITE = "sqlite"
 DATABASE_POSTGRES = "postgres"
@@ -25,3 +34,9 @@ PROVIDER_INFURA = "infura"
 PROVIDER_ALCHEMY = "alchemy"
 PROVIDER_TENDERLY = "tenderly"
 PROVIDER_UNITTEST = "unittest"
+
+# Constants
+FACTORY_ADDRESS = "FACTORY_ADDRESS"
+ROUTER_ADDRESS = "ROUTER_ADDRESS"
+CARBON_CONTROLLER_ADDRESS = "CARBON_CONTROLLER_ADDRESS"
+BALANCER_VAULT_ADDRESS = "BALANCER_VAULT_ADDRESS"

@@ -10,7 +10,6 @@ from typing import Dict, Any, List
 
 from web3.contract import Contract
 
-from fastlane_bot.data.pools import uniswap_v3_pools
 from fastlane_bot.events.pools.base import Pool
 
 
@@ -30,12 +29,18 @@ class UniswapV3Pool(Pool):
         return "address"
 
     @classmethod
-    def event_matches_format(cls, event: Dict[str, Any]) -> bool:
+    def event_matches_format(
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+    ) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.
         """
         event_args = event["args"]
-        return "sqrtPriceX96" in event_args and event["address"] in uniswap_v3_pools and "protocolFeesToken0" not in event_args
+        return (
+            "sqrtPriceX96" in event_args
+            and event["address"] in static_pools["uniswap_v3_pools"]
+            and "protocolFeesToken0" not in event_args
+        )
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
@@ -64,7 +69,12 @@ class UniswapV3Pool(Pool):
         return data
 
     def update_from_contract(
-        self, contract: Contract, tenderly_fork_id: str = None, w3_tenderly: Any = None, w3: Any = None, tenderly_exchanges: List[str] = None
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Any = None,
+        w3: Any = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         See base class.

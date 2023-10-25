@@ -320,7 +320,7 @@ class ContractsManager(BaseManager):
 
         if symbol is None or decimals is None:
             raise self.FailedToGetTokenDetailsException(addr=addr)
-
+        symbol = str(symbol).replace("-", "_")
         new_data = {
             "key": key,
             "symbol": symbol,

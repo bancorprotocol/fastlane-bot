@@ -1706,3 +1706,42 @@ def get_current_block(
     else:
         current_block = last_block + 1
     return current_block
+
+
+def handle_static_pools_update(mgr: Any):
+    """
+    Handles the static pools update 1x at startup and then periodically thereafter upon terraformer runs.
+
+    Parameters
+    ----------
+    mgr : Any
+        The manager object.
+
+    """
+    uniswap_v2_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.uniswap_v2_event_mappings.items()
+        ]
+    )
+    uniswap_v3_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.uniswap_v3_event_mappings.items()
+        ]
+    )
+    all_event_mappings = (
+        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
+        .drop_duplicates("address")
+        .to_dict(orient="records")
+    )
+    for ex in mgr.forked_exchanges:
+        if ex in mgr.exchanges:
+            exchange_pools = [
+                e["address"] for e in all_event_mappings if e["exchange_name"] == ex
+            ]
+            mgr.cfg.logger.info(
+                f"Adding {len(exchange_pools)} {ex} pools to static pools"
+            )
+            attr_name = f"{ex}_pools"
+            mgr.static_pools[attr_name] = exchange_pools

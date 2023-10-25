@@ -4,6 +4,10 @@ Fastlane bot config -- network
 __VERSION__ = "1.0.3-RESTRICTED"
 __DATE__ = "02/May 2023"
 
+from typing import List
+
+import pandas as pd
+
 from .base import ConfigBase
 from . import selectors as S
 
@@ -25,6 +29,7 @@ class ConfigNetwork(ConfigBase):
     """
     Fastlane bot config -- network
     """
+
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
@@ -58,14 +63,35 @@ class ConfigNetwork(ConfigBase):
     UNISWAP_V2_NAME = "uniswap_v2"
     UNISWAP_V3_NAME = "uniswap_v3"
     SUSHISWAP_V2_NAME = "sushiswap_v2"
+    SUSHISWAP_V3_NAME = "sushiswap_v3"
     CARBON_V1_NAME = "carbon_v1"
-    CARBON_POL_NAME = "bancor_pol"
+    BANCOR_POL_NAME = "bancor_pol"
+
+    BALANCER_NAME = "balancer"
+
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
-    BALANCER_NAME = "balancer"
-    BANCOR_POL_NAME = "bancor_pol"
-    SUSHISWAP_V3_NAME = "sushiswap_v3"
+    SOLIDLY_V2_NAME = "solidly_v2"
+
+    # Base Exchanges
+    AERODROME_V2_NAME = "aerodrome_v2"
+    AERODROME_V3_NAME = "aerodrome_v3"
+    ALIENBASE_V2_NAME = "alienbase_v2"
+    ALIENBASE_V3_NAME = "alienbase_v3"
+    BASESWAP_V2_NAME = "baseswap_v2"
+    BASESWAP_V3_NAME = "baseswap_v3"
+    SWAPBASED_V2_NAME = "swap_based_v2"
+    # SWAPBASED_V3_NAME = "swap_based_v3" # This uses Algebra DEX
+    SYNTHSWAP_V2_NAME = "synthswap_v2"
+    SYNTHSWAP_V3_NAME = "synthswap_v3"
+    SMARDEX_V2_NAME = "smardex_v2"
+    # SMARDEX_V3_NAME = "smardex_v3" # This uses Algebra DEX
+
+    CARBON_POL_NAME = "bancor_pol"
     SHIBA_V2_NAME = "shiba_v2"
+    VELOCIMETER_V1_NAME = "velocimeter_v1"
+    VELOCIMETER_V2_NAME = "velocimeter_v2"
+
     EXCHANGE_IDS = {
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,
@@ -76,10 +102,32 @@ class ConfigNetwork(ConfigBase):
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
     }
-    UNI_V2_FORKS = [UNISWAP_V2_NAME, SUSHISWAP_V2_NAME, PANCAKESWAP_V2_NAME, SHIBA_V2_NAME]
-    UNI_V3_FORKS = [UNISWAP_V3_NAME, SUSHISWAP_V3_NAME, PANCAKESWAP_V3_NAME, ]
-
-    UNI_V2_FEE_MAPPING = {UNISWAP_V2_NAME: 0.003, SUSHISWAP_V2_NAME: 0.0025, PANCAKESWAP_V2_NAME: 0.0025}
+    UNIV2_FORKS = [
+        UNISWAP_V2_NAME,
+        SUSHISWAP_V2_NAME,
+        PANCAKESWAP_V2_NAME,
+        SHIBA_V2_NAME,
+        SMARDEX_V2_NAME,
+        SWAPBASED_V2_NAME,
+        BASESWAP_V2_NAME,
+        ALIENBASE_V2_NAME,
+        AERODROME_V2_NAME,
+        VELOCIMETER_V1_NAME,
+        SOLIDLY_V2_NAME,
+    ]
+    UNIV3_FORKS = [
+        UNISWAP_V3_NAME,
+        SUSHISWAP_V3_NAME,
+        PANCAKESWAP_V3_NAME,
+        BASESWAP_V3_NAME,
+    ]
+    SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
+    CARBON_V1_FORKS = [CARBON_V1_NAME]
+    UNI_V2_FEE_MAPPING = {
+        UNISWAP_V2_NAME: 0.003,
+        SUSHISWAP_V2_NAME: 0.0025,
+        PANCAKESWAP_V2_NAME: 0.0025,
+    }
 
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
@@ -107,7 +155,9 @@ class ConfigNetwork(ConfigBase):
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500 * 100  # 10 block time deviation
     DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
     _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
-    DEFAULT_CURVES_DATAFILE = os.path.normpath(f"{_PROJECT_PATH}/carbon/data/curves.csv.gz")
+    DEFAULT_CURVES_DATAFILE = os.path.normpath(
+        f"{_PROJECT_PATH}/carbon/data/curves.csv.gz"
+    )
     CARBON_STRATEGY_CHUNK_SIZE = 200
     Q96 = Decimal("2") ** Decimal("96")
     DEFAULT_TIMEOUT = 60
@@ -125,6 +175,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_ETHEREUM = S.NETWORK_ETHEREUM
     NETWORK_MAINNET = S.NETWORK_MAINNET
     NETWORK_TENDERLY = S.NETWORK_TENDERLY
+    NETWORK_BASE = S.NETWORK_BASE
 
     @classmethod
     def new(cls, network=None):
@@ -135,6 +186,8 @@ class ConfigNetwork(ConfigBase):
             network = cls.NETWORK_ETHEREUM
         if network == cls.NETWORK_ETHEREUM:
             return _ConfigNetworkMainnet(_direct=False)
+        elif network == cls.NETWORK_BASE:
+            return _ConfigNetworkBase(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -153,6 +206,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     NETWORK_ID = "mainnet"
     NETWORK_NAME = "Ethereum Mainnet"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://eth-mainnet.alchemyapi.io/v2/"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -191,17 +245,146 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     SHIBA_V2_FACTORY_ADDRESS = "0x115934131916C8b277DD010Ee02de363c09d037c"
 
     # Uni V2 & V3 Router Mapping
-    UNI_V2_ROUTER_MAPPING = {ConfigNetwork.UNISWAP_V2_NAME: UNISWAP_V2_ROUTER_ADDRESS, ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS, ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS, ConfigNetwork.SHIBA_V2_NAME: SHIBA_V2_ROUTER_ADDRESS}
-    UNI_V3_ROUTER_MAPPING = {ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS, ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS, ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS}
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {UNISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V2_NAME, SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME, PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME, SHIBA_V2_FACTORY_ADDRESS: ConfigNetwork.SHIBA_V2_NAME}
+    UNI_V2_ROUTER_MAPPING = {
+        ConfigNetwork.UNISWAP_V2_NAME: UNISWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SHIBA_V2_NAME: SHIBA_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_ROUTER_MAPPING = {
+        ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        UNISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V2_NAME,
+        SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME,
+        SHIBA_V2_FACTORY_ADDRESS: ConfigNetwork.SHIBA_V2_NAME,
+    }
 
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {UNISWAP_V2_FACTORY_ADDRESS: UNISWAP_V2_ROUTER_ADDRESS, SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS, PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS, SHIBA_V2_FACTORY_ADDRESS: SHIBA_V2_ROUTER_ADDRESS}
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS, SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS, PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS}
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME, SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME, PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME}
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        UNISWAP_V2_FACTORY_ADDRESS: UNISWAP_V2_ROUTER_ADDRESS,
+        SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS,
+        SHIBA_V2_FACTORY_ADDRESS: SHIBA_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS,
+        SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME,
+        SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME,
+    }
 
-   # FRAX
+    # FRAX
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+
+class _ConfigNetworkBase(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_BASE
+    NETWORK_ID = "8453"
+    NETWORK_NAME = "Base Mainnet"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
+
+    # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
+    #######################################################################################
+
+    FASTLANE_CONTRACT_ADDRESS = ""  # TODO
+
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    # Uniswap
+    UNISWAP_V3_ROUTER_ADDRESS = "0x2626664c2603336E57B271c5C0b26F421741e481"
+    UNISWAP_V3_FACTORY_ADDRESS = "0x33128a8fC17869897dcE68Ed026d694621f6FDfD"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    # Pancake
+    PANCAKESWAP_V2_ROUTER_ADDRESS = "0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb"
+    PANCAKESWAP_V2_FACTORY_ADDRESS = "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E"
+    PANCAKESWAP_V3_ROUTER_ADDRESS = "0x1b81D678ffb9C0263b24A97847620C99d213eB14"
+    PANCAKESWAP_V3_FACTORY_ADDRESS = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865"
+
+    # Sushi
+    SUSHISWAP_V2_ROUTER_ADDRESS = "0x6BDED42c6DA8FBf0d2bA55B2fa120C5e0c8D7891"
+    SUSHISWAP_V2_FACTORY_ADDRESS = "0x71524B4f93c58fcbF659783284E38825f0622859"
+    SUSHISWAP_V3_ROUTER_ADDRESS = "0xFB7eF66a7e61224DD6FcD0D7d9C3be5C8B049b9f"
+    SUSHISWAP_V3_FACTORY_ADDRESS = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4"
+
+    # Alienbase
+    ALIENBASE_V2_FACTORY_ADDRESS = "0x3E84D913803b02A4a7f027165E8cA42C14C0FdE7"
+    ALIENBASE_V2_ROUTER_ADDRESS = "0x8c1A3cF8f83074169FE5D7aD50B978e1cD6b37c7"
+
+    # Smardex
+    SMARDEX_V2_FACTORY_ADDRESS = "0xdd4536dD9636564D891c919416880a3e250f975A"
+    SMARDEX_V2_ROUTER_ADDRESS = "0x5C622Dcc96b6D96ac6c154f99CF081815094CBC9"
+    SMARDEX_V3_FACTORY_ADDRESS = ""
+    SMARDEX_V3_ROUTER_ADDRESS = ""
+
+    # Baseswap
+    BASESWAP_V2_FACTORY_ADDRESS = "0xFDa619b6d20975be80A10332cD39b9a4b0FAa8BB"
+    BASESWAP_V2_ROUTER_ADDRESS = "0x327Df1E6de05895d2ab08513aaDD9313Fe505d86"
+    BASESWAP_V3_FACTORY_ADDRESS = "0x38015D05f4fEC8AFe15D7cc0386a126574e8077B"
+    BASESWAP_V3_ROUTER_ADDRESS = "0x1B8eea9315bE495187D873DA7773a874545D9D48"
+
+    # SwapBased
+    SWAPBASED_V2_ROUTER_ADDRESS = "0xaaa3b1F1bd7BCc97fD1917c18ADE665C5D31F066"
+    SWAPBASED_V2_FACTORY_ADDRESS = "0x04C9f118d21e8B767D2e50C946f0cC9F6C367300"
+
+    # Uni V2 & V3 Router Mapping
+    UNI_V2_ROUTER_MAPPING = {
+        ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.ALIENBASE_V2_NAME: ALIENBASE_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SMARDEX_V2_NAME: SMARDEX_V2_ROUTER_ADDRESS,
+        ConfigNetwork.BASESWAP_V2_NAME: BASESWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SWAPBASED_V2_NAME: SWAPBASED_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_ROUTER_MAPPING = {
+        ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.BASESWAP_V3_NAME: BASESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME,
+        ALIENBASE_V2_ROUTER_ADDRESS: ConfigNetwork.ALIENBASE_V2_NAME,
+        SWAPBASED_V2_FACTORY_ADDRESS: ConfigNetwork.SWAPBASED_V2_NAME,
+    }
+
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS,
+        SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME,
+        SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME,
+    }
+    UNI_V2_FORK_FEE_MAP = {
+        ConfigNetwork.UNISWAP_V2_NAME: 0.003,
+        ConfigNetwork.SUSHISWAP_V2_NAME: 0.0025,
+        ConfigNetwork.SMARDEX_V2_NAME: 0.001,
+        ConfigNetwork.SWAPBASED_V2_NAME: 0.003,
+    }
+
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
@@ -252,28 +435,134 @@ class _ConfigNetworkTenderly(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    UNI_V2_ROUTER_MAPPING = {ConfigNetwork.UNISWAP_V2_NAME: UNISWAP_V2_ROUTER_ADDRESS,
-                             ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS,
-                             ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS,
-                             ConfigNetwork.SHIBA_V2_NAME: SHIBA_V2_ROUTER_ADDRESS}
-    UNI_V3_ROUTER_MAPPING = {ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS,
-                             ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS,
-                             ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS}
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {UNISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V2_NAME,
-                                                    SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME,
-                                                    PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME,
-                                                    SHIBA_V2_FACTORY_ADDRESS: ConfigNetwork.SHIBA_V2_NAME}
+    UNI_V2_ROUTER_MAPPING = {
+        ConfigNetwork.UNISWAP_V2_NAME: UNISWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS,
+        ConfigNetwork.SHIBA_V2_NAME: SHIBA_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_ROUTER_MAPPING = {
+        ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS,
+        ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        UNISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V2_NAME,
+        SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME,
+        SHIBA_V2_FACTORY_ADDRESS: ConfigNetwork.SHIBA_V2_NAME,
+    }
 
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {UNISWAP_V2_FACTORY_ADDRESS: UNISWAP_V2_ROUTER_ADDRESS,
-                                             SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS,
-                                             PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS,
-                                             SHIBA_V2_FACTORY_ADDRESS: SHIBA_V2_ROUTER_ADDRESS}
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS,
-                                             SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS,
-                                             PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS}
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME,
-                                                    SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME,
-                                                    PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME}
+    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        UNISWAP_V2_FACTORY_ADDRESS: UNISWAP_V2_ROUTER_ADDRESS,
+        SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS,
+        PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS,
+        SHIBA_V2_FACTORY_ADDRESS: SHIBA_V2_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {
+        UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS,
+        SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS,
+    }
+    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
+        UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME,
+        SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME,
+        PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME,
+    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+def get_multichain_addresses(network: str):
+    """
+    Create dataframe of addresses for the selected network
+    :param network: the network in which to get addresses
+
+    returns:
+    A dataframe that contains items from the selected network
+    """
+    multichain_address_path = os.path.normpath(
+        "fastlane_bot/data/multichain_addresses.csv"
+    )
+    chain_addresses_df = pd.read_csv(multichain_address_path)
+    network_df = chain_addresses_df.loc[chain_addresses_df["chain"] == network]
+    return network_df
+
+
+def map_fork_addresses(df: pd.DataFrame):
+    # UNI_V2_ROUTER_MAPPING
+    # UNI_V3_ROUTER_MAPPING
+    # UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME
+    pass
+
+
+def get_row_from_address(address: str, df: pd.DataFrame) -> pd.DataFrame:
+    if df["address"].isin([address]).any():
+        return df[df["address"] == address]
+    return None
+
+
+def get_exchange_from_address(address: str, df: pd.DataFrame) -> str or None:
+    row = get_row_from_address(address=address, df=df)
+    if row is None:
+        return None
+    return row["exchange_name"].values[0]
+
+
+def get_items_from_exchange(
+    item_names: List[str],
+    exchange_name: str,
+    contract_name: str,
+    fork: str,
+    df: pd.DataFrame,
+) -> List[str or float]:
+    df_ex = df[
+        (df["exchange_name"] == exchange_name)
+        & (df["fork"] == fork)
+        & (df["contract_name"] == contract_name)
+    ]
+    if len(df_ex.index) == 0:
+        return None
+    items_to_return = []
+    for item in item_names:
+        items_to_return.append(df_ex[item].values[0])
+    return items_to_return
+
+
+def get_router_address_for_exchange(
+    exchange_name: str, fork: str, df: pd.DataFrame
+) -> str:
+    router_address = get_items_from_exchange(
+        item_names=["address"],
+        exchange_name=exchange_name,
+        fork=fork,
+        contract_name="ROUTER_ADDRESS",
+        df=df,
+    )
+    if router_address is None:
+        raise ExchangeInfoNotFound(
+            f"Router address could not be found for exchange: {exchange_name}, fork of: {fork}. Exchange must be mapped in fastlane_bot/data/multichain_addresses.csv"
+        )
+    return router_address[0]
+
+
+def get_fee_for_exchange(
+    exchange_name: str, fork: str, df: pd.DataFrame
+) -> float or None:
+    exchange_fee = get_items_from_exchange(
+        item_names=["fee"],
+        exchange_name=exchange_name,
+        fork=fork,
+        contract_name="FACTORY_ADDRESS",
+        df=df,
+    )
+    if exchange_fee is None:
+        raise ExchangeInfoNotFound(
+            f"Fee could not be found for exchange: {exchange_name}, fork of: {fork}. Exchange must be mapped in fastlane_bot/data/multichain_addresses.csv"
+        )
+    return exchange_fee[0]
+
+
+class ExchangeInfoNotFound(AssertionError):
+    pass
