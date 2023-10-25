@@ -670,7 +670,6 @@ def run(
                 (current_block - (current_block - last_block_queried)) if loop_idx > 1 else None
             )
             (
-                static_pool_data,
                 uniswap_v2_event_mappings,
                 uniswap_v3_event_mappings,
             ) = terraform_blockchain(
