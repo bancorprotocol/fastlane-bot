@@ -707,7 +707,6 @@ def run(
                 else None
             )
             (
-                static_pool_data,
                 uniswap_v2_event_mappings,
                 uniswap_v3_event_mappings,
             ) = terraform_blockchain(

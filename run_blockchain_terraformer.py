@@ -1211,5 +1211,5 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     #exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
-    return exchange_df, univ2_mapdf, univ3_mapdf
+    return univ2_mapdf, univ3_mapdf
 
