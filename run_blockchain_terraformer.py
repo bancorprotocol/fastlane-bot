@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -151,7 +151,7 @@ dataframe_key = [
 skip_token_list = ["0xaD67F7a72BA2ca971390B2a1dD907303bD577a4F".lower()]
 
 
-def get_all_token_details(web3: Web3, network: str) -> dict:
+def get_all_token_details(web3: Web3, network: str) -> Dict:
     """
     This function collects the number of decimals and symbol of a token, and formats it for use in a dataframe.
     :param web3: the Web3 reference
@@ -232,7 +232,7 @@ def get_token_details_from_contract(
 
 
 def get_token_details(
-    tkn: str, token_addr_lookup: dict, web3: Web3
+    tkn: str, token_addr_lookup: Dict, web3: Web3
 ) -> Tuple[str, int] or Tuple[None, None]:
     """
     :param tkn: the token address
@@ -297,7 +297,7 @@ def skip_tokens(addr: str) -> bool:
         return False
 
 
-def get_token_prices_coingecko(token_list: dict) -> dict:
+def get_token_prices_coingecko(token_list: Dict) -> Dict:
     """
     :param token_list: the list of tokens for which to fetch prices
 
@@ -333,7 +333,7 @@ def get_token_prices_coingecko(token_list: dict) -> dict:
     return token_list
 
 
-def generate_token_price_map(pool_data: dict, web3: Web3) -> dict:
+def generate_token_price_map(pool_data: Dict, web3: Web3) -> Dict:
     """
     This function retrieves token prices from Coingecko
     :param pool_data: list of pools
@@ -361,8 +361,8 @@ def generate_token_price_map(pool_data: dict, web3: Web3) -> dict:
 
 
 def organize_pool_details_uni_v3(
-    pool_data: dict, token_addr_lookup: dict, exchange: str, web3: Web3
-) -> dict:
+    pool_data: Dict, token_addr_lookup: Dict, exchange: str, web3: Web3
+) -> Dict:
     """
     This function organizes pool details for Uni V3 pools.
     :param pool_data: the pool data from the pool creation event
@@ -426,8 +426,8 @@ def organize_pool_details_uni_v3(
 
 
 def process_token_details(
-    tokens: List[str], token_addr_lookup: dict, web3: Web3
-) -> Tuple[dict, str, bool] or Tuple[None, None, bool]:
+    tokens: List[str], token_addr_lookup: Dict, web3: Web3
+) -> Tuple[Dict, str, bool] or Tuple[None, None, bool]:
     """
     This function processes token details & generates the token pair
 
@@ -466,7 +466,7 @@ def process_token_details(
 
 
 def organize_pool_details_balancer(
-    pool_data: dict, token_prices: dict, web3: Web3, min_usd: int = 100000
+    pool_data: Dict, token_prices: Dict, web3: Web3, min_usd: int = 100000
 ):
     """
     This function organizes pool details for Uni V3 pools.
@@ -698,7 +698,7 @@ def organize_pool_details_solidly_v2(
 
 def get_uni_pool_creation_events_v3(
     factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> list:
+) -> List:
     """
     This function retrieves Uniswap V3 pool generation events
 
@@ -726,7 +726,7 @@ def get_uni_pool_creation_events_v3(
 
 def get_uni_pool_creation_events_v2(
     factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> list:
+) -> List:
     """
     This function retrieves Uniswap V2 pool generation events
 
@@ -753,7 +753,7 @@ def get_uni_pool_creation_events_v2(
 
 def get_solidly_pool_creation_events_v2(
     factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> list:
+) -> List:
     """
     This function retrieves Solidly pool generation events
 
@@ -779,7 +779,7 @@ def get_solidly_pool_creation_events_v2(
 
 
 def get_uni_v3_pools(
-    token_addr_lookup: dict,
+    token_addr_lookup: Dict,
     exchange: str,
     factory_contract,
     start_block: int,
@@ -824,7 +824,7 @@ def get_uni_v3_pools(
 
 
 def get_uni_v2_pools(
-    token_addr_lookup: dict,
+    token_addr_lookup: Dict,
     exchange: str,
     factory_contract,
     start_block: int,
@@ -870,7 +870,7 @@ def get_uni_v2_pools(
 
 
 def get_solidly_v2_pools(
-    token_addr_lookup: dict,
+    token_addr_lookup: Dict,
     exchange: str,
     factory_contract,
     start_block: int,
