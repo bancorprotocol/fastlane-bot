@@ -817,6 +817,7 @@ def get_uni_v3_pools(
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
+    mapdf = mapdf.reset_index(drop=True)
     #mapdf = mapdf.set_index("exchange")
     return df, mapdf
 
@@ -862,6 +863,7 @@ def get_uni_v2_pools(
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
+    mapdf = mapdf.reset_index(drop=True)
     return df, mapdf
 
 
@@ -905,6 +907,7 @@ def get_solidly_v2_pools(
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
+    mapdf = mapdf.reset_index(drop=True)
     return df, mapdf
 
 
@@ -1113,9 +1116,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
         fresh_data = True
     else:
-        exchange_df = pd.read_csv(write_path + "/static_pool_data.csv")
-        univ2_mapdf = pd.read_csv(write_path + "/uniswap_v2_event_mappings.csv")
-        univ3_mapdf = pd.read_csv(write_path + "/uniswap_v3_event_mappings.csv")
+        exchange_df = pd.read_csv(write_path + "/static_pool_data.csv", low_memory=False, dtype=str, index_col=False)
+        univ2_mapdf = pd.read_csv(write_path + "/uniswap_v2_event_mappings.csv", index_col=False)
+        univ3_mapdf = pd.read_csv(write_path + "/uniswap_v3_event_mappings.csv", index_col=False)
 
     multichain_df = get_multichain_addresses(network=network_name)
 
@@ -1155,7 +1158,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
-
+            m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif fork in "uniswap_v3":
             if fee == "TBD":
@@ -1171,6 +1174,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
+            m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             if fee == "TBD":
@@ -1187,6 +1191,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
+            m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif "balancer" in fork:
             try:
@@ -1199,8 +1204,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
         exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
-    exchange_df.to_csv((write_path + "/static_pool_data.csv"))
-    univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"))
-    univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"))
+    exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+    univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
+    univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return exchange_df, univ2_mapdf, univ3_mapdf
 

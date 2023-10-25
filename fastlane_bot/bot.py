@@ -1364,7 +1364,7 @@ class CarbonBot(CarbonBotBase):
     def get_tokens_in_exchange(
             self,
             exchange_name: str,
-    ) -> list[str]:
+    ) -> List[str]:
         """
         Gets all tokens that exist in pools on the specified exchange.
         :param exchange_name: the exchange name

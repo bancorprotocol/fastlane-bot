@@ -218,7 +218,7 @@ load_dotenv()
 )
 @click.option(
     "--pool_data_update_frequency",
-    default=-1,
+    default=2,
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
@@ -678,7 +678,6 @@ def run(
                 web3=mgr.web3,
                 start_block=sblock,
             )
-            mgr.pool_data = static_pool_data.to_dict(orient="records")
             mgr.uniswap_v2_event_mappings = uniswap_v2_event_mappings
             mgr.uniswap_v3_event_mappings = uniswap_v3_event_mappings
             mgr.set_forked_pools()
