@@ -784,7 +784,7 @@ def get_uni_v3_pools(
     factory_contract,
     start_block: int,
     web3: Web3,
-) -> Tuple[DataFrame, DataFrame]:
+) -> DataFrame:
     """
     This function retrieves Uniswap V3 pool generation events and organizes them into two Dataframes
 
@@ -819,7 +819,8 @@ def get_uni_v3_pools(
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
     #mapdf = mapdf.set_index("exchange")
-    return df, mapdf
+    return mapdf
+    #return df, mapdf
 
 
 def get_uni_v2_pools(
@@ -829,7 +830,7 @@ def get_uni_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
-) -> Tuple[DataFrame, DataFrame]:
+) -> DataFrame:
     """
     This function retrieves Uniswap V2 pool generation events and organizes them into two Dataframes
 
@@ -864,7 +865,8 @@ def get_uni_v2_pools(
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    return df, mapdf
+    return mapdf
+    #return df, mapdf
 
 
 def get_solidly_v2_pools(
@@ -874,7 +876,7 @@ def get_solidly_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
-) -> Tuple[DataFrame, DataFrame]:
+) -> DataFrame:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
     :param token_addr_lookup: the dict containing token information
@@ -908,7 +910,8 @@ def get_solidly_v2_pools(
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    return df, mapdf
+    return mapdf
+    #return df, mapdf
 
 
 def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.DataFrame:
@@ -1150,7 +1153,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             factory_contract = web3.eth.contract(
                 address=address, abi=UNISWAP_V2_FACTORY_ABI
             )
-            u_df, m_df = get_uni_v2_pools(
+            m_df = get_uni_v2_pools(
                 token_addr_lookup=token_addr_lookup,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
@@ -1167,7 +1170,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             factory_contract = web3.eth.contract(
                 address=address, abi=UNISWAP_V3_FACTORY_ABI
             )
-            u_df, m_df = get_uni_v3_pools(
+            m_df = get_uni_v3_pools(
                 token_addr_lookup=token_addr_lookup,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
@@ -1183,7 +1186,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             factory_contract = web3.eth.contract(
                 address=address, abi=SOLIDLY_FACTORY_ABI_V2
             )
-            u_df, m_df = get_solidly_v2_pools(
+
+            m_df = get_solidly_v2_pools(
                 token_addr_lookup=token_addr_lookup,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
@@ -1203,8 +1207,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         else:
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
-        exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
-    exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+        #exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
+    #exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return exchange_df, univ2_mapdf, univ3_mapdf
