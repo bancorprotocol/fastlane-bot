@@ -218,14 +218,14 @@ load_dotenv()
 )
 @click.option(
     "--pool_data_update_frequency",
-    default=2,
+    default=-1,
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
 
 @click.option(
     "--use_specific_exchange_for_target_tokens",
-    default="None",
+    default=None,
     type=str,
     help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
 )
