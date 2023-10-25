@@ -9,7 +9,6 @@ import time
 from typing import List
 
 import click
-import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
@@ -40,6 +39,7 @@ from fastlane_bot.events.utils import (
     handle_replay_from_block,
     get_current_block,
     handle_tenderly_event_exchanges,
+    handle_static_pools_update,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -698,34 +698,6 @@ def run(
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")
         #     time.sleep(polling_interval)
-
-
-def handle_static_pools_update(mgr):
-    uniswap_v2_event_mappings = pd.DataFrame(
-        [
-            {"address": k, "exchange_name": v}
-            for k, v in mgr.uniswap_v2_event_mappings.items()
-        ]
-    )
-    uniswap_v3_event_mappings = pd.DataFrame(
-        [
-            {"address": k, "exchange_name": v}
-            for k, v in mgr.uniswap_v3_event_mappings.items()
-        ]
-    )
-    all_event_mappings = (
-        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
-        .drop_duplicates("address")
-        .to_dict(orient="records")
-    )
-    for ex in mgr.forked_exchanges:
-        if ex in mgr.exchanges:
-            exchange_pools = [e for e in all_event_mappings if e["exchange_name"] == ex]
-            mgr.cfg.logger.info(
-                f"Adding {len(exchange_pools)} {ex} pools to static pools"
-            )
-            attr_name = f"{ex}_pools"
-            mgr.static_pools[attr_name] = exchange_pools
 
 
 if __name__ == "__main__":
