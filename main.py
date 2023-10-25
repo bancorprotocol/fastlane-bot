@@ -686,10 +686,10 @@ def run(
                 start_block=sblock,
             )
             mgr.uniswap_v2_event_mappings = dict(
-                uniswap_v2_event_mappings[["address", "exchange_name"]].values
+                uniswap_v2_event_mappings[["address", "exchange"]].values
             )
             mgr.uniswap_v3_event_mappings = dict(
-                uniswap_v3_event_mappings[["address", "exchange_name"]].values
+                uniswap_v3_event_mappings[["address", "exchange"]].values
             )
             last_block_queried = current_block
 
