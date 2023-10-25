@@ -502,38 +502,9 @@ def run(
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     forks_to_cleanup = []
     last_block_queried = 0
-
+    handle_static_pools_update(mgr)
     while True:
         # try:
-        uniswap_v2_event_mappings = pd.DataFrame(
-            [
-                {"address": k, "exchange_name": v}
-                for k, v in mgr.uniswap_v2_event_mappings.items()
-            ]
-        )
-        uniswap_v3_event_mappings = pd.DataFrame(
-            [
-                {"address": k, "exchange_name": v}
-                for k, v in mgr.uniswap_v3_event_mappings.items()
-            ]
-        )
-
-        all_event_mappings = (
-            pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
-            .drop_duplicates("address")
-            .to_dict(orient="records")
-        )
-
-        for ex in mgr.forked_exchanges:
-            if ex in mgr.exchanges:
-                exchange_pools = [
-                    e for e in all_event_mappings if e["exchange_name"] == ex
-                ]
-                mgr.cfg.logger.info(
-                    f"Adding {len(exchange_pools)} {ex} pools to static pools"
-                )
-                attr_name = f"{ex}_pools"
-                mgr.static_pools[attr_name] = exchange_pools
 
         # Save initial state of pool data to assert whether it has changed
         initial_state = mgr.pool_data.copy()
@@ -714,13 +685,47 @@ def run(
                 web3=mgr.web3,
                 start_block=sblock,
             )
-            mgr.uniswap_v2_event_mappings = uniswap_v2_event_mappings
-            mgr.uniswap_v3_event_mappings = uniswap_v3_event_mappings
-            # mgr.set_forked_pools()
+            mgr.uniswap_v2_event_mappings = dict(
+                uniswap_v2_event_mappings[["address", "exchange_name"]].values
+            )
+            mgr.uniswap_v3_event_mappings = dict(
+                uniswap_v3_event_mappings[["address", "exchange_name"]].values
+            )
             last_block_queried = current_block
+
+            handle_static_pools_update(mgr)
+
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")
         #     time.sleep(polling_interval)
+
+
+def handle_static_pools_update(mgr):
+    uniswap_v2_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.uniswap_v2_event_mappings.items()
+        ]
+    )
+    uniswap_v3_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.uniswap_v3_event_mappings.items()
+        ]
+    )
+    all_event_mappings = (
+        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
+        .drop_duplicates("address")
+        .to_dict(orient="records")
+    )
+    for ex in mgr.forked_exchanges:
+        if ex in mgr.exchanges:
+            exchange_pools = [e for e in all_event_mappings if e["exchange_name"] == ex]
+            mgr.cfg.logger.info(
+                f"Adding {len(exchange_pools)} {ex} pools to static pools"
+            )
+            attr_name = f"{ex}_pools"
+            mgr.static_pools[attr_name] = exchange_pools
 
 
 if __name__ == "__main__":
