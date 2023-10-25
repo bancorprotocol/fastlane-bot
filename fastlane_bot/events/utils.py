@@ -242,6 +242,7 @@ def filter_static_pool_data(
 def get_static_data(
     cfg: Config,
     exchanges: List[str],
+    blockchain: str,
     static_pool_data_filename: str,
     static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
@@ -254,6 +255,8 @@ def get_static_data(
         The config object.
     exchanges : List[str]
         A list of exchanges to fetch data for.
+    blockchain : str
+        The name of the blockchain being used
     static_pool_data_filename : str
         The filename of the static pool data CSV file.
     static_pool_data_sample_sz : int or str
@@ -265,8 +268,8 @@ def get_static_data(
         A tuple of static pool data, tokens, and Uniswap v2 event mappings.
 
     """
-    base_path = "fastlane_bot/data"
-
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -290,7 +293,7 @@ def get_static_data(
         uniswap_v3_event_mappings_df[["address", "exchange"]].values
     )
 
-    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    tokens_filepath = os.path.join(token_path, "tokens.csv")
     tokens = read_csv_file(tokens_filepath)
 
     # Initialize web3
@@ -442,6 +445,7 @@ def get_config(
     limit_bancor3_flashloan_tokens: bool,
     loglevel: str,
     logging_path: str,
+    blockchain: str,
     tenderly_fork_id: str = None,
 ) -> Config:
     """
@@ -457,6 +461,8 @@ def get_config(
         The log level.
     logging_path : str
         The logging path.
+    blockchain : str
+        The name of the blockchain
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
 
@@ -470,12 +476,12 @@ def get_config(
 
     if tenderly_fork_id:
         cfg = Config.new(
-            config=Config.CONFIG_TENDERLY, loglevel=loglevel, logging_path=logging_path
+            config=Config.CONFIG_TENDERLY, loglevel=loglevel, logging_path=logging_path, blockchain=blockchain
         )
         cfg.logger.info("Using Tenderly config")
     else:
         cfg = Config.new(
-            config=Config.CONFIG_MAINNET, loglevel=loglevel, logging_path=logging_path
+            config=Config.CONFIG_MAINNET, loglevel=loglevel, logging_path=logging_path, blockchain=blockchain
         )
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens

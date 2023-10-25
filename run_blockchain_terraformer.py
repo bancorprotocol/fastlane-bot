@@ -20,6 +20,15 @@ ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
 
+BLOCK_CHUNK_SIZE_MAP = {
+    "ethereum": 50000,
+    "polygon": 250000,
+    "polygon_zkevm": 500000,
+    "arbitrum_one": 500000,
+    "optimism": 500000,
+    "coinbase_base": 500000,
+}
+
 ALCHEMY_KEY_DICT = {
     "ethereum": "WEB3_ALCHEMY_PROJECT_ID",
     "polygon": "WEB3_ALCHEMY_POLYGON",
@@ -697,7 +706,7 @@ def organize_pool_details_solidly_v2(
 
 
 def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Uniswap V3 pool generation events
@@ -725,7 +734,7 @@ def get_uni_pool_creation_events_v3(
 
 
 def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Uniswap V2 pool generation events
@@ -752,7 +761,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Solidly pool generation events
@@ -1201,15 +1210,18 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
                 u_df = get_balancer_pools(subgraph_url=subgraph_url, web3=web3)
+                exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
+                exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
             except:
                 print(f"Could not find Balancer subgraph URL for chain: {network_name}")
                 continue
         else:
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
-        #exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
-    #exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+
+
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return univ2_mapdf, univ3_mapdf
 
+#terraform_blockchain(network_name="optimism")

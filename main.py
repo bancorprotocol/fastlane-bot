@@ -95,8 +95,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_pol,balancer,bancor_v2,pancakeswap_v2,pancakeswap_v3",
-    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
+    default="uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
+    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included on Ethereum.",
 )
 @click.option(
     "--polling_interval",
@@ -207,13 +207,14 @@ load_dotenv()
 )
 @click.option(
     "--blockchain",
-    default="ethereum",
+    default="coinbase_base",
     help="Select a blockchain from ethereum, coinbase_base, or arbitrum_one.",
     type=click.Choice(
         [
             "ethereum",
             "coinbase_base",
             "arbitrum_one",
+            "optimism"
         ]
     ),
 )
@@ -308,6 +309,7 @@ def main(
         limit_bancor3_flashloan_tokens,
         loglevel,
         logging_path,
+        blockchain,
         tenderly_fork_id,
     )
     # TODO: add blockchain support
@@ -377,7 +379,7 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+        cfg, exchanges, blockchain, static_pool_data_filename, static_pool_data_sample_sz
     )
 
     target_token_addresses = handle_target_token_addresses(

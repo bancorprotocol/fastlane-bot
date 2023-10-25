@@ -355,15 +355,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         if pool.exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             return pool.anchor
         elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
-            router = pool.router
-            if router is None:
-                router = self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
-            return router
+            return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
-            router = pool.router
-            if router is None:
-                router = self.ConfigObj.UNI_V3_ROUTER_MAPPING[pool.exchange_name]
-            return router
+            return self.ConfigObj.UNI_V3_ROUTER_MAPPING[pool.exchange_name]
         else:
             return pool.tkn0_address
 
