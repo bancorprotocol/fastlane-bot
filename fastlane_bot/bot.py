@@ -564,7 +564,7 @@ class CarbonBot(CarbonBotBase):
             )
             if max_trade_in is None:
                 return None
-            if type(max_trade_in) != float or int:
+            if type(max_trade_in) != float and type(max_trade_in) != int:
                 return None
             if max_trade_in < 0.0:
                 return None
