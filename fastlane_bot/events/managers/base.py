@@ -91,13 +91,8 @@ class BaseManager:
     carbon_inititalized: bool = None
     replay_from_block: int = None
 
-    _uniswap_v2_pools: pd.DataFrame = None
-    _sushiswap_v2_pools: pd.DataFrame = None
-    _uniswap_v3_pools: pd.DataFrame = None
-    _pancakeswap_v2_pools: pd.DataFrame = None
-    _pancakeswap_v3_pools: pd.DataFrame = None
-    forked_exchanges: List[str] = None
-    static_pools: Dict[str, pd.DataFrame] = None
+    forked_exchanges: List[str] = field(default_factory=list)
+    static_pools: Dict[str, List[str]] = field(default_factory=dict)
 
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
@@ -105,44 +100,6 @@ class BaseManager:
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
-        self.set_forked_pools()
-
-    def set_forked_pools(self):
-        """
-        Set the forked pools.
-        """
-        forked_exchanges = self.forked_exchanges
-        self.static_pools = {}
-        for exchange in forked_exchanges:
-            attr_name = f"_{exchange}_pools"
-            setattr(self, attr_name, None)
-
-            def get_property(exchange=exchange, attr_name=attr_name):
-                def inner(self):
-                    if getattr(self, attr_name) is None:
-                        setattr(
-                            self,
-                            attr_name,
-                            pd.DataFrame(self.pool_data)[
-                                pd.DataFrame(self.pool_data)["exchange_name"]
-                                == exchange
-                            ],
-                        )
-                    return getattr(self, attr_name)
-
-                return inner
-
-            def set_property(exchange=exchange, attr_name=attr_name):
-                def inner(self, value):
-                    setattr(self, attr_name, value)
-
-                return inner
-
-            prop = property(get_property())
-            prop = prop.setter(set_property())
-            setattr(self.__class__, f"{exchange}_pools", prop)
-
-            self.static_pools[f"{exchange}_pools"] = getattr(self, f"{exchange}_pools")
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:

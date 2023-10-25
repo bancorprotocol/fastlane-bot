@@ -9,6 +9,7 @@ import time
 from typing import List
 
 import click
+import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
@@ -222,15 +223,12 @@ load_dotenv()
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
-
 @click.option(
     "--use_specific_exchange_for_target_tokens",
     default=None,
     type=str,
     help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
 )
-
-
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -469,7 +467,6 @@ def run(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
-
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -508,6 +505,35 @@ def run(
 
     while True:
         # try:
+        uniswap_v2_event_mappings = pd.DataFrame(
+            [
+                {"address": k, "exchange_name": v}
+                for k, v in mgr.uniswap_v2_event_mappings.items()
+            ]
+        )
+        uniswap_v3_event_mappings = pd.DataFrame(
+            [
+                {"address": k, "exchange_name": v}
+                for k, v in mgr.uniswap_v3_event_mappings.items()
+            ]
+        )
+
+        all_event_mappings = (
+            pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
+            .drop_duplicates("address")
+            .to_dict(orient="records")
+        )
+
+        for ex in mgr.forked_exchanges:
+            if ex in mgr.exchanges:
+                exchange_pools = [
+                    e for e in all_event_mappings if e["exchange_name"] == ex
+                ]
+                mgr.cfg.logger.info(
+                    f"Adding {len(exchange_pools)} {ex} pools to static pools"
+                )
+                attr_name = f"{ex}_pools"
+                mgr.static_pools[attr_name] = exchange_pools
 
         # Save initial state of pool data to assert whether it has changed
         initial_state = mgr.pool_data.copy()
@@ -605,8 +631,12 @@ def run(
         verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
         if use_specific_exchange_for_target_tokens is not None:
-            target_tokens = bot.get_tokens_in_exchange(exchange_name=use_specific_exchange_for_target_tokens)
-            mgr.cfg.logger.info(f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens")
+            target_tokens = bot.get_tokens_in_exchange(
+                exchange_name=use_specific_exchange_for_target_tokens
+            )
+            mgr.cfg.logger.info(
+                f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
+            )
 
         # Handle subsequent iterations
         handle_subsequent_iterations(
@@ -664,10 +694,17 @@ def run(
             params = [w3.toHex(increment_blocks)]  # number of blocks
             w3.provider.make_request(method="evm_increaseBlocks", params=params)
 
-        if loop_idx % pool_data_update_frequency == 0 and pool_data_update_frequency != -1:
-            mgr.cfg.logger.info(f"Terraforming {blockchain}. Standby for oxygen levels.")
+        if (
+            loop_idx % pool_data_update_frequency == 0
+            and pool_data_update_frequency != -1
+        ):
+            mgr.cfg.logger.info(
+                f"Terraforming {blockchain}. Standby for oxygen levels."
+            )
             sblock = (
-                (current_block - (current_block - last_block_queried)) if loop_idx > 1 else None
+                (current_block - (current_block - last_block_queried))
+                if loop_idx > 1
+                else None
             )
             (
                 static_pool_data,
@@ -680,7 +717,7 @@ def run(
             )
             mgr.uniswap_v2_event_mappings = uniswap_v2_event_mappings
             mgr.uniswap_v3_event_mappings = uniswap_v3_event_mappings
-            mgr.set_forked_pools()
+            # mgr.set_forked_pools()
             last_block_queried = current_block
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")
