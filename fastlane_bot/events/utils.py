@@ -1737,7 +1737,9 @@ def handle_static_pools_update(mgr: Any):
     )
     for ex in mgr.forked_exchanges:
         if ex in mgr.exchanges:
-            exchange_pools = [e for e in all_event_mappings if e["exchange_name"] == ex]
+            exchange_pools = [
+                e["address"] for e in all_event_mappings if e["exchange_name"] == ex
+            ]
             mgr.cfg.logger.info(
                 f"Adding {len(exchange_pools)} {ex} pools to static pools"
             )

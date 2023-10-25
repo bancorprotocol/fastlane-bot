@@ -693,7 +693,7 @@ def run(
             )
             last_block_queried = current_block
 
-            handle_static_pools_update(mgr)
+            # handle_static_pools_update(mgr)
 
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")
