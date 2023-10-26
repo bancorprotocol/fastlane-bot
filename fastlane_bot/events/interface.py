@@ -118,7 +118,7 @@ class QueryInterface:
             True if the pool has a balance for the given key, False otherwise
 
         """
-        return key in pool and pool[key] > 0
+        return key in pool and pool[key] > 0 if pool["exchange_name"] not in self.ConfigObj.CARBON_V1_FORKS else (key in pool and (pool[key] > 0 or pool["y_1"] > 0))
 
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
         """
