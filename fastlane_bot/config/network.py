@@ -371,6 +371,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+    CHAIN_FLASHLOAN_TOKENS = {"WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599","BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","WETH-6Cc2":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" ,"USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",  "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA"}
 
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES += ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
@@ -398,6 +399,7 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-bab1": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", "USDC-5831": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", "WBTC-5b0f": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", }
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
 
@@ -407,7 +409,7 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     NETWORK_ID = "137"
     NETWORK_NAME = "polygon"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    RPC_ENDPOINT = "https://polygonzkevm-mainnet.g.alchemy.com/v2/"
+    RPC_ENDPOINT = "https://polygon-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_POLYGON")
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
@@ -422,6 +424,8 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010"}
 
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
@@ -447,6 +451,8 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-e6e9": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9", "USDC-c035": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035", "USDT-d41d": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d", "WBTC-08e1": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1", }
+
 
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
@@ -472,7 +478,8 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+                              "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095", }
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
 
@@ -502,6 +509,8 @@ class _ConfigNetworkBase(ConfigNetwork):
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
     #Balancer
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}
 
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]

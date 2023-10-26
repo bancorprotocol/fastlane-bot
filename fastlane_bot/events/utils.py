@@ -430,9 +430,12 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
         A list of flashloan tokens to fetch data for.
     """
     flashloan_tokens = flashloan_tokens.split(",")
-    flashloan_tokens = [
-        QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
-    ]
+    # flashloan_tokens = [
+    #     QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
+    # ]
+
+    flashloan_tokens = [key for tkn in flashloan_tokens for key in cfg.CHAIN_FLASHLOAN_TOKENS.keys() if tkn in key]
+
     # Log the flashloan tokens
     cfg.logger.info(
         f"Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
