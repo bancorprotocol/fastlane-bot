@@ -55,6 +55,8 @@ with open("fastlane_bot/data/test_pool_data.json", "r") as f:
 # +
 from fastlane_bot.events.utils import handle_static_pools_update, get_static_data
 
+base_path = f"fastlane_bot/data/blockchain_data/ethereum"
+
 # Create mock instances for all required parameters
 cfg = Config.new(config=Config.CONFIG_MAINNET)
 
@@ -64,7 +66,7 @@ cfg = Config.new(config=Config.CONFIG_MAINNET)
     uniswap_v2_event_mappings,
     uniswap_v3_event_mappings,
 ) = get_static_data(
-    cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], 'static_pool_data', 'max'
+    cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], 'static_pool_data', 'max', base_path
 )
 # create manager instance for all tests
 manager = Manager(cfg.w3, 
