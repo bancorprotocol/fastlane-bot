@@ -2,9 +2,24 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.49...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.51...HEAD)
+
+- Several bugs - static pool csv and validator [\#171](https://github.com/bancorprotocol/fastlane-bot/issues/171)
+
+- Add the ability to get all pools [\#174](https://github.com/bancorprotocol/fastlane-bot/issues/174)
+- Create terraformer [\#175](https://github.com/bancorprotocol/fastlane-bot/pull/175) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.51](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.51) (2023-10-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.50...v2.7.51)
 
 - Bancor V2 Events Filtering Issue [\#168](https://github.com/bancorprotocol/fastlane-bot/issues/168)
+- Fix bug in validate\_optimizer\_trades and readd Balancer pools to stat… [\#172](https://github.com/bancorprotocol/fastlane-bot/pull/172) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.50](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.50) (2023-10-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.49...v2.7.50)
+
 - goalseek should use eps as a ratio [\#138](https://github.com/bancorprotocol/fastlane-bot/issues/138)
 - Update event filtering to remove Bancor V2 anchors [\#169](https://github.com/bancorprotocol/fastlane-bot/pull/169) ([mikewcasale](https://github.com/mikewcasale))
 
