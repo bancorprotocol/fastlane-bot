@@ -293,6 +293,7 @@ def main(
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
     """
+    base_path = f"fastlane_bot/data/blockchain_data/{blockchain}"
 
     if replay_from_block or tenderly_fork_id:
         polling_interval, reorg_delay, use_cached_events = handle_replay_from_block(
@@ -377,7 +378,7 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz, base_path
     )
 
     target_token_addresses = handle_target_token_addresses(

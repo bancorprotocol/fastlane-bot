@@ -244,6 +244,7 @@ def get_static_data(
     exchanges: List[str],
     static_pool_data_filename: str,
     static_pool_data_sample_sz: int or str,
+    base_path: str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -265,7 +266,6 @@ def get_static_data(
         A tuple of static pool data, tokens, and Uniswap v2 event mappings.
 
     """
-    base_path = "fastlane_bot/data"
 
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
@@ -290,7 +290,7 @@ def get_static_data(
         uniswap_v3_event_mappings_df[["address", "exchange"]].values
     )
 
-    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    tokens_filepath = os.path.join("fastlane_bot/data", "tokens.csv")
     tokens = read_csv_file(tokens_filepath)
 
     # Initialize web3
