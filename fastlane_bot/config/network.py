@@ -56,7 +56,7 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
         contract_name = row[1][3]
         address = row[1][4]
         if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
-            fork_map[exchange_name] : address
+            fork_map[exchange_name] = address
     return fork_map
 
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
@@ -245,7 +245,7 @@ class ConfigNetwork(ConfigBase):
         PANCAKESWAP_V3_NAME,
         BASESWAP_V3_NAME,
     ]
-    SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
+    # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
     CARBON_V1_FORKS = [CARBON_V1_NAME]
     UNI_V2_FEE_MAPPING = {
         UNISWAP_V2_NAME: 0.003,
@@ -330,7 +330,24 @@ class ConfigNetwork(ConfigBase):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.__post_init__()
 
+    def __post_init__(self):
+        assert self.NETWORK is not None
+        self.network_df = get_multichain_addresses(network=self.NETWORK)
+
+        self.UNI_V2_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.UNISWAP_V2)
+        self.UNI_V2_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.UNISWAP_V2)
+        self.UNI_V3_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.UNISWAP_V3)
+        self.SOLIDLY_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.SOLIDLY)
+        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY)
+        self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + ["uniswap_v2"]
+        self.UNI_V3_FORKS = [key for key in self.UNI_V3_ROUTER_MAPPING.keys()]
+        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_ROUTER_MAPPING.keys()]
+        self.CARBON_CONTROLLER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.CARBON_V1)
+
+        self.ALL_EXCHANGES = self.ALL_EXCHANGES + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
+        self.ALL_EXCHANGES = [ex for ex in self.ALL_EXCHANGES if ex is not None]
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
@@ -344,12 +361,15 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     RPC_ENDPOINT = "https://eth-mainnet.alchemyapi.io/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
-    network_df = get_multichain_addresses(network="polygon")
-
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-    NATIVE_GAS_TOKEN = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN = "WETH-6Cc2"
-    STABLECOIN = "USDC-eB48"
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
+    STABLECOIN_KEY = "USDC-eB48"
+    
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
     BANCOR_V3_NETWORK_INFO_ADDRESS = "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
@@ -363,18 +383,10 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
 
-    # Uni V2 & V3 Router Mapping
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
-
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {"WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599","BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","WETH-6Cc2":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" ,"USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",  "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA"}
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES += ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
 
 class _ConfigNetworkArbitrumOne(ConfigNetwork):
@@ -387,24 +399,21 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    NATIVE_GAS_TOKEN = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN = "WETH-bab1"
-    STABLECOIN = "USDC-5831"
-    network_df = get_multichain_addresses(network="arbitrum_one")
-
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
+    
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-bab1"
+    STABLECOIN_KEY = "USDC-5831"
+    
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+    STABLECOIN_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {"WETH-bab1": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", "USDC-5831": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", "WBTC-5b0f": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", }
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
 
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = []
 
 class _ConfigNetworkPolygon(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON
@@ -416,24 +425,21 @@ class _ConfigNetworkPolygon(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    NATIVE_GAS_TOKEN = "MATIC-1010"
-    WRAPPED_GAS_TOKEN = "WMATIC-1270"
-    STABLECOIN = "USDC-4174"
-    network_df = get_multichain_addresses(network="polygon")
+    
+    NATIVE_GAS_TOKEN_KEY = "MATIC-1010"
+    WRAPPED_GAS_TOKEN_KEY = "WMATIC-1270"
+    STABLECOIN_KEY = "USDC-4174"
 
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
+    NATIVE_GAS_TOKEN_ADDRESS = "0x0000000000000000000000000000000000001010"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+    STABLECOIN_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010", "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"}
 
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
-
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = []
 
 class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON_ZKEVM
@@ -445,24 +451,19 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    NATIVE_GAS_TOKEN = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN = "WETH-E6e9"
-    STABLECOIN = "USDC-c035"
-    network_df = get_multichain_addresses(network="polygon_zkevm")
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-E6e9"
+    STABLECOIN_KEY = "USDC-c035"
 
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9"
+    STABLECOIN_ADDRESS = "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035"
+
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {"WETH-e6e9": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9", "USDC-c035": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035", "USDT-d41d": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d", "WBTC-08e1": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1", }
 
-
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
-
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = []
 
 class _ConfigNetworkOptimism(ConfigNetwork):
     NETWORK = S.NETWORK_OPTIMISM
@@ -472,25 +473,22 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     RPC_ENDPOINT = "https://opt-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
 
-    network_df = get_multichain_addresses(network="optimism")
-
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    NATIVE_GAS_TOKEN = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN = "WETH-0006"
-    STABLECOIN = "USDC-ff85"
+    
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    STABLECOIN_KEY = "USDC-ff85"
 
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
+    STABLECOIN_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
                               "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095", }
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = []
 
 
 class _ConfigNetworkBase(ConfigNetwork):
@@ -506,26 +504,24 @@ class _ConfigNetworkBase(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
     network_df = get_multichain_addresses(network="coinbase_base")
-
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
-    NATIVE_GAS_TOKEN = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN = "WETH-0006"
-    STABLECOIN = "USDC-2913"
+    
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    STABLECOIN_KEY = "USDC-2913"
 
-    UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
-    UNI_V3_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V3)
-    SOLIDLY_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.SOLIDLY)
-    SOLIDLY_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.SOLIDLY)
-    CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
-    #Balancer
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
+    STABLECOIN_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+
+    # Balancer
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}
-
-    ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006",
+                              "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}
+    # Add any exchanges unique to the chain here
+    ALL_EXCHANGES = []
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
@@ -537,6 +533,14 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
     TENDERLY_FORK = TENDERLY_FORK
+
+    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
+    STABLECOIN_KEY = "USDC-eB48"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -575,41 +579,6 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     SHIBA_V2_FACTORY_ADDRESS = "0x115934131916C8b277DD010Ee02de363c09d037c"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-
-    UNI_V2_ROUTER_MAPPING = {
-        ConfigNetwork.UNISWAP_V2_NAME: UNISWAP_V2_ROUTER_ADDRESS,
-        ConfigNetwork.SUSHISWAP_V2_NAME: SUSHISWAP_V2_ROUTER_ADDRESS,
-        ConfigNetwork.PANCAKESWAP_V2_NAME: PANCAKESWAP_V2_ROUTER_ADDRESS,
-        ConfigNetwork.SHIBA_V2_NAME: SHIBA_V2_ROUTER_ADDRESS,
-    }
-    UNI_V3_ROUTER_MAPPING = {
-        ConfigNetwork.UNISWAP_V3_NAME: UNISWAP_V3_ROUTER_ADDRESS,
-        ConfigNetwork.SUSHISWAP_V3_NAME: SUSHISWAP_V3_ROUTER_ADDRESS,
-        ConfigNetwork.PANCAKESWAP_V3_NAME: PANCAKESWAP_V3_ROUTER_ADDRESS,
-    }
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
-        UNISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V2_NAME,
-        SUSHISWAP_V2_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V2_NAME,
-        PANCAKESWAP_V2_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V2_NAME,
-        SHIBA_V2_FACTORY_ADDRESS: ConfigNetwork.SHIBA_V2_NAME,
-    }
-
-    UNI_V2_FORK_FACTORY_ADDRESS_TO_ROUTER = {
-        UNISWAP_V2_FACTORY_ADDRESS: UNISWAP_V2_ROUTER_ADDRESS,
-        SUSHISWAP_V2_FACTORY_ADDRESS: SUSHISWAP_V2_ROUTER_ADDRESS,
-        PANCAKESWAP_V2_FACTORY_ADDRESS: PANCAKESWAP_V2_ROUTER_ADDRESS,
-        SHIBA_V2_FACTORY_ADDRESS: SHIBA_V2_ROUTER_ADDRESS,
-    }
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_ROUTER = {
-        UNISWAP_V3_FACTORY_ADDRESS: UNISWAP_V3_ROUTER_ADDRESS,
-        SUSHISWAP_V3_FACTORY_ADDRESS: SUSHISWAP_V3_ROUTER_ADDRESS,
-        PANCAKESWAP_V3_FACTORY_ADDRESS: PANCAKESWAP_V3_ROUTER_ADDRESS,
-    }
-    UNI_V3_FORK_FACTORY_ADDRESS_TO_EXCHANGE_NAME = {
-        UNISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.UNISWAP_V3_NAME,
-        SUSHISWAP_V3_FACTORY_ADDRESS: ConfigNetwork.SUSHISWAP_V3_NAME,
-        PANCAKESWAP_V3_FACTORY_ADDRESS: ConfigNetwork.PANCAKESWAP_V3_NAME,
-    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

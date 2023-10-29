@@ -144,7 +144,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
 
-    def is_weth(self, address: str) -> bool:
+    def is_wrapped_gas_token(self, address: str) -> bool:
         """
         Checks if the address is WETH.
 
@@ -158,7 +158,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         bool
             Whether the address is WETH.
         """
-        return address.lower() == self.ConfigObj.WETH_ADDRESS.lower()
+        return address.lower() == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS.lower()
 
     @staticmethod
     def custom_data_encoder(
@@ -279,11 +279,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         RouteStruct
             The route struct.
         """
-        if self.is_weth(target_address):
-            target_address = self.ConfigObj.ETH_ADDRESS
-
+        target_address = self.wrapped_gas_token_to_native(target_address)
         target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
-        source_token = self.weth_to_eth(source_token)
+        source_token = self.wrapped_gas_token_to_native(source_token)
+        source_token = self.ConfigObj.w3.toChecksumAddress(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
 
         return RouteStruct(
@@ -380,6 +379,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         :return:
             int
         """
+
+        if self.ConfigObj.NETWORK not in "ethereum":
+            return 7
+
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
         if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.USDC_ADDRESS, self.ConfigObj.USDT_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.USDC_KEY, self.ConfigObj.LINK_KEY, self.ConfigObj.USDT_KEY]:
             return 2
@@ -405,7 +408,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 balancer["sourceTokens"].append(source_token)
                 balancer["sourceAmounts"].append(source_amounts)
             else:
-                source_token = self.weth_to_eth(source_token)
+                source_token = self.wrapped_gas_token_to_native(source_token)
                 flashloans.append(
                     {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]})
         if has_balancer:
@@ -413,16 +416,23 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return flashloans
 
-    def weth_to_eth(self, tkn: str):
+    def wrapped_gas_token_to_native(self, tkn: str):
         """
-        Checks if a Token is WETH and converts it to ETH
+        Checks if a Token is a wrapped gas token and converts it to the native gas token.
+
+        This is only relevant on the Ethereum network
+
         :param tkn: the token address
 
         returns:
         the token address
         """
-        if tkn in [T.WETH, self.ConfigObj.WETH_ADDRESS]:
-            return T.NATIVE_ETH if tkn == T.WETH else self.ConfigObj.ETH_ADDRESS
+
+        if self.ConfigObj.NETWORK not in "ethereum":
+            return tkn
+
+        if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_KEY if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_KEY else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
         else:
             return tkn
 
@@ -434,15 +444,15 @@ class TxRouteHandler(TxRouteHandlerBase):
         token_change = {}
         flash_tokens = {}
         for trade in trade_instructions:
-            tknin_key = self.weth_to_eth(trade.tknin_key)
-            tknout_key = self.weth_to_eth(trade.tknout_key)
+            tknin_key = self.wrapped_gas_token_to_native(trade.tknin_key)
+            tknout_key = self.wrapped_gas_token_to_native(trade.tknout_key)
 
             token_change[tknin_key] = {"tkn": tknin_key, "amtin": 0, "amtout": 0, "balance": 0}
             token_change[tknout_key] = {"tkn": tknout_key, "amtin": 0, "amtout": 0, "balance": 0}
 
         for trade in trade_instructions:
-            tknin_key = self.weth_to_eth(trade.tknin_key)
-            tknout_key = self.weth_to_eth(trade.tknout_key)
+            tknin_key = self.wrapped_gas_token_to_native(trade.tknin_key)
+            tknout_key = self.wrapped_gas_token_to_native(trade.tknout_key)
 
             token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + Decimal(str(trade.amtin))
             token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - Decimal(str(trade.amtin))
@@ -1178,8 +1188,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         tkn0_key = curve.pair_name.split("/")[0]
         tkn1_key = curve.pair_name.split("/")[1]
 
-        tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn0_key
-        tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn1_key
+        if self.ConfigObj.NETWORK in "ethereum":
+            tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn0_key
+            tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn1_key
+
         #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, ")
 
         assert tkn_in == tkn0_key or tkn_in == tkn1_key, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_key} & {tkn1_key}"
@@ -1319,10 +1331,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             tkn1_key = curve.pair_name.split("/")[1]
             tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
             tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
-            tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
-            tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (
-                        trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
-            #if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2"):
+            if self.ConfigObj.NETWORK in "ethereum":
+                tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
+                tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
 
             assert tkn0_key == trade.tknin_key or tkn0_key == trade.tknout_key, f"[_solve_trade_output] tkn0_key {tkn0_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
             assert tkn1_key == trade.tknin_key or tkn1_key == trade.tknout_key, f"[_solve_trade_output] tkn1_key {tkn1_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"

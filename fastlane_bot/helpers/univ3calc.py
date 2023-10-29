@@ -19,13 +19,15 @@ class Univ3Calculator():
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
+    FEE80       = 80
     FEE100      = 100
+    FEE450      = 450
     FEE500      = 500
     FEE2500     = 2500
     FEE3000     = 3000
     FEE10000    = 10000
 
-    TICKSZ = {FEE100: 1, FEE500: 10, FEE2500: 50, FEE3000: 60, FEE10000: 200}
+    TICKSZ = {FEE80: 1, FEE100: 1, FEE450: 10, FEE500: 10, FEE2500: 50, FEE3000: 60, FEE10000: 200}
 
     Q96 = 2**96
     Q192 = 2**192
@@ -108,7 +110,7 @@ class Univ3Calculator():
         super().__setattr__('tick', int(self.tick)) 
         super().__setattr__('liquidity', int(self.liquidity)) 
         super().__setattr__('fee_const', int(self.fee_const)) 
-        assert self.fee_const in {self.FEE100, self.FEE500, self.FEE2500, self.FEE3000, self.FEE10000}, "fee not one of the FEEXXX constants {self.fee_const}"
+        assert self.fee_const in {self.FEE80,self.FEE100, self.FEE450,self.FEE500, self.FEE2500, self.FEE3000, self.FEE10000}, "fee not one of the FEEXXX constants {self.fee_const}"
         assert not self.tkn0dec is None, "tkn0dec is None"
         assert not self.tkn1dec is None, "tkn1dec is None"
 

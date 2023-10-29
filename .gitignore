@@ -69,3 +69,4 @@ latest_pool_data.json
 missing_events.json
 *.log
 logs/*
+/token_details.csv

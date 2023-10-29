@@ -67,13 +67,17 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
                 src_token = tkn1
                 if len(curve_combo) < 2:
                     continue
+                try:
+                    (
+                        O,
+                        profit_src,
+                        r,
+                        trade_instructions_df,
+                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                except ValueError:
+                    #Optimizer did not converge
+                    continue
 
-                (
-                    O,
-                    profit_src,
-                    r,
-                    trade_instructions_df,
-                ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
 
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
@@ -151,7 +155,9 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
         }  # this intentionally selects the non_carbon curve
+
         r = O.optimize(src_token, params=dict(pstart=pstart))
+
         profit_src = -r.result
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df

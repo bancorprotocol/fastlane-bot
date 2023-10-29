@@ -269,7 +269,7 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
-    token_path = os.path.normpath(f"fastlane_bot/data/")
+    #token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -293,7 +293,10 @@ def get_static_data(
         uniswap_v3_event_mappings_df[["address", "exchange"]].values
     )
 
-    tokens_filepath = os.path.join(token_path, "tokens.csv")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(columns=["key","symbol","name","address","decimals","blockchain"])
+        df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
 
     # Initialize web3

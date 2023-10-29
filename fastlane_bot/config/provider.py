@@ -95,17 +95,17 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        if N.NETWORK_NAME in N.NETWORK_ETHEREUM:
+        if network.NETWORK in N.NETWORK_ETHEREUM:
             self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-                address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
                 abi=BANCOR_V3_NETWORK_INFO_ABI,
             )
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-                address=N.CARBON_CONTROLLER_ADDRESS,
+                address=network.CARBON_CONTROLLER_ADDRESS,
                 abi=CARBON_CONTROLLER_ABI,
             )
             self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
+                address=self.w3.toChecksumAddress(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
             reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()

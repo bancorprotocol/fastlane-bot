@@ -8,6 +8,7 @@ Licensed under MIT
 from fastlane_bot.events.pools.bancor_v3 import BancorV3Pool
 from fastlane_bot.events.pools.carbon_v1 import CarbonV1Pool
 from fastlane_bot.events.pools.factory import pool_factory
+from fastlane_bot.events.pools.solidly_v2 import SolidlyV2Pool
 from fastlane_bot.events.pools.sushiswap_v2 import SushiswapV2Pool
 from fastlane_bot.events.pools.uniswap_v2 import UniswapV2Pool
 from fastlane_bot.events.pools.uniswap_v3 import UniswapV3Pool
@@ -30,3 +31,4 @@ pool_factory.register_format("bancor_pol", BancorPolPool)
 pool_factory.register_format("pancakeswap_v2", PancakeswapV2Pool)
 pool_factory.register_format("pancakeswap_v3", PancakeswapV3Pool)
 pool_factory.register_format("balancer", BalancerPool)
+#pool_factory.register_format("solidly_v2", SolidlyV2Pool)

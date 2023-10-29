@@ -5,6 +5,7 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os.path
 from typing import Dict, Any, Tuple, List
 
 import pandas as pd
@@ -266,7 +267,7 @@ class ContractsManager(BaseManager):
 
         """
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
-        tokens_filepath = 'fastlane_bot/data/tokens.csv'
+        tokens_filepath = os.path.normpath(f'fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv')
         token_data = pd.read_csv(tokens_filepath, index_col=[0])
 
         try:
@@ -316,9 +317,9 @@ class ContractsManager(BaseManager):
             decimals = token_data.loc[token_data['key'] == key, 'decimals'].iloc[0]
             return symbol, decimals
         else:
-            decimals = contract.functions.decimals().call()
+            decimals = int(contract.functions.decimals().call())
 
-        if symbol is None or decimals is None:
+        if symbol is None or decimals is None or type(symbol) != str or type(decimals) != int:
             raise self.FailedToGetTokenDetailsException(addr=addr)
         symbol = str(symbol).replace("-", "_")
         new_data = {
@@ -326,13 +327,24 @@ class ContractsManager(BaseManager):
             "symbol": symbol,
             "name": symbol,
             "address": addr,
-            "decimals": decimals
+            "decimals": decimals,
+            "blockchain": self.cfg.NETWORK
         }
-        self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
-        next_index = len(token_data.index)
         try:
-            row = pd.DataFrame(new_data, columns=token_data.columns, index=[next_index])
-            token_data = pd.concat([token_data, row])
+            self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
+        except UnicodeEncodeError:
+            return
+        #next_index = len(token_data.index)
+        row = pd.DataFrame(new_data, columns=token_data.columns, index=[1])
+        try:
+            row.to_csv("token_details.csv")
+        except Exception:
+            # if the row fails to write to CSV, skip this token
+            return (
+                symbol, decimals
+            ) if (symbol is not None and type(decimals) == int) else (None, None)
+        try:
+            token_data = pd.concat([token_data, row], ignore_index=True)
             token_data.to_csv(tokens_filepath)
         except Exception:
             # If CSV fails to update, we still return the token symbol & decimals

@@ -885,7 +885,7 @@ def get_solidly_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
-) -> DataFrame:
+) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
     :param token_addr_lookup: the dict containing token information
@@ -913,13 +913,14 @@ def get_solidly_v2_pools(
         )
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
+    df = df.reset_index(drop=True)
     pool_mapping = [
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    return mapdf
+    return df, mapdf
     #return df, mapdf
 
 
@@ -1196,7 +1197,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 address=address, abi=SOLIDLY_FACTORY_ABI_V2
             )
 
-            m_df = get_solidly_v2_pools(
+            u_df, m_df = get_solidly_v2_pools(
                 token_addr_lookup=token_addr_lookup,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
@@ -1204,6 +1205,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
+            exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
+            exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif "balancer" in fork:
@@ -1224,4 +1228,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return univ2_mapdf, univ3_mapdf
 
-#terraform_blockchain(network_name="optimism")
+#terraform_blockchain(network_name="coinbase_base")
