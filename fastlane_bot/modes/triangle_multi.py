@@ -39,62 +39,31 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             r = None
             CC_cc = CPCContainer(miniverse)
             O = MargPOptimizer(CC_cc)
-            try:
-                r = O.margp_optimizer(src_token)
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                trade_instructions = r.trade_instructions()
-                """
-                The following handles an edge case until parallel execution is available:
-                1 Determine correct direction - opposite of non-Carbon pool
-                2 Get cids of wrong-direction Carbon pools
-                3 Create new CPCContainer with correct pools
-                4 Rerun optimizer
-                5 Resume normal flow
-                """
-                non_carbon_cids = [
-                    curve.cid
-                    for curve in miniverse
-                    if curve.params.get("exchange") != "carbon_v1"
-                ]
-                non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                tkn0_into_carbon = non_carbon_row[0] < 0
-                wrong_direction_cids = [
-                    idx
-                    for idx, row in trade_instructions_df.iterrows()
-                    if (
-                        (tkn0_into_carbon and row[0] < 0)
-                        or (not tkn0_into_carbon and row[0] > 0)
-                    )
-                    and ("-0" in idx or "-1" in idx)
-                ]
-                if non_carbon_cids and len(wrong_direction_cids) > 0:
-                    self.ConfigObj.logger.debug(
-                        f"\n\nRemoving wrong direction pools & rerunning optimizer\ntrade_instructions_df before: {trade_instructions_df.to_string()}"
-                    )
-                    new_curves = [
-                        curve
-                        for curve in miniverse
-                        if curve.cid not in wrong_direction_cids
-                    ]
-
-                    # Rerun main flow with the new set of curves
-                    CC_cc = CPCContainer(new_curves)
-                    O = MargPOptimizer(CC_cc)
-                    r = O.margp_optimizer(src_token)
-                    profit_src = -r.result
-                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                    trade_instructions = r.trade_instructions()
-            except Exception as e:
+            #try:
+            r = O.margp_optimizer(src_token)
+            trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+            if len(trade_instructions_dic) < 3:
+                # Failed to converge
                 continue
+            trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+            #print(trade_instructions_df)
+            trade_instructions = r.trade_instructions()
+            """
+            The following handles an edge case until parallel execution is available:
+            1 Determine correct direction - opposite of non-Carbon pool
+            2 Get cids of wrong-direction Carbon pools
+            3 Create new CPCContainer with correct pools
+            4 Rerun optimizer
+            5 Resume normal flow
+            """
+
+            profit_src = -r.result
 
             # Get the cids
             cids = [ti["cid"] for ti in trade_instructions_dic]
 
             # Calculate the profit
             profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-
             if str(profit) == "nan":
                 self.ConfigObj.logger.debug("profit is nan, skipping")
                 continue

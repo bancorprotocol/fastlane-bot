@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -57,8 +57,8 @@ assert (len(qi.state) == 1)
 # ## test_has_balance
 
 qi.state = [{'exchange_name': 'uniswap_v2', 'address': '0x123', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0x456', 'pair_name': 'Pair-0x789', 'liquidity': 10}, {'exchange_name': 'sushiswap_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0xabc', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 0}]
-assert (qi.has_balance(qi.state[0], 'liquidity') == True)
-assert (qi.has_balance(qi.state[1], 'liquidity') == False)
+assert (qi.has_balance(qi.state[0], ['liquidity']) == True)
+assert (qi.has_balance(qi.state[1], ['liquidity']) == False)
 
 # ## test_filter_pools
 

@@ -122,6 +122,13 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         .byparams(exchange=self.base_exchange)
                         .curves
                     )
+                    if len(base_exchange_curves) == 0:
+                        continue
+
+                    base_direction_pair = base_exchange_curves[0].pair
+                    base_direction_one = [curve for curve in base_exchange_curves if curve.pair == base_direction_pair]
+                    base_direction_two = [curve for curve in base_exchange_curves if curve.pair != base_direction_pair]
+                    assert len(base_exchange_curves) == len(base_direction_one) + len(base_direction_two)
                     y_match_curves = CCm.bypairs(
                         set(CCm.filter_pairs(onein=target_tknx))
                         & set(CCm.filter_pairs(onein=flt))
@@ -130,24 +137,39 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         set(CCm.filter_pairs(onein=target_tkny))
                         & set(CCm.filter_pairs(onein=flt))
                     )
+
                     y_match_curves_not_carbon = [
                         x
                         for x in y_match_curves
                         if x.params.exchange != self.base_exchange
                     ]
+                    if len(y_match_curves_not_carbon) == 0:
+                        continue
                     x_match_curves_not_carbon = [
                         x
                         for x in x_match_curves
                         if x.params.exchange != self.base_exchange
                     ]
-                    combos = self.get_miniverse(
-                        y_match_curves_not_carbon,
-                        base_exchange_curves,
-                        x_match_curves_not_carbon,
-                        flt,
-                        arb_mode,
-                        combos,
-                    )
+                    if len(x_match_curves_not_carbon) == 0:
+                        continue
+                    if len(base_direction_one) > 0:
+                        combos = self.get_miniverse(
+                            y_match_curves_not_carbon,
+                            base_direction_one,
+                            x_match_curves_not_carbon,
+                            flt,
+                            arb_mode,
+                            combos,
+                        )
+                    if len(base_direction_two) > 0:
+                        combos = self.get_miniverse(
+                            y_match_curves_not_carbon,
+                            base_direction_two,
+                            x_match_curves_not_carbon,
+                            flt,
+                            arb_mode,
+                            combos,
+                        )
         return combos
 
     @staticmethod
