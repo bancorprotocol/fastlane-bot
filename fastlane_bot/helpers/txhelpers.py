@@ -364,9 +364,14 @@ class TxHelpers:
             )
 
             # Submit the transaction
-            tx_hash = self.submit_private_transaction(
-                arb_tx=arb_tx, block_number=block_number
-            )
+
+            if self.ConfigObj.network == "ethereum":
+
+                tx_hash = self.submit_private_transaction(
+                    arb_tx=arb_tx, block_number=block_number
+                )
+            else:
+                tx_hash = self.submit_transaction(arb_tx=arb_tx)
             self.ConfigObj.logger.info(f"Arbitrage executed, tx hash: {tx_hash}")
             return tx_hash if tx_hash is not None else None
         else:
@@ -626,7 +631,6 @@ class TxHelpers:
         self.ConfigObj.logger.info(f"Attempting to submit tx {signed_arb_tx}")
         tx = self.web3.eth.send_raw_transaction(signed_arb_tx.rawTransaction)
         tx_hash = self.web3.toHex(tx)
-        self.transactions_submitted.append(tx_hash)
         try:
             tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx)
             return tx_receipt

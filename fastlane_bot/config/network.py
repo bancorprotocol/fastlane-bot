@@ -347,7 +347,9 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     network_df = get_multichain_addresses(network="polygon")
 
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-
+    NATIVE_GAS_TOKEN = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN = "WETH-6Cc2"
+    STABLECOIN = "USDC-eB48"
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
     BANCOR_V3_NETWORK_INFO_ADDRESS = "0x8E303D296851B320e6a697bAcB979d13c9D6E760"
@@ -371,7 +373,6 @@ class _ConfigNetworkMainnet(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {"WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599","BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","WETH-6Cc2":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" ,"USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",  "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA"}
-
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES += ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
@@ -386,7 +387,9 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-
+    NATIVE_GAS_TOKEN = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN = "WETH-bab1"
+    STABLECOIN = "USDC-5831"
     network_df = get_multichain_addresses(network="arbitrum_one")
 
     UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
@@ -413,7 +416,9 @@ class _ConfigNetworkPolygon(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-
+    NATIVE_GAS_TOKEN = "MATIC-1010"
+    WRAPPED_GAS_TOKEN = "WMATIC-1270"
+    STABLECOIN = "USDC-4174"
     network_df = get_multichain_addresses(network="polygon")
 
     UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
@@ -424,7 +429,7 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     CARBON_CONTROLLER_MAPPING = get_fork_map(df=network_df, fork_name=S.CARBON_V1)
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010"}
+    CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010", "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"}
 
     ALL_EXCHANGES = [ex for ex in UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if BALANCER_VAULT_ADDRESS is not None else None]
     ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
@@ -440,7 +445,9 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
-
+    NATIVE_GAS_TOKEN = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN = "WETH-E6e9"
+    STABLECOIN = "USDC-c035"
     network_df = get_multichain_addresses(network="polygon_zkevm")
 
     UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
@@ -469,6 +476,9 @@ class _ConfigNetworkOptimism(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "" # TODO
+    NATIVE_GAS_TOKEN = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN = "WETH-0006"
+    STABLECOIN = "USDC-ff85"
 
     UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
     UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)
@@ -499,6 +509,9 @@ class _ConfigNetworkBase(ConfigNetwork):
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+    NATIVE_GAS_TOKEN = "ETH-EEeE"
+    WRAPPED_GAS_TOKEN = "WETH-0006"
+    STABLECOIN = "USDC-2913"
 
     UNI_V2_ROUTER_MAPPING = get_fork_map(df=network_df, fork_name=S.UNISWAP_V2)
     UNI_V2_FEE_MAPPING = get_fee_map(df=network_df, fork_name=S.UNISWAP_V2)

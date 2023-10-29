@@ -44,13 +44,24 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            carbon_curves = [x for x in CC.curves if "carbon" in x.params.exchange ]
+            carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             not_carbon_curves = [
-                x for x in CC.curves if "carbon" not in x.params.exchange
+                x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS
             ]
 
             curve_combos = [[_curve0] + [_curve1] for _curve0 in not_carbon_curves for _curve1 in not_carbon_curves if (_curve0 != _curve1)]
-            curve_combos += [[curve] + carbon_curves for curve in not_carbon_curves]
+
+            if len(carbon_curves) > 0:
+                base_direction_pair = carbon_curves[0].pair
+                base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
+                base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+                curve_combos = []
+
+                if len(base_direction_one) > 0:
+                    curve_combos += [[curve] + base_direction_one for curve in not_carbon_curves]
+
+                if len(base_direction_two) > 0:
+                    curve_combos += [[curve] + base_direction_two for curve in not_carbon_curves]
 
             for curve_combo in curve_combos:
                 src_token = tkn1
@@ -64,47 +75,14 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
                     trade_instructions_df,
                 ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
 
-
-                non_carbon_cids = [
-                    curve.cid
-                    for curve in curve_combo
-                    if "carbon" not in curve.params.get("exchange")
-                ]
-                carbon_cids = [
-                    curve.cid
-                    for curve in curve_combo
-                    if "carbon" in curve.params.get("exchange")
-                ]
-
-                if len(carbon_cids) > 0:
-                    if non_carbon_cids[0] in trade_instructions_df.index and carbon_cids[0] in trade_instructions_df.index:
-                        non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                        tkn0_into_carbon = non_carbon_row[0] < 0
-                        wrong_direction_cids = self.get_wrong_direction_cids(
-                            tkn0_into_carbon, trade_instructions_df
-                        )
-                        if len(wrong_direction_cids) > 0:
-                            filtered_curves = self.process_wrong_direction_pools(
-                                curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
-                            )
-                            if len(filtered_curves) < 2:
-                                continue
-                            (
-                                O,
-                                profit_src,
-                                r,
-                                trade_instructions_df,
-                            ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
-
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
-                print(f"trade_instructions_dic\n{trade_instructions_dic}")
+
                 # Get the cids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
 
                 # Calculate the profit
                 profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-
                 if str(profit) == "nan":
                     self.ConfigObj.logger.debug("profit is nan, skipping")
                     continue
@@ -189,20 +167,4 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             curve for curve in curve_combo if curve.cid not in wrong_direction_cids
         ]
         return new_curves
-
-    @staticmethod
-    def get_balancer_combos(CCm, flashloan_tokens):
-        balancer_curves = CCm.byparams(exchange="balancer").curves
-        bal_tkns_raw = [curve.tkny for curve in balancer_curves]
-        bal_tkns_raw += [curve.tknx for curve in balancer_curves]
-        bal_tkns_raw = list(set(bal_tkns_raw))
-
-        if "WETH-6Cc2" in flashloan_tokens:
-            flashloan_tokens = ["WETH-6Cc2"]
-        else:
-            flashloan_tokens = [flashloan_tokens[0]]
-        combos = [(tkn0, tkn1) for tkn0, tkn1 in itertools.product(bal_tkns_raw, flashloan_tokens) if tkn0 != tkn1]
-                # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-
-        return combos
 

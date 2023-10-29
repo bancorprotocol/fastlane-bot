@@ -754,20 +754,20 @@ class CarbonBot(CarbonBotBase):
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
         best_profit_fl_token = best_profit
-        if fl_token_with_weth != T.WETH: # TODO generalize to native gas token
+        if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN: # TODO generalize to native gas token
             try:
-                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{T.WETH}").bytknq(f"{fl_token_with_weth}")[0].p))
+                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN}").bytknq(f"{fl_token_with_weth}")[0].p))
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
             except:
                 try:
-                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{T.WETH}")[0].p))
+                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN}")[0].p))
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
                     raise str(e)
         else:
             best_profit_eth = best_profit_fl_token
 
-        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{T.WETH}/{T.USDC}")[0].p))  ## TODO dependency on USDC
+        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN}/{self.ConfigObj.STABLECOIN}")[0].p))  ## TODO dependency on USDC
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
