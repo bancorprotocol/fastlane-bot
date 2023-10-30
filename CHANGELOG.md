@@ -2,9 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.52...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.53...HEAD)
 
+- Bug in close pool script [\#181](https://github.com/bancorprotocol/fastlane-bot/issues/181)
 - zero liquidity pool filters Carbon Orders where y0 is 0 but y1 isn't [\#176](https://github.com/bancorprotocol/fastlane-bot/issues/176)
+- adds base\_path to the get\_static\_data fn [\#182](https://github.com/bancorprotocol/fastlane-bot/pull/182) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.53](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.53) (2023-10-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.52...v2.7.53)
 
 - Add the ability to get all pools [\#174](https://github.com/bancorprotocol/fastlane-bot/issues/174)
 
