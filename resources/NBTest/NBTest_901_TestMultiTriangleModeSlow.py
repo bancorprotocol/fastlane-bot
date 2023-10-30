@@ -176,6 +176,16 @@ finder2 = arb_finder(
 combos = finder2.get_combos(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode="multi_triangle")
 assert len(combos) >= 1225, f"[TestMultiTriangleMode] Using wrong dataset, expected at least 1225 combos, found {len(combos)}"
 
+# +
+# print(len(combos))
+# for ex in exchanges:
+#     count = 0
+#     for pool in CCm:
+#         if ex in pool.descr:
+#             count +=1
+#     print(f"found {count} pools for {ex}")
+# -
+
 # ### Test_find_arbitrage
 
 arb_finder = bot._get_arb_finder("multi_triangle")
@@ -205,6 +215,6 @@ for arb in r:
                 has_zero_curves = True
             if "-1" in curve['cid']:
                 has_one_curves = True
-            assert not has_zero_curves or not has_one_curves, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
+        assert not has_zero_curves or not has_one_curves, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
 assert multi_carbon_count > 0, f"[TestMultiTriangleMode] Not finding arbs with multiple Carbon curves."
 assert len(r) >= 58, f"[TestMultiTriangleMode] Expected at least 58 arbs, found {len(r)}"

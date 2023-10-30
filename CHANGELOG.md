@@ -2,11 +2,26 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.51...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.52...HEAD)
+
+- zero liquidity pool filters Carbon Orders where y0 is 0 but y1 isn't [\#176](https://github.com/bancorprotocol/fastlane-bot/issues/176)
+
+- Add the ability to get all pools [\#174](https://github.com/bancorprotocol/fastlane-bot/issues/174)
+
+Closed issues
+
+- unsupported operand type\(s\) for -: 'float' and 'decimal.Decimal' [\#180](https://github.com/bancorprotocol/fastlane-bot/issues/180)
+
+Merged pull requests
+
+- Fix a bug that filtered Carbon Strategies with an empty order 0 [\#177](https://github.com/bancorprotocol/fastlane-bot/pull/177) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.52](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.52) (2023-10-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.51...v2.7.52)
 
 - Several bugs - static pool csv and validator [\#171](https://github.com/bancorprotocol/fastlane-bot/issues/171)
 
-- Add the ability to get all pools [\#174](https://github.com/bancorprotocol/fastlane-bot/issues/174)
 - Create terraformer [\#175](https://github.com/bancorprotocol/fastlane-bot/pull/175) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.51](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.51) (2023-10-25)

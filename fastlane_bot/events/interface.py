@@ -101,7 +101,7 @@ class QueryInterface:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
 
-    def has_balance(self, pool: Dict[str, Any], key: str) -> bool:
+    def has_balance(self, pool: Dict[str, Any], keys: List[str]) -> bool:
         """
         Check if a pool has a balance for a given key
 
@@ -109,8 +109,8 @@ class QueryInterface:
         ----------
         pool: Dict[str, Any]
             The pool to check
-        key: str
-            The key to check for a balance
+        keys: List[str]
+            The keys to check for a balance
 
         Returns
         -------
@@ -118,7 +118,12 @@ class QueryInterface:
             True if the pool has a balance for the given key, False otherwise
 
         """
-        return key in pool and pool[key] > 0
+
+        for key in keys:
+            if key in pool and pool[key] > 0:
+                return True
+        return False
+
 
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
         """
@@ -147,7 +152,7 @@ class QueryInterface:
         tokens = list(set(tokens))
         return tokens
 
-    def filter_pools(self, exchange_name: str, key: str = "") -> List[Dict[str, Any]]:
+    def filter_pools(self, exchange_name: str, keys: List[str] = "") -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
 
@@ -155,7 +160,7 @@ class QueryInterface:
         ----------
         exchange_name: str
             The exchange name to filter by
-        key: str
+        keys: str
             The key to filter by
 
         Returns
@@ -163,12 +168,12 @@ class QueryInterface:
         List[Dict[str, Any]]
             The filtered pools
         """
-        if key:
+        if keys:
             return [
                 pool
                 for pool in self.state
                 if pool["exchange_name"] == exchange_name
-                and self.has_balance(pool, key)
+                and self.has_balance(pool, keys)
             ]
         else:
             return [
@@ -208,16 +213,16 @@ class QueryInterface:
             "balancer"
         ]
         keys = [
-            "liquidity",
-            "tkn0_balance",
-            "tkn0_balance",
-            "tkn0_balance",
-            "tkn0_balance",
-            "y_0",
-            "y_0",
-            "tkn0_balance",
-            "liquidity",
-            "tkn0_balance",
+            ["liquidity"],
+            ["tkn0_balance"],
+            ["tkn0_balance"],
+            ["tkn0_balance"],
+            ["tkn0_balance"],
+            ["y_0"],
+            ["y_0", "y_1"],
+            ["tkn0_balance"],
+            ["liquidity"],
+            ["tkn0_balance"],
         ]
 
         self.state = [
