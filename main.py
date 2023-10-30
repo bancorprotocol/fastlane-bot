@@ -5,13 +5,16 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import asyncio
 import time
 from typing import List
 
 import click
+import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
+from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V2_FACTORY_ABI
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -40,6 +43,7 @@ from fastlane_bot.events.utils import (
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
+    ensure_carbon_coverage,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -418,6 +422,8 @@ def main(
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, n_jobs)
 
+    ensure_carbon_coverage(mgr, flashloan_tokens)
+
     # Run the main loop
     run(
         cache_latest_only,
@@ -693,6 +699,8 @@ def run(
                     uniswap_v3_event_mappings[["address", "exchange"]].values
                 )
                 last_block_queried = current_block
+                handle_static_pools_update(mgr)
+                ensure_carbon_coverage(mgr, flashloan_tokens)
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")

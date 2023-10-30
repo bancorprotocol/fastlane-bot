@@ -5,6 +5,7 @@ Contains the utils functions for events
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import asyncio
 import contextlib
 import importlib
 import json
@@ -29,7 +30,12 @@ from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
-from fastlane_bot.data.abi import ERC20_ABI
+from fastlane_bot.data.abi import (
+    ERC20_ABI,
+    UNISWAP_V2_FACTORY_ABI,
+    UNISWAP_V2_POOL_ABI,
+    UNISWAP_V3_FACTORY_ABI,
+)
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import encode_token_price
@@ -1745,3 +1751,195 @@ def handle_static_pools_update(mgr: Any):
             )
             attr_name = f"{ex}_pools"
             mgr.static_pools[attr_name] = exchange_pools
+
+
+def ensure_carbon_coverage(mgr: Any, flashloan_tokens: List[str]):
+    """
+    Ensure that all carbon tokens have coverage.
+
+    Parameters
+    ----------
+    mgr: Any
+        The manager object
+    flashloan_tokens: List[str]
+        The list of flashloan tokens
+
+    """
+
+    # update the carbon pools
+    current_block = mgr.cfg.w3.eth.blockNumber
+    mgr.update_carbon(current_block)
+
+    missing_carbon_tokens = get_missing_carbon_tokens(mgr)
+
+    if missing_carbon_tokens:
+        large_static_data = pd.read_csv("fastlane_bot/data/static_data_large.csv")
+
+        matching_rows = get_carbon_tokens_without_coverage(
+            filter_by_target_tokens=True,
+            large_static_data=large_static_data,
+            missing_carbon_tokens=missing_carbon_tokens,
+            mgr=mgr,
+            flashloan_tokens=flashloan_tokens,
+        )
+
+        # add the matching rows to the pool data
+        mgr.pool_data += matching_rows.to_dict(orient="records")
+
+        missing_carbon_tokens = get_missing_carbon_tokens(mgr)
+
+        matching_rows = get_carbon_tokens_without_coverage(
+            filter_by_target_tokens=False,
+            large_static_data=large_static_data,
+            missing_carbon_tokens=missing_carbon_tokens,
+            mgr=mgr,
+            flashloan_tokens=flashloan_tokens,
+        )
+
+        # add the matching rows to the pool data
+        mgr.pool_data += matching_rows.to_dict(orient="records")
+
+    missing_carbon_tokens = get_missing_carbon_tokens(mgr)
+    if missing_carbon_tokens:
+        mgr.cfg.logger.warning(
+            f"\nCarbon tokens without coverage remaining: {missing_carbon_tokens}\n"
+        )
+    else:
+        mgr.cfg.logger.info(f"\nSuccessfully achieved 100% carbon token coverage...\n")
+
+
+async def get_token_and_fee(exchange_name: str, ex: Any, address: str, contract: Any):
+    """
+    Get the token and fee information for a given exchange.
+
+    Args:
+        exchange_name (str): The name of the exchange.
+        ex: The exchange object.
+        address (str): The address of the token.
+        contract (str): The contract address.
+
+    Returns:
+        tuple: A tuple containing the exchange name, address, token 0, token 1, and fee.
+
+    Raises:
+        Exception: If there is an error retrieving the token and fee information.
+
+    """
+
+    try:
+        tkn0 = await ex.get_tkn0(address, contract, event=None)
+        tkn1 = await ex.get_tkn1(address, contract, event=None)
+        fee = await ex.get_fee(address, contract)
+        return exchange_name, address, tkn0, tkn1, fee
+    except Exception as e:
+        print(e)
+        return exchange_name, address, None, None, None
+
+
+async def async_get_token_and_fee(c):
+    """
+    Find pools.
+
+    Parameters
+    ----------
+    c
+
+    Returns
+    -------
+
+    """
+    vals = await asyncio.gather(*[get_token_and_fee(**args) for args in c])
+    return pd.DataFrame(vals, columns=["exchange", "address", "tkn0", "tkn1", "fee"])
+
+
+def get_carbon_tokens_without_coverage(
+    filter_by_target_tokens,
+    large_static_data,
+    missing_carbon_tokens,
+    mgr,
+    flashloan_tokens,
+):
+    """
+    Find Carbon tokens/pairs without coverage in the static data.
+
+    Parameters
+    ----------
+    filter_by_target_tokens: bool
+        Whether to filter by target tokens
+    large_static_data: pd.DataFrame
+        The static data
+    missing_carbon_tokens: List[str]
+        The list of carbon tokens that do not have a matching static_data pool
+    mgr: Any
+        The manager object
+    flashloan_tokens: List[str]
+        The list of flashloan tokens
+
+    Returns
+    -------
+    pd.DataFrame
+        The static data with the missing pairs added
+
+    """
+    # find rows in static_data that match the missing carbon tokens
+    matching_rows = large_static_data[
+        large_static_data["tkn0_address"].isin(missing_carbon_tokens)
+        | large_static_data["tkn1_address"].isin(missing_carbon_tokens)
+    ]
+    if filter_by_target_tokens:
+        # filter to only those rows where one of the tokens is a flashloan token
+        matching_rows = matching_rows[
+            matching_rows["tkn0_address"].isin(flashloan_tokens)
+            | matching_rows["tkn1_address"].isin(flashloan_tokens)
+        ]
+    matching_rows["pair_name"] = (
+        matching_rows["tkn0_key"] + "/" + matching_rows["tkn1_key"]
+    )
+    matching_rows["descr"] = (
+        matching_rows["exchange_name"].astype(str)
+        + " "
+        + matching_rows["pair_name"].astype(str)
+        + " "
+        + matching_rows["fee"].astype(str)
+    )
+    matching_rows["cid"] = [
+        mgr.cfg.w3.keccak(text=f"{row['descr']}").hex()
+        for index, row in matching_rows.iterrows()
+    ]
+    return matching_rows
+
+
+def get_missing_carbon_tokens(mgr: Any) -> List[str]:
+    """
+    ensure that the carbon tokens have at least one matching static_data pool
+
+    Parameters
+    ----------
+    mgr: Any
+        The manager object
+
+    Returns
+    -------
+    List[str]
+        The list of carbon tokens that do not have a matching static_data pool
+
+    """
+    carbon_tokens = [
+        tkn["tkn0_address"]
+        for tkn in mgr.pool_data
+        if tkn["exchange_name"] == "carbon_v1"
+    ] + [
+        tkn["tkn1_address"]
+        for tkn in mgr.pool_data
+        if tkn["exchange_name"] == "carbon_v1"
+    ]
+    non_carbon_tokens = [
+        tkn["tkn0_address"]
+        for tkn in mgr.pool_data
+        if tkn["exchange_name"] != "carbon_v1"
+    ] + [
+        tkn["tkn1_address"]
+        for tkn in mgr.pool_data
+        if tkn["exchange_name"] != "carbon_v1"
+    ]
+    return [tkn for tkn in carbon_tokens if tkn not in non_carbon_tokens]
