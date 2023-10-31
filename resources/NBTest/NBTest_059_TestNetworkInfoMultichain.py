@@ -64,8 +64,6 @@ from fastlane_bot.config.network import *
 
 exchange_df = get_multichain_addresses('coinbase_base')
 
-
-# +
 fork_map = get_fork_map(df=exchange_df, fork_name="uniswap_v3")
 
 
@@ -74,7 +72,6 @@ assert 'sushiswap_v3' in fork_map, f"[TestGenerateNetworkInfo] Could not find su
 assert 'pancakeswap_v3' in fork_map, f"[TestGenerateNetworkInfo] Could not find pancakeswap_v3 in fork_map."
 assert 'baseswap_v3' in fork_map, f"[TestGenerateNetworkInfo] Could not find baseswap_v3 in fork_map."
 assert type(fork_map['uniswap_v3']) == str
-# -
 
 addr_row = get_row_from_address(address="0xBA12222222228d8Ba445958a75a0704d566BF2C8", df=exchange_df)
 assert type(addr_row) == pd.DataFrame
