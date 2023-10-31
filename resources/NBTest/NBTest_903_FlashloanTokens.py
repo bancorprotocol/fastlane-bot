@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -76,7 +76,8 @@ def run_command(mode):
         "--limit_bancor3_flashloan_tokens=True",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=70"
+        "--timeout=70",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
