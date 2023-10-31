@@ -31,7 +31,6 @@ from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
 from dataclasses import dataclass, asdict, field
 from fastlane_bot.testing import *
-import pytest
 import math
 import json
 from typing import Dict
@@ -54,7 +53,7 @@ cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="coinbase_base")
 # ## Config_Test_Multichain
 
 assert cfg.RPC_ENDPOINT in "https://base-mainnet.g.alchemy.com/v2/", f"[TestGenerateNetworkInfo] Wrong RPC endpoint for coinbase_base. Expected: https://base-mainnet.g.alchemy.com/v2/, found {cfg.RPC_ENDPOINT}"
-assert cfg.NATIVE_GAS_TOKEN_KEY_KEY in "ETH-EEeE", f"[TestGenerateNetworkInfo] NATIVE_GAS_TOKEN_KEY for coinbase_base. Expected: ETH-EEeE, found {cfg.NATIVE_GAS_TOKEN_KEY_KEY}"
+assert cfg.NATIVE_GAS_TOKEN_KEY in "ETH-EEeE", f"[TestGenerateNetworkInfo] NATIVE_GAS_TOKEN_KEY for coinbase_base. Expected: ETH-EEeE, found {cfg.NATIVE_GAS_TOKEN_KEY}"
 assert cfg.WRAPPED_GAS_TOKEN_KEY in "WETH-0006", f"[TestGenerateNetworkInfo] WRAPPED_GAS_TOKEN_KEY for coinbase_base. Expected: WETH-0006, found {cfg.WRAPPED_GAS_TOKEN_KEY}"
 assert cfg.STABLECOIN_KEY in "USDC-2913", f"[TestGenerateNetworkInfo] STABLECOIN_KEY for coinbase_base. Expected: USDC-2913, found {cfg.STABLECOIN_KEY}"
 
