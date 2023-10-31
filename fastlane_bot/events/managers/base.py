@@ -635,43 +635,52 @@ class BaseManager:
             The token symbol and decimals.
 
         """
-        token_info = self.get_token_info_from_config(cfg, addr)
-        if token_info:
-            return token_info
+        # token_info = self.get_token_info_from_config(cfg, addr)
+        # if token_info:
+        #     return token_info
 
-        record = next((add for add in self.tokens if add["address"] == addr), None)
-        if record:
-            return record["symbol"], int(record["decimals"])
-
-        return self.get_token_info_from_contract(web3, erc20_contracts, addr)
-
-    def get_token_info_from_config(
-        self, cfg: Config, addr: str
-    ) -> Optional[Tuple[str, int]]:
-        """
-        Get the token info from config.
-
-        Parameters
-        ----------
-        cfg : Config
-            The config.
-        addr : str
-            The address.
-
-        Returns
-        -------
-        Optional[Tuple[str, int]]
-            The token info.
-
-        """
-        return next(
+        record = next(
             (
-                info
-                for address_attr, info in self.TOKENS_MAPPING.items()
-                if addr in [getattr(cfg, address_attr)]
+                add
+                for add in self.tokens
+                if str(add["address"]).lower() == str(addr).lower()
             ),
             None,
         )
+        if record:
+            return record["symbol"], int(record["decimals"])
+
+        return self.get_token_info_from_contract(
+            web3=web3, erc20_contracts=erc20_contracts, addr=addr
+        )
+
+    # def get_token_info_from_config(
+    #     self, cfg: Config, addr: str
+    # ) -> Optional[Tuple[str, int]]:
+    #     """
+    #     Get the token info from config.
+    #
+    #     Parameters
+    #     ----------
+    #     cfg : Config
+    #         The config.
+    #     addr : str
+    #         The address.
+    #
+    #     Returns
+    #     -------
+    #     Optional[Tuple[str, int]]
+    #         The token info.
+    #
+    #     """
+    #     return next(
+    #         (
+    #             info
+    #             for address_attr, info in self.TOKENS_MAPPING.items()
+    #             if addr in [getattr(cfg, address_attr)]
+    #         ),
+    #         None,
+    #     )
 
     def validate_pool_info(
         self,

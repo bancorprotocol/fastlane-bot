@@ -305,6 +305,8 @@ def get_static_data(
         for index, row in static_pool_data.iterrows()
     ]
 
+    static_pool_data["last_updated_block"] = [0 for _ in range(len(static_pool_data))]
+
     return (
         static_pool_data,
         tokens,
@@ -1747,7 +1749,7 @@ def handle_static_pools_update(mgr: Any):
                 e["address"] for e in all_event_mappings if e["exchange_name"] == ex
             ]
             mgr.cfg.logger.info(
-                f"Adding {len(exchange_pools)} {ex} pools to static pools"
+                f"Mapped {len(exchange_pools)} {ex} pools for event tracking"
             )
             attr_name = f"{ex}_pools"
             mgr.static_pools[attr_name] = exchange_pools
@@ -1782,6 +1784,7 @@ def ensure_carbon_coverage(mgr: Any, flashloan_tokens: List[str]):
             mgr=mgr,
             flashloan_tokens=flashloan_tokens,
         )
+        matching_rows["last_updated_block"] = [0 for _ in range(len(matching_rows))]
 
         # add the matching rows to the pool data
         mgr.pool_data += matching_rows.to_dict(orient="records")
@@ -1892,9 +1895,11 @@ def get_carbon_tokens_without_coverage(
             matching_rows["tkn0_address"].isin(flashloan_tokens)
             | matching_rows["tkn1_address"].isin(flashloan_tokens)
         ]
+    matching_rows = matching_rows.copy()
     matching_rows["pair_name"] = (
         matching_rows["tkn0_key"] + "/" + matching_rows["tkn1_key"]
     )
+
     matching_rows["descr"] = (
         matching_rows["exchange_name"].astype(str)
         + " "

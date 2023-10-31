@@ -40,283 +40,283 @@ AD = DAttrDict
 #     print(f"""{k} = "{v}",  """)
 
 TOKENIDS = AttrDict(
-    NATIVE_ETH="ETH-EEeE",
-    AAVE="AAVE-DaE9",
-    WETH="WETH-6Cc2",
-    ETH="WETH-6Cc2",
-    WBTC="WBTC-C599",
-    BTC="WBTC-C599",
-    USDC="USDC-eB48",
-    USDT="USDT-1ec7",
-    DAI="DAI-1d0F",
-    LINK="LINK-86CA",
-    MKR="MKR-79A2",
-    BNT="BNT-FF1C",
-    UNI="UNI-F984",
-    SUSHI="SUSHI-0fE2",
-    CRV="CRV-cd52",
-    FRAX="FRAX-b99e",
-    HEX="HEX-eb39",
-    MATIC="MATIC-eBB0",
-    HDRN="HDRN-5e06",
-    SHIB="SHIB-C4cE",
-    ICHI="ICHI-C4d6",
-    OCTO="OCTO-2BA3",
-    ECO="ECO-5727",
+    NATIVE_ETH="ETH-eeeeEEeE",
+    AAVE="AAVE-3E2DDaE9",
+    WETH="WETH-3C756Cc2",
+    ETH="WETH-3C756Cc2",
+    WBTC="WBTC-3bc2C599",
+    BTC="WBTC-3bc2C599",
+    USDC="USDC-3606eB48",
+    USDT="USDT-3D831ec7",
+    DAI="DAI-95271d0F",
+    LINK="LINK-EcF986CA",
+    # MKR="MKR-79A2",
+    BNT="BNT-79a7FF1C",
+    # UNI="UNI-F984",
+    # SUSHI="SUSHI-0fE2",
+    # CRV="CRV-cd52",
+    # FRAX="FRAX-b99e",
+    # HEX="HEX-eb39",
+    # MATIC="MATIC-eBB0",
+    # HDRN="HDRN-5e06",
+    # SHIB="SHIB-C4cE",
+    # ICHI="ICHI-C4d6",
+    # OCTO="OCTO-2BA3",
+    # ECO="ECO-5727",
 )
 T = TOKENIDS
-
-TOKENS_NOETH = {
-    "$LSVR-c09B",
-    "3Crv-E490",
-    "ABR-8C7C",
-    "ACR-E3CF",
-    "ACRE-FC21",
-    "AGV-382B",
-    "APM-BA6c",
-    "ARPA-b71a",
-    "ASTO-4689",
-    "ASW-2a11",
-    "B2M-0a1f",
-    "BAC-A69a",
-    "BACON-38e7",
-    "BAG-14b0",
-    "BAMBOO-2e89",
-    "BASE-04e0",
-    "BASv2-5287",
-    "BBS-B430",
-    "BDT-d5Cf",
-    "BHNY-0844",
-    "BLID-56A5",
-    "BLU-1FfD",
-    "BORING-92CA",
-    "BRD-9aD6",
-    "BRKL-9ff8",
-    "BRZ-2e2B",
-    "BTTY-3D0A",
-    "CE-EecE",
-    "CHANGE-2754",
-    "CHEQ-4de7",
-    "CHO-3099",
-    "CIRUS-8756",
-    "CLB-3c84",
-    "CLS-de37",
-    "CMT-Dc18",
-    "COW-5Ea8",
-    "CP-CFCa",
-    "CPOOL-FaC5",
-    "CPRX-978f",
-    "CRF-219d",
-    "CROWN-E0fa",
-    "CRPT-6d8B",
-    "CTO-6C47",
-    "CTX-f98D",
-    "CWEB-Bf04",
-    "CoreDAO-Dd58",
-    "DAMM-16b8",
-    "DAPP-1649",
-    "DAWN-9aFa",
-    "DCHF-7A36",
-    "DEXG-436D",
-    "DHT-Fa84",
-    "DIGG-01C3",
-    "DIGITS-404F",
-    "DLTA-D823",
-    "DNXC-f03a",
-    "DOG-868D",
-    "DOGZ-33eF",
-    "DORA-c81d",
-    "DREP-b4c2",
-    "DSD-66e3",
-    "DSU-7109",
-    "DTX-3F75",
-    "DVF-1918",
-    "DXP-B745",
-    "Daruma-f704",
-    "EAG8-EeE4",
-    "ECO-5727",
-    "ECOx-736a",
-    "EGG-6a0c",
-    "ERC20-EPK-40c4",
-    "ERP-2267",
-    "ESD-d723",
-    "ETHV-aC76",
-    "EURe-273f",
-    "EVA-8707",
-    "EXD-6560",
-    "FANC-c045",
-    "FCC-e079",
-    "FEAR-1E83",
-    "FLX-0770",
-    "FLy-1472",
-    "FORM-FA2a",
-    "FORT-Ec29",
-    "FPI-E08E",
-    "FTG-7659",
-    "FWT-a295",
-    "GAME-1d1c",
-    "GBPT-bA98",
-    "GBYTE-cc2a",
-    "GEM-efcC",
-    "GENI-6a39",
-    "GOB-8A80",
-    "GODS-FD97",
-    "GPO-3aCE",
-    "GRO-74D7",
-    "GST-1404",
-    "GUILD-475A",
-    "GVT-2a0c",
-    "HAI-9a63",
-    "HAN-511F",
-    "HDAO-fF2D",
-    "HILO-5ff6",
-    "HOME-1F62",
-    "INSUR-7429",
-    "IOEN-893A",
-    "IOI-1d81",
-    "IPISTR-348e",
-    "IPT-FC3d",
-    "ISK-a75C",
-    "IZE-327B",
-    "JOY-1FB5",
-    "KOL-d414",
-    "KYOKO-BaC2",
-    "LBlock-D329",
-    "LEAN-99F8",
-    "LMT-c8AF",
-    "LUCKY-6140",
-    "LXF-772A",
-    "M2-D15C",
-    "MAXI-e84b",
-    "MDF-B411",
-    "MFI-355B",
-    "MGG-8740",
-    "MIDAS-66A5",
-    "MLP-1152",
-    "MPS-D47D",
-    "MYC-F5Ba",
-    "Mars-70B7",
-    "NAO-53dc",
-    "NBT-824c",
-    "NFTD-B379",
-    "NFTY-3208",
-    "NGL-66aE",
-    "NRFX-94a4",
-    "NUM-3079",
-    "NineFi-2f1d",
-    "O-c40f",
-    "O3-7d28",
-    "OBOT-0c32",
-    "OCT-c6DC",
-    "OIL-88a5",
-    "OK-4189",
-    "ONIGIRI-30D0",
-    "OPUL-6444",
-    "OTHR-C334",
-    "OUSD-5e86",
-    "OXAI-Fe9d",
-    "Okinami-4121",
-    "PAL-f4BF",
-    "PAR-4703",
-    "PEPEBET-0350",
-    "PINA-780D",
-    "PNL-B459",
-    "POLA-2CED",
-    "POLAR-075E",
-    "POLY-fdad",
-    "PP-CfD0",
-    "PROS-4B56",
-    "PULSE-97cE",
-    "QLT-c87c",
-    "RACA-9040",
-    "RPG-e251",
-    "RWS-7802",
-    "SAKURA-FeD6",
-    "SCOIN-0EB4",
-    "SD-D10f",
-    "SDEX-BEeF",
-    "SENT-556F",
-    "SEURO-9A00",
-    "SKEB-C810",
-    "SLD-a084",
-    "SMTX-419b",
-    "SNP-E873",
-    "SNP-FA9d",
-    "SOTU-9162",
-    "SPIRAL-1C3c",
-    "SPOOL-0976",
-    "SPOT-bafE",
-    "SPWN-1126",
-    "SST-9868",
-    "STABLZ-F7cd",
-    "SUM-40b1",
-    "SWASH-2F80",
-    "SWEAT-3A35",
-    "SWIV-6f2d",
-    "SYL-eb9C",
-    "SYNR-490a",
-    "Shird-695f",
-    "SpillWays-7b47",
-    "TCR-F050",
-    "TEAM-dE02",
-    "TEMP-1aB9",
-    "TGL-4e92",
-    "TOL-2cFA",
-    "TR3-5F98",
-    "TRIO-3308",
-    "TXA-A830",
-    "UBXN-1065",
-    "UCOIL-9a13",
-    "ULX-636F",
-    "UNIX-7aC8",
-    "UNKAI-B73D",
-    "USDC-1130",
-    "USDD-b5c6",
-    "USDP-89E1",
-    "UST-87a5",
-    "Umoon-C5da",
-    "UwU-5257",
-    "VENDETTA-53c3",
-    "VIS-E863",
-    "VLX-Edb9",
-    "VNDC-b5DE",
-    "VOW-46Fb",
-    "VPAD-4EDc",
-    "VR-8cdD",
-    "WAVES-f29a",
-    "WFAIR-8972",
-    "WMLX-1AAd",
-    "WOOFY-57f1",
-    "WXT-E915",
-    "XAI-bEAc",
-    "XAUt-2F38",
-    "XDAO-Ad28",
-    "XDEX-6c83",
-    "XETA-3550",
-    "XFIT-7441",
-    "Y2B-0650",
-    "Z3-61a6",
-    "ZEUM-8190",
-    "ZUSD-04fA",
-    "ankrMATIC-480C",
-    "bLUSD-79C3",
-    "bluSGD-db22",
-    "cvxCRV-0Aa7",
-    "eLunr-Aa5A",
-    "eMAID-a303",
-    "iAI-2122",
-    "ibETH-9c7A",
-    "icc-a177",
-    "one1INCH-3857",
-    "oneICHI-1e07",
-    "rETH2-86c5",
-    "rUSD-C8F6",
-    "sifu-C313",
-    "vBNT-7f94",
-    "wMEMO-af57",
-    "wOXEN-bcc5",
-    "wPPC-2958",
-}
+#
+# TOKENS_NOETH = {
+#     "$LSVR-c09B",
+#     "3Crv-E490",
+#     "ABR-8C7C",
+#     "ACR-E3CF",
+#     "ACRE-FC21",
+#     "AGV-382B",
+#     "APM-BA6c",
+#     "ARPA-b71a",
+#     "ASTO-4689",
+#     "ASW-2a11",
+#     "B2M-0a1f",
+#     "BAC-A69a",
+#     "BACON-38e7",
+#     "BAG-14b0",
+#     "BAMBOO-2e89",
+#     "BASE-04e0",
+#     "BASv2-5287",
+#     "BBS-B430",
+#     "BDT-d5Cf",
+#     "BHNY-0844",
+#     "BLID-56A5",
+#     "BLU-1FfD",
+#     "BORING-92CA",
+#     "BRD-9aD6",
+#     "BRKL-9ff8",
+#     "BRZ-2e2B",
+#     "BTTY-3D0A",
+#     "CE-EecE",
+#     "CHANGE-2754",
+#     "CHEQ-4de7",
+#     "CHO-3099",
+#     "CIRUS-8756",
+#     "CLB-3c84",
+#     "CLS-de37",
+#     "CMT-Dc18",
+#     "COW-5Ea8",
+#     "CP-CFCa",
+#     "CPOOL-FaC5",
+#     "CPRX-978f",
+#     "CRF-219d",
+#     "CROWN-E0fa",
+#     "CRPT-6d8B",
+#     "CTO-6C47",
+#     "CTX-f98D",
+#     "CWEB-Bf04",
+#     "CoreDAO-Dd58",
+#     "DAMM-16b8",
+#     "DAPP-1649",
+#     "DAWN-9aFa",
+#     "DCHF-7A36",
+#     "DEXG-436D",
+#     "DHT-Fa84",
+#     "DIGG-01C3",
+#     "DIGITS-404F",
+#     "DLTA-D823",
+#     "DNXC-f03a",
+#     "DOG-868D",
+#     "DOGZ-33eF",
+#     "DORA-c81d",
+#     "DREP-b4c2",
+#     "DSD-66e3",
+#     "DSU-7109",
+#     "DTX-3F75",
+#     "DVF-1918",
+#     "DXP-B745",
+#     "Daruma-f704",
+#     "EAG8-EeE4",
+#     "ECO-5727",
+#     "ECOx-736a",
+#     "EGG-6a0c",
+#     "ERC20-EPK-40c4",
+#     "ERP-2267",
+#     "ESD-d723",
+#     "ETHV-aC76",
+#     "EURe-273f",
+#     "EVA-8707",
+#     "EXD-6560",
+#     "FANC-c045",
+#     "FCC-e079",
+#     "FEAR-1E83",
+#     "FLX-0770",
+#     "FLy-1472",
+#     "FORM-FA2a",
+#     "FORT-Ec29",
+#     "FPI-E08E",
+#     "FTG-7659",
+#     "FWT-a295",
+#     "GAME-1d1c",
+#     "GBPT-bA98",
+#     "GBYTE-cc2a",
+#     "GEM-efcC",
+#     "GENI-6a39",
+#     "GOB-8A80",
+#     "GODS-FD97",
+#     "GPO-3aCE",
+#     "GRO-74D7",
+#     "GST-1404",
+#     "GUILD-475A",
+#     "GVT-2a0c",
+#     "HAI-9a63",
+#     "HAN-511F",
+#     "HDAO-fF2D",
+#     "HILO-5ff6",
+#     "HOME-1F62",
+#     "INSUR-7429",
+#     "IOEN-893A",
+#     "IOI-1d81",
+#     "IPISTR-348e",
+#     "IPT-FC3d",
+#     "ISK-a75C",
+#     "IZE-327B",
+#     "JOY-1FB5",
+#     "KOL-d414",
+#     "KYOKO-BaC2",
+#     "LBlock-D329",
+#     "LEAN-99F8",
+#     "LMT-c8AF",
+#     "LUCKY-6140",
+#     "LXF-772A",
+#     "M2-D15C",
+#     "MAXI-e84b",
+#     "MDF-B411",
+#     "MFI-355B",
+#     "MGG-8740",
+#     "MIDAS-66A5",
+#     "MLP-1152",
+#     "MPS-D47D",
+#     "MYC-F5Ba",
+#     "Mars-70B7",
+#     "NAO-53dc",
+#     "NBT-824c",
+#     "NFTD-B379",
+#     "NFTY-3208",
+#     "NGL-66aE",
+#     "NRFX-94a4",
+#     "NUM-3079",
+#     "NineFi-2f1d",
+#     "O-c40f",
+#     "O3-7d28",
+#     "OBOT-0c32",
+#     "OCT-c6DC",
+#     "OIL-88a5",
+#     "OK-4189",
+#     "ONIGIRI-30D0",
+#     "OPUL-6444",
+#     "OTHR-C334",
+#     "OUSD-5e86",
+#     "OXAI-Fe9d",
+#     "Okinami-4121",
+#     "PAL-f4BF",
+#     "PAR-4703",
+#     "PEPEBET-0350",
+#     "PINA-780D",
+#     "PNL-B459",
+#     "POLA-2CED",
+#     "POLAR-075E",
+#     "POLY-fdad",
+#     "PP-CfD0",
+#     "PROS-4B56",
+#     "PULSE-97cE",
+#     "QLT-c87c",
+#     "RACA-9040",
+#     "RPG-e251",
+#     "RWS-7802",
+#     "SAKURA-FeD6",
+#     "SCOIN-0EB4",
+#     "SD-D10f",
+#     "SDEX-BEeF",
+#     "SENT-556F",
+#     "SEURO-9A00",
+#     "SKEB-C810",
+#     "SLD-a084",
+#     "SMTX-419b",
+#     "SNP-E873",
+#     "SNP-FA9d",
+#     "SOTU-9162",
+#     "SPIRAL-1C3c",
+#     "SPOOL-0976",
+#     "SPOT-bafE",
+#     "SPWN-1126",
+#     "SST-9868",
+#     "STABLZ-F7cd",
+#     "SUM-40b1",
+#     "SWASH-2F80",
+#     "SWEAT-3A35",
+#     "SWIV-6f2d",
+#     "SYL-eb9C",
+#     "SYNR-490a",
+#     "Shird-695f",
+#     "SpillWays-7b47",
+#     "TCR-F050",
+#     "TEAM-dE02",
+#     "TEMP-1aB9",
+#     "TGL-4e92",
+#     "TOL-2cFA",
+#     "TR3-5F98",
+#     "TRIO-3308",
+#     "TXA-A830",
+#     "UBXN-1065",
+#     "UCOIL-9a13",
+#     "ULX-636F",
+#     "UNIX-7aC8",
+#     "UNKAI-B73D",
+#     "USDC-1130",
+#     "USDD-b5c6",
+#     "USDP-89E1",
+#     "UST-87a5",
+#     "Umoon-C5da",
+#     "UwU-5257",
+#     "VENDETTA-53c3",
+#     "VIS-E863",
+#     "VLX-Edb9",
+#     "VNDC-b5DE",
+#     "VOW-46Fb",
+#     "VPAD-4EDc",
+#     "VR-8cdD",
+#     "WAVES-f29a",
+#     "WFAIR-8972",
+#     "WMLX-1AAd",
+#     "WOOFY-57f1",
+#     "WXT-E915",
+#     "XAI-bEAc",
+#     "XAUt-2F38",
+#     "XDAO-Ad28",
+#     "XDEX-6c83",
+#     "XETA-3550",
+#     "XFIT-7441",
+#     "Y2B-0650",
+#     "Z3-61a6",
+#     "ZEUM-8190",
+#     "ZUSD-04fA",
+#     "ankrMATIC-480C",
+#     "bLUSD-79C3",
+#     "bluSGD-db22",
+#     "cvxCRV-0Aa7",
+#     "eLunr-Aa5A",
+#     "eMAID-a303",
+#     "iAI-2122",
+#     "ibETH-9c7A",
+#     "icc-a177",
+#     "one1INCH-3857",
+#     "oneICHI-1e07",
+#     "rETH2-86c5",
+#     "rUSD-C8F6",
+#     "sifu-C313",
+#     "vBNT-7f94",
+#     "wMEMO-af57",
+#     "wOXEN-bcc5",
+#     "wPPC-2958",
+# }
 
 
 @dataclass_
@@ -324,7 +324,7 @@ class ConstantProductCurve(CurveBase):
     """
     represents a, potentially levered, constant product curve
 
-    :k:        pool invariant k (see NOTE2 below) 
+    :k:        pool invariant k (see NOTE2 below)
     :x:        (virtual) pool state x (virtual number of base tokens for sale)
     :x_act:    actual pool state x (actual number of base tokens for sale)
     :y_act:    actual pool state y (actual number of quote tokens for sale)
@@ -337,17 +337,17 @@ class ConstantProductCurve(CurveBase):
     :constr:   which (alternative) constructor was used (optional; user should not set)
     :params:   additional parameters (optional)
 
-    NOTE1: always use the alternative constructors `from_xx` rather then the 
+    NOTE1: always use the alternative constructors `from_xx` rather then the
     canonical one; if you insist on using the canonical one then keep in mind
     that the order of the parameters may change in future versions, so you
     MUST use keyword arguments
-    
+
     NOTE2: This class implements two distinct types of constant product curves:
     (1) the standard constant product curve xy=k
     (2) the weighted constant product curve x^al y^1-al = k^al
     Note that the case alpha=0.5 is equivalent to the standard constant product curve
     xy=k, including the value of k
-    
+
     NOTE3: There are two different ways of specifying the weights of the tokens
     (1) alpha: the weight of the x token (equal weight = 0.5), such that x^al y^1-al = k^al
     (2) eta = alpha / (1-alpha): the relative weight (equal weight = 1; x overweight  > 1)
@@ -369,21 +369,20 @@ class ConstantProductCurve(CurveBase):
     params: AttrDict = field(default=None, repr=True, compare=False, hash=False)
 
     def __post_init__(self):
-        
+
         if self.alpha is None:
-            super().__setattr__("_is_symmetric", True) 
-            super().__setattr__("alpha", 0.5) 
+            super().__setattr__("_is_symmetric", True)
+            super().__setattr__("alpha", 0.5)
         else:
-            super().__setattr__("_is_symmetric", self.alpha == 0.5) 
-            #print(f"[ConstantProductCurve] _is_symmetric = {self._is_symmetric}")
+            super().__setattr__("_is_symmetric", self.alpha == 0.5)
+            # print(f"[ConstantProductCurve] _is_symmetric = {self._is_symmetric}")
             assert self.alpha > 0, f"alpha must be > 0 [{self.alpha}]"
             assert self.alpha < 1, f"alpha must be < 1 [{self.alpha}]"
-    
 
         if self.constr is None:
             super().__setattr__("constr", "default")
-            
-        super().__setattr__("cid", str(self.cid))   
+
+        super().__setattr__("cid", str(self.cid))
 
         if self.params is None:
             super().__setattr__("params", AttrDict())
@@ -406,11 +405,9 @@ class ConstantProductCurve(CurveBase):
 
         if self.isbigger(big=self.x_act, small=self.x):
             print(f"[ConstantProductCurve] x_act > x in {self.cid}", self.x_act, self.x)
-            
+
         if self.isbigger(big=self.y_act, small=self.y):
             print(f"[ConstantProductCurve] y_act > y in {self.cid}", self.y_act, self.y)
-
-        
 
         self.set_tokenscale(self.TOKENSCALE)
 
@@ -438,32 +435,32 @@ class ConstantProductCurve(CurveBase):
     def cid0(self):
         "short cid [last 8 characters]"
         return self.cid[-8:]
-    
+
     @property
     def eta(self):
         "portfolio weight factor eta = alpha / (1-alpha)"
         return self.alpha / (1 - self.alpha)
-    
+
     def is_constant_product(self):
         "True iff alpha == 0.5 (deprecated; use `is_symmetric`)"
         return self.is_symmetric()
-    
+
     def is_symmetric(self):
         "True iff alpha == 0.5"
         return self._is_symmetric
-    
+
     def is_asymmetric(self):
         "True iff alpha != 0.5"
         return not self.is_symmetric()
-    
+
     def is_levered(self):
         "True iff x!=x_act or y!=y_act"
         return not self.is_unlevered()
-    
+
     def is_unlevered(self):
         "True iff x==x_act and y==y_act"
         return self.x == self.x_act and self.y == self.y_act
-    
+
     TOKENSCALE = ts.TokenScale1Data
     # default token scale object is the trivial scale (everything one)
     # change this to a different scale object be creating a derived class
@@ -496,8 +493,8 @@ class ConstantProductCurve(CurveBase):
     def fromdict(cls, d):
         "returns a curve from a dict representation"
         return cls(**d)
-    
-    from_dict = fromdict # DEPRECATED (use fromdict)
+
+    from_dict = fromdict  # DEPRECATED (use fromdict)
 
     def setcid(self, cid):
         """sets the curve id [can only be done once]"""
@@ -505,8 +502,9 @@ class ConstantProductCurve(CurveBase):
         super().__setattr__("cid", cid)
         return self
 
-    class CPCValidationError(ValueError): pass
-    
+    class CPCValidationError(ValueError):
+        pass
+
     @classmethod
     def from_kx(
         cls,
@@ -606,21 +604,27 @@ class ConstantProductCurve(CurveBase):
     ):
         "constructor: from x,y,alpha/eta (and x_act, y_act)"
         if not alpha is None and not eta is None:
-            raise ValueError(f"at most one of alpha and eta must be given [{alpha}, {eta}]")
+            raise ValueError(
+                f"at most one of alpha and eta must be given [{alpha}, {eta}]"
+            )
         if not eta is None:
             alpha = eta / (eta + 1)
         if alpha is None:
             alpha = 0.5
         assert alpha > 0, f"alpha must be > 0 [{alpha}]"
-        eta_inv = (1-alpha) / alpha
+        eta_inv = (1 - alpha) / alpha
         k = x * (y**eta_inv)
-        #print(f"[from_xyal] eta_inv = {eta_inv}")
-        #print(f"[from_xyal] x={x}, y={y}, k = {k}")
+        # print(f"[from_xyal] eta_inv = {eta_inv}")
+        # print(f"[from_xyal] x={x}, y={y}, k = {k}")
         if not alpha == 0.5:
-            assert x_act is None, f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={x_act}]"
-            assert y_act is None, f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={y_act}]"
+            assert (
+                x_act is None
+            ), f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={x_act}]"
+            assert (
+                y_act is None
+            ), f"currently not allowing levered curves for alpha != 0.5 [alpha={alpha}, x_act={y_act}]"
         return cls(
-            #k=(x**alpha * y**(1-alpha))**(1/alpha),
+            # k=(x**alpha * y**(1-alpha))**(1/alpha),
             k=k,
             x=x,
             alpha=alpha,
@@ -633,7 +637,6 @@ class ConstantProductCurve(CurveBase):
             constr="xyal",
             params=params,
         )
-
 
     @classmethod
     def from_pk(
@@ -942,11 +945,11 @@ class ConstantProductCurve(CurveBase):
             B = sqrt(pb)
             A0 = A if pa0 != pb0 else 0
         else:
-            pb0 = B * B             # B = sqrt(pb), A = sqrt(pa) - sqrt(pb)
-            pa0 = (A+B) * (A+B)     # A+B = sqrt(pa)
+            pb0 = B * B  # B = sqrt(pb), A = sqrt(pa) - sqrt(pb)
+            pa0 = (A + B) * (A + B)  # A+B = sqrt(pa)
             A0 = A
-            if A/B < 1e-7:
-                A = B*1e-7
+            if A / B < 1e-7:
+                A = B * 1e-7
 
         # set some intermediate parameters (see handwritten notes in repo)
         # yasym = yint * B / A
@@ -964,8 +967,10 @@ class ConstantProductCurve(CurveBase):
 
         return cls(
             k=kappa,
-            x=kappa_times_A / (y * A + yasym_times_A) if y * A + yasym_times_A != 0 else 1e99,
-            #x=kappa / (y + yasym) if y + yasym != 0 else 0,
+            x=kappa_times_A / (y * A + yasym_times_A)
+            if y * A + yasym_times_A != 0
+            else 1e99,
+            # x=kappa / (y + yasym) if y + yasym != 0 else 0,
             x_act=0,
             y_act=y,
             pair=f"{tknx}/{tkny}",
@@ -976,7 +981,6 @@ class ConstantProductCurve(CurveBase):
             params=params,
         )
 
-    
     def execute(self, dx=None, dy=None, *, ignorebounds=False, verbose=False):
         """
         executes a transaction in the pool, returning a new curve object
@@ -988,8 +992,10 @@ class ConstantProductCurve(CurveBase):
 
         *at least one of dx, dy must be None
         """
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if not dx is None and not dy is None:
             raise ValueError(f"either dx or dy must be None dx={dx} dy={dy}")
 
@@ -1070,8 +1076,10 @@ class ConstantProductCurve(CurveBase):
 
     def description(self):
         "description of the pool"
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         s = ""
         s += f"cid      = {self.cid0} [{self.cid}]\n"
         s += f"primary  = {Pair.n(self.pairo.primary)} [{self.pairo.primary}]\n"
@@ -1087,28 +1095,32 @@ class ConstantProductCurve(CurveBase):
     @property
     def y(self):
         "(virtual) pool state x (virtual number of base tokens for sale)"
-        
+
         if self.k == 0:
             return 0
         if self.is_constant_product():
             return self.k / self.x
-        return (self.k / self.x)**(self.eta)
-        
+        return (self.k / self.x) ** (self.eta)
+
     @property
     def p(self):
         "pool price (in dy/dx)"
         if self.is_constant_product():
-            return self.y / self.x 
-        
+            return self.y / self.x
+
         return self.eta * self.y / self.x
-    
+
     def buysell(self, *, verbose=False, withprice=False):
         """
         returns b (buy primary tknb), s (sells primary tknb) or bs (buys and sells)
         """
-        b,s = ("b", "s") if not verbose else ("buy-", "sell-")
-        xa, ya = (self.x_act, self.y_act) if self.pairo.isprimary else (self.y_act, self.x_act)
-        result  = b if ya > 0 else ""
+        b, s = ("b", "s") if not verbose else ("buy-", "sell-")
+        xa, ya = (
+            (self.x_act, self.y_act)
+            if self.pairo.isprimary
+            else (self.y_act, self.x_act)
+        )
+        result = b if ya > 0 else ""
         result += s if xa > 0 else ""
         if verbose:
             result += f"{self.pairo.primary_tknb}"
@@ -1119,16 +1131,17 @@ class ConstantProductCurve(CurveBase):
             return result, self.primaryp()
         else:
             return result
-    
+
     def buy(self):
         """returns 'b' if the curve buys the primary token, '' otherwise"""
         return self.buysell(verbose=False, withprice=False).replace("s", "")
-    
+
     def sell(self):
         """returns 's' if the curve sells the primary token, '' otherwise"""
         return self.buysell(verbose=False, withprice=False).replace("b", "")
-        
+
     ITM_THRESHOLDPC = 0.01
+
     @classmethod
     def itm0(cls, bsp1, bsp2, *, thresholdpc=None):
         """
@@ -1142,20 +1155,20 @@ class ConstantProductCurve(CurveBase):
             thresholdpc = cls.ITM_THRESHOLDPC
         bs1, p1 = bsp1
         bs2, p2 = bsp2
-        
+
         # if  prices are equal (within threshold), positions are not in the money
-        if abs(p2/p1-1) < thresholdpc:
+        if abs(p2 / p1 - 1) < thresholdpc:
             return False
         if bs1 == "bs" and bs2 == "bs":
             return True
-        
+
         if p2 > p1:
             # if p2 > p1: amm1 must sell and amm2 must buy
             return "s" in bs1 and "b" in bs2
         else:
             # if p1 < p2: amm1 must buy and amm2 must sell
             return "b" in bs1 and "s" in bs2
-    
+
     def itm(self, other, *, thresholdpc=None, aggr=True):
         """
         like itm0, but self against another curve object
@@ -1164,8 +1177,10 @@ class ConstantProductCurve(CurveBase):
         :thresholdpc:   in-the-money threshold in percent (default: ITM_THRESHOLD)
         :aggr:          if True, and an iterable is passed, True iff one is in the money
         """
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         try:
             itm_t = tuple(self.itm(o) for o in other)
             if not aggr:
@@ -1176,8 +1191,7 @@ class ConstantProductCurve(CurveBase):
         bss = self.buysell(verbose=False, withprice=True)
         bso = other.buysell(verbose=False, withprice=True)
         return self.itm0(bss, bso, thresholdpc=thresholdpc)
-    
-    
+
     def tvl(self, tkn=None, *, mult=1.0, incltkn=False, raiseonerror=True):
         """
         total value locked in the curve, expressed in the token tkn (default: tknq)
@@ -1204,24 +1218,24 @@ class ConstantProductCurve(CurveBase):
     def p_convention(self):
         """price convention for p (dy/dx)"""
         return f"{self.tknyp} per {self.tknxp}"
-    
+
     @property
     def primary(self):
         "alias for self.pairo.primary"
         return self.pairo.primary
-    
+
     @property
     def isprimary(self):
         "alias for self.pairo.isprimary"
         return self.pairo.isprimary
-    
+
     def primaryp(self, *, withconvention=False):
         "pool price in the native quote of the curve Pair object"
         price = self.pairo.pp(self.p)
         if not withconvention:
             return price
-        return f"{price:.2f} {self.pairo.pp_convention}"     
-    
+        return f"{price:.2f} {self.pairo.pp_convention}"
+
     @property
     def pp(self):
         """alias for self.primaryp()"""
@@ -1231,7 +1245,7 @@ class ConstantProductCurve(CurveBase):
     def kbar(self):
         """
         kbar is pool invariant the scales linearly with the pool size
-        
+
         kbar = sqrt(k) for constant product
         kbar = k^alpha for general curves
         """
@@ -1242,29 +1256,31 @@ class ConstantProductCurve(CurveBase):
     def invariant(self, xvec=None, *, include_target=False):
         """
         returns the actual invariant of the curve (eg x*y for constant product)
-        
+
         :xvec:              vector of x values (default: current)
         :include_target:    if True, the target invariant returned in addition to the actual invariant
         :returns:           invariant, or (invariant, target)
         """
-        if xvec is None: 
+        if xvec is None:
             xvec = {self.tknx: self.x, self.tkny: self.y}
-        x,y = xvec[self.tknx], xvec[self.tkny]
+        x, y = xvec[self.tknx], xvec[self.tkny]
         if self.is_constant_product():
             invariant = sqrt(x * y)
         else:
-            invariant = x**self.alpha * y**(1-self.alpha)
+            invariant = x**self.alpha * y ** (1 - self.alpha)
         if not include_target:
             return invariant
         return (invariant, self.kbar)
-        
+
     @property
     def x_min(self):
         "minimum (virtual) x value"
         if self.is_unlevered():
             return 0
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         return self.x - self.x_act
 
     @property
@@ -1295,8 +1311,10 @@ class ConstantProductCurve(CurveBase):
         "minimum (virtual) y value"
         if self.is_unlevered():
             return 0
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         return self.y - self.y_act
 
     @property
@@ -1304,8 +1322,10 @@ class ConstantProductCurve(CurveBase):
         "maximum (virtual) x value"
         if self.is_unlevered():
             return None
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if self.y_min > 0:
             return self.k / self.y_min
         else:
@@ -1316,8 +1336,10 @@ class ConstantProductCurve(CurveBase):
         "maximum (virtual) y value"
         if self.is_unlevered():
             return None
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if self.x_min > 0:
             return self.k / self.x_min
         else:
@@ -1328,45 +1350,53 @@ class ConstantProductCurve(CurveBase):
         "maximum pool price (in dy/dx; None if unlimited) = y_max/x_min"
         if self.is_unlevered():
             return None
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if not self.x_min is None and self.x_min > 0:
             return self.y_max / self.x_min
         else:
             return None
-        
+
     def p_max_primary(self, swap=True):
         "p_max in the native quote of the curve Pair object (swap=True: p_min)"
         if self.is_unlevered():
             return None
         p = self.p_max if not (swap and not self.isprimary) else self.p_min
-        if p is None: return None
-        return p if self.isprimary else 1/p
-    
+        if p is None:
+            return None
+        return p if self.isprimary else 1 / p
+
     @property
     def p_min(self):
         "minimum pool price (in dy/dx; None if unlimited) = y_min/x_max"
         if self.is_unlevered():
             return 0
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if not self.x_max is None and self.x_max > 0:
             return self.y_min / self.x_max
         else:
             return None
-    
+
     def p_min_primary(self, swap=True):
         "p_min in the native quote of the curve Pair object (swap=True: p_max)"
         if self.is_unlevered():
             return 0
         p = self.p_min if not (swap and not self.isprimary) else self.p_max
-        if p is None: return None
-        return p if self.isprimary else 1/p
-    
+        if p is None:
+            return None
+        return p if self.isprimary else 1 / p
+
     def format(self, *, heading=False, formatid=None):
         """returns info about the curve as a formatted string"""
-        assert self.is_constant_product(), "only implemented for constant product curves"
-        
+        assert (
+            self.is_constant_product()
+        ), "only implemented for constant product curves"
+
         if formatid is None:
             formatid = 0
         assert formatid in [0], "only formatid in [0] is supported"
@@ -1391,16 +1421,16 @@ class ConstantProductCurve(CurveBase):
         :ignorebounds:      if True, ignore x_act and y_act; if False, return the x,y values where
                             x_act and y_act are at zero (i.e. the pool is empty in this direction)
         :withunits:         if False, return x,y,p; if True, also return tknx, tkny, pair
-        
-        
+
+
         $$
         x(p) = \left( \frac{\eta}{p}   \right) ^ {1-\alpha} k^\alpha
         y(p) = \left( \frac{p}{\eta}   \right) ^ \alpha     k^\alpha
-        $$     
+        $$
         """
         if p is None:
             p = self.p
-            
+
         if self.is_constant_product():
             sqrt_p = sqrt(p)
             sqrt_k = self.kbar
@@ -1409,9 +1439,9 @@ class ConstantProductCurve(CurveBase):
         else:
             eta = self.eta
             alpha = self.alpha
-            x = (eta/p)**(1-alpha) * self.kbar
-            y = (p/eta)**alpha * self.kbar
-        
+            x = (eta / p) ** (1 - alpha) * self.kbar
+            y = (p / eta) ** alpha * self.kbar
+
         if not ignorebounds:
             if not self.x_min is None:
                 if x < self.x_min:
@@ -1434,18 +1464,22 @@ class ConstantProductCurve(CurveBase):
     def xvecfrompvec_f(self, pvec, *, ignorebounds=False):
         """
         alternative API to xyfromp_f
-        
+
         :pvec:      a dict containing all prices; the dict must contain the keys
                     for tknx and for tkny and the associated value must be the respective
                     price in any numeraire (only the ratio is used)
         :returns:   token amounts as dict {tknx: x, tkny: y}
         """
-        assert self.tknx in pvec, f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
-        assert self.tkny in pvec, f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
+        assert (
+            self.tknx in pvec
+        ), f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
+        assert (
+            self.tkny in pvec
+        ), f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
         p = pvec[self.tknx] / pvec[self.tkny]
         x, y, _ = self.xyfromp_f(p, ignorebounds=ignorebounds)
         return {self.tknx: x, self.tkny: y}
-    
+
     def dxdyfromp_f(self, p=None, *, ignorebounds=False, withunits=False):
         """like xyfromp_f, but returns dx,dy,p instead of x,y,p"""
         x, y, p = self.xyfromp_f(p, ignorebounds=ignorebounds)
@@ -1454,18 +1488,22 @@ class ConstantProductCurve(CurveBase):
         if withunits:
             return dx, dy, p, self.tknxp, self.tknyp, self.pairp
         return dx, dy, p
-    
+
     def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
         """
         alternative API to dxdyfromp_f
-        
+
         :pvec:      a dict containing all prices; the dict must contain the keys
                     for tknx and for tkny and the associated value must be the respective
                     price in any numeraire (only the ratio is used)
         :returns:   token difference amounts as dict {tknx: dx, tkny: dy}
         """
-        assert self.tknx in pvec, f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
-        assert self.tkny in pvec, f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
+        assert (
+            self.tknx in pvec
+        ), f"pvec must contain price for {self.tknx} [{pvec.keys()}]"
+        assert (
+            self.tkny in pvec
+        ), f"pvec must contain price for {self.tkny} [{pvec.keys()}]"
         p = pvec[self.tknx] / pvec[self.tkny]
         dx, dy, _ = self.dxdyfromp_f(p, ignorebounds=ignorebounds)
         return {self.tknx: dx, self.tkny: dy}
@@ -1476,7 +1514,7 @@ class ConstantProductCurve(CurveBase):
             y = self.k / x
         else:
             y = (self.k / x) ** self.eta
-        
+
         if ignorebounds:
             return y
         if not self.inrange(y, self.y_min, self.y_max):
@@ -1488,7 +1526,7 @@ class ConstantProductCurve(CurveBase):
         if self.is_constant_product():
             x = self.k / y
         else:
-            x = self.k / (y ** (1/self.eta))
+            x = self.k / (y ** (1 / self.eta))
         if ignorebounds:
             return x
         if not self.inrange(x, self.x_min, self.x_max):
@@ -1700,10 +1738,11 @@ class CPCContainer:
             return None
         pp = sum(c.pp for c in curves) / len(curves)
         return pp if pairo.isprimary else 1 / pp
-    
+
     PR_TUPLE = "tuple"
     PR_DICT = "dict"
     PR_DF = "df"
+
     def prices(self, result=None, *, inclpair=None, primary=None):
         """
         returns tuple or dictionary of the prices of all curves in the container
@@ -1712,28 +1751,33 @@ class CPCContainer:
         :inclpair:      if True, includes the pair in the dictionary
         :result:        what result to return (PR_TUPLE, PR_DICT, PR_DF)
         """
-        if primary is None: primary = True
-        if inclpair is None: inclpair = True
-        if result is None: result = self.PR_DICT
-        price_g = ((
+        if primary is None:
+            primary = True
+        if inclpair is None:
+            inclpair = True
+        if result is None:
+            result = self.PR_DICT
+        price_g = (
+            (
                 c.cid,
-                c.primaryp() if primary else c.p, 
-                c.pairo.primary if primary else c.pair
-            ) for c in self.curves
+                c.primaryp() if primary else c.p,
+                c.pairo.primary if primary else c.pair,
+            )
+            for c in self.curves
         )
-        
+
         if result == self.PR_TUPLE:
             if inclpair:
                 return tuple(price_g)
             else:
                 return tuple(r[1] for r in price_g)
-        
+
         if result == self.PR_DICT:
             if inclpair:
                 return {r[0]: (r[1], r[2]) for r in price_g}
             else:
                 return {r[0]: r[1] for r in price_g}
-        
+
         if result == self.PR_DF:
             df = pd.DataFrame.from_records(price_g, columns=["cid", "price", "pair"])
             df = df.set_index("cid")
@@ -1802,7 +1846,7 @@ class CPCContainer:
         if not asdict:
             return tokens_l
         return dict(tokens_l)
-    
+
     def pairs(self, *, standardize=True):
         """
         returns set of all pairs used by the curves
@@ -2176,8 +2220,10 @@ class CPCContainer:
     def bycid(self, cid):
         """returns curve by cid"""
         return self.curves_by_cid.get(cid, None)
-    
-    def bycids(self, include=None, *, endswith=None, exclude=None, asgenerator=None, ascc=None):
+
+    def bycids(
+        self, include=None, *, endswith=None, exclude=None, asgenerator=None, ascc=None
+    ):
         """
         returns curves by cids (as tuple, generator or CC object)
 
@@ -2195,15 +2241,19 @@ class CPCContainer:
             result = (c for c in self if not c.cid in exclude)
         else:
             if not include is None:
-                result = (self.curves_by_cid[cid] for cid in include if not cid in exclude)
+                result = (
+                    self.curves_by_cid[cid] for cid in include if not cid in exclude
+                )
             else:
-                result = (c for c in self if c.cid.endswith(endswith) and not c.cid in exclude)
+                result = (
+                    c for c in self if c.cid.endswith(endswith) and not c.cid in exclude
+                )
         return self._convert(result, asgenerator=asgenerator, ascc=ascc)
 
     def bycid0(self, cid0, **kwargs):
         """alias for bycids(endswith=cid0)"""
         return self.bycids(endswith=cid0, **kwargs)
-    
+
     def bypair(self, pair, *, directed=False, asgenerator=None, ascc=None):
         """returns all curves by (possibly directed) pair (as tuple, genator or CC object)"""
         result = (c for c in self if c.pair == pair)
@@ -2248,11 +2298,11 @@ class CPCContainer:
         """
         if not params:
             raise ValueError(f"no params given {params}")
-        
+
         params_t = tuple(params.items())
         if len(params_t) > 1:
             raise NotImplementedError(f"currently only one param allowed {params}")
-        
+
         pname, pvalue = params_t[0]
         if _inv:
             result = (c for c in self if c.P(pname) != pvalue)
@@ -2356,11 +2406,13 @@ class CPCContainer:
                         :PE_DATA:      prices, weights
         :returns:       price (quote per base)
         """
-        assert tknq is not None and tknb is not None or pair is not None, (
-            f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
-        )
-        assert not (not tknb is None and not pair is None), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
-        
+        assert (
+            tknq is not None and tknb is not None or pair is not None
+        ), f"must specify tknq, tknb or pair [{tknq}, {tknb}, {pair}]"
+        assert not (
+            not tknb is None and not pair is None
+        ), f"must not specify both tknq, tknb and pair [{tknq}, {tknb}, {pair}]"
+
         if not pair is None:
             tknb, tknq = pair.split("/")
         if tknq == tknb:
@@ -2409,7 +2461,7 @@ class CPCContainer:
 
         :tknqs:         list of quote tokens to calculate prices for
         :tknbs:         list of base tokens to calculate prices for
-        :triangulate:   tokens used as intermediate token for triangulation; if True, a standard 
+        :triangulate:   tokens used as intermediate token for triangulation; if True, a standard
                         token list is used; if None or False, no triangulation
         :unwrapsingle:  if there is only one quote token, a 1-d array is returned
         :pairs:         if True, returns the slashpairs instead of the prices
@@ -2421,7 +2473,7 @@ class CPCContainer:
         # NOTE: this code is relatively slow to compute, on the order of a few seconds
         # for go through the entire token list; the likely reason is that it keeps reestablishing
         # the CPCContainer objects whenever price_estimate is called; there may be a way to
-        # speed this up by smartly computing the container objects once and storing them 
+        # speed this up by smartly computing the container objects once and storing them
         # in a dictionary the is then passed to price_estimate.
         start_time = time.time()
         assert not tknqs is None, "tknqs must be set"
@@ -2436,22 +2488,28 @@ class CPCContainer:
         result = np.array(
             [
                 [
-                    self.price_estimate(tknb=b, tknq=q, raiseonerror=False, result=resulttp)
+                    self.price_estimate(
+                        tknb=b, tknq=q, raiseonerror=False, result=resulttp
+                    )
                     for b in tknbs
-                ] 
+                ]
                 for q in tknqs
             ]
         )
-        #print(f"[price_estimates] PAIRS [{time.time()-start_time:.2f}s]")
+        # print(f"[price_estimates] PAIRS [{time.time()-start_time:.2f}s]")
         flattened = result.flatten()
         nmissing = len([r for r in flattened if r is None])
         if verbose:
-            print(f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing")
+            print(
+                f"[price_estimates] pair estimates: {len(flattened)-nmissing} found, {nmissing} missing"
+            )
             if nmissing > 0 and not triangulate:
-                print(f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]")
+                print(
+                    f"[price_estimates] {nmissing} missing pairs may be triangulated, but triangulation disabled [{triangulate}]"
+                )
             if nmissing == 0 and triangulate:
                 print(f"[price_estimates] no missing pairs, triangulation not needed")
-        
+
         if triangulate and nmissing > 0:
             if triangulate is True:
                 triangulate = self.TRIANGTOKENS
@@ -2460,30 +2518,36 @@ class CPCContainer:
             if verbose:
                 print("[price_estimates] triangulation tokens", triangulate)
             for ib, b in enumerate(tknbs):
-                #print(f"TOKENB={b:22} [{time.time()-start_time:.4f}s]")
+                # print(f"TOKENB={b:22} [{time.time()-start_time:.4f}s]")
                 for iq, q in enumerate(tknqs):
-                    #print(f" TOKENQ={q:21} [{time.time()-start_time:.4f}s]")
+                    # print(f" TOKENQ={q:21} [{time.time()-start_time:.4f}s]")
                     if result[iq][ib] is None:
                         result1 = []
                         for tkn in triangulate:
-                            #print(f"  TKN={tkn:23} [{time.time()-start_time:.4f}s]")
-                            #print(f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}")
-                            b_tkn = self.price_estimate(tknb=b, tknq=tkn, raiseonerror=False)
-                            q_tkn = self.price_estimate(tknb=q, tknq=tkn, raiseonerror=False)
-                            #print(f"[price_estimates] triangulating {b}/{tkn} = {b_tkn}, {q}/{tkn} = {q_tkn}")
+                            # print(f"  TKN={tkn:23} [{time.time()-start_time:.4f}s]")
+                            # print(f"[price_estimates] triangulating tknb={b} tknq={q} via {tkn}")
+                            b_tkn = self.price_estimate(
+                                tknb=b, tknq=tkn, raiseonerror=False
+                            )
+                            q_tkn = self.price_estimate(
+                                tknb=q, tknq=tkn, raiseonerror=False
+                            )
+                            # print(f"[price_estimates] triangulating {b}/{tkn} = {b_tkn}, {q}/{tkn} = {q_tkn}")
                             if not b_tkn is None and not q_tkn is None:
                                 if verbose:
-                                    print(f"[price_estimates] triangulated {b}/{q} via {tkn} [={b_tkn/q_tkn}]")
+                                    print(
+                                        f"[price_estimates] triangulated {b}/{q} via {tkn} [={b_tkn/q_tkn}]"
+                                    )
                                 result1 += [b_tkn / q_tkn]
                                 if stopatfirst:
-                                    #print(f"[price_estimates] stop at first")
+                                    # print(f"[price_estimates] stop at first")
                                     break
                                 # else:
                                 #     print(f"[price_estimates] continue {stopatfirst}")
                         result2 = np.mean(result1) if len(result1) > 0 else None
-                        #print(f"[price_estimates] final result {b}/{q} = {result2} [{len(result1)}]")
+                        # print(f"[price_estimates] final result {b}/{q} = {result2} [{len(result1)}]")
                         result[iq][ib] = result2
-        
+
         flattened = result.flatten()
         nmissing = len([r for r in flattened if r is None])
         if verbose:
@@ -2494,9 +2558,11 @@ class CPCContainer:
                     for iq, q in enumerate(tknqs)
                     if result[iq][ib] is None
                 }
-                print(f"[price_estimates] after triangulation {nmissing} missing", missing)
+                print(
+                    f"[price_estimates] after triangulation {nmissing} missing", missing
+                )
             else:
-                print("[price_estimates] no missing pairs after triangulation")  
+                print("[price_estimates] no missing pairs after triangulation")
         if raiseonerror:
             missing = {
                 f"{b}/{q}"
@@ -2513,7 +2579,7 @@ class CPCContainer:
                     len(missing),
                 )
 
-        #print(f"[price_estimates] DONE [{time.time()-start_time:.2f}s]")
+        # print(f"[price_estimates] DONE [{time.time()-start_time:.2f}s]")
         if unwrapsingle and len(tknqs) == 1:
             result = result[0]
         return result
@@ -2778,10 +2844,10 @@ class CPCInverter:
     @property
     def p(self):
         return 1 / self.curve.p
-    
+
     def P(self, *args, **kwargs):
         return self.curve.P(*args, **kwargs)
-    
+
     @property
     def fee(self):
         return self.curve.fee
@@ -2805,12 +2871,12 @@ class CPCInverter:
     @property
     def pair(self):
         return f"{self.tknb}/{self.tknq}"
-    
+
     @property
     def primary(self):
         "alias for self.pairo.primary [pair]"
         return self.pairo.primary
-    
+
     @property
     def pairp(self):
         "prety pair (without the -xxx part)"
@@ -2822,7 +2888,7 @@ class CPCInverter:
         tokens = self.primary.split("/")
         tokens = [t.split("-")[0] for t in tokens]
         return "/".join(tokens)
-    
+
     @property
     def x_min(self):
         return self.curve.y_min
@@ -2896,5 +2962,3 @@ class CPCInverter:
 
     # TOKENS_NOETH=TOKENS_NOETH
     # TOKENIDS=TOKENIDS
-
-

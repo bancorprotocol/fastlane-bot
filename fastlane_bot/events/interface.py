@@ -56,6 +56,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -205,7 +206,7 @@ class QueryInterface:
             "carbon_v1",
             "pancakeswap_v2",
             "pancakeswap_v3",
-            "balancer"
+            "balancer",
         ]
         keys = [
             "liquidity",
@@ -292,7 +293,7 @@ class QueryInterface:
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
-        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
         uniswap_v2_unmapped = [
             pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
         ]
@@ -301,9 +302,6 @@ class QueryInterface:
             pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
-
-
-
 
     def remove_faulty_token_pools(self) -> None:
         """
@@ -343,7 +341,7 @@ class QueryInterface:
             The cleaned up token key
 
         """
-        split_key = token_key.split("-", 2)
+        split_key = str(token_key).split("-", 2)
         return (
             f"{split_key[0]}_{split_key[1]}-{split_key[2]}"
             if len(split_key) > 2
@@ -354,12 +352,19 @@ class QueryInterface:
         """
         Cleanup token keys in state
         """
+        remove_idxs = []
         for idx, pool in enumerate(self.state):
             key0 = self.cleanup_token_key(pool["tkn0_key"])
             key1 = self.cleanup_token_key(pool["tkn1_key"])
-            self.state[idx]["tkn0_key"] = key0
-            self.state[idx]["tkn1_key"] = key1
-            self.state[idx]["pair_name"] = key0 + "/" + key1
+            try:
+                self.state[idx]["tkn0_key"] = key0
+                self.state[idx]["tkn1_key"] = key1
+                self.state[idx]["pair_name"] = f"{key0}/{key1}"
+            except Exception as e:
+                self.cfg.logger.warning(f"Exception: {e}")
+                self.cfg.logger.warning(f"pair_name: {key0}/{key1}")
+                remove_idxs.append(idx)
+        self.state = [pool for i, pool in enumerate(self.state) if i not in remove_idxs]
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
@@ -482,7 +487,7 @@ class QueryInterface:
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
-                    "tkn7_weight"
+                    "tkn7_weight",
                 ]
             },
         )
