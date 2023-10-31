@@ -15,6 +15,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
+from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -43,7 +44,8 @@ from fastlane_bot.events.utils import (
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
-    read_csv_file, handle_tokens_csv,
+    read_csv_file,
+    handle_tokens_csv,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -323,6 +325,8 @@ def main(
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
+
+    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['key'].tolist()[0]}")
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
@@ -712,17 +716,12 @@ def run(
                 )
                 last_block_queried = current_block
 
-
-
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
             time.sleep(polling_interval)
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
-
-
-
 
 
 if __name__ == "__main__":

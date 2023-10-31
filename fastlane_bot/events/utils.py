@@ -1800,6 +1800,4 @@ def handle_tokens_csv(mgr):
             except FileNotFoundError:
                 pass
 
-        mgr.cfg.logger.info(
-            f"Updated token data with {len(extra_info)} new tokens"
-        )
+        mgr.cfg.logger.info(f"Updated token data with {len(extra_info)} new tokens")
