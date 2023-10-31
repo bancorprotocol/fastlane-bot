@@ -1,11 +1,12 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -69,7 +70,7 @@ def run_command(arb_mode, expected_log_line):
         "python",
         main_script_path,
         f"--arb_mode={arb_mode}",
-        "--default_min_profit_bnt=60",
+        "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
@@ -94,6 +95,7 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test Data Validation For b3_two_hop
 
+# + is_executing=true
 expected_log_line = "Transactions will be required to pass data validation for"
 arb_mode = "b3_two_hop"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)

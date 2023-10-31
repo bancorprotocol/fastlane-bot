@@ -43,6 +43,7 @@ from fastlane_bot.events.utils import (
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
+    read_csv_file, handle_tokens_csv,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -314,8 +315,17 @@ def main(
         tenderly_fork_id,
     )
     # TODO: add blockchain support
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
+
     # Format the flashloan tokens
-    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -616,6 +626,8 @@ def run(
                     f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
                 )
 
+            handle_tokens_csv(mgr)
+
             # Handle subsequent iterations
             handle_subsequent_iterations(
                 arb_mode=arb_mode,
@@ -700,34 +712,7 @@ def run(
                 )
                 last_block_queried = current_block
 
-            tokens_filepath = os.path.normpath(
-                f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
-            )
-            token_data = pd.read_csv(tokens_filepath, index_col=[0])
-            extra_info = glob(
-                os.path.normpath(
-                    f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
-                )
-            )
-            if len(extra_info) > 0:
-                extra_info_df = pd.concat(
-                    [pd.read_csv(f) for f in extra_info], ignore_index=True
-                )
-                token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
-                token_data = token_data.drop_duplicates(subset=["address"])
-                token_data.to_csv(tokens_filepath)
-                mgr.tokens = token_data.to_dict(orient="records")
 
-                # delete all files in token_detail
-                for f in extra_info:
-                    try:
-                        os.remove(f)
-                    except FileNotFoundError:
-                        pass
-
-                mgr.cfg.logger.info(
-                    f"Updated token data with {len(extra_info)} new tokens"
-                )
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
@@ -735,6 +720,9 @@ def run(
             if timeout is not None and time.time() - start_timeout > timeout:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 break
+
+
+
 
 
 if __name__ == "__main__":

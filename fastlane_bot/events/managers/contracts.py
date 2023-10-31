@@ -274,7 +274,7 @@ class ContractsManager(BaseManager):
         tokens_filepath = os.path.normpath(
             f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv"
         )
-        token_data = pd.read_csv(tokens_filepath, index_col=[0])
+        token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
             f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv"
         )
@@ -378,7 +378,8 @@ class ContractsManager(BaseManager):
 
         ts = pd.Timestamp.now()
         row.to_csv(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"
+            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv",
+            index=False,
         )
         # try:
         #     row.to_csv("token_details.csv")

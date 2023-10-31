@@ -13,6 +13,7 @@ import random
 import sys
 import time
 from _decimal import Decimal
+from glob import glob
 from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
@@ -269,7 +270,7 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
-    #token_path = os.path.normpath(f"fastlane_bot/data/")
+    # token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -295,7 +296,9 @@ def get_static_data(
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
-        df = pd.DataFrame(columns=["key","symbol","name","address","decimals","blockchain"])
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
 
@@ -416,7 +419,9 @@ def handle_target_tokens(
     return target_tokens
 
 
-def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
+def handle_flashloan_tokens(
+    cfg: Config, flashloan_tokens: str, tokens: pd.DataFrame
+) -> List[str]:
     """
     Handles the flashloan tokens parameter.
 
@@ -433,11 +438,15 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
         A list of flashloan tokens to fetch data for.
     """
     flashloan_tokens = flashloan_tokens.split(",")
-    # flashloan_tokens = [
-    #     QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
-    # ]
+    flashloan_tokens = [
+        QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
+    ]
 
-    flashloan_tokens = [key for tkn in flashloan_tokens for key in cfg.CHAIN_FLASHLOAN_TOKENS.keys() if tkn in key]
+    unique_tokens = len(tokens["key"].unique())
+    cfg.logger.info(f"unique_tokens: {unique_tokens}")
+    flashloan_tokens = [
+        tkn for tkn in flashloan_tokens if tkn in tokens["key"].unique()
+    ]
 
     # Log the flashloan tokens
     cfg.logger.info(
@@ -482,12 +491,18 @@ def get_config(
 
     if tenderly_fork_id:
         cfg = Config.new(
-            config=Config.CONFIG_TENDERLY, loglevel=loglevel, logging_path=logging_path, blockchain=blockchain
+            config=Config.CONFIG_TENDERLY,
+            loglevel=loglevel,
+            logging_path=logging_path,
+            blockchain=blockchain,
         )
         cfg.logger.info("Using Tenderly config")
     else:
         cfg = Config.new(
-            config=Config.CONFIG_MAINNET, loglevel=loglevel, logging_path=logging_path, blockchain=blockchain
+            config=Config.CONFIG_MAINNET,
+            loglevel=loglevel,
+            logging_path=logging_path,
+            blockchain=blockchain,
         )
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
@@ -1611,7 +1626,8 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
     """
     # Verify MIN_PROFIT_BNT is set and respected
     assert (
-        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
+        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
+        == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
 
@@ -1756,3 +1772,34 @@ def handle_static_pools_update(mgr: Any):
             )
             attr_name = f"{ex}_pools"
             mgr.static_pools[attr_name] = exchange_pools
+
+
+def handle_tokens_csv(mgr):
+    tokens_filepath = os.path.normpath(
+        f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
+    )
+    token_data = pd.read_csv(tokens_filepath, index_col=[0])
+    extra_info = glob(
+        os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
+        )
+    )
+    if len(extra_info) > 0:
+        extra_info_df = pd.concat(
+            [pd.read_csv(f) for f in extra_info], ignore_index=True
+        )
+        token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
+        token_data = token_data.drop_duplicates(subset=["address"])
+        token_data.to_csv(tokens_filepath)
+        mgr.tokens = token_data.to_dict(orient="records")
+
+        # delete all files in token_detail
+        for f in extra_info:
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
+
+        mgr.cfg.logger.info(
+            f"Updated token data with {len(extra_info)} new tokens"
+        )
