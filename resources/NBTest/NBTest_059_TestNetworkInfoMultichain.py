@@ -48,6 +48,8 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
+# # Multichain Network Configuration Test [NBTest059]
+
 cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="coinbase_base")
 
 # ## Config_Test_Multichain
