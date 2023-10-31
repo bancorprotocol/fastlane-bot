@@ -31,6 +31,7 @@ from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
 from dataclasses import dataclass, asdict, field
 from fastlane_bot.testing import *
+from fastlane_bot.config.network import *
 import math
 import json
 from typing import Dict
@@ -62,8 +63,6 @@ assert cfg.STABLECOIN_KEY in "USDC-2913", f"[TestGenerateNetworkInfo] STABLECOIN
 # ## Multichain_Tests
 
 # +
-from fastlane_bot.config.network import *
-
 exchange_df = get_multichain_addresses('coinbase_base')
 
 fork_map = get_fork_map(df=exchange_df, fork_name="uniswap_v3")
