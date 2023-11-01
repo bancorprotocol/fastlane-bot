@@ -6,6 +6,8 @@ Contains the manager module for handling contract functionality within the event
 Licensed under MIT
 """
 import os.path
+import random
+from datetime import datetime
 from glob import glob
 from typing import Dict, Any, Tuple, List
 
@@ -276,7 +278,7 @@ class ContractsManager(BaseManager):
         )
         token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv"
+            os.path.normpath(f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv")
         )
         if len(extra_info) > 0:
             extra_info_df = pd.concat(
@@ -335,7 +337,10 @@ class ContractsManager(BaseManager):
             The token info.
 
         """
-        symbol = contract.functions.symbol().call()
+        try:
+            symbol = contract.functions.symbol().call()
+        except OverflowError:
+            raise self.FailedToGetTokenDetailsException(addr=addr)
         key = self.get_tkn_key(symbol=symbol, addr=addr)
 
         if key in token_data["key"].unique():
@@ -363,22 +368,24 @@ class ContractsManager(BaseManager):
         try:
             self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
         except UnicodeEncodeError:
-            return
-        # next_index = len(token_data.index)
+            raise self.FailedToGetTokenDetailsException(addr=addr)
+
         row = pd.DataFrame(new_data, columns=token_data.columns, index=[1])
-        if not os.path.exists(
+        if not os.path.exists(os.path.normpath(
             f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
-        ):
+        )):
             try:
-                os.mkdir(
+                os.mkdir(os.path.normpath(
                     f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
-                )
+                ))
             except FileExistsError:
                 pass
 
-        ts = pd.Timestamp.now()
-        row.to_csv(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv",
+        collision_safety = str(random.randrange(1, 1000))
+        ts = datetime.now().strftime("%d-%H-%M-%S-%f")
+        ts += collision_safety
+        row.to_csv(os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"),
             index=False,
         )
         # try:
