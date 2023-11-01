@@ -1778,7 +1778,7 @@ def handle_tokens_csv(mgr):
     tokens_filepath = os.path.normpath(
         f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
     )
-    token_data = pd.read_csv(tokens_filepath, index_col=[0])
+    token_data = pd.read_csv(tokens_filepath)
     extra_info = glob(
         os.path.normpath(
             f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
@@ -1790,7 +1790,7 @@ def handle_tokens_csv(mgr):
         )
         token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
         token_data = token_data.drop_duplicates(subset=["address"])
-        token_data.to_csv(tokens_filepath)
+        token_data.to_csv(tokens_filepath, index=False)
         mgr.tokens = token_data.to_dict(orient="records")
 
         # delete all files in token_detail
