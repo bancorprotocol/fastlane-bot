@@ -58,22 +58,21 @@ load_dotenv()
     help="The logging level.",
 )
 def main(
-        logging_path: str,
-        loglevel: str,
-        polling_interval: int,
-        config: str,
-        n_jobs: int,
-        flashloan_tokens: str = "ETH",
-        exchanges: str = "bancor_v3",
-        alchemy_max_block_fetch: int = 20,
-        static_pool_data_filename: str = "static_pool_data",
-        static_pool_data_sample_sz: str = "max",
-        limit_bancor3_flashloan_tokens: bool = False,
-        default_min_profit_bnt: int = 0,
-        timeout: int = 0,
-        target_tokens: str = None,
-        replay_from_block: int = None,
-        blockchain: str = "ethereum",
+    logging_path: str,
+    loglevel: str,
+    polling_interval: int,
+    config: str,
+    n_jobs: int,
+    flashloan_tokens: str = "ETH",
+    exchanges: str = "bancor_v3",
+    alchemy_max_block_fetch: int = 20,
+    static_pool_data_filename: str = "static_pool_data",
+    static_pool_data_sample_sz: str = "max",
+    limit_bancor3_flashloan_tokens: bool = False,
+    default_min_profit_bnt: int = 0,
+    timeout: int = 0,
+    target_tokens: str = None,
+    replay_from_block: int = None,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -97,7 +96,6 @@ def main(
         replay_from_block (int): The block number to replay from. (For debugging / testing)
 
     """
-    base_path = f"fastlane_bot/data/blockchain_data/{blockchain}"
 
     # Set config
     loglevel = get_loglevel(loglevel)
@@ -156,13 +154,8 @@ def main(
     )
 
     # Get the static pool data, tokens and uniswap v2 event mappings
-    (
-        static_pool_data,
-        tokens,
-        uniswap_v2_event_mappings,
-        uniswap_v3_event_mappings,
-    ) = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz, base_path
+    static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
+        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
     )
 
     target_token_addresses = handle_target_token_addresses(
@@ -182,7 +175,6 @@ def main(
         SUPPORTED_EXCHANGES=exchanges,
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
-        uniswap_v3_event_mappings=uniswap_v3_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,
