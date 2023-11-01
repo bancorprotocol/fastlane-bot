@@ -754,7 +754,7 @@ class CarbonBot(CarbonBotBase):
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
         best_profit_fl_token = best_profit
-        if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY: # TODO generalize to native gas token
+        if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY:
             try:
                 fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token_with_weth}")[0].p))
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
@@ -767,7 +767,7 @@ class CarbonBot(CarbonBotBase):
         else:
             best_profit_eth = best_profit_fl_token
 
-        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))  ## TODO dependency on USDC
+        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 

@@ -184,18 +184,18 @@ class ConfigNetwork(ConfigBase):
     #######################################################################################
     BANCOR_V2_NAME = "bancor_v2"
     BANCOR_V3_NAME = "bancor_v3"
+    CARBON_POL_NAME = "bancor_pol"
     UNISWAP_V2_NAME = "uniswap_v2"
     UNISWAP_V3_NAME = "uniswap_v3"
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
     CARBON_V1_NAME = "carbon_v1"
     BANCOR_POL_NAME = "bancor_pol"
-
     BALANCER_NAME = "balancer"
-
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
+    SHIBA_V2_NAME = "shiba_v2"
 
     # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
@@ -210,9 +210,6 @@ class ConfigNetwork(ConfigBase):
     SYNTHSWAP_V3_NAME = "synthswap_v3"
     SMARDEX_V2_NAME = "smardex_v2"
     # SMARDEX_V3_NAME = "smardex_v3" # This uses Algebra DEX
-
-    CARBON_POL_NAME = "bancor_pol"
-    SHIBA_V2_NAME = "shiba_v2"
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 

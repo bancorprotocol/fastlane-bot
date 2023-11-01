@@ -19,7 +19,6 @@ load_dotenv()
 TENDERLY_FORK_ID = os.environ.get("TENDERLY_FORK_ID")
 if TENDERLY_FORK_ID is None:
     TENDERLY_FORK_ID = ''
-# WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
 @dataclass
 class Config():
@@ -49,14 +48,6 @@ class Config():
     LL_ERR = S.LOGLEVEL_ERROR
 
     SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2', 'bancor_pol', 'pancakeswap_v2', 'pancakeswap_v3']
-    # connection = EthereumNetwork(
-    #     network_id=NETWORK_ID,
-    #     network_name=NETWORK_NAME,
-    #     provider_url=PROVIDER_URL,
-    #     provider_name="alchemy",
-    # )
-    # connection.connect_network()
-    # w3 = connection.web3
 
     @classmethod
     def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, **kwargs):
