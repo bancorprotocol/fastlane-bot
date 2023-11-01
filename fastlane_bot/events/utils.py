@@ -408,7 +408,7 @@ def handle_target_tokens(
             for token in flashloan_tokens:
                 if token not in target_tokens:
                     cfg.logger.warning(
-                        f"Falshloan token {token} not in target tokens. Adding it to target tokens."
+                        f"Flashloan token {token} not in target tokens. Adding it to target tokens."
                     )
                     target_tokens.append(token)
 
