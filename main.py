@@ -353,34 +353,34 @@ def main(
         
         Starting fastlane bot with the following configuration:
         
-        cache_latest_only: {cache_latest_only}
-        backdate_pools: {backdate_pools}
+        logging_path: {logging_path}
         arb_mode: {arb_mode}
-        flashloan_tokens: {flashloan_tokens}
-        n_jobs: {n_jobs}
+        blockchain: {blockchain}
+        default_min_profit_gas_token: {default_min_profit_gas_token}
         exchanges: {exchanges}
-        polling_interval: {polling_interval}
+        flashloan_tokens: {flashloan_tokens}
+        target_tokens: {target_tokens}
+        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
+        loglevel: {loglevel}
+        backdate_pools: {backdate_pools}
         alchemy_max_block_fetch: {alchemy_max_block_fetch}
         static_pool_data_filename: {static_pool_data_filename}
+        cache_latest_only: {cache_latest_only}
+        n_jobs: {n_jobs}
+        polling_interval: {polling_interval}
         reorg_delay: {reorg_delay}
-        logging_path: {logging_path}
-        loglevel: {loglevel}
         static_pool_data_sample_sz: {static_pool_data_sample_sz}
         use_cached_events: {use_cached_events}
         run_data_validator: {run_data_validator}
         randomizer: {randomizer}
         limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
-        default_min_profit_gas_token: {default_min_profit_gas_token}
         timeout: {timeout}
-        target_tokens: {target_tokens}
         replay_from_block: {replay_from_block}
         tenderly_fork_id: {tenderly_fork_id}
         tenderly_event_exchanges: {tenderly_event_exchanges}
         increment_time: {increment_time}
         increment_blocks: {increment_blocks}
-        blockchain: {blockchain}
         pool_data_update_frequency: {pool_data_update_frequency}
-        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
