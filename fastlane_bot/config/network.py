@@ -266,7 +266,7 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [100, 500, 2500, 3000, 10000]
+    UNIV3_FEE_LIST = [80, 100, 450, 500, 2500, 3000, 10000]
     MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
     DEFAULT_GAS = 950_000
     DEFAULT_GAS_PRICE = 0
