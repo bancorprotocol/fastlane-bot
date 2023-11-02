@@ -388,19 +388,5 @@ class ContractsManager(BaseManager):
             f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"),
             index=False,
         )
-        # try:
-        #     row.to_csv("token_details.csv")
-        # except Exception:
-        #     # if the row fails to write to CSV, skip this token
-        #     return (
-        #         symbol, decimals
-        #     ) if (symbol is not None and type(decimals) == int) else (None, None)
-        # try:
-        #     token_data = pd.concat([token_data, row], ignore_index=True)
-        #     token_data.to_csv(tokens_filepath)
-        # except Exception:
-        #     # If CSV fails to update, we still return the token symbol & decimals
-        #     return (
-        #         symbol, decimals
-        #     )
+
         return (symbol, decimals)
