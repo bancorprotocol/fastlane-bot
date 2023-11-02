@@ -33,7 +33,7 @@ class SushiswapV2(Exchange):
         return [contract.events.Sync]
 
     def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        return "0.0025", 0.0025
+        return "0.003", 0.003
 
     def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         return contract.functions.token0().call()
