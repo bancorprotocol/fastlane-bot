@@ -5,6 +5,10 @@ Runs the fastlane bot in pool shutdown mode.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os
+
+import pandas as pd
+
 from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 
 try:
@@ -31,7 +35,7 @@ from fastlane_bot.events.utils import (
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    handle_target_token_addresses,
+    handle_target_token_addresses, read_csv_file,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 
@@ -73,6 +77,7 @@ def main(
     timeout: int = 0,
     target_tokens: str = None,
     replay_from_block: int = None,
+    blockchain: str = "ethereum",
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -102,14 +107,24 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        default_min_profit_bnt=default_min_profit_bnt,
+        default_min_profit_gas_token=default_min_profit_bnt,
         limit_bancor3_flashloan_tokens=limit_bancor3_flashloan_tokens,
         loglevel=loglevel,
         logging_path=logging_path,
+        blockchain="ethereum",
     )
 
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
+
     # Format the flashloan tokens
-    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -154,8 +169,11 @@ def main(
     )
 
     # Get the static pool data, tokens and uniswap v2 event mappings
-    static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+    (static_pool_data,
+    tokens,
+    uniswap_v2_event_mappings,
+    uniswap_v3_event_mappings) = get_static_data(
+        cfg=cfg, exchanges=exchanges, blockchain=blockchain, static_pool_data_filename=static_pool_data_filename, static_pool_data_sample_sz=static_pool_data_sample_sz
     )
 
     target_token_addresses = handle_target_token_addresses(
