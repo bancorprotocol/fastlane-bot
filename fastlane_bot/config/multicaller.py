@@ -5,11 +5,13 @@ This is the multicaller module.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 
 import web3
-from eth_abi import decode_abi
+from eth_abi import decode
+from web3 import Web3
 
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
@@ -138,7 +140,10 @@ class MultiCaller(ContextManager):
             output_types = get_output_types_from_abi(self.contract.abi, fn_name)
             output_types_list.append(output_types)
 
-        w3 = self.contract.web3
+        WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+        provider_url = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+        w3 = Web3(Web3.HTTPProvider(provider_url))
+
         encoded_data = w3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
@@ -150,7 +155,7 @@ class MultiCaller(ContextManager):
         encoded_data = encoded_data[1]
         decoded_data_list = []
         for output_types, encoded_output in zip(output_types_list, encoded_data):
-            decoded_data = decode_abi(output_types, encoded_output)
+            decoded_data = decode(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]

@@ -957,7 +957,7 @@ class CarbonBot(CarbonBotBase):
 
         # Get the flashloan amount and token address
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-        flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
+        flashloan_token_address = self.ConfigObj.w3.to_checksum_address(
             self.db.get_token(key=fl_token).address
         )
 

@@ -46,19 +46,19 @@ class AutomaticPoolShutdown:
     def __post_init__(self):
         self.tx_helpers = TxHelpers(ConfigObj=self.mgr.cfg)
         self.bancor_network_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_NETWORK_ADDRESS
             ),
             abi=BANCOR_V3_NETWORK_ABI,
         )
         self.bancor_settings_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_NETWORK_SETTINGS
             ),
             abi=BANCOR_V3_NETWORK_SETTINGS,
         )
         self.pool_collection_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_POOL_COLLECTOR_ADDRESS
             ),
             abi=BANCOR_V3_POOL_COLLECTION_ABI,
@@ -135,7 +135,7 @@ class AutomaticPoolShutdown:
         for tkn in self.active_pools.keys():
             if tkn == self.mgr.cfg.ETH_ADDRESS:
                 eth_balance = self.mgr.web3.eth.get_balance(
-                    self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_VAULT)
+                    self.mgr.web3.to_checksum_address(self.mgr.cfg.BANCOR_V3_VAULT)
                 )
                 if eth_balance > 0 and eth_balance > self.active_pools[tkn]:
                     return tkn
@@ -164,7 +164,7 @@ class AutomaticPoolShutdown:
         tkn_contract = self.mgr.get_or_create_token_contracts(
             self.mgr.web3,
             self.mgr.erc20_contracts,
-            self.mgr.web3.toChecksumAddress(tkn),
+            self.mgr.web3.to_checksum_address(tkn),
         )
         return tkn_contract.functions.balanceOf(self.mgr.cfg.BANCOR_V3_VAULT).call()
 
@@ -220,7 +220,7 @@ class AutomaticPoolShutdown:
 
         try:
             return self.bancor_network_contract.functions.withdrawPOL(
-                self.mgr.web3.toChecksumAddress(tkn)
+                self.mgr.web3.to_checksum_address(tkn)
             ).build_transaction(
                 self.tx_helpers.build_tx(
                     base_gas_price=gas_price,
@@ -268,7 +268,7 @@ class AutomaticPoolShutdown:
             int(split2[0]) * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET
         )
         return self.bancor_network_contract.functions.withdrawPOL(
-            self.mgr.web3.toChecksumAddress(tkn)
+            self.mgr.web3.to_checksum_address(tkn)
         ).build_transaction(
             self.tx_helpers.build_tx(
                 base_gas_price=split_base_fee,

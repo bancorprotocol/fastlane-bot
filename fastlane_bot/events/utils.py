@@ -564,14 +564,14 @@ def get_event_filters(
 
     # Get for exchanges except POL contract
     by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
+        delayed(event.create_filter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
         if event.__name__ not in bancor_pol_events
     )
 
     # Get all events since the beginning of time for Bancor POL contract
     max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=0, toBlock="latest")
+        delayed(event.create_filter)(fromBlock=0, toBlock="latest")
         for event in mgr.events
         if event.__name__ in bancor_pol_events
     )
@@ -670,7 +670,7 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
 
     """
     Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.update)(event=event) for event in latest_events
+        delayed(mgr.update_from_event)(event=event) for event in latest_events
     )
 
 
@@ -1201,14 +1201,14 @@ def get_start_block(
         ), replay_from_block
     elif mgr.tenderly_fork_id:
         # connect to the Tenderly fork and get the latest block number
-        from_block = mgr.w3_tenderly.eth.blockNumber
+        from_block = mgr.w3_tenderly.eth.block_number
         return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
             else from_block - reorg_delay - alchemy_max_block_fetch
         ), from_block
     else:
-        current_block = mgr.web3.eth.blockNumber
+        current_block = mgr.web3.eth.block_number
         return (
             (
                 max(block["last_updated_block"] for block in mgr.pool_data)
@@ -1237,7 +1237,7 @@ def get_tenderly_block_number(tenderly_fork_id: str) -> int:
     """
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
     web3 = Web3(provider)
-    return web3.eth.blockNumber
+    return web3.eth.block_number
 
 
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
@@ -1349,7 +1349,7 @@ def set_network_connection_to_tenderly(
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     if tenderly_fork_id and not forked_from_block:
-        forked_from_block = mgr.cfg.w3.eth.blockNumber
+        forked_from_block = mgr.cfg.w3.eth.block_number
 
     assert (
         mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
@@ -1725,11 +1725,11 @@ def get_current_block(
 
     """
     if not replay_from_block and not tenderly_fork_id:
-        current_block = mgr.web3.eth.blockNumber - reorg_delay
+        current_block = mgr.web3.eth.block_number - reorg_delay
     elif last_block == 0 and replay_from_block:
         current_block = replay_from_block - reorg_delay
     elif tenderly_fork_id:
-        current_block = mgr.w3_tenderly.eth.blockNumber
+        current_block = mgr.w3_tenderly.eth.block_number
     else:
         current_block = last_block + 1
     return current_block

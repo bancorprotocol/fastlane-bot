@@ -93,6 +93,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
+        self.async_w3 = self.connection.async_web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
         if network.NETWORK in N.NETWORK_ETHEREUM:
@@ -105,9 +106,24 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=CARBON_CONTROLLER_ABI,
             )
             self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.toChecksumAddress(network.FASTLANE_CONTRACT_ADDRESS),
+                address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
+
+            # init the async contracts
+            self.ASYNC_BANCOR_NETWORK_INFO_CONTRACT = self.async_w3.eth.contract(
+                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                abi=BANCOR_V3_NETWORK_INFO_ABI,
+            )
+            self.ASYNC_CARBON_CONTROLLER_CONTRACT = self.async_w3.eth.contract(
+                address=network.CARBON_CONTROLLER_ADDRESS,
+                abi=CARBON_CONTROLLER_ABI,
+            )
+            self.ASYNC_BANCOR_ARBITRAGE_CONTRACT = self.async_w3.eth.contract(
+                address=self.async_w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
+                abi=FAST_LANE_CONTRACT_ABI,
+            )
+
             reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
             self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
@@ -137,6 +153,7 @@ class _ConfigProviderTenderly(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
+        self.async_w3 = self.connection.async_web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
         self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
@@ -148,7 +165,21 @@ class _ConfigProviderTenderly(ConfigProvider):
             abi=CARBON_CONTROLLER_ABI,
         )
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-            address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
+            address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
+
+        # init the async contracts
+        self.ASYNC_BANCOR_NETWORK_INFO_CONTRACT = self.async_w3.eth.contract(
+            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
+            abi=BANCOR_V3_NETWORK_INFO_ABI,
+        )
+        self.ASYNC_CARBON_CONTROLLER_CONTRACT = self.async_w3.eth.contract(
+            address=N.CARBON_CONTROLLER_ADDRESS,
+            abi=CARBON_CONTROLLER_ABI,
+        )
+        self.ASYNC_BANCOR_ARBITRAGE_CONTRACT = self.async_w3.eth.contract(
+            address=self.async_w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
         reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
@@ -180,6 +211,7 @@ class _ConfigProviderUnitTest(ConfigProvider):
         #raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
+        self.async_w3 = None
         self.BANCOR_NETWORK_INFO_CONTRACT = None
         self.CARBON_CONTROLLER_CONTRACT = None
         self.BANCOR_ARBITRAGE_CONTRACT = None

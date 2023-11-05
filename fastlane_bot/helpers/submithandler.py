@@ -15,7 +15,6 @@ import requests
 from eth_utils import to_hex
 from web3._utils.threads import Timeout
 from web3._utils.transactions import fill_nonce
-from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
 
@@ -24,6 +23,7 @@ from .routehandler import RouteStruct
 from ..data.abi import ERC20_ABI, FAST_LANE_CONTRACT_ABI
 from fastlane_bot.config import Config
 
+ContractFunction = Any
 
 @dataclass
 class TxSubmitHandlerBase:
@@ -256,9 +256,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return {
             "gasPrice": self.ConfigObj.DEFAULT_GAS_PRICE,
             "gas": self.ConfigObj.DEFAULT_GAS,
-            "from": self.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS),
+            "from": self.w3.to_checksum_address(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS),
             "nonce": self.w3.eth.get_transaction_count(
-                self.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS)
+                self.w3.to_checksum_address(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS)
             ),
         }
 
@@ -290,7 +290,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         print(f"self.ConfigObj.network: {self.ConfigObj.network}")
 
         self.arb_contract = self.w3.eth.contract(
-            address=self.w3.toChecksumAddress(
+            address=self.w3.to_checksum_address(
                 self.ConfigObj.network.FASTLANE_CONTRACT_ADDRESS
             ),
             abi=FAST_LANE_CONTRACT_ABI,
@@ -298,7 +298,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         print(
             f"Submitting transaction to Tenderly with endpoint_uri: {self.ConfigObj.w3.provider.endpoint_uri}"
         )
-        address = self.ConfigObj.w3.toChecksumAddress(
+        address = self.ConfigObj.w3.to_checksum_address(
             self.ConfigObj.BINANCE14_WALLET_ADDRESS
         )
         return self.arb_contract.functions.flashloanAndArb(

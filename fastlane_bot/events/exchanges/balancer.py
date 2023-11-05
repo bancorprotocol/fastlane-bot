@@ -36,44 +36,40 @@ class Balancer(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.AuthorizerChanged]
 
-    def get_fee(self, pool_id: str, contract: Contract) -> Tuple[str, float]:
+    async def get_fee(self, pool_id: str, contract: Contract) -> Tuple[str, float]:
         pool = self.get_pool(pool_id)
-        fee, fee_float = (
-            (pool.state["fee"], pool.state["fee_float"])
-            if pool
-            else (
-                contract.functions.getSwapFeePercentage().call(),
-                float(contract.caller.getSwapFeePercentage()) / 1e18,
-            )
-        )
+        if pool:
+            fee, fee_float = pool.state["fee"], pool.state["fee_float"]
+        else:
+            fee = await contract.functions.getSwapFeePercentage().call()
+            fee_float = float(fee) / 1e18
         return fee, fee_float
 
-    def get_tokens(self, address: str, contract: Contract, event: Any) -> []:
-        pool_balances = contract.caller.getPoolTokens(address).call()
+    async def get_tokens(self, address: str, contract: Contract, event: Any) -> []:
+        pool_balances = await contract.caller.getPoolTokens(address).call()
         tokens = pool_balances[0]
         return tokens
 
-    def get_token_balances(self, address: str, contract: Contract, event: Any) -> []:
-        pool_balances = contract.caller.getPoolTokens(address)
+    async def get_token_balances(self, address: str, contract: Contract, event: Any) -> []:
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return [{tkn: token_balances[idx]} for idx, tkn in enumerate(tokens)]
 
-
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        pool_balances = contract.caller.getPoolTokens(address)
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[0]
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        pool_balances = contract.caller.getPoolTokens(address)
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[1]
 
-    def get_tkn_n(self, address: str, contract: Contract, event: Any, index: int) -> str:
-        pool_balances = contract.caller.getPoolTokens(address)
+    async def get_tkn_n(self, address: str, contract: Contract, event: Any, index: int) -> str:
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[index]

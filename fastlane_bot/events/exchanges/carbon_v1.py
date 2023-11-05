@@ -174,9 +174,9 @@ class CarbonV1(Exchange):
         """
         cid = strategy[0]
         order0, order1 = strategy[3][0], strategy[3][1]
-        tkn0_address, tkn1_address = cfg.w3.toChecksumAddress(
+        tkn0_address, tkn1_address = cfg.w3.to_checksum_address(
             strategy[2][0]
-        ), cfg.w3.toChecksumAddress(strategy[2][1])
+        ), cfg.w3.to_checksum_address(strategy[2][1])
 
         try:
             fee = self.fee_pairs[(tkn0_address, tkn1_address)]

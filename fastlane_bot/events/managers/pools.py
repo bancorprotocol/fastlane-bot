@@ -327,7 +327,7 @@ class PoolManager(BaseManager):
             ex_name = "uniswap_v2"
 
         if key == "address":
-            key_value = self.web3.toChecksumAddress(key_value)
+            key_value = self.web3.to_checksum_address(key_value)
 
         if ex_name == "bancor_pol":
             key = "tkn0_address"

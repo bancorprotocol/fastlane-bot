@@ -280,9 +280,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             The route struct.
         """
         target_address = self.wrapped_gas_token_to_native(target_address)
-        target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
+        target_address = self.ConfigObj.w3.to_checksum_address(target_address)
         source_token = self.wrapped_gas_token_to_native(source_token)
-        source_token = self.ConfigObj.w3.toChecksumAddress(source_token)
+        source_token = self.ConfigObj.w3.to_checksum_address(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
 
         return RouteStruct(

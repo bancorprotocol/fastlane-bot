@@ -114,7 +114,7 @@ class CarbonV1Pool(Pool):
             order1 = [0, 0, 0, 0]
         return order0, order1
 
-    def update_from_contract(
+    async def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -126,9 +126,9 @@ class CarbonV1Pool(Pool):
         See base class.
         """
         try:
-            strategy = contract.strategy(self.state["cid"])
+            strategy = await contract.strategy(self.state["cid"])
         except AttributeError:
-            strategy = contract.caller.strategy(self.state["cid"])
+            strategy = await contract.caller.strategy(self.state["cid"])
 
         fake_event = {
             "args": {

@@ -73,7 +73,7 @@ def get_coingecko_token_table() -> List[Dict[str, Any]]:
 
     tokens = [
         {
-            "address": cfg.w3.toChecksumAddress(token["address"]),
+            "address": cfg.w3.to_checksum_address(token["address"]),
             "symbol": token["symbol"],
             "decimals": token["decimals"],
             "name": token["name"],

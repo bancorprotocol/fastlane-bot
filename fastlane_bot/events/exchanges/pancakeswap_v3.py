@@ -8,7 +8,7 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
@@ -32,20 +32,13 @@ class PancakeswapV3(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap]
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        pool = self.get_pool(address)
-        fee, fee_float = (
-            (pool.state["fee"], pool.state["fee_float"])
-            if pool
-            else (
-                contract.functions.fee().call(),
-                float(contract.functions.fee().call()) / 1e6,
-            )
-        )
+    async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
+        fee = await contract.functions.fee().call()
+        fee_float = float(fee) / 1e6
         return fee, fee_float
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token0().call()
+    async def get_tkn0(self, address: str, contract: AsyncContract, event: Any) -> str:
+        return await contract.functions.token0().call()
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token1().call()
+    async def get_tkn1(self, address: str, contract: AsyncContract, event: Any) -> str:
+        return await contract.functions.token1().call()

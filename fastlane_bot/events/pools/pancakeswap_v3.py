@@ -69,7 +69,7 @@ class PancakeswapV3Pool(Pool):
             print(f"[pools.update_from_event] Exception: {e}")
         return data
 
-    def update_from_contract(
+    async def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -80,15 +80,15 @@ class PancakeswapV3Pool(Pool):
         """
         See base class.
         """
-        slot0 = contract.caller.slot0()
-        fee = contract.caller.fee()
+        slot0 = await contract.caller.slot0()
+        fee = await contract.caller.fee()
         params = {
             "tick": slot0[1],
             "sqrt_price_q96": slot0[0],
-            "liquidity": contract.caller.liquidity(),
+            "liquidity": await contract.caller.liquidity(),
             "fee": fee,
             "fee_float": fee / 1e6,
-            "tick_spacing": contract.caller.tickSpacing(),
+            "tick_spacing": await contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
         }

@@ -8,7 +8,7 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import SUSHISWAP_POOLS_ABI
 from fastlane_bot.events.exchanges.base import Exchange
@@ -32,11 +32,11 @@ class SushiswapV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync]
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.0025", 0.0025
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token0().call()
+    async def get_tkn0(self, address: str, contract: AsyncContract, event: Any) -> str:
+        return await contract.functions.token0().call()
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token1().call()
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        return await contract.functions.token1().call()

@@ -74,10 +74,6 @@ class BancorPolPool(Pool):
         ]:
             # *** Balance now updated from multicall ***
             pass
-            # if self.state['last_updated_block'] < event_args['blockNumber']:
-            #     data["y_0"] = (
-            #         self.state["y_0"] - event_args["args"]["amount"]
-            #     )
 
         for key, value in data.items():
             self.state[key] = value
@@ -88,7 +84,7 @@ class BancorPolPool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    def update_from_contract(
+    async def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -107,7 +103,7 @@ class BancorPolPool(Pool):
         p0 = 0
         p1 = 0
 
-        tkn_balance = self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly, w3)
+        tkn_balance = await self.get_erc20_tkn_balance(contract, tkn0, w3_tenderly, w3)
 
         if tenderly_fork_id and "bancor_pol" in tenderly_exchanges:
             contract = w3_tenderly.eth.contract(
@@ -115,7 +111,7 @@ class BancorPolPool(Pool):
             )
 
         try:
-            p0, p1 = contract.functions.tokenPrice(tkn0).call()
+            p0, p1 = await contract.functions.tokenPrice(tkn0).call()
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {tkn0}")
 
@@ -138,7 +134,7 @@ class BancorPolPool(Pool):
         return params
 
     @staticmethod
-    def get_erc20_tkn_balance(
+    async def get_erc20_tkn_balance(
         contract: Contract, tkn0: str, w3_tenderly: Web3 = None, w3: Web3 = None
     ) -> int:
         """
@@ -165,7 +161,7 @@ class BancorPolPool(Pool):
             erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
         else:
             erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0)
-        return erc20_contract.functions.balanceOf(contract.address).call()
+        return await erc20_contract.functions.balanceOf(contract.address).call()
 
     @staticmethod
     def bitLength(value):
@@ -184,13 +180,13 @@ class BancorPolPool(Pool):
     def encode_token_price(self, price):
         return self.encodeFloat(self.encodeRate((price)))
 
-    def update_erc20_balance(self, token_contract, address) -> dict:
+    async def update_erc20_balance(self, token_contract, address) -> dict:
         """
         returns: the current balance held by the POL contract
         Uses ERC20 contracts to get the number of tokens held by the POL contract
         """
 
-        balance = token_contract.caller.balanceOf(address)
+        balance = await token_contract.caller.balanceOf(address)
         params = {
             "y_0": balance,
             "z_0": balance,
