@@ -61,7 +61,7 @@ class CarbonV1(Exchange):
             contract.events.PairCreated,
         ]
 
-    def get_fee(
+    async def get_fee(
         self, address: str, contract: Contract
     ) -> Tuple[str, float]:
         """
@@ -77,12 +77,12 @@ class CarbonV1(Exchange):
 
         """
         try:
-            fee = contract.functions.tradingFeePPM().call()
+            fee = await contract.functions.tradingFeePPM().call()
         except AttributeError:
-            fee = contract.tradingFeePPM()
+            fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         """
         Get the token0 address from the contract or event.
 
@@ -102,11 +102,11 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return contract.functions.token0().call()
+            return await contract.functions.token0().call()
         else:
             return event["args"]["token0"]
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         """
         Get the token1 address from the contract or event.
 
@@ -126,7 +126,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return contract.functions.token1().call()
+            return await contract.functions.token1().call()
         else:
             return event["args"]["token1"]
 

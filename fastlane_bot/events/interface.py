@@ -125,7 +125,6 @@ class QueryInterface:
                 return True
         return False
 
-
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
         """
         This token gets all tokens that exist in pools on the specified exchange.
