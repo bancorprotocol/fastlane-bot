@@ -533,7 +533,7 @@ def run(
     while True:
 
         try:
-    
+
             # Save initial state of pool data to assert whether it has changed
             initial_state = mgr.pool_data.copy()
 
