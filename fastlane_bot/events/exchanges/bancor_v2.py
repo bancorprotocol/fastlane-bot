@@ -43,15 +43,11 @@ class BancorV2(Exchange):
         return fee, fee_float
 
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return (
-            event["args"]["_token1"]
-            if event
-            else await contract.functions.reserveTokens().call()[0]
-        )
+        # if event:
+        #     return await event["args"]["_token1"]
+        return await contract.functions.reserveTokens().call()[0]
 
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return (
-            event["args"]["_token2"]
-            if event
-            else await contract.functions.reserveTokens().call()[1]
-        )
+        # if event:
+        #     return await event["args"]["_token2"]
+        return await contract.functions.reserveTokens().call()[1]

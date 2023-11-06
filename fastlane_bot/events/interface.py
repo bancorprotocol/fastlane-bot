@@ -508,6 +508,17 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
+            # remove tokens with no address, symbol or decimals
+            if (
+                record.get("tkn0_address") is None
+                or record.get("tkn0_symbol") is None
+                or record.get("tkn0_decimals") is None
+                or str(record.get("tkn1_decimals")) == 'nan'
+            ):
+                self.cfg.logger.warning(
+                    f"WARNING: Token {record.get('tkn0_key')} has no address, symbol or decimals"
+                )
+                continue
             token_set.add(self.create_token(record, "tkn0_"))
             token_set.add(self.create_token(record, "tkn1_"))
         return list(token_set)

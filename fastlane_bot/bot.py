@@ -408,7 +408,7 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.w3.eth.block_number if block_number is None else block_number
         )
         return (
-            self.ConfigObj.w3.eth.getBlock(block_number).timestamp
+            self.ConfigObj.w3.eth.get_block(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 

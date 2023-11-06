@@ -5,6 +5,7 @@ Contains the utils functions for events
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import base64
 import contextlib
 import importlib
 import json
@@ -610,6 +611,17 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
         for event_filter in event_filters
     )
 
+def convert_to_serializable(data: Any) -> Any:
+    if isinstance(data, bytes):
+        return base64.b64encode(data).decode('ascii')
+    elif isinstance(data, dict):
+        return {key: convert_to_serializable(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_to_serializable(item) for item in data]
+    elif hasattr(data, '__dict__'):
+        return convert_to_serializable(data.__dict__)
+    else:
+        return data
 
 def save_events_to_json(
     cache_latest_only,
@@ -647,14 +659,17 @@ def save_events_to_json(
         )
     try:
         with open(path, "w") as f:
-            latest_events = [
-                _["args"].pop("contextId", None) for _ in latest_events
-            ] and latest_events
+            # Remove contextId from the latest events
+            latest_events = convert_to_serializable(latest_events)
+            # latest_events = [
+            #     _["args"].pop("contextId", None) for _ in latest_events
+            # ] and latest_events
             f.write(json.dumps(latest_events))
+            mgr.cfg.logger.info(f"Saved events to {path}")
     except Exception as e:
         mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
 
-    mgr.cfg.logger.info(f"Saved events to {path}")
+
 
 
 def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):

@@ -32,11 +32,14 @@ class UniswapV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync]
 
-    async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
+    @staticmethod
+    async def get_fee(address: str, contract: AsyncContract) -> Tuple[str, float]:
         return "0.003", 0.003
 
-    async def get_tkn0(self, address: str, contract: AsyncContract, event: Any) -> str:
+    @staticmethod
+    async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.functions.token0().call()
 
-    async def get_tkn1(self, address: str, contract: AsyncContract, event: Any) -> str:
+    @staticmethod
+    async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.functions.token1().call()
