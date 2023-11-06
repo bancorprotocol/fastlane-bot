@@ -480,7 +480,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
     network_df = get_multichain_addresses(network="coinbase_base")
-    FASTLANE_CONTRACT_ADDRESS = ""  # TODO
+    FASTLANE_CONTRACT_ADDRESS = "0x8e6AF0013688e5ef92217f23895Ea822cD3051E8"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
     
     NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
