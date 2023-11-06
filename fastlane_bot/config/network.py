@@ -156,15 +156,14 @@ class ConfigNetwork(ConfigBase):
 
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
-
     # COMMONLY USED TOKEN ADDRESSES SECTION
     #######################################################################################
     ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+    ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
     MKR_ADDRESS = "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2"
     LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA"
     WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
@@ -174,6 +173,7 @@ class ConfigNetwork(ConfigBase):
     USDC_KEY = "USDC-eB48"
     LINK_KEY = "LINK-86CA"
     USDT_KEY = "USDT-1ec7"
+
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -225,32 +225,9 @@ class ConfigNetwork(ConfigBase):
         PANCAKESWAP_V2_NAME: 3,
         PANCAKESWAP_V3_NAME: 4,
     }
-    UNI_V2_FORKS = [
-        UNISWAP_V2_NAME,
-        SUSHISWAP_V2_NAME,
-        PANCAKESWAP_V2_NAME,
-        SHIBA_V2_NAME,
-        SMARDEX_V2_NAME,
-        SWAPBASED_V2_NAME,
-        BASESWAP_V2_NAME,
-        ALIENBASE_V2_NAME,
-        AERODROME_V2_NAME,
-        VELOCIMETER_V1_NAME,
-        SOLIDLY_V2_NAME,
-    ]
-    UNI_V3_FORKS = [
-        UNISWAP_V3_NAME,
-        SUSHISWAP_V3_NAME,
-        PANCAKESWAP_V3_NAME,
-        BASESWAP_V3_NAME,
-    ]
+
     # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
     CARBON_V1_FORKS = [CARBON_V1_NAME]
-    UNI_V2_FEE_MAPPING = {
-        UNISWAP_V2_NAME: 0.003,
-        SUSHISWAP_V2_NAME: 0.0025,
-        PANCAKESWAP_V2_NAME: 0.0025,
-    }
 
     SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
@@ -345,8 +322,8 @@ class ConfigNetwork(ConfigBase):
         self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.CARBON_V1)
 
-        self.ALL_EXCHANGES = self.ALL_EXCHANGES + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
-        self.ALL_EXCHANGES = [ex for ex in self.ALL_EXCHANGES if ex is not None]
+        self.CHAIN_SPECIFIC_EXCHANGES = self.CHAIN_SPECIFIC_EXCHANGES + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
+        self.CHAIN_SPECIFIC_EXCHANGES = [ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None]
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
@@ -385,8 +362,10 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {"WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599","BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","WETH-6Cc2":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" ,"USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",  "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA"}
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
-    ALL_EXCHANGES = [ex for ex in ALL_EXCHANGES if ex is not None]
+    CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
+    CHAIN_SPECIFIC_EXCHANGES = [ex for ex in CHAIN_SPECIFIC_EXCHANGES if ex is not None]
+
+
 
 class _ConfigNetworkArbitrumOne(ConfigNetwork):
     NETWORK = S.NETWORK_ARBITRUM
@@ -412,7 +391,7 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {"WETH-bab1": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", "USDC-5831": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", "WBTC-5b0f": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", }
 
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = []
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 class _ConfigNetworkPolygon(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON
@@ -438,7 +417,7 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010", "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"}
 
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = []
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON_ZKEVM
@@ -462,7 +441,7 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {"WETH-e6e9": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9", "USDC-c035": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035", "USDT-d41d": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d", "WBTC-08e1": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1", }
 
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = []
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 class _ConfigNetworkOptimism(ConfigNetwork):
     NETWORK = S.NETWORK_OPTIMISM
@@ -487,7 +466,7 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
                               "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095", }
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = []
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 
 class _ConfigNetworkBase(ConfigNetwork):
@@ -520,7 +499,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006",
                               "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}
     # Add any exchanges unique to the chain here
-    ALL_EXCHANGES = []
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """

@@ -528,6 +528,12 @@ def organize_pool_details_balancer(
 
         pair += tkn_key + "/"
 
+        if type(tkn["weight"]) == float:
+            if (tkn["weight"]) <= 0.01:
+                skip_pool = True
+        elif type(tkn["weight"]) == str:
+            if (tkn["weight"]) in "0.01":
+                skip_pool = True
     # if pool_total_liquidity_usd < min_usd:
     #     print(f"pool eliminated due to low liquidity: {pool_total_liquidity_usd} vs min {min_usd}")
     #     return None

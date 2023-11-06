@@ -85,7 +85,7 @@ assert (uniswap_v3_exchange.get_tkn0('', mocked_contract, {}) == mocked_contract
 
 sushiswap_v2_exchange = SushiswapV2()
 assert (sushiswap_v2_exchange.get_abi() == SUSHISWAP_POOLS_ABI)
-assert (sushiswap_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025))
+assert (sushiswap_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003))
 assert (sushiswap_v2_exchange.get_tkn0('', mocked_contract, {}) == mocked_contract.functions.token0().call())
 
 # ## test_bancor_v3_exchange
