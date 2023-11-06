@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 import time
 from glob import glob
@@ -9,7 +8,7 @@ import pandas as pd
 from web3 import AsyncWeb3
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.events.exchanges import exchange_factory, UniswapV2
+from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.utils import update_pools_from_events, parse_non_multicall_rows_to_update
 
 w3_async = AsyncWeb3(
