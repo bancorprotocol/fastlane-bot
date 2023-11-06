@@ -580,7 +580,7 @@ def run(
         # Update new pool events from contracts
         if len(mgr.pools_to_add_from_contracts) > 0:
             mgr.cfg.logger.info(f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts")
-            async_update_pools_from_contracts(mgr)
+            async_update_pools_from_contracts(mgr, current_block)
             mgr.pools_to_add_from_contracts = []
 
         # Set the network connection to Tenderly if replaying from a block

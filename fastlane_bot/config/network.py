@@ -222,6 +222,8 @@ class ConfigNetwork(ConfigBase):
         CARBON_V1_NAME: 6,
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
+        PANCAKESWAP_V2_NAME: 3,
+        PANCAKESWAP_V3_NAME: 4,
     }
     UNI_V2_FORKS = [
         UNISWAP_V2_NAME,

@@ -489,7 +489,7 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = self.randomize(arb_opps=r, randomizer=randomizer)
-
+        data_validator = False
         if data_validator:
             # Add random chance if we should check or not
             r = self.validate_optimizer_trades(
@@ -628,6 +628,8 @@ class CarbonBot(CarbonBotBase):
                 "tkn1_key": current_pool.tkn1_key,
                 "args": {"id": current_pool.cid},
             }
+
+            print("pool_info: ", pool_info)
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
             if fetched_pool is None:

@@ -120,6 +120,7 @@ class QueryInterface:
         """
 
         for key in keys:
+            # print(f"key: {key}")
             if key in pool and pool[key] > 0:
                 return True
         return False

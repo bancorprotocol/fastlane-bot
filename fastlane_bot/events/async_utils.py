@@ -56,14 +56,18 @@ async def main_get_missing_tkn(c):
 
 
 async def get_token_and_fee(exchange_name, ex, address, contract, event):
-    tkn0 = await ex.get_tkn0(
-        address, contract, event=event
-    )
-    tkn1 = await ex.get_tkn1(
-        address, contract, event=event
-    )
-    fee = await ex.get_fee(address, contract)
-    return exchange_name, address, tkn0, tkn1, fee
+    try:
+        tkn0 = await ex.get_tkn0(
+            address, contract, event=event
+        )
+        tkn1 = await ex.get_tkn1(
+            address, contract, event=event
+        )
+        fee = await ex.get_fee(address, contract)
+        return exchange_name, address, tkn0, tkn1, fee
+    except Exception as e:
+        cfg.logger.info(f"Failed to get tokens and fee for {address} {exchange_name} {e}")
+        return exchange_name, address, None, None, None
 
 
 async def main_get_tokens_and_fee(c):
@@ -76,9 +80,11 @@ async def main_get_tokens_and_fee(c):
     return pd.DataFrame(vals, columns=["exchange_name", "address", "tkn0_address", "tkn1_address", "fee"])
 
 
-def async_update_pools_from_contracts(mgr):
+def async_update_pools_from_contracts(mgr, current_block):
+    global cfg
+    cfg = mgr.cfg
     start_time = time.time()
-    mgr.cfg.logger.info(f"Async Updating pools from contracts {mgr.async_w3.eth}")
+    mgr.cfg.logger.info("Async process now updating pools from contracts...")
     key_digits = 4
     abis = {}
     exchanges = {}
@@ -95,14 +101,13 @@ def async_update_pools_from_contracts(mgr):
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
         address = event['address']
-        if exchange_name == 'uniswap_v2':
-            contracts.append({
-                'exchange_name': exchange_name,
-                'ex': exchange_factory.get_exchange(exchange_name),
-                'address': address,
-                'contract': w3_async.eth.contract(address=address, abi=abis[exchange_name]),
-                'event': event
-            })
+        contracts.append({
+            'exchange_name': exchange_name,
+            'ex': exchange_factory.get_exchange(exchange_name),
+            'address': address,
+            'contract': w3_async.eth.contract(address=address, abi=abis[exchange_name]),
+            'event': event
+        })
 
     # split contracts into chunks of 1000
     chunks = [contracts[i:i + 1000] for i in range(0, len(contracts), 1000)]
@@ -111,12 +116,14 @@ def async_update_pools_from_contracts(mgr):
         os.mkdir(dirname)
 
     for idx, chunk in enumerate(chunks):
+        print(f"Getting tokens and fee for chunk {idx} of {len(chunks)}")
         loop = asyncio.get_event_loop()
         tokens_and_fee_df = loop.run_until_complete(main_get_tokens_and_fee(chunk))
         tokens_and_fee_df.to_csv(f"{dirname}/tokens_and_fee_df_{idx}.csv")
 
     filepaths = glob(f"{dirname}/*.csv")
     if filepaths:
+        print(f"Concatenating {len(filepaths)} tokens_and_fee_df_ files")
         tokens_and_fee_df = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
         tokens_and_fee_df = tokens_and_fee_df.drop_duplicates(subset=["exchange_name", "address"])
         tokens_and_fee_df.to_csv("tokens_and_fee_df.csv")
@@ -127,7 +134,7 @@ def async_update_pools_from_contracts(mgr):
 
     # for each token in the pools, check whether we have the token info in the tokens.csv static data, and ifr not,
     # add it
-    tokens = pool_tokens_and_fee_df["tkn0_address"].tolist() + pool_tokens_and_fee_df["tkn1_address"].tolist()
+    tokens = tokens_and_fee_df["tkn0_address"].tolist() + tokens_and_fee_df["tkn1_address"].tolist()
     tokens = list(set(tokens))
     tokens_df = pd.read_csv(f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv")
     missing_tokens = [tkn for tkn in tokens if tkn not in tokens_df["address"].tolist()]
@@ -144,17 +151,19 @@ def async_update_pools_from_contracts(mgr):
             }
         )
 
-    mgr.cfg.logger.info(f"\n\n failed [token contracts]:{len(contracts)} {len(failed_contracts)}")
+    mgr.cfg.logger.info(f"\n\n failed token contracts:{len(failed_contracts)}/{len(contracts)} ")
 
     chunks = [contracts[i:i + 1000] for i in range(0, len(contracts), 1000)]
 
     for idx, chunk in enumerate(chunks):
+        print(f"Getting missing tokens for chunk {idx} of {len(chunks)}")
         loop = asyncio.get_event_loop()
         missing_tokens_df = loop.run_until_complete(main_get_missing_tkn(chunk))
         missing_tokens_df.to_csv(f"{dirname}/missing_tokens_df_{idx}.csv")
 
     filepaths = glob(f"{dirname}/*.csv")
     if filepaths:
+        print(f"Concatenating {len(filepaths)} missing_tokens_df_ files")
         missing_tokens_df = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
         missing_tokens_df = missing_tokens_df.drop_duplicates(subset=["address"])
         missing_tokens_df.to_csv("missing_tokens_df.csv")
@@ -164,12 +173,16 @@ def async_update_pools_from_contracts(mgr):
         tokens_df = tokens_df.drop_duplicates(subset=["address"])
         tokens_df.to_csv(f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False)
 
+    # clear temp dir
+    for filepath in filepaths:
+        os.remove(filepath)
+
     # create pool_data entry for each pool_tokens_and_fee_df by combining the tokens_df info with the
     # tokens_and_fee_df info
     pool_data_keys = mgr.pool_data[0].keys()
     new_pool_data = []
 
-    for idx, pool in pool_tokens_and_fee_df.iterrows():
+    for idx, pool in tokens_and_fee_df.iterrows():
         tkn0 = tokens_df[tokens_df["address"] == pool["tkn0_address"]].to_dict(orient="records")
         tkn1 = tokens_df[tokens_df["address"] == pool["tkn1_address"]].to_dict(orient="records")
         if not tkn0 or not tkn1:
@@ -202,14 +215,27 @@ def async_update_pools_from_contracts(mgr):
             "pair_name": pair_name(tkn0["symbol"], tkn0["address"], tkn1["symbol"], tkn1["address"], key_digits),
             "blockchain": mgr.blockchain,
             "anchor": None,
+            "exchange_id": mgr.cfg.EXCHANGE_IDS[pool["exchange_name"]],
+            "last_updated_block": current_block,
         }
         pool_info["descr"] = mgr.pool_descr_from_info(pool_info)
         pool_info["cid"] = mgr.cfg.w3.keccak(text=f"{pool_info['descr']}").hex()
-
+        keys = [
+            "liquidity",
+            "tkn0_balance",
+            "tkn0_balance",
+            "tkn0_balance",
+            "tkn0_balance",
+            "y_0",
+            "y_1",
+            "tkn0_balance",
+            "liquidity",
+            "tkn0_balance",
+        ]
         # add missing keys to dicts
         for key in pool_data_keys:
             if key not in pool_info:
-                pool_info[key] = None
+                pool_info[key] = 0 if key in keys else None
         new_pool_data.append(pool_info)
 
     # add new_pool_data to pool_data
