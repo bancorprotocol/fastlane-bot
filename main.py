@@ -407,12 +407,9 @@ def main(
     else:
         w3_tenderly = None
 
-    async_w3 = cfg.connection.async_web3
-
     # Initialize data fetch manager
     mgr = Manager(
         web3=cfg.w3,
-        async_w3=async_w3,
         cfg=cfg,
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,

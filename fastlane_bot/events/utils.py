@@ -209,7 +209,8 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
     except pd.errors.ParserError as e:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
-#bookmark
+
+# bookmark
 # def filter_static_pool_data(
 #     pool_data: pd.DataFrame, exchanges: List[str]
 # ) -> pd.DataFrame:
@@ -274,7 +275,9 @@ def get_static_data(
         base_path, f"{static_pool_data_filename}.csv"
     )
     static_pool_data = read_csv_file(static_pool_data_filepath)
-    static_pool_data = static_pool_data[static_pool_data["exchange_name"].isin(exchanges)]
+    static_pool_data = static_pool_data[
+        static_pool_data["exchange_name"].isin(exchanges)
+    ]
 
     # Read Uniswap v2 event mappings and tokens
     uniswap_v2_filepath = os.path.join(base_path, "uniswap_v2_event_mappings.csv")
@@ -606,17 +609,19 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
         for event_filter in event_filters
     )
 
+
 def convert_to_serializable(data: Any) -> Any:
     if isinstance(data, bytes):
-        return base64.b64encode(data).decode('ascii')
+        return base64.b64encode(data).decode("ascii")
     elif isinstance(data, dict):
         return {key: convert_to_serializable(value) for key, value in data.items()}
     elif isinstance(data, list):
         return [convert_to_serializable(item) for item in data]
-    elif hasattr(data, '__dict__'):
+    elif hasattr(data, "__dict__"):
         return convert_to_serializable(data.__dict__)
     else:
         return data
+
 
 def save_events_to_json(
     cache_latest_only,
@@ -663,8 +668,6 @@ def save_events_to_json(
             mgr.cfg.logger.info(f"Saved events to {path}")
     except Exception as e:
         mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
-
-
 
 
 def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
