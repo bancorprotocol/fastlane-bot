@@ -209,36 +209,34 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
     except pd.errors.ParserError as e:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
-
-def filter_static_pool_data(
-    pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
-) -> pd.DataFrame:
-    """Helper function to filter static pool data.
-
-    Parameters
-    ----------
-    pool_data : pd.DataFrame
-        The pool data.
-    exchanges : List[str]
-        A list of exchanges to fetch data for.
-    sample_size : int or str
-        The number of Bancor v3 pools to fetch.
-
-    Returns
-    -------
-    pd.DataFrame
-        The filtered pool data.
-    """
-    filtered_data = pool_data[pool_data["exchange_name"].isin(exchanges)]
-
-    if sample_size != "max":
-        bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
-        non_bancor_data = filtered_data[
-            filtered_data["exchange_name"] != "bancor_v3"
-        ].sample(n=sample_size)
-        filtered_data = pd.concat([bancor_data, non_bancor_data])
-
-    return filtered_data
+#bookmark
+# def filter_static_pool_data(
+#     pool_data: pd.DataFrame, exchanges: List[str]
+# ) -> pd.DataFrame:
+#     """Helper function to filter static pool data.
+#
+#     Parameters
+#     ----------
+#     pool_data : pd.DataFrame
+#         The pool data.
+#     exchanges : List[str]
+#         A list of exchanges to fetch data for.
+#
+#     Returns
+#     -------
+#     pd.DataFrame
+#         The filtered pool data.
+#     """
+#     filtered_data = pool_data[pool_data["exchange_name"].isin(exchanges)]
+#
+#     if sample_size != "max":
+#         bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
+#         non_bancor_data = filtered_data[
+#             filtered_data["exchange_name"] != "bancor_v3"
+#         ].sample(n=sample_size)
+#         filtered_data = pd.concat([bancor_data, non_bancor_data])
+#
+#     return filtered_data
 
 
 def get_static_data(
@@ -246,7 +244,6 @@ def get_static_data(
     exchanges: List[str],
     blockchain: str,
     static_pool_data_filename: str,
-    static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -277,9 +274,7 @@ def get_static_data(
         base_path, f"{static_pool_data_filename}.csv"
     )
     static_pool_data = read_csv_file(static_pool_data_filepath)
-    static_pool_data = filter_static_pool_data(
-        static_pool_data, exchanges, static_pool_data_sample_sz
-    )
+    static_pool_data = static_pool_data[static_pool_data["exchange_name"].isin(exchanges)]
 
     # Read Uniswap v2 event mappings and tokens
     uniswap_v2_filepath = os.path.join(base_path, "uniswap_v2_event_mappings.csv")

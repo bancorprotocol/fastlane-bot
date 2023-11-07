@@ -7,7 +7,6 @@ Licensed under MIT
 """
 import os
 import time
-from glob import glob
 from typing import List
 
 import click
@@ -19,7 +18,6 @@ from fastlane_bot.events.async_utils import (
     async_update_pools_from_contracts,
     async_handle_initial_iteration,
 )
-from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -37,7 +35,6 @@ from fastlane_bot.events.utils import (
     handle_subsequent_iterations,
     verify_state_changed,
     handle_duplicates,
-    handle_initial_iteration,
     get_latest_events,
     get_start_block,
     set_network_to_mainnet_if_replay,
@@ -51,7 +48,6 @@ from fastlane_bot.events.utils import (
     read_csv_file,
     handle_tokens_csv,
 )
-from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
 
@@ -134,12 +130,6 @@ load_dotenv()
     default="INFO",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
-)
-@click.option(
-    "--static_pool_data_sample_sz",
-    default="max",
-    type=str,
-    help="The sample size of the static pool data. Set to 'max' for production.",
 )
 @click.option(
     "--use_cached_events",
@@ -251,7 +241,6 @@ def main(
     reorg_delay: int,
     logging_path: str,
     loglevel: str,
-    static_pool_data_sample_sz: str,
     use_cached_events: bool,
     run_data_validator: bool,
     randomizer: int,
@@ -285,7 +274,6 @@ def main(
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         logging_path (str): The logging path.
         loglevel (str): The logging level.
-        static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
@@ -373,7 +361,6 @@ def main(
         n_jobs: {n_jobs}
         polling_interval: {polling_interval}
         reorg_delay: {reorg_delay}
-        static_pool_data_sample_sz: {static_pool_data_sample_sz}
         use_cached_events: {use_cached_events}
         run_data_validator: {run_data_validator}
         randomizer: {randomizer}
@@ -402,7 +389,6 @@ def main(
         exchanges,
         blockchain,
         static_pool_data_filename,
-        static_pool_data_sample_sz,
     )
 
     target_token_addresses = handle_target_token_addresses(
