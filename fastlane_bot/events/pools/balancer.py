@@ -64,16 +64,17 @@ class BalancerPool(Pool):
         """
         See base class.
         """
-        pool_balances = await contract.caller.getPoolTokens(self.state["anchor"])
+
+        pool_balances = await contract.caller.getPoolTokens(
+            self.state["anchor"].iloc[0]
+        )
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         params = {key: self.state[key] for key in self.state.keys()}
 
         for idx, tkn in enumerate(tokens):
-            tkn_bal = "tkn" + str(idx) + "_balance"
+            tkn_bal = f"tkn{str(idx)}_balance"
             params[tkn_bal] = token_balances[idx]
 
-        for key, value in params.items():
-            self.state[key] = value
-
+        self.update_pool_state_from_data(params)
         return params

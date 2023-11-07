@@ -50,8 +50,8 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
-        for key, value in data.items():
-            self.state[key] = value
+
+        self.update_pool_state_from_data(data)
         return data
 
     @staticmethod
@@ -125,10 +125,11 @@ class CarbonV1Pool(Pool):
         """
         See base class.
         """
+        cid = self.state.index.get_level_values("cid").tolist()[0]
         try:
-            strategy = await contract.strategy(self.state["cid"])
+            strategy = await contract.strategy(cid)
         except AttributeError:
-            strategy = await contract.caller.strategy(self.state["cid"])
+            strategy = await contract.caller.strategy(cid)
 
         fake_event = {
             "args": {
@@ -139,7 +140,6 @@ class CarbonV1Pool(Pool):
         }
         params = self.parse_event(self.state, fake_event, "None")
         params["exchange_name"] = "carbon_v1"
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
 
         return params

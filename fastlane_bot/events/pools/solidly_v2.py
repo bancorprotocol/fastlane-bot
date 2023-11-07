@@ -51,13 +51,14 @@ class SolidlyV2Pool(Pool):
         event_args = event_args["args"]
         data["tkn0_balance"] = event_args["reserve0"]
         data["tkn1_balance"] = event_args["reserve1"]
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
-        data["cid"] = self.state["cid"]
-        data["fee"] = self.state["fee"]
-        data["fee_float"] = self.state["fee_float"]
-        data["exchange_name"] = self.state["exchange_name"]
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["fee"] = self.state["fee"].iloc[0]
+        data["fee_float"] = self.state["fee_float"].iloc[0]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     async def update_from_contract(
@@ -79,6 +80,5 @@ class SolidlyV2Pool(Pool):
             "tkn1_balance": reserve_balance[1],
             "exchange_name": "solidly_v2",
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params

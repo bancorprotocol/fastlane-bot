@@ -185,6 +185,7 @@ class CarbonBotBase:
         pools_and_tokens = self.db.get_pool_data_with_tokens()
         curves = []
         tokens = self.db.get_tokens()
+        print(f"tokens={tokens[0]}")
         ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
         for p in pools_and_tokens:
             try:
@@ -650,7 +651,9 @@ class CarbonBot(CarbonBotBase):
                         "Carbon pool not up to date, updating and restarting."
                     )
                     return False
-            elif current_pool.exchange_name in ["balancer",]:
+            elif current_pool.exchange_name in [
+                "balancer",
+            ]:
                 for idx, balance in enumerate(current_pool.token_balances):
                     if balance != fetched_pool[f"tkn{idx}_balance"]:
                         self.ConfigObj.logger.debug(
@@ -758,18 +761,36 @@ class CarbonBot(CarbonBotBase):
         best_profit_fl_token = best_profit
         if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY:
             try:
-                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token_with_weth}")[0].p))
+                fltkn_eth_conversion_rate = Decimal(
+                    str(
+                        CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
+                        .bytknq(f"{fl_token_with_weth}")[0]
+                        .p
+                    )
+                )
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
             except:
                 try:
-                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0].p))
+                    fltkn_eth_conversion_rate = 1 / Decimal(
+                        str(
+                            CCm.bytknb(f"{fl_token_with_weth}")
+                            .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
+                            .p
+                        )
+                    )
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
                     raise str(e)
         else:
             best_profit_eth = best_profit_fl_token
 
-        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
+        usd_eth_conversion_rate = Decimal(
+            str(
+                CCm.bypair(
+                    pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}"
+                )[0].p
+            )
+        )
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
@@ -1361,8 +1382,8 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     def get_tokens_in_exchange(
-            self,
-            exchange_name: str,
+        self,
+        exchange_name: str,
     ) -> List[str]:
         """
         Gets all tokens that exist in pools on the specified exchange.

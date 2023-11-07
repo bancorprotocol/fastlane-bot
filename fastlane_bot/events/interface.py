@@ -56,6 +56,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -88,8 +89,8 @@ class QueryInterface:
 
     def remove_unsupported_exchanges(self) -> None:
         initial_state = self.state.copy()
-        self.state = [
-            pool for pool in self.state if pool["exchange_name"] in self.exchanges
+        self.state = self.state[
+            self.state.index.get_level_values("exchange_name").isin(self.exchanges)
         ]
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unsupported exchanges. {len(self.state)} pools remaining"
@@ -152,7 +153,9 @@ class QueryInterface:
         tokens = list(set(tokens))
         return tokens
 
-    def filter_pools(self, exchange_name: str, keys: List[str] = "") -> List[Dict[str, Any]]:
+    def filter_pools(
+        self, exchange_name: str, keys: List[str] = ""
+    ) -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
 
@@ -168,17 +171,12 @@ class QueryInterface:
         List[Dict[str, Any]]
             The filtered pools
         """
+        df = self.state.copy()
         if keys:
-            return [
-                pool
-                for pool in self.state
-                if pool["exchange_name"] == exchange_name
-                and self.has_balance(pool, keys)
-            ]
-        else:
-            return [
-                pool for pool in self.state if pool["exchange_name"] == exchange_name
-            ]
+            for key in keys:
+                df = df[df[key] > 0]
+        df = df[df.index.get_level_values("exchange_name") == exchange_name]
+        return df
 
     def log_pool_numbers(self, pools: List[Dict[str, Any]], exchange_name: str) -> None:
         """
@@ -210,7 +208,7 @@ class QueryInterface:
             "carbon_v1",
             "pancakeswap_v2",
             "pancakeswap_v3",
-            "balancer"
+            "balancer",
         ]
         keys = [
             ["liquidity"],
@@ -224,47 +222,49 @@ class QueryInterface:
             ["liquidity"],
             ["tkn0_balance"],
         ]
+        df = self.state.copy()
+        for exchange, key in zip(exchanges, keys):
+            df = df[
+                ~df.index.isin(
+                    self.filter_pools(exchange, key).index
+                )  # remove pools with zero liquidity
+            ]
+        self.state = df
 
-        self.state = [
-            pool
-            for exchange, key in zip(exchanges, keys)
-            for pool in self.filter_pools(exchange, key)
+        for exchange in exchanges:
+            df = self.state.copy()
+            df = df[df.index.get_level_values("exchange_name") == exchange]
+            self.log_pool_numbers(df, exchange)
+
+        df = self.state.copy()
+        zero_liquidity_pools = initial_state[
+            initial_state.index.isin(df.index) == False
         ]
 
         for exchange in exchanges:
-            self.log_pool_numbers(
-                [pool for pool in self.state if pool["exchange_name"] == exchange],
-                exchange,
-            )
-
-        zero_liquidity_pools = [
-            pool for pool in initial_state if pool not in self.state
-        ]
-
-        for exchange in exchanges:
-            self.log_pool_numbers(
-                [
-                    pool
-                    for pool in zero_liquidity_pools
-                    if pool["exchange_name"] == exchange
-                ],
-                f"{exchange}_zero_liquidity_pools",
-            )
+            df = zero_liquidity_pools.copy()
+            df = df[df.index.get_level_values("exchange_name") == exchange]
+            self.log_pool_numbers(df, f"{exchange}_zero_liquidity_pools")
 
     def remove_unmapped_uniswap_v2_pools(self) -> None:
         """
         Remove unmapped uniswap_v2 pools
         """
         initial_state = self.state.copy()
-        self.state = [
-            pool
-            for pool in self.state
-            if pool["exchange_name"] != "uniswap_v2"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
-                and pool["address"] in self.uniswap_v2_event_mappings
+        self.state = self.state[
+            ~self.state.index.get_level_values("exchange_name").isin(["uniswap_v2"])
+        ]
+        self.state = self.state[
+            self.state.index.get_level_values("exchange_name").isin(
+                self.cfg.UNI_V2_FORKS
             )
         ]
+        self.state = self.state[
+            self.state.index.get_level_values("address").isin(
+                self.uniswap_v2_event_mappings
+            )
+        ]
+
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
         )
@@ -275,13 +275,17 @@ class QueryInterface:
         Remove unmapped uniswap_v2 pools
         """
         initial_state = self.state.copy()
-        self.state = [
-            pool
-            for pool in self.state
-            if pool["exchange_name"] != "uniswap_v3"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V3_FORKS
-                and pool["address"] in self.uniswap_v3_event_mappings
+        self.state = self.state[
+            ~self.state.index.get_level_values("exchange_name").isin(["uniswap_v3"])
+        ]
+        self.state = self.state[
+            self.state.index.get_level_values("exchange_name").isin(
+                self.cfg.UNI_V3_FORKS
+            )
+        ]
+        self.state = self.state[
+            self.state.index.get_level_values("address").isin(
+                self.uniswap_v3_event_mappings
             )
         ]
         self.cfg.logger.info(
@@ -292,23 +296,25 @@ class QueryInterface:
     def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
         self.ConfigObj.logger.info("Unmapped uniswap_v2/sushi pools:")
-        unmapped_pools = [pool for pool in initial_state if pool not in self.state]
+        initial_state_df = initial_state.copy()
+        current_state_df = self.state.copy()
+        # find pools in the initial state that are not in the current state
+        unmapped_pools = initial_state_df[
+            ~initial_state_df.index.isin(current_state_df.index)
+        ]
         assert len(unmapped_pools) == len(initial_state) - len(self.state)
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
-        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
-        uniswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
+        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        uniswap_v2_unmapped = unmapped_pools[
+            unmapped_pools.index.get_level_values("exchange_name") == "uniswap_v2"
         ]
         self.log_pool_numbers(uniswap_v2_unmapped, "uniswap_v2")
-        sushiswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
+        sushiswap_v2_unmapped = unmapped_pools[
+            unmapped_pools.index.get_level_values("exchange_name") == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
-
-
-
 
     def remove_faulty_token_pools(self) -> None:
         """
@@ -348,7 +354,7 @@ class QueryInterface:
             The cleaned up token key
 
         """
-        split_key = token_key.split("-", 2)
+        split_key = str(token_key).split("-", 2)
         return (
             f"{split_key[0]}_{split_key[1]}-{split_key[2]}"
             if len(split_key) > 2
@@ -359,12 +365,9 @@ class QueryInterface:
         """
         Cleanup token keys in state
         """
-        for idx, pool in enumerate(self.state):
-            key0 = self.cleanup_token_key(pool["tkn0_key"])
-            key1 = self.cleanup_token_key(pool["tkn1_key"])
-            self.state[idx]["tkn0_key"] = key0
-            self.state[idx]["tkn1_key"] = key1
-            self.state[idx]["pair_name"] = key0 + "/" + key1
+        self.state["tkn0_key"] = self.state["tkn0_key"].apply(self.cleanup_token_key)
+        self.state["tkn1_key"] = self.state["tkn1_key"].apply(self.cleanup_token_key)
+        self.state["pair_name"] = self.state["tkn0_key"] + "/" + self.state["tkn1_key"]
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
@@ -390,12 +393,9 @@ class QueryInterface:
         """
         Get pool data with tokens
         """
-        return [
-            self.create_pool_and_tokens(idx, record)
-            for idx, record in enumerate(self.state)
-        ]
+        return [self.create_pool_and_tokens(idx) for idx in self.state.index]
 
-    def create_pool_and_tokens(self, idx: int, record: Dict[str, Any]) -> PoolAndTokens:
+    def create_pool_and_tokens(self, idx: int) -> PoolAndTokens:
         """
         Create a pool and tokens object from a record
 
@@ -412,11 +412,16 @@ class QueryInterface:
             The pool and tokens object
 
         """
+        record = self.state[self.state.index == idx]
         result = PoolAndTokens(
             ConfigObj=self.ConfigObj,
             id=idx,
             **{
-                key: record.get(key)
+                key: record[key].iloc[0]
+                if key in record.columns
+                else record.index.get_level_values(key).tolist()[0]
+                if key in record.index.names
+                else None
                 for key in [
                     "cid",
                     "last_updated",
@@ -487,7 +492,7 @@ class QueryInterface:
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
-                    "tkn7_weight"
+                    "tkn7_weight",
                 ]
             },
         )
@@ -507,16 +512,17 @@ class QueryInterface:
             The list of tokens
         """
         token_set = set()
-        for record in self.state:
+        for idx in self.state.index:
+            record = self.state[self.state.index == idx]
             # remove tokens with no address, symbol or decimals
             if (
-                record.get("tkn0_address") is None
-                or record.get("tkn0_symbol") is None
-                or record.get("tkn0_decimals") is None
-                or str(record.get("tkn1_decimals")) == 'nan'
+                record.index.get_level_values("tkn0_address").tolist()[0] is None
+                or record.index.get_level_values("tkn1_address").tolist()[0] is None
+                or record["tkn0_symbol"].iloc[0] is None
+                or str(record["tkn1_decimals"].iloc[0]) == "nan"
             ):
                 self.cfg.logger.warning(
-                    f"WARNING: Token {record.get('tkn0_key')} has no address, symbol or decimals"
+                    f"WARNING: Token {record['tkn0_key'].iloc[0]} has no address, symbol or decimals"
                 )
                 continue
             token_set.add(self.create_token(record, "tkn0_"))
@@ -541,10 +547,10 @@ class QueryInterface:
 
         """
         return Token(
-            symbol=record.get(f"{prefix}symbol"),
-            decimals=record.get(f"{prefix}decimals"),
-            key=record.get(f"{prefix}key"),
-            address=record.get(f"{prefix}address"),
+            symbol=record[f"{prefix}symbol"].iloc[0],
+            decimals=record[f"{prefix}decimals"].iloc[0],
+            key=record[f"{prefix}key"].iloc[0],
+            address=record.index.get_level_values(f"{prefix}address").tolist()[0],
         )
 
     def get_bnt_price_from_tokens(self, price: float, tkn: Token) -> float:

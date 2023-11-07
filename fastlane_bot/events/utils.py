@@ -534,7 +534,9 @@ def get_event_filters(
 
     # Get for exchanges except POL contract
     by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.create_filter)(fromBlock=start_block, toBlock=current_block)
+        delayed(event.create_filter)(
+            fromBlock=int(start_block), toBlock=int(current_block)
+        )
         for event in mgr.events
         if event.__name__ not in bancor_pol_events
     )
@@ -910,18 +912,19 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
         The manager object.
 
     """
-    # Compare the initial state to the final state, and update the state if it has changed
-    final_state = mgr.pool_data.copy()
-    final_state_bancor_pol = [
-        final_state[i]
-        for i in range(len(final_state))
-        if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
-    ]
-    # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-    if initial_state != final_state_bancor_pol:
-        mgr.cfg.logger.info("State has changed...")
-    else:
-        mgr.cfg.logger.info("State has not changed...")
+    pass
+    # # Compare the initial state to the final state, and update the state if it has changed
+    # final_state = mgr.pool_data.copy()
+    # final_state_bancor_pol = [
+    #     final_state[i]
+    #     for i in range(len(final_state))
+    #     if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
+    # ]
+    # # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
+    # if initial_state != final_state_bancor_pol:
+    #     mgr.cfg.logger.info("State has changed...")
+    # else:
+    #     mgr.cfg.logger.info("State has not changed...")
 
 
 def handle_duplicates(mgr: Any):
@@ -1196,9 +1199,12 @@ def get_start_block(
         ), from_block
     else:
         current_block = mgr.web3.eth.block_number
+        max_last_updated_block = mgr.pool_data.index.get_level_values(
+            "last_updated_block"
+        ).max()
         return (
             (
-                mgr.pool_data["last_updated_block"].max() - reorg_delay
+                max_last_updated_block - reorg_delay
                 if last_block != 0
                 else current_block - reorg_delay - alchemy_max_block_fetch
             ),

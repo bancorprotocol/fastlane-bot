@@ -52,16 +52,16 @@ class UniswapV3Pool(Pool):
         data["liquidity"] = event_args["liquidity"]
         data["sqrt_price_q96"] = event_args["sqrtPriceX96"]
         data["tick"] = event_args["tick"]
-
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
         try:
-            data["cid"] = self.state["cid"]
-            data["exchange_name"] = self.state["exchange_name"]
-            data["fee"] = self.state["fee"]
-            data["fee_float"] = self.state["fee_float"]
-            data["tick_spacing"] = self.state["tick_spacing"]
+            data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+            data["exchange_name"] = self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0]
+            data["fee"] = self.state["fee"].iloc[0]
+            data["fee_float"] = self.state["fee_float"].iloc[0]
+            data["tick_spacing"] = self.state["tick_spacing"].iloc[0]
         except KeyError as e:
             pass
         except Exception as e:
@@ -88,9 +88,10 @@ class UniswapV3Pool(Pool):
             "fee": fee,
             "fee_float": fee / 1e6,
             "tick_spacing": await contract.caller.tickSpacing(),
-            "exchange_name": self.state["exchange_name"],
-            "address": self.state["address"],
+            "exchange_name": self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0],
+            "address": self.state.index.get_level_values("address").tolist()[0],
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params

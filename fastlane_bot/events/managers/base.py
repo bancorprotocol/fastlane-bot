@@ -98,15 +98,24 @@ class BaseManager:
     static_pools: Dict[str, List[str]] = field(default_factory=dict)
 
     def __post_init__(self):
-        assert isinstance(self.pool_data, list), (
+
+        self.pool_data = self.setup_pool_data_df(self.pool_data)
+
+        for exchange_name in self.SUPPORTED_EXCHANGES:
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
+        self.init_exchange_contracts()
+        self.set_carbon_v1_fee_pairs()
+        self.init_tenderly_event_contracts()
+
+    @staticmethod
+    def setup_pool_data_df(pool_data: List[Dict[str, Any]]) -> pd.DataFrame:
+        assert isinstance(pool_data, list), (
             "pool_data must be a list of dicts created by calling "
             "pd.DataFrame.to_dict(orient='records')"
         )
         # Pandas Structure
-        pool_data = self.pool_data
         # Convert the data into a pandas DataFrame with dtype specification to handle NaN and large numbers
         pool_data_df = pd.DataFrame(pool_data)
-
         # Set the appropriate data types
         for column in pool_data_df.columns:
             if pool_data_df[column].dtype == float and not any(
@@ -114,25 +123,25 @@ class BaseManager:
             ):
                 pool_data_df[column] = pool_data_df[column].astype("int64")
 
-        # Create indices for the frequently queried columns
-        pool_data_df.set_index(
-            ["exchange_name", "tkn0_address", "tkn1_address", "cid", "address"],
-            inplace=True,
-        )
-
         # Optimize the data types for the 'last_updated_block' column
         pool_data_df["last_updated_block"] = pool_data_df["last_updated_block"].astype(
             "int32"
         )
 
-        # Set the pool_data to the pandas DataFrame
-        self.pool_data = pool_data_df
+        # Create indices for the frequently queried columns
+        pool_data_df.set_index(
+            [
+                "exchange_name",
+                "tkn0_address",
+                "tkn1_address",
+                "cid",
+                "address",
+                "last_updated_block",
+            ],
+            inplace=True,
+        )
 
-        for exchange_name in self.SUPPORTED_EXCHANGES:
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
-        self.init_exchange_contracts()
-        self.set_carbon_v1_fee_pairs()
-        self.init_tenderly_event_contracts()
+        return pool_data_df
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -289,6 +298,15 @@ class BaseManager:
         )
         return tkns or (None, None)
 
+    def update_pool_data_from_other_args(self, pool_data, other_args):
+        state_cp = pool_data.copy()
+        for key, value in other_args.items():
+            if key in state_cp.index.names:
+                state_cp = state_cp[state_cp.index.get_level_values(key) == value]
+            else:
+                state_cp[key] = value
+        return state_cp
+
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
         Get the rows to update.
@@ -310,7 +328,10 @@ class BaseManager:
 
         threshold_block = update_from_contract_block - self.alchemy_max_block_fetch
         return (
-            self.pool_data[self.pool_data["last_updated_block"] < threshold_block]
+            self.pool_data[
+                self.pool_data.index.get_level_values("last_updated_block")
+                < threshold_block
+            ]
             .index.get_level_values("cid")
             .tolist()
         )
@@ -848,7 +869,16 @@ class BaseManager:
         self.pool_data = self.pool_data.sort_values(
             by="last_updated_block", ascending=False
         )
-        self.pool_data = self.pool_data.drop_duplicates(subset=["cid"])
+
+        duplicates_mask = self.pool_data.index.get_level_values("cid").duplicated(
+            keep="first"
+        )
+
+        # drop duplicate cid index rows
+        self.pool_data = self.pool_data[~duplicates_mask]
+
+        # assert that the cid index is unique
+        assert self.pool_data.index.get_level_values("cid").is_unique
 
     @staticmethod
     def pool_key_value_from_event(key: str, event: Dict[str, Any]) -> Any:

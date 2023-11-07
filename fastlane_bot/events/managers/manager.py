@@ -62,9 +62,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
             return
 
-        print(
-            f"[update_from_event] pool_info.index.names: {pool_info.index.names}, pool_info: {pool_info}"
-        )
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info)

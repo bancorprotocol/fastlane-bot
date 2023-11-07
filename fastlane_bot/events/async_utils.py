@@ -4,6 +4,7 @@ import time
 from glob import glob
 from typing import Any, List, Dict, Callable, Tuple, Type
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from web3 import AsyncWeb3
@@ -206,7 +207,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
     # add new_pool_data to pool_data
-    mgr.pool_data = new_pool_data + mgr.pool_data
+    mgr.pool_data = pd.concat([mgr.pool_data, new_pool_data])
 
     # update the pool_data from events
     update_pools_from_events(-1, mgr, all_events)
@@ -222,12 +223,14 @@ def get_new_pool_data(
     mgr: Any,
     tokens_and_fee_df: pd.DataFrame,
     tokens_df: pd.DataFrame,
-) -> List[Dict]:
+) -> pd.DataFrame:
     # Convert tokens_df to a dictionary keyed by address for faster access
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
     # Convert pool_data_keys to a frozenset for faster containment checks
-    pool_data_keys: frozenset = frozenset(mgr.pool_data[0].keys())
-    new_pool_data: List[Dict] = []
+    pool_data_keys: frozenset = frozenset(
+        mgr.pool_data.columns.tolist() + mgr.pool_data.index.names
+    )
+    new_pool_data: List[pd.DataFrame] = []
     for idx, pool in tokens_and_fee_df.iterrows():
         tkn0 = tokens_dict.get(pool["tkn0_address"])
         tkn0["address"] = pool["tkn0_address"]
@@ -244,8 +247,31 @@ def get_new_pool_data(
             pool_data_keys,
             keys,
         )
+        pool_info = pd.DataFrame([pool_info])
         new_pool_data.append(pool_info)
-    return new_pool_data
+    new_pool_data_df = pd.concat(new_pool_data)
+    new_pool_data_df.set_index(mgr.pool_data.index.names, inplace=True)
+
+    # print column name mismatches
+    if mgr.pool_data.columns.tolist() != new_pool_data_df.columns.tolist():
+        mismatch_cols = [
+            col
+            for col in new_pool_data_df.columns.tolist()
+            if col not in mgr.pool_data.columns.tolist()
+        ]
+        if mismatch_cols:
+            new_pool_data_df.drop(columns=mismatch_cols, inplace=True)
+
+        mismatch_cols = [
+            col
+            for col in mgr.pool_data.columns.tolist()
+            if col not in new_pool_data_df.columns.tolist()
+        ]
+        if mismatch_cols:
+            mgr.cfg.logger.info(f"mismatched columns: {mismatch_cols}")
+            raise Exception("mismatched columns")
+    new_pool_data_df.columns = mgr.pool_data.columns.tolist()
+    return new_pool_data_df
 
 
 def get_token_contracts(

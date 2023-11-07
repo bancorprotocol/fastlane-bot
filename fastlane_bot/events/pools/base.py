@@ -30,6 +30,15 @@ class Pool(ABC):
 
     state: Dict[str, Any] = field(default_factory=dict)
 
+    def update_pool_state_from_data(self, data):
+        state_cp = self.state.copy()
+        for key, value in data.items():
+            if key in state_cp.index.names:
+                state_cp = state_cp[state_cp.index.get_level_values(key) == value]
+            else:
+                state_cp[key] = value
+        self.state = state_cp
+
     @classmethod
     @abstractmethod
     def event_matches_format(

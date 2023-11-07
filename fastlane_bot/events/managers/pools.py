@@ -8,6 +8,7 @@ Licensed under MIT
 from typing import List, Dict, Any, Callable, Optional
 
 import pandas as pd
+from pandas import DataFrame
 from web3 import Web3
 from web3.contract import Contract
 
@@ -33,7 +34,18 @@ class PoolManager(BaseManager):
             The pool key.
 
         """
-        exchange_name = pool_info.index.get_level_values("exchange_name")
+        if not isinstance(pool_info, pd.DataFrame):
+            pool_info = pd.DataFrame([pool_info]).set_index(
+                [
+                    "exchange_name",
+                    "tkn0_address",
+                    "tkn1_address",
+                    "cid",
+                    "address",
+                    "last_updated_block",
+                ]
+            )
+        exchange_name = pool_info.index.get_level_values("exchange_name").tolist()[0]
         if exchange_name in [
             "uniswap_v2",
             "sushiswap_v2",
@@ -138,7 +150,7 @@ class PoolManager(BaseManager):
         fee,
         fee_float,
         block_number: int = None,
-    ) -> Dict[str, Any]:
+    ) -> DataFrame:
         """
         Generate the pool info.
 
@@ -193,6 +205,18 @@ class PoolManager(BaseManager):
             "fee": fee,
         }
         pool_info["descr"] = self.pool_descr_from_info(pool_info)
+
+        pool_info = pd.DataFrame([pool_info]).set_index(
+            [
+                "exchange_name",
+                "tkn0_address",
+                "tkn1_address",
+                "cid",
+                "address",
+                "last_updated_block",
+            ]
+        )
+
         return pool_info
 
     def add_pool_info(
@@ -265,11 +289,12 @@ class PoolManager(BaseManager):
 
         # Add other args if necessary
         if other_args:
-            pool_info.update(other_args)
+            pool_info = self.update_pool_data_from_other_args(pool_info, other_args)
 
         # Update cid if necessary
         if exchange_name != "carbon_v1":
-            pool_info["cid"] = self.pool_cid_from_descr(self.web3, pool_info["descr"])
+            cid = self.pool_cid_from_descr(self.web3, pool_info["descr"])
+            pool_info = pool_info[pool_info.index.get_level_values("cid") == cid]
 
         # Add pool to exchange if necessary
         pool = self.get_or_init_pool(pool_info)
@@ -286,7 +311,7 @@ class PoolManager(BaseManager):
                 )
             )
 
-        self.pool_data.append(pool_info)
+        self.pool_data = pd.concat([self.pool_data, pool_info])
         return pool_info
 
     def add_pool_to_exchange(self, pool_info: pd.DataFrame) -> None:
@@ -341,10 +366,12 @@ class PoolManager(BaseManager):
             key = "tkn0_address"
 
         if ex_name == "bancor_v2":
-            filtered_pools = self.pool_data[
-                self.pool_data.index.get_level_values("exchange_name") == ex_name
-                and self.pool_data.index.get_level_values(key[0]) == key_value[0]
-                and self.pool_data.index.get_level_values(key[1]) == key_value[1]
+            pool_data = self.pool_data
+
+            filtered_pools = pool_data[
+                (pool_data.index.get_level_values("exchange_name") == ex_name)
+                & (pool_data.index.get_level_values(key[0]) == key_value[0])
+                & (pool_data.index.get_level_values(key[1]) == key_value[1])
             ]
 
         else:
@@ -382,14 +409,11 @@ class PoolManager(BaseManager):
         data : Dict[str, Any]
             The data.
         """
-        cid = pool_info.index.get_level_values("cid").tolist()[0]
-        pool = self.pool_data[self.pool_data.index.get_level_values("cid") == cid]
+        cid = pool_info.index.get_level_values("cid")[0]
 
-        # update the 'pool' dataframe with 'data'
-        pool.update(pd.DataFrame(data, index=pool.index))
-
-        # update the 'pool_data' dataframe with the updated 'pool' dataframe
-        self.pool_data.update(pool)
+        self.pool_data.loc[
+            self.pool_data.index.get_level_values("cid") == cid, :
+        ] = pd.DataFrame(data, index=pool_info.index)
 
     def get_or_init_pool(self, pool_info: Dict[str, Any]) -> Pool:
         """

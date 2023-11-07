@@ -176,17 +176,61 @@ class PoolAndTokens:
         self.z_1 = self.z_1 or 0
         self.y_1 = self.y_1 or 0
 
-        self.tokens = self.get_tokens #self.remove_nan([self.tkn0_key, self.tkn1_key, self.tkn2_key, self.tkn3_key, self.tkn4_key, self.tkn5_key, self.tkn6_key, self.tkn7_key])
-        self.token_weights = self.remove_nan([self.tkn0_weight, self.tkn1_weight, self.tkn2_weight, self.tkn3_weight, self.tkn4_weight, self.tkn5_weight, self.tkn6_weight, self.tkn7_weight])
-        self.token_balances = self.remove_nan([self.tkn0_balance, self.tkn1_balance, self.tkn2_balance, self.tkn3_balance, self.tkn4_balance, self.tkn5_balance, self.tkn6_balance, self.tkn7_balance])
-        self.token_decimals = self.remove_nan([self.tkn0_decimals, self.tkn1_decimals, self.tkn2_decimals, self.tkn3_decimals, self.tkn4_decimals, self.tkn5_decimals, self.tkn6_decimals, self.tkn7_decimals])
+        self.tokens = (
+            self.get_tokens
+        )  # self.remove_nan([self.tkn0_key, self.tkn1_key, self.tkn2_key, self.tkn3_key, self.tkn4_key, self.tkn5_key, self.tkn6_key, self.tkn7_key])
+        self.token_weights = self.remove_nan(
+            [
+                self.tkn0_weight,
+                self.tkn1_weight,
+                self.tkn2_weight,
+                self.tkn3_weight,
+                self.tkn4_weight,
+                self.tkn5_weight,
+                self.tkn6_weight,
+                self.tkn7_weight,
+            ]
+        )
+        self.token_balances = self.remove_nan(
+            [
+                self.tkn0_balance,
+                self.tkn1_balance,
+                self.tkn2_balance,
+                self.tkn3_balance,
+                self.tkn4_balance,
+                self.tkn5_balance,
+                self.tkn6_balance,
+                self.tkn7_balance,
+            ]
+        )
+        self.token_decimals = self.remove_nan(
+            [
+                self.tkn0_decimals,
+                self.tkn1_decimals,
+                self.tkn2_decimals,
+                self.tkn3_decimals,
+                self.tkn4_decimals,
+                self.tkn5_decimals,
+                self.tkn6_decimals,
+                self.tkn7_decimals,
+            ]
+        )
 
     @property
     def get_tokens(self):
         """
         returns all tokens in a curve
         """
-        tokens = [self.tkn0_key, self.tkn1_key, self.tkn2_key, self.tkn3_key, self.tkn4_key, self.tkn5_key, self.tkn6_key, self.tkn7_key]
+        tokens = [
+            self.tkn0_key,
+            self.tkn1_key,
+            self.tkn2_key,
+            self.tkn3_key,
+            self.tkn4_key,
+            self.tkn5_key,
+            self.tkn6_key,
+            self.tkn7_key,
+        ]
         tokens = [tkn for tkn in tokens if type(tkn) == str]
         return [tkn for tkn in tokens if tkn is not None]
 
@@ -196,7 +240,10 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(self.fee))
-        if self.exchange_name in [self.ConfigObj.UNISWAP_V3_NAME, self.ConfigObj.PANCAKESWAP_V3_NAME]:
+        if self.exchange_name in [
+            self.ConfigObj.UNISWAP_V3_NAME,
+            self.ConfigObj.PANCAKESWAP_V3_NAME,
+        ]:
             out = self._univ3_to_cpc()
         elif self.exchange_name in [
             self.ConfigObj.CARBON_V1_NAME,
@@ -246,27 +293,37 @@ class PoolAndTokens:
                     continue
 
                 # convert tkn0_balance and tkn1_balance to Decimal from wei
-                tkn0_balance = self.convert_decimals(self.token_balances[idx], self.token_decimals[idx])
-                tkn1_balance = self.convert_decimals(self.token_balances[_idx], self.token_decimals[_idx])
+                tkn0_balance = self.convert_decimals(
+                    self.token_balances[idx], self.token_decimals[idx]
+                )
+                tkn1_balance = self.convert_decimals(
+                    self.token_balances[_idx], self.token_decimals[_idx]
+                )
                 weight0 = float(str(self.token_weights[idx]))
                 weight1 = float(str(self.token_weights[_idx]))
                 eta = weight0 / weight1
                 _pair_name = tkn + "/" + _tkn
                 # create a typed-dictionary of the arguments
-                typed_args_all.append({
-                    "x": tkn0_balance,
-                    "y": tkn1_balance,
-                    #"alpha": weight0,
-                    "eta": eta,
-                    "pair": _pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
-                    "fee": self.fee,
-                    "cid": self.cid,
-                    "descr": self.descr,
-                    "params":  self._params,
-                })
-        return [ConstantProductCurve.from_xyal(**self._convert_to_float(typed_args)) for typed_args in typed_args_all]
+                typed_args_all.append(
+                    {
+                        "x": tkn0_balance,
+                        "y": tkn1_balance,
+                        # "alpha": weight0,
+                        "eta": eta,
+                        "pair": _pair_name.replace("ETH-EEeE", "WETH-6Cc2"),
+                        "fee": self.fee,
+                        "cid": self.cid,
+                        "descr": self.descr,
+                        "params": self._params,
+                    }
+                )
+        return [
+            ConstantProductCurve.from_xyal(**self._convert_to_float(typed_args))
+            for typed_args in typed_args_all
+        ]
 
-    class DoubleInvalidCurveError(ValueError): pass
+    class DoubleInvalidCurveError(ValueError):
+        pass
 
     def _other_to_cpc(self) -> List[Any]:
         """
@@ -493,6 +550,7 @@ class PoolAndTokens:
         """
         idx = self._get_token_index(tkn=tkn)
         return self.token_balances[idx]
+
     def get_token_decimals(self, tkn):
         """
         :param tkn: the token key
@@ -501,6 +559,7 @@ class PoolAndTokens:
         """
         idx = self._get_token_index(tkn=tkn)
         return self.token_decimals[idx]
+
     def _get_token_index(self, tkn):
         """
         :param tkn: the token key
@@ -521,4 +580,9 @@ class PoolAndTokens:
 
         Returns: List
         """
-        return [item for item in item_list if item is not None and not math.isnan(item)]
+        try:
+            return [
+                item for item in item_list if item is not None and not math.isnan(item)
+            ]
+        except TypeError:
+            print(f"item_list: {item_list}")
