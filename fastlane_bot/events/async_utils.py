@@ -244,16 +244,14 @@ def get_token_contracts(mgr, tokens_and_fee_df):
     missing_tokens = [tkn for tkn in tokens if tkn not in tokens_df["address"].tolist()]
     contracts = []
     failed_contracts = []
-    for tkn in missing_tokens:
-        if tkn is None or str(tkn) == "nan":
-            continue
-
-        contracts.append(
-            {
-                "contract": w3_async.eth.contract(address=tkn, abi=ERC20_ABI),
-                "tkn": tkn,
-            }
-        )
+    contracts.extend(
+        {
+            "contract": w3_async.eth.contract(address=tkn, abi=ERC20_ABI),
+            "tkn": tkn,
+        }
+        for tkn in missing_tokens
+        if tkn is not None and str(tkn) != "nan"
+    )
     mgr.cfg.logger.info(
         f"\n\n failed token contracts:{len(failed_contracts)}/{len(contracts)} "
     )
@@ -348,8 +346,21 @@ async def async_main_backdate_from_contracts(c):
     )
 
 
-def async_backdate_from_contracts(mgr, rows, current_block, last_block, start_block):
+def async_backdate_from_contracts(mgr, rows, current_block, start_block):
     abis = get_abis_and_exchanges(mgr)
+    contracts = get_backdate_contracts(abis, mgr, rows)
+    chunks = get_contract_chunks(contracts)
+    for chunk in chunks:
+        loop = asyncio.get_event_loop()
+        vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk))
+        idxes = [val[0] for val in vals]
+        updated_pool_info = [val[1] for val in vals]
+        for i, idx in enumerate(idxes):
+            updated_pool_data = updated_pool_info[i]
+            mgr.pool_data[idx] = updated_pool_data
+
+
+def get_backdate_contracts(abis, mgr, rows):
     contracts = []
     for idx in rows:
         pool_info = mgr.pool_data[idx]
@@ -366,19 +377,7 @@ def async_backdate_from_contracts(mgr, rows, current_block, last_block, start_bl
                 ),
             }
         )
-
-    chunks = [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
-    for idx2, chunk in enumerate(chunks):
-        mgr.cfg.logger.info(
-            f"Backdating {idx2} of {len(chunks)} chunked pools from {start_block} to {current_block}"
-        )
-        loop = asyncio.get_event_loop()
-        vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk))
-        idxes = [val[0] for val in vals]
-        updated_pool_info = [val[1] for val in vals]
-        for i, idx in enumerate(idxes):
-            updated_pool_data = updated_pool_info[i]
-            mgr.pool_data[idx] = updated_pool_data
+    return contracts
 
 
 def async_handle_initial_iteration(
@@ -405,10 +404,9 @@ def async_handle_initial_iteration(
             )
             start_time = time.time()
             async_backdate_from_contracts(
-                mgr,
-                other_pool_rows,
+                mgr=mgr,
+                rows=other_pool_rows,
                 current_block=current_block,
-                last_block=last_block,
                 start_block=start_block,
             )
             mgr.cfg.logger.info(
