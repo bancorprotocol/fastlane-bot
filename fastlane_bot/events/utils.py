@@ -210,36 +210,6 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
 
-# bookmark
-# def filter_static_pool_data(
-#     pool_data: pd.DataFrame, exchanges: List[str]
-# ) -> pd.DataFrame:
-#     """Helper function to filter static pool data.
-#
-#     Parameters
-#     ----------
-#     pool_data : pd.DataFrame
-#         The pool data.
-#     exchanges : List[str]
-#         A list of exchanges to fetch data for.
-#
-#     Returns
-#     -------
-#     pd.DataFrame
-#         The filtered pool data.
-#     """
-#     filtered_data = pool_data[pool_data["exchange_name"].isin(exchanges)]
-#
-#     if sample_size != "max":
-#         bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
-#         non_bancor_data = filtered_data[
-#             filtered_data["exchange_name"] != "bancor_v3"
-#         ].sample(n=sample_size)
-#         filtered_data = pd.concat([bancor_data, non_bancor_data])
-#
-#     return filtered_data
-
-
 def get_static_data(
     cfg: Config,
     exchanges: List[str],
@@ -259,8 +229,6 @@ def get_static_data(
         The name of the blockchain being used
     static_pool_data_filename : str
         The filename of the static pool data CSV file.
-    static_pool_data_sample_sz : int or str
-        The number of Bancor v3 pools to fetch.
 
     Returns
     -------
@@ -269,7 +237,6 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
-    # token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
