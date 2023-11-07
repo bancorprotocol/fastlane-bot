@@ -66,12 +66,9 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.concat(vals)
 
 
-async def get_token_and_fee(exchange_name: str,
-                            ex: Any,
-                            address: str,
-                            contract: AsyncContract,
-                            event: Any
-    ) -> Tuple[str, str, str, str, str] or Tuple[str, str, None, None, None]:
+async def get_token_and_fee(
+    exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
+) -> Tuple[str, str, str, str, str] or Tuple[str, str, None, None, None]:
     try:
         tkn0 = await ex.get_tkn0(address, contract, event=event)
         tkn1 = await ex.get_tkn1(address, contract, event=event)
@@ -108,7 +105,13 @@ def pair_name(
     return f"{t0_symbol}-{tkn0_address[-key_digits:]}/{t1_symbol}-{tkn1_address[-key_digits:]}"
 
 
-def get_pool_info(pool: pd.Series, mgr: Any, current_block: int, tkn0: Dict[str, Any], tkn1: Dict[str, Any]) -> Dict[str, Any]:
+def get_pool_info(
+    pool: pd.Series,
+    mgr: Any,
+    current_block: int,
+    tkn0: Dict[str, Any],
+    tkn1: Dict[str, Any],
+) -> Dict[str, Any]:
     fee_raw = eval(pool["fee"])
     pool_info = {
         "exchange_name": pool["exchange_name"],
@@ -128,7 +131,9 @@ def get_pool_info(pool: pd.Series, mgr: Any, current_block: int, tkn0: Dict[str,
     return pool_info
 
 
-def add_token_info(pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]) -> Dict[str, Any]:
+def add_token_info(
+    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
+) -> Dict[str, Any]:
     pool_info["tkn0_symbol"] = tkn0["symbol"]
     pool_info["tkn0_decimals"] = tkn0["decimals"]
     pool_info["tkn0_key"] = get_tkn_key(tkn0["symbol"], tkn0["address"])
@@ -211,7 +216,13 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
 
-def get_new_pool_data(current_block: int, keys: List[str], mgr: Any, tokens_and_fee_df: pd.DataFrame, tokens_df: pd.DataFrame) -> List[Dict]:
+def get_new_pool_data(
+    current_block: int,
+    keys: List[str],
+    mgr: Any,
+    tokens_and_fee_df: pd.DataFrame,
+    tokens_df: pd.DataFrame,
+) -> List[Dict]:
     # Convert tokens_df to a dictionary keyed by address for faster access
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
     # Convert pool_data_keys to a frozenset for faster containment checks
@@ -237,8 +248,12 @@ def get_new_pool_data(current_block: int, keys: List[str], mgr: Any, tokens_and_
     return new_pool_data
 
 
-def get_token_contracts(mgr: Any, tokens_and_fee_df: pd.DataFrame) -> Tuple[
-    List[Dict[str, Type[AsyncContract] or AsyncContract or Any] or None or Any], DataFrame]:
+def get_token_contracts(
+    mgr: Any, tokens_and_fee_df: pd.DataFrame
+) -> Tuple[
+    List[Dict[str, Type[AsyncContract] or AsyncContract or Any] or None or Any],
+    DataFrame,
+]:
     # for each token in the pools, check whether we have the token info in the tokens.csv static data, and ifr not,
     # add it
     tokens = (
@@ -319,7 +334,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
 
 
 def get_contract_chunks(contracts: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
-    return [contracts[i: i + 1000] for i in range(0, len(contracts), 1000)]
+    return [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
 
 
 def get_abis_and_exchanges(mgr: Any) -> Dict[str, Any]:
