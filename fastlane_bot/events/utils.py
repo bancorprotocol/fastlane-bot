@@ -60,9 +60,8 @@ def filter_latest_events(
     # Handles the case where multiple pools are created in the same block
     all_events.reverse()
 
-    bancor_v2_anchor_addresses = {
-        pool["anchor"] for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"
-    }
+    bancor_v2_pools = mgr.pool_data.xs("bancor_v2", level="exchange_name")
+    bancor_v2_anchor_addresses = set(bancor_v2_pools.index.get_level_values("address"))
 
     for event in all_events:
         pool_type = mgr.pool_type_from_exchange_name(
@@ -171,8 +170,13 @@ def add_initial_pool_data(cfg: Config, mgr: Any, n_jobs: int = -1):
     # Add initial pools for each row in the static_pool_data
     start_time = time.time()
     Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
+        delayed(mgr.add_pool_to_exchange)(
+            mgr.pool_data.loc[(slice(None), slice(None), slice(None), cid), :]
+        )
+        for cid in mgr.pool_data.index.get_level_values("cid").unique()
     )
+
+    # mgr.pool_data.apply(lambda row: mgr.add_pool_to_exchange(row), axis=1)
     cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
 
 
@@ -649,9 +653,10 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
         The manager object.
 
     """
-    Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.update_from_event)(event=event) for event in latest_events
-    )
+    # Parallel(n_jobs=n_jobs, backend="threading")(
+    #     delayed(mgr.update_from_event)(event=event) for event in latest_events
+    # )
+    [mgr.update_from_event(event=latest_events[i]) for i in range(len(latest_events))]
 
 
 def write_pool_data_to_disk(
@@ -678,8 +683,8 @@ def write_pool_data_to_disk(
             os.mkdir("pool_data")
         path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.pool_data))
+        # with open(path, "w") as f:
+        mgr.pool_data.to_json(f"{path}", orient="index")
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
@@ -704,12 +709,13 @@ def parse_non_multicall_rows_to_update(
         A tuple of the Bancor v3 pool rows to update and other pool rows to update.
     """
 
-    other_pool_rows = [
-        idx
-        for idx in rows_to_update
-        if mgr.pool_data[idx]["exchange_name"] not in mgr.cfg.MULTICALLABLE_EXCHANGES
-    ]
-    return other_pool_rows
+    # other_pool_rows = [
+    #     idx
+    #     for idx in rows_to_update
+    #     if mgr.pool_data[idx]["exchange_name"] not in mgr.cfg.MULTICALLABLE_EXCHANGES
+    # ]
+    # return the cids of the rows_to_update
+    return mgr.pool_data.loc[rows_to_update, "cid"].tolist()
 
 
 def init_bot(mgr: Any) -> CarbonBot:
@@ -930,7 +936,7 @@ def handle_duplicates(mgr: Any):
     """
     # check if any duplicate cid's exist in the pool data
     mgr.deduplicate_pool_data()
-    cids = [pool["cid"] for pool in mgr.pool_data]
+    cids = mgr.pool_data.index.get_level_values("cid").tolist()
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
 
 
@@ -950,11 +956,12 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
     List[Any]
         A list of pools for the specified exchange.
     """
-    return [
-        idx
-        for idx, pool in enumerate(mgr.pool_data)
-        if pool["exchange_name"] == exchange
-    ]
+    # return [
+    #     idx
+    #     for idx, pool in enumerate(mgr.pool_data)
+    #     if pool["exchange_name"] == exchange
+    # ]
+    return mgr.pool_data.xs(exchange, level="exchange_name")
 
 
 def handle_initial_iteration(
@@ -1183,7 +1190,7 @@ def get_start_block(
         # connect to the Tenderly fork and get the latest block number
         from_block = mgr.w3_tenderly.eth.block_number
         return (
-            max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
+            mgr.pool_data["last_updated_block"].max() - reorg_delay
             if last_block != 0
             else from_block - reorg_delay - alchemy_max_block_fetch
         ), from_block
@@ -1191,8 +1198,7 @@ def get_start_block(
         current_block = mgr.web3.eth.block_number
         return (
             (
-                max(block["last_updated_block"] for block in mgr.pool_data)
-                - reorg_delay
+                mgr.pool_data["last_updated_block"].max() - reorg_delay
                 if last_block != 0
                 else current_block - reorg_delay - alchemy_max_block_fetch
             ),

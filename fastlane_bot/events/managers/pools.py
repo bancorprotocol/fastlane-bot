@@ -7,6 +7,7 @@ Licensed under MIT
 """
 from typing import List, Dict, Any, Callable, Optional
 
+import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
@@ -32,7 +33,8 @@ class PoolManager(BaseManager):
             The pool key.
 
         """
-        if pool_info["exchange_name"] in [
+        exchange_name = pool_info.index.get_level_values("exchange_name")
+        if exchange_name in [
             "uniswap_v2",
             "sushiswap_v2",
             "uniswap_v3",
@@ -40,13 +42,13 @@ class PoolManager(BaseManager):
             "pancakeswap_v3",
             "bancor_v2",
         ]:
-            return pool_info["address"]
-        elif pool_info["exchange_name"] in ["carbon_v1", "balancer"]:
-            return pool_info["cid"]
-        elif pool_info["exchange_name"] == "bancor_v3":
-            return pool_info["tkn1_address"]
-        elif pool_info["exchange_name"] == "bancor_pol":
-            return pool_info["tkn0_address"]
+            return pool_info.index.get_level_values("address").tolist()[0]
+        elif exchange_name in ["carbon_v1", "balancer"]:
+            return pool_info.index.get_level_values("cid").tolist()[0]
+        elif exchange_name == "bancor_v3":
+            return pool_info.index.get_level_values("tkn1_address").tolist()[0]
+        elif exchange_name == "bancor_pol":
+            return pool_info.index.get_level_values("tkn0_address").tolist()[0]
 
     @staticmethod
     def pool_type_from_exchange_name(exchange_name: str) -> Callable:
@@ -276,14 +278,18 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3, tenderly_exchanges
+                    contract,
+                    self.tenderly_fork_id,
+                    self.w3_tenderly,
+                    self.web3,
+                    tenderly_exchanges,
                 )
             )
 
         self.pool_data.append(pool_info)
         return pool_info
 
-    def add_pool_to_exchange(self, pool_info: Dict[str, Any]):
+    def add_pool_to_exchange(self, pool_info: pd.DataFrame) -> None:
         """
         Add a pool to the exchange.
 
@@ -293,9 +299,11 @@ class PoolManager(BaseManager):
             The pool info.
 
         """
-        pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
+
+        exchange_name = pool_info.index.get_level_values("exchange_name").tolist()[0]
+        pool_type = self.pool_type_from_exchange_name(exchange_name)
         pool = pool_type(state=pool_info)
-        self.exchanges[pool_info["exchange_name"]].add_pool(pool)
+        self.exchanges[exchange_name].add_pool(pool)
 
     def get_pool_info(
         self,
@@ -331,25 +339,37 @@ class PoolManager(BaseManager):
 
         if ex_name == "bancor_pol":
             key = "tkn0_address"
-            
-        if ex_name == "bancor_v2":
-            return next(
-                (
-                    self.validate_pool_info(key_value, event, pool, key)
-                    for pool in self.pool_data
-                    if pool[key[0]] == key_value[0] and pool[key[1]] == key_value[1] and pool["exchange_name"] == ex_name
-                ),
-                None,
-            )
 
-        return next(
-            (
-                self.validate_pool_info(key_value, event, pool, key)
-                for pool in self.pool_data
-                if pool[key] == key_value and pool["exchange_name"] == ex_name
-            ),
-            None,
-        )
+        if ex_name == "bancor_v2":
+            filtered_pools = self.pool_data[
+                self.pool_data.index.get_level_values("exchange_name") == ex_name
+                and self.pool_data.index.get_level_values(key[0]) == key_value[0]
+                and self.pool_data.index.get_level_values(key[1]) == key_value[1]
+            ]
+
+        else:
+
+            # Filter the DataFrame for the specified conditions
+            filtered_pools = self.pool_data[
+                (self.pool_data.index.get_level_values(key) == key_value)
+                & (self.pool_data.index.get_level_values("exchange_name") == ex_name)
+            ]
+
+        # Apply the validation function to the first row if the filter result is not empty
+        if not filtered_pools.empty:
+            # Using iloc[0] to get the first row of the DataFrame as a Series
+            # result = self.validate_pool_info(
+            #     key_value, event, filtered_pools.iloc[0], key
+            # )
+            result = filtered_pools
+        else:
+            result = None
+
+        if result is not None:
+            # set the index of the result to be the same as the pool_data index
+            result.index.names = self.pool_data.index.names
+
+        return result
 
     def update_pool_data(self, pool_info: Dict[str, Any], data: Dict[str, Any]) -> None:
         """
@@ -362,10 +382,14 @@ class PoolManager(BaseManager):
         data : Dict[str, Any]
             The data.
         """
-        for pool in self.pool_data:
-            if pool["cid"] == pool_info["cid"]:
-                pool.update(data)
-                break
+        cid = pool_info.index.get_level_values("cid").tolist()[0]
+        pool = self.pool_data[self.pool_data.index.get_level_values("cid") == cid]
+
+        # update the 'pool' dataframe with 'data'
+        pool.update(pd.DataFrame(data, index=pool.index))
+
+        # update the 'pool_data' dataframe with the updated 'pool' dataframe
+        self.pool_data.update(pool)
 
     def get_or_init_pool(self, pool_info: Dict[str, Any]) -> Pool:
         """
@@ -382,10 +406,11 @@ class PoolManager(BaseManager):
             The pool.
         """
         key = self.pool_key_from_info(pool_info)
-
-        pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
+        exchange_name = pool_info.index.get_level_values("exchange_name").tolist()[0]
+        pool = self.exchanges[exchange_name].get_pool(key)
         if not pool:
             self.add_pool_to_exchange(pool_info)
             key = self.pool_key_from_info(pool_info)
-            pool = self.exchanges[pool_info["exchange_name"]].get_pool(key)
+
+            pool = self.exchanges[exchange_name].get_pool(key)
         return pool

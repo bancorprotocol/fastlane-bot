@@ -54,10 +54,12 @@ class UniswapV2Pool(Pool):
         for key, value in data.items():
             self.state[key] = value
 
-        data["cid"] = self.state["cid"]
-        data["fee"] = self.state["fee"]
-        data["fee_float"] = self.state["fee_float"]
-        data["exchange_name"] = self.state["exchange_name"]
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["fee"] = self.state["fee"].values[0]
+        data["fee_float"] = self.state["fee_float"].values[0]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     async def update_from_contract(

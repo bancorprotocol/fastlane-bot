@@ -9,6 +9,7 @@ import random
 import time
 from typing import Dict, Any, Optional
 
+import pandas as pd
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
@@ -18,9 +19,7 @@ from fastlane_bot.events.managers.pools import PoolManager
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-    def update_from_event(
-        self, event: Dict[str, Any]
-    ) -> None:
+    def update_from_event(self, event: Dict[str, Any]) -> None:
         """
         Updates the state of the pool data from an event.
 
@@ -55,15 +54,17 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
-        pool_info = self.get_pool_info(
-            key, key_value, ex_name
-        )
-        if not pool_info:
+        pool_info = self.get_pool_info(key, key_value, ex_name)
+
+        if pool_info is None:
             self.pools_to_add_from_contracts.append(
                 (addr, ex_name, event, key, key_value)
             )
             return
 
+        print(
+            f"[update_from_event] pool_info.index.names: {pool_info.index.names}, pool_info: {pool_info}"
+        )
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info)
@@ -172,9 +173,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     pool_info = pool
                     break
 
-        pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
-        if not pool_info:
-            return
+        # pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
+        # if not pool_info:
+        #     return
 
         pool_info["last_updated_block"] = block_number
         if contract is None:
@@ -251,15 +252,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     break
                 break
             except Exception as e:
-                if 'Too Many Requests for url' in str(e):
+                if "Too Many Requests for url" in str(e):
                     time.sleep(random.random())
                     return self.update(
-                            event,
-                            address,
-                            token_address,
-                            pool_info,
-                            contract,
-                            block_number,
+                        event,
+                        address,
+                        token_address,
+                        pool_info,
+                        contract,
+                        block_number,
                     )
                 elif "format_name" not in str(e):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
@@ -269,7 +270,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 else:
                     rate_limiter = 0.1 + 0.9 * random.random()
                     time.sleep(random.random())
-
 
     def handle_pair_trading_fee_updated(
         self,
