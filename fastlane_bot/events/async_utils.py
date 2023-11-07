@@ -2,10 +2,12 @@ import asyncio
 import os
 import time
 from glob import glob
-from typing import Any, List, Dict, Callable
+from typing import Any, List, Dict, Callable, Tuple, Type
 
 import pandas as pd
+from pandas import DataFrame
 from web3 import AsyncWeb3
+from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.exchanges import exchange_factory
@@ -21,7 +23,7 @@ w3_async = AsyncWeb3(
 )
 
 
-async def get_missing_tkn(contract, tkn):
+async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     try:
         symbol = await contract.functions.symbol().call()
         name = symbol
@@ -41,7 +43,7 @@ async def get_missing_tkn(contract, tkn):
             ]
         )
     except Exception as e:
-        print(e)
+        cfg.logger.error(f"Failed to get token info for {tkn} {e}")
         df = pd.DataFrame(
             [
                 {
@@ -57,14 +59,19 @@ async def get_missing_tkn(contract, tkn):
     return df
 
 
-async def main_get_missing_tkn(c):
+async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
     vals = await asyncio.wait_for(
         asyncio.gather(*[get_missing_tkn(**args) for args in c]), timeout=20 * 60
     )
     return pd.concat(vals)
 
 
-async def get_token_and_fee(exchange_name, ex, address, contract, event):
+async def get_token_and_fee(exchange_name: str,
+                            ex: Any,
+                            address: str,
+                            contract: AsyncContract,
+                            event: Any
+    ) -> Tuple[str, str, str, str, str] or Tuple[str, str, None, None, None]:
     try:
         tkn0 = await ex.get_tkn0(address, contract, event=event)
         tkn1 = await ex.get_tkn1(address, contract, event=event)
@@ -77,7 +84,7 @@ async def get_token_and_fee(exchange_name, ex, address, contract, event):
         return exchange_name, address, None, None, None
 
 
-async def main_get_tokens_and_fee(c):
+async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
     vals = await asyncio.wait_for(
         asyncio.gather(*[get_token_and_fee(**args) for args in c]), timeout=20 * 60
     )
@@ -101,7 +108,7 @@ def pair_name(
     return f"{t0_symbol}-{tkn0_address[-key_digits:]}/{t1_symbol}-{tkn1_address[-key_digits:]}"
 
 
-def get_pool_info(pool: pd.Series, mgr, current_block, tkn0, tkn1) -> Dict:
+def get_pool_info(pool: pd.Series, mgr: Any, current_block: int, tkn0: Dict[str, Any], tkn1: Dict[str, Any]) -> Dict[str, Any]:
     fee_raw = eval(pool["fee"])
     pool_info = {
         "exchange_name": pool["exchange_name"],
@@ -121,7 +128,7 @@ def get_pool_info(pool: pd.Series, mgr, current_block, tkn0, tkn1) -> Dict:
     return pool_info
 
 
-def add_token_info(pool_info: Dict, tkn0: Dict, tkn1: Dict) -> Dict:
+def add_token_info(pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]) -> Dict[str, Any]:
     pool_info["tkn0_symbol"] = tkn0["symbol"]
     pool_info["tkn0_decimals"] = tkn0["decimals"]
     pool_info["tkn0_key"] = get_tkn_key(tkn0["symbol"], tkn0["address"])
@@ -135,8 +142,8 @@ def add_token_info(pool_info: Dict, tkn0: Dict, tkn1: Dict) -> Dict:
 
 
 def add_missing_keys(
-    pool_info: Dict, pool_data_keys: frozenset, keys: List[str]
-) -> Dict:
+    pool_info: Dict[str, Any], pool_data_keys: frozenset, keys: List[str]
+) -> Dict[str, Any]:
     for key in pool_data_keys:
         if key not in pool_info:
             pool_info[key] = 0 if key in keys else None
@@ -204,7 +211,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
 
-def get_new_pool_data(current_block, keys, mgr, tokens_and_fee_df, tokens_df):
+def get_new_pool_data(current_block: int, keys: List[str], mgr: Any, tokens_and_fee_df: pd.DataFrame, tokens_df: pd.DataFrame) -> List[Dict]:
     # Convert tokens_df to a dictionary keyed by address for faster access
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
     # Convert pool_data_keys to a frozenset for faster containment checks
@@ -230,7 +237,8 @@ def get_new_pool_data(current_block, keys, mgr, tokens_and_fee_df, tokens_df):
     return new_pool_data
 
 
-def get_token_contracts(mgr, tokens_and_fee_df):
+def get_token_contracts(mgr: Any, tokens_and_fee_df: pd.DataFrame) -> Tuple[
+    List[Dict[str, Type[AsyncContract] or AsyncContract or Any] or None or Any], DataFrame]:
     # for each token in the pools, check whether we have the token info in the tokens.csv static data, and ifr not,
     # add it
     tokens = (
@@ -266,7 +274,7 @@ def process_contract_chunks(
     subset: List[str],
     func: Callable,
     df_combined: pd.DataFrame = None,
-):
+) -> pd.DataFrame:
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
@@ -291,7 +299,7 @@ def process_contract_chunks(
     return df_combined
 
 
-def get_pool_contracts(mgr):
+def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
@@ -310,11 +318,11 @@ def get_pool_contracts(mgr):
     return contracts
 
 
-def get_contract_chunks(contracts):
-    return [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
+def get_contract_chunks(contracts: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
+    return [contracts[i: i + 1000] for i in range(0, len(contracts), 1000)]
 
 
-def get_abis_and_exchanges(mgr):
+def get_abis_and_exchanges(mgr: Any) -> Dict[str, Any]:
     abis = {}
     exchanges = {}
     for exchange in mgr.exchanges:
@@ -324,8 +332,13 @@ def get_abis_and_exchanges(mgr):
 
 
 async def async_handle_main_backdate_from_contracts(
-    idx, pool, w3_tenderly, tenderly_fork_id, pool_info, contract
-):
+    idx: int,
+    pool: Any,
+    w3_tenderly: Any,
+    tenderly_fork_id: str,
+    pool_info: Dict,
+    contract: Any,
+) -> Tuple[int, Dict[str, Any]]:
     params = await pool.update_from_contract(
         contract,
         tenderly_fork_id=tenderly_fork_id,
@@ -337,7 +350,7 @@ async def async_handle_main_backdate_from_contracts(
     return idx, pool_info
 
 
-async def async_main_backdate_from_contracts(c):
+async def async_main_backdate_from_contracts(c: List[Dict[str, Any]]) -> Tuple[Any]:
     return await asyncio.wait_for(
         asyncio.gather(
             *[async_handle_main_backdate_from_contracts(**args) for args in c]
@@ -346,7 +359,7 @@ async def async_main_backdate_from_contracts(c):
     )
 
 
-def async_backdate_from_contracts(mgr, rows, current_block, start_block):
+def async_backdate_from_contracts(mgr: Any, rows: List[int]):
     abis = get_abis_and_exchanges(mgr)
     contracts = get_backdate_contracts(abis, mgr, rows)
     chunks = get_contract_chunks(contracts)
@@ -360,7 +373,9 @@ def async_backdate_from_contracts(mgr, rows, current_block, start_block):
             mgr.pool_data[idx] = updated_pool_data
 
 
-def get_backdate_contracts(abis, mgr, rows):
+def get_backdate_contracts(
+    abis: Dict, mgr: Any, rows: List[int]
+) -> List[Dict[str, Any]]:
     contracts = []
     for idx in rows:
         pool_info = mgr.pool_data[idx]
@@ -406,8 +421,6 @@ def async_handle_initial_iteration(
             async_backdate_from_contracts(
                 mgr=mgr,
                 rows=other_pool_rows,
-                current_block=current_block,
-                start_block=start_block,
             )
             mgr.cfg.logger.info(
                 f"Backdating {len(other_pool_rows)} pools took {time.time() - start_time} seconds"
