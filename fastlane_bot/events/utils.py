@@ -404,10 +404,6 @@ def handle_flashloan_tokens(
         A list of flashloan tokens to fetch data for.
     """
     flashloan_tokens = flashloan_tokens.split(",")
-    flashloan_tokens = [
-        QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
-    ]
-
     unique_tokens = len(tokens["key"].unique())
     cfg.logger.info(f"unique_tokens: {unique_tokens}")
     flashloan_tokens = [
