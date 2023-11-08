@@ -28,6 +28,9 @@ from unittest.mock import Mock
 import nest_asyncio
 nest_asyncio.apply()
 import pytest
+import asyncio
+from unittest.mock import AsyncMock
+
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
@@ -52,7 +55,6 @@ with open('fastlane_bot/data/event_test_data.json', 'r') as f:
     setup_data = json.load(f)
 
 # +
-from unittest.mock import AsyncMock
 
 mocked_contract = Mock()
 
@@ -80,7 +82,7 @@ assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
 # ## test_uniswap_v2_exchange
 
 # +
-import asyncio, pytest
+
 
 uniswap_v2_exchange = UniswapV2()
 
