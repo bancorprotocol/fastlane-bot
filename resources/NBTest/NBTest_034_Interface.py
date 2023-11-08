@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -75,7 +75,7 @@ qi.update_state(new_state)
 
 # ## test_get_token
 
-new_state = [{'exchange_name': 'bancor_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10}]
+new_state = [{'exchange_name': 'bancor_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10, 'tkn0_decimals': 18, 'tkn1_decimals': 6, 'tkn0_symbol': 'ETH', 'tkn1_symbol': 'USDC', 'tkn0_address': 'Ox9er', 'tkn1_address': 'Ox8er'}]
 qi.update_state(new_state)
 token = qi.get_token('TKN-0x123')
 assert isinstance(token, Token)

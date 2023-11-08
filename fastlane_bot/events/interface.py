@@ -56,6 +56,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -152,7 +153,9 @@ class QueryInterface:
         tokens = list(set(tokens))
         return tokens
 
-    def filter_pools(self, exchange_name: str, keys: List[str] = "") -> List[Dict[str, Any]]:
+    def filter_pools(
+        self, exchange_name: str, keys: List[str] = ""
+    ) -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
 
@@ -210,7 +213,7 @@ class QueryInterface:
             "carbon_v1",
             "pancakeswap_v2",
             "pancakeswap_v3",
-            "balancer"
+            "balancer",
         ]
         keys = [
             ["liquidity"],
@@ -297,7 +300,7 @@ class QueryInterface:
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
-        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
         uniswap_v2_unmapped = [
             pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
         ]
@@ -306,9 +309,6 @@ class QueryInterface:
             pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
-
-
-
 
     def remove_faulty_token_pools(self) -> None:
         """
@@ -487,7 +487,7 @@ class QueryInterface:
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
-                    "tkn7_weight"
+                    "tkn7_weight",
                 ]
             },
         )
@@ -508,12 +508,13 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
+
             # remove tokens with no address, symbol or decimals
             if (
                 record.get("tkn0_address") is None
                 or record.get("tkn0_symbol") is None
                 or record.get("tkn0_decimals") is None
-                or str(record.get("tkn1_decimals")) == 'nan'
+                or str(record.get("tkn1_decimals")) == "nan"
             ):
                 self.cfg.logger.warning(
                     f"WARNING: Token {record.get('tkn0_key')} has no address, symbol or decimals"
