@@ -109,8 +109,6 @@ assert event['args']['liquidity'] == [pool['liquidity'] for pool in manager.pool
 
 # ## test_update_from_event_carbon_v1_update
 
-event['args']['id'] in pools_to_add_from_contracts
-
 # +
 event_create_for_update = event_data['carbon_v1_event_create_for_update']
 event = event_data['carbon_v1_event_update']

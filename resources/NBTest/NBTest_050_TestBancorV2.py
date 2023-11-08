@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -274,7 +274,7 @@ best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
 
 # Get the flashloan amount and token address
 flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-flashloan_token_address = bot.ConfigObj.w3.toChecksumAddress(
+flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
     bot.db.get_token(key=fl_token).address
 )
 
@@ -298,6 +298,3 @@ assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, fo
 assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
 assert encoded_trade_instructions[0].amtin * 10 ** 18 == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount"
 assert route_struct[0]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533" or route_struct[1]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533", f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: 0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533 for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
-# -
-
-

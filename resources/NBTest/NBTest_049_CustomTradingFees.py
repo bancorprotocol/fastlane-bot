@@ -24,7 +24,10 @@ from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, Car
 from fastlane_bot.events.managers.manager import Manager
 Base = None
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-
+import asyncio
+from unittest.mock import AsyncMock
+import nest_asyncio
+nest_asyncio.apply()
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
@@ -78,25 +81,34 @@ assert (event['args']['token0'], event['args']['token1']) in manager.fee_pairs
 #
 
 # +
+
 event = event_data['carbon_v1_trading_fee_updated']
 prevFeePPM = event['args']['prevFeePPM']
 newFeePPM = event['args']['newFeePPM']
 
 mocked_contract = Mock()
-mocked_contract.functions.tradingFeePPM.return_value.call.return_value = prevFeePPM
-assert int(manager.exchanges['carbon_v1'].get_fee('', mocked_contract)[0]) == prevFeePPM
+new_mocked_contract = Mock()
+mocked_contract.functions.tradingFeePPM.return_value.call =  AsyncMock(return_value=prevFeePPM)
+new_mocked_contract.functions.tradingFeePPM.return_value.call = AsyncMock(return_value=newFeePPM)
 
-# find all pools with fee==prevFeePPM
-prev_default_pools = [idx for idx, pool in enumerate(manager.pool_data) if pool['fee'] == prevFeePPM]
+@pytest.mark.asyncio
+async def test_update_from_event_carbon_v1_trading_fee_updated():
+    val = await manager.exchanges['carbon_v1'].get_fee('', mocked_contract)
+    assert int(val[0]) == prevFeePPM
+    
+    # find all pools with fee==prevFeePPM
+    prev_default_pools = [idx for idx, pool in enumerate(manager.pool_data) if pool['fee'] == prevFeePPM]
+    
+    manager.update_from_event(event)
 
-manager.update_from_event(event)
+    for idx in prev_default_pools:
+        assert manager.pool_data[idx]['fee'] == newFeePPM
+    
+    val2 = await manager.exchanges['carbon_v1'].get_fee('', new_mocked_contract)
+    assert int(val2[0]) == newFeePPM
 
-for idx in prev_default_pools:
-    assert manager.pool_data[idx]['fee'] == newFeePPM
-
-mocked_contract.functions.tradingFeePPM.return_value.call.return_value = newFeePPM
-
-assert int(manager.exchanges['carbon_v1'].get_fee('', mocked_contract)[0]) == newFeePPM
+# Run the test in an event loop
+asyncio.run(test_update_from_event_carbon_v1_trading_fee_updated())
 # -
 
 # ## test_update_from_event_carbon_v1_pair_trading_fee_updated
