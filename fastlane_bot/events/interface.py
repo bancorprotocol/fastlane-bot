@@ -508,8 +508,8 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
-            token_set.add(self.create_token(record, "tkn0_"))
-            token_set.add(self.create_token(record, "tkn1_"))
+            for idx in range(len(record["descr"].split("/"))):
+                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:

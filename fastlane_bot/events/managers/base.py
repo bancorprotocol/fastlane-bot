@@ -474,6 +474,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         with multicaller as mc:
@@ -602,6 +603,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         with multicaller as mc:

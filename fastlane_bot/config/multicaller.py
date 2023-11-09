@@ -108,8 +108,8 @@ class MultiCaller(ContextManager):
     __VERSION__ = "0.0.2"
 
 
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
-                 block_identifier: Any = 'latest', multicall_address: str = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
+    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract, multicall_address,
+                 block_identifier: Any = 'latest'):
         self._contract_calls: List[Callable] = []
         self.contract = contract
         self.block_identifier = block_identifier
