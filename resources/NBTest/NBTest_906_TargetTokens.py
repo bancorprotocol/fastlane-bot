@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
@@ -77,7 +78,8 @@ def run_command(mode):
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
         "--timeout=45",
-        f"--target_tokens={T.WETH},{T.DAI}"
+        f"--target_tokens={T.WETH},{T.DAI}",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         

@@ -5,13 +5,22 @@ Contains the manager module for handling contract functionality within the event
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os.path
+import random
+from datetime import datetime
+from glob import glob
 from typing import Dict, Any, Tuple, List
 
 import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI, ERC20_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI
+from fastlane_bot.data.abi import (
+    BANCOR_V3_NETWORK_INFO_ABI,
+    ERC20_ABI,
+    BANCOR_POL_ABI,
+    BALANCER_VAULT_ABI,
+)
 from fastlane_bot.events.managers.base import BaseManager
 
 
@@ -37,21 +46,21 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
                 )
-            elif exchange_name == 'carbon_v1':
+            elif exchange_name == "carbon_v1":
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
                     address=self.cfg.CARBON_CONTROLLER_ADDRESS,
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
-            elif exchange_name == 'pancakeswap_v2':
+            elif exchange_name == "pancakeswap_v2":
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
                     address=self.cfg.PANCAKESWAP_V2_FACTORY_ADDRESS,
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
-            elif exchange_name == 'pancakeswap_v3':
+            elif exchange_name == "pancakeswap_v3":
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
@@ -62,7 +71,6 @@ class ContractsManager(BaseManager):
                 raise NotImplementedError(
                     f"Exchange {exchange_name} not supported for tenderly"
                 )
-
 
     def init_exchange_contracts(self):
         """
@@ -94,7 +102,7 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BALANCER_VAULT_ADDRESS,
                     abi=BALANCER_VAULT_ABI,
                 )
-            elif exchange_name == 'carbon_v1':
+            elif exchange_name == "carbon_v1":
                 self.pool_contracts[exchange_name][
                     self.cfg.CARBON_CONTROLLER_ADDRESS
                 ] = self.web3.eth.contract(
@@ -104,11 +112,11 @@ class ContractsManager(BaseManager):
 
     @staticmethod
     def get_or_create_token_contracts(
-            web3: Web3,
-            erc20_contracts: Dict[str, Contract],
-            address: str,
-            exchange_name: str = None,
-            tenderly_fork_id: str = None,
+        web3: Web3,
+        erc20_contracts: Dict[str, Contract],
+        address: str,
+        exchange_name: str = None,
+        tenderly_fork_id: str = None,
     ) -> Contract:
         """
         Get or create the token contracts.
@@ -145,11 +153,11 @@ class ContractsManager(BaseManager):
         return contract
 
     def add_pool_info_from_contract(
-            self,
-            exchange_name: str = None,
-            address: str = None,
-            event: Any = None,
-            tenderly_exchanges: List[str] = None,
+        self,
+        exchange_name: str = None,
+        address: str = None,
+        event: Any = None,
+        tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
         Add the pool info from the contract.
@@ -237,7 +245,6 @@ class ContractsManager(BaseManager):
             ),
         )
 
-
     @staticmethod
     def get_tkn_key(symbol: str, addr: str) -> str:
         if symbol is None or symbol == "None" or addr is None:
@@ -245,7 +252,7 @@ class ContractsManager(BaseManager):
         return f"{symbol}-{addr[-4:]}"
 
     def get_token_info_from_contract(
-            self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
+        self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
     ) -> Tuple[str, int]:
         """
         Get the token info from contract.
@@ -266,12 +273,26 @@ class ContractsManager(BaseManager):
 
         """
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
-        tokens_filepath = 'fastlane_bot/data/tokens.csv'
-        token_data = pd.read_csv(tokens_filepath, index_col=[0])
-
+        tokens_filepath = os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv"
+        )
+        token_data = pd.read_csv(tokens_filepath)
+        extra_info = glob(
+            os.path.normpath(f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv")
+        )
+        if len(extra_info) > 0:
+            extra_info_df = pd.concat(
+                [pd.read_csv(f) for f in extra_info], ignore_index=True
+            )
+            token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
+            token_data = token_data.drop_duplicates(subset=["address"])
+            self.tokens = token_data.to_dict(orient="records")
         try:
             return self._get_and_save_token_info_from_contract(
-                contract=contract, addr=addr, token_data=token_data, tokens_filepath=tokens_filepath
+                contract=contract,
+                addr=addr,
+                token_data=token_data,
+                tokens_filepath=tokens_filepath,
             )
         except self.FailedToGetTokenDetailsException as e:
             self.cfg.logger.debug(f"{e}")
@@ -282,13 +303,20 @@ class ContractsManager(BaseManager):
         """
 
         def __init__(self, addr):
-            self.message = f"Failed to get token symbol and decimals for token address: {addr}"
+            self.message = (
+                f"Failed to get token symbol and decimals for token address: {addr}"
+            )
 
         def __str__(self):
             return self.message
 
-    def _get_and_save_token_info_from_contract(self, contract: Contract, addr: str, token_data: pd.DataFrame,
-                                               tokens_filepath: str) -> Tuple[str, int]:
+    def _get_and_save_token_info_from_contract(
+        self,
+        contract: Contract,
+        addr: str,
+        token_data: pd.DataFrame,
+        tokens_filepath: str,
+    ) -> Tuple[str, int]:
         """
         Get and save the token info from contract to csv.
 
@@ -309,16 +337,24 @@ class ContractsManager(BaseManager):
             The token info.
 
         """
-        symbol = contract.functions.symbol().call()
+        try:
+            symbol = contract.functions.symbol().call()
+        except OverflowError:
+            raise self.FailedToGetTokenDetailsException(addr=addr)
         key = self.get_tkn_key(symbol=symbol, addr=addr)
 
-        if key in token_data['key'].unique():
-            decimals = token_data.loc[token_data['key'] == key, 'decimals'].iloc[0]
+        if key in token_data["key"].unique():
+            decimals = token_data.loc[token_data["key"] == key, "decimals"].iloc[0]
             return symbol, decimals
         else:
-            decimals = contract.functions.decimals().call()
+            decimals = int(contract.functions.decimals().call())
 
-        if symbol is None or decimals is None:
+        if (
+            symbol is None
+            or decimals is None
+            or type(symbol) != str
+            or type(decimals) != int
+        ):
             raise self.FailedToGetTokenDetailsException(addr=addr)
         symbol = str(symbol).replace("-", "_")
         new_data = {
@@ -326,19 +362,31 @@ class ContractsManager(BaseManager):
             "symbol": symbol,
             "name": symbol,
             "address": addr,
-            "decimals": decimals
+            "decimals": decimals,
+            "blockchain": self.cfg.NETWORK,
         }
-        self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
-        next_index = len(token_data.index)
         try:
-            row = pd.DataFrame(new_data, columns=token_data.columns, index=[next_index])
-            token_data = pd.concat([token_data, row])
-            token_data.to_csv(tokens_filepath)
-        except Exception:
-            # If CSV fails to update, we still return the token symbol & decimals
-            return (
-                symbol, decimals
-            )
-        return (
-            symbol, decimals
+            self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
+        except UnicodeEncodeError:
+            raise self.FailedToGetTokenDetailsException(addr=addr)
+
+        row = pd.DataFrame(new_data, columns=token_data.columns, index=[1])
+        if not os.path.exists(os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
+        )):
+            try:
+                os.mkdir(os.path.normpath(
+                    f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
+                ))
+            except FileExistsError:
+                pass
+
+        collision_safety = str(random.randrange(1, 1000))
+        ts = datetime.now().strftime("%d-%H-%M-%S-%f")
+        ts += collision_safety
+        row.to_csv(os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"),
+            index=False,
         )
+
+        return (symbol, decimals)

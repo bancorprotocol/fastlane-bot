@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
@@ -69,11 +70,12 @@ def run_command(arb_mode, expected_log_line):
         "python",
         main_script_path,
         f"--arb_mode={arb_mode}",
-        "--default_min_profit_bnt=60",
+        "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=80"
+        "--timeout=80",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
@@ -93,6 +95,7 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test Data Validation For b3_two_hop
 
+# + is_executing=true
 expected_log_line = "Transactions will be required to pass data validation for"
 arb_mode = "b3_two_hop"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)

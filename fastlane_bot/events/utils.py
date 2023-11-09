@@ -13,6 +13,7 @@ import random
 import sys
 import time
 from _decimal import Decimal
+from glob import glob
 from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
@@ -242,6 +243,7 @@ def filter_static_pool_data(
 def get_static_data(
     cfg: Config,
     exchanges: List[str],
+    blockchain: str,
     static_pool_data_filename: str,
     static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
@@ -254,6 +256,8 @@ def get_static_data(
         The config object.
     exchanges : List[str]
         A list of exchanges to fetch data for.
+    blockchain : str
+        The name of the blockchain being used
     static_pool_data_filename : str
         The filename of the static pool data CSV file.
     static_pool_data_sample_sz : int or str
@@ -265,8 +269,8 @@ def get_static_data(
         A tuple of static pool data, tokens, and Uniswap v2 event mappings.
 
     """
-    base_path = "fastlane_bot/data"
-
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    # token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -291,6 +295,11 @@ def get_static_data(
     )
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
 
     # Initialize web3
@@ -399,7 +408,7 @@ def handle_target_tokens(
             for token in flashloan_tokens:
                 if token not in target_tokens:
                     cfg.logger.warning(
-                        f"Falshloan token {token} not in target tokens. Adding it to target tokens."
+                        f"Flashloan token {token} not in target tokens. Adding it to target tokens."
                     )
                     target_tokens.append(token)
 
@@ -410,7 +419,9 @@ def handle_target_tokens(
     return target_tokens
 
 
-def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
+def handle_flashloan_tokens(
+    cfg: Config, flashloan_tokens: str, tokens: pd.DataFrame
+) -> List[str]:
     """
     Handles the flashloan tokens parameter.
 
@@ -430,6 +441,13 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
     flashloan_tokens = [
         QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
     ]
+
+    unique_tokens = len(tokens["key"].unique())
+    cfg.logger.info(f"unique_tokens: {unique_tokens}")
+    flashloan_tokens = [
+        tkn for tkn in flashloan_tokens if tkn in tokens["key"].unique()
+    ]
+
     # Log the flashloan tokens
     cfg.logger.info(
         f"Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
@@ -438,10 +456,11 @@ def handle_flashloan_tokens(cfg: Config, flashloan_tokens: str) -> List[str]:
 
 
 def get_config(
-    default_min_profit_bnt: int or Decimal,
+    default_min_profit_gas_token: str,
     limit_bancor3_flashloan_tokens: bool,
     loglevel: str,
     logging_path: str,
+    blockchain: str,
     tenderly_fork_id: str = None,
 ) -> Config:
     """
@@ -457,6 +476,8 @@ def get_config(
         The log level.
     logging_path : str
         The logging path.
+    blockchain : str
+        The name of the blockchain
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
 
@@ -466,21 +487,26 @@ def get_config(
         The config object.
 
     """
-    default_min_profit_bnt = Decimal(str(default_min_profit_bnt))
+    default_min_profit_gas_token = Decimal(default_min_profit_gas_token)
 
     if tenderly_fork_id:
         cfg = Config.new(
-            config=Config.CONFIG_TENDERLY, loglevel=loglevel, logging_path=logging_path
+            config=Config.CONFIG_TENDERLY,
+            loglevel=loglevel,
+            logging_path=logging_path,
+            blockchain=blockchain,
         )
         cfg.logger.info("Using Tenderly config")
     else:
         cfg = Config.new(
-            config=Config.CONFIG_MAINNET, loglevel=loglevel, logging_path=logging_path
+            config=Config.CONFIG_MAINNET,
+            loglevel=loglevel,
+            logging_path=logging_path,
+            blockchain=blockchain,
         )
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
-    cfg.DEFAULT_MIN_PROFIT_BNT = Decimal(str(default_min_profit_bnt))
-    cfg.DEFAULT_MIN_PROFIT = Decimal(str(default_min_profit_bnt))
+    cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     return cfg
 
 
@@ -1600,7 +1626,8 @@ def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
     """
     # Verify MIN_PROFIT_BNT is set and respected
     assert (
-        bot.ConfigObj.DEFAULT_MIN_PROFIT == mgr.cfg.DEFAULT_MIN_PROFIT
+        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
+        == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
     ), "bot failed to update min profit"
     mgr.cfg.logger.debug("Bot successfully updated min profit")
 
@@ -1745,3 +1772,32 @@ def handle_static_pools_update(mgr: Any):
             )
             attr_name = f"{ex}_pools"
             mgr.static_pools[attr_name] = exchange_pools
+
+
+def handle_tokens_csv(mgr):
+    tokens_filepath = os.path.normpath(
+        f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
+    )
+    token_data = pd.read_csv(tokens_filepath)
+    extra_info = glob(
+        os.path.normpath(
+            f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
+        )
+    )
+    if len(extra_info) > 0:
+        extra_info_df = pd.concat(
+            [pd.read_csv(f) for f in extra_info], ignore_index=True
+        )
+        token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
+        token_data = token_data.drop_duplicates(subset=["address"])
+        token_data.to_csv(tokens_filepath, index=False)
+        mgr.tokens = token_data.to_dict(orient="records")
+
+        # delete all files in token_detail
+        for f in extra_info:
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
+
+        mgr.cfg.logger.info(f"Updated token data with {len(extra_info)} new tokens")

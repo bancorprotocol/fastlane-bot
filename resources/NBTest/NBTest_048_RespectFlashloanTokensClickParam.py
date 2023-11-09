@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -62,7 +62,7 @@ def run_command(arb_mode, expected_log_line):
     # Find the correct path to main.py
     main_script_path = find_main_py()
     print(f"Found main.py in {main_script_path}")
-    main_script_path = main_script_path + "/main.py"
+    main_script_path = os.path.normpath(main_script_path + "/main.py")
 
     # Run the command
     cmd = [
@@ -76,6 +76,7 @@ def run_command(arb_mode, expected_log_line):
         "--timeout=1",
         "--loglevel=DEBUG",
         "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2X-FLI-USD",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         

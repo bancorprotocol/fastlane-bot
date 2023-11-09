@@ -149,8 +149,8 @@ assert type(tx_route_h).__name__ == "TxRouteHandler"
 assert type(tx_route_h).__bases__[0].__name__ == "TxRouteHandlerBase"
 assert tx_route_h.contains_carbon, "No orders in route that contain a Carbon order"
 assert 6 in tx_route_h.exchange_ids and 3 in tx_route_h.exchange_ids, "Exchange ids missing from txRouteHandler"
-assert tx_route_h.is_weth(tx_route_h.trade_instructions[0].tknout_address), f"TxRouteHandler is_weth returned: {tx_route_h.is_weth(h.trade_instructions[0].tknout_address)}, expected True"
-assert not tx_route_h.is_weth(tx_route_h.trade_instructions[0].tknin_address), f"TxRouteHandler is_weth returned: {tx_route_h.is_weth(h.trade_instructions[0].tknin_address)}, expected False"
+assert tx_route_h.is_wrapped_gas_token(tx_route_h.trade_instructions[0].tknout_address), f"TxRouteHandler is_weth returned: {tx_route_h.is_wrapped_gas_token(h.trade_instructions[0].tknout_address)}, expected True"
+assert not tx_route_h.is_wrapped_gas_token(tx_route_h.trade_instructions[0].tknin_address), f"TxRouteHandler is_weth returned: {tx_route_h.is_wrapped_gas_token(h.trade_instructions[0].tknin_address)}, expected False"
 
 
 uni_v2_pool = bot.db.get_pool(exchange_name="uniswap_v2", pair_name=f"{usdc}/{weth}")

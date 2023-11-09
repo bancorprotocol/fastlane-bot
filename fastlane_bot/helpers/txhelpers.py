@@ -276,8 +276,8 @@ class TxHelpers:
             route_struct: List[Dict[str, Any]],
             src_amt: int,
             src_address: str,
-            expected_profit: Decimal,
-            bnt_eth: Tuple,
+            expected_profit_eth: Decimal,
+            expected_profit_usd: Decimal,
             result: str = None,
             verbose: bool = False,
             safety_override: bool = False,
@@ -292,7 +292,7 @@ class TxHelpers:
 
         """
 
-        if expected_profit < self.ConfigObj.DEFAULT_MIN_PROFIT:
+        if expected_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(f"Transaction below minimum profit, reverting... /*_*\\")
             return None
 
@@ -302,11 +302,11 @@ class TxHelpers:
         if verbose:
             self.ConfigObj.logger.info("Validating trade...")
             self.ConfigObj.logger.debug(
-                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in BNT: {num_format(expected_profit)} \n\n")
+                f"\nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_eth)} \n\n")
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = int(
-            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in "ethereum" else 0
 
         # Get current block number
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -335,77 +335,52 @@ class TxHelpers:
         gas_estimate = arb_tx["gas"]
         current_gas_price = arb_tx["maxFeePerGas"]
 
-        # Calculate the number of BNT paid in gas
-        bnt, eth = bnt_eth
-
-        gas_in_src = self.estimate_gas_in_bnt(
-            gas_price=current_gas_price,
-            gas_estimate=gas_estimate,
-            bnt=bnt,
-            eth=eth,
-        )
-
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
-        gas_in_src = gas_in_src * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
+        gas_cost_eth = Decimal(str(current_gas_price)) * Decimal(str(gas_estimate)) * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER) / Decimal('10') ** Decimal('18')
+        # Gas cost in usd can be estimated using the profit usd/eth rate
+        gas_cost_usd = gas_cost_eth * expected_profit_usd/expected_profit_eth
         # Multiply by reward percentage, taken from the arb contract
-        adjusted_reward = Decimal(Decimal(expected_profit) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
-        # Get the max profit, taken from the arb contract
-        max_profit = Decimal(self.ConfigObj.ARB_MAX_PROFIT)
-        gas_cost_eth = num_format_float(int(current_gas_price) * int(gas_estimate) * 0.8 / 10 ** 18)
-
-        gas_cost_eth_uni_v3 = (int(current_gas_price) * 157092 / 10 ** 18)
-        eth_price = self.get_eth_price()
-        if eth_price is not None:
-            gas_cost_usd = gas_cost_eth * eth_price
-            uni_v3_cost_usd = gas_cost_eth_uni_v3 * eth_price
-        else:
-            gas_cost_usd = "Coingecko_api_failed"
-            uni_v3_cost_usd = "Coingecko_api_failed"
+        adjusted_reward = Decimal(Decimal(expected_profit_eth) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        adjusted_reward_usd = adjusted_reward * expected_profit_usd/expected_profit_eth
 
         transaction_log = {"block_number": block_number, "gas": gas_estimate,
                            "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]),
                            "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price,
-                           "gas_cost_bnt": num_format_float(gas_in_src), "gas_cost_eth": num_format_float(gas_cost_eth),
-                           "gas_cost_usd": + num_format_float(gas_cost_usd),
-                           "uni_v3_trade_cost_eth": num_format_float(gas_cost_eth_uni_v3),
-                           "uni_v3_trade_cost_usd": num_format_float(uni_v3_cost_usd)}
+                           "gas_cost_eth": num_format_float(gas_cost_eth),
+                           "gas_cost_usd": + num_format_float(gas_cost_usd)}
 
         log_json = {**log_object, **transaction_log}
 
         self.ConfigObj.logger.info(log_format(log_data=log_json, log_name='arb_with_gas'))
         if result == self.XS_MIN_PROFIT_CHECK:
-            return adjusted_reward, gas_in_src
+            return adjusted_reward, gas_cost_eth
 
-        if adjusted_reward > gas_in_src or safety_override:
+        if adjusted_reward > gas_cost_eth or safety_override:
             self.ConfigObj.logger.info(
-                f"Expected reward of {num_format(adjusted_reward)} BNT vs cost of {num_format(gas_in_src)} BNT in gas, executing arb."
+                f"Expected reward of {num_format(adjusted_reward)} GAS TOKEN vs cost of {num_format(gas_cost_eth)} GAS TOKEN in gas, executing arb."
+            )
+            self.ConfigObj.logger.info(
+                f"Expected reward of {num_format(adjusted_reward_usd)} USD vs cost of {num_format(gas_cost_usd)} USD in gas, executing arb."
             )
 
             # Submit the transaction
-            tx_hash = self.submit_private_transaction(
-                arb_tx=arb_tx, block_number=block_number
-            )
+
+            if self.ConfigObj.network == "ethereum":
+
+                tx_hash = self.submit_private_transaction(
+                    arb_tx=arb_tx, block_number=block_number
+                )
+            else:
+                tx_hash = self.submit_transaction(arb_tx=arb_tx)
             self.ConfigObj.logger.info(f"Arbitrage executed, tx hash: {tx_hash}")
             return tx_hash if tx_hash is not None else None
         else:
             self.ConfigObj.logger.info(
-                f"Gas price too expensive! profit of {num_format(adjusted_reward)} BNT vs gas cost of {num_format(gas_in_src)} BNT. Abort, abort!\n\n"
+                f"Gas price too expensive! profit of {num_format(adjusted_reward)} GAS TOKEN vs gas cost of {num_format(gas_cost_eth)} GAS TOKEN. Abort, abort!\n\n"
             )
-            return None
-
-    def get_eth_price(self):
-        """
-        Returns ETH Price using Coingecko API
-        """
-        url = "https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&vs_currencies=USD&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false"
-        response = requests.get(url)
-        data = response.json()
-
-        if data is not None:
-            price = data.get("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2".lower()).get("usd")
-            # item = (token_address.lower(), price)
-            return (float(str(price)))
-        else:
+            self.ConfigObj.logger.info(
+                f"Gas price too expensive! profit of {num_format(adjusted_reward_usd)} USD vs gas cost of {num_format(gas_cost_usd)} USD. Abort, abort!\n\n"
+            )
             return None
 
     def get_gas_price(self) -> int:
@@ -438,32 +413,6 @@ class TxHelpers:
         """
         profit_wei = int(bnt_profit * 10 ** 18)
         return profit_wei * eth // (gas_estimate * bnt)
-
-    @staticmethod
-    def estimate_gas_in_bnt(
-            gas_price: int, gas_estimate: int, bnt: int, eth: int
-    ) -> Decimal:
-        """
-        Converts the expected cost of the transaction into BNT.
-        This is for comparing to the minimum profit required for the transaction to ensure that the gas cost isn't
-        greater than the profit.
-
-        gas_price: the gas price of the transaction
-        gas_estimate: the estimated gas cost of the transaction
-        bnt: the current BNT liquidity in the Bancor V3 BNT + ETH pool
-        eth: the current ETH liquidity in the Bancor V3 BNT + ETH pool
-
-        returns: the expected cost of the transaction in BNT
-        """
-        eth_cost = gas_price * gas_estimate
-        return Decimal(eth_cost * bnt) / (eth * 10 ** 18)
-
-    @staticmethod
-    def estimate_gas_in_src(
-            gas_price: int, gas_estimate: int, src: int, eth: int
-    ) -> Decimal:
-        eth_cost = gas_price * gas_estimate
-        return Decimal(eth_cost * src / eth)
 
     def get_gas_estimate(self, transaction: TxReceipt) -> int:
         """
@@ -661,13 +610,21 @@ class TxHelpers:
         max_priority_fee = int(max_priority_fee)
         base_gas_price = int(base_gas_price)
         max_gas_price = base_gas_price + max_priority_fee
-        return {
-            "type": "0x2",
-            "maxFeePerGas": max_gas_price,
-            "maxPriorityFeePerGas": max_priority_fee,
-            "from": self.wallet_address,
-            "nonce": nonce,
-        }
+
+        if self.ConfigObj.NETWORK in "ethereum":
+            return {
+                "type": "0x2",
+                "maxFeePerGas": max_gas_price,
+                "maxPriorityFeePerGas": max_priority_fee,
+                "from": self.wallet_address,
+                "nonce": nonce,
+            }
+        else:
+            return {
+                "gasPrice": max_gas_price,
+                "from": self.wallet_address,
+                "nonce": nonce,
+            }
 
     def submit_transaction(self, arb_tx: str) -> Any:
         """
@@ -682,7 +639,6 @@ class TxHelpers:
         self.ConfigObj.logger.info(f"Attempting to submit tx {signed_arb_tx}")
         tx = self.web3.eth.send_raw_transaction(signed_arb_tx.rawTransaction)
         tx_hash = self.web3.toHex(tx)
-        self.transactions_submitted.append(tx_hash)
         try:
             tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx)
             return tx_receipt

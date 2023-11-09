@@ -5,13 +5,17 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os
 import time
+from glob import glob
 from typing import List
 
 import click
+import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
+from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -40,6 +44,8 @@ from fastlane_bot.events.utils import (
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
+    read_csv_file,
+    handle_tokens_csv,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -68,7 +74,7 @@ load_dotenv()
 )
 @click.option(
     "--arb_mode",
-    default="multi",
+    default="multi_pairwise_all",
     help="See arb_mode in bot.py",
     type=click.Choice(
         [
@@ -80,12 +86,13 @@ load_dotenv()
             "b3_two_hop",
             "multi_pairwise_pol",
             "multi_pairwise_bal",
+            "multi_pairwise_all",
         ]
     ),
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.WBTC},{T.BNT},{T.NATIVE_ETH},{T.USDC},{T.USDT},{T.WETH},{T.LINK}",
+    default=f"WBTC-c599,BNT-FF1C,WETH-6Cc2,USDC-eB48,USDT-1ec7,LINK-86CA",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -95,8 +102,8 @@ load_dotenv()
 @click.option("--n_jobs", default=-1, help="Number of parallel jobs to run")
 @click.option(
     "--exchanges",
-    default="carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_pol,balancer,bancor_v2,pancakeswap_v2,pancakeswap_v3",
-    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included.",
+    default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
+    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included on Ethereum.",
 )
 @click.option(
     "--polling_interval",
@@ -156,10 +163,10 @@ load_dotenv()
     "parameter to be overwritten as all tokens supported by Bancor v3.",
 )
 @click.option(
-    "--default_min_profit_bnt",
-    default=80,
-    type=int,
-    help="Set to the default minimum profit in BNT. This should be reasonably high to avoid losses from gas fees.",
+    "--default_min_profit_gas_token",
+    default="0.0001",
+    type=str,
+    help="Set to the default minimum profit in gas token. This should be reasonably high to avoid losses from gas fees.",
 )
 @click.option(
     "--timeout",
@@ -208,12 +215,10 @@ load_dotenv()
 @click.option(
     "--blockchain",
     default="ethereum",
-    help="Select a blockchain from ethereum, coinbase_base, or arbitrum_one.",
+    help="Select a blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
     type=click.Choice(
         [
             "ethereum",
-            "coinbase_base",
-            "arbitrum_one",
         ]
     ),
 )
@@ -247,7 +252,7 @@ def main(
     run_data_validator: bool,
     randomizer: int,
     limit_bancor3_flashloan_tokens: bool,
-    default_min_profit_bnt: int,
+    default_min_profit_gas_token: str,
     timeout: int,
     target_tokens: str,
     replay_from_block: int,
@@ -281,7 +286,7 @@ def main(
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
-        default_min_profit_bnt (int): The default minimum profit in BNT.
+        default_min_profit_gas_token (str): The default minimum profit in the native gas token.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
@@ -304,15 +309,27 @@ def main(
 
     # Initialize the config object
     cfg = get_config(
-        default_min_profit_bnt,
+        default_min_profit_gas_token,
         limit_bancor3_flashloan_tokens,
         loglevel,
         logging_path,
+        blockchain,
         tenderly_fork_id,
     )
     # TODO: add blockchain support
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
+
+    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['key'].tolist()[0]}")
+
     # Format the flashloan tokens
-    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -336,34 +353,34 @@ def main(
         
         Starting fastlane bot with the following configuration:
         
-        cache_latest_only: {cache_latest_only}
-        backdate_pools: {backdate_pools}
+        logging_path: {logging_path}
         arb_mode: {arb_mode}
-        flashloan_tokens: {flashloan_tokens}
-        n_jobs: {n_jobs}
+        blockchain: {blockchain}
+        default_min_profit_gas_token: {default_min_profit_gas_token}
         exchanges: {exchanges}
-        polling_interval: {polling_interval}
+        flashloan_tokens: {flashloan_tokens}
+        target_tokens: {target_tokens}
+        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
+        loglevel: {loglevel}
+        backdate_pools: {backdate_pools}
         alchemy_max_block_fetch: {alchemy_max_block_fetch}
         static_pool_data_filename: {static_pool_data_filename}
+        cache_latest_only: {cache_latest_only}
+        n_jobs: {n_jobs}
+        polling_interval: {polling_interval}
         reorg_delay: {reorg_delay}
-        logging_path: {logging_path}
-        loglevel: {loglevel}
         static_pool_data_sample_sz: {static_pool_data_sample_sz}
         use_cached_events: {use_cached_events}
         run_data_validator: {run_data_validator}
         randomizer: {randomizer}
         limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
-        default_min_profit_bnt: {default_min_profit_bnt}
         timeout: {timeout}
-        target_tokens: {target_tokens}
         replay_from_block: {replay_from_block}
         tenderly_fork_id: {tenderly_fork_id}
         tenderly_event_exchanges: {tenderly_event_exchanges}
         increment_time: {increment_time}
         increment_blocks: {increment_blocks}
-        blockchain: {blockchain}
         pool_data_update_frequency: {pool_data_update_frequency}
-        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -377,7 +394,11 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+        cfg,
+        exchanges,
+        blockchain,
+        static_pool_data_filename,
+        static_pool_data_sample_sz,
     )
 
     target_token_addresses = handle_target_token_addresses(
@@ -609,6 +630,8 @@ def run(
                     f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
                 )
 
+            handle_tokens_csv(mgr)
+
             # Handle subsequent iterations
             handle_subsequent_iterations(
                 arb_mode=arb_mode,
@@ -696,6 +719,9 @@ def run(
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
             time.sleep(polling_interval)
+            if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                break
 
 
 if __name__ == "__main__":

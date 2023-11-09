@@ -58,7 +58,13 @@ class ArbitrageFinderBase:
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         See subclasses for details
 
@@ -126,25 +132,48 @@ class ArbitrageFinderBase:
         return best_profit, ops
 
     def calculate_profit(
-        self, src_token: str, profit_src: float, CCm: Any, cids: List[str], profit: int = 0
+        self,
+        src_token: str,
+        profit_src: float,
+        CCm: Any,
+        cids: List[str],
+        profit: int = 0,
     ) -> float:
         """
         Calculate profit based on the source token.
         """
-        if src_token == T.BNT:
-            profit = profit_src
-        else:
+
+        best_profit_fl_token = profit_src
+        if src_token not in [
+            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
+            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+        ]:
+            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_KEY:
+                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
+            else:
+                fl_token_with_weth = src_token
+
             try:
-                price_src_per_bnt = (
-                    CCm.bypair(pair=f"{T.BNT}/{src_token}")
-                    .byparams(exchange="bancor_v3")[0]
+                fltkn_eth_conversion_rate = (
+                    CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
+                    .bytknq(f"{fl_token_with_weth}")[0]
                     .p
                 )
-                profit = profit_src / price_src_per_bnt
-            except Exception as e:
-                self.ConfigObj.logger.error(f"[TODO CLEAN UP]{e}")
-        self.ConfigObj.logger.debug(f"Profit in bnt: {num_format(profit)} {cids}")
-        return profit
+                best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+            except:
+                try:
+                    fltkn_eth_conversion_rate = (
+                        1
+                        / CCm.bytknb(f"{fl_token_with_weth}")
+                        .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
+                        .p
+                    )
+                    best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
+                except Exception as e:
+                    raise e
+        else:
+            best_profit_eth = best_profit_fl_token
+        return best_profit_eth
 
     @staticmethod
     def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
@@ -192,7 +221,8 @@ class ArbitrageFinderBase:
         condition_zeros_one_token = max(netchange) < 1e-4
 
         if (
-            condition_zeros_one_token and profit > self.ConfigObj.DEFAULT_MIN_PROFIT
+            condition_zeros_one_token
+            and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
         ):  # candidate regardless if profitable
             return [
                 (
@@ -264,7 +294,11 @@ class ArbitrageFinderBase:
         fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
             # Filter out tokens that are not in the existing flashloan_tokens list
-            self.flashloan_tokens = [tkn for tkn in fltkns if tkn in self.flashloan_tokens]
-            self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
+            self.flashloan_tokens = [
+                tkn for tkn in fltkns if tkn in self.flashloan_tokens
+            ]
+            self.ConfigObj.logger.info(
+                f"limiting flashloan_tokens to {self.flashloan_tokens}"
+            )
         else:
             self.flashloan_tokens = fltkns

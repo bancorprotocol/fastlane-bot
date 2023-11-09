@@ -474,6 +474,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         with multicaller as mc:
@@ -602,6 +603,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         with multicaller as mc:
@@ -708,7 +710,7 @@ class BaseManager:
                 address=addr, event=event, block_number=event["blockNumber"]
             )
 
-        if addr == self.cfg.CARBON_CONTROLLER_ADDRESS:
+        if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
             cid = event["args"]["id"] if event is not None else pool_info["cid"]
             for pool in self.pool_data:
                 if pool["cid"] == cid:

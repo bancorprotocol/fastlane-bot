@@ -21,7 +21,7 @@ from ..data.abi import (
 )
 
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
-WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+#WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
 class ConfigProvider(ConfigBase):
     """
@@ -38,7 +38,7 @@ class ConfigProvider(ConfigBase):
     PROVIDER_TENDERLY = S.PROVIDER_TENDERLY
     PROVIDER_UNITTEST = S.PROVIDER_UNITTEST
     ETH_PRIVATE_KEY_BE_CAREFUL = ETH_PRIVATE_KEY_BE_CAREFUL
-    WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
+    #WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
 
 
     @classmethod
@@ -76,12 +76,13 @@ class _ConfigProviderAlchemy(ConfigProvider):
     Fastlane bot config -- provider [Alchemy]
     """
     PROVIDER = S.PROVIDER_ALCHEMY
-    WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
+    #WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
     
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
-        self.RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{self.WEB3_ALCHEMY_PROJECT_ID}"
+        #assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        self.WEB3_ALCHEMY_PROJECT_ID = network.WEB3_ALCHEMY_PROJECT_ID
+        self.RPC_URL = f"{network.RPC_ENDPOINT}{self.WEB3_ALCHEMY_PROJECT_ID}"
 
         N = self.network
         self.connection = EthereumNetwork(
@@ -93,25 +94,29 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.connection.connect_network()
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
-        self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
-            abi=BANCOR_V3_NETWORK_INFO_ABI,
-        )
-        self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-            address=N.CARBON_CONTROLLER_ADDRESS,
-            abi=CARBON_CONTROLLER_ABI,
-        )
-        self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-            address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
-            abi=FAST_LANE_CONTRACT_ABI,
-        )
-        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
-        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
-        self.EXPECTED_GAS_MODIFIER = "0.85"
+        if network.NETWORK in N.NETWORK_ETHEREUM:
+            self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
+                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                abi=BANCOR_V3_NETWORK_INFO_ABI,
+            )
+            self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
+                address=network.CARBON_CONTROLLER_ADDRESS,
+                abi=CARBON_CONTROLLER_ABI,
+            )
+            self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
+                address=self.w3.toChecksumAddress(network.FASTLANE_CONTRACT_ADDRESS),
+                abi=FAST_LANE_CONTRACT_ABI,
+            )
+            reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
-
+            self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+            self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
+            self.EXPECTED_GAS_MODIFIER = "0.85"
+        else:
+            self.CARBON_CONTROLLER_CONTRACT = None
+            self.BANCOR_ARBITRAGE_CONTRACT = None
+            self.ARB_REWARD_PERCENTAGE = "0.5"
 class _ConfigProviderTenderly(ConfigProvider):
     """
     Fastlane bot config -- provider [Tenderly]

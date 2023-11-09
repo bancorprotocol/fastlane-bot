@@ -20,6 +20,15 @@ ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
 
+BLOCK_CHUNK_SIZE_MAP = {
+    "ethereum": 50000,
+    "polygon": 250000,
+    "polygon_zkevm": 500000,
+    "arbitrum_one": 500000,
+    "optimism": 500000,
+    "coinbase_base": 500000,
+}
+
 ALCHEMY_KEY_DICT = {
     "ethereum": "WEB3_ALCHEMY_PROJECT_ID",
     "polygon": "WEB3_ALCHEMY_POLYGON",
@@ -519,6 +528,12 @@ def organize_pool_details_balancer(
 
         pair += tkn_key + "/"
 
+        if type(tkn["weight"]) == float:
+            if (tkn["weight"]) <= 0.01:
+                skip_pool = True
+        elif type(tkn["weight"]) == str:
+            if (tkn["weight"]) in "0.01":
+                skip_pool = True
     # if pool_total_liquidity_usd < min_usd:
     #     print(f"pool eliminated due to low liquidity: {pool_total_liquidity_usd} vs min {min_usd}")
     #     return None
@@ -697,7 +712,7 @@ def organize_pool_details_solidly_v2(
 
 
 def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Uniswap V3 pool generation events
@@ -725,7 +740,7 @@ def get_uni_pool_creation_events_v3(
 
 
 def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Uniswap V2 pool generation events
@@ -752,7 +767,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
 ) -> List:
     """
     This function retrieves Solidly pool generation events
@@ -876,7 +891,7 @@ def get_solidly_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
-) -> DataFrame:
+) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
     :param token_addr_lookup: the dict containing token information
@@ -904,13 +919,14 @@ def get_solidly_v2_pools(
         )
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
+    df = df.reset_index(drop=True)
     pool_mapping = [
         {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
     ]
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    return mapdf
+    return df, mapdf
     #return df, mapdf
 
 
@@ -1187,7 +1203,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 address=address, abi=SOLIDLY_FACTORY_ABI_V2
             )
 
-            m_df = get_solidly_v2_pools(
+            u_df, m_df = get_solidly_v2_pools(
                 token_addr_lookup=token_addr_lookup,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
@@ -1195,21 +1211,27 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 start_block=start_block,
                 web3=web3,
             )
+            exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
+            exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
         elif "balancer" in fork:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
                 u_df = get_balancer_pools(subgraph_url=subgraph_url, web3=web3)
+                exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
+                exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
             except:
                 print(f"Could not find Balancer subgraph URL for chain: {network_name}")
                 continue
         else:
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
-        #exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
-    #exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+
+
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return univ2_mapdf, univ3_mapdf
 
+#terraform_blockchain(network_name="coinbase_base")

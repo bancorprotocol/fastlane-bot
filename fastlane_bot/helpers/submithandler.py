@@ -70,7 +70,8 @@ class TxSubmitHandler(TxSubmitHandlerBase):
     def __post_init__(self):
         self.w3 = self.ConfigObj.w3
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.bancor_network_info = self.ConfigObj.BANCOR_NETWORK_INFO_CONTRACT
+        if self.ConfigObj.NETWORK in "ethereum":
+            self.bancor_network_info = self.ConfigObj.BANCOR_NETWORK_INFO_CONTRACT
         # self.token_contract = Contract.from_abi(
         #     name="Token",
         #     address=self.src_address,

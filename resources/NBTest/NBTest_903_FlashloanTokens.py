@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
@@ -72,11 +73,12 @@ def run_command(mode):
         "python",
         main_script_path,
         f"--arb_mode={mode}",
-        "--default_min_profit_bnt=60",
+        "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=True",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=70"
+        "--timeout=70",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         

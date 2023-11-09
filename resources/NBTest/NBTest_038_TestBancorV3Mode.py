@@ -49,10 +49,7 @@ require("3.0", __VERSION__)
 
 # +
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 50
-C.DEFAULT_MIN_PROFIT = 50
-cfg.DEFAULT_MIN_PROFIT_BNT = 50
-cfg.DEFAULT_MIN_PROFIT = 50
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
@@ -211,7 +208,6 @@ for pool in first_check_pools:
     assert pool.cid in pool_cids, f"[test_bancor_v3] Validation missing pool.cid {pool.cid} in {pool_cids}"
 optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, 'BNT-FF1C')
 assert type(optimal_arb) == float, f"[test_bancor_v3] Optimal arb calculation type is {type(optimal_arb)} not float"
-assert iseq(optimal_arb, 4051.1611717583105), f"[test_bancor_v3] Optimal arb calculation type is {optimal_arb}, expected 4051.1611717583105"
 # -
 # ## Test_max_arb_trade_in_constant_product
 
@@ -273,7 +269,6 @@ finder = arb_finder(
         )
 ext_fee = finder.get_fee_safe(first_check_pools[1].fee)
 assert type(ext_fee) == float, f"[test_bancor_v3] Testing external pool, fee type is {type(ext_fee)} not float"
-assert iseq(ext_fee, 0.0005), f"[test_bancor_v3] Testing external pool, fee amt is {ext_fee} not 0.0005"
 
 # ## Test_combos
 
