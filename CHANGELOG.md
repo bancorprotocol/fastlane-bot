@@ -2,7 +2,13 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.54...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.55...HEAD)
+
+- Add multichain support [\#183](https://github.com/bancorprotocol/fastlane-bot/pull/183) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.55](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.55) (2023-11-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.54...v2.7.55)
 
 - Bug in close pool script [\#181](https://github.com/bancorprotocol/fastlane-bot/issues/181)
 
