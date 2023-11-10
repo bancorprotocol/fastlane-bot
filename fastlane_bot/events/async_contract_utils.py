@@ -337,8 +337,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
     )
 
-    print(f"new_pool_data: {new_pool_data}")
-    raise Exception("test")
+    # print(f"new_pool_data: {new_pool_data}")
+    # raise Exception("test")
 
     # add new_pool_data to pool_data
     mgr.pool_data = new_pool_data + mgr.pool_data
