@@ -6,12 +6,9 @@ Contains the utils functions for events
 Licensed under MIT
 """
 import base64
-import contextlib
-import importlib
 import json
 import os
 import random
-import sys
 import time
 from _decimal import Decimal
 from glob import glob
@@ -26,18 +23,13 @@ from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from packaging import version as pkg_version
 from web3 import Web3
-from web3.contract import Contract
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
-from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.events.multicall_utils import encode_token_price
-from fastlane_bot.events.pools import CarbonV1Pool
 
 
 def filter_latest_events(
@@ -1795,22 +1787,33 @@ class VersionRequirementError(Exception):
 
     def __init__(self, installed_version, required_version):
         super().__init__(
-            f"web3.py version is {installed_version}, which does not meet the requirement of >= {required_version}."
+            f""
+            f"************** Version Requirement Error **************"
+            f"Your current web3.py version is {installed_version}, which does not meet the requirement of >= {required_version}."
+            f"Please upgrade your web3.py version to {required_version} or higher."
+            f""
+            f"Note: we recommend using the latest requirements.txt file to install the latest versions of all "
+            f"dependencies."
+            f"To do this, run `pip install -r requirements.txt` from the root directory of the fastlane-bot repo."
+            f"************** Version Requirement Error **************"
+            f""
         )
 
 
-def check_version_requirements(required_version="6.11.0"):
+def check_version_requirements(required_version="6.11.0", package_name="web3"):
     """
     Checks the version requirements for the web3 library.
 
     Args:
         required_version (str, optional): The minimum required version of web3. Defaults to "6.11.0".
+        package_name (str, optional): The name of the package to check. Defaults to "web3".
 
     Raises:
         VersionRequirementError: If the installed version of web3 does not meet the minimum required version.
     """
     # Get the installed version of web3
-    installed_version = version("web3")
+    installed_version = version(package_name)
+
     # Check the version and raise an exception if the requirement is not met
     if not pkg_version.parse(installed_version) >= pkg_version.parse(required_version):
         raise VersionRequirementError(installed_version, required_version)

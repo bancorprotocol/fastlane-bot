@@ -52,7 +52,7 @@ from fastlane_bot.events.utils import (
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
 
-check_version_requirements(required_version="6.11.0")
+check_version_requirements(required_version="6.11.0", package_name="web3")
 
 load_dotenv()
 
