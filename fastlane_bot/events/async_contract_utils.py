@@ -389,6 +389,14 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     # update the pool_data from events
     update_pools_from_events(-1, mgr, all_events)
 
+    # import pprint
+    #
+    # for pool in new_pool_data:
+    #     cid = pool["cid"]
+    #     updated_pool = [p for p in mgr.pool_data if p["cid"] == cid][0]
+    #     # prettyprint pool data
+    #     mgr.cfg.logger.info(f"\n\n{pprint.pprint(updated_pool, indent=4)}")
+
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {time.time() - start_time} seconds"
     )
