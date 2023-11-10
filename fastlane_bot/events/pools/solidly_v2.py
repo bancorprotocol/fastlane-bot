@@ -60,7 +60,7 @@ class SolidlyV2Pool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -71,7 +71,7 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = await contract.caller.getReserves()
+        reserve_balance = contract.caller.getReserves()
         params = {
             "fee": "0.003",
             "fee_float": 0.003,

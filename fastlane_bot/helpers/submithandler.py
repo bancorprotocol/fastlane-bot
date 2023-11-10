@@ -15,6 +15,8 @@ import requests
 from eth_utils import to_hex
 from web3._utils.threads import Timeout
 from web3._utils.transactions import fill_nonce
+
+# from web3.contract import ContractFunction
 from web3.exceptions import TimeExhausted
 from web3.types import TxParams
 
@@ -24,6 +26,7 @@ from ..data.abi import ERC20_ABI, FAST_LANE_CONTRACT_ABI
 from fastlane_bot.config import Config
 
 ContractFunction = Any
+
 
 @dataclass
 class TxSubmitHandlerBase:
@@ -91,7 +94,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             The deadline.
         """
         return (
-            self.w3.eth.getBlock(self.w3.eth.block_number).timestamp
+            self.w3.eth.get_block(self.w3.eth.block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
@@ -111,9 +114,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         """
         return fill_nonce(self.ConfigObj.w3, tx_details)
 
-    def _get_transaction_receipt(
-        self, tx_hash: str, timeout: int
-    ):
+    def _get_transaction_receipt(self, tx_hash: str, timeout: int):
         """
         Gets the transaction receipt for a given transaction hash.
 
@@ -256,14 +257,20 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return {
             "gasPrice": self.ConfigObj.DEFAULT_GAS_PRICE,
             "gas": self.ConfigObj.DEFAULT_GAS,
-            "from": self.w3.to_checksum_address(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS),
+            "from": self.w3.to_checksum_address(
+                self.ConfigObj.FASTLANE_CONTRACT_ADDRESS
+            ),
             "nonce": self.w3.eth.get_transaction_count(
                 self.w3.to_checksum_address(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS)
             ),
         }
 
     def submit_transaction_tenderly(
-        self, route_struct: List[RouteStruct], src_address: str, src_amount: int, flashloan_struct: List[Dict[str, int or str]] = None
+        self,
+        route_struct: List[RouteStruct],
+        src_address: str,
+        src_amount: int,
+        flashloan_struct: List[Dict[str, int or str]] = None,
     ) -> Any:
         """
         Submits a transaction to the network.
@@ -301,24 +308,28 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         address = self.ConfigObj.w3.to_checksum_address(
             self.ConfigObj.BINANCE14_WALLET_ADDRESS
         )
-        return self.arb_contract.functions.flashloanAndArb(
-            route_struct, src_address, src_amount
-        ).transact(
-            {
-                "gas": self.ConfigObj.DEFAULT_GAS,
-                "from": address,
-                "nonce": self._get_nonce(address),
-                "gasPrice": 0,
-            }
-        ) if flashloan_struct is None else self.arb_contract.functions.flashloanAndArbV2(
+        return (
+            self.arb_contract.functions.flashloanAndArb(
+                route_struct, src_address, src_amount
+            ).transact(
+                {
+                    "gas": self.ConfigObj.DEFAULT_GAS,
+                    "from": address,
+                    "nonce": self._get_nonce(address),
+                    "gasPrice": 0,
+                }
+            )
+            if flashloan_struct is None
+            else self.arb_contract.functions.flashloanAndArbV2(
                 flashloan_struct, route_struct
             ).transact(
-            {
-                "gas": self.ConfigObj.DEFAULT_GAS,
-                "from": address,
-                "nonce": self._get_nonce(address),
-                "gasPrice": 0,
-            }
+                {
+                    "gas": self.ConfigObj.DEFAULT_GAS,
+                    "from": address,
+                    "nonce": self._get_nonce(address),
+                    "gasPrice": 0,
+                }
+            )
         )
 
     def _get_transaction_details(

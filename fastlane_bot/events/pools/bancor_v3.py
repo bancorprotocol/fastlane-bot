@@ -71,7 +71,7 @@ class BancorV3Pool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -82,7 +82,7 @@ class BancorV3Pool(Pool):
         """
         See base class.
         """
-        pool_balances = await contract.caller.tradingLiquidity(self.state["tkn1_address"])
+        pool_balances = contract.caller.tradingLiquidity(self.state["tkn1_address"])
 
         params = {
             "fee": "0.000",

@@ -204,6 +204,7 @@ class BaseManager:
             (
                 exchange_name
                 for exchange_name, pool_class in pool_factory._creators.items()
+                if exchange_name in self.exchanges
                 if pool_class.event_matches_format(event, self.static_pools)
             ),
             None,

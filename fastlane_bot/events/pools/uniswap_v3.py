@@ -68,7 +68,7 @@ class UniswapV3Pool(Pool):
             print(f"[pools.update_from_event] Exception: {e}")
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -79,15 +79,15 @@ class UniswapV3Pool(Pool):
         """
         See base class.
         """
-        slot0 = await contract.caller.slot0()
-        fee = await contract.caller.fee()
+        slot0 = contract.caller.slot0()
+        fee = contract.caller.fee()
         params = {
             "tick": slot0[1],
             "sqrt_price_q96": slot0[0],
-            "liquidity": await contract.caller.liquidity(),
+            "liquidity": contract.caller.liquidity(),
             "fee": fee,
             "fee_float": fee / 1e6,
-            "tick_spacing": await contract.caller.tickSpacing(),
+            "tick_spacing": contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
         }

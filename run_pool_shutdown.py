@@ -35,7 +35,8 @@ from fastlane_bot.events.utils import (
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    handle_target_token_addresses, read_csv_file,
+    handle_target_token_addresses,
+    read_csv_file,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 
@@ -169,11 +170,16 @@ def main(
     )
 
     # Get the static pool data, tokens and uniswap v2 event mappings
-    (static_pool_data,
-    tokens,
-    uniswap_v2_event_mappings,
-    uniswap_v3_event_mappings) = get_static_data(
-        cfg=cfg, exchanges=exchanges, blockchain=blockchain, static_pool_data_filename=static_pool_data_filename, static_pool_data_sample_sz=static_pool_data_sample_sz
+    (
+        static_pool_data,
+        tokens,
+        uniswap_v2_event_mappings,
+        uniswap_v3_event_mappings,
+    ) = get_static_data(
+        cfg=cfg,
+        exchanges=exchanges,
+        blockchain=blockchain,
+        static_pool_data_filename=static_pool_data_filename,
     )
 
     target_token_addresses = handle_target_token_addresses(

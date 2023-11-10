@@ -184,7 +184,7 @@ def get_all_token_details(web3: Web3, network: str) -> Dict:
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {"symbol": "ETH", "decimals": 18}
     }
     for token in response:
-        address = web3.toChecksumAddress(token.get("address"))
+        address = web3.to_checksum_address(token.get("address"))
         symbol = token.get("symbol")
         decimals = token.get("decimals")
         try:
@@ -224,7 +224,7 @@ def get_token_details_from_contract(
     else:
         try:
             contract = web3.eth.contract(
-                address=web3.toChecksumAddress(token), abi=ERC20_ABI
+                address=web3.to_checksum_address(token), abi=ERC20_ABI
             )
             decimals = contract.caller.decimals()
             symbol = contract.caller.symbol()
@@ -250,7 +250,7 @@ def get_token_details(
 
     Returns: a Tuple containing the token symbol & decimals, or None, None if the contract call failed.
     """
-    tkn = web3.toChecksumAddress(tkn)
+    tkn = web3.to_checksum_address(tkn)
     if tkn in token_addr_lookup:
         symbol = token_addr_lookup.get(tkn).get("symbol")
         decimal = token_addr_lookup.get(tkn).get("decimals")
@@ -362,7 +362,7 @@ def generate_token_price_map(pool_data: Dict, web3: Web3) -> Dict:
             symbol = tkn["symbol"]
             symbol = fix_missing_symbols(addr=address, symbol=symbol)
 
-            address = web3.toChecksumAddress(address)
+            address = web3.to_checksum_address(address)
             token_prices[str(address)] = {"tokenSymbol": str(symbol), "usd": None}
 
     token_prices = get_token_prices_coingecko(token_list=token_prices)
@@ -383,7 +383,7 @@ def organize_pool_details_uni_v3(
     """
     skip_pool = False
     pool_address = pool_data["args"]["pool"]
-    pool_address = web3.toChecksumAddress(pool_address)
+    pool_address = web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
     token_info = {}
     pair = ""
@@ -454,7 +454,7 @@ def process_token_details(
 
         if skip_tokens(addr=address):
             return None, None, True
-        address = web3.toChecksumAddress(address)
+        address = web3.to_checksum_address(address)
         symbol, decimals = get_token_details(
             token_addr_lookup=token_addr_lookup, tkn=address, web3=web3
         )
@@ -493,7 +493,7 @@ def organize_pool_details_balancer(
     pool_id = pool_data["id"]
     pool_type = pool_data["poolType"]
     pool_address = pool_data["address"]
-    pool_address = web3.toChecksumAddress(pool_address)
+    pool_address = web3.to_checksum_address(pool_address)
     token_info = {}
     tokens = pool_data["tokens"]
 
@@ -504,7 +504,7 @@ def organize_pool_details_balancer(
     for idx, tkn in enumerate(tokens):
         tkn_num = "tkn" + str(idx)
         address = tkn["address"]
-        address = web3.toChecksumAddress(address)
+        address = web3.to_checksum_address(address)
         if skip_tokens(addr=address):
             skip_pool = True
             break
@@ -597,7 +597,7 @@ def organize_pool_details_uni_v2(
     """
     skip_pool = False
     pool_address = pool_data["args"]["pair"]
-    pool_address = web3.toChecksumAddress(pool_address)
+    pool_address = web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
     token_info = {}
     pair = ""
@@ -660,7 +660,7 @@ def organize_pool_details_solidly_v2(
     """
     skip_pool = False
     pool_address = pool_data["args"]["pool"]
-    pool_address = web3.toChecksumAddress(pool_address)
+    pool_address = web3.to_checksum_address(pool_address)
 
     last_updated_block = pool_data["blockNumber"]
 
@@ -833,9 +833,9 @@ def get_uni_v3_pools(
     ]
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    #mapdf = mapdf.set_index("exchange")
+    # mapdf = mapdf.set_index("exchange")
     return mapdf
-    #return df, mapdf
+    # return df, mapdf
 
 
 def get_uni_v2_pools(
@@ -881,7 +881,7 @@ def get_uni_v2_pools(
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
     return mapdf
-    #return df, mapdf
+    # return df, mapdf
 
 
 def get_solidly_v2_pools(
@@ -927,7 +927,7 @@ def get_solidly_v2_pools(
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
     return df, mapdf
-    #return df, mapdf
+    # return df, mapdf
 
 
 def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.DataFrame:
@@ -1135,9 +1135,18 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
         fresh_data = True
     else:
-        exchange_df = pd.read_csv(write_path + "/static_pool_data.csv", low_memory=False, dtype=str, index_col=False)
-        univ2_mapdf = pd.read_csv(write_path + "/uniswap_v2_event_mappings.csv", index_col=False)
-        univ3_mapdf = pd.read_csv(write_path + "/uniswap_v3_event_mappings.csv", index_col=False)
+        exchange_df = pd.read_csv(
+            write_path + "/static_pool_data.csv",
+            low_memory=False,
+            dtype=str,
+            index_col=False,
+        )
+        univ2_mapdf = pd.read_csv(
+            write_path + "/uniswap_v2_event_mappings.csv", index_col=False
+        )
+        univ3_mapdf = pd.read_csv(
+            write_path + "/uniswap_v3_event_mappings.csv", index_col=False
+        )
 
     multichain_df = get_multichain_addresses(network=network_name)
 
@@ -1229,9 +1238,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
             continue
 
-
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return univ2_mapdf, univ3_mapdf
 
-#terraform_blockchain(network_name="coinbase_base")
+
+# terraform_blockchain(network_name="coinbase_base")

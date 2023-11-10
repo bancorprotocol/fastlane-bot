@@ -60,7 +60,7 @@ class SushiswapV2Pool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -71,10 +71,10 @@ class SushiswapV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = await contract.caller.getReserves()
+        reserve_balance = contract.caller.getReserves()
         params = {
-            "fee": "0.003",
-            "fee_float": 0.003,
+            "fee": "0.0025",
+            "fee_float": 0.0025,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
             "exchange_name": "sushiswap_v2",

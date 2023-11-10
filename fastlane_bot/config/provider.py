@@ -111,21 +111,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
-
-            # init the async contracts
-            self.ASYNC_BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                abi=BANCOR_V3_NETWORK_INFO_ABI,
-            )
-            self.ASYNC_CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-                address=network.CARBON_CONTROLLER_ADDRESS,
-                abi=CARBON_CONTROLLER_ABI,
-            )
-            self.ASYNC_BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
-                abi=FAST_LANE_CONTRACT_ABI,
-            )
-
             reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
             self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
@@ -174,20 +159,6 @@ class _ConfigProviderTenderly(ConfigProvider):
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
-
-        # init the async contracts
-        self.ASYNC_BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
-            abi=BANCOR_V3_NETWORK_INFO_ABI,
-        )
-        self.ASYNC_CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-            address=N.CARBON_CONTROLLER_ADDRESS,
-            abi=CARBON_CONTROLLER_ABI,
-        )
-        self.ASYNC_BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-            address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
-            abi=FAST_LANE_CONTRACT_ABI,
-        )
         reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
         self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
@@ -218,8 +189,8 @@ class _ConfigProviderUnitTest(ConfigProvider):
 
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        # assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {
-        # self.network}" raise NotImplementedError("Infura not implemented")
+        # assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        # raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
         self.BANCOR_NETWORK_INFO_CONTRACT = None

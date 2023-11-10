@@ -276,7 +276,11 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3, tenderly_exchanges
+                    contract,
+                    self.tenderly_fork_id,
+                    self.w3_tenderly,
+                    self.web3,
+                    tenderly_exchanges,
                 )
             )
 
@@ -323,21 +327,23 @@ class PoolManager(BaseManager):
         Optional[Dict[str, Any]]
             The pool info.
         """
-        if ex_name in self.cfg.UNI_V2_FORKS:
-            ex_name = "uniswap_v2"
+        # if ex_name in self.cfg.UNI_V2_FORKS:
+        #     ex_name = "uniswap_v2"
 
         if key == "address":
             key_value = self.web3.to_checksum_address(key_value)
 
         if ex_name == "bancor_pol":
             key = "tkn0_address"
-            
+
         if ex_name == "bancor_v2":
             return next(
                 (
                     self.validate_pool_info(key_value, event, pool, key)
                     for pool in self.pool_data
-                    if pool[key[0]] == key_value[0] and pool[key[1]] == key_value[1] and pool["exchange_name"] == ex_name
+                    if pool[key[0]] == key_value[0]
+                    and pool[key[1]] == key_value[1]
+                    and pool["exchange_name"] == ex_name
                 ),
                 None,
             )

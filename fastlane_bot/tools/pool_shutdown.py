@@ -175,7 +175,7 @@ class AutomaticPoolShutdown:
         Generates and submits the pool shutdown transaction
         """
         # Get current base fee for pending block
-        gas_price = self.mgr.web3.eth.getBlock("pending").get("baseFeePerGas")
+        gas_price = self.mgr.web3.eth.get_block("pending").get("baseFeePerGas")
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         max_priority_gas = int(
             self.tx_helpers.get_max_priority_fee_per_gas_alchemy()

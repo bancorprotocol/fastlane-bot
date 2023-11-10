@@ -11,7 +11,7 @@ from abc import ABCMeta, ABC
 
 from eth_typing import HexStr
 from hexbytes import HexBytes
-from web3 import Web3, AsyncWeb3
+from web3 import Web3
 from web3.types import TxReceipt
 
 import os
@@ -77,7 +77,6 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.provider_url = provider_url
         self.provider_name = provider_name
         self.web3 = Web3(Web3.HTTPProvider(provider_url))
-        self.async_web3 = AsyncWeb3(AsyncWeb3.HTTPProvider(provider_url))
         self.nonce = nonce
 
 

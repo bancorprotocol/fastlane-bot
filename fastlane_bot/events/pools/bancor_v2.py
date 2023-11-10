@@ -85,7 +85,7 @@ class BancorV2Pool(Pool):
         data["exchange_name"] = self.state["exchange_name"]
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -96,16 +96,16 @@ class BancorV2Pool(Pool):
         """
         See base class.
         """
-        reserve0, reserve1 = await contract.caller.reserveBalances()
-        tkn0_address, tkn1_address = await contract.caller.reserveTokens()
-        fee = await contract.caller.conversionFee()
+        reserve0, reserve1 = contract.caller.reserveBalances()
+        tkn0_address, tkn1_address = contract.caller.reserveTokens()
+        fee = contract.caller.conversionFee()
 
         params = {
             "fee": fee,
             "fee_float": fee / 1e6,
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
-            "anchor": await contract.caller.anchor(),
+            "anchor": contract.caller.anchor(),
             "tkn0_balance": reserve0,
             "tkn1_balance": reserve1,
             "tkn0_address": tkn0_address,

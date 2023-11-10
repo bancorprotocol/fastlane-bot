@@ -183,6 +183,7 @@ class CarbonBotBase:
             The container of curves.
         """
         pools_and_tokens = self.db.get_pool_data_with_tokens()
+        print(f"pools_and_tokens={len(pools_and_tokens)}")
         curves = []
         tokens = self.db.get_tokens()
         ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
@@ -489,6 +490,7 @@ class CarbonBot(CarbonBotBase):
 
         self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
         r = self.randomize(arb_opps=r, randomizer=randomizer)
+
         if data_validator:
             # Add random chance if we should check or not
             r = self.validate_optimizer_trades(
@@ -627,8 +629,6 @@ class CarbonBot(CarbonBotBase):
                 "tkn1_key": current_pool.tkn1_key,
                 "args": {"id": current_pool.cid},
             }
-
-            print("pool_info: ", pool_info)
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
             if fetched_pool is None:

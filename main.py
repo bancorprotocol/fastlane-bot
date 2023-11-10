@@ -14,10 +14,10 @@ import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
-from fastlane_bot.events.async_utils import (
-    async_update_pools_from_contracts,
+from fastlane_bot.events.async_backdate_utils import (
     async_handle_initial_iteration,
 )
+from fastlane_bot.events.async_contract_utils import async_update_pools_from_contracts
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -47,9 +47,12 @@ from fastlane_bot.events.utils import (
     handle_static_pools_update,
     read_csv_file,
     handle_tokens_csv,
+    check_version_requirements,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
+
+check_version_requirements(required_version="6.11.0")
 
 load_dotenv()
 
@@ -570,9 +573,10 @@ def run(
             # Update new pool events from contracts
             if len(mgr.pools_to_add_from_contracts) > 0:
                 mgr.cfg.logger.info(
-                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts"
+                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts,"
+                    f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
-                async_update_pools_from_contracts(mgr, current_block)
+                async_update_pools_from_contracts(mgr, current_block, logging_path)
                 mgr.pools_to_add_from_contracts = []
 
             total_iteration_time = time.time() - iteration_start_time

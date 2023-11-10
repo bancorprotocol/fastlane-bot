@@ -18,9 +18,7 @@ from fastlane_bot.events.managers.pools import PoolManager
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-    def update_from_event(
-        self, event: Dict[str, Any]
-    ) -> None:
+    def update_from_event(self, event: Dict[str, Any]) -> None:
         """
         Updates the state of the pool data from an event.
 
@@ -49,15 +47,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         addr = self.web3.to_checksum_address(event["address"])
         ex_name = self.exchange_name_from_event(event)
-
         if not ex_name:
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
-        pool_info = self.get_pool_info(
-            key, key_value, ex_name
-        )
+        pool_info = self.get_pool_info(key, key_value, ex_name)
+
         if not pool_info:
             self.pools_to_add_from_contracts.append(
                 (addr, ex_name, event, key, key_value)
@@ -133,6 +129,12 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         for key, value in params.items():
             pool_info[key] = value
+
+        # update the pool_data where the cids match
+        for idx, pool in enumerate(self.pool_data):
+            if pool["cid"] == pool_info["cid"]:
+                self.pool_data[idx] = pool_info
+                break
         return pool_info
 
     def update_from_contract(
@@ -251,15 +253,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     break
                 break
             except Exception as e:
-                if 'Too Many Requests for url' in str(e):
+                if "Too Many Requests for url" in str(e):
                     time.sleep(random.random())
                     return self.update(
-                            event,
-                            address,
-                            token_address,
-                            pool_info,
-                            contract,
-                            block_number,
+                        event,
+                        address,
+                        token_address,
+                        pool_info,
+                        contract,
+                        block_number,
                     )
                 elif "format_name" not in str(e):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
@@ -269,7 +271,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 else:
                     rate_limiter = 0.1 + 0.9 * random.random()
                     time.sleep(random.random())
-
 
     def handle_pair_trading_fee_updated(
         self,

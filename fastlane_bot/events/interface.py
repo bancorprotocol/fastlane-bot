@@ -121,7 +121,6 @@ class QueryInterface:
         """
 
         for key in keys:
-            # print(f"key: {key}")
             if key in pool and pool[key] > 0:
                 return True
         return False
@@ -508,20 +507,8 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
-
-            # remove tokens with no address, symbol or decimals
-            if (
-                record.get("tkn0_address") is None
-                or record.get("tkn0_symbol") is None
-                or record.get("tkn0_decimals") is None
-                or str(record.get("tkn1_decimals")) == "nan"
-            ):
-                self.cfg.logger.warning(
-                    f"WARNING: Token {record.get('tkn0_key')} has no address, symbol or decimals"
-                )
-                continue
-            token_set.add(self.create_token(record, "tkn0_"))
-            token_set.add(self.create_token(record, "tkn1_"))
+            for idx in range(len(record["descr"].split("/"))):
+                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
@@ -639,7 +626,9 @@ class QueryInterface:
             The list of pools
 
         """
-        return self.get_pool_data_with_tokens()
+        pool_data_with_tokens = self.get_pool_data_with_tokens()
+        print(f"pool_data_with_tokens: {len(pool_data_with_tokens)}")
+        return pool_data_with_tokens
 
     def update_recently_traded_pools(self, cids: List[str]):
         """
