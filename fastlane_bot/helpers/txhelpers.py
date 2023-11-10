@@ -546,6 +546,7 @@ class TxHelpers:
             )
         return transaction
 
+    # bookmark
     def build_transaction_with_gas(
         self,
         routes: List[Dict[str, Any]],
@@ -579,7 +580,7 @@ class TxHelpers:
                 flashloan_struct=flashloan_struct,
             )
         except Exception as e:
-            self.ConfigObj.logger.debug(
+            self.ConfigObj.logger.info(
                 f"Error when building transaction: {e.__class__.__name__} {e}"
             )
             if "max fee per gas less than block base fee" in str(e):
@@ -591,6 +592,9 @@ class TxHelpers:
                     split_maxPriorityFeePerGas = int(
                         int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
                     )
+                    self.ConfigObj.logger.info(
+                        f"Retrying transaction with maxPriorityFeePerGas: {split_maxPriorityFeePerGas}, baseFee: {split_baseFee}"
+                    )
                     transaction = self.construct_contract_function(
                         routes=routes,
                         src_amt=src_amt,
@@ -601,8 +605,10 @@ class TxHelpers:
                         flashloan_struct=flashloan_struct,
                     )
                 except Exception as e:
-                    self.ConfigObj.logger.debug(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}"
+                    self.ConfigObj.logger.info(
+                        f"(***2***) New error when building transaction: {e.__class__.__name__} {e},"
+                        f"routes: {routes}, src_amt: {src_amt}, src_address: {src_address}, gas_price: {gas_price},"
+                        f"max_priority: {max_priority}, nonce: {nonce},"
                     )
             else:
                 return None

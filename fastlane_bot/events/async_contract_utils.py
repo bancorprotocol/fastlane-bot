@@ -337,6 +337,9 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
     )
 
+    print(f"new_pool_data: {new_pool_data}")
+    raise Exception("test")
+
     # add new_pool_data to pool_data
     mgr.pool_data = new_pool_data + mgr.pool_data
 
@@ -382,21 +385,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             mgr.cfg.logger.info(f"\n\nFailed to update pool {pool}")
 
         raise Exception("Failed to update pools from contracts")
-
-    # for address, exchange_name, event, key, value in mgr.pools_to_add_from_contracts:
-    #     if exchange_name in ["sushiswap_v2", "pancakeswap_v2"]:
-    #         mgr.cfg.logger.info(
-    #             f"Skipping {exchange_name} pool {address} because it's not supported yet"
-    #         )
-    #         # update the pool_data from events
-    #         update_pools_from_events(-1, mgr, [event])
-    #         vals = [
-    #             pool
-    #             for pool in mgr.pool_data
-    #             if pool["address"] == address and pool["exchange_name"] == exchange_name
-    #         ]
-    #         print(f"vals: {vals}")
-    #         raise Exception("Not supported yet")
 
     # update the pool_data from events
     update_pools_from_events(-1, mgr, all_events)
