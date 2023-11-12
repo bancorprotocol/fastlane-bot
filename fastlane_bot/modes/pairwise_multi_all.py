@@ -137,8 +137,8 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             idx
             for idx, row in trade_instructions_df.iterrows()
             if (
-                (tkn0_into_carbon and row[0] < 0)
-                or (not tkn0_into_carbon and row[0] > 0)
+                (tkn0_into_carbon and row.iloc[0] < 0)
+                or (not tkn0_into_carbon and row.iloc[0] > 0)
             )
             and ("-0" in idx or "-1" in idx)
         ]

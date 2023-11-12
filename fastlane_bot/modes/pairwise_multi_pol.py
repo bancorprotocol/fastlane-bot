@@ -68,7 +68,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                         if curve.params.get("exchange") != "carbon_v1"
                     ]
                     non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                    tkn0_into_carbon = non_carbon_row[0] < 0
+                    tkn0_into_carbon = non_carbon_row.iloc[0] < 0
                     wrong_direction_cids = self.get_wrong_direction_cids(
                         tkn0_into_carbon, trade_instructions_df
                     )
@@ -146,8 +146,8 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
             idx
             for idx, row in trade_instructions_df.iterrows()
             if (
-                (tkn0_into_carbon and row[0] < 0)
-                or (not tkn0_into_carbon and row[0] > 0)
+                (tkn0_into_carbon and row.iloc[0] < 0)
+                or (not tkn0_into_carbon and row.iloc[0] > 0)
             )
             and ("-0" in idx or "-1" in idx)
         ]
