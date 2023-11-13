@@ -60,6 +60,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
             )
             return
 
+        if "descr" not in pool_info:
+            pool_info["descr"] = self.pool_descr_from_info(pool_info)
+
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info)
