@@ -2,11 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.57...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.58...HEAD)
+
+- Bug in automatic pool shutdown [\#192](https://github.com/bancorprotocol/fastlane-bot/issues/192)
+- Bugfix in auto pool shutdown [\#193](https://github.com/bancorprotocol/fastlane-bot/pull/193) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Tokens with shutdown pools should be flashloaned from Balancer [\#196](https://github.com/bancorprotocol/fastlane-bot/issues/196)
+
+## [v2.7.58](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.58) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.57...v2.7.58)
 
 - Wrong router address for Uni V3 [\#190](https://github.com/bancorprotocol/fastlane-bot/issues/190)
 
-- Tokens with shutdown pools should be flashloaned from Balancer [\#196](https://github.com/bancorprotocol/fastlane-bot/issues/196)
 - 196 tokens with shutdown pools should be flashloaned from balancer [\#197](https://github.com/bancorprotocol/fastlane-bot/pull/197) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.57](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.57) (2023-11-10)
