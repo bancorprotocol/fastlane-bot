@@ -354,6 +354,50 @@ class QueryInterface:
             else token_key
         )
 
+    def remove_pools_with_invalid_tokens(self) -> None:
+        """
+        Remove pools with invalid tokens
+        """
+        self.cfg.logger.info(
+            f"Total number of pools. {len(self.state)} before removing pools with invalid tokens"
+        )
+
+        safe_pools = []
+        for idx, pool in enumerate(self.state):
+            if str(pool["tkn0_decimals"]) in ["None", "nan"] or str(
+                pool["tkn1_decimals"]
+            ) in ["None", "nan"]:
+                self.cfg.logger.info(
+                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for invalid token"
+                )
+                continue
+            if str(pool["tkn0_key"]) in ["None", "nan"] or str(pool["tkn1_key"]) in [
+                "None",
+                "nan",
+            ]:
+                self.cfg.logger.info(
+                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for invalid token"
+                )
+                continue
+            if str(pool["tkn0_address"]) in ["None", "nan"] or str(
+                pool["tkn1_address"]
+            ) in ["None", "nan"]:
+                self.cfg.logger.info(
+                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for invalid token"
+                )
+                continue
+            if str(pool["tkn0_symbcol"]) in ["None", "nan"] or str(
+                pool["tkn1_symbol"]
+            ) in ["None", "nan"]:
+                self.cfg.logger.info(
+                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for invalid token"
+                )
+                continue
+
+            safe_pools.append(pool)
+
+        self.state = safe_pools
+
     def handle_token_key_cleanup(self) -> None:
         """
         Cleanup token keys in state
@@ -496,6 +540,17 @@ class QueryInterface:
         result.tkn1_key = result.pair_name.split("/")[1]
         return result
 
+    def ensure_descr_in_pool_data(self) -> None:
+        """
+        Ensure that the pool data has a description
+        """
+        for idx, pool in enumerate(self.state):
+            if "descr" not in pool:
+                pool[
+                    "descr"
+                ] = f"{pool['exchange_name']} {pool['pair_name']} {pool['fee']}"
+                self.state[idx] = pool
+
     def get_tokens(self) -> List[Token]:
         """
         Get tokens. This method returns a list of tokens that are in the state.
@@ -509,7 +564,11 @@ class QueryInterface:
         for record in self.state:
             for idx in range(len(record["descr"].split("/"))):
                 v = self.create_token(record, f"tkn{str(idx)}_")
-                if not v.decimals or not v.key:
+                if (
+                    str(v.key) in ["None", "nan"]
+                    or str(v.decimals) in ["None", "nan"]
+                    or str(v.symbol) in ["None", "nan"]
+                ):
                     continue
                 token_set.add(v)
         return list(token_set)

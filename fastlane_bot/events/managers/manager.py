@@ -178,6 +178,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         if not pool_info:
             return
 
+        pool_info["descr"] = self.pool_descr_from_info(pool_info)
         pool_info["last_updated_block"] = block_number
         if contract is None:
             contract = self.pool_contracts[pool_info["exchange_name"]].get(

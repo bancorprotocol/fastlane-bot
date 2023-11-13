@@ -531,6 +531,17 @@ def run(
         # Save initial state of pool data to assert whether it has changed
         initial_state = mgr.pool_data.copy()
 
+        # ensure 'last_updated_block' is in pool_data for all pools
+        for idx, pool in enumerate(mgr.pool_data):
+            if "last_updated_block" not in pool:
+                # print(f"pool missing 'last_updated_block` {pool}")
+                pool["last_updated_block"] = last_block_queried
+                mgr.pool_data[idx] = pool
+            if not pool["last_updated_block"]:
+                # print(f"pool missing 'last_updated_block` {pool}")
+                pool["last_updated_block"] = last_block_queried
+                mgr.pool_data[idx] = pool
+
         # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
         start_block, replay_from_block = get_start_block(
             alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
@@ -699,7 +710,7 @@ def run(
               +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
               """
             )
-            last_block_queried = current_block
+
         if tenderly_fork_id:
             w3 = Web3(HTTPProvider(tenderly_uri))
 
@@ -736,7 +747,8 @@ def run(
             mgr.uniswap_v3_event_mappings = dict(
                 uniswap_v3_event_mappings[["address", "exchange"]].values
             )
-            last_block_queried = current_block
+
+        last_block_queried = current_block
 
         # except Exception as e:
         #     mgr.cfg.logger.error(f"Error in main loop: {e}")

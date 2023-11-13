@@ -47,6 +47,7 @@ __DATE__ = "20/June/2023"
 import random
 import time
 from _decimal import Decimal
+from copy import copy
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from typing import List, Dict, Tuple, Any, Callable
@@ -493,12 +494,13 @@ class CarbonBot(CarbonBotBase):
 
         if data_validator:
             # Add random chance if we should check or not
+            arb_opp = copy(r)
             r = self.validate_optimizer_trades(
                 arb_opp=r, arb_mode=arb_mode, arb_finder=finder
             )
             if r is None:
                 self.ConfigObj.logger.info(
-                    "Math validation eliminated arb opportunity, restarting."
+                    f"Math validation eliminated arb opportunity, restarting. {arb_opp}"
                 )
                 return None
             if replay_mode:
