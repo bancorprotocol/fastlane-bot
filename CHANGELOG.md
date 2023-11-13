@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.58...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.59...HEAD)
 
 - Bug in automatic pool shutdown [\#192](https://github.com/bancorprotocol/fastlane-bot/issues/192)
+
+Closed issues
+
+- Ensure backward compatibility for python 3.8 in light of new async changes [\#188](https://github.com/bancorprotocol/fastlane-bot/issues/188)
+
+Merged pull requests
+
+- removing incompatible type reference for upcoming web3.py version change [\#189](https://github.com/bancorprotocol/fastlane-bot/pull/189) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.59](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.59) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.58...v2.7.59)
+
 - Bugfix in auto pool shutdown [\#193](https://github.com/bancorprotocol/fastlane-bot/pull/193) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Tokens with shutdown pools should be flashloaned from Balancer [\#196](https://github.com/bancorprotocol/fastlane-bot/issues/196)
