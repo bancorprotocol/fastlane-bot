@@ -114,3 +114,33 @@ class BancorV2Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
+    async def async_update_from_contract(
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        reserve0, reserve1 = await contract.caller.reserveBalances()
+        tkn0_address, tkn1_address = await contract.caller.reserveTokens()
+        fee = await contract.caller.conversionFee()
+
+        params = {
+            "fee": fee,
+            "fee_float": fee / 1e6,
+            "exchange_name": self.state["exchange_name"],
+            "address": self.state["address"],
+            "anchor": await contract.caller.anchor(),
+            "tkn0_balance": reserve0,
+            "tkn1_balance": reserve1,
+            "tkn0_address": tkn0_address,
+            "tkn1_address": tkn1_address,
+        }
+        for key, value in params.items():
+            self.state[key] = value
+        return params

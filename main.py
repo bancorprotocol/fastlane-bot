@@ -58,6 +58,9 @@ from run_blockchain_terraformer import terraform_blockchain
 
 load_dotenv()
 
+# python main.py --alchemy_max_block_fetch=200 --reorg_delay=0 --polling_interval=0 --randomizer=1 --exchanges=carbon_v1,bancor_v3,bancor_v2,uniswap_v3,uniswap_v2,sushiswap_v2,pancakeswap_v2,pancakeswap_v3 --arb_mode=b3_two_hop
+# python main.py --alchemy_max_block_fetch=2000 --reorg_delay=0 --polling_interval=0 --randomizer=1 --exchanges=carbon_v1,bancor_v3,bancor_v2 --arb_mode=b3_two_hop
+
 
 @click.command()
 @click.option(

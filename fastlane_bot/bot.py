@@ -188,33 +188,33 @@ class CarbonBotBase:
         tokens = self.db.get_tokens()
         ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
         for p in pools_and_tokens:
-            try:
-                p.ADDRDEC = ADDRDEC
-                curves += p.to_cpc()
-            except ZeroDivisionError as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
-                )
-            except CPC.CPCValidationError as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
-                )
-            except TypeError as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
-                )
-            except p.DoubleInvalidCurveError as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
-                )
-            except Univ3Calculator.DecimalsMissingError as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
-                )
-            except Exception as e:
-                self.ConfigObj.logger.error(
-                    f"[get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
-                )
+            # try:
+            p.ADDRDEC = ADDRDEC
+            curves += p.to_cpc()
+            # except ZeroDivisionError as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
+            #     )
+            # except CPC.CPCValidationError as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
+            #     )
+            # except TypeError as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+            #     )
+            # except p.DoubleInvalidCurveError as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
+            #     )
+            # except Univ3Calculator.DecimalsMissingError as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
+            #     )
+            # except Exception as e:
+            #     self.ConfigObj.logger.error(
+            #         f"[get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
+            #     )
 
         return CPCContainer(curves)
 

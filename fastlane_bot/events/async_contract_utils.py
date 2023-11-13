@@ -119,8 +119,8 @@ def get_pool_info(
         "address": pool["address"],
         "tkn0_address": pool["tkn0_address"],
         "tkn1_address": pool["tkn1_address"],
-        "tkn0_balance": pool["tkn0_balance"] if "tkn0_balance" in pool else None,
-        "tkn1_balance": pool["tkn1_balance"] if "tkn1_balance" in pool else None,
+        # "tkn0_balance": pool["tkn0_balance"] if "tkn0_balance" in pool else None,
+        # "tkn1_balance": pool["tkn1_balance"] if "tkn1_balance" in pool else None,
         "fee": fee_raw[0],
         "fee_float": fee_raw[1],
         "blockchain": mgr.blockchain,
@@ -141,15 +141,19 @@ def get_pool_info(
 def add_token_info(
     pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
 ) -> Dict[str, Any]:
-    pool_info["tkn0_symbol"] = tkn0["symbol"]
+    tkn0["symbol"] = tkn0["symbol"].replace("/", "_").replace("-", "_")
+    tkn1["symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
+    pool_info["tkn0_symbol"] = tkn0["symbol"].replace("/", "_").replace("-", "_")
     pool_info["tkn0_decimals"] = tkn0["decimals"]
     pool_info["tkn0_key"] = get_tkn_key(tkn0["symbol"], tkn0["address"])
-    pool_info["tkn1_symbol"] = tkn1["symbol"]
+    pool_info["tkn1_symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
     pool_info["tkn1_decimals"] = tkn1["decimals"]
     pool_info["tkn1_key"] = get_tkn_key(tkn1["symbol"], tkn1["address"])
     pool_info["pair_name"] = pair_name(
         tkn0["symbol"], tkn0["address"], tkn1["symbol"], tkn1["address"]
     )
+    if len(pool_info["pair_name"].split("/")) != 2:
+        raise Exception(f"pair_name is not valid for {pool_info}")
     return pool_info
 
 
@@ -193,6 +197,10 @@ def get_new_pool_data(
             pool_data_keys,
             keys,
         )
+        pool_info["last_updated_block"] = current_block
+        # convert block to timestamp
+        blocktime = mgr.cfg.w3.eth.get_block(current_block)["timestamp"]
+        pool_info["last_updated"] = blocktime
         new_pool_data.append(pool_info)
     return new_pool_data
 

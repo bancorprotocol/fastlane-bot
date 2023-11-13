@@ -62,7 +62,9 @@ def collapse_if_tuple(abi: Dict[str, Any]) -> str:
     return collapsed
 
 
-def get_output_types_from_abi(abi: List[Dict[str, Any]], function_name: str) -> List[str]:
+def get_output_types_from_abi(
+    abi: List[Dict[str, Any]], function_name: str
+) -> List[str]:
     """
     Get the output types from an ABI.
 
@@ -80,8 +82,11 @@ def get_output_types_from_abi(abi: List[Dict[str, Any]], function_name: str) -> 
 
     """
     for item in abi:
-        if item['type'] == 'function' and item['name'] == function_name:
-            return [collapse_if_tuple(cast(Dict[str, Any], item)) for item in item['outputs']]
+        if item["type"] == "function" and item["name"] == function_name:
+            return [
+                collapse_if_tuple(cast(Dict[str, Any], item))
+                for item in item["outputs"]
+            ]
     raise ValueError(f"No function named {function_name} found in ABI.")
 
 
@@ -89,6 +94,7 @@ class ContractMethodWrapper:
     """
     Wraps a contract method to be used with multicall.
     """
+
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
@@ -106,18 +112,22 @@ class MultiCaller(ContextManager):
     """
     Context manager for multicalls.
     """
+
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
-
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
-                 block_identifier: Any = 'latest', multicall_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
+    def __init__(
+        self,
+        contract: MultiProviderContractWrapper or web3.contract.Contract,
+        block_identifier: Any = "latest",
+        multicall_address="0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696",
+    ):
         self._contract_calls: List[Callable] = []
         self.contract = contract
         self.block_identifier = block_identifier
         self.MULTICALL_CONTRACT_ADDRESS = multicall_address
 
-    def __enter__(self) -> 'MultiCaller':
+    def __enter__(self) -> "MultiCaller":
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -132,11 +142,13 @@ class MultiCaller(ContextManager):
         output_types_list = []
 
         for fn in self._contract_calls:
-            fn_name = str(fn).split('functools.partial(<Function ')[1].split('>')[0]
-            calls_for_aggregate.append({
-                'target': self.contract.address,
-                'callData': fn()._encode_transaction_data()
-            })
+            fn_name = str(fn).split("functools.partial(<Function ")[1].split(">")[0]
+            calls_for_aggregate.append(
+                {
+                    "target": self.contract.address,
+                    "callData": fn()._encode_transaction_data(),
+                }
+            )
             output_types = get_output_types_from_abi(self.contract.abi, fn_name)
             output_types_list.append(output_types)
 
@@ -144,13 +156,16 @@ class MultiCaller(ContextManager):
         provider_url = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
         w3 = Web3(Web3.HTTPProvider(provider_url))
 
-        encoded_data = w3.eth.contract(
-            abi=MULTICALL_ABI,
-            address=self.MULTICALL_CONTRACT_ADDRESS
-        ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
+        encoded_data = (
+            w3.eth.contract(abi=MULTICALL_ABI, address=self.MULTICALL_CONTRACT_ADDRESS)
+            .functions.aggregate(calls_for_aggregate)
+            .call(block_identifier=self.block_identifier)
+        )
 
         if not isinstance(encoded_data, list):
-            raise TypeError(f"Expected encoded_data to be a list, got {type(encoded_data)} instead.")
+            raise TypeError(
+                f"Expected encoded_data to be a list, got {type(encoded_data)} instead."
+            )
 
         encoded_data = encoded_data[1]
         decoded_data_list = []

@@ -508,7 +508,10 @@ class QueryInterface:
         token_set = set()
         for record in self.state:
             for idx in range(len(record["descr"].split("/"))):
-                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+                v = self.create_token(record, f"tkn{str(idx)}_")
+                if not v.decimals or not v.key:
+                    continue
+                token_set.add(v)
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:

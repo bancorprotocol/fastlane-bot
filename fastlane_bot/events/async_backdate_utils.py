@@ -63,7 +63,7 @@ async def async_handle_main_backdate_from_contracts(
     pool_info: Dict,
     contract: Any,
 ) -> Tuple[int, Dict[str, Any]]:
-    params = await pool.update_from_contract(
+    params = await pool.async_update_from_contract(
         contract,
         tenderly_fork_id=tenderly_fork_id,
         w3_tenderly=w3_tenderly,
