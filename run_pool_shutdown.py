@@ -5,6 +5,10 @@ Runs the fastlane bot in pool shutdown mode.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import os
+
+import pandas as pd
+
 from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 
 try:
@@ -31,7 +35,7 @@ from fastlane_bot.events.utils import (
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    handle_target_token_addresses,
+    handle_target_token_addresses, read_csv_file,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 
@@ -69,7 +73,7 @@ def main(
     static_pool_data_filename: str = "static_pool_data",
     static_pool_data_sample_sz: str = "max",
     limit_bancor3_flashloan_tokens: bool = False,
-    default_min_profit_bnt: int = 0,
+    default_min_profit_gas_token: int = 0,
     timeout: int = 0,
     target_tokens: str = None,
     replay_from_block: int = None,
@@ -90,7 +94,7 @@ def main(
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
-        default_min_profit_bnt (int): The default minimum profit in BNT.
+        default_min_profit_gas_token (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
@@ -99,17 +103,27 @@ def main(
 
     # Set config
     loglevel = get_loglevel(loglevel)
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/ethereum/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
 
     # Initialize the config object
     cfg = get_config(
-        default_min_profit_bnt=default_min_profit_bnt,
+        default_min_profit_gas_token="0",
         limit_bancor3_flashloan_tokens=limit_bancor3_flashloan_tokens,
         loglevel=loglevel,
         logging_path=logging_path,
+        blockchain="ethereum",
+
     )
 
     # Format the flashloan tokens
-    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens)
+    flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -154,8 +168,17 @@ def main(
     )
 
     # Get the static pool data, tokens and uniswap v2 event mappings
-    static_pool_data, tokens, uniswap_v2_event_mappings = get_static_data(
-        cfg, exchanges, static_pool_data_filename, static_pool_data_sample_sz
+    (
+        static_pool_data,
+        tokens,
+        uniswap_v2_event_mappings,
+        uniswap_v3_event_mappings,
+    ) = get_static_data(
+        cfg,
+        exchanges,
+        "ethereum",
+        static_pool_data_filename,
+        static_pool_data_sample_sz,
     )
 
     target_token_addresses = handle_target_token_addresses(
