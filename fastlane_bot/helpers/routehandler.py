@@ -384,7 +384,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.USDC_ADDRESS, self.ConfigObj.USDT_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.USDC_KEY, self.ConfigObj.LINK_KEY, self.ConfigObj.USDT_KEY]:
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.LINK_KEY]:
             return 2
         else:
             return 7
