@@ -2,7 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.55...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.57...HEAD)
+
+- Wrong router address for Uni V3 [\#190](https://github.com/bancorprotocol/fastlane-bot/issues/190)
+
+- Tokens with shutdown pools should be flashloaned from Balancer [\#196](https://github.com/bancorprotocol/fastlane-bot/issues/196)
+- 196 tokens with shutdown pools should be flashloaned from balancer [\#197](https://github.com/bancorprotocol/fastlane-bot/pull/197) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.57](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.57) (2023-11-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.56...v2.7.57)
+
+- Fix router address for Uni V3 [\#191](https://github.com/bancorprotocol/fastlane-bot/pull/191) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.56](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.56) (2023-11-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.55...v2.7.56)
 
 - Add multichain support [\#183](https://github.com/bancorprotocol/fastlane-bot/pull/183) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
