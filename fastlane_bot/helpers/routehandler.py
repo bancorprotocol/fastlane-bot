@@ -382,7 +382,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             int
         """
 
-        if self.ConfigObj.NETWORK not in "ethereum":
+        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
