@@ -166,40 +166,40 @@ class Manager(PoolManager, EventManager, ContractsManager):
         Dict[str, Any]
             The pool info.
         """
-        if pool_info:
-            address = pool_info["address"]
-
-        addr = self.web3.to_checksum_address(address)
-
-        if not pool_info:
-            for pool in self.pool_data:
-                if pool["address"] == addr:
-                    pool_info = pool
-                    break
-
-        pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
-        if not pool_info:
-            return
-
-        pool_info["descr"] = self.pool_descr_from_info(pool_info)
-        pool_info["last_updated_block"] = block_number
-        if contract is None:
-            contract = self.pool_contracts[pool_info["exchange_name"]].get(
-                pool_info["address"],
-                self.web3.eth.contract(
-                    address=pool_info["address"],
-                    abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
-                ),
-            )
-        pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(
-            contract,
-            tenderly_fork_id=self.tenderly_fork_id,
-            w3_tenderly=self.w3_tenderly,
-            w3=self.web3,
-        )
-        for key, value in params.items():
-            pool_info[key] = value
+        # if pool_info:
+        #     address = pool_info["address"]
+        #
+        # addr = self.web3.to_checksum_address(address)
+        #
+        # if not pool_info:
+        #     for pool in self.pool_data:
+        #         if pool["address"] == addr:
+        #             pool_info = pool
+        #             break
+        #
+        # pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
+        # if not pool_info:
+        #     return
+        #
+        # pool_info["descr"] = self.pool_descr_from_info(pool_info)
+        # pool_info["last_updated_block"] = block_number
+        # if contract is None:
+        #     contract = self.pool_contracts[pool_info["exchange_name"]].get(
+        #         pool_info["address"],
+        #         self.web3.eth.contract(
+        #             address=pool_info["address"],
+        #             abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
+        #         ),
+        #     )
+        # pool = self.get_or_init_pool(pool_info)
+        # params = pool.update_from_contract(
+        #     contract,
+        #     tenderly_fork_id=self.tenderly_fork_id,
+        #     w3_tenderly=self.w3_tenderly,
+        #     w3=self.web3,
+        # )
+        # for key, value in params.items():
+        #     pool_info[key] = value
         return pool_info
 
     def update(

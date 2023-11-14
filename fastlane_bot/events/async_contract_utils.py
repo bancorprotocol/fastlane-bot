@@ -4,6 +4,7 @@ import time
 from glob import glob
 from typing import Any, List, Dict, Tuple, Type, Callable
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from web3.contract import AsyncContract
@@ -112,6 +113,7 @@ def get_pool_info(
     current_block: int,
     tkn0: Dict[str, Any],
     tkn1: Dict[str, Any],
+    pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
     fee_raw = eval(pool["fee"])
     pool_info = {
@@ -119,22 +121,39 @@ def get_pool_info(
         "address": pool["address"],
         "tkn0_address": pool["tkn0_address"],
         "tkn1_address": pool["tkn1_address"],
-        # "tkn0_balance": pool["tkn0_balance"] if "tkn0_balance" in pool else None,
-        # "tkn1_balance": pool["tkn1_balance"] if "tkn1_balance" in pool else None,
         "fee": fee_raw[0],
         "fee_float": fee_raw[1],
         "blockchain": mgr.blockchain,
         "anchor": None,
         "exchange_id": mgr.cfg.EXCHANGE_IDS[pool["exchange_name"]],
         "last_updated_block": current_block,
+        "tkn0_symbol": tkn0["symbol"],
+        "tkn0_decimals": tkn0["decimals"],
+        "tkn0_key": tkn0["key"],
+        "tkn1_symbol": tkn1["symbol"],
+        "tkn1_decimals": tkn1["decimals"],
+        "tkn1_key": tkn1["key"],
+        "pair_name": pair_name(
+            tkn0["symbol"], tkn0["address"], tkn1["symbol"], tkn1["address"]
+        ),
     }
-    pool_info = add_token_info(pool_info, tkn0, tkn1)
+    if len(pool_info["pair_name"].split("/")) != 2:
+        raise Exception(f"pair_name is not valid for {pool_info}")
     pool_info["descr"] = mgr.pool_descr_from_info(pool_info)
     pool_info["cid"] = (
         mgr.cfg.w3.keccak(text=f"{pool_info['descr']}").hex()
         if pool_info["exchange_name"] != "carbon_v1"
         else str(pool["cid"])
     )
+    pool_info["last_updated_block"] = current_block
+
+    # convert block to timestamp
+    pool_info["last_updated"] = mgr.cfg.w3.eth.get_block(current_block)["timestamp"]
+
+    for key in pool_data_keys:
+        if key not in pool_info.keys():
+            pool_info[key] = np.nan
+
     return pool_info
 
 
@@ -178,8 +197,13 @@ def get_new_pool_data(
 ) -> List[Dict]:
     # Convert tokens_df to a dictionary keyed by address for faster access
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
+
     # Convert pool_data_keys to a frozenset for faster containment checks
-    pool_data_keys: frozenset = frozenset(mgr.pool_data[0].keys())
+    all_keys = set()
+    for pool in mgr.pool_data:
+        all_keys.update(pool.keys())
+
+    pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
         tkn0 = tokens_dict.get(pool["tkn0_address"])
@@ -192,15 +216,8 @@ def get_new_pool_data(
             )
             continue
 
-        pool_info = add_missing_keys(
-            get_pool_info(pool, mgr, current_block, tkn0, tkn1),
-            pool_data_keys,
-            keys,
-        )
-        pool_info["last_updated_block"] = current_block
-        # convert block to timestamp
-        blocktime = mgr.cfg.w3.eth.get_block(current_block)["timestamp"]
-        pool_info["last_updated"] = blocktime
+        pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
+
         new_pool_data.append(pool_info)
     return new_pool_data
 
@@ -308,6 +325,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     if not os.path.exists(dirname):
         os.mkdir(dirname)
     start_time = time.time()
+    # deplicate pool data
+
     orig_num_pools_in_data = len(mgr.pool_data)
     mgr.cfg.logger.info("Async process now updating pools from contracts...")
 
@@ -340,20 +359,52 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
     )
+    tokens_df["symbol"] = (
+        tokens_df["symbol"].str.replace("/", "_").str.replace("-", "_")
+    )
+    tokens_df.to_csv(
+        f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
+    )
+    tokens_df["key"] = tokens_df.apply(
+        lambda x: get_tkn_key(x["symbol"], x["address"]), axis=1
+    )
 
     new_pool_data = get_new_pool_data(
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
     )
 
-    # print(f"new_pool_data: {new_pool_data}")
-    # raise Exception("test")
+    new_pool_data_df = (
+        pd.DataFrame(new_pool_data)
+        .sort_values("last_updated_block", ascending=False)
+        .drop_duplicates(subset=["cid"])
+        .set_index("cid")
+    )
 
-    # add new_pool_data to pool_data
-    mgr.pool_data = new_pool_data + mgr.pool_data
+    print(new_pool_data_df.to_dict()
 
+    duplicate_new_pool_ct = len(new_pool_data) - len(new_pool_data_df)
+
+    assert len(mgr.pools_to_add_from_contracts) == (
+        len(new_pool_data) + duplicate_new_pool_ct
+    )
+
+    all_pools_df = (
+        pd.DataFrame(mgr.pool_data)
+        .sort_values("last_updated_block", ascending=False)
+        .drop_duplicates(subset=["cid"])
+        .set_index("cid")
+    )
+
+    # add new_pool_data to pool_data, ensuring no duplicates
+    all_pools_df.update(new_pool_data_df)
+    all_pools = all_pools_df.reset_index().to_dict(orient="records")
+
+    mgr.pool_data = all_pools
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
-    if new_pools_added < len(mgr.pools_to_add_from_contracts):
+    if (new_pools_added + duplicate_new_pool_ct) != len(
+        mgr.pools_to_add_from_contracts
+    ):
         write_pool_data_to_disk(
             cache_latest_only=True,
             logging_path=logging_path,
@@ -375,7 +426,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             key,
             value,
         ) in mgr.pools_to_add_from_contracts:
-            # print(f"key: {key}, value: {value}")
             data_vals = (
                 [pool["tkn0_address"] for pool in mgr.pool_data]
                 + [pool["tkn1_address"] for pool in mgr.pool_data]

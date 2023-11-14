@@ -364,36 +364,35 @@ class QueryInterface:
 
         safe_pools = []
         for idx, pool in enumerate(self.state):
-            if str(pool["tkn0_decimals"]) in ["None", "nan"] or str(
-                pool["tkn1_decimals"]
-            ) in ["None", "nan"]:
-                self.cfg.logger.info(
-                    f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                )
+            try:
+                if str(pool["tkn0_decimals"]) in ["None", "nan"] or str(
+                    pool["tkn1_decimals"]
+                ) in ["None", "nan"]:
+                    self.cfg.logger.info(
+                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
+                    )
+                    continue
+                if str(pool["tkn0_key"]) in ["None", "nan"] or str(
+                    pool["tkn1_key"]
+                ) in [
+                    "None",
+                    "nan",
+                ]:
+                    self.cfg.logger.info(
+                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
+                    )
+                    continue
+                if str(pool["tkn0_address"]) in ["None", "nan"] or str(
+                    pool["tkn1_address"]
+                ) in ["None", "nan"]:
+                    self.cfg.logger.info(
+                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
+                    )
+                    continue
+            except Exception as e:
+                self.cfg.logger.info(f"Exception: {e}")
+                self.cfg.logger.info(f"Removing pool {pool}")
                 continue
-            if str(pool["tkn0_key"]) in ["None", "nan"] or str(pool["tkn1_key"]) in [
-                "None",
-                "nan",
-            ]:
-                self.cfg.logger.info(
-                    f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                )
-                continue
-            if str(pool["tkn0_address"]) in ["None", "nan"] or str(
-                pool["tkn1_address"]
-            ) in ["None", "nan"]:
-                self.cfg.logger.info(
-                    f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                )
-                continue
-            # if str(pool["tkn0_symbcol"]) in ["None", "nan"] or str(
-            #     pool["tkn1_symbol"]
-            # ) in ["None", "nan"]:
-            #     self.cfg.logger.info(
-            #         f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for invalid token"
-            #     )
-            #     continue
-
             safe_pools.append(pool)
 
         self.state = safe_pools

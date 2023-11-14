@@ -499,9 +499,14 @@ class CarbonBot(CarbonBotBase):
                 arb_opp=r, arb_mode=arb_mode, arb_finder=finder
             )
             if r is None:
-                self.ConfigObj.logger.info(
-                    f"Math validation eliminated arb opportunity, restarting. {arb_opp}"
-                )
+                instructions_dic = arb_opp[2]
+                for instruction in instructions_dic:
+                    cid = instruction["cid"]
+                    # print exchange name for each cid
+                    pool = self.db.get_pool(cid=cid)
+                    self.ConfigObj.logger.info(
+                        f"\nMath validation eliminated arb opportunity, restarting. pool={pool}\n"
+                    )
                 return None
             if replay_mode:
                 pass

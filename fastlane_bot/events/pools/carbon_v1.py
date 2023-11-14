@@ -75,6 +75,8 @@ class CarbonV1Pool(Pool):
         Dict[str, Any]
             The updated data.
         """
+        print(f"event_type: {event_type}")
+        print(f"event_args: {event_args}")
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
         data["y_0"] = order0[0]

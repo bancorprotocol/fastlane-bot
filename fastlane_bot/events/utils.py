@@ -15,6 +15,7 @@ from glob import glob
 from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
+import numpy as np
 import pandas as pd
 import requests
 import web3
@@ -259,12 +260,69 @@ def get_static_data(
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
+    tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
+    tokens = tokens.drop_duplicates(subset=["address"])
+    tokens = tokens.dropna(subset=["decimals", "symbol", "address"])
+    tokens["symbol"] = tokens["symbol"].str.replace(" ", "_").replace("/", "_")
+    # key should be symbol + last 4 of address
+    tokens["key"] = tokens["symbol"] + "-" + tokens["address"].str[-4:]
+    tokens = tokens.drop_duplicates(subset=["key"])
+
+    def correct_tkn(tkn_address, keyname):
+        try:
+            return tokens[tokens["address"] == tkn_address][keyname].values[0]
+        except IndexError:
+            return np.nan
+
+    static_pool_data["tkn0_address"] = static_pool_data["tkn0_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn1_address"] = static_pool_data["tkn1_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn0_decimals"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+    static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+    static_pool_data["tkn0_key"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "key")
+    )
+    static_pool_data["tkn1_key"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "key")
+    )
+    static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["tkn1_symbol"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["pair_name"] = (
+        static_pool_data["tkn0_key"] + "/" + static_pool_data["tkn1_key"]
+    )
+    static_pool_data = static_pool_data.dropna(
+        subset=[
+            "pair_name",
+            "exchange_name",
+            "fee",
+            "tkn0_key",
+            "tkn1_key",
+            "tkn0_symbol",
+            "tkn1_symbol",
+            "tkn0_decimals",
+            "tkn1_decimals",
+        ]
+    )
 
     # Initialize web3
     static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
+
+    static_pool_data = static_pool_data.drop_duplicates(subset=["cid"])
+    static_pool_data.reset_index(drop=True, inplace=True)
 
     return (
         static_pool_data,
