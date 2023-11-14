@@ -263,7 +263,12 @@ def get_static_data(
     tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
     tokens = tokens.drop_duplicates(subset=["address"])
     tokens = tokens.dropna(subset=["decimals", "symbol", "address"])
-    tokens["symbol"] = tokens["symbol"].str.replace(" ", "_").replace("/", "_")
+    tokens["symbol"] = (
+        tokens["symbol"]
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+        .str.replace("-", "_")
+    )
     # key should be symbol + last 4 of address
     tokens["key"] = tokens["symbol"] + "-" + tokens["address"].str[-4:]
     tokens = tokens.drop_duplicates(subset=["key"])
@@ -313,6 +318,14 @@ def get_static_data(
             "tkn0_decimals",
             "tkn1_decimals",
         ]
+    )
+
+    static_pool_data["descr"] = (
+        static_pool_data["exchange_name"]
+        + " "
+        + static_pool_data["pair_name"]
+        + " "
+        + static_pool_data["fee"].astype(str)
     )
 
     # Initialize web3

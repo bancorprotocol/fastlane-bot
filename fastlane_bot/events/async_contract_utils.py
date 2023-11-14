@@ -7,6 +7,7 @@ from typing import Any, List, Dict, Tuple, Type, Callable
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from web3 import Web3
 from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
@@ -360,32 +361,104 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         ),
     )
     tokens_df["symbol"] = (
-        tokens_df["symbol"].str.replace("/", "_").str.replace("-", "_")
+        tokens_df["symbol"]
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+        .str.replace("-", "_")
     )
     tokens_df.to_csv(
         f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
     )
-    tokens_df["key"] = tokens_df.apply(
-        lambda x: get_tkn_key(x["symbol"], x["address"]), axis=1
+    tokens_df["address"] = tokens_df["address"].apply(
+        lambda x: Web3.to_checksum_address(x)
     )
+    tokens_df["key"] = tokens_df["symbol"] + "-" + tokens_df["address"].str[-4:]
+    tokens_df = tokens_df.drop_duplicates(subset=["key"])
 
     new_pool_data = get_new_pool_data(
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
     )
 
+    new_pool_data_df = pd.DataFrame(new_pool_data).sort_values(
+        "last_updated_block", ascending=False
+    )
+
+    new_pool_data_df = new_pool_data_df.dropna(
+        subset=[
+            "pair_name",
+            "exchange_name",
+            "fee",
+            "tkn0_key",
+            "tkn1_key",
+            "tkn0_symbol",
+            "tkn1_symbol",
+            "tkn0_decimals",
+            "tkn1_decimals",
+        ]
+    )
+
+    def correct_tkn(tkn_address, keyname):
+        try:
+            return tokens_df[tokens_df["address"] == tkn_address][keyname].values[0]
+        except IndexError:
+            return np.nan
+
+    static_pool_data = new_pool_data_df.copy()
+    static_pool_data["tkn0_address"] = static_pool_data["tkn0_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn1_address"] = static_pool_data["tkn1_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn0_decimals"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+    static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+    static_pool_data["tkn0_key"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "key")
+    )
+    static_pool_data["tkn1_key"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "key")
+    )
+    static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["tkn1_symbol"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["pair_name"] = (
+        static_pool_data["tkn0_key"] + "/" + static_pool_data["tkn1_key"]
+    )
+
+    new_pool_data_df = static_pool_data.copy()
+    del static_pool_data
+
+    new_pool_data_df["descr"] = (
+        new_pool_data_df["exchange_name"]
+        + " "
+        + new_pool_data_df["pair_name"]
+        + " "
+        + new_pool_data_df["fee"].astype(str)
+    )
+
+    # Initialize web3
+    new_pool_data_df["cid"] = [
+        cfg.w3.keccak(text=f"{row['descr']}").hex()
+        for index, row in new_pool_data_df.iterrows()
+    ]
+
     new_pool_data_df = (
-        pd.DataFrame(new_pool_data)
-        .sort_values("last_updated_block", ascending=False)
+        new_pool_data_df.sort_values("last_updated_block", ascending=False)
         .drop_duplicates(subset=["cid"])
         .set_index("cid")
     )
 
-    print(new_pool_data_df.to_dict()
-
     duplicate_new_pool_ct = len(new_pool_data) - len(new_pool_data_df)
 
     assert len(mgr.pools_to_add_from_contracts) == (
-        len(new_pool_data) + duplicate_new_pool_ct
+        len(new_pool_data_df) + duplicate_new_pool_ct
     )
 
     all_pools_df = (
@@ -395,9 +468,23 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         .set_index("cid")
     )
 
+    new_pool_data_df = new_pool_data_df[all_pools_df.columns]
+
     # add new_pool_data to pool_data, ensuring no duplicates
-    all_pools_df.update(new_pool_data_df)
-    all_pools = all_pools_df.reset_index().to_dict(orient="records")
+    all_pools_df.update(new_pool_data_df, overwrite=True)
+
+    new_pool_data_df = new_pool_data_df[
+        ~new_pool_data_df.index.isin(all_pools_df.index)
+    ]
+    all_pools_df = pd.concat([all_pools_df, new_pool_data_df])
+    all_pools_df[["tkn0_decimals", "tkn1_decimals"]] = all_pools_df[
+        ["tkn0_decimals", "tkn1_decimals"]
+    ].astype(int)
+    all_pools = (
+        all_pools_df.reset_index()
+        .sort_values("last_updated_block", ascending=False)
+        .to_dict(orient="records")
+    )
 
     mgr.pool_data = all_pools
     new_num_pools_in_data = len(mgr.pool_data)
@@ -433,10 +520,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
                 + [pool["anchor"] for pool in mgr.pool_data if pool["anchor"]]
                 + [pool["cid"] for pool in mgr.pool_data]
             )
-            if str(value) not in data_vals or exchange_name in [
-                "sushiswap_v2",
-                "pancakeswap_v2",
-            ]:
+            if str(value) not in data_vals:
                 failed_pools.append((address, exchange_name, event, key, value))
 
         for pool in failed_pools:
