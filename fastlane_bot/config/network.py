@@ -55,7 +55,7 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
         fork = row[1][2]
         contract_name = row[1][3]
         address = row[1][4]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
+        if fork in fork_name and contract_name in [S.ROUTER_ADDRESS, S.CARBON_CONTROLLER]:
             fork_map[exchange_name] = address
     return fork_map
 
