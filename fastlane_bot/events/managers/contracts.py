@@ -279,7 +279,7 @@ class ContractsManager(BaseManager):
         token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
             os.path.normpath(
-                f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv"
+                f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv"
             )
         )
         if len(extra_info) > 0:

@@ -1776,9 +1776,15 @@ def handle_static_pools_update(mgr: Any):
 
 def handle_tokens_csv(mgr, prefix_path):
     tokens_filepath = os.path.normpath(
-        f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
+        f"{prefix_path}fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
     )
-    token_data = pd.read_csv(tokens_filepath)
+    try:
+        token_data = pd.read_csv(tokens_filepath)
+    except Exception as e:
+        mgr.cfg.logger.info(f"Error reading token data: {e}... creating new file")
+        token_data = pd.DataFrame(mgr.tokens)
+        token_data.to_csv(tokens_filepath, index=False)
+
     extra_info = glob(
         os.path.normpath(
             f"{prefix_path}fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
