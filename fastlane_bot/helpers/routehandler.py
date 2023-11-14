@@ -355,6 +355,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             return pool.anchor
         elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
+        elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
+            return self.ConfigObj.CARBON_CONTROLLER_ADDRESS
         elif pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             return self.ConfigObj.UNI_V3_ROUTER_MAPPING[pool.exchange_name]
         else:
@@ -394,15 +396,14 @@ class TxRouteHandler(TxRouteHandlerBase):
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
         :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
         """
-        flash_tokens = self._extract_flashloan_tokens(trade_instructions=trade_instructions_objects)
+        flash_tokens = self._extract_single_flashloan_token(trade_instructions=trade_instructions_objects)
         flashloans = []
         balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
         has_balancer = False
         for tkn in flash_tokens.keys():
             platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
-            source_amounts = TradeInstruction._convert_to_wei(abs(flash_tokens[tkn]["flash_amt"]),
-                                                              flash_tokens[tkn]["decimals"])
+            source_amounts = abs(flash_tokens[tkn]["flash_amt"])
             if platform_id == 7:
                 has_balancer = True
                 balancer["sourceTokens"].append(source_token)
@@ -428,13 +429,23 @@ class TxRouteHandler(TxRouteHandlerBase):
         the token address
         """
 
-        if self.ConfigObj.NETWORK not in "ethereum":
+        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
             return tkn
 
         if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
             return self.ConfigObj.NATIVE_GAS_TOKEN_KEY if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_KEY else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
         else:
             return tkn
+
+    def _extract_single_flashloan_token(self, trade_instructions: List[TradeInstruction]) -> Dict:
+        """
+        Generate a flashloan tokens and amounts.
+        :param trade_instructions: A list of trade instruction objects
+        """
+        flash_tokens = {trade_instructions[0].tknin_key: {"tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
+                                                          "flash_amt": trade_instructions[0].amtin_wei,
+                                                          "decimals": trade_instructions[0].tknin_decimals}}
+        return flash_tokens
 
     def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
         """
@@ -454,14 +465,15 @@ class TxRouteHandler(TxRouteHandlerBase):
             tknin_key = self.wrapped_gas_token_to_native(trade.tknin_key)
             tknout_key = self.wrapped_gas_token_to_native(trade.tknout_key)
 
-            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + Decimal(str(trade.amtin))
-            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - Decimal(str(trade.amtin))
-            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + Decimal(str(trade.amtout))
-            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + Decimal(str(trade.amtout))
+            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + trade.amtin_wei
+            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - trade.amtin_wei
+            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + trade.amtout_wei
+            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + trade.amtout_wei
 
             if token_change[tknin_key]["balance"] < 0:
                 flash_tokens[tknin_key] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_key]["amtin"],
                                            "decimals": trade.tknin_decimals}
+
         return flash_tokens
 
     def get_arb_contract_args(
@@ -1331,7 +1343,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             tkn1_key = curve.pair_name.split("/")[1]
             tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
             tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
-            if self.ConfigObj.NETWORK in "ethereum":
+            if self.ConfigObj.NETWORK in ["ethereum", "tenderly"]:
                 tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
                 tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
 
