@@ -100,6 +100,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
                 abi=BANCOR_V3_NETWORK_INFO_ABI,
             )
+        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM]:
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
                 address=network.CARBON_CONTROLLER_ADDRESS,
                 abi=CARBON_CONTROLLER_ABI,
