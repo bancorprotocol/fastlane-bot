@@ -278,7 +278,9 @@ class ContractsManager(BaseManager):
         )
         token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
-            os.path.normpath(f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv")
+            os.path.normpath(
+                f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/*.csv"
+            )
         )
         if len(extra_info) > 0:
             extra_info_df = pd.concat(
@@ -371,21 +373,27 @@ class ContractsManager(BaseManager):
             raise self.FailedToGetTokenDetailsException(addr=addr)
 
         row = pd.DataFrame(new_data, columns=token_data.columns, index=[1])
-        if not os.path.exists(os.path.normpath(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
-        )):
+        if not os.path.exists(
+            os.path.normpath(
+                f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
+            )
+        ):
             try:
-                os.mkdir(os.path.normpath(
-                    f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
-                ))
+                os.mkdir(
+                    os.path.normpath(
+                        f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail"
+                    )
+                )
             except FileExistsError:
                 pass
 
         collision_safety = str(random.randrange(1, 1000))
         ts = datetime.now().strftime("%d-%H-%M-%S-%f")
         ts += collision_safety
-        row.to_csv(os.path.normpath(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"),
+        row.to_csv(
+            os.path.normpath(
+                f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"
+            ),
             index=False,
         )
 

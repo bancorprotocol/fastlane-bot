@@ -1774,14 +1774,14 @@ def handle_static_pools_update(mgr: Any):
             mgr.static_pools[attr_name] = exchange_pools
 
 
-def handle_tokens_csv(mgr):
+def handle_tokens_csv(mgr, prefix_path):
     tokens_filepath = os.path.normpath(
         f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
     )
     token_data = pd.read_csv(tokens_filepath)
     extra_info = glob(
         os.path.normpath(
-            f"fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
+            f"{prefix_path}fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/token_detail/*.csv"
         )
     )
     if len(extra_info) > 0:
