@@ -51,3 +51,6 @@ class BancorV2(Exchange):
         if event:
             return event["args"]["_token2"]
         return await contract.functions.reserveTokens().call()[1]
+
+    async def get_anchor(self, contract: Contract) -> str:
+        return await contract.caller.anchor()

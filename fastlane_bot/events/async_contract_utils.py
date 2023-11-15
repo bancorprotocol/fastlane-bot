@@ -61,20 +61,23 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
 
 async def get_token_and_fee(
     exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
-) -> Tuple[str, str, str, str, str, int or None] or Tuple[
-    str, str, None, None, None, None
+) -> Tuple[str, str, str, str, str, int or None, str or None] or Tuple[
+    str, str, None, None, None, None, None
 ]:
     try:
+        anchor = None
         tkn0 = await ex.get_tkn0(address, contract, event=event)
         tkn1 = await ex.get_tkn1(address, contract, event=event)
         fee = await ex.get_fee(address, contract)
+        if exchange_name == "bancor_v2":
+            anchor = await ex.get_anchor(contract)
         cid = str(event["args"]["id"]) if exchange_name == "carbon_v1" else None
-        return exchange_name, address, tkn0, tkn1, fee, cid
+        return exchange_name, address, tkn0, tkn1, fee, cid, anchor
     except Exception as e:
         cfg.logger.info(
             f"Failed to get tokens and fee for {address} {exchange_name} {e}"
         )
-        return exchange_name, address, None, None, None, None
+        return exchange_name, address, None, None, None, None, anchor
 
 
 async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -90,6 +93,7 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
             "tkn1_address",
             "fee",
             "cid",
+            "anchor",
         ],
     )
 
@@ -125,7 +129,7 @@ def get_pool_info(
         "fee": fee_raw[0],
         "fee_float": fee_raw[1],
         "blockchain": mgr.blockchain,
-        "anchor": None,
+        "anchor": pool["anchor"],
         "exchange_id": mgr.cfg.EXCHANGE_IDS[pool["exchange_name"]],
         "last_updated_block": current_block,
         "tkn0_symbol": tkn0["symbol"],
@@ -489,6 +493,19 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     mgr.pool_data = all_pools
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
+
+    print(f"\n\nnew_pools_added: {new_pools_added}")
+    print(f"orig_num_pools_in_data: {orig_num_pools_in_data}")
+    print(f"duplicate_new_pool_ct: {duplicate_new_pool_ct}")
+    print(
+        f"len(mgr.pools_to_add_from_contracts): {len(mgr.pools_to_add_from_contracts)}"
+    )
+    print(f"len(mgr.pool_data): {len(mgr.pool_data)}")
+    print(
+        "compare",
+        (new_pools_added + duplicate_new_pool_ct),
+        len(mgr.pools_to_add_from_contracts),
+    )
     if (new_pools_added + duplicate_new_pool_ct) != len(
         mgr.pools_to_add_from_contracts
     ):
@@ -513,20 +530,62 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             key,
             value,
         ) in mgr.pools_to_add_from_contracts:
-            data_vals = (
-                [pool["tkn0_address"] for pool in mgr.pool_data]
-                + [pool["tkn1_address"] for pool in mgr.pool_data]
-                + [pool["address"] for pool in mgr.pool_data]
-                + [pool["anchor"] for pool in mgr.pool_data if pool["anchor"]]
-                + [pool["cid"] for pool in mgr.pool_data]
-            )
-            if str(value) not in data_vals:
-                failed_pools.append((address, exchange_name, event, key, value))
+            if exchange_name == "bancor_v2":
+                # data_vals = [pool["address"] for pool in mgr.pool_data]
+                # data_vals += [(pool["tkn0_address"], pool["tkn1_address"]) for pool in mgr.pool_data]
+                data_vals = (
+                    [pool["tkn0_address"] for pool in mgr.pool_data]
+                    + [pool["tkn1_address"] for pool in mgr.pool_data]
+                    + [pool["address"] for pool in mgr.pool_data]
+                    + [pool["anchor"] for pool in mgr.pool_data if pool["anchor"]]
+                    + [pool["cid"] for pool in mgr.pool_data]
+                    + [
+                        (pool["tkn0_address"].lower(), pool["tkn1_address"].lower())
+                        for pool in mgr.pool_data
+                    ]
+                    # + [
+                    #     (pool["tkn1_address"], pool["tkn0_address"])
+                    #     for pool in mgr.pool_data
+                    # ]
+                )
 
-        for pool in failed_pools:
-            mgr.cfg.logger.info(f"\n\nFailed to update pool {pool}")
+                # if isinstance(value, tuple):
+                #     value = (value[0].lower(), value[1].lower())
 
-        raise Exception("Failed to update pools from contracts")
+                is_found = False
+                for pool in mgr.pool_data:
+                    is_found = (
+                        pool["tkn0_address"] == value[0]
+                        and pool["tkn1_address"] == value[1]
+                    )
+                    if is_found:
+                        break
+
+                if not is_found:
+                    # foound_pool = [
+                    #     pool
+                    #     for pool in mgr.pool_data
+                    #     if pool["tkn0_address"] == value[0]
+                    #     and pool["tkn1_address"] == value[1]
+                    # ]
+                    print(f"\n\nis_found: {is_found}, {value}")
+                    #     break
+                    # else:
+                    #     print(is_found)
+                    # or (pool['tkn0_address']==value[1] and pool['tkn1_address']==value[0])
+
+                # if is_found != True:
+                #     print(f"\n\nis_found: {is_found}, {value}, {foound_pool}")
+                #     failed_pools.append((address, exchange_name, event, key, value))
+
+                # if value not in data_vals:
+                #     print(f"\nvalue {value} not in data_vals")
+                #     failed_pools.append((address, exchange_name, event, key, value))
+
+        # for pool in failed_pools:
+        #     mgr.cfg.logger.info(f"\n\nFailed to update pool {pool}")
+
+        # raise Exception("Failed to update pools from contracts")
 
     # update the pool_data from events
     update_pools_from_events(-1, mgr, all_events)
