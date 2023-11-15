@@ -235,6 +235,12 @@ load_dotenv()
     type=str,
     help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
 )
+@click.option(
+    "--prefix_path",
+    default="",
+    type=str,
+    help="Prefixes the path to the write folders (used for deployment)",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -264,6 +270,7 @@ def main(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
+    prefix_path: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -298,6 +305,7 @@ def main(
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
+        prefix_path (str): prefixes the path to the write folders (used for deployment)
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -382,6 +390,7 @@ def main(
         increment_time: {increment_time}
         increment_blocks: {increment_blocks}
         pool_data_update_frequency: {pool_data_update_frequency}
+        prefix_path: {prefix_path}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -434,6 +443,7 @@ def main(
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
         forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS,
+        prefix_path=prefix_path,
     )
 
     # Add initial pool data to the manager
@@ -631,7 +641,7 @@ def run(
                     f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
                 )
 
-            handle_tokens_csv(mgr)
+            handle_tokens_csv(mgr, mgr.prefix_path)
 
             # Handle subsequent iterations
             handle_subsequent_iterations(
