@@ -353,6 +353,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         if pool.exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             return pool.anchor
+        elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
+            return self.ConfigObj.CARBON_CONTROLLER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
