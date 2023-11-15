@@ -388,9 +388,7 @@ class PoolAndTokens:
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
             z = yint = Decimal(self.z_1) if i == 0 else Decimal(self.z_0)
-            print(
-                f"{self.pair_name}, exchange: {self.exchange_name}, i: {i}, S: {S}, B: {B}, y: {y}, z: {z}, yint: {yint}"
-            )
+
             if y <= 0:
                 continue
             encoded_order = EncodedOrder(
