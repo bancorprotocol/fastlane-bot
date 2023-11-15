@@ -58,6 +58,8 @@ class BancorV2Pool(Pool):
         Bancor V2 pools emit 3 events per trade. Only one of them contains the new token balances we want.
         The one we want is the one where _token1 and _token2 match the token addresses of the pool.
         """
+        # if event_args["address"] == "0x79D89b87468a59B9895b31E3a373DC5973d60065":
+        #     print(f"state: {self.state}")
 
         if (
             self.state["tkn0_address"] == event_args["args"]["_token1"]

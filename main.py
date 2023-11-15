@@ -401,6 +401,14 @@ def main(
         static_pool_data_filename,
     )
 
+    # static_pool_data = static_pool_data[
+    #     static_pool_data["exchange_name"] != "bancor_v2"
+    # ]
+    # if len(static_pool_data) == 0:
+    #     # add a row with all nan values
+    #     static_pool_data.loc[0] = [None] * len(static_pool_data.columns)
+    # print(f"columns: {static_pool_data.columns}, {len(static_pool_data)}")
+
     target_token_addresses = handle_target_token_addresses(
         static_pool_data, target_tokens
     )

@@ -402,11 +402,17 @@ class QueryInterface:
         Cleanup token keys in state
         """
         for idx, pool in enumerate(self.state):
-            key0 = self.cleanup_token_key(pool["tkn0_key"])
-            key1 = self.cleanup_token_key(pool["tkn1_key"])
-            self.state[idx]["tkn0_key"] = key0
-            self.state[idx]["tkn1_key"] = key1
-            self.state[idx]["pair_name"] = key0 + "/" + key1
+            try:
+                key0 = self.cleanup_token_key(pool["tkn0_key"])
+                key1 = self.cleanup_token_key(pool["tkn1_key"])
+                self.state[idx]["tkn0_key"] = key0
+                self.state[idx]["tkn1_key"] = key1
+                self.state[idx]["pair_name"] = key0 + "/" + key1
+            except Exception as e:
+                self.cfg.logger.info(f"Exception: {e}")
+                self.cfg.logger.info(f"Removing pool {pool}")
+                self.state.pop(idx)
+                continue
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """

@@ -33,6 +33,12 @@ class BancorV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
 
+    # def async convert_address(self, address: str, contract: Contract) -> str:
+    #     return
+
+    async def get_connector_tokens(self, contract, i: int) -> str:
+        return await contract.functions.connectorTokens(i).call()
+
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         pool = self.get_pool(address)
         if pool:
