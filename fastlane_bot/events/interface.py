@@ -121,8 +121,11 @@ class QueryInterface:
         """
 
         for key in keys:
-            if key in pool and pool[key] > 0:
-                return True
+            try:
+                if key in pool and int(pool[key]) > 0:
+                    return True
+            except ValueError:
+                return False
         return False
 
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
