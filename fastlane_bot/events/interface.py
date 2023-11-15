@@ -122,6 +122,8 @@ class QueryInterface:
 
         for key in keys:
             try:
+                if pool["exchange_name"] == "bancor_pol":
+                    print(f"filter zero liquidity: {pool}")
                 if key in pool and int(pool[key]) > 0:
                     return True
             except ValueError:

@@ -97,6 +97,8 @@ class BaseManager:
     forked_exchanges: List[str] = field(default_factory=list)
     static_pools: Dict[str, List[str]] = field(default_factory=dict)
 
+    prefix_path: str = ""
+
     def __post_init__(self):
         for exchange_name in self.SUPPORTED_EXCHANGES:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
@@ -478,7 +480,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
         )
 
         with multicaller as mc:
@@ -607,7 +609,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
         )
 
         with multicaller as mc:
