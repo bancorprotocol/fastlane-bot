@@ -2,13 +2,21 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.59...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.60...HEAD)
 
-- Bug in automatic pool shutdown [\#192](https://github.com/bancorprotocol/fastlane-bot/issues/192)
+- Bug - ensure no precision or rounding error when generating trades through Carbon [\#201](https://github.com/bancorprotocol/fastlane-bot/issues/201)
+- Fix to use wei format for generating flashloans to avoid precision or rounding errors [\#202](https://github.com/bancorprotocol/fastlane-bot/pull/202) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 Closed issues
 
+- Warning! Error encountered during contract execution \[execution reverted\]  [\#195](https://github.com/bancorprotocol/fastlane-bot/issues/195)
 - Ensure backward compatibility for python 3.8 in light of new async changes [\#188](https://github.com/bancorprotocol/fastlane-bot/issues/188)
+
+## [v2.7.60](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.60) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.59...v2.7.60)
+
+- Bug in automatic pool shutdown [\#192](https://github.com/bancorprotocol/fastlane-bot/issues/192)
 
 Merged pull requests
 
