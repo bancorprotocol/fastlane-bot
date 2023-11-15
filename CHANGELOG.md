@@ -2,11 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.61...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.62...HEAD)
+
+- Add prefix option to file paths which are written \(for deployment job write permissions\) [\#204](https://github.com/bancorprotocol/fastlane-bot/issues/204)
+
+- Add support for Graphene on Base [\#198](https://github.com/bancorprotocol/fastlane-bot/issues/198)
+- 204 add prefix option to file paths which are written for deployment job write permissions [\#205](https://github.com/bancorprotocol/fastlane-bot/pull/205) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.62](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.62) (2023-11-15)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.61...v2.7.62)
 
 - Bug - ensure no precision or rounding error when generating trades through Carbon [\#201](https://github.com/bancorprotocol/fastlane-bot/issues/201)
 
-- Add support for Graphene on Base [\#198](https://github.com/bancorprotocol/fastlane-bot/issues/198)
 - Add addresses & handling to route through Graphene on Base [\#199](https://github.com/bancorprotocol/fastlane-bot/pull/199) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.61](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.61) (2023-11-14)
