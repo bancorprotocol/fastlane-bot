@@ -54,6 +54,11 @@ from run_blockchain_terraformer import terraform_blockchain
 load_dotenv()
 
 
+from fastlane_bot.events.version_utils import check_version_requirements
+
+check_version_requirements()
+
+
 @click.command()
 @click.option(
     "--cache_latest_only",
@@ -216,12 +221,7 @@ load_dotenv()
     "--blockchain",
     default="ethereum",
     help="Select a blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-    type=click.Choice(
-        [
-            "ethereum",
-            "coinbase_base"
-        ]
-    ),
+    type=click.Choice(["ethereum", "coinbase_base"]),
 )
 @click.option(
     "--pool_data_update_frequency",
