@@ -152,8 +152,7 @@ class QueryInterface:
                 except KeyError:
                     # Out of bounds
                     break
-        tokens = list(set(tokens))
-        return tokens
+        return list(set(tokens))
 
     def filter_pools(
         self, exchange_name: str, keys: List[str] = ""
@@ -569,7 +568,7 @@ class QueryInterface:
             The list of tokens
         """
         token_set = set()
-        for record in self.state:
+        for pidx, record in enumerate(self.state):
             for idx in range(len(record["descr"].split("/"))):
                 v = self.create_token(record, f"tkn{str(idx)}_")
                 if (
@@ -577,6 +576,8 @@ class QueryInterface:
                     or str(v.decimals) in ["None", "nan"]
                     or str(v.symbol) in ["None", "nan"]
                 ):
+                    self.cfg.logger.info(f"Removing pool with invalid token {v}")
+                    self.state.pop(pidx)
                     continue
                 token_set.add(v)
         return list(token_set)
