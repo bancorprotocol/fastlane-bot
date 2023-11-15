@@ -51,11 +51,11 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1]["exchange_name"]
-        fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        address = row[1]["address"]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
+        exchange_name = row[1][0]
+        fork = row[1][2]
+        contract_name = row[1][3]
+        address = row[1][4]
+        if fork in fork_name and contract_name in [S.ROUTER_ADDRESS, S.CARBON_CONTROLLER]:
             fork_map[exchange_name] = address
     return fork_map
 
@@ -70,12 +70,12 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1]["exchange_name"]
-        fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        fee = row[1]["fee"]
+        exchange_name = row[1][0]
+        fork = row[1][2]
+        contract_name = row[1][3]
+        fee = row[1][5]
         if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
-            fork_map[exchange_name]: fee
+            fork_map[exchange_name] : fee
     return fork_map
 
 def get_row_from_address(address: str, df: pd.DataFrame) -> pd.DataFrame:
@@ -480,9 +480,11 @@ class _ConfigNetworkBase(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
     network_df = get_multichain_addresses(network="coinbase_base")
-    FASTLANE_CONTRACT_ADDRESS = "0x8e6AF0013688e5ef92217f23895Ea822cD3051E8"
+    FASTLANE_CONTRACT_ADDRESS = "0x2f33499368C4239290B045e3A34DFFA2AeD2CA05"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
     
+    CARBON_CONTROLLER_ADDRESS = GRAPHENE_CONTROLLER_ADDRESS = "0xfbF069Dbbf453C1ab23042083CFa980B3a672BbA"
+    CARBON_CONTROLLER_VOUCHER = GRAPHENE_CONTROLLER_VOUCHER = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
     NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
     STABLECOIN_KEY = "USDC-2913"

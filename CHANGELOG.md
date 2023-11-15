@@ -2,7 +2,59 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.55...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.61...HEAD)
+
+- Bug - ensure no precision or rounding error when generating trades through Carbon [\#201](https://github.com/bancorprotocol/fastlane-bot/issues/201)
+
+- Add support for Graphene on Base [\#198](https://github.com/bancorprotocol/fastlane-bot/issues/198)
+- Add addresses & handling to route through Graphene on Base [\#199](https://github.com/bancorprotocol/fastlane-bot/pull/199) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.61](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.61) (2023-11-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.60...v2.7.61)
+
+- Fix to use wei format for generating flashloans to avoid precision or rounding errors [\#202](https://github.com/bancorprotocol/fastlane-bot/pull/202) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Closed issues
+
+- Warning! Error encountered during contract execution \[execution reverted\]  [\#195](https://github.com/bancorprotocol/fastlane-bot/issues/195)
+- Ensure backward compatibility for python 3.8 in light of new async changes [\#188](https://github.com/bancorprotocol/fastlane-bot/issues/188)
+
+## [v2.7.60](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.60) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.59...v2.7.60)
+
+- Bug in automatic pool shutdown [\#192](https://github.com/bancorprotocol/fastlane-bot/issues/192)
+
+Merged pull requests
+
+- removing incompatible type reference for upcoming web3.py version change [\#189](https://github.com/bancorprotocol/fastlane-bot/pull/189) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.59](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.59) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.58...v2.7.59)
+
+- Bugfix in auto pool shutdown [\#193](https://github.com/bancorprotocol/fastlane-bot/pull/193) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Tokens with shutdown pools should be flashloaned from Balancer [\#196](https://github.com/bancorprotocol/fastlane-bot/issues/196)
+
+## [v2.7.58](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.58) (2023-11-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.57...v2.7.58)
+
+- Wrong router address for Uni V3 [\#190](https://github.com/bancorprotocol/fastlane-bot/issues/190)
+
+- 196 tokens with shutdown pools should be flashloaned from balancer [\#197](https://github.com/bancorprotocol/fastlane-bot/pull/197) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.57](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.57) (2023-11-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.56...v2.7.57)
+
+- Fix router address for Uni V3 [\#191](https://github.com/bancorprotocol/fastlane-bot/pull/191) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.56](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.56) (2023-11-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.55...v2.7.56)
 
 - Add multichain support [\#183](https://github.com/bancorprotocol/fastlane-bot/pull/183) ([Lesigh-3100](https://github.com/Lesigh-3100))
 

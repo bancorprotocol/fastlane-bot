@@ -126,7 +126,8 @@ class AutomaticPoolShutdown:
                 tkn_trading_liquidity,
                 staked_balance,
             ) = tkn_results
-            self.active_pools[tkn] = staked_balance
+            if tkn_trading_liquidity > 0 and trading_enabled:
+                self.active_pools[tkn] = staked_balance
 
     def iterate_active_pools(self):
         """

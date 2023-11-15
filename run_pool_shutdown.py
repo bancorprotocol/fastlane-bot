@@ -74,7 +74,7 @@ def main(
     static_pool_data_filename: str = "static_pool_data",
     static_pool_data_sample_sz: str = "max",
     limit_bancor3_flashloan_tokens: bool = False,
-    default_min_profit_bnt: int = 0,
+    default_min_profit_gas_token: int = 0,
     timeout: int = 0,
     target_tokens: str = None,
     replay_from_block: int = None,
@@ -96,7 +96,7 @@ def main(
         loglevel (str): The logging level.
         static_pool_data_sample_sz (str): The sample size of the static pool data.
         limit_bancor3_flashloan_tokens (bool): Whether to limit the flashloan tokens to the ones supported by Bancor v3 or not.
-        default_min_profit_bnt (int): The default minimum profit in BNT.
+        default_min_profit_gas_token (int): The default minimum profit in BNT.
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
@@ -105,10 +105,18 @@ def main(
 
     # Set config
     loglevel = get_loglevel(loglevel)
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/ethereum/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
 
     # Initialize the config object
     cfg = get_config(
-        default_min_profit_gas_token=default_min_profit_bnt,
+        default_min_profit_gas_token="0",
         limit_bancor3_flashloan_tokens=limit_bancor3_flashloan_tokens,
         loglevel=loglevel,
         logging_path=logging_path,
