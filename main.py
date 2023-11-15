@@ -219,6 +219,7 @@ load_dotenv()
     type=click.Choice(
         [
             "ethereum",
+            "coinbase_base"
         ]
     ),
 )
