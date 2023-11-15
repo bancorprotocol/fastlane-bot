@@ -18,8 +18,8 @@ class VersionRequirementError(Exception):
         super().__init__(
             f""
             f"\n\n************** Version Requirement Error **************\n\n"
-            f"Your current web3.py version is {installed_version}, which does not meet the requirement of >= {required_version}.\n"
-            f"Please upgrade your web3.py version to {required_version} or higher.\n"
+            f"Your current web3.py version is {installed_version}, which does not meet the requirement of ~= {required_version}.\n"
+            f"Please upgrade your web3.py version to {required_version}.\n"
             f"We recommend using the latest requirements.txt file to install the latest versions of all "
             f"dependencies.\n\n"
             f"Run `pip install -r requirements.txt` from the project directory of the fastlane-bot repo.\n"
@@ -39,5 +39,5 @@ def check_version_requirements():
     installed_version = version("web3")
 
     # Check the version and raise an exception if the requirement is not met
-    if not pkg_version.parse(installed_version) >= pkg_version.parse(required_version):
+    if not pkg_version.parse(installed_version) < pkg_version.parse(required_version):
         raise VersionRequirementError(installed_version, required_version)
