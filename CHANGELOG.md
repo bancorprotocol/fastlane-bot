@@ -2,9 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.62...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.63...HEAD)
 
+- Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
 - Add prefix option to file paths which are written \(for deployment job write permissions\) [\#204](https://github.com/bancorprotocol/fastlane-bot/issues/204)
+- Convert tkn key when WETH \> ETH for single-flashloan creation [\#211](https://github.com/bancorprotocol/fastlane-bot/pull/211) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.63](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.63) (2023-11-15)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.62...v2.7.63)
 
 - Add support for Graphene on Base [\#198](https://github.com/bancorprotocol/fastlane-bot/issues/198)
 - 204 add prefix option to file paths which are written for deployment job write permissions [\#205](https://github.com/bancorprotocol/fastlane-bot/pull/205) ([mikewcasale](https://github.com/mikewcasale))
