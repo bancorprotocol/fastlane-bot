@@ -18,7 +18,6 @@ from typing import List
 import numpy as np
 import pandas as pd
 import requests
-import web3
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3 import Web3
@@ -474,9 +473,7 @@ def handle_flashloan_tokens(
     ]
 
     # Log the flashloan tokens
-    cfg.logger.info(
-        f"Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
-    )
+    cfg.logger.info(f"Flashloan tokens are set as: {flashloan_tokens}")
     return flashloan_tokens
 
 
