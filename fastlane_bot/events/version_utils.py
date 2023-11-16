@@ -39,5 +39,5 @@ def check_version_requirements():
     installed_version = version("web3")
 
     # Check the version and raise an exception if the requirement is not met
-    if not pkg_version.parse(installed_version) < pkg_version.parse(required_version):
+    if not pkg_version.parse(installed_version) <= pkg_version.parse(required_version):
         raise VersionRequirementError(installed_version, required_version)
