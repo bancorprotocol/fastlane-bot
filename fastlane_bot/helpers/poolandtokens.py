@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Dict, Any, List, Union
 
 from fastlane_bot.config import Config
+
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve

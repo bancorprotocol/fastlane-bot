@@ -569,16 +569,20 @@ class QueryInterface:
         """
         token_set = set()
         for pidx, record in enumerate(self.state):
-            for idx in range(len(record["descr"].split("/"))):
+            for idx in range(len(str(record["descr"]).split("/"))):
                 v = self.create_token(record, f"tkn{str(idx)}_")
                 if (
                     str(v.key) in ["None", "nan"]
                     or str(v.decimals) in ["None", "nan"]
                     or str(v.symbol) in ["None", "nan"]
                 ):
-                    self.cfg.logger.info(f"Removing pool with invalid token {v}")
-                    self.state.pop(pidx)
-                    continue
+                    if "-" in v.key:
+                        v.symbol = v.key.split("-")[0]
+                        self.state[pidx][f"tkn{str(idx)}_symbol"] = v.symbol
+                    else:
+                        self.cfg.logger.info(f"Removing pool with invalid token {v}")
+                        self.state.pop(pidx)
+                        continue
                 token_set.add(v)
         return list(token_set)
 
@@ -676,15 +680,22 @@ class QueryInterface:
             pool.exchange_name
         except AttributeError:
             if "cid" in kwargs:
-                kwargs["cid"] = int(kwargs["cid"])
-                pool = next(
-                    (
-                        pool
-                        for pool in pool_data_with_tokens
-                        if all(getattr(pool, key) == kwargs[key] for key in kwargs)
-                    ),
-                    None,
-                )
+                try:
+                    try:
+                        kwargs["cid"] = int(kwargs["cid"])
+                    except ValueError:
+                        print(f"Invalid cid: {kwargs}")
+
+                    pool = next(
+                        (
+                            pool
+                            for pool in pool_data_with_tokens
+                            if all(getattr(pool, key) == kwargs[key] for key in kwargs)
+                        ),
+                        None,
+                    )
+                except ValueError:
+                    print(f"Invalid cid: {kwargs}")
         return pool
 
     def get_pools(self) -> List[PoolAndTokens]:
