@@ -14,11 +14,9 @@
 # ---
 
 # +
-from dataclasses import asdict
+
 from unittest.mock import MagicMock
 from unittest.mock import Mock
-
-import pytest
 
 from fastlane_bot import Bot
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
@@ -75,8 +73,9 @@ qi.update_state(new_state)
 
 # ## test_get_token
 
-new_state = [{'exchange_name': 'bancor_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10, 'tkn0_decimals': 18, 'tkn1_decimals': 6, 'tkn0_symbol': 'ETH', 'tkn1_symbol': 'USDC', 'tkn0_address': 'Ox9er', 'tkn1_address': 'Ox8er'}]
-qi.update_state(new_state)
+new_state = {'fee':'0','exchange_name': 'bancor_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10, 'tkn0_decimals': 18, 'tkn1_decimals': 6, 'tkn0_symbol': 'ETH', 'tkn1_symbol': 'USDC', 'tkn0_address': 'Ox9er', 'tkn1_address': 'Ox8er'}
+new_state['descr'] = new_state['exchange_name'] + ' ' + new_state['pair_name'] + ' ' + new_state['fee']
+qi.update_state([new_state])
 token = qi.get_token('TKN-0x123')
 assert isinstance(token, Token)
 
