@@ -39,9 +39,16 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             r = None
             CC_cc = CPCContainer(miniverse)
             O = MargPOptimizer(CC_cc)
-            #try:
-            r = O.margp_optimizer(src_token)
+            try:
+                r = O.margp_optimizer(src_token)
+            except Exception:
+                continue
+
             trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+
+            if trade_instructions_dic is None:
+                # Failed to converge
+                continue
             if len(trade_instructions_dic) < 3:
                 # Failed to converge
                 continue
