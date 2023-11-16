@@ -444,7 +444,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         Generate a flashloan tokens and amounts.
         :param trade_instructions: A list of trade instruction objects
         """
-        flash_tokens = {trade_instructions[0].tknin_key: {"tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
+
+
+        flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_key): {"tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
                                                           "flash_amt": trade_instructions[0].amtin_wei,
                                                           "decimals": trade_instructions[0].tknin_decimals}}
         return flash_tokens
