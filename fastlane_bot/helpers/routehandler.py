@@ -132,6 +132,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         self.contains_carbon = True
         self._validate_trade_instructions()
         self.ConfigObj = self.trade_instructions[0].ConfigObj
+        # TODO:
         self.curve_pool = curve_make_pool(
             '3pool', {
                 "coins": [
@@ -153,12 +154,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "future_A": 2000,
                 "initial_A_time": 1653559305,
                 "future_A_time": 1654158027,
-                "timestamp": 1696175663,
-                "balances": [
-                    0,
-                    0,
-                    0
-                ]
+                "timestamp": None,
+                "balances": None
             }
         )
 
@@ -1271,6 +1268,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         )
 
     def _calc_curve_output(self, tkn_in: str, tkn_out: str, amount_in: int):
+        # TODO:
+        self.curve_pool.timestamp = 0
         self.curve_pool.balances = [0, 0, 0]
         return self.curve_pool.swap_calc(tkn_in, tkn_out, amount_in)
 
