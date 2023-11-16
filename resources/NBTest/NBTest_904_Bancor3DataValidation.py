@@ -13,15 +13,19 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests which ensure that data validation checks always occur when running a bancor3-related arb_mode.
 """
-from fastlane_bot import Bot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
-import subprocess, os, sys
+import subprocess
+
 import pytest
+
+from fastlane_bot import Bot
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
@@ -34,6 +38,8 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
+
+# -
 
 # # Setup
 
@@ -74,14 +80,16 @@ def run_command(arb_mode, expected_log_line):
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=80",
+        "--timeout=60",
+        "--alchemy_max_block_fetch=10",
+        "--polling_interval=0",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=140)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr or expected_log_line in result.stdout:
