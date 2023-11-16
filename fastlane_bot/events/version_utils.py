@@ -43,5 +43,5 @@ def check_version_requirements(required_version="6.11.0", package_name="web3"):
     installed_version = version(package_name)
 
     # Check the version and raise an exception if the requirement is not met
-    if not pkg_version.parse(installed_version) >= pkg_version.parse(required_version):
+    if not pkg_version.parse("6.11.0") <= pkg_version.parse(installed_version):
         raise VersionRequirementError(installed_version, required_version)
