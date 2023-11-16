@@ -1468,7 +1468,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 last_tx = len(data) - 1
 
-                for idx, tx in enumerate(data):
+                for _idx, tx in enumerate(data):
                     cid = tx["cid"]
                     cid = cid.split("-")[0]
                     tknin_key = tx["tknin"]
@@ -1478,7 +1478,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                         _next_amt_in = remaining_tkn_in
                     remaining_tkn_in -= _next_amt_in
 
-                    if idx == last_tx:
+                    if _idx == last_tx:
                         if _next_amt_in < remaining_tkn_in:
                             _next_amt_in = remaining_tkn_in
 
@@ -1508,8 +1508,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                     total_in_wei += amount_in_wei
                     total_out_wei += amount_out_wei
 
-                    if idx == last_tx and remaining_tkn_in > 0:
-                        for _idx, _tx in enumerate(raw_txs_lst):
+                    remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in, decimals=trade.tknin_decimals)
+                    if _idx == last_tx and remaining_tkn_in > 0:
+
+                        for __idx, _tx in enumerate(raw_txs_lst):
                             adjusted_next_amt_in = _tx["amtin"] + remaining_tkn_in
                             _curve = trade_instructions[idx].db.get_pool(cid=_tx["cid"])
                             (
@@ -1521,11 +1523,11 @@ class TxRouteHandler(TxRouteHandlerBase):
                                 curve=_curve, trade=trade, amount_in=adjusted_next_amt_in
                             )
 
-                            test_remaining = remaining_tkn_in - _amount_in
+                            test_remaining = remaining_tkn_in - _amount_in + _tx["amtin"]
                             if test_remaining < 0:
                                 continue
 
-                            remaining_tkn_in -= _amount_in
+                            remaining_tkn_in = remaining_tkn_in + _tx["amtin"] - _amount_in
 
                             _raw_txs = {
                                 "cid": _tx["cid"],
@@ -1537,7 +1539,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                                 "_amtout_wei": _amount_out_wei,
                             }
 
-                            raw_txs_lst[_idx] = _raw_txs
+                            raw_txs_lst[__idx] = _raw_txs
 
                             if remaining_tkn_in == 0:
                                 break
