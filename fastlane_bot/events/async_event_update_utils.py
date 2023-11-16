@@ -13,7 +13,7 @@ from web3.contract import AsyncContract
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks, w3_async
 from fastlane_bot.events.exchanges import exchange_factory
-from fastlane_bot.events.utils import update_pools_from_events, write_pool_data_to_disk
+from fastlane_bot.events.utils import update_pools_from_events
 
 
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
@@ -75,18 +75,32 @@ async def get_token_and_fee(
                 connector_token = await ex.get_connector_tokens(contract, i)
                 if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                     break
-            tkn0 = (
-                connector_token
-                if tkn0 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-                and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-                else tkn0
-            )
-            tkn1 = (
-                connector_token
-                if tkn1 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-                and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-                else tkn1
-            )
+
+            if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                tkn1 = connector_token
+            elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                tkn0 = connector_token
+            # tkn0 = (
+            #     connector_token
+            #     if tkn0 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+            #     else tkn0
+            # )
+            # tkn1 = (
+            #     connector_token
+            #     if tkn1 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+            #     else tkn1
+            # )
+            # if address in [
+            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
+            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
+            #     "0x079cA3f710599739a22673c2856202F90D3A8806",
+            # ]:
+            #     print(
+            #         f"\n#2 connector_token: {connector_token}, anchor: {anchor}, tkn0: {tkn0}, tkn1: {tkn1}"
+            #     )
+            #     raise Exception("test")
         cid = str(event["args"]["id"]) if exchange_name == "carbon_v1" else None
 
         return exchange_name, address, tkn0, tkn1, fee, cid, anchor
@@ -272,7 +286,7 @@ def get_token_contracts(
         if tkn is not None and str(tkn) != "nan"
     )
     mgr.cfg.logger.info(
-        f"\n\n failed token contracts:{len(failed_contracts)}/{len(contracts)} "
+        f"\n\n successful token contracts: {len(contracts) - len(failed_contracts)} of {len(contracts)} "
     )
     return contracts, tokens_df
 
