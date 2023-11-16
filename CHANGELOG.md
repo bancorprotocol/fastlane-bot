@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.63...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.64...HEAD)
 
 - Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
+
+Closed issues
+
+- fix current version requirements.txt file [\#207](https://github.com/bancorprotocol/fastlane-bot/issues/207)
+
+Merged pull requests
+
+- added version checker and requirements change [\#208](https://github.com/bancorprotocol/fastlane-bot/pull/208) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.64](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.64) (2023-11-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.63...v2.7.64)
+
 - Add prefix option to file paths which are written \(for deployment job write permissions\) [\#204](https://github.com/bancorprotocol/fastlane-bot/issues/204)
 - Convert tkn key when WETH \> ETH for single-flashloan creation [\#211](https://github.com/bancorprotocol/fastlane-bot/pull/211) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
