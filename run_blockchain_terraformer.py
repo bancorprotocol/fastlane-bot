@@ -723,7 +723,7 @@ def get_uni_pool_creation_events_v3(
     :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
-    current_block = web3.eth.blockNumber
+    current_block = web3.eth.block_number
     events = []
 
     for idx in range(int((current_block - block_number) / block_chunk_size)):
@@ -751,7 +751,7 @@ def get_uni_pool_creation_events_v2(
     :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
-    current_block = web3.eth.blockNumber
+    current_block = web3.eth.block_number
     events = []
     for idx in range(int((current_block - block_number) / block_chunk_size)):
         from_block = block_number + idx * block_chunk_size
@@ -778,7 +778,7 @@ def get_solidly_pool_creation_events_v2(
     :param block_chunk_size: the number of blocks to fetch at a time
     returns: a list of raw pool creation events
     """
-    current_block = web3.eth.blockNumber
+    current_block = web3.eth.block_number
     events = []
     for idx in range(int((current_block - block_number) / block_chunk_size)):
         from_block = block_number + idx * block_chunk_size
@@ -1114,7 +1114,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
 
-    assert web3.isConnected(), f"Web3 is not connected for network: {network_name}"
+    assert web3.is_connected(), f"Web3 is not connected for network: {network_name}"
 
     token_addr_lookup = get_all_token_details(web3, network=network_name)
 
