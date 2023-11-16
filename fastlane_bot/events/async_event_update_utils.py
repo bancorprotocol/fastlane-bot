@@ -304,7 +304,7 @@ def process_contract_chunks(
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
         df = loop.run_until_complete(func(chunk))
-        df.to_csv(f"{dirname}/{base_filename}{idx}.csv")
+        df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
 
     # concatenate and deduplicate
     filepaths = glob(f"{dirname}/*.csv")
@@ -315,7 +315,7 @@ def process_contract_chunks(
             pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
         )
         df_combined = df_combined.drop_duplicates(subset=subset)
-        df_combined.to_csv(filename)
+        df_combined.to_csv(filename, index=False)
 
     # clear temp dir
     for filepath in filepaths:
