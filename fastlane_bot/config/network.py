@@ -51,10 +51,10 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1][0]
-        fork = row[1][2]
-        contract_name = row[1][3]
-        address = row[1][4]
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        contract_name = row[1]["contract_name"]
+        address = row[1]["address"]
         if fork in fork_name and contract_name in [S.ROUTER_ADDRESS, S.CARBON_CONTROLLER]:
             fork_map[exchange_name] = address
     return fork_map
@@ -70,10 +70,10 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1][0]
-        fork = row[1][2]
-        contract_name = row[1][3]
-        fee = row[1][5]
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        contract_name = row[1]["contract_name"]
+        fee = row[1]["fee"]
         if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
             fork_map[exchange_name] : fee
     return fork_map
