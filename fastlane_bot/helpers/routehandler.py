@@ -19,7 +19,7 @@ import pandas as pd
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
-
+from curve.factory import make_pool as curve_make_pool
 
 @dataclass
 class RouteStruct:
@@ -132,6 +132,35 @@ class TxRouteHandler(TxRouteHandlerBase):
         self.contains_carbon = True
         self._validate_trade_instructions()
         self.ConfigObj = self.trade_instructions[0].ConfigObj
+        self.curve_pool = curve_make_pool(
+            '3pool', {
+                "coins": [
+                    {
+                        "symbol": "DAI",
+                        "decimals": 18
+                    },
+                    {
+                        "symbol": "USDC",
+                        "decimals": 6
+                    },
+                    {
+                        "symbol": "USDT",
+                        "decimals": 6
+                    }
+                ],
+                "fee": 1000000,
+                "initial_A": 5000,
+                "future_A": 2000,
+                "initial_A_time": 1653559305,
+                "future_A_time": 1654158027,
+                "timestamp": 1696175663,
+                "balances": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        )
 
     def _validate_trade_instructions(self):
         """
@@ -1241,6 +1270,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             (tokens_in * token1_amt * (1 - Decimal(fee))) / (tokens_in + token0_amt)
         )
 
+    def _calc_curve_output(self, tkn_in: str, tkn_out: str, amount_in: int):
+        self.curve_pool.balances = [0, 0, 0]
+        return self.curve_pool.swap_calc(tkn_in, tkn_out, amount_in)
+
     def _calc_balancer_output(self, curve: Pool, tkn_in: str, tkn_out: str, amount_in: Decimal):
         """
         This is a wrapper function that extracts the necessary pool values to pass into the Balancer swap equation and passes them into the low-level function.
@@ -1380,6 +1413,14 @@ class TxRouteHandler(TxRouteHandlerBase):
                         )
         elif curve.exchange_name == self.ConfigObj.BALANCER_NAME:
             amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_key, tkn_out=trade.tknout_key, amount_in=amount_in)
+
+        elif curve.exchange_name == self.ConfigObj.CURVE_NAME:
+            tkn_in_symbol = trade.db.get_token(key=trade.tknin_key).symbol
+            tkn_out_symbol = trade.db.get_token(key=trade.tknout_key).symbol
+            amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
+            amount_out_wei = self._calc_curve_output(tkn_in_symbol, tkn_out_symbol, amount_in_wei)
+            amount_out = TradeInstruction._convert_to_decimals(amount_out_wei, tkn_out_decimals)
+            return amount_in, amount_out, amount_in_wei, amount_out_wei
 
         else:
             tkn0_amt, tkn1_amt = (

@@ -222,6 +222,7 @@ class ConfigNetwork(ConfigBase):
         CARBON_V1_NAME: 6,
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
+        CURVE_NAME: 9,
     }
 
     # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
