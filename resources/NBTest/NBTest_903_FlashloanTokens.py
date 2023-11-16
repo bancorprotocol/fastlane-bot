@@ -13,15 +13,19 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests which ensure the the flashloan_tokens parameter is respected when using the b3_two_hop and bancor_v3 arb modes.
 """
-from fastlane_bot import Bot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
-import subprocess, os, sys
+import subprocess
+
 import pytest
+
+from fastlane_bot import Bot
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
@@ -34,6 +38,8 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
+
+# -
 
 # # Setup
 
@@ -78,6 +84,8 @@ def run_command(mode):
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
         "--timeout=70",
+        "--alchemy_max_block_fetch=10",
+        "--polling_interval=0",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
