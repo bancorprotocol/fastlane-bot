@@ -5,9 +5,13 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+
+from fastlane_bot.events.version_utils import check_version_requirements
+
+check_version_requirements()
+
 import os
 import time
-from glob import glob
 from typing import List
 
 import click
@@ -15,7 +19,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
-from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -47,7 +50,6 @@ from fastlane_bot.events.utils import (
     read_csv_file,
     handle_tokens_csv,
 )
-from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
 
@@ -216,12 +218,7 @@ load_dotenv()
     "--blockchain",
     default="ethereum",
     help="Select a blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-    type=click.Choice(
-        [
-            "ethereum",
-            "coinbase_base"
-        ]
-    ),
+    type=click.Choice(["ethereum", "coinbase_base"]),
 )
 @click.option(
     "--pool_data_update_frequency",
