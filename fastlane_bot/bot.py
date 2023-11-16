@@ -54,7 +54,6 @@ from typing import List, Dict, Tuple, Any, Callable
 from typing import Optional
 
 from web3 import Web3
-from web3.datastructures import AttributeDict
 
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
@@ -67,8 +66,8 @@ from fastlane_bot.helpers import (
     TxHelpers,
     TxHelpersBase,
     TradeInstruction,
-    Univ3Calculator,
     RouteStruct,
+    Univ3Calculator,
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -79,10 +78,10 @@ from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
 from .modes.pairwise_multi_bal import FindArbitrageMultiPairwiseBalancer
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
+from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
-from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format, log_format, num_format_float
 
 

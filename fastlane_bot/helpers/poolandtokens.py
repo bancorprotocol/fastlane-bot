@@ -1,19 +1,17 @@
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 
-import itertools
+import decimal
 import math
-from typing import Dict, Any, List, Union
-
 from _decimal import Decimal
 from dataclasses import dataclass
+from typing import Dict, Any, List, Union
 
+from fastlane_bot.config import Config
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import UniV3Helper, EncodedOrder
-
-from fastlane_bot.config import Config
+from fastlane_bot.utils import EncodedOrder
 
 
 @dataclass
@@ -239,7 +237,7 @@ class PoolAndTokens:
         converts self into an instance of the ConstantProductCurve class.
         """
 
-        self.fee = float(Decimal(self.fee))
+        self.fee = float(Decimal(str(self.fee)))
         if self.exchange_name in [
             self.ConfigObj.UNISWAP_V3_NAME,
             self.ConfigObj.PANCAKESWAP_V3_NAME,
@@ -388,7 +386,13 @@ class PoolAndTokens:
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
             z = yint = Decimal(self.z_1) if i == 0 else Decimal(self.z_0)
-            if y <= 0:
+            try:
+                if y <= 0:
+                    continue
+            except decimal.InvalidOperation:
+                # print(
+                #     f"decimal.InvalidOperation attributes: {self.exchange_name}, {self.pair_name}, {self.cid}, y={y}, y_0={self.y_0}, y_1={self.y_1}, skipping..."
+                # )
                 continue
             encoded_order = EncodedOrder(
                 **{

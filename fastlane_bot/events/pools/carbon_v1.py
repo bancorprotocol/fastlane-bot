@@ -79,16 +79,7 @@ class CarbonV1Pool(Pool):
         print(f"event_args: {event_args}")
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
-        if type(order0) is Dict:
-            data["y_0"] = order0["y"]
-            data["z_0"] = order0["z"]
-            data["A_0"] = order0["A"]
-            data["B_0"] = order0["B"]
-            data["y_1"] = order1["y"]
-            data["z_1"] = order1["z"]
-            data["A_1"] = order1["A"]
-            data["B_1"] = order1["B"]
-        else:
+        if isinstance(order0, list) and isinstance(order1, list):
             data["y_0"] = order0[0]
             data["z_0"] = order0[1]
             data["A_0"] = order0[2]
@@ -97,6 +88,16 @@ class CarbonV1Pool(Pool):
             data["z_1"] = order1[1]
             data["A_1"] = order1[2]
             data["B_1"] = order1[3]
+        else:
+            data["y_0"] = order0["y"]
+            data["z_0"] = order0["z"]
+            data["A_0"] = order0["A"]
+            data["B_0"] = order0["B"]
+            data["y_1"] = order1["y"]
+            data["z_1"] = order1["z"]
+            data["A_1"] = order1["A"]
+            data["B_1"] = order1["B"]
+
         return data
 
     @staticmethod
