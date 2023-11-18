@@ -563,9 +563,9 @@ class CarbonBot(CarbonBotBase):
                     return arb_opp
                     # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
-            if len(cids) > 3:
+            if len(cids) != 3:
                 self.ConfigObj.logger.info(
-                    f"Math validation not supported for more than 3 pools, returning to main flow."
+                    f"Math validation not supported for more than 3 pools, found {len(cids)} pools, returning to main flow."
                 )
                 return arb_opp
             max_trade_in = arb_finder.get_optimal_arb_trade_amts(
@@ -761,7 +761,7 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        best_profit_fl_token = best_profit
+        best_profit_fl_token = Decimal(str(best_profit))
         if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY:
             try:
                 fltkn_eth_conversion_rate = Decimal(
