@@ -1457,9 +1457,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 expected_in = trade_instructions[idx].amtin
 
                 remaining_tkn_in = Decimal(str(next_amount_in))
-                self.ConfigObj.logger.info(f"\n\n")
 
-                self.ConfigObj.logger.info(f"[calculate_trade_outputs REMOVE] starting Carbon trade calculations, {len(data)} trades, remaining_tkn_in = {remaining_tkn_in}")
                 for tx in data:
                     try:
                         tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
@@ -1495,7 +1493,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                     )
 
                     remaining_tkn_in -= amount_in
-                    self.ConfigObj.logger.info(f"[calculate_trade_outputs REMOVE] calculated trade, {amount_in} {tknin_key} into trade, remaining={remaining_tkn_in}")
 
                     if amount_in_wei <= 0:
                         continue
@@ -1516,7 +1513,6 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                     remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in, decimals=trade.tknin_decimals)
                     if _idx == last_tx and remaining_tkn_in > 0:
-                        self.ConfigObj.logger.info(f"[calculate_trade_outputs REMOVE] LAST trade going into Carbon but {remaining_tkn_in} remaining. Stuffing remainder into other orders:")
 
                         for __idx, _tx in enumerate(raw_txs_lst):
                             adjusted_next_amt_in = _tx["amtin"] + remaining_tkn_in
@@ -1534,8 +1530,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                             remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in,
                                                                           decimals=trade.tknin_decimals)
                             if test_remaining < 0:
-                                self.ConfigObj.logger.info(
-                                    f"[calculate_trade_outputs REMOVE] Trade overflow, trying next order.")
                                 continue
 
                             remaining_tkn_in = remaining_tkn_in + _tx["amtin"] - _amount_in
@@ -1553,8 +1547,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                             raw_txs_lst[__idx] = _raw_txs
 
                             if remaining_tkn_in == 0:
-                                self.ConfigObj.logger.info(
-                                    f"[calculate_trade_outputs REMOVE] Remaining tkns in == 0. Process complete")
                                 break
 
 
