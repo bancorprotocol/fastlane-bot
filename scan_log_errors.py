@@ -75,6 +75,7 @@ def main(logs_directory, interval, search_pattern):
         print(f"Latest folder containing '{search_pattern}': {latest_folder}")
     else:
         print("No folder found with the specified pattern.")
+        raise ValueError("No folder found with the specified pattern.")
 
     print("Starting continuous scan of log file.")
     while True:
