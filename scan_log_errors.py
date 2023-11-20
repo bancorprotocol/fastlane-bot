@@ -67,7 +67,10 @@ def scan_logs_for_opportunity(logs, search_pattern, latest_opportunity_timestamp
 @click.option('--search_pattern',
                 default="arb_mode: multi_pairwise_all",
                 type=str)
-def main(logs_directory, interval, search_pattern):
+@click.option('--max_minutes',
+                default=5,
+                type=int)
+def main(logs_directory, interval, search_pattern, max_minutes):
 
     latest_folder = find_latest_log_with_string(logs_directory, search_pattern)
 
@@ -79,7 +82,7 @@ def main(logs_directory, interval, search_pattern):
 
     print("Starting continuous scan of log file.")
     while True:
-        last_timestamp = datetime.now() - timedelta(minutes=5)
+        last_timestamp = datetime.now() - timedelta(minutes=max_minutes)
         try:
             logs = read_log_file(f"{latest_folder}/bot.log")
             scan_logs_for_opportunity(logs, r"Opportunity with profit:", last_timestamp)
