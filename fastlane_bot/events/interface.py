@@ -178,8 +178,6 @@ class QueryInterface:
         else:
             return [
                 pool for pool in self.state if pool["exchange_name"] == exchange_name
-                and pool['tkn0_decimals'] is not None
-                and pool['tkn1_decimals'] is not None
             ]
 
     def log_pool_numbers(self, pools: List[Dict[str, Any]], exchange_name: str) -> None:
