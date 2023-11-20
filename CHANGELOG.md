@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.66...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.67...HEAD)
 
 - Scan logging for unknown errors failing silently [\#217](https://github.com/bancorprotocol/fastlane-bot/issues/217)
+- Precision Update 2 [\#206](https://github.com/bancorprotocol/fastlane-bot/issues/206)
+
+- 206 precision update 2 [\#219](https://github.com/bancorprotocol/fastlane-bot/pull/219) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.67](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.67) (2023-11-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.66...v2.7.67)
+
 - Handle token decimals of None type [\#215](https://github.com/bancorprotocol/fastlane-bot/issues/215)
 - Create scan\_log\_errors.py [\#218](https://github.com/bancorprotocol/fastlane-bot/pull/218) ([mikewcasale](https://github.com/mikewcasale))
 
