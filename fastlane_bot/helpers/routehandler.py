@@ -297,6 +297,102 @@ class TxRouteHandler(TxRouteHandlerBase):
             customData=customData,
         )
 
+    def get_wrap_or_unwrap_native_gas_tkn_struct(self, deadline: int, wrap: bool, source_amount: int = 0):
+        """
+        This function provides a trade struct to wrap or unwrap the native gas token.
+
+        :param deadline: the deadline
+        :param wrap: if True, wrap the native gas token, else unwrap the native gas token
+        :param source_amount: the number of tokens to wrap or unwrap. If 0, this will wrap or unwrap the current balance of tokens.
+
+        returns: RouteStruct
+
+        """
+        return RouteStruct(
+            platformId=self.ConfigObj.PLATFORM_ID_WRAP_UNWRAP,
+            targetToken=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if wrap else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+            sourceToken=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if wrap else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+            sourceAmount=int(source_amount),
+            minTargetAmount=int(source_amount),
+            deadline=deadline,
+            customAddress="",
+            customInt=0,
+            customData="[]",
+        )
+
+    def add_wrap_or_unwrap_trades_to_route(self, trade_instructions: List[TradeInstruction], route_struct: List[RouteStruct], flashloan_struct: List
+    ) -> List[RouteStruct]:
+        """
+        Adds native token wrap and unwrap trades as necessary to the route struct.
+        :param trade_instructions: the processed trade instructions
+        :param route_struct: the processed route struct
+        :param flashloan_struct: the processed route struct
+
+        returns: List of RouteStruct
+        """
+
+        # balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
+
+        flashloan_native_gas_token = False
+        flashloan_wrapped_gas_token = False
+
+        # Check if we are flashloaning wrapped or native gas tokens
+        for flash in flashloan_struct:
+            if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in flash["sourceTokens"]:
+                flashloan_wrapped_gas_token = True
+            if self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in flash["sourceTokens"]:
+                flashloan_native_gas_token = True
+        # Ensure we didn't try to flashloan wrapped & native gas token
+        assert not flashloan_wrapped_gas_token or not flashloan_native_gas_token, f"Cannot flashloan both wrapped & native gas tokens! Flashloan struct = {flashloan_struct}"
+
+        for idx, route in enumerate(route_struct):
+            # Ensure tokens are set according to the pool's token
+            if trade_instructions[idx].tknin_is_native:
+                route.sourceToken = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+            elif trade_instructions[idx].tknin_is_wrapped:
+                route.sourceToken = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            if trade_instructions[idx].tknout_is_native:
+                route.targetToken = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+            elif trade_instructions[idx].tknout_is_wrapped:
+                route.targetToken = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+
+            if idx == 0:
+                if flashloan_wrapped_gas_token and trade_instructions[idx].tknin_is_native:
+                    # First trade, we took flashloan of wrapped tokens but need Native tokens, add unwrap
+                    route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                           wrap=False,
+                                                                                           source_amount=route.sourceAmount))
+                elif flashloan_native_gas_token and trade_instructions[idx].tknin_is_wrapped:
+                    # First trade, we took flashloan of wrapped tokens but need Native tokens, add unwrap
+                    route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                           wrap=True,
+                                                                                           source_amount=route.sourceAmount))
+            # Received wrapped tokens from last trade, native tokens going into next trade
+            elif trade_instructions[idx - 1].tknout_is_wrapped and trade_instructions[idx].tknin_is_native:
+                route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                       wrap=False,
+                                                                                       source_amount=route.sourceAmount))
+            # Received native tokens from last trade, wrapped going into next trade
+            elif trade_instructions[idx - 1].tknout_is_native and trade_instructions[idx].tknin_is_wrapped:
+                route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                       wrap=True,
+                                                                                       source_amount=route.sourceAmount))
+            if idx == len(route_struct) - 1:
+                # Flashloaned native, get wrapped out of last trade, convert to native
+                if flashloan_native_gas_token and trade_instructions[idx].tknout_is_wrapped:
+                    route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                           wrap=False,
+                                                                                           source_amount=route.sourceAmount))
+                # Flashloaned wrapped, get native out of last trade, convert to wrapped
+                elif flashloan_wrapped_gas_token and trade_instructions[idx].tknout_is_native:
+                    route_struct.insert(idx, self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route.deadline,
+                                                                                           wrap=True,
+                                                                                           source_amount=route.sourceAmount))
+
+
+        return route_struct
+
+
     def get_route_structs(
         self, trade_instructions: List[TradeInstruction]=None, deadline: int=None
     ) -> List[RouteStruct]:

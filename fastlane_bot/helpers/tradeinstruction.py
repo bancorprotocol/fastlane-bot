@@ -127,7 +127,11 @@ class TradeInstruction:
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
-            
+        self.tknin_is_native = self._tknin_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        self.tknout_is_native = self._tknout_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        self.tknin_is_wrapped = self._tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        self.tknout_is_wrapped = self._tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+
         if self._amtout_wei is None:            
             self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
 

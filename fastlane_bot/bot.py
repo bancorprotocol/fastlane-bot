@@ -979,7 +979,7 @@ class CarbonBot(CarbonBotBase):
         route_struct = [
             asdict(rs)
             for rs in tx_route_handler.get_route_structs(
-                encoded_trade_instructions, deadline
+                flashloan_struct, encoded_trade_instructions, deadline
             )
         ]
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)

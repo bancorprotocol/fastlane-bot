@@ -161,7 +161,7 @@ class _ConfigProviderTenderly(ConfigProvider):
             abi=FAST_LANE_CONTRACT_ABI,
         )
         self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-        
+
         reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
         self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
