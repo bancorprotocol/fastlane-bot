@@ -59,7 +59,7 @@ def scan_logs_for_opportunity(logs, search_pattern, latest_opportunity_timestamp
 
 @click.command()
 @click.option('--logs_directory',
-                default="./logs",
+                default="logs",
               type=str)
 @click.option('--interval',
                 default=30,
