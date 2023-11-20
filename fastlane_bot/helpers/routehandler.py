@@ -1460,6 +1460,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 total_out_wei = 0
                 expected_in = trade_instructions[idx].amtin
 
+                remaining_tkn_in = Decimal(str(next_amount_in))
 
                 for tx in data:
                     try:
@@ -1469,10 +1470,22 @@ class TxRouteHandler(TxRouteHandlerBase):
                         # total_percent += tx["amtin"]/expected_in
                         self.ConfigObj.logger.warning(f"[calculate_trade_outputs] Invalid operation: {tx['amtin']}/{expected_in}")
 
-                for tx in data:
+                last_tx = len(data) - 1
+
+                for _idx, tx in enumerate(data):
                     cid = tx["cid"]
                     cid = cid.split("-")[0]
                     tknin_key = tx["tknin"]
+
+                    _next_amt_in = Decimal(str(next_amount_in)) * tx["percent_in"]
+                    if _next_amt_in > remaining_tkn_in:
+                        _next_amt_in = remaining_tkn_in
+
+
+                    if _idx == last_tx:
+                        if _next_amt_in < remaining_tkn_in:
+                            _next_amt_in = remaining_tkn_in
+
                     curve = trade_instructions[idx].db.get_pool(cid=cid)
                     (
                         amount_in,
@@ -1480,9 +1493,13 @@ class TxRouteHandler(TxRouteHandlerBase):
                         amount_in_wei,
                         amount_out_wei,
                     ) = self._solve_trade_output(
-                        curve=curve, trade=trade, amount_in=Decimal(str(next_amount_in)) * tx["percent_in"]
+                        curve=curve, trade=trade, amount_in=_next_amt_in
                     )
 
+                    remaining_tkn_in -= amount_in
+
+                    if amount_in_wei <= 0:
+                        continue
                     raw_txs = {
                         "cid": cid,
                         "tknin": tx["tknin"],
@@ -1492,14 +1509,51 @@ class TxRouteHandler(TxRouteHandlerBase):
                         "amtout": amount_out,
                         "_amtout_wei": amount_out_wei,
                     }
-
-                    if amount_in_wei > 0:
-                        raw_txs_lst.append(raw_txs)
-
+                    raw_txs_lst.append(raw_txs)
                     total_in += amount_in
                     total_out += amount_out
                     total_in_wei += amount_in_wei
                     total_out_wei += amount_out_wei
+
+                    remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in, decimals=trade.tknin_decimals)
+                    if _idx == last_tx and remaining_tkn_in > 0:
+
+                        for __idx, _tx in enumerate(raw_txs_lst):
+                            adjusted_next_amt_in = _tx["amtin"] + remaining_tkn_in
+                            _curve = trade_instructions[idx].db.get_pool(cid=_tx["cid"])
+                            (
+                                _amount_in,
+                                _amount_out,
+                                _amount_in_wei,
+                                _amount_out_wei,
+                            ) = self._solve_trade_output(
+                                curve=_curve, trade=trade, amount_in=adjusted_next_amt_in
+                            )
+
+                            test_remaining = remaining_tkn_in - _amount_in + _tx["amtin"]
+                            remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in,
+                                                                          decimals=trade.tknin_decimals)
+                            if test_remaining < 0:
+                                continue
+
+                            remaining_tkn_in = remaining_tkn_in + _tx["amtin"] - _amount_in
+
+                            _raw_txs = {
+                                "cid": _tx["cid"],
+                                "tknin": _tx["tknin"],
+                                "amtin": _amount_in,
+                                "_amtin_wei": _amount_in_wei,
+                                "tknout": _tx["tknout"],
+                                "amtout": _amount_out,
+                                "_amtout_wei": _amount_out_wei,
+                            }
+
+                            raw_txs_lst[__idx] = _raw_txs
+
+                            if remaining_tkn_in == 0:
+                                break
+
+
                 amount_out = total_out
                 trade_instructions[idx].amtin = total_in
                 trade_instructions[idx].amtout = amount_out
