@@ -86,7 +86,7 @@ def main(logs_directory, interval, search_pattern):
             print("Everything is OK...")
         except ValueError as e:
             next_latest_folder = find_latest_log_with_string(logs_directory, search_pattern)
-            if next_latest_folder:
+            if next_latest_folder and next_latest_folder != latest_folder:
                 print(f"Latest folder containing '{search_pattern}': {next_latest_folder}")
                 latest_folder = next_latest_folder
                 continue
@@ -95,7 +95,7 @@ def main(logs_directory, interval, search_pattern):
                 break
         except Exception as ex:
             next_latest_folder = find_latest_log_with_string(logs_directory, search_pattern)
-            if next_latest_folder:
+            if next_latest_folder and next_latest_folder != latest_folder:
                 print(f"Latest folder containing '{search_pattern}': {next_latest_folder}")
                 latest_folder = next_latest_folder
                 continue
