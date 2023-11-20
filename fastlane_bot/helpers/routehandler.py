@@ -353,6 +353,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         if pool.exchange_name == self.ConfigObj.BANCOR_V2_NAME:
             return pool.anchor
+        elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
+            return self.ConfigObj.CARBON_CONTROLLER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
@@ -442,7 +444,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         Generate a flashloan tokens and amounts.
         :param trade_instructions: A list of trade instruction objects
         """
-        flash_tokens = {trade_instructions[0].tknin_key: {"tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
+
+
+        flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_key): {"tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
                                                           "flash_amt": trade_instructions[0].amtin_wei,
                                                           "decimals": trade_instructions[0].tknin_decimals}}
         return flash_tokens

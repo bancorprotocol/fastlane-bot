@@ -75,6 +75,7 @@ class BaseManager:
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
     tenderly_fork_id: str = None
+    prefix_path: str = ""
 
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -474,7 +475,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
         )
 
         with multicaller as mc:
@@ -603,7 +604,7 @@ class BaseManager:
         multicaller = MultiCaller(
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
+            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
         )
 
         with multicaller as mc:

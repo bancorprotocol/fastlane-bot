@@ -100,6 +100,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
                 abi=BANCOR_V3_NETWORK_INFO_ABI,
             )
+        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM]:
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
                 address=network.CARBON_CONTROLLER_ADDRESS,
                 abi=CARBON_CONTROLLER_ABI,
@@ -108,15 +109,22 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 address=self.w3.toChecksumAddress(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
-            reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
-            self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-            self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
-            self.EXPECTED_GAS_MODIFIER = "0.85"
         else:
             self.CARBON_CONTROLLER_CONTRACT = None
             self.BANCOR_ARBITRAGE_CONTRACT = None
+
+        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
+            try:
+                reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+                self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
+                self.ARB_MAX_PROFIT = 1000000 # This is no longer used
+            except:
+                self.ARB_REWARD_PERCENTAGE = "0.5"
+        else:
             self.ARB_REWARD_PERCENTAGE = "0.5"
+            
+        self.EXPECTED_GAS_MODIFIER = "0.85"
 class _ConfigProviderTenderly(ConfigProvider):
     """
     Fastlane bot config -- provider [Tenderly]
