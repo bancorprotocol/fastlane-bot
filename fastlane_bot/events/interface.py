@@ -14,7 +14,6 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 @dataclass
 class Token:
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -32,7 +31,6 @@ class Token:
 
 @dataclass
 class Pool(PoolAndTokens):
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -56,6 +54,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -124,7 +123,6 @@ class QueryInterface:
                 return True
         return False
 
-
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
         """
         This token gets all tokens that exist in pools on the specified exchange.
@@ -173,7 +171,9 @@ class QueryInterface:
                 pool
                 for pool in self.state
                 if pool["exchange_name"] == exchange_name
-                and self.has_balance(pool, keys)
+                   and self.has_balance(pool, keys)
+                   and pool['tkn0_decimals'] is not None
+                   and pool['tkn1_decimals'] is not None
             ]
         else:
             return [
@@ -260,10 +260,10 @@ class QueryInterface:
             pool
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v2"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
-                and pool["address"] in self.uniswap_v2_event_mappings
-            )
+               or (
+                       pool["exchange_name"] in self.cfg.UNI_V2_FORKS
+                       and pool["address"] in self.uniswap_v2_event_mappings
+               )
         ]
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
@@ -279,10 +279,10 @@ class QueryInterface:
             pool
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v3"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V3_FORKS
-                and pool["address"] in self.uniswap_v3_event_mappings
-            )
+               or (
+                       pool["exchange_name"] in self.cfg.UNI_V3_FORKS
+                       and pool["address"] in self.uniswap_v3_event_mappings
+               )
         ]
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
@@ -297,7 +297,7 @@ class QueryInterface:
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
-        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
         uniswap_v2_unmapped = [
             pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
         ]
@@ -306,9 +306,6 @@ class QueryInterface:
             pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
-
-
-
 
     def remove_faulty_token_pools(self) -> None:
         """

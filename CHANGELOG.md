@@ -2,13 +2,21 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.64...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.65...HEAD)
 
-- Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
+- Handle token decimals of None type [\#215](https://github.com/bancorprotocol/fastlane-bot/issues/215)
+- adds handling for decimals of None type [\#216](https://github.com/bancorprotocol/fastlane-bot/pull/216) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
+- multiple runtime errors in latest main branch [\#213](https://github.com/bancorprotocol/fastlane-bot/issues/213)
 - fix current version requirements.txt file [\#207](https://github.com/bancorprotocol/fastlane-bot/issues/207)
+
+## [v2.7.65](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.65) (2023-11-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.64...v2.7.65)
+
+- Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
 
 Merged pull requests
 
