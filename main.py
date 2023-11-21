@@ -238,6 +238,12 @@ load_dotenv()
     type=str,
     help="Prefixes the path to the write folders (used for deployment)",
 )
+@click.option(
+    "--version_check_frequency",
+    default=1,
+    type=int,
+    help="How frequently pool data should be updated, in main loop iterations.",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -268,6 +274,7 @@ def main(
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
     prefix_path: str,
+    version_check_frequency: int,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -303,6 +310,7 @@ def main(
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         prefix_path (str): prefixes the path to the write folders (used for deployment)
+        version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -388,6 +396,7 @@ def main(
         increment_blocks: {increment_blocks}
         pool_data_update_frequency: {pool_data_update_frequency}
         prefix_path: {prefix_path}
+        version_check_frequency: {version_check_frequency}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -470,6 +479,7 @@ def main(
         blockchain,
         pool_data_update_frequency,
         use_specific_exchange_for_target_tokens,
+        version_check_frequency
     )
 
 
@@ -496,6 +506,7 @@ def run(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
+    version_check_frequency: int
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -523,6 +534,7 @@ def run(
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
+        version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
     """
 
     bot = tenderly_uri = forked_from_block = None
@@ -695,7 +707,13 @@ def run(
 
                 params = [w3.toHex(increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
-
+            if (
+                loop_idx % version_check_frequency == 0
+                and version_check_frequency != -1
+            ):
+               # Check the version of the deployed arbitrage contract
+               mgr.cfg.provider.check_version_of_arb_contract()
+               mgr.cfg.logger.info(f"Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}")
             if (
                 loop_idx % pool_data_update_frequency == 0
                 and pool_data_update_frequency != -1
