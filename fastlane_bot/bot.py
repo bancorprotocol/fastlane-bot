@@ -732,7 +732,6 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         best_profit: Decimal,
         fl_token: str,
-        fl_token_with_weth: str,
     ) -> Tuple[Decimal, Decimal, Decimal]:
         """
         Calculate the actual profit in USD.
@@ -754,13 +753,13 @@ class CarbonBot(CarbonBotBase):
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
         best_profit_fl_token = best_profit
-        if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY:
+        if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, self.ConfigObj.NATIVE_GAS_TOKEN_KEY]:
             try:
-                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token_with_weth}")[0].p))
+                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token}")[0].p))
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
             except:
                 try:
-                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0].p))
+                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0].p))
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
                     raise str(e)
@@ -915,11 +914,7 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the flashloan token
-        fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
-
-        # If the flashloan token is WETH, then use ETH
-        if fl_token == T.WETH:
-            fl_token = T.NATIVE_ETH
+        fl_token = calculated_trade_instructions[0].tknin_key
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -927,7 +922,7 @@ class CarbonBot(CarbonBotBase):
 
         # Use helper function to calculate profit
         best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
-            CCm, best_profit, fl_token, fl_token_with_weth
+            CCm, best_profit, fl_token
         )
 
         # Log the best trade instructions
@@ -983,6 +978,8 @@ class CarbonBot(CarbonBotBase):
             )
         ]
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
+        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
+            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(trade_instructions=calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
         # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 

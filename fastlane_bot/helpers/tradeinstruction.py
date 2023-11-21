@@ -81,6 +81,11 @@ class TradeInstruction:
     _amtin_wei: int = None
     _amtout_wei: int = None
 
+    tknin_is_native = None
+    tknout_is_native = None
+    tknin_is_wrapped = None
+    tknout_is_wrapped = None
+
     @property
     def tknin_key(self) -> str:
         """
@@ -127,10 +132,13 @@ class TradeInstruction:
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
-        self.tknin_is_native = self._tknin_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        self.tknout_is_native = self._tknout_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        self.tknin_is_wrapped = self._tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-        self.tknout_is_wrapped = self._tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        pool = self.db.get_pool(cid=self.cid.split('-')[0])
+        tokens = pool.get_token_addresses
+        self.tknin_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
+        self.tknin_is_native = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
+        self.tknout_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknout_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
+        self.tknout_is_native = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens and self._tknout_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
+        assert not [self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native].count(True) > 1, f"[TradeInstruction __post_init__] only 1 token can be native or wrapped, [self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native] = {self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native}"
 
         if self._amtout_wei is None:            
             self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
@@ -146,7 +154,7 @@ class TradeInstruction:
         if self.pair_sorting is None:
             self.pair_sorting = ""
         if self.exchange_override is None:
-            self._exchange_name = self.db.get_pool(cid=self.cid.split('-')[0]).exchange_name
+            self._exchange_name = pool.exchange_name
         else:
             self._exchange_name = self.exchange_override
         self._exchange_id = self.get_platform_id()
