@@ -166,8 +166,8 @@ def multicall_fn(exchange: str, mc: Any, multicall_contract: Any, pool_info: Dic
         mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
     elif exchange == "bancor_pol":
         mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
-        if pool_info["tkn0_address"] in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
-            mc.add_call(multicall_contract.functions.ethSaleAmount)
+        # if pool_info["tkn0_address"] in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE":
+        #     mc.add_call(multicall_contract.functions.ethSaleAmount)
     elif exchange == 'carbon_v1':
         mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
     elif exchange == 'balancer':
