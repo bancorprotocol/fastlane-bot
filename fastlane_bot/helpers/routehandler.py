@@ -317,7 +317,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             deadline=deadline,
             customAddress="",
             customInt=0,
-            customData="[]",
+            customData="0x",
         )
 
     def add_wrap_or_unwrap_trades_to_route(self, trade_instructions: List[TradeInstruction], route_struct: List[Dict], flashloan_struct: List
