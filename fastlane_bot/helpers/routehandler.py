@@ -315,7 +315,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             sourceAmount=int(source_amount),
             minTargetAmount=int(source_amount),
             deadline=deadline,
-            customAddress="",
+            customAddress=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if wrap else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
             customInt=0,
             customData="0x",
         )
