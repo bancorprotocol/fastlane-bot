@@ -2,10 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.67...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.68...HEAD)
+
+- "strategy" error in multi mode [\#220](https://github.com/bancorprotocol/fastlane-bot/issues/220)
+- Precision Update 2 [\#206](https://github.com/bancorprotocol/fastlane-bot/issues/206)
+- bugfix strategy error [\#221](https://github.com/bancorprotocol/fastlane-bot/pull/221) ([NIXBNT](https://github.com/NIXBNT))
+
+- Remove dependencies on profit calculations [\#173](https://github.com/bancorprotocol/fastlane-bot/issues/173)
+
+## [v2.7.68](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.68) (2023-11-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.67...v2.7.68)
 
 - Scan logging for unknown errors failing silently [\#217](https://github.com/bancorprotocol/fastlane-bot/issues/217)
-- Precision Update 2 [\#206](https://github.com/bancorprotocol/fastlane-bot/issues/206)
 
 - 206 precision update 2 [\#219](https://github.com/bancorprotocol/fastlane-bot/pull/219) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
