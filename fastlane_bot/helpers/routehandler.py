@@ -694,6 +694,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
                                                                  tknin=trade_before.tknin_key, tknout=trade.tknout_key,
                                                                  pair_sorting="", raw_txs="[]", db=trade.db)
+                        new_trade_instruction.tknout_is_native = trade.tknout_is_native
+                        new_trade_instruction.tknout_is_wrapped = trade.tknout_is_wrapped
                         calculated_trade_instructions[idx - 1] = new_trade_instruction
                         calculated_trade_instructions.pop(idx)
 
