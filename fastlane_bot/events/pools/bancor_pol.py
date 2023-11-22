@@ -166,7 +166,7 @@ class BancorPolPool(Pool):
             erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0) if tkn0 not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else contract
         else:
             erc20_contract = w3.eth.contract(abi=ERC20_ABI, address=tkn0) if tkn0 not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else contract
-        return erc20_contract.functions.balanceOf(contract.address).call() if tkn0 not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else contract.caller.ethSaleAmount()
+        return erc20_contract.functions.balanceOf(contract.address).call() if tkn0 not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else contract.caller.ethSaleAmount()[1]
 
     @staticmethod
     def bitLength(value):
@@ -203,7 +203,12 @@ class BancorPolPool(Pool):
         """
         Returns the current amount of ETH for sale
         """
-        balance = contract.caller.ethSaleAmount.current()
+        balance = contract.caller.ethSaleAmount()
+        if balance is not None:
+            balance = balance[1]
+        else:
+            # if this fails, set balance to 0
+            balance = 0
         params = {
             "y_0": balance,
             "z_0": balance,

@@ -285,10 +285,10 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
     token_price = Decimal(p1) / Decimal(p0)
     tkn0_address = pool_info["tkn0_address"]
     tkn_contract = mgr.token_contracts.get(tkn0_address,
-                                           mgr.web3.eth.contract(abi=ERC20_ABI, address=tkn0_address)) if tkn0_address not in mgr.cfg.ETH_ADDRESS else mgr.cfg.pool_contracts[mgr.cfg.BANCOR_POL_NAME][mgr.cfg.BANCOR_POL_ADDRESS]
+                                           mgr.web3.eth.contract(abi=ERC20_ABI, address=tkn0_address)) if tkn0_address not in mgr.cfg.ETH_ADDRESS else mgr.pool_contracts[mgr.cfg.BANCOR_POL_NAME][mgr.cfg.BANCOR_POL_ADDRESS]
     if tkn0_address not in mgr.token_contracts and tkn0_address not in mgr.cfg.ETH_ADDRESS:
         mgr.token_contracts[tkn0_address] = tkn_contract
-    tkn_balance = tkn_contract.functions.balanceOf(mgr.cfg.BANCOR_POL_ADDRESS).call() if tkn0_address not in mgr.cfg.ETH_ADDRESS else tkn_contract.functions.get_eth_tkn_balance().call()
+    tkn_balance = tkn_contract.functions.balanceOf(mgr.cfg.BANCOR_POL_ADDRESS).call() if tkn0_address not in mgr.cfg.ETH_ADDRESS else tkn_contract.functions.ethSaleAmount().call()[1]
     result = {
         "fee": "0.000",
         "fee_float": 0.000,

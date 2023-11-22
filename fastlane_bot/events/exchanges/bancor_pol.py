@@ -42,7 +42,7 @@ class BancorPol(Exchange):
         return event["args"]["token"]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return self.ETH_ADDRESS
+        return self.ETH_ADDRESS if event["args"]["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
 
     def save_strategy(
         self,
