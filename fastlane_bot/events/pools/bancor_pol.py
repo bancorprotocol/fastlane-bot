@@ -203,12 +203,7 @@ class BancorPolPool(Pool):
         """
         Returns the current amount of ETH for sale
         """
-        balance = contract.caller.ethSaleAmount()
-        if balance is not None:
-            balance = balance[1]
-        else:
-            # if this fails, set balance to 0
-            balance = 0
+        balance = contract.caller.ethSaleAmount()[1]
         params = {
             "y_0": balance,
             "z_0": balance,
