@@ -254,21 +254,26 @@ class PairOptimizer(CPCArbOptimizer):
             eps = params.get("eps", self.PAIROPTIMIZEREPS)
             
             assert targettkn in {c0.tknx, c0.tkny,}, f"targettkn {targettkn} not in {c0.tknx}, {c0.tkny}"
-            
+            print(f"targettkn == c0.tknx = {targettkn == c0.tknx}")
             # we are now running a goalseek == 0 on the token that is NOT the target token
             if targettkn == c0.tknx:
                 func = lambda p: dxdyfromp_sum_f(p)[1]
+                print(f"func = {func}")
                 p_optimal = self.goalseek(func, p_min * 0.99, p_max * 1.01, eps=eps)
                 p_optimal_t = (1/float(p_optimal),)
                 full_result = dxdyfromp_sum_f(float(p_optimal))
                 opt_result  = full_result[0]
+                print(f"full_result = {full_result}, p_optimal={p_optimal}, p_optimal_t={p_optimal_t} {type(p_optimal_t)}")
                 
             else:
                 func = lambda p: dxdyfromp_sum_f(p)[0]
+                print(f"func = {func}")
                 p_optimal = self.goalseek(func, p_min * 0.99, p_max * 1.01, eps=eps)
                 p_optimal_t = (float(p_optimal),)
                 full_result = dxdyfromp_sum_f(float(p_optimal))
                 opt_result = full_result[1]
+                print(f"full_result = {full_result}, p_optimal={p_optimal}, p_optimal_t={p_optimal_t}")
+
             #print("[PairOptimizer.optimize] p_optimal", p_optimal, "full_result", full_result)
             method = "margp-pair"
         

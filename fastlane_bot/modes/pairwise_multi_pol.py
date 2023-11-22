@@ -67,20 +67,28 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                 src_token = tkn1
                 if len(curve_combo) < 2:
                     continue
+                tkncheck = ["BNT-FF1C", "WETH-6Cc2"]
+                if tkn0 in tkncheck and tkn1 in tkncheck:
+                    print(f"\n\n*******************************************")
 
-                try:
-                    (
-                        O,
-                        profit_src,
-                        r,
-                        trade_instructions_df,
-                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                #try:
+                (
+                    O,
+                    profit_src,
+                    r,
+                    trade_instructions_df,
+                ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
 
-                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                    trade_instructions = r.trade_instructions()
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                trade_instructions = r.trade_instructions()
+                print(f"trade_instructions_dic = {trade_instructions_dic}")
+                print(f"trade_instructions = {trade_instructions}\n")
+                if tkn0 in tkncheck and tkn1 in tkncheck:
 
-                except Exception:
-                    continue
+                    print(f"*******************************************\n\n")
+
+                # except Exception:
+                #     continue
 
                 # Get the cids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
@@ -152,11 +160,22 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
         CC_cc = CPCContainer(curves)
         O = PairOptimizer(CC_cc)
+
+        tkncheck = ["BNT-FF1C", "WETH-6Cc2"]
+        if tkn0 in tkncheck and tkn1 in tkncheck:
+
+            print(f"CC_cc = {CC_cc}")
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
         }  # this intentionally selects the non_carbon curve
-        r = O.optimize(src_token, params=dict(pstart=pstart))
+        if tkn0 in tkncheck and tkn1 in tkncheck:
+            print(f"pstart = {pstart}, {tkn0}/{tkn1}")
+
+        r = O.optimize(targettkn=src_token, params=dict(pstart=pstart))
+
         profit_src = -r.result
+        if tkn0 in tkncheck and tkn1 in tkncheck:
+            print(f"profit_src = {profit_src}")
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df
 
