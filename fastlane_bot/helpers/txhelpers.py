@@ -544,9 +544,11 @@ class TxHelpers:
                         nonce=nonce,
                         flashloan_struct=flashloan_struct)
                 except Exception as e:
-                    self.ConfigObj.logger.debug(
+                    self.ConfigObj.logger.info(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
+                self.ConfigObj.logger.info(
+                    f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
                 return None
         if test_fake_gas:
             transaction["gas"] = self.ConfigObj.DEFAULT_GAS
@@ -557,6 +559,12 @@ class TxHelpers:
                     self.web3.eth.estimate_gas(transaction=transaction)
                     + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
+        except Exception as e:
+            self.ConfigObj.logger.info(
+                f"Failed to estimate gas for transaction because the transaction is likely fail. Most often this is due to an arb opportunity already being closed, but it can include other bugs. Exception: {e}"
+            )
+            return None
+        try:
             if access_list:
                 access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
 
@@ -578,9 +586,8 @@ class TxHelpers:
                     self.ConfigObj.logger.info(f"Failed to apply access list to transaction")
         except Exception as e:
             self.ConfigObj.logger.info(
-                f"Failed to estimate gas due to exception {e}, scrapping transaction :(."
+                f"Failed to add Access List to transaction. This should not invalidate the transaction. Exception: {e}"
             )
-            return None
         transaction["gas"] = estimated_gas
         return transaction
 
