@@ -2,9 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.69...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.70...HEAD)
 
+- Add missing pool data [\#227](https://github.com/bancorprotocol/fastlane-bot/issues/227)
 - Access List handling in TxHelpers should have its own try/except [\#223](https://github.com/bancorprotocol/fastlane-bot/issues/223)
+
+Merged pull requests
+
+- Update uniswap\_v3\_event\_mappings.csv [\#228](https://github.com/bancorprotocol/fastlane-bot/pull/228) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.70](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.70) (2023-11-23)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.69...v2.7.70)
+
 - Minor bug fix in Carbon calculations [\#222](https://github.com/bancorprotocol/fastlane-bot/issues/222)
 - "strategy" error in multi mode [\#220](https://github.com/bancorprotocol/fastlane-bot/issues/220)
 - Add standalone try except for Access List and improve error logging [\#224](https://github.com/bancorprotocol/fastlane-bot/pull/224) ([Lesigh-3100](https://github.com/Lesigh-3100))
