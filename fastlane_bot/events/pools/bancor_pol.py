@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 import web3
 from web3 import Web3
 from web3.contract import Contract
+import web3.exceptions
 
 from fastlane_bot.data.abi import ERC20_ABI, BANCOR_POL_ABI
 from fastlane_bot.events.pools.base import Pool
@@ -27,6 +28,7 @@ class BancorPolPool(Pool):
     ONE = 2**48
     contract: Contract = None
     BANCOR_POL_ADDRESS = "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46"
+    ARB_CONTRACT_VERSION = None
 
     @staticmethod
     def unique_key() -> str:
@@ -164,7 +166,15 @@ class BancorPolPool(Pool):
         """
         if w3_tenderly:
             contract = w3_tenderly.eth.contract(abi=BANCOR_POL_ABI, address=contract.address)
-        return contract.caller.amountAvailableForTrading(tkn0)
+        try:
+            return contract.caller.amountAvailableForTrading(tkn0)
+        except web3.exceptions.ContractLogicError:
+            if w3_tenderly:
+                erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
+            else:
+                erc20_contract = w3.eth.contract(abi=ERC20_ABI,address=tkn0)
+            return erc20_contract.functions.balanceOf(contract.address).call()
+
 
     @staticmethod
     def bitLength(value):
