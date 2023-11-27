@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.70...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.71...HEAD)
 
 - Add missing pool data [\#227](https://github.com/bancorprotocol/fastlane-bot/issues/227)
+
+Closed issues
+
+- USDC missing from tokens.csv [\#229](https://github.com/bancorprotocol/fastlane-bot/issues/229)
+
+Merged pull requests
+
+- Update tokens.csv [\#230](https://github.com/bancorprotocol/fastlane-bot/pull/230) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.71](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.71) (2023-11-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.70...v2.7.71)
+
 - Access List handling in TxHelpers should have its own try/except [\#223](https://github.com/bancorprotocol/fastlane-bot/issues/223)
 
 Merged pull requests
