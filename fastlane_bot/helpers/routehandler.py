@@ -548,25 +548,32 @@ class TxRouteHandler(TxRouteHandlerBase):
         Generate a flashloan tokens and amounts.
         :param trade_instructions: A list of trade instruction objects
         """
-        tknin_key = None
-        tknin_address = None
-        if trade_instructions[0].tknin_is_native:
-            tknin_key = self.ConfigObj.NATIVE_GAS_TOKEN_KEY
-            tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        elif trade_instructions[0].tknin_is_wrapped:
-            tknin_key = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
-            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+
+        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
+            tknin_key = None
+            tknin_address = None
+            if trade_instructions[0].tknin_is_native:
+                tknin_key = self.ConfigObj.NATIVE_GAS_TOKEN_KEY
+                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+            elif trade_instructions[0].tknin_is_wrapped:
+                tknin_key = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
+                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            else:
+                tknin_key = trade_instructions[0].tknin_key
+                tknin_address = trade_instructions[0].tknin_address
+            assert  tknin_key is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_key is {tknin_key} and tknin_address is {tknin_address}, must not be None"
+            flash_tokens = {
+                tknin_key :
+                {
+                "tkn": tknin_address,
+                "flash_amt": trade_instructions[0].amtin_wei,
+                "decimals": trade_instructions[0].tknin_decimals}
+            }
         else:
-            tknin_key = trade_instructions[0].tknin_key
-            tknin_address = trade_instructions[0].tknin_address
-        assert  tknin_key is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_key is {tknin_key} and tknin_address is {tknin_address}, must not be None"
-        flash_tokens = {
-            tknin_key :
-            {
-            "tkn": tknin_address,
-            "flash_amt": trade_instructions[0].amtin_wei,
-            "decimals": trade_instructions[0].tknin_decimals}
-        }
+            flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_key): {
+                "tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
+                "flash_amt": trade_instructions[0].amtin_wei,
+                "decimals": trade_instructions[0].tknin_decimals}}
         return flash_tokens
 
     def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
