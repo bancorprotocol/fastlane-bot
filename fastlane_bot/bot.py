@@ -766,8 +766,10 @@ class CarbonBot(CarbonBotBase):
                     raise str(e)
         else:
             best_profit_eth = best_profit_fl_token
-
-        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
+        try:
+            usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
+        except Exception:
+            usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
