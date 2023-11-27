@@ -278,6 +278,10 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
 
+    # FLAGS
+    #######################################################################################
+    GAS_TKN_IN_FLASHLOAN_TOKENS = None
+
     @classmethod
     def new(cls, network=None):
         """
@@ -557,6 +561,9 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     SHIBA_V2_FACTORY_ADDRESS = "0x115934131916C8b277DD010Ee02de363c09d037c"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
+    CHAIN_SPECIFIC_EXCHANGES = [ex for ex in CHAIN_SPECIFIC_EXCHANGES if ex is not None]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
