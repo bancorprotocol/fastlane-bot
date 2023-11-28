@@ -2,13 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.71...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.72...HEAD)
 
-- Add missing pool data [\#227](https://github.com/bancorprotocol/fastlane-bot/issues/227)
+- Specific exchanges bug [\#226](https://github.com/bancorprotocol/fastlane-bot/issues/226)
+- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
+- If gas tkn or wrapped gas token is in flashloan tokens, always include both in token list [\#232](https://github.com/bancorprotocol/fastlane-bot/pull/232) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Add handling for instances where Stablecoin pool cannot be found for … [\#231](https://github.com/bancorprotocol/fastlane-bot/pull/231) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 Closed issues
 
 - USDC missing from tokens.csv [\#229](https://github.com/bancorprotocol/fastlane-bot/issues/229)
+
+## [v2.7.72](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.72) (2023-11-27)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.71...v2.7.72)
+
+- Add missing pool data [\#227](https://github.com/bancorprotocol/fastlane-bot/issues/227)
 
 Merged pull requests
 
