@@ -349,7 +349,7 @@ class ContractsManager(BaseManager):
             decimals = token_data.loc[token_data["key"] == key, "decimals"].iloc[0]
             return symbol, decimals
         else:
-            decimals = int(contract.functions.decimals().call())
+            decimals = int(float(contract.functions.decimals().call()))
 
         if (
             symbol is None
