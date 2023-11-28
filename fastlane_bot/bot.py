@@ -1220,6 +1220,17 @@ class CarbonBot(CarbonBotBase):
         """
         if CCm is None:
             CCm = self.get_curves()
+            if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
+                filter_out_weth = [
+                    x
+                    for x in CCm
+                    if (x.params.exchange == "carbon_v1")
+                       & (
+                               (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+                               or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
+                       )
+                ]
+                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
     def run_continuous_mode(
