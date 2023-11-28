@@ -166,7 +166,7 @@ class PairOptimizer(CPCArbOptimizer):
     #         assert ti_format != CPCArbOptimizer.TIF_DFPG, "TIF_DFPG not implemented for convex optimization"
     #         return CPCArbOptimizer.TradeInstruction.to_format(result, ti_format=ti_format)
 
-    PAIROPTIMIZEREPS = 1e-12
+    PAIROPTIMIZEREPS = 1e-15
 
     SO_DXDYVECFUNC = "dxdyvecfunc"
     SO_DXDYSUMFUNC = "dxdysumfunc"
