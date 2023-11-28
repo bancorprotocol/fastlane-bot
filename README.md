@@ -124,7 +124,7 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
       - **b3_two_hop**: Triangular arbitrage - the same as bancor_v3 mode but more gas-efficient.
       - **multi_pairwise_pol**: Pairwise multi-mode that always routes through the Bancor protocol-owned liquidity contract.
       - **multi_pairwise_bal**: Pairwise multi-mode that always routes through Balancer.
-      - **multi_pairwise_all**: Pairwise multi-mode that searches all available exchanges for pairwise arbitrage.
+      - **multi_pairwise_all**: **(Default)** Pairwise multi-mode that searches all available exchanges for pairwise arbitrage.
 - **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify tokens as a comma-separated string in TKN-ADDR format (e.g., BNT-FF1C, WETH-6Cc2).
 - **exchanges** (str): Comma-separated string of exchanges to include.
 - **polling_interval** (int): Bot's polling interval for new events.
