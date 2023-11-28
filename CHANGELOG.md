@@ -2,10 +2,23 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.72...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.73...HEAD)
+
+- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
+
+Closed issues
+
+- Update Arb Mode descriptions in Readme [\#233](https://github.com/bancorprotocol/fastlane-bot/issues/233)
+
+Merged pull requests
+
+- Update README.md [\#234](https://github.com/bancorprotocol/fastlane-bot/pull/234) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.73](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.73) (2023-11-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.72...v2.7.73)
 
 - Specific exchanges bug [\#226](https://github.com/bancorprotocol/fastlane-bot/issues/226)
-- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
 - If gas tkn or wrapped gas token is in flashloan tokens, always include both in token list [\#232](https://github.com/bancorprotocol/fastlane-bot/pull/232) ([Lesigh-3100](https://github.com/Lesigh-3100))
 - Add handling for instances where Stablecoin pool cannot be found for … [\#231](https://github.com/bancorprotocol/fastlane-bot/pull/231) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
