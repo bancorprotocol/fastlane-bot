@@ -507,6 +507,9 @@ class QueryInterface:
         for record in self.state:
             for idx in range(len(record["descr"].split("/"))):
                 token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
+            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.NATIVE_GAS_TOKEN_KEY, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:

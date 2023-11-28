@@ -320,6 +320,7 @@ def main(
         loglevel,
         logging_path,
         blockchain,
+        flashloan_tokens,
         tenderly_fork_id,
     )
     # TODO: add blockchain support
