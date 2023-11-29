@@ -213,6 +213,9 @@ class ConfigNetwork(ConfigBase):
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 
+    PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
+    PLATFORM_ID_WRAP_UNWRAP = 10
+
     EXCHANGE_IDS = {
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,
@@ -222,6 +225,7 @@ class ConfigNetwork(ConfigBase):
         CARBON_V1_NAME: 6,
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
+        PLATFORM_ID_WRAP_UNWRAP : 10
     }
 
     # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]

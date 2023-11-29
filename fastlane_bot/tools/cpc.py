@@ -505,7 +505,7 @@ class ConstantProductCurve(CurveBase):
         super().__setattr__("cid", cid)
         return self
 
-    class CPCValidationError(ValueError): pass
+    class CPCValidationError(BaseException): pass
     
     @classmethod
     def from_kx(

@@ -42,7 +42,7 @@ class BancorPol(Exchange):
         return event["args"]["token"]
 
     def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return self.ETH_ADDRESS
+        return self.ETH_ADDRESS if event["args"]["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
 
     def save_strategy(
         self,
@@ -73,7 +73,7 @@ class BancorPol(Exchange):
         """
         cid = f"{self.exchange_name}_{token}"
         tkn0_address = cfg.w3.toChecksumAddress(token)
-        tkn1_address = cfg.w3.toChecksumAddress(cfg.ETH_ADDRESS)
+        tkn1_address = cfg.w3.toChecksumAddress(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS
 
         return func(
             address=cfg.BANCOR_POL_ADDRESS,

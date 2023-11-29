@@ -35,28 +35,23 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
         )
 
         for src_token, miniverse in combos:
+            try:
+                r = None
+                CC_cc = CPCContainer(miniverse)
+                O = MargPOptimizer(CC_cc)
+                #try:
+                pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
+                r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True
+                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                if len(trade_instructions_dic) < 3:
+                    # Failed to converge
+                    continue
+                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                trade_instructions = r.trade_instructions()
 
-            r = None
-            CC_cc = CPCContainer(miniverse)
-            O = MargPOptimizer(CC_cc)
-            #try:
-            r = O.margp_optimizer(src_token)
-            trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-            if len(trade_instructions_dic) < 3:
-                # Failed to converge
+            except Exception as e:
+                self.ConfigObj.logger.debug(f"[triangle multi] {str(e)}")
                 continue
-            trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-            #print(trade_instructions_df)
-            trade_instructions = r.trade_instructions()
-            """
-            The following handles an edge case until parallel execution is available:
-            1 Determine correct direction - opposite of non-Carbon pool
-            2 Get cids of wrong-direction Carbon pools
-            3 Create new CPCContainer with correct pools
-            4 Rerun optimizer
-            5 Resume normal flow
-            """
-
             profit_src = -r.result
 
             # Get the cids
@@ -90,3 +85,21 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
+    
+    def build_pstart(self, CCm, tkn0list, tkn1):
+        tkn0list = [x for x in tkn0list if x not in [tkn1]]
+        pstart = {}
+        for tkn0 in tkn0list:
+            try:
+                price = CCm.bytknb(tkn0).bytknq(tkn1)[0].p
+            except:
+                try:
+                    price = 1/CCm.bytknb(tkn1).bytknq(tkn0)[0].p
+                except Exception as e:
+                    print(str(e))
+                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
+            pstart[tkn0]=price
+        pstart[tkn1] = 1
+        return pstart
+
+
