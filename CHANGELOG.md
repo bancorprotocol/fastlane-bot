@@ -2,13 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.73...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.74...HEAD)
 
-- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
+- Error reading updating pool decimals [\#235](https://github.com/bancorprotocol/fastlane-bot/issues/235)
+- add float wrapper incase decimal input is string [\#236](https://github.com/bancorprotocol/fastlane-bot/pull/236) ([NIXBNT](https://github.com/NIXBNT))
 
 Closed issues
 
 - Update Arb Mode descriptions in Readme [\#233](https://github.com/bancorprotocol/fastlane-bot/issues/233)
+
+## [v2.7.74](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.74) (2023-11-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.73...v2.7.74)
+
+- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
 
 Merged pull requests
 
