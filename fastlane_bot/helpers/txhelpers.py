@@ -545,7 +545,7 @@ class TxHelpers:
                         flashloan_struct=flashloan_struct)
                 except Exception as e:
                     self.ConfigObj.logger.info(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
+                        f"(***1***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 self.ConfigObj.logger.info(
                     f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
