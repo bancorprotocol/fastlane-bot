@@ -166,7 +166,7 @@ load_dotenv()
 )
 @click.option(
     "--default_min_profit_gas_token",
-    default="0.0001",
+    default="0.01",
     type=str,
     help="Set to the default minimum profit in gas token. This should be reasonably high to avoid losses from gas fees.",
 )
