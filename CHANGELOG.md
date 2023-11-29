@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.74...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.75...HEAD)
 
 - Error reading updating pool decimals [\#235](https://github.com/bancorprotocol/fastlane-bot/issues/235)
+
+- Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
+- Major Update - handles upcoming changes to the Fast Lane smart contract [\#237](https://github.com/bancorprotocol/fastlane-bot/pull/237) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.75](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.75) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.74...v2.7.75)
+
 - add float wrapper incase decimal input is string [\#236](https://github.com/bancorprotocol/fastlane-bot/pull/236) ([NIXBNT](https://github.com/NIXBNT))
 
 Closed issues
