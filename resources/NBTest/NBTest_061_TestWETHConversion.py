@@ -94,15 +94,9 @@ Put path to log file here >>>
 """
 ###
 
-path = os.path.normpath("fastlane_bot/data/tests/latest_pool_data_testing_balancer.json")
-print(f"path={path}")
-with open(path) as f:
+
+with open("fastlane_bot/data/tests/latest_pool_data_testing_balancer.json") as f:
     pools = json.load(f)
-
-
-
-# with open("fastlane_bot/data/tests/latest_pool_data_testing_balancer.json") as f:
-#     pools = json.load(f)
 
 flashloan_tokens = ["BNT-FF1C","WETH-6Cc2","USDC-eB48","LINK-86CA"]
 #flashloan_tokens = ["WETH-0006,USDC-2913"]
@@ -150,7 +144,7 @@ mgr = Manager(
     SUPPORTED_EXCHANGES=exchanges,
     alchemy_max_block_fetch=alchemy_max_block_fetch,
     uniswap_v2_event_mappings=uniswap_v2_event_mappings,
-    #uniswap_v3_event_mappings=uniswap_v3_event_mappings,
+    uniswap_v3_event_mappings=uniswap_v3_event_mappings,
     tokens=tokens.to_dict(orient="records"),
 )
 
@@ -192,7 +186,7 @@ bot = init_bot(mgr)
 bot.db.handle_token_key_cleanup()
 #bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
-bot.db.remove_unsupported_exchanges()
+#bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 #flashloan_tokens = bot.setup_flashloan_tokens(None)
