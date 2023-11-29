@@ -1637,10 +1637,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                         "_amtout_wei": amount_out_wei,
                     }
                     raw_txs_lst.append(raw_txs)
-                    total_in += amount_in
-                    total_out += amount_out
-                    total_in_wei += amount_in_wei
-                    total_out_wei += amount_out_wei
 
                     remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in, decimals=trade.tknin_decimals)
                     if _idx == last_tx and remaining_tkn_in > 0:
@@ -1680,13 +1676,23 @@ class TxRouteHandler(TxRouteHandlerBase):
                             if remaining_tkn_in == 0:
                                 break
 
+                _total_in = 0
+                _total_in_wei = 0
+                _total_out = 0
+                _total_out_wei = 0
+                for raw_tx in raw_txs_lst:
+                    _total_in += raw_tx["amtin"]
+                    _total_in_wei += raw_tx["_amtin_wei"]
+                    _total_out += raw_tx["amtout"]
+                    _total_out_wei += raw_tx["_amtout_wei"]
 
-                amount_out = total_out
-                trade_instructions[idx].amtin = total_in
-                trade_instructions[idx].amtout = amount_out
-                trade_instructions[idx]._amtin_wei = total_in_wei
-                trade_instructions[idx]._amtout_wei = total_out_wei
+                trade_instructions[idx].amtin = _total_in
+                trade_instructions[idx].amtout = _total_out
+                trade_instructions[idx]._amtin_wei = _total_in_wei
+                trade_instructions[idx]._amtout_wei = _total_out_wei
                 trade_instructions[idx].raw_txs = str(raw_txs_lst)
+
+                amount_out = _total_out
 
             else:
 
