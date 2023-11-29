@@ -2,11 +2,24 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.75...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...HEAD)
+
+- default\_min\_profit\_gas\_token too low by default [\#239](https://github.com/bancorprotocol/fastlane-bot/issues/239)
+- Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
+- Arb Bot Upgrade for next POL iteration [\#194](https://github.com/bancorprotocol/fastlane-bot/issues/194)
+- Add triangle arb mode for Bancor POL pools [\#157](https://github.com/bancorprotocol/fastlane-bot/issues/157)
+- Further process all arb opportunities [\#100](https://github.com/bancorprotocol/fastlane-bot/issues/100)
+
+Merged pull requests
+
+- update the default min profit [\#240](https://github.com/bancorprotocol/fastlane-bot/pull/240) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.76](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.76) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.75...v2.7.76)
 
 - Error reading updating pool decimals [\#235](https://github.com/bancorprotocol/fastlane-bot/issues/235)
 
-- Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
 - Major Update - handles upcoming changes to the Fast Lane smart contract [\#237](https://github.com/bancorprotocol/fastlane-bot/pull/237) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v2.7.75](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.75) (2023-11-29)
