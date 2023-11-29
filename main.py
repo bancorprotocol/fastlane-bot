@@ -710,7 +710,7 @@ def run(
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
                 loop_idx % version_check_frequency == 0
-                and version_check_frequency != -1
+                and version_check_frequency != -1 and blockchain in "ethereum"
             ):
                # Check the version of the deployed arbitrage contract
                mgr.cfg.provider.check_version_of_arb_contract()
