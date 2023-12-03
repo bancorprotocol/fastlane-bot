@@ -87,14 +87,14 @@ class TradeInstruction:
     tknout_is_wrapped = None
 
     @property
-    def tknin_key(self) -> str:
+    def tknin_address(self) -> str:
         """
         The input token key (e.g. 'DAI-1d46')
         """
         return self.tknin
 
     @property
-    def tknout_key(self) -> str:
+    def tknout_address(self) -> str:
         """
         The output token key (e.g. 'DAI-1d46')
         """
@@ -219,29 +219,29 @@ class TradeInstruction:
 
 
 
-    def _get_token_address(self, token_key: str) -> str:
-        """
-        Gets the token address based on the token key.
+    # def _get_token_address(self, token_address: str) -> str:
+    #     """
+    #     Gets the token address based on the token key.
+    #
+    #     Parameters
+    #     ----------
+    #     token_address: str
+    #         The token key (e.g. 'DAI-1d46')
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The token address.
+    #     """
+    #     return self._get_token(token_address).address
 
-        Parameters
-        ----------
-        token_key: str
-            The token key (e.g. 'DAI-1d46')
-
-        Returns
-        -------
-        str
-            The token address.
-        """
-        return self._get_token(token_key).address
-
-    def _get_token_decimals(self, token_key: str) -> int:
+    def _get_token_decimals(self, token_address: str) -> int:
         """
         Gets the token decimals based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -249,15 +249,15 @@ class TradeInstruction:
         int
             The token decimals.
         """
-        return self._get_token(token_key).decimals
+        return self._get_token(token_address).decimals
 
-    def _get_token(self, token_key: str) -> Token:
+    def _get_token(self, token_address: str) -> Token:
         """
         Gets the token object based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -266,7 +266,7 @@ class TradeInstruction:
             The token object.
         """
 
-        return self.db.get_token(key=token_key)
+        return self.db.get_token(key=token_address)
 
     def _get_pool(self) -> Pool:
         """

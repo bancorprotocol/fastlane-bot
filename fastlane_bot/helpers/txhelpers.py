@@ -297,7 +297,7 @@ class TxHelpers:
             return None
 
         # Get current base fee for pending block
-        current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
+        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
 
         if verbose:
             self.ConfigObj.logger.info("Validating trade...")

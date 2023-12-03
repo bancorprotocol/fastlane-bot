@@ -245,11 +245,6 @@ class ContractsManager(BaseManager):
             ),
         )
 
-    @staticmethod
-    def get_tkn_key(symbol: str, addr: str) -> str:
-        if symbol is None or symbol == "None" or addr is None:
-            print(addr)
-        return f"{symbol}-{addr[-4:]}"
 
     def get_token_info_from_contract(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
@@ -343,10 +338,9 @@ class ContractsManager(BaseManager):
             symbol = contract.functions.symbol().call()
         except OverflowError:
             raise self.FailedToGetTokenDetailsException(addr=addr)
-        key = self.get_tkn_key(symbol=symbol, addr=addr)
 
-        if key in token_data["key"].unique():
-            decimals = token_data.loc[token_data["key"] == key, "decimals"].iloc[0]
+        if addr in token_data["address"].unique():
+            decimals = token_data.loc[token_data["address"] == addr, "decimals"].iloc[0]
             return symbol, decimals
         else:
             decimals = int(float(contract.functions.decimals().call()))
@@ -360,15 +354,12 @@ class ContractsManager(BaseManager):
             raise self.FailedToGetTokenDetailsException(addr=addr)
         symbol = str(symbol).replace("-", "_")
         new_data = {
-            "key": key,
             "symbol": symbol,
-            "name": symbol,
             "address": addr,
             "decimals": decimals,
-            "blockchain": self.cfg.NETWORK,
         }
         try:
-            self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
+            self.cfg.logger.info(f"Adding new token {symbol} to {tokens_filepath}")
         except UnicodeEncodeError:
             raise self.FailedToGetTokenDetailsException(addr=addr)
 

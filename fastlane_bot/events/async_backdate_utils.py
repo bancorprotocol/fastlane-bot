@@ -1,19 +1,19 @@
 import asyncio
 import time
 from typing import Any, Dict, Tuple, List
+from web3 import AsyncWeb3
 
 from fastlane_bot.events.async_utils import (
-    w3_async,
     get_abis_and_exchanges,
     get_contract_chunks,
 )
 from fastlane_bot.events.utils import parse_non_multicall_rows_to_update
 
 
-async def async_main_backdate_from_contracts(c: List[Dict[str, Any]]) -> Tuple[Any]:
+async def async_main_backdate_from_contracts(c: List[Dict[str, Any]], w3_async: AsyncWeb3) -> Tuple[Any]:
     return await asyncio.wait_for(
         asyncio.gather(
-            *[async_handle_main_backdate_from_contracts(**args) for args in c]
+            *[async_handle_main_backdate_from_contracts(**args, w3_async=w3_async) for args in c]
         ),
         timeout=20 * 60,
     )
@@ -46,7 +46,7 @@ def get_backdate_contracts(
                 "w3_tenderly": mgr.w3_tenderly,
                 "tenderly_fork_id": mgr.tenderly_fork_id,
                 "pool_info": pool_info,
-                "contract": w3_async.eth.contract(
+                "contract": mgr.w3_async.eth.contract(
                     address=mgr.pool_data[idx]["address"],
                     abi=abis[mgr.pool_data[idx]["exchange_name"]],
                 ),
@@ -59,6 +59,7 @@ async def async_handle_main_backdate_from_contracts(
     idx: int,
     pool: Any,
     w3_tenderly: Any,
+    w3_async: AsyncWeb3,
     tenderly_fork_id: str,
     pool_info: Dict,
     contract: Any,

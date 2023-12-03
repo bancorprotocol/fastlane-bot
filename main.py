@@ -6,6 +6,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 from fastlane_bot.events.version_utils import check_version_requirements
+from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
 
@@ -99,7 +100,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"WBTC-c599,BNT-FF1C,WETH-6Cc2,USDC-eB48,USDT-1ec7,LINK-86CA",
+    default=f"{T.LINK},{T.ETH},{T.BNT},{T.WBTC}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -165,7 +166,7 @@ load_dotenv()
 )
 @click.option(
     "--default_min_profit_gas_token",
-    default="0.0001",
+    default="0.01",
     type=str,
     help="Set to the default minimum profit in gas token. This should be reasonably high to avoid losses from gas fees.",
 )
@@ -238,6 +239,14 @@ load_dotenv()
     type=str,
     help="Prefixes the path to the write folders (used for deployment)",
 )
+
+@click.option(
+    "--version_check_frequency",
+    default=1,
+    type=int,
+    help="How frequently pool data should be updated, in main loop iterations.",
+)
+
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -267,6 +276,8 @@ def main(
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
     prefix_path: str,
+    version_check_frequency: int,
+
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -301,6 +312,8 @@ def main(
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         prefix_path (str): prefixes the path to the write folders (used for deployment)
+        version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
+
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -318,18 +331,19 @@ def main(
         loglevel,
         logging_path,
         blockchain,
+        flashloan_tokens,
         tenderly_fork_id,
     )
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(
-            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+            columns=["address", "decimals"]
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
 
-    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['key'].tolist()[0]}")
+    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['address'].tolist()[0]}")
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
@@ -384,6 +398,8 @@ def main(
         increment_blocks: {increment_blocks}
         pool_data_update_frequency: {pool_data_update_frequency}
         prefix_path: {prefix_path}
+        version_check_frequency: {version_check_frequency}
+
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -422,6 +438,7 @@ def main(
     # Initialize data fetch manager
     mgr = Manager(
         web3=cfg.w3,
+        w3_async=cfg.w3_async,
         cfg=cfg,
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,
@@ -466,6 +483,7 @@ def main(
         blockchain,
         pool_data_update_frequency,
         use_specific_exchange_for_target_tokens,
+        version_check_frequency
     )
 
 
@@ -492,6 +510,7 @@ def run(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
+    version_check_frequency: int,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -519,6 +538,8 @@ def run(
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
+        version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
+
     """
 
     bot = tenderly_uri = forked_from_block = None
@@ -725,7 +746,14 @@ def run(
 
             params = [w3.toHex(increment_blocks)]  # number of blocks
             w3.provider.make_request(method="evm_increaseBlocks", params=params)
-
+        if (
+                loop_idx % version_check_frequency == 0
+                and version_check_frequency != -1 and blockchain in "ethereum"
+        ):
+            # Check the version of the deployed arbitrage contract
+            mgr.cfg.provider.check_version_of_arb_contract()
+            mgr.cfg.logger.info(
+                f"Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}")
         if (
             loop_idx % pool_data_update_frequency == 0
             and pool_data_update_frequency != -1

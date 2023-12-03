@@ -56,6 +56,7 @@ class BaseManager:
     """
 
     web3: Web3
+    w3_async: AsyncWeb3
     cfg: Config
     pool_data: List[Dict[str, Any]]
     alchemy_max_block_fetch: int
@@ -481,6 +482,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+            web3=self.web3
         )
 
         with multicaller as mc:
@@ -610,6 +612,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+            web3=self.web3
         )
 
         with multicaller as mc:

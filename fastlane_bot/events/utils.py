@@ -268,9 +268,6 @@ def get_static_data(
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
-    # key should be symbol + last 4 of address
-    tokens["key"] = tokens["symbol"] + "-" + tokens["address"].str[-4:]
-    tokens = tokens.drop_duplicates(subset=["key"])
 
     def correct_tkn(tkn_address, keyname):
         try:
@@ -290,12 +287,7 @@ def get_static_data(
     static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
         lambda x: correct_tkn(x, "decimals")
     )
-    static_pool_data["tkn0_key"] = static_pool_data["tkn0_address"].apply(
-        lambda x: correct_tkn(x, "key")
-    )
-    static_pool_data["tkn1_key"] = static_pool_data["tkn1_address"].apply(
-        lambda x: correct_tkn(x, "key")
-    )
+
     static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
         lambda x: correct_tkn(x, "symbol")
     )
@@ -303,15 +295,13 @@ def get_static_data(
         lambda x: correct_tkn(x, "symbol")
     )
     static_pool_data["pair_name"] = (
-        static_pool_data["tkn0_key"] + "/" + static_pool_data["tkn1_key"]
+        static_pool_data["tkn0_address"] + "/" + static_pool_data["tkn1_address"]
     )
     static_pool_data = static_pool_data.dropna(
         subset=[
             "pair_name",
             "exchange_name",
             "fee",
-            "tkn0_key",
-            "tkn1_key",
             "tkn0_symbol",
             "tkn1_symbol",
             "tkn0_decimals",
@@ -326,7 +316,6 @@ def get_static_data(
         + " "
         + static_pool_data["fee"].astype(str)
     )
-
     # Initialize web3
     static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
@@ -428,9 +417,9 @@ def handle_target_tokens(
             target_tokens = flashloan_tokens
         else:
             target_tokens = target_tokens.split(",")
-            target_tokens = [
-                QueryInterface.cleanup_token_key(token) for token in target_tokens
-            ]
+            # target_tokens = [
+            #     QueryInterface.cleanup_token_key(token) for token in target_tokens
+            # ]
 
             # Ensure that the target tokens are a subset of the flashloan tokens
             for token in flashloan_tokens:
@@ -466,10 +455,10 @@ def handle_flashloan_tokens(
         A list of flashloan tokens to fetch data for.
     """
     flashloan_tokens = flashloan_tokens.split(",")
-    unique_tokens = len(tokens["key"].unique())
+    unique_tokens = len(tokens["address"].unique())
     cfg.logger.info(f"unique_tokens: {unique_tokens}")
     flashloan_tokens = [
-        tkn for tkn in flashloan_tokens if tkn in tokens["key"].unique()
+        tkn for tkn in flashloan_tokens if tkn in tokens["address"].unique()
     ]
 
     # Log the flashloan tokens
@@ -532,7 +521,7 @@ def get_config(
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_KEY in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_KEY in flashloan_tokens)
+    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens)
     return cfg
 
 
@@ -919,12 +908,13 @@ def handle_subsequent_iterations(
 
     """
     if loop_idx > 0 or replay_from_block:
-        bot.db.handle_token_key_cleanup()
+        #bot.db.handle_token_key_cleanup()
         bot.db.remove_unmapped_uniswap_v2_pools()
         bot.db.remove_zero_liquidity_pools()
         bot.db.remove_unsupported_exchanges()
-        bot.db.remove_pools_with_invalid_tokens()
-        bot.db.ensure_descr_in_pool_data()
+        #bot.db.remove_faulty_token_pools()
+        # bot.db.remove_pools_with_invalid_tokens()
+        # bot.db.ensure_descr_in_pool_data()
 
         # Filter the target tokens
         if target_tokens:
@@ -1697,13 +1687,13 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
         for token in target_tokens:
             target_token_addresses = (
                 target_token_addresses
-                + static_pool_data[static_pool_data["tkn0_key"] == token][
+                + static_pool_data[static_pool_data["tkn0_address"] == token][
                     "tkn0_address"
                 ].tolist()
             )
             target_token_addresses = (
                 target_token_addresses
-                + static_pool_data[static_pool_data["tkn1_key"] == token][
+                + static_pool_data[static_pool_data["tkn1_address"] == token][
                     "tkn1_address"
                 ].tolist()
             )

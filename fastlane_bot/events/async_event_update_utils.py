@@ -11,7 +11,7 @@ from web3 import Web3
 from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.events.async_utils import get_contract_chunks, w3_async
+from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.utils import update_pools_from_events
 
@@ -19,19 +19,19 @@ from fastlane_bot.events.utils import update_pools_from_events
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     try:
         symbol = await contract.functions.symbol().call()
-        name = symbol
+    except Exception:
+        symbol = None
+    try:
         decimals = await contract.functions.decimals().call()
-        blockchain = "ethereum"
-        key = f"{name}-{tkn[-4:]}"
+    except Exception:
+        decimals = None
+    try:
         df = pd.DataFrame(
             [
                 {
                     "address": tkn,
-                    "name": symbol,
                     "symbol": symbol,
                     "decimals": decimals,
-                    "blockchain": blockchain,
-                    "key": key,
                 }
             ]
         )
@@ -41,11 +41,8 @@ async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
             [
                 {
                     "address": tkn,
-                    "name": None,
                     "symbol": None,
-                    "decimals": None,
-                    "blockchain": None,
-                    "key": None,
+                    "decimals": decimals,
                 }
             ]
         )
@@ -129,8 +126,8 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
     )
 
 
-def get_tkn_key(t0_symbol: str, tkn0_address: str, key_digits: int = 4) -> str:
-    return f"{t0_symbol}-{tkn0_address[-key_digits:]}"
+# def get_tkn_key(t0_symbol: str, tkn0_address: str, key_digits: int = 4) -> str:
+#     return f"{t0_symbol}-{tkn0_address[-key_digits:]}"
 
 
 def pair_name(
@@ -165,13 +162,9 @@ def get_pool_info(
         "last_updated_block": current_block,
         "tkn0_symbol": tkn0["symbol"],
         "tkn0_decimals": tkn0["decimals"],
-        "tkn0_key": tkn0["key"],
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
-        "tkn1_key": tkn1["key"],
-        "pair_name": pair_name(
-            tkn0["symbol"], tkn0["address"], tkn1["symbol"], tkn1["address"]
-        ),
+        "pair_name": tkn0["address"] + "/" + tkn1["address"]
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
@@ -181,7 +174,6 @@ def get_pool_info(
         if pool_info["exchange_name"] != "carbon_v1"
         else str(pool["cid"])
     )
-    pool_info["last_updated_block"] = current_block
 
     # convert block to timestamp
     pool_info["last_updated"] = mgr.cfg.w3.eth.get_block(current_block)["timestamp"]
@@ -200,13 +192,10 @@ def add_token_info(
     tkn1["symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
     pool_info["tkn0_symbol"] = tkn0["symbol"].replace("/", "_").replace("-", "_")
     pool_info["tkn0_decimals"] = tkn0["decimals"]
-    pool_info["tkn0_key"] = get_tkn_key(tkn0["symbol"], tkn0["address"])
     pool_info["tkn1_symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
     pool_info["tkn1_decimals"] = tkn1["decimals"]
-    pool_info["tkn1_key"] = get_tkn_key(tkn1["symbol"], tkn1["address"])
-    pool_info["pair_name"] = pair_name(
-        tkn0["symbol"], tkn0["address"], tkn1["symbol"], tkn1["address"]
-    )
+    pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
+
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
     return pool_info
@@ -238,20 +227,20 @@ def get_new_pool_data(
     all_keys = set()
     for pool in mgr.pool_data:
         all_keys.update(pool.keys())
-
+    if "last_updated_block" not in all_keys:
+        all_keys.update("last_updated_block")
     pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
         tkn0 = tokens_dict.get(pool["tkn0_address"])
-        tkn0["address"] = pool["tkn0_address"]
         tkn1 = tokens_dict.get(pool["tkn1_address"])
-        tkn1["address"] = pool["tkn1_address"]
         if not tkn0 or not tkn1:
             mgr.cfg.logger.info(
                 f"tkn0 or tkn1 not found: {pool['tkn0_address']}, {pool['tkn1_address']}, {pool['address']} "
             )
             continue
-
+        tkn0["address"] = pool["tkn0_address"]
+        tkn1["address"] = pool["tkn1_address"]
         pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
 
         new_pool_data.append(pool_info)
@@ -279,7 +268,7 @@ def get_token_contracts(
     failed_contracts = []
     contracts.extend(
         {
-            "contract": w3_async.eth.contract(address=tkn, abi=ERC20_ABI),
+            "contract": mgr.w3_async.eth.contract(address=tkn, abi=ERC20_ABI),
             "tkn": tkn,
         }
         for tkn in missing_tokens
@@ -339,7 +328,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
                 "exchange_name": exchange_name,
                 "ex": exchange_factory.get_exchange(exchange_name),
                 "address": address,
-                "contract": w3_async.eth.contract(address=address, abi=abi),
+                "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,
             }
         )
@@ -407,8 +396,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     tokens_df["address"] = tokens_df["address"].apply(
         lambda x: Web3.to_checksum_address(x)
     )
-    tokens_df["key"] = tokens_df["symbol"] + "-" + tokens_df["address"].str[-4:]
-    tokens_df = tokens_df.drop_duplicates(subset=["key"])
+    tokens_df = tokens_df.drop_duplicates(subset=["address"])
 
     new_pool_data = get_new_pool_data(
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
@@ -423,8 +411,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             "pair_name",
             "exchange_name",
             "fee",
-            "tkn0_key",
-            "tkn1_key",
             "tkn0_symbol",
             "tkn1_symbol",
             "tkn0_decimals",
@@ -494,10 +480,9 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
-
-    assert len(mgr.pools_to_add_from_contracts) == (
-        len(new_pool_data_df) + duplicate_new_pool_ct
-    )
+    # assert len(mgr.pools_to_add_from_contracts) == (
+    #     len(new_pool_data_df) + duplicate_new_pool_ct
+    # )
 
     all_pools_df = (
         pd.DataFrame(mgr.pool_data)

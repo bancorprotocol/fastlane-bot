@@ -82,7 +82,7 @@ class Config():
     def is_config_item(self, item):
         """returns True if item is a (possible) configuration item [uppercase, numbers, underscore; len>2]"""
         # print("[is_config_item]", item)
-        if item in {"w3", "connection"}:
+        if item in {"w3", "connection", "w3_async"}:
             return True
         if len(item) < 3:
             return False

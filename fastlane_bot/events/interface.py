@@ -20,13 +20,12 @@ class Token:
     symbol: str
     address: str
     decimals: int
-    key: str
 
     def __eq__(self, other):
-        return self.key == other.key if isinstance(other, Token) else False
+        return self.address == other.address if isinstance(other, Token) else False
 
     def __hash__(self):
-        return hash(self.key)
+        return hash(self.address)
 
 
 @dataclass
@@ -72,7 +71,7 @@ class QueryInterface:
         self.state = [
             pool
             for pool in self.state
-            if pool["tkn0_key"] in target_tokens and pool["tkn1_key"] in target_tokens
+            if pool["tkn0_address"] in target_tokens and pool["tkn1_address"] in target_tokens
         ]
 
         self.cfg.logger.info(
@@ -141,7 +140,7 @@ class QueryInterface:
         for pool in pools:
             for idx in range(8):
                 try:
-                    tkn = pool[f"tkn{idx}_key"]
+                    tkn = pool[f"tkn{idx}_address"]
                     if type(tkn) == str:
                         tokens.append(tkn)
                 except KeyError:
@@ -317,14 +316,15 @@ class QueryInterface:
 
         safe_pools = []
         for pool in self.state:
+            self.cfg.logger.info(pool)
             try:
-                self.get_token(pool["tkn0_key"])
-                self.get_token(pool["tkn1_key"])
+                self.get_token(pool["tkn0_address"])
+                self.get_token(pool["tkn1_address"])
                 safe_pools.append(pool)
             except Exception as e:
                 self.cfg.logger.info(f"Exception: {e}")
                 self.cfg.logger.info(
-                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token"
+                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_address']} from state for faulty token"
                 )
 
         self.state = safe_pools
@@ -357,11 +357,11 @@ class QueryInterface:
         Cleanup token keys in state
         """
         for idx, pool in enumerate(self.state):
-            key0 = self.cleanup_token_key(pool["tkn0_key"])
-            key1 = self.cleanup_token_key(pool["tkn1_key"])
-            self.state[idx]["tkn0_key"] = key0
-            self.state[idx]["tkn1_key"] = key1
-            self.state[idx]["pair_name"] = key0 + "/" + key1
+            addr0 = self.cleanup_token_key(pool["tkn0_address"])
+            addr1 = self.cleanup_token_key(pool["tkn1_address"])
+            self.state[idx]["tkn0_address"] = addr0
+            self.state[idx]["tkn1_address"] = addr1
+            self.state[idx]["pair_name"] = addr0 + "/" + addr1
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
@@ -441,8 +441,6 @@ class QueryInterface:
                     "anchor",
                     "tkn0",
                     "tkn1",
-                    "tkn0_key",
-                    "tkn1_key",
                     "tkn0_address",
                     "tkn0_decimals",
                     "tkn1_address",
@@ -450,37 +448,31 @@ class QueryInterface:
                     "tkn0_weight",
                     "tkn1_weight",
                     "tkn2",
-                    "tkn2_key",
                     "tkn2_balance",
                     "tkn2_address",
                     "tkn2_decimals",
                     "tkn2_weight",
                     "tkn3",
-                    "tkn3_key",
                     "tkn3_balance",
                     "tkn3_address",
                     "tkn3_decimals",
                     "tkn3_weight",
                     "tkn4",
-                    "tkn4_key",
                     "tkn4_balance",
                     "tkn4_address",
                     "tkn4_decimals",
                     "tkn4_weight",
                     "tkn5",
-                    "tkn5_key",
                     "tkn5_balance",
                     "tkn5_address",
                     "tkn5_decimals",
                     "tkn5_weight",
                     "tkn6",
-                    "tkn6_key",
                     "tkn6_balance",
                     "tkn6_address",
                     "tkn6_decimals",
                     "tkn6_weight",
                     "tkn7",
-                    "tkn7_key",
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
@@ -490,8 +482,8 @@ class QueryInterface:
         )
         result.tkn0 = result.pair_name.split("/")[0].split("-")[0]
         result.tkn1 = result.pair_name.split("/")[1].split("-")[0]
-        result.tkn0_key = result.pair_name.split("/")[0]
-        result.tkn1_key = result.pair_name.split("/")[1]
+        result.tkn0_address = result.pair_name.split("/")[0]
+        result.tkn1_address = result.pair_name.split("/")[1]
         return result
 
     def get_tokens(self) -> List[Token]:
@@ -505,11 +497,16 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
+            if type(record["descr"]) == float:
+                print(record)
             for idx in range(len(record["descr"].split("/"))):
-                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+                try:
+                    token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+                except AttributeError:
+                    pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.NATIVE_GAS_TOKEN_KEY, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
-            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
@@ -532,7 +529,6 @@ class QueryInterface:
         return Token(
             symbol=record.get(f"{prefix}symbol"),
             decimals=record.get(f"{prefix}decimals"),
-            key=record.get(f"{prefix}key"),
             address=record.get(f"{prefix}address"),
         )
 
@@ -571,9 +567,7 @@ class QueryInterface:
 
         """
         tokens = self.get_tokens()
-        if "-" in key:
-            return next((tkn for tkn in tokens if tkn.key == key), None)
-        elif key.startswith("0x"):
+        if key.startswith("0x"):
             return next((tkn for tkn in tokens if tkn.address == key), None)
         else:
             raise ValueError(f"[get_token] Invalid token: {key}")

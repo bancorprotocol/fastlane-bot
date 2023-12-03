@@ -313,7 +313,7 @@ for arb in r:
 
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-    flashloan_token_address = bot.ConfigObj.w3.toChecksumAddress(
+    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
         bot.db.get_token(key=fl_token).address
     )
 

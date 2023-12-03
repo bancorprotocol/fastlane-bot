@@ -184,9 +184,7 @@ class PoolManager(BaseManager):
             "tkn0_decimals": t0_decimals,
             "tkn1_decimals": t1_decimals,
             "cid": cid,
-            "tkn0_key": f"{t0_symbol}-{tkn0_address[-4:]}",
-            "tkn1_key": f"{t1_symbol}-{tkn1_address[-4:]}",
-            "pair_name": f"{t0_symbol}-{tkn0_address[-4:]}/{t1_symbol}-{tkn1_address[-4:]}",
+            "pair_name": f"{tkn0_address}/{tkn1_address}",
             "fee_float": fee_float,
             "fee": fee,
         }

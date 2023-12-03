@@ -145,17 +145,17 @@ class ArbitrageFinderBase:
 
         best_profit_fl_token = profit_src
         if src_token not in [
-            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
-            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
         ]:
-            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_KEY:
-                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
+            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS:
+                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
             else:
                 fl_token_with_weth = src_token
 
             try:
                 fltkn_eth_conversion_rate = (
-                    CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
+                    CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}")
                     .bytknq(f"{fl_token_with_weth}")[0]
                     .p
                 )
@@ -165,7 +165,7 @@ class ArbitrageFinderBase:
                     fltkn_eth_conversion_rate = (
                         1
                         / CCm.bytknb(f"{fl_token_with_weth}")
-                        .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
+                        .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}")[0]
                         .p
                     )
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate

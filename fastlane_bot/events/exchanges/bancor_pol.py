@@ -72,8 +72,8 @@ class BancorPol(Exchange):
 
         """
         cid = f"{self.exchange_name}_{token}"
-        tkn0_address = cfg.w3.toChecksumAddress(token)
-        tkn1_address = cfg.w3.toChecksumAddress(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS
+        tkn0_address = cfg.w3.to_checksum_address(token)
+        tkn1_address = cfg.w3.to_checksum_address(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS
 
         return func(
             address=cfg.BANCOR_POL_ADDRESS,

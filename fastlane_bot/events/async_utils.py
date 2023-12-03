@@ -5,12 +5,6 @@ from web3 import AsyncWeb3
 
 from fastlane_bot.events.exchanges import exchange_factory
 
-w3_async = AsyncWeb3(
-    AsyncWeb3.AsyncHTTPProvider(
-        f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ALCHEMY_PROJECT_ID']}"
-    )
-)
-
 
 def get_contract_chunks(contracts: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
     return [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
