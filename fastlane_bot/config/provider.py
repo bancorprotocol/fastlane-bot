@@ -70,8 +70,17 @@ class ConfigProvider(ConfigBase):
 
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(**kwargs)
+        self.ARB_CONTRACT_VERSION = None
+        self.BANCOR_ARBITRAGE_CONTRACT = None
         self.network = network
 
+    def check_version_of_arb_contract(self):
+        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
+            try:
+                self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+            except Exception as e:
+                # Failed to get latest version of arbitrage contract
+                print(f"Failed to get latest version of arbitrage contract due to exception: {e}")
 
 class _ConfigProviderAlchemy(ConfigProvider):
     """
@@ -86,7 +95,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
         # assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
         self.WEB3_ALCHEMY_PROJECT_ID = network.WEB3_ALCHEMY_PROJECT_ID
         self.RPC_URL = f"{network.RPC_ENDPOINT}{self.WEB3_ALCHEMY_PROJECT_ID}"
-
         N = self.network
         self.connection = EthereumNetwork(
             network_id=N.NETWORK_ID,
@@ -98,11 +106,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        if network.NETWORK in N.NETWORK_ETHEREUM:
-            self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                abi=BANCOR_V3_NETWORK_INFO_ABI,
-            )
+
         if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM]:
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
                 address=network.CARBON_CONTROLLER_ADDRESS,
@@ -113,9 +117,18 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=FAST_LANE_CONTRACT_ABI,
             )
 
+
+        if network.NETWORK in N.NETWORK_ETHEREUM:
+            self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
+                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
+                abi=BANCOR_V3_NETWORK_INFO_ABI,
+            )
+            self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+
         else:
             self.CARBON_CONTROLLER_CONTRACT = None
             self.BANCOR_ARBITRAGE_CONTRACT = None
+            self.ARB_CONTRACT_VERSION = 10
 
         if self.BANCOR_ARBITRAGE_CONTRACT is not None:
             try:
@@ -170,6 +183,8 @@ class _ConfigProviderTenderly(ConfigProvider):
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
+        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+
         reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
         self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)

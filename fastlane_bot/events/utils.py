@@ -483,6 +483,7 @@ def get_config(
     loglevel: str,
     logging_path: str,
     blockchain: str,
+    flashloan_tokens: str,
     tenderly_fork_id: str = None,
 ) -> Config:
     """
@@ -500,6 +501,8 @@ def get_config(
         The logging path.
     blockchain : str
         The name of the blockchain
+    flashloan_tokens (str):
+        Comma seperated list of tokens that the bot can use for flash loans.
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
 
@@ -529,6 +532,7 @@ def get_config(
         cfg.logger.info("Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
+    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_KEY in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_KEY in flashloan_tokens)
     return cfg
 
 

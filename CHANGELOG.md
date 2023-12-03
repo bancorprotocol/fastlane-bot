@@ -2,13 +2,126 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.64...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...HEAD)
 
-- Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
+- default\_min\_profit\_gas\_token too low by default [\#239](https://github.com/bancorprotocol/fastlane-bot/issues/239)
+- Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
+- Arb Bot Upgrade for next POL iteration [\#194](https://github.com/bancorprotocol/fastlane-bot/issues/194)
+- Add triangle arb mode for Bancor POL pools [\#157](https://github.com/bancorprotocol/fastlane-bot/issues/157)
+- Further process all arb opportunities [\#100](https://github.com/bancorprotocol/fastlane-bot/issues/100)
+
+Merged pull requests
+
+- update the default min profit [\#240](https://github.com/bancorprotocol/fastlane-bot/pull/240) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.76](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.76) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.75...v2.7.76)
+
+- Error reading updating pool decimals [\#235](https://github.com/bancorprotocol/fastlane-bot/issues/235)
+
+- Major Update - handles upcoming changes to the Fast Lane smart contract [\#237](https://github.com/bancorprotocol/fastlane-bot/pull/237) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.75](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.75) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.74...v2.7.75)
+
+- add float wrapper incase decimal input is string [\#236](https://github.com/bancorprotocol/fastlane-bot/pull/236) ([NIXBNT](https://github.com/NIXBNT))
 
 Closed issues
 
+- Update Arb Mode descriptions in Readme [\#233](https://github.com/bancorprotocol/fastlane-bot/issues/233)
+
+## [v2.7.74](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.74) (2023-11-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.73...v2.7.74)
+
+- Target token bug [\#225](https://github.com/bancorprotocol/fastlane-bot/issues/225)
+
+Merged pull requests
+
+- Update README.md [\#234](https://github.com/bancorprotocol/fastlane-bot/pull/234) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.73](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.73) (2023-11-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.72...v2.7.73)
+
+- Specific exchanges bug [\#226](https://github.com/bancorprotocol/fastlane-bot/issues/226)
+- If gas tkn or wrapped gas token is in flashloan tokens, always include both in token list [\#232](https://github.com/bancorprotocol/fastlane-bot/pull/232) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Add handling for instances where Stablecoin pool cannot be found for … [\#231](https://github.com/bancorprotocol/fastlane-bot/pull/231) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Closed issues
+
+- USDC missing from tokens.csv [\#229](https://github.com/bancorprotocol/fastlane-bot/issues/229)
+
+## [v2.7.72](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.72) (2023-11-27)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.71...v2.7.72)
+
+- Add missing pool data [\#227](https://github.com/bancorprotocol/fastlane-bot/issues/227)
+
+Merged pull requests
+
+- Update tokens.csv [\#230](https://github.com/bancorprotocol/fastlane-bot/pull/230) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.71](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.71) (2023-11-26)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.70...v2.7.71)
+
+- Access List handling in TxHelpers should have its own try/except [\#223](https://github.com/bancorprotocol/fastlane-bot/issues/223)
+
+Merged pull requests
+
+- Update uniswap\_v3\_event\_mappings.csv [\#228](https://github.com/bancorprotocol/fastlane-bot/pull/228) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.70](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.70) (2023-11-23)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.69...v2.7.70)
+
+- Minor bug fix in Carbon calculations [\#222](https://github.com/bancorprotocol/fastlane-bot/issues/222)
+- "strategy" error in multi mode [\#220](https://github.com/bancorprotocol/fastlane-bot/issues/220)
+- Add standalone try except for Access List and improve error logging [\#224](https://github.com/bancorprotocol/fastlane-bot/pull/224) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.69](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.69) (2023-11-21)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.68...v2.7.69)
+
+- Precision Update 2 [\#206](https://github.com/bancorprotocol/fastlane-bot/issues/206)
+- bugfix strategy error [\#221](https://github.com/bancorprotocol/fastlane-bot/pull/221) ([NIXBNT](https://github.com/NIXBNT))
+
+- Remove dependencies on profit calculations [\#173](https://github.com/bancorprotocol/fastlane-bot/issues/173)
+
+## [v2.7.68](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.68) (2023-11-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.67...v2.7.68)
+
+- Scan logging for unknown errors failing silently [\#217](https://github.com/bancorprotocol/fastlane-bot/issues/217)
+
+- 206 precision update 2 [\#219](https://github.com/bancorprotocol/fastlane-bot/pull/219) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.67](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.67) (2023-11-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.66...v2.7.67)
+
+- Handle token decimals of None type [\#215](https://github.com/bancorprotocol/fastlane-bot/issues/215)
+- Create scan\_log\_errors.py [\#218](https://github.com/bancorprotocol/fastlane-bot/pull/218) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v2.7.66](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.66) (2023-11-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.65...v2.7.66)
+
+- adds handling for decimals of None type [\#216](https://github.com/bancorprotocol/fastlane-bot/pull/216) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- multiple runtime errors in latest main branch [\#213](https://github.com/bancorprotocol/fastlane-bot/issues/213)
 - fix current version requirements.txt file [\#207](https://github.com/bancorprotocol/fastlane-bot/issues/207)
+
+## [v2.7.65](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.65) (2023-11-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.64...v2.7.65)
+
+- Bugfix in flashloan generation [\#210](https://github.com/bancorprotocol/fastlane-bot/issues/210)
 
 Merged pull requests
 

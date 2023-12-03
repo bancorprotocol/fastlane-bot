@@ -9,6 +9,8 @@ from decimal import Decimal
 from typing import Dict, Any
 from typing import List, Tuple
 
+import web3.exceptions
+
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.pools import CarbonV1Pool
@@ -141,12 +143,12 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
             pool_info = mgr.pool_data[row]
             pool_info["last_updated_block"] = current_block
             # Function to be defined elsewhere based on what each exchange type needs
-            multicall_fn(exchange, mc, multicall_contract, pool_info)
+            multicall_fn(exchange, mc, mgr, multicall_contract, pool_info)
         result_list = mc.multicall()
     process_results_for_multicall(exchange, rows_to_update, result_list, mgr)
 
 
-def multicall_fn(exchange: str, mc: Any, multicall_contract: Any, pool_info: Dict[str, Any]) -> None:
+def multicall_fn(exchange: str, mc: Any, mgr: Any, multicall_contract: Any, pool_info: Dict[str, Any]) -> None:
     """
     Function to be defined elsewhere based on what each exchange type needs.
 
@@ -156,6 +158,8 @@ def multicall_fn(exchange: str, mc: Any, multicall_contract: Any, pool_info: Dic
         Name of the exchange.
     mc : Any
         The multicaller.
+    mgr : Any
+        Manager object containing configuration and pool data.
     multicall_contract : Any
         The multicall contract.
     pool_info : Dict
@@ -166,6 +170,8 @@ def multicall_fn(exchange: str, mc: Any, multicall_contract: Any, pool_info: Dic
         mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
     elif exchange == "bancor_pol":
         mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
+        if mgr.cfg.ARB_CONTRACT_VERSION >= 10:
+            mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
     elif exchange == 'carbon_v1':
         mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
     elif exchange == 'balancer':
@@ -278,15 +284,28 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
         The extracted params.
 
     """
-    prices = result
-    p0, p1 = prices
-    token_price = Decimal(p1) / Decimal(p0)
     tkn0_address = pool_info["tkn0_address"]
-    tkn_contract = mgr.token_contracts.get(tkn0_address,
-                                           mgr.web3.eth.contract(abi=ERC20_ABI, address=tkn0_address))
-    if tkn0_address not in mgr.token_contracts:
-        mgr.token_contracts[tkn0_address] = tkn_contract
-    tkn_balance = tkn_contract.functions.balanceOf(mgr.cfg.BANCOR_POL_ADDRESS).call()
+    if type(result) != int:
+        prices = result
+        p0, p1 = prices
+        token_price = Decimal(p1) / Decimal(p0)
+
+        if mgr.cfg.ARB_CONTRACT_VERSION < 10:
+            tkn_contract = mgr.token_contracts.get(tkn0_address, mgr.web3.eth.contract(abi=ERC20_ABI, address=tkn0_address)) if tkn0_address not in mgr.cfg.ETH_ADDRESS else None
+            if tkn_contract is not None:
+                if tkn0_address not in mgr.token_contracts:
+                    mgr.token_contracts[tkn0_address] = tkn_contract
+                tkn_balance = tkn_contract.functions.balanceOf(mgr.cfg.BANCOR_POL_ADDRESS).call()
+            else:
+                tkn_balance = 0
+
+        else:
+            tkn_balance = pool_info["y_0"]
+        token_price= int(str(encode_token_price(token_price)))
+
+    else:
+        tkn_balance = result
+        token_price = pool_info["B_0"]
     result = {
         "fee": "0.000",
         "fee_float": 0.000,
@@ -297,7 +316,7 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
         "y_0": tkn_balance,
         "z_0": tkn_balance,
         "A_0": 0,
-        "B_0": int(str(encode_token_price(token_price))),
+        "B_0": token_price,
     }
     return result
 

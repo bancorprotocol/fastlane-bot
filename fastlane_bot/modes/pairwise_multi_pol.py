@@ -44,13 +44,27 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                 continue
             pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
             not_bancor_pol_curves = [
-                x for x in CC.curves if x.params.exchange != "bancor_pol"
+                x for x in CC.curves if x.params.exchange not in ["bancor_pol", "carbon_v1"]
             ]
+            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
             curve_combos = [[curve] + pol_curves for curve in not_bancor_pol_curves]
+
+
+            if len(carbon_curves) > 0:
+                base_direction_pair = carbon_curves[0].pair
+                base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
+                base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+
+
+                if len(base_direction_one) > 0:
+                    curve_combos += [[curve] + base_direction_one for curve in pol_curves]
+
+                if len(base_direction_two) > 0:
+                    curve_combos += [[curve] + base_direction_two for curve in pol_curves]
+
 
             for curve_combo in curve_combos:
                 src_token = tkn1
-
                 if len(curve_combo) < 2:
                     continue
 
@@ -62,29 +76,6 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                         trade_instructions_df,
                     ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
 
-                    non_carbon_cids = [
-                        curve.cid
-                        for curve in curve_combo
-                        if curve.params.get("exchange") != "carbon_v1"
-                    ]
-                    non_carbon_row = trade_instructions_df.loc[non_carbon_cids[0]]
-                    tkn0_into_carbon = non_carbon_row.iloc[0] < 0
-                    wrong_direction_cids = self.get_wrong_direction_cids(
-                        tkn0_into_carbon, trade_instructions_df
-                    )
-
-                    if non_carbon_cids and len(wrong_direction_cids) > 0:
-                        filtered_curves = self.process_wrong_direction_pools(
-                            curve_combo=curve_combo, wrong_direction_cids=wrong_direction_cids
-                        )
-                        if len(filtered_curves) < 2:
-                            continue
-                        (
-                            O,
-                            profit_src,
-                            r,
-                            trade_instructions_df,
-                        ) = self.run_main_flow(curves=filtered_curves, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
 
@@ -146,8 +137,8 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
             idx
             for idx, row in trade_instructions_df.iterrows()
             if (
-                (tkn0_into_carbon and row.iloc[0] < 0)
-                or (not tkn0_into_carbon and row.iloc[0] > 0)
+                (tkn0_into_carbon and row[0] < 0)
+                or (not tkn0_into_carbon and row[0] > 0)
             )
             and ("-0" in idx or "-1" in idx)
         ]

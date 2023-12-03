@@ -217,6 +217,9 @@ class ConfigNetwork(ConfigBase):
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 
+    PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
+    PLATFORM_ID_WRAP_UNWRAP = 10
+
     EXCHANGE_IDS = {
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,
@@ -228,6 +231,7 @@ class ConfigNetwork(ConfigBase):
         CARBON_V1_NAME: 6,
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
+        PLATFORM_ID_WRAP_UNWRAP : 10
     }
 
     # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
@@ -283,6 +287,10 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON = S.NETWORK_POLYGON
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
+
+    # FLAGS
+    #######################################################################################
+    GAS_TKN_IN_FLASHLOAN_TOKENS = None
 
     @classmethod
     def new(cls, network=None):
@@ -622,6 +630,9 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     SHIBA_V2_FACTORY_ADDRESS = "0x115934131916C8b277DD010Ee02de363c09d037c"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
+    CHAIN_SPECIFIC_EXCHANGES = [ex for ex in CHAIN_SPECIFIC_EXCHANGES if ex is not None]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

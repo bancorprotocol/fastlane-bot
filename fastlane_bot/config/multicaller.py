@@ -5,13 +5,11 @@ This is the multicaller module.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import os
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 
 import web3
-from eth_abi import decode
-from web3 import Web3
+from eth_abi import decode_abi
 
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
@@ -62,9 +60,7 @@ def collapse_if_tuple(abi: Dict[str, Any]) -> str:
     return collapsed
 
 
-def get_output_types_from_abi(
-    abi: List[Dict[str, Any]], function_name: str
-) -> List[str]:
+def get_output_types_from_abi(abi: List[Dict[str, Any]], function_name: str) -> List[str]:
     """
     Get the output types from an ABI.
 
@@ -82,11 +78,8 @@ def get_output_types_from_abi(
 
     """
     for item in abi:
-        if item["type"] == "function" and item["name"] == function_name:
-            return [
-                collapse_if_tuple(cast(Dict[str, Any], item))
-                for item in item["outputs"]
-            ]
+        if item['type'] == 'function' and item['name'] == function_name:
+            return [collapse_if_tuple(cast(Dict[str, Any], item)) for item in item['outputs']]
     raise ValueError(f"No function named {function_name} found in ABI.")
 
 
@@ -94,7 +87,6 @@ class ContractMethodWrapper:
     """
     Wraps a contract method to be used with multicall.
     """
-
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
@@ -112,22 +104,18 @@ class MultiCaller(ContextManager):
     """
     Context manager for multicalls.
     """
-
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
-    def __init__(
-        self,
-        contract: MultiProviderContractWrapper or web3.contract.Contract,
-        block_identifier: Any = "latest",
-        multicall_address="0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696",
-    ):
+
+    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
+                 block_identifier: Any = 'latest', multicall_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
         self._contract_calls: List[Callable] = []
         self.contract = contract
         self.block_identifier = block_identifier
         self.MULTICALL_CONTRACT_ADDRESS = multicall_address
 
-    def __enter__(self) -> "MultiCaller":
+    def __enter__(self) -> 'MultiCaller':
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -140,37 +128,51 @@ class MultiCaller(ContextManager):
     def multicall(self) -> List[Any]:
         calls_for_aggregate = []
         output_types_list = []
-
+        _calls_for_aggregate = {}
+        _output_types_list = {}
         for fn in self._contract_calls:
-            fn_name = str(fn).split("functools.partial(<Function ")[1].split(">")[0]
-            calls_for_aggregate.append(
-                {
-                    "target": self.contract.address,
-                    "callData": fn()._encode_transaction_data(),
-                }
-            )
+            fn_name = str(fn).split('functools.partial(<Function ')[1].split('>')[0]
             output_types = get_output_types_from_abi(self.contract.abi, fn_name)
-            output_types_list.append(output_types)
+            if fn_name in _calls_for_aggregate:
+                _calls_for_aggregate[fn_name].append({
+                'target': self.contract.address,
+                'callData': fn()._encode_transaction_data()
+            })
+                _output_types_list[fn_name].append(output_types)
+            else:
+                _calls_for_aggregate[fn_name] = [{
+                'target': self.contract.address,
+                'callData': fn()._encode_transaction_data()
+            }]
+                _output_types_list[fn_name] = [output_types]
 
-        WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
-        provider_url = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
-        w3 = Web3(Web3.HTTPProvider(provider_url))
+        for fn_list in _calls_for_aggregate.keys():
+            calls_for_aggregate += (_calls_for_aggregate[fn_list])
+            output_types_list += (_output_types_list[fn_list])
 
-        encoded_data = (
-            w3.eth.contract(abi=MULTICALL_ABI, address=self.MULTICALL_CONTRACT_ADDRESS)
-            .functions.aggregate(calls_for_aggregate)
-            .call(block_identifier=self.block_identifier)
-        )
+        w3 = self.contract.web3
+        _encoded_data = []
+        for fn_list in _calls_for_aggregate.keys():
+            _encoded_data.append(w3.eth.contract(
+                abi=MULTICALL_ABI,
+                address=self.MULTICALL_CONTRACT_ADDRESS
+            ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
+
+        if not isinstance(_encoded_data[0], list):
+            raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
+
+        encoded_data = w3.eth.contract(
+            abi=MULTICALL_ABI,
+            address=self.MULTICALL_CONTRACT_ADDRESS
+        ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
 
         if not isinstance(encoded_data, list):
-            raise TypeError(
-                f"Expected encoded_data to be a list, got {type(encoded_data)} instead."
-            )
+            raise TypeError(f"Expected encoded_data to be a list, got {type(encoded_data)} instead.")
 
         encoded_data = encoded_data[1]
         decoded_data_list = []
         for output_types, encoded_output in zip(output_types_list, encoded_data):
-            decoded_data = decode(output_types, encoded_output)
+            decoded_data = decode_abi(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]

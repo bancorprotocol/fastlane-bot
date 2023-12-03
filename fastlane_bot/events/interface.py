@@ -14,7 +14,6 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 @dataclass
 class Token:
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -32,7 +31,6 @@ class Token:
 
 @dataclass
 class Pool(PoolAndTokens):
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -121,11 +119,8 @@ class QueryInterface:
         """
 
         for key in keys:
-            try:
-                if key in pool and int(pool[key]) > 0:
-                    return True
-            except ValueError:
-                return False
+            if key in pool and pool[key] > 0:
+                return True
         return False
 
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
@@ -152,11 +147,10 @@ class QueryInterface:
                 except KeyError:
                     # Out of bounds
                     break
-        return list(set(tokens))
+        tokens = list(set(tokens))
+        return tokens
 
-    def filter_pools(
-        self, exchange_name: str, keys: List[str] = ""
-    ) -> List[Dict[str, Any]]:
+    def filter_pools(self, exchange_name: str, keys: List[str] = "") -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
 
@@ -177,7 +171,9 @@ class QueryInterface:
                 pool
                 for pool in self.state
                 if pool["exchange_name"] == exchange_name
-                and self.has_balance(pool, keys)
+                   and self.has_balance(pool, keys)
+                   and pool['tkn0_decimals'] is not None
+                   and pool['tkn1_decimals'] is not None
             ]
         else:
             return [
@@ -214,7 +210,7 @@ class QueryInterface:
             "carbon_v1",
             "pancakeswap_v2",
             "pancakeswap_v3",
-            "balancer",
+            "balancer"
         ]
         keys = [
             ["liquidity"],
@@ -264,10 +260,10 @@ class QueryInterface:
             pool
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v2"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
-                and pool["address"] in self.uniswap_v2_event_mappings
-            )
+               or (
+                       pool["exchange_name"] in self.cfg.UNI_V2_FORKS
+                       and pool["address"] in self.uniswap_v2_event_mappings
+               )
         ]
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
@@ -283,10 +279,10 @@ class QueryInterface:
             pool
             for pool in self.state
             if pool["exchange_name"] != "uniswap_v3"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V3_FORKS
-                and pool["address"] in self.uniswap_v3_event_mappings
-            )
+               or (
+                       pool["exchange_name"] in self.cfg.UNI_V3_FORKS
+                       and pool["address"] in self.uniswap_v3_event_mappings
+               )
         ]
         self.cfg.logger.info(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
@@ -356,65 +352,16 @@ class QueryInterface:
             else token_key
         )
 
-    def remove_pools_with_invalid_tokens(self) -> None:
-        """
-        Remove pools with invalid tokens
-        """
-        self.cfg.logger.info(
-            f"Total number of pools. {len(self.state)} before removing pools with invalid tokens"
-        )
-
-        safe_pools = []
-        for idx, pool in enumerate(self.state):
-            try:
-                if str(pool["tkn0_decimals"]) in ["None", "nan"] or str(
-                    pool["tkn1_decimals"]
-                ) in ["None", "nan"]:
-                    self.cfg.logger.info(
-                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                    )
-                    continue
-                if str(pool["tkn0_key"]) in ["None", "nan"] or str(
-                    pool["tkn1_key"]
-                ) in [
-                    "None",
-                    "nan",
-                ]:
-                    self.cfg.logger.info(
-                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                    )
-                    continue
-                if str(pool["tkn0_address"]) in ["None", "nan"] or str(
-                    pool["tkn1_address"]
-                ) in ["None", "nan"]:
-                    self.cfg.logger.info(
-                        f"Removing pool for exchange={pool['exchange_name']}, pair_name={pool['pair_name']} from state for invalid token"
-                    )
-                    continue
-            except Exception as e:
-                self.cfg.logger.info(f"Exception: {e}")
-                self.cfg.logger.info(f"Removing pool {pool}")
-                continue
-            safe_pools.append(pool)
-
-        self.state = safe_pools
-
     def handle_token_key_cleanup(self) -> None:
         """
         Cleanup token keys in state
         """
         for idx, pool in enumerate(self.state):
-            try:
-                key0 = self.cleanup_token_key(pool["tkn0_key"])
-                key1 = self.cleanup_token_key(pool["tkn1_key"])
-                self.state[idx]["tkn0_key"] = key0
-                self.state[idx]["tkn1_key"] = key1
-                self.state[idx]["pair_name"] = key0 + "/" + key1
-            except Exception as e:
-                self.cfg.logger.info(f"Exception: {e}")
-                self.cfg.logger.info(f"Removing pool {pool}")
-                self.state.pop(idx)
-                continue
+            key0 = self.cleanup_token_key(pool["tkn0_key"])
+            key1 = self.cleanup_token_key(pool["tkn1_key"])
+            self.state[idx]["tkn0_key"] = key0
+            self.state[idx]["tkn1_key"] = key1
+            self.state[idx]["pair_name"] = key0 + "/" + key1
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
@@ -537,7 +484,7 @@ class QueryInterface:
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
-                    "tkn7_weight",
+                    "tkn7_weight"
                 ]
             },
         )
@@ -546,17 +493,6 @@ class QueryInterface:
         result.tkn0_key = result.pair_name.split("/")[0]
         result.tkn1_key = result.pair_name.split("/")[1]
         return result
-
-    def ensure_descr_in_pool_data(self) -> None:
-        """
-        Ensure that the pool data has a description
-        """
-        for idx, pool in enumerate(self.state):
-            if "descr" not in pool:
-                pool[
-                    "descr"
-                ] = f"{pool['exchange_name']} {pool['pair_name']} {pool['fee']}"
-                self.state[idx] = pool
 
     def get_tokens(self) -> List[Token]:
         """
@@ -568,22 +504,12 @@ class QueryInterface:
             The list of tokens
         """
         token_set = set()
-        for pidx, record in enumerate(self.state):
-            for idx in range(len(str(record["descr"]).split("/"))):
-                v = self.create_token(record, f"tkn{str(idx)}_")
-                if (
-                    str(v.key) in ["None", "nan"]
-                    or str(v.decimals) in ["None", "nan"]
-                    or str(v.symbol) in ["None", "nan"]
-                ):
-                    if "-" in v.key:
-                        v.symbol = v.key.split("-")[0]
-                        self.state[pidx][f"tkn{str(idx)}_symbol"] = v.symbol
-                    else:
-                        self.cfg.logger.info(f"Removing pool with invalid token {v}")
-                        self.state.pop(pidx)
-                        continue
-                token_set.add(v)
+        for record in self.state:
+            for idx in range(len(record["descr"].split("/"))):
+                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
+            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.NATIVE_GAS_TOKEN_KEY, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY.split("-")[0], key=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
@@ -680,22 +606,15 @@ class QueryInterface:
             pool.exchange_name
         except AttributeError:
             if "cid" in kwargs:
-                try:
-                    try:
-                        kwargs["cid"] = int(kwargs["cid"])
-                    except ValueError:
-                        print(f"Invalid cid: {kwargs}")
-
-                    pool = next(
-                        (
-                            pool
-                            for pool in pool_data_with_tokens
-                            if all(getattr(pool, key) == kwargs[key] for key in kwargs)
-                        ),
-                        None,
-                    )
-                except ValueError:
-                    print(f"Invalid cid: {kwargs}")
+                kwargs["cid"] = int(kwargs["cid"])
+                pool = next(
+                    (
+                        pool
+                        for pool in pool_data_with_tokens
+                        if all(getattr(pool, key) == kwargs[key] for key in kwargs)
+                    ),
+                    None,
+                )
         return pool
 
     def get_pools(self) -> List[PoolAndTokens]:
@@ -708,9 +627,7 @@ class QueryInterface:
             The list of pools
 
         """
-        pool_data_with_tokens = self.get_pool_data_with_tokens()
-        print(f"pool_data_with_tokens: {len(pool_data_with_tokens)}")
-        return pool_data_with_tokens
+        return self.get_pool_data_with_tokens()
 
     def update_recently_traded_pools(self, cids: List[str]):
         """

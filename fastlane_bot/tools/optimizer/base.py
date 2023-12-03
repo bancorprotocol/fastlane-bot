@@ -223,7 +223,7 @@ class OptimizerBase(ABC):
     findmin = findminmax_nr
     findmax = findminmax_nr
 
-    GOALSEEKEPS = 1e-12 # double has 15 digits
+    GOALSEEKEPS = 1e-15 # double has 15 digits
 
     @classmethod
     def goalseek(cls, func, a, b, *, eps=None):
@@ -255,7 +255,7 @@ class OptimizerBase(ABC):
             else:
                 a = c
             counter += 1
-            if counter > 100:
+            if counter > 200:
                 raise ValueError(f"goalseek did not converge; possible epsilon too small [{eps}]")
         return cls.SimpleResult(result=(a + b) / 2, method="bisection")
 

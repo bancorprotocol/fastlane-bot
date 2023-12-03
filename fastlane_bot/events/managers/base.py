@@ -649,7 +649,7 @@ class BaseManager:
 
         record = next((add for add in self.tokens if add["address"] == addr), None)
         if record:
-            return record["symbol"], int(record["decimals"])
+            return record["symbol"], int(float(record["decimals"]))
 
         return self.get_token_info_from_contract(web3, erc20_contracts, addr)
 
