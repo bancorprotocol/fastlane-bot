@@ -99,8 +99,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
         current_block : int, optional
             The current block, by default None.
         """
-
-        pool_info["last_updated_block"] = current_block
+        if "last_updated_block" in pool_info:
+            if type(pool_info["last_updated_block"]) == int and pool_info["last_updated_block"] == current_block:
+                return pool_info
+        else:
+            pool_info["last_updated_block"] = current_block
 
         if pool_info["exchange_name"] == self.cfg.BANCOR_V3_NAME:
             contract = self.pool_contracts[pool_info["exchange_name"]].get(
