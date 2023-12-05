@@ -498,7 +498,7 @@ class QueryInterface:
         token_set = set()
         for record in self.state:
             if type(record["descr"]) == float:
-                print(record)
+                print(f"[interface.py] empty record found: {record}")
             for idx in range(len(record["descr"].split("/"))):
                 try:
                     token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
