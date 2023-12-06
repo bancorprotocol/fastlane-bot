@@ -306,7 +306,7 @@ class TxHelpers:
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = int(
-            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in "ethereum" else 0
+            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         # Get current block number
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -571,7 +571,7 @@ class TxHelpers:
             )
             return None
         try:
-            if access_list:
+            if access_list and self.ConfigObj.NETWORK_NAME in "ethereum":
                 access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
 
                 if access_list is not None:
@@ -624,7 +624,7 @@ class TxHelpers:
         base_gas_price = int(base_gas_price)
         max_gas_price = base_gas_price + max_priority_fee
 
-        if self.ConfigObj.NETWORK in "ethereum":
+        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             return {
                 "type": "0x2",
                 "maxFeePerGas": max_gas_price,
