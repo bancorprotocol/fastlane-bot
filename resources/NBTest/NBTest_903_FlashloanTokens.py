@@ -75,9 +75,10 @@ def run_command(mode):
         f"--arb_mode={mode}",
         "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=True",
-        "--use_cached_events=True",
+        # "--use_cached_events=True",
+        "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=70",
+        "--timeout=80",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
