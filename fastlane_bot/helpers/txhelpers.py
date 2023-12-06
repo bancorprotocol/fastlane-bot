@@ -348,10 +348,12 @@ class TxHelpers:
         adjusted_reward_usd = adjusted_reward * expected_profit_usd/expected_profit_eth
 
         transaction_log = {"block_number": block_number, "gas": gas_estimate,
-                           "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]),
-                           "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price,
+                           "max_gas_fee_wei": current_gas_price,
                            "gas_cost_eth": num_format_float(gas_cost_eth),
                            "gas_cost_usd": + num_format_float(gas_cost_usd)}
+        if "maxPriorityFeePerGas" in arb_tx:
+            transaction_log["base_fee_wei"] = (current_gas_price - arb_tx["maxPriorityFeePerGas"])
+            transaction_log["priority_fee_wei"] = arb_tx["maxPriorityFeePerGas"]
 
         log_json = {**log_object, **transaction_log}
 
