@@ -255,7 +255,7 @@ def get_static_data(
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(
-            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+            columns=["address", "symbol", "decimals"]
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
