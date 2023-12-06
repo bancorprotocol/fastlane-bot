@@ -333,7 +333,11 @@ class TxHelpers:
             self.ConfigObj.logger.info("Failed to construct trade, discarding.")
             return None
         gas_estimate = arb_tx["gas"]
-        current_gas_price = arb_tx["maxFeePerGas"]
+
+        if "maxFeePerGas" in arb_tx:
+            current_gas_price = arb_tx["maxFeePerGas"]
+        else:
+            current_gas_price = arb_tx["gasPrice"]
 
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = Decimal(str(current_gas_price)) * Decimal(str(gas_estimate)) * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER) / Decimal('10') ** Decimal('18')
