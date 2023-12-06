@@ -100,7 +100,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The current block, by default None.
         """
         if "last_updated_block" in pool_info:
-            if type(pool_info["last_updated_block"]) == int and pool_info["last_updated_block"] == current_block:
+            if (
+                type(pool_info["last_updated_block"]) == int
+                and pool_info["last_updated_block"] == current_block
+            ):
                 return pool_info
         else:
             pool_info["last_updated_block"] = current_block
@@ -135,6 +138,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         for key, value in params.items():
             pool_info[key] = value
+
+        if "descr" not in pool_info or not pool_info["descr"]:
+            pool_info["descr"] = self.pool_descr_from_info(pool_info)
 
         # update the pool_data where the cids match
         for idx, pool in enumerate(self.pool_data):
