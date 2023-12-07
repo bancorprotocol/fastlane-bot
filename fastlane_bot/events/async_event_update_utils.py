@@ -184,15 +184,38 @@ def get_pool_info(
 
     return pool_info
 
+def sanitize_token_symbol(token_symbol: str, token_address: str) -> str:
+    """
+    This function ensures token symbols are compatible with the bot's data structures.
+    If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
+
+    :param token_symbol: the token's symbol
+    :param token_address: the token's address
+
+    returns: str
+    """
+    sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
+    try:
+        token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
+        token_pd.to_csv(sanitization_path)
+        return token_symbol
+    except Exception:
+        return token_address
+
 
 def add_token_info(
     pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
 ) -> Dict[str, Any]:
-    tkn0["symbol"] = tkn0["symbol"].replace("/", "_").replace("-", "_")
-    tkn1["symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    pool_info["tkn0_symbol"] = tkn0["symbol"].replace("/", "_").replace("-", "_")
+    tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
+    tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
+    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"])
+    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"])
+    tkn0["symbol"] = tkn0_symbol
+    tkn1["symbol"] = tkn1_symbol
+
+    pool_info["tkn0_symbol"] = tkn0_symbol
     pool_info["tkn0_decimals"] = tkn0["decimals"]
-    pool_info["tkn1_symbol"] = tkn1["symbol"].replace("/", "_").replace("-", "_")
+    pool_info["tkn1_symbol"] = tkn1_symbol
     pool_info["tkn1_decimals"] = tkn1["decimals"]
     pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
 
@@ -242,7 +265,6 @@ def get_new_pool_data(
         tkn0["address"] = pool["tkn0_address"]
         tkn1["address"] = pool["tkn1_address"]
         pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
-
         new_pool_data.append(pool_info)
     return new_pool_data
 
