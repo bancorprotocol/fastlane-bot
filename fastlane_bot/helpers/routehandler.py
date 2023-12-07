@@ -1332,8 +1332,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         tkn1_address = curve.pair_name.split("/")[1]
 
         if self.ConfigObj.NETWORK in "ethereum":
-            tkn0_address = "WETH-6Cc2" if tkn0_address == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn0_address
-            tkn1_address = "WETH-6Cc2" if tkn1_address == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn1_address
+            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn0_address
+            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn1_address
 
         #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
