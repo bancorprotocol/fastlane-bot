@@ -292,7 +292,6 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         # print(
         #     f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
         # )
-        print(f"self.ConfigObj.network: {self.ConfigObj.network}")
 
         self.arb_contract = self.w3.eth.contract(
             address=self.w3.to_checksum_address(
@@ -306,6 +305,19 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         address = self.ConfigObj.w3.to_checksum_address(
             self.ConfigObj.BINANCE14_WALLET_ADDRESS
         )
+        if not self.ConfigObj.USE_FLASHLOANS:
+            return self.arb_contract.functions.fundAndArb(
+                route_struct, src_address, src_amount
+            ).transact(
+                {
+                    "gas": self.ConfigObj.DEFAULT_GAS,
+                    "from": address,
+                    "nonce": self._get_nonce(address),
+                    "gasPrice": 0,
+                    "value": src_amount if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
+                }
+            )
+
         return (
             self.arb_contract.functions.flashloanAndArb(
                 route_struct, src_address, src_amount

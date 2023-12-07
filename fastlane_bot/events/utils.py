@@ -29,6 +29,10 @@ from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
+from fastlane_bot.events.multicall_utils import encode_token_price
+from fastlane_bot.events.pools import CarbonV1Pool
+from fastlane_bot.helpers import TxHelpers
+
 
 def filter_latest_events(
     mgr: Manager, events: List[List[AttributeDict]]
@@ -551,6 +555,7 @@ def get_config(
     blockchain: str,
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
+    use_flashloans: bool = True
 ) -> Config:
     """
     Gets the config object.
@@ -571,7 +576,8 @@ def get_config(
         Comma seperated list of tokens that the bot can use for flash loans.
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
-
+    use_flashloans : bool
+        The bot will default to using flashloans if True, otherwise it will attempt to use funds from the wallet.
     Returns
     -------
     Config
@@ -586,6 +592,8 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            use_flashloans=use_flashloans,
+
         )
         cfg.logger.info("[events.utils.get_config] Using Tenderly config")
     else:
@@ -594,6 +602,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            use_flashloans=use_flashloans
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
@@ -1944,3 +1953,89 @@ def handle_tokens_csv(mgr, prefix_path):
         mgr.cfg.logger.info(
             f"[events.utils.handle_tokens_csv] Updated token data with {len(extra_info)} new tokens"
         )
+
+
+def self_funding_warning_sequence(cfg):
+    """
+    This function initiates a warning sequence if the user has specified to use their own funds.
+
+    :param cfg: the config object
+
+    """
+    cfg.logger.info(f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n")
+    cfg.logger.info(f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************")
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 15 seconds")
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 10 seconds")
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 5 seconds")
+    time.sleep(5)
+    cfg.logger.info(f"*********************************************************************************\n\nSelf-funding mode activated.")
+    cfg.logger.info(f"""\n\n
+          _____
+         |A .  | _____
+         | /.\ ||A ^  | _____
+         |(_._)|| / \ ||A _  | _____
+         |  |  || \ / || ( ) ||A_ _ |
+         |____V||  .  ||(_'_)||( v )|
+                |____V||  |  || \ / |
+                       |____V||  .  |
+                              |____V|
+    \n\n""")
+
+
+def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
+    """
+    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
+    :param tokens: the list of tokens to check/approve
+    :param cfg: the config object
+    :param tx_helpers: the TxHelpers instantiated class
+
+    returns: List of tokens that have not been approved
+
+    """
+    unapproved_tokens = []
+    for tkn in tokens:
+        approved = tx_helpers.check_if_token_approved(token_address=tkn)
+        if not approved:
+            unapproved_tokens.append(tkn)
+    return unapproved_tokens
+
+def check_and_approve_tokens(tokens: List, cfg) -> bool:
+    """
+    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
+
+    :param tokens: the list of tokens to check/approve
+    :param cfg: the config object
+
+    """
+    _tokens = []
+    for tkn in tokens:
+        try:
+            _tokens.append(cfg.CHAIN_FLASHLOAN_TOKENS[tkn])
+        except KeyError:
+            cfg.logger.info(f"could not find token address for tkn: {tkn}")
+    tokens = _tokens
+
+    #self_funding_warning_sequence(cfg=cfg)
+    tx_helpers = TxHelpers(ConfigObj=cfg)
+    unapproved_tokens = find_unapproved_tokens(tokens=tokens, cfg=cfg, tx_helpers=tx_helpers)
+
+    if len(unapproved_tokens) == 0:
+        return True
+
+    for _tkn in unapproved_tokens:
+        tx = tx_helpers.approve_token_for_arb_contract(token_address=_tkn)
+        if tx is not None:
+            continue
+        else:
+            assert False, f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
+
+    unapproved_tokens = find_unapproved_tokens(tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers)
+    if len(unapproved_tokens) == 0:
+        return True
+    else:
+        return False

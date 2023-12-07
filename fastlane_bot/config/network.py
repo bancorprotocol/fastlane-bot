@@ -178,6 +178,7 @@ class ConfigNetwork(ConfigBase):
     # USDC_KEY = "USDC-eB48"
     # LINK_KEY = "LINK-86CA"
     # USDT_KEY = "USDT-1ec7"
+    USE_FLASHLOANS = True
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -322,7 +323,9 @@ class ConfigNetwork(ConfigBase):
 
     def __post_init__(self):
         assert self.NETWORK is not None
-        self.network_df = get_multichain_addresses(network=self.NETWORK)
+
+        network = self.NETWORK if "tenderly" not in self.NETWORK else "ethereum"
+        self.network_df = get_multichain_addresses(network=network)
 
         self.UNI_V2_ROUTER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.UNISWAP_V2
