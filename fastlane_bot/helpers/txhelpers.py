@@ -306,7 +306,7 @@ class TxHelpers:
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = int(
-            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in "ethereum" else 0
+            self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         # Get current block number
         block_number = self.web3.eth.get_block("latest")["number"]
@@ -333,7 +333,11 @@ class TxHelpers:
             self.ConfigObj.logger.info("Failed to construct trade, discarding.")
             return None
         gas_estimate = arb_tx["gas"]
-        current_gas_price = arb_tx["maxFeePerGas"]
+
+        if "maxFeePerGas" in arb_tx:
+            current_gas_price = arb_tx["maxFeePerGas"]
+        else:
+            current_gas_price = arb_tx["gasPrice"]
 
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = Decimal(str(current_gas_price)) * Decimal(str(gas_estimate)) * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER) / Decimal('10') ** Decimal('18')
@@ -344,10 +348,12 @@ class TxHelpers:
         adjusted_reward_usd = adjusted_reward * expected_profit_usd/expected_profit_eth
 
         transaction_log = {"block_number": block_number, "gas": gas_estimate,
-                           "base_fee_wei": (current_gas_price - arb_tx["maxPriorityFeePerGas"]),
-                           "priority_fee_wei": arb_tx["maxPriorityFeePerGas"], "max_gas_fee_wei": current_gas_price,
+                           "max_gas_fee_wei": current_gas_price,
                            "gas_cost_eth": num_format_float(gas_cost_eth),
                            "gas_cost_usd": + num_format_float(gas_cost_usd)}
+        if "maxPriorityFeePerGas" in arb_tx:
+            transaction_log["base_fee_wei"] = (current_gas_price - arb_tx["maxPriorityFeePerGas"])
+            transaction_log["priority_fee_wei"] = arb_tx["maxPriorityFeePerGas"]
 
         log_json = {**log_object, **transaction_log}
 
@@ -565,7 +571,7 @@ class TxHelpers:
             )
             return None
         try:
-            if access_list:
+            if access_list and self.ConfigObj.NETWORK_NAME in "ethereum":
                 access_list = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
 
                 if access_list is not None:
@@ -618,7 +624,7 @@ class TxHelpers:
         base_gas_price = int(base_gas_price)
         max_gas_price = base_gas_price + max_priority_fee
 
-        if self.ConfigObj.NETWORK in "ethereum":
+        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             return {
                 "type": "0x2",
                 "maxFeePerGas": max_gas_price,

@@ -124,7 +124,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
 
         else:
             self.CARBON_CONTROLLER_CONTRACT = None
-            self.BANCOR_ARBITRAGE_CONTRACT = None
             self.ARB_CONTRACT_VERSION = 10
 
         if self.BANCOR_ARBITRAGE_CONTRACT is not None:
