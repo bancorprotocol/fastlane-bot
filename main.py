@@ -53,7 +53,7 @@ from fastlane_bot.events.utils import (
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
     read_csv_file,
-    handle_tokens_csv,
+    handle_tokens_csv, get_tkn_symbols,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
@@ -345,6 +345,8 @@ def main(
 
     cfg.logger.info(f"tokens: {len(tokens)}, {tokens['address'].tolist()[0]}")
 
+    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
+
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
@@ -375,7 +377,7 @@ def main(
         blockchain: {blockchain}
         default_min_profit_gas_token: {default_min_profit_gas_token}
         exchanges: {exchanges}
-        flashloan_tokens: {flashloan_tokens}
+        flashloan_tokens: {flt_symbols}
         target_tokens: {target_tokens}
         use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
         loglevel: {loglevel}

@@ -202,6 +202,38 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
 
+def get_tkn_symbol(tkn_address, tokens: pd.DataFrame) -> str:
+    """
+    Gets the token symbol for logging purposes
+    :param tkn_address: the token address
+    :param tokens: the Dataframe containing token information
+
+    returns: str
+    """
+    try:
+        return tokens.loc[tokens["address"] == tkn_address]["symbol"].values[0]
+    except Exception:
+        return tkn_address
+
+def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
+    """
+    Gets the token symbol for logging purposes
+    :param flashloan_tokens: the flashloan token addresses
+    :param tokens: the Dataframe containing token information
+
+    returns: list
+    """
+    flashloan_tokens = flashloan_tokens.split(",")
+    flashloan_tkn_symbols = []
+    for tkn in flashloan_tokens:
+        flashloan_tkn_symbols.append(get_tkn_symbol(tkn_address=tkn, tokens=tokens))
+    return flashloan_tkn_symbols
+
+
+
+
+
+
 def get_static_data(
     cfg: Config,
     exchanges: List[str],
@@ -454,6 +486,7 @@ def handle_flashloan_tokens(
     List[str]
         A list of flashloan tokens to fetch data for.
     """
+    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
     flashloan_tokens = flashloan_tokens.split(",")
     unique_tokens = len(tokens["address"].unique())
     cfg.logger.info(f"unique_tokens: {unique_tokens}")
@@ -462,7 +495,7 @@ def handle_flashloan_tokens(
     ]
 
     # Log the flashloan tokens
-    cfg.logger.info(f"Flashloan tokens are set as: {flashloan_tokens}")
+    cfg.logger.info(f"Flashloan tokens are set as: {flt_symbols}")
     return flashloan_tokens
 
 
