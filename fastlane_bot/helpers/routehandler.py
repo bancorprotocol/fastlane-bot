@@ -1331,7 +1331,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             tkn1_key = curve.pair_name.split("/")[1]
             tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
             tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
-            if self.ConfigObj.NETWORK in "ethereum":
+            if self.ConfigObj.NETWORK in ["ethereum", "tenderly"]:
                 tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
                 tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
 

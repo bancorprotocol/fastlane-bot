@@ -174,6 +174,7 @@ class ConfigNetwork(ConfigBase):
     LINK_KEY = "LINK-86CA"
     USDT_KEY = "USDT-1ec7"
 
+    USE_FLASHLOANS = True
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -308,7 +309,9 @@ class ConfigNetwork(ConfigBase):
 
     def __post_init__(self):
         assert self.NETWORK is not None
-        self.network_df = get_multichain_addresses(network=self.NETWORK)
+
+        network = self.NETWORK if "tenderly" not in self.NETWORK else "ethereum"
+        self.network_df = get_multichain_addresses(network=network)
 
         self.UNI_V2_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.UNISWAP_V2)
         self.UNI_V2_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.UNISWAP_V2)
@@ -509,7 +512,6 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     NETWORK_ID = S.NETWORK_TENDERLY
     NETWORK_NAME = "tenderly"
     TENDERLY_FORK = TENDERLY_FORK
-
     NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
     STABLECOIN_KEY = "USDC-eB48"
@@ -555,6 +557,9 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     SHIBA_V2_FACTORY_ADDRESS = "0x115934131916C8b277DD010Ee02de363c09d037c"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+
+    CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
+    CHAIN_SPECIFIC_EXCHANGES = [ex for ex in CHAIN_SPECIFIC_EXCHANGES if ex is not None]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

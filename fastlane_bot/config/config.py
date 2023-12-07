@@ -50,12 +50,13 @@ class Config():
     SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2', 'bancor_pol', 'pancakeswap_v2', 'pancakeswap_v3']
 
     @classmethod
-    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, **kwargs):
+    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, use_flashloans=True, **kwargs):
         """
         Alternative constructor: create and return new Config object
         
         :config:    CONFIG_MAINNET(default), CONFIG_TENDERLY, CONFIG_UNITTEST
         :loglevel:  LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
+        :use_flashloans:
         """
         if config is None:
             config = cls.CONFIG_MAINNET
@@ -67,14 +68,17 @@ class Config():
 
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=blockchain)
+            C_nw.USE_FLASHLOANS = use_flashloans
             return cls(network=C_nw, logger=C_log, **kwargs)
         elif config == cls.CONFIG_TENDERLY:
             C_db = db_.ConfigDB.new(db=S.DATABASE_POSTGRES, POSTGRES_DB="tenderly")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
+            C_nw.USE_FLASHLOANS = use_flashloans
             return cls(db=C_db, logger=C_log, network=C_nw, **kwargs)
         elif config == cls.CONFIG_UNITTEST:
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST, POSTGRES_DB="unittest")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
+            C_nw.USE_FLASHLOANS = use_flashloans
             C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
             return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")

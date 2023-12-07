@@ -45,7 +45,7 @@ from fastlane_bot.events.utils import (
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
     read_csv_file,
-    handle_tokens_csv,
+    handle_tokens_csv, check_and_approve_tokens,
 )
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -234,6 +234,14 @@ load_dotenv()
     type=str,
     help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
 )
+
+@click.option(
+    "--use_flashloans",
+    default=True,
+    type=bool,
+    help="If False, the bot will attempt to submit arbitrage transactions using funds in your wallet when possible.",
+)
+
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -263,6 +271,7 @@ def main(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
+    use_flashloans: bool
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -297,6 +306,7 @@ def main(
         blockchain (str): the name of the blockchain for which to run
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
+        use_flashloans (bool): If True, the bot will use Flashloans to fund arbitrage trades. If False, the bot will use funds in the wallet to perform arbitrage trades.
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -330,6 +340,9 @@ def main(
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
+
+    if not use_flashloans:
+        check_and_approve_tokens(tokens=flashloan_tokens, cfg=cfg)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -381,6 +394,7 @@ def main(
         increment_time: {increment_time}
         increment_blocks: {increment_blocks}
         pool_data_update_frequency: {pool_data_update_frequency}
+        use_flashloans: {use_flashloans}
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
