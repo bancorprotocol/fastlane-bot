@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.77...HEAD)
 
+- Update Fast Lane contract address on Base [\#244](https://github.com/bancorprotocol/fastlane-bot/issues/244)
 - default\_min\_profit\_gas\_token too low by default [\#239](https://github.com/bancorprotocol/fastlane-bot/issues/239)
+- Update network.py [\#245](https://github.com/bancorprotocol/fastlane-bot/pull/245) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.77](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.77) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...v2.7.77)
+
 - Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
 - Arb Bot Upgrade for next POL iteration [\#194](https://github.com/bancorprotocol/fastlane-bot/issues/194)
 - Add triangle arb mode for Bancor POL pools [\#157](https://github.com/bancorprotocol/fastlane-bot/issues/157)
