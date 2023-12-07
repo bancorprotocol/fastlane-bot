@@ -108,7 +108,7 @@ class TradeInstruction:
         self._is_carbon = self._check_if_carbon()
         
         if self.tknin_dec_override is None:
-            TokenIn = self.db.get_token(key =self.tknin)
+            TokenIn = self.db.get_token(tkn_address=self.tknin)
             self._tknin_address = TokenIn.address
             self._tknin_decimals = int(TokenIn.decimals)
         else:
@@ -126,7 +126,7 @@ class TradeInstruction:
         )
         
         if self.tknout_dec_override is None:
-            TokenOut = self.db.get_token(key =self.tknout)
+            TokenOut = self.db.get_token(tkn_address=self.tknout)
             self._tknout_address = TokenOut.address
             self._tknout_decimals = int(TokenOut.decimals)
         else:
@@ -266,7 +266,7 @@ class TradeInstruction:
             The token object.
         """
 
-        return self.db.get_token(key=token_address)
+        return self.db.get_token(tkn_address=token_address)
 
     def _get_pool(self) -> Pool:
         """

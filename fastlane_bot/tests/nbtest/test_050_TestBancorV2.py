@@ -292,7 +292,7 @@ def test_test_expected_output_bancorv2():
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
     flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
-        bot.db.get_token(key=fl_token).address
+        bot.db.get_token(tkn_address=fl_token).address
     )
     
     # Encode the trade instructions

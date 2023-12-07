@@ -1472,8 +1472,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         if curve.exchange_name != "balancer":
             tkn0_address = curve.pair_name.split("/")[0]
             tkn1_address = curve.pair_name.split("/")[1]
-            tkn0_decimals = int(trade.db.get_token(key=tkn0_address).decimals)
-            tkn1_decimals = int(trade.db.get_token(key=tkn1_address).decimals)
+            tkn0_decimals = int(trade.db.get_token(tkn_address=tkn0_address).decimals)
+            tkn1_decimals = int(trade.db.get_token(tkn_address=tkn1_address).decimals)
 
             tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
             tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
@@ -1487,8 +1487,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             assert trade.tknin_address in tokens, f"[_solve_trade_output] trade.tknin_address {trade.tknin_address} not in Balancer curve tokens: {tokens}"
             assert trade.tknout_address in tokens, f"[_solve_trade_output] trade.tknout_address {trade.tknout_address} not in Balancer curve tokens: {tokens}"
 
-        tkn_in_decimals = int(trade.db.get_token(key=trade.tknin_address).decimals)
-        tkn_out_decimals = int(trade.db.get_token(key=trade.tknout_address).decimals)
+        tkn_in_decimals = int(trade.db.get_token(tkn_address=trade.tknin_address).decimals)
+        tkn_out_decimals = int(trade.db.get_token(tkn_address=trade.tknout_address).decimals)
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 

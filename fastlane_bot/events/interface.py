@@ -53,6 +53,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+    token_list: Dict[str, Any] = None
 
     @property
     def cfg(self) -> Config:
@@ -329,40 +330,6 @@ class QueryInterface:
 
         self.state = safe_pools
 
-    @staticmethod
-    def cleanup_token_key(token_key: str) -> str:
-        """
-        Cleanup token key. This renames keys that have more than 1 '-' in them.
-
-        Parameters
-        ----------
-        token_key: str
-            The token key to cleanup
-
-        Returns
-        -------
-        str
-            The cleaned up token key
-
-        """
-        split_key = token_key.split("-", 2)
-        return (
-            f"{split_key[0]}_{split_key[1]}-{split_key[2]}"
-            if len(split_key) > 2
-            else token_key
-        )
-
-    def handle_token_key_cleanup(self) -> None:
-        """
-        Cleanup token keys in state
-        """
-        for idx, pool in enumerate(self.state):
-            addr0 = self.cleanup_token_key(pool["tkn0_address"])
-            addr1 = self.cleanup_token_key(pool["tkn1_address"])
-            self.state[idx]["tkn0_address"] = addr0
-            self.state[idx]["tkn1_address"] = addr1
-            self.state[idx]["pair_name"] = addr0 + "/" + addr1
-
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
         Update the state.
@@ -497,8 +464,6 @@ class QueryInterface:
         """
         token_set = set()
         for record in self.state:
-            if type(record["descr"]) == float:
-                print(f"[interface.py] empty record found: {record}")
             for idx in range(len(record["descr"].split("/"))):
                 try:
                     token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
@@ -508,6 +473,24 @@ class QueryInterface:
             token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
             token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
+
+    def populate_tokens(self):
+        """
+        Populate the token Dict with tokens using the available pool data.
+        """
+        self.token_list = {}
+        for record in self.state:
+            for idx in range(len(record["descr"].split("/"))):
+                try:
+                    token = self.create_token(record, f"tkn{str(idx)}_")
+                    self.token_list[token.address] = token
+                except AttributeError:
+                    pass
+        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
+            native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
+            wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
+            self.token_list[native_gas_tkn.address] = native_gas_tkn
+            self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
         """
@@ -551,14 +534,14 @@ class QueryInterface:
         """
         raise DeprecationWarning("Method not implemented")
 
-    def get_token(self, key: str) -> Optional[Token]:
+    def get_token(self, tkn_address: str) -> Optional[Token]:
         """
         Get a token from the state
 
         Parameters
         ----------
-        key: str
-            The token key
+        tkn_address: str
+            The token address
 
         Returns
         -------
@@ -566,11 +549,21 @@ class QueryInterface:
             The token
 
         """
-        tokens = self.get_tokens()
-        if key.startswith("0x"):
-            return next((tkn for tkn in tokens if tkn.address == key), None)
-        else:
-            raise ValueError(f"[get_token] Invalid token: {key}")
+        if self.token_list is None:
+            self.populate_tokens()
+        try:
+            return self.token_list.get(tkn_address)
+        except KeyError:
+            try:
+                self.populate_tokens()
+                return self.token_list.get(tkn_address)
+            except KeyError as e:
+                self.ConfigObj.logger.info(f"[interface.py get_token] Could not find token: {tkn_address} in token_list")
+                tokens = self.get_tokens()
+                if tkn_address.startswith("0x"):
+                    return next((tkn for tkn in tokens if tkn.address == tkn_address), None)
+                else:
+                    raise ValueError(f"[get_token] Invalid token: {tkn_address}")
 
     def get_pool(self, **kwargs) -> Optional[PoolAndTokens]:
         """
