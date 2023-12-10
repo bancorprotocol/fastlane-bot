@@ -300,7 +300,9 @@ class ContractsManager(BaseManager):
                 tokens_filepath=tokens_filepath,
             )
         except self.FailedToGetTokenDetailsException as e:
-            self.cfg.logger.debug(f"[events.managers.contracts] {e}")
+            self.cfg.logger.debug(
+                f"[events.managers.contracts.get_token_info_from_contract] {e}"
+            )
 
     class FailedToGetTokenDetailsException(Exception):
         """
@@ -308,9 +310,7 @@ class ContractsManager(BaseManager):
         """
 
         def __init__(self, addr):
-            self.message = (
-                f"Failed to get token symbol and decimals for token address: {addr}"
-            )
+            self.message = f"[events.managers.contracts.get_token_info_from_contract] Failed to get token symbol and decimals for token address: {addr}"
 
         def __str__(self):
             return self.message
