@@ -10,7 +10,7 @@ from fastlane_bot.events.version_utils import check_version_requirements
 
 check_version_requirements()
 
-import os
+import os, sys
 import time
 from typing import List
 
@@ -51,6 +51,7 @@ from fastlane_bot.events.utils import (
     handle_tokens_csv,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
+from fastlane_bot import __version__ as bot_version
 from run_blockchain_terraformer import terraform_blockchain
 
 load_dotenv()
@@ -360,13 +361,20 @@ def main(
         cfg, tenderly_event_exchanges, tenderly_fork_id
     )
 
+    # Get the current python version used
+    python_version = sys.version
+    python_info = sys.version_info
+
     # Log the run configuration
-    cfg.logger.info(
-        f"""
+    logging_header = f"""
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         
         Starting fastlane bot with the following configuration:
+        bot_version: {bot_version}
+        
+        python_version: {python_version}
+        python_info: {python_info}
         
         logging_path: {logging_path}
         arb_mode: {arb_mode}
@@ -401,8 +409,18 @@ def main(
         
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+        Copy and paste the above configuration when reporting a bug. Please also include the error message and stack trace below:
+        
+        <INSERT ERROR MESSAGE AND STACK TRACE HERE>
+        
+        Please direct all questions/reporting to the Fastlane Telegram channel: https://t.me/BancorDevelopers
+        
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         """
-    )
+
+    cfg.logging_header = logging_header
+    cfg.logger.info(logging_header)
 
     # Get the static pool data, tokens and uniswap v2 event mappings
     (
@@ -480,7 +498,7 @@ def main(
         blockchain,
         pool_data_update_frequency,
         use_specific_exchange_for_target_tokens,
-        version_check_frequency
+        version_check_frequency,
     )
 
 
@@ -507,7 +525,7 @@ def run(
     blockchain: str,
     pool_data_update_frequency: int,
     use_specific_exchange_for_target_tokens: str,
-    version_check_frequency: int
+    version_check_frequency: int,
 ) -> None:
     """
     The main function that drives the logic of the program. It uses helper functions to handle specific tasks.
@@ -563,7 +581,7 @@ def run(
 
             # Log the current start, end and last block
             mgr.cfg.logger.info(
-                f"Fetching events from {start_block} to {current_block}... {last_block}"
+                f"[main] Fetching events from {start_block} to {current_block}... {last_block}"
             )
 
             # Set the network connection to Mainnet if replaying from a block
@@ -648,7 +666,7 @@ def run(
                     exchange_name=use_specific_exchange_for_target_tokens
                 )
                 mgr.cfg.logger.info(
-                    f"Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
+                    f"[main] Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
                 )
 
             handle_tokens_csv(mgr, mgr.prefix_path)
@@ -679,7 +697,7 @@ def run(
 
             # Check if timeout has been hit, and if so, break the loop for tests
             if timeout is not None and time.time() - start_timeout > timeout:
-                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
                 break
 
             # Delete all Tenderly forks except the most recent one
@@ -710,17 +728,20 @@ def run(
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
                 loop_idx % version_check_frequency == 0
-                and version_check_frequency != -1 and blockchain in "ethereum"
+                and version_check_frequency != -1
+                and blockchain in "ethereum"
             ):
-               # Check the version of the deployed arbitrage contract
-               mgr.cfg.provider.check_version_of_arb_contract()
-               mgr.cfg.logger.info(f"Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}")
+                # Check the version of the deployed arbitrage contract
+                mgr.cfg.provider.check_version_of_arb_contract()
+                mgr.cfg.logger.info(
+                    f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
+                )
             if (
                 loop_idx % pool_data_update_frequency == 0
                 and pool_data_update_frequency != -1
             ):
                 mgr.cfg.logger.info(
-                    f"Terraforming {blockchain}. Standby for oxygen levels."
+                    f"[main] Terraforming {blockchain}. Standby for oxygen levels."
                 )
                 sblock = (
                     (current_block - (current_block - last_block_queried))
@@ -744,10 +765,14 @@ def run(
                 last_block_queried = current_block
 
         except Exception as e:
-            mgr.cfg.logger.error(f"Error in main loop: {e}")
+            mgr.cfg.logger.error(
+                f"[main] Error in main loop: {e}. Continuing... "
+                f"Please report this error to the Fastlane Telegram channel if it persists."
+                f"{mgr.cfg.logging_header}"
+            )
             time.sleep(polling_interval)
             if timeout is not None and time.time() - start_timeout > timeout:
-                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
                 break
 
 
