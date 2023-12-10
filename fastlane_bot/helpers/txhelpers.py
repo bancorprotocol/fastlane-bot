@@ -364,7 +364,8 @@ class TxHelpers:
 
         if arb_tx is None:
             self.ConfigObj.logger.info(
-                "[helpers.txhelpers.validate_and_submit_transaction] Failed to construct trade, discarding."
+                "[helpers.txhelpers.validate_and_submit_transaction] Failed to construct trade. "
+                "This is expected to happen occasionally, discarding..."
             )
             return None
         gas_estimate = arb_tx["gas"]
@@ -616,12 +617,12 @@ class TxHelpers:
                 except Exception as e:
                     self.ConfigObj.logger.warning(
                         f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
-                        f"Error when building transaction: {e.__class__.__name__} {e}"
+                        f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
                     )
             else:
                 self.ConfigObj.logger.warning(
                     f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
-                    f"Error when building transaction: {e.__class__.__name__} {e}"
+                    f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
                 )
                 return None
         if test_fake_gas:
@@ -634,10 +635,10 @@ class TxHelpers:
                 + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
-            self.ConfigObj.logger.info(
+            self.ConfigObj.logger.warning(
                 f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the "
                 f"transaction is likely fail. Most often this is due to an arb opportunity already being closed, "
-                f"but it can include other bugs. Exception: {e}"
+                f"but it can include other bugs. This is expected to happen occasionally, discarding. Exception: {e}"
             )
             return None
         try:
