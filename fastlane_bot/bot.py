@@ -648,7 +648,9 @@ class CarbonBot(CarbonBotBase):
                         "Carbon pool not up to date, updating and restarting."
                     )
                     return False
-            elif current_pool.exchange_name in ["balancer",]:
+            elif current_pool.exchange_name in [
+                "balancer",
+            ]:
                 for idx, balance in enumerate(current_pool.token_balances):
                     if balance != fetched_pool[f"tkn{idx}_balance"]:
                         self.ConfigObj.logger.debug(
@@ -753,20 +755,41 @@ class CarbonBot(CarbonBotBase):
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
         best_profit_fl_token = best_profit
-        if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, self.ConfigObj.NATIVE_GAS_TOKEN_KEY]:
+        if fl_token not in [
+            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
+        ]:
             try:
-                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token}")[0].p))
+                fltkn_eth_conversion_rate = Decimal(
+                    str(
+                        CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
+                        .bytknq(f"{fl_token}")[0]
+                        .p
+                    )
+                )
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
             except:
                 try:
-                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0].p))
+                    fltkn_eth_conversion_rate = 1 / Decimal(
+                        str(
+                            CCm.bytknb(f"{fl_token}")
+                            .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
+                            .p
+                        )
+                    )
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
-                    raise str(e)
+                    raise e
         else:
             best_profit_eth = best_profit_fl_token
         try:
-            usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
+            usd_eth_conversion_rate = Decimal(
+                str(
+                    CCm.bypair(
+                        pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}"
+                    )[0].p
+                )
+            )
         except Exception:
             usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
@@ -981,7 +1004,11 @@ class CarbonBot(CarbonBotBase):
         ]
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(trade_instructions=calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
+            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(
+                trade_instructions=calculated_trade_instructions,
+                route_struct=route_struct,
+                flashloan_struct=flashloan_struct,
+            )
         # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 
@@ -1225,10 +1252,10 @@ class CarbonBot(CarbonBotBase):
                     x
                     for x in CCm
                     if (x.params.exchange == "carbon_v1")
-                       & (
-                               (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                               or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                       )
+                    & (
+                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
+                    )
                 ]
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
@@ -1250,7 +1277,6 @@ class CarbonBot(CarbonBotBase):
         arb_mode: bool
             The arb mode
         """
-        print(f"run_continuous_mode run_data_validator={run_data_validator}")
         while True:
             try:
                 CCm = self.get_curves()
@@ -1266,7 +1292,7 @@ class CarbonBot(CarbonBotBase):
 
                 time.sleep(self.polling_interval)
             except self.NoArbAvailable as e:
-                self.ConfigObj.logger.debug(f"[bot:run:single] {e}")
+                self.ConfigObj.logger.debug(f"[bot:run:continuous] {e}")
             except Exception as e:
                 self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
                 time.sleep(self.polling_interval)
@@ -1349,8 +1375,8 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     def get_tokens_in_exchange(
-            self,
-            exchange_name: str,
+        self,
+        exchange_name: str,
     ) -> List[str]:
         """
         Gets all tokens that exist in pools on the specified exchange.

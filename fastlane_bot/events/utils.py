@@ -172,7 +172,7 @@ def add_initial_pool_data(cfg: Config, mgr: Any, n_jobs: int = -1):
     Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
     )
-    cfg.logger.info(f"Time taken to add initial pools: {time.time() - start_time}")
+    cfg.logger.debug(f"[events.utils] Time taken to add initial pools: {time.time() - start_time}")
 
 
 class CSVReadError(Exception):
@@ -344,7 +344,7 @@ def handle_tenderly_event_exchanges(
         return []
 
     exchanges = exchanges.split(",") if exchanges else []
-    cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
+    cfg.logger.info(f"[events.utils] [events.utils.handle_tenderly_event_exchanges] Running data fetching for exchanges: {exchanges}")
     return exchanges
 
 
@@ -367,7 +367,7 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     # Set external exchanges
     exchanges = exchanges.split(",") if exchanges else []
-    cfg.logger.info(f"Running data fetching for exchanges: {exchanges}")
+    cfg.logger.info(f"[events.utils] Running data fetching for exchanges: {exchanges}")
     return exchanges
 
 
@@ -443,7 +443,7 @@ def handle_flashloan_tokens(
     ]
 
     unique_tokens = len(tokens["key"].unique())
-    cfg.logger.info(f"unique_tokens: {unique_tokens}")
+    cfg.logger.info(f"[events.utils] unique_tokens: {unique_tokens}")
     flashloan_tokens = [
         tkn for tkn in flashloan_tokens if tkn in tokens["key"].unique()
     ]
@@ -499,7 +499,7 @@ def get_config(
             logging_path=logging_path,
             blockchain=blockchain,
         )
-        cfg.logger.info("Using Tenderly config")
+        cfg.logger.info("[events.utils] Using Tenderly config")
     else:
         cfg = Config.new(
             config=Config.CONFIG_MAINNET,
@@ -507,10 +507,13 @@ def get_config(
             logging_path=logging_path,
             blockchain=blockchain,
         )
-        cfg.logger.info("Using mainnet config")
+        cfg.logger.info("[events.utils] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_KEY in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_KEY in flashloan_tokens)
+    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
+        cfg.NATIVE_GAS_TOKEN_KEY in flashloan_tokens
+        or cfg.WRAPPED_GAS_TOKEN_KEY in flashloan_tokens
+    )
     return cfg
 
 
@@ -656,9 +659,9 @@ def save_events_to_json(
             ] and latest_events
             f.write(json.dumps(latest_events))
     except Exception as e:
-        mgr.cfg.logger.error(f"Error saving events to JSON: {e}")
+        mgr.cfg.logger.warning(f"[events/utils.py save_events_to_json]: {e}")
 
-    mgr.cfg.logger.info(f"Saved events to {path}")
+    mgr.cfg.logger.debug(f"[events.utils] Saved events to {path}")
 
 
 def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
@@ -750,7 +753,6 @@ def init_bot(mgr: Any) -> CarbonBot:
     CarbonBot
         The bot object.
     """
-    mgr.cfg.logger.info("Initializing the bot...")
     db = QueryInterface(
         mgr=mgr,
         ConfigObj=mgr.cfg,
@@ -823,14 +825,14 @@ def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
 
     """
     # read data from the json file latest_event_data.json
-    mgr.cfg.logger.info("Using cached events")
+    mgr.cfg.logger.info("[events.utils] Using cached events...")
     path = "fastlane_bot/data/latest_event_data.json".replace("./logs", "logs")
     os.path.isfile(path)
     with open(path, "r") as f:
         latest_events = json.load(f)
     if not latest_events or len(latest_events) == 0:
         raise ValueError("No events found in the json file")
-    mgr.cfg.logger.info(f"Found {len(latest_events)} new events")
+    mgr.cfg.logger.info(f"[events.utils] Found {len(latest_events)} new events")
     return latest_events
 
 
@@ -895,7 +897,7 @@ def handle_subsequent_iterations(
         # Log the forked_from_block
         if forked_from_block:
             mgr.cfg.logger.info(
-                f"Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
+                f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
             )
             mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
@@ -937,9 +939,9 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
     ]
     # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
     if initial_state != final_state_bancor_pol:
-        mgr.cfg.logger.info("State has changed...")
+        mgr.cfg.logger.info("[events.utils] State has changed...")
     else:
-        mgr.cfg.logger.info("State has not changed...")
+        mgr.cfg.logger.info("[events.utils] State has not changed...")
 
 
 def handle_duplicates(mgr: Any):
@@ -1120,7 +1122,7 @@ def get_latest_events(
             current_block=current_block,
             tenderly_fork_id=mgr.tenderly_fork_id,
         )
-        mgr.cfg.logger.info(f"tenderly_events: {len(tenderly_events)}")
+        mgr.cfg.logger.info(f"[events.utils] tenderly_events: {len(tenderly_events)}")
 
     # Get all event filters, events, and flatten them
     events = [
@@ -1295,7 +1297,7 @@ def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     fork_id = fork_data["simulation_fork"]["id"]
 
     # Log the fork id
-    mgr.cfg.logger.info(f"Forked with fork id: {fork_id}")
+    mgr.cfg.logger.info(f"[events.utils] Forked with fork id: {fork_id}")
 
     # Create the provider you can use throughout the rest of your project
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{fork_id}")
@@ -1349,7 +1351,7 @@ def set_network_connection_to_tenderly(
         )
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
     elif tenderly_uri:
-        mgr.cfg.logger.info(f"Connecting to Tenderly fork at {tenderly_uri}")
+        mgr.cfg.logger.info(f"[events.utils] Connecting to Tenderly fork at {tenderly_uri}")
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     if tenderly_fork_id and not forked_from_block:
@@ -1393,7 +1395,7 @@ def set_network_connection_to_mainnet(
     assert (
         mgr.cfg.w3.provider.endpoint_uri == mainnet_uri
     ), f"Failed to connect to Mainnet at {mainnet_uri} - got {mgr.cfg.w3.provider.endpoint_uri} instead"
-    mgr.cfg.logger.info("Successfully connected to Mainnet")
+    mgr.cfg.logger.info("[events.utils] Successfully connected to Mainnet")
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
     return mgr
 
@@ -1426,7 +1428,7 @@ def handle_limit_pairs_for_replay_mode(
     """
     if limit_pairs_for_replay and replay_from_block:
         limit_pairs_for_replay = limit_pairs_for_replay.split(",")
-        cfg.logger.info(f"Limiting replay to pairs: {limit_pairs_for_replay}")
+        cfg.logger.info(f"[events.utils] Limiting replay to pairs: {limit_pairs_for_replay}")
         static_pool_data = static_pool_data[
             static_pool_data["pair_name"].isin(limit_pairs_for_replay)
         ]
@@ -1478,7 +1480,7 @@ def set_network_to_tenderly_if_replay(
         return mgr, None, None
 
     elif last_block == 0 and tenderly_fork_id:
-        mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
+        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}")
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1491,7 +1493,7 @@ def set_network_to_tenderly_if_replay(
 
     elif replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
         # Tx must always be submitted from Tenderly when in replay mode
-        mgr.cfg.logger.info(f"Setting network connection to Tenderly idx: {loop_idx}")
+        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}")
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1546,7 +1548,7 @@ def set_network_to_mainnet_if_replay(
         and mgr.cfg.NETWORK != "mainnet"
         and last_block != 0
     ):
-        mgr.cfg.logger.info(f"Setting network connection to Mainnet idx: {loop_idx}")
+        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Mainnet idx: {loop_idx}")
         mgr = set_network_connection_to_mainnet(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1785,7 +1787,7 @@ def handle_tokens_csv(mgr, prefix_path):
     try:
         token_data = pd.read_csv(tokens_filepath)
     except Exception as e:
-        mgr.cfg.logger.info(f"Error reading token data: {e}... creating new file")
+        mgr.cfg.logger.info(f"[events.utils] Error reading token data: {e}... creating new file")
         token_data = pd.DataFrame(mgr.tokens)
         token_data.to_csv(tokens_filepath, index=False)
 
@@ -1810,4 +1812,4 @@ def handle_tokens_csv(mgr, prefix_path):
             except FileNotFoundError:
                 pass
 
-        mgr.cfg.logger.info(f"Updated token data with {len(extra_info)} new tokens")
+        mgr.cfg.logger.info(f"[events.utils] Updated token data with {len(extra_info)} new tokens")
