@@ -935,9 +935,11 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
     ]
     # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
     if initial_state != final_state_bancor_pol:
-        mgr.cfg.logger.info("[events.utils] State has changed...")
+        mgr.cfg.logger.debug("[events.utils.verify_state_changed] State has changed...")
     else:
-        mgr.cfg.logger.info("[events.utils] State has not changed...")
+        mgr.cfg.logger.warning(
+            "[events.utils.verify_state_changed] State has not changed... This may indicate an error"
+        )
 
 
 def handle_duplicates(mgr: Any):
