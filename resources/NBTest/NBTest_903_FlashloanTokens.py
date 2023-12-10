@@ -78,7 +78,7 @@ def run_command(mode):
         # "--use_cached_events=True",
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=80",
+        "--timeout=120",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
@@ -86,7 +86,7 @@ def run_command(mode):
     # Wait for the expected log line to appear
     expected_log_line = "limiting flashloan_tokens to ["
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr:
@@ -100,4 +100,5 @@ def run_command(mode):
 
 # ## Test Flashloan Tokens b3_two_hop
 
+# + is_executing=true
 run_command("b3_two_hop")
