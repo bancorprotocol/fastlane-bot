@@ -614,12 +614,14 @@ class TxHelpers:
                         flashloan_struct=flashloan_struct,
                     )
                 except Exception as e:
-                    self.ConfigObj.logger.info(
-                        f"[helpers.txhelpers.build_transaction_with_gas] (***1***) Error when building transaction: {e.__class__.__name__} {e}"
+                    self.ConfigObj.logger.warning(
+                        f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
+                        f"Error when building transaction: {e.__class__.__name__} {e}"
                     )
             else:
-                self.ConfigObj.logger.info(
-                    f"[helpers.txhelpers.build_transaction_with_gas] (***2***) Error when building transaction: {e.__class__.__name__} {e}"
+                self.ConfigObj.logger.warning(
+                    f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
+                    f"Error when building transaction: {e.__class__.__name__} {e}"
                 )
                 return None
         if test_fake_gas:
@@ -633,7 +635,9 @@ class TxHelpers:
             )
         except Exception as e:
             self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the transaction is likely fail. Most often this is due to an arb opportunity already being closed, but it can include other bugs. Exception: {e}"
+                f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the "
+                f"transaction is likely fail. Most often this is due to an arb opportunity already being closed, "
+                f"but it can include other bugs. Exception: {e}"
             )
             return None
         try:

@@ -372,7 +372,7 @@ class ContractsManager(BaseManager):
         }
         try:
             self.cfg.logger.info(
-                f"[events.managers.contracts] Adding new token {key} to {tokens_filepath}"
+                f"[events.managers.contracts._get_and_save_token_info_from_contract] Adding new token {key} to {tokens_filepath}"
             )
         except UnicodeEncodeError:
             raise self.FailedToGetTokenDetailsException(addr=addr)
