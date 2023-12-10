@@ -567,7 +567,7 @@ def run(
     forks_to_cleanup = []
     last_block_queried = 0
     handle_static_pools_update(mgr)
-    total_iteration_time_list = []
+    total_iteration_time = 0
     while True:
         try:
 
@@ -698,11 +698,10 @@ def run(
             # Increment the loop index
             loop_idx += 1
 
-            total_iteration_time = time.time() - iteration_start_time
-            total_iteration_time_list.append(total_iteration_time)
+            total_iteration_time += time.time() - iteration_start_time
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {sum(total_iteration_time_list) / len(total_iteration_time_list)}"
+                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
                 f"\n********************************************\n\n"
             )
 
