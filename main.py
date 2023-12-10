@@ -365,6 +365,10 @@ def main(
     python_version = sys.version
     python_info = sys.version_info
 
+    import platform
+
+    os_system = platform.system()
+
     # Log the run configuration
     logging_header = f"""
         +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -372,7 +376,7 @@ def main(
         
         Starting fastlane bot with the following configuration:
         bot_version: {bot_version}
-        
+        os_system: {os_system}
         python_version: {python_version}
         python_info: {python_info}
         
