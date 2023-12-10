@@ -2,9 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.77...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.78...HEAD)
 
 - Update Fast Lane contract address on Base [\#244](https://github.com/bancorprotocol/fastlane-bot/issues/244)
+- Improve logging error messages [\#243](https://github.com/bancorprotocol/fastlane-bot/issues/243)
+- 243 improve logging error messages [\#247](https://github.com/bancorprotocol/fastlane-bot/pull/247) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- Can anyone provide the instructions to use a private eth node? Already have the node [\#246](https://github.com/bancorprotocol/fastlane-bot/issues/246)
+
+## [v2.7.78](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.78) (2023-12-07)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.77...v2.7.78)
+
 - default\_min\_profit\_gas\_token too low by default [\#239](https://github.com/bancorprotocol/fastlane-bot/issues/239)
 - Update network.py [\#245](https://github.com/bancorprotocol/fastlane-bot/pull/245) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
