@@ -563,10 +563,11 @@ def run(
     forks_to_cleanup = []
     last_block_queried = 0
     handle_static_pools_update(mgr)
-    iteration_start_time = time.time()
     total_iteration_time_list = []
     while True:
         try:
+
+            iteration_start_time = time.time()
 
             # Save initial state of pool data to assert whether it has changed
             initial_state = mgr.pool_data.copy()
