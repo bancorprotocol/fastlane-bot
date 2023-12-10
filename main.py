@@ -697,9 +697,9 @@ def run(
             total_iteration_time = time.time() - iteration_start_time
             total_iteration_time_list.append(total_iteration_time)
             mgr.cfg.logger.info(
-                f"\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {sum(total_iteration_time_list) / len(total_iteration_time_list)}\n"
-                f"\n********************************************\n"
+                f"\n\n********************************************\n"
+                f"Average Total iteration time for loop {loop_idx}: {sum(total_iteration_time_list) / len(total_iteration_time_list)}"
+                f"\n********************************************\n\n"
             )
 
             # Sleep for the polling interval
