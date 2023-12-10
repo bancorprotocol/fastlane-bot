@@ -82,3 +82,25 @@ class SushiswapV2Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
+    async def async_update_from_contract(self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None
+         ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        reserve_balance = await contract.caller.getReserves()
+        params = {
+            "fee": "0.003",
+            "fee_float": 0.003,
+            "tkn0_balance": reserve_balance[0],
+            "tkn1_balance": reserve_balance[1],
+            "exchange_name": "sushiswap_v2",
+        }
+        for key, value in params.items():
+            self.state[key] = value
+        return params

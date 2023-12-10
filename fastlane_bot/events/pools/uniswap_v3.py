@@ -94,3 +94,30 @@ class UniswapV3Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
+    async def async_update_from_contract(
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Any = None,
+        w3: Any = None,
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        slot0 = await contract.caller.slot0()
+        fee = await contract.caller.fee()
+        params = {
+            "tick": slot0[1],
+            "sqrt_price_q96": slot0[0],
+            "liquidity": await contract.caller.liquidity(),
+            "fee": fee,
+            "fee_float": fee / 1e6,
+            "tick_spacing": await contract.caller.tickSpacing(),
+            "exchange_name": self.state["exchange_name"],
+            "address": self.state["address"],
+        }
+        for key, value in params.items():
+            self.state[key] = value
+        return params

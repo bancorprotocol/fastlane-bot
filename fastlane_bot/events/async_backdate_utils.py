@@ -25,7 +25,7 @@ def async_backdate_from_contracts(mgr: Any, rows: List[int]):
     chunks = get_contract_chunks(contracts)
     for chunk in chunks:
         loop = asyncio.get_event_loop()
-        vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk))
+        vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk, w3_async=mgr.w3_async))
         idxes = [val[0] for val in vals]
         updated_pool_info = [val[1] for val in vals]
         for i, idx in enumerate(idxes):
