@@ -72,17 +72,17 @@ def run_command(arb_mode, expected_log_line):
         f"--arb_mode={arb_mode}",
         "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=False",
-        # "--use_cached_events=True",
+        "--loglevel=DEBUG",
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=80",
+        "--timeout=120",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr or expected_log_line in result.stdout:

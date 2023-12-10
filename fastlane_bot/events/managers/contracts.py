@@ -179,12 +179,15 @@ class ContractsManager(BaseManager):
         """
         exchange_name = self.check_forked_exchange_names(exchange_name, address, event)
         if not exchange_name:
-            self.cfg.logger.info(f"Exchange name not found {event}")
+            self.cfg.logger.warning(
+                f"[events.managers.contracts] Exchange name not found {event}. Skipping event..."
+            )
             return None
 
         if exchange_name not in self.SUPPORTED_EXCHANGES:
-            self.cfg.logger.debug(
-                f"Event exchange {exchange_name} not in exchanges={self.SUPPORTED_EXCHANGES} for address={address}"
+            self.cfg.logger.warning(
+                f"Event exchange {exchange_name} not in exchanges={self.SUPPORTED_EXCHANGES} for address={address}. "
+                f"Skipping event..."
             )
             return None
 
@@ -297,7 +300,9 @@ class ContractsManager(BaseManager):
                 tokens_filepath=tokens_filepath,
             )
         except self.FailedToGetTokenDetailsException as e:
-            self.cfg.logger.debug(f"{e}")
+            self.cfg.logger.debug(
+                f"[events.managers.contracts.get_token_info_from_contract] {e}"
+            )
 
     class FailedToGetTokenDetailsException(Exception):
         """
@@ -305,9 +310,7 @@ class ContractsManager(BaseManager):
         """
 
         def __init__(self, addr):
-            self.message = (
-                f"Failed to get token symbol and decimals for token address: {addr}"
-            )
+            self.message = f"[events.managers.contracts.get_token_info_from_contract] Failed to get token symbol and decimals for token address: {addr}"
 
         def __str__(self):
             return self.message
@@ -368,7 +371,9 @@ class ContractsManager(BaseManager):
             "blockchain": self.cfg.NETWORK,
         }
         try:
-            self.cfg.logger.info(f"Adding new token {key} to {tokens_filepath}")
+            self.cfg.logger.debug(
+                f"[events.managers.contracts._get_and_save_token_info_from_contract] Adding new token {key} to {tokens_filepath}"
+            )
         except UnicodeEncodeError:
             raise self.FailedToGetTokenDetailsException(addr=addr)
 
