@@ -299,7 +299,9 @@ class BaseManager:
 
         """
         start_time = time.time()
-        self.cfg.logger.info("[events.managers.ba] Updating carbon pools w/ multicall...")
+        self.cfg.logger.info(
+            "[events.managers.ba] Updating carbon pools w/ multicall..."
+        )
 
         # Create or get CarbonController contract object
         carbon_controller = self.create_or_get_carbon_controller()
@@ -498,8 +500,12 @@ class BaseManager:
         self.carbon_inititalized = True
 
         # Log that Carbon is initialized
-        self.cfg.logger.debug(f"[events.managers.base] Carbon is initialized {self.carbon_inititalized}")
-        self.cfg.logger.debug(f"[events.managers.base] Retrieved {len(strategies_by_pair)} carbon strategies")
+        self.cfg.logger.debug(
+            f"[events.managers.base] Carbon is initialized {self.carbon_inititalized}"
+        )
+        self.cfg.logger.debug(
+            f"[events.managers.base] Retrieved {len(strategies_by_pair)} carbon strategies"
+        )
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:

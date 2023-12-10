@@ -75,7 +75,8 @@ class QueryInterface:
             if pool["tkn0_key"] in target_tokens and pool["tkn1_key"] in target_tokens
         ]
 
-        self.cfg.logger.info(f"[events.interface] Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
+        self.cfg.logger.info(
+            f"[events.interface] Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
         )
 
         # Log the total number of pools remaining for each exchange

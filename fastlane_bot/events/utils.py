@@ -172,7 +172,9 @@ def add_initial_pool_data(cfg: Config, mgr: Any, n_jobs: int = -1):
     Parallel(n_jobs=n_jobs, backend="threading")(
         delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
     )
-    cfg.logger.debug(f"[events.utils] Time taken to add initial pools: {time.time() - start_time}")
+    cfg.logger.debug(
+        f"[events.utils] Time taken to add initial pools: {time.time() - start_time}"
+    )
 
 
 class CSVReadError(Exception):
@@ -344,7 +346,9 @@ def handle_tenderly_event_exchanges(
         return []
 
     exchanges = exchanges.split(",") if exchanges else []
-    cfg.logger.info(f"[events.utils] [events.utils.handle_tenderly_event_exchanges] Running data fetching for exchanges: {exchanges}")
+    cfg.logger.info(
+        f"[events.utils] [events.utils.handle_tenderly_event_exchanges] Running data fetching for exchanges: {exchanges}"
+    )
     return exchanges
 
 
@@ -1351,7 +1355,9 @@ def set_network_connection_to_tenderly(
         )
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
     elif tenderly_uri:
-        mgr.cfg.logger.info(f"[events.utils] Connecting to Tenderly fork at {tenderly_uri}")
+        mgr.cfg.logger.info(
+            f"[events.utils] Connecting to Tenderly fork at {tenderly_uri}"
+        )
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     if tenderly_fork_id and not forked_from_block:
@@ -1428,7 +1434,9 @@ def handle_limit_pairs_for_replay_mode(
     """
     if limit_pairs_for_replay and replay_from_block:
         limit_pairs_for_replay = limit_pairs_for_replay.split(",")
-        cfg.logger.info(f"[events.utils] Limiting replay to pairs: {limit_pairs_for_replay}")
+        cfg.logger.info(
+            f"[events.utils] Limiting replay to pairs: {limit_pairs_for_replay}"
+        )
         static_pool_data = static_pool_data[
             static_pool_data["pair_name"].isin(limit_pairs_for_replay)
         ]
@@ -1480,7 +1488,9 @@ def set_network_to_tenderly_if_replay(
         return mgr, None, None
 
     elif last_block == 0 and tenderly_fork_id:
-        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}")
+        mgr.cfg.logger.info(
+            f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}"
+        )
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1493,7 +1503,9 @@ def set_network_to_tenderly_if_replay(
 
     elif replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
         # Tx must always be submitted from Tenderly when in replay mode
-        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}")
+        mgr.cfg.logger.info(
+            f"[events.utils] Setting network connection to Tenderly idx: {loop_idx}"
+        )
         mgr, forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1548,7 +1560,9 @@ def set_network_to_mainnet_if_replay(
         and mgr.cfg.NETWORK != "mainnet"
         and last_block != 0
     ):
-        mgr.cfg.logger.info(f"[events.utils] Setting network connection to Mainnet idx: {loop_idx}")
+        mgr.cfg.logger.info(
+            f"[events.utils] Setting network connection to Mainnet idx: {loop_idx}"
+        )
         mgr = set_network_connection_to_mainnet(
             mgr=mgr,
             use_cached_events=use_cached_events,
@@ -1787,7 +1801,9 @@ def handle_tokens_csv(mgr, prefix_path):
     try:
         token_data = pd.read_csv(tokens_filepath)
     except Exception as e:
-        mgr.cfg.logger.info(f"[events.utils] Error reading token data: {e}... creating new file")
+        mgr.cfg.logger.info(
+            f"[events.utils] Error reading token data: {e}... creating new file"
+        )
         token_data = pd.DataFrame(mgr.tokens)
         token_data.to_csv(tokens_filepath, index=False)
 
@@ -1812,4 +1828,6 @@ def handle_tokens_csv(mgr, prefix_path):
             except FileNotFoundError:
                 pass
 
-        mgr.cfg.logger.info(f"[events.utils] Updated token data with {len(extra_info)} new tokens")
+        mgr.cfg.logger.info(
+            f"[events.utils] Updated token data with {len(extra_info)} new tokens"
+        )
