@@ -821,13 +821,15 @@ class CarbonBot(CarbonBotBase):
         }
 
         for idx, trade in enumerate(calculated_trade_instructions):
+            tknin = {trade.tknin_symbol, trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
+            tknout = {trade.tknout_symbol, trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
             log_dict["trades"].append(
                 {
                     "trade_index": idx,
                     "exchange": trade.exchange_name,
-                    "tkn_in": trade.tknin,
+                    "tkn_in": tknin,
                     "amount_in": num_format_float(trade.amtin),
-                    "tkn_out": trade.tknout,
+                    "tkn_out": tknout,
                     "amt_out": num_format_float(trade.amtout),
                     "cid0": trade.cid[-10:],
                 }
@@ -918,6 +920,7 @@ class CarbonBot(CarbonBotBase):
 
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
+        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -940,7 +943,7 @@ class CarbonBot(CarbonBotBase):
             best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
-            fl_token,
+            fl_token_symbol,
         )
 
         # Log the log dict
@@ -1006,6 +1009,7 @@ class CarbonBot(CarbonBotBase):
         self.handle_logging_for_trade_instructions(
             4,  # The log id
             flashloan_amount=flashloan_amount,
+            flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
             route_struct=route_struct,
             best_trade_instructions_dic=best_trade_instructions_dic,
@@ -1098,6 +1102,7 @@ class CarbonBot(CarbonBotBase):
         self,
         flashloan_amount: Optional[float] = None,
         flashloan_token_address: Optional[str] = None,
+        flashloan_token_symbol: Optional[str] = None,
         route_struct: Optional[List[Dict]] = None,
         best_trade_instructions_dic: Optional[Dict] = None,
     ):
@@ -1108,6 +1113,8 @@ class CarbonBot(CarbonBotBase):
         ----------
         flashloan_amount : Optional[float], optional
             The flashloan amount, by default None
+        flashloan_token_symbol : Optional[str], optional
+            The flashloan token symbol, by default None
         flashloan_token_address : Optional[str], optional
             The flashloan token address, by default None
         route_struct : Optional[List[Dict]], optional
@@ -1117,7 +1124,7 @@ class CarbonBot(CarbonBotBase):
         """
         self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
         self.ConfigObj.logger.debug(
-            f"Flashloan token address: {flashloan_token_address}"
+            f"Flashloan token symbol: {flashloan_token_symbol}, Flashloan token address: {flashloan_token_address}"
         )
         self.ConfigObj.logger.debug(f"Route Struct: \n {route_struct}")
         self.ConfigObj.logger.debug(
