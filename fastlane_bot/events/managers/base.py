@@ -300,7 +300,7 @@ class BaseManager:
         """
         start_time = time.time()
         self.cfg.logger.info(
-            "[events.managers.ba] Updating carbon pools w/ multicall..."
+            "[events.managers.base] Updating carbon pools w/ multicall..."
         )
 
         # Create or get CarbonController contract object
@@ -845,7 +845,7 @@ class BaseManager:
 
         """
         start_time = time.time()
-        self.cfg.logger.info("[events.managers.ba] Updating Bancor POL pools...")
+        self.cfg.logger.info("[events.managers.base] Updating Bancor POL pools...")
 
         # Create or get CarbonController contract object
         bancor_pol = self.create_or_get_bancor_pol_contract()
