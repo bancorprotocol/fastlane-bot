@@ -371,7 +371,7 @@ class ContractsManager(BaseManager):
             "blockchain": self.cfg.NETWORK,
         }
         try:
-            self.cfg.logger.info(
+            self.cfg.logger.debug(
                 f"[events.managers.contracts._get_and_save_token_info_from_contract] Adding new token {key} to {tokens_filepath}"
             )
         except UnicodeEncodeError:
