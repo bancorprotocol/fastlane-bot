@@ -5,12 +5,9 @@ Contains the utils functions for events
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import contextlib
-import importlib
 import json
 import os
 import random
-import sys
 import time
 from _decimal import Decimal
 from glob import glob
@@ -23,18 +20,13 @@ import web3
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3 import Web3
-from web3.contract import Contract
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
-from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.events.multicall_utils import encode_token_price
-from fastlane_bot.events.pools import CarbonV1Pool
 
 
 def filter_latest_events(
