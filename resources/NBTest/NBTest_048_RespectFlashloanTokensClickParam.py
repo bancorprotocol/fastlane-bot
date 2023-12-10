@@ -1,31 +1,26 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
-# +
 # coding=utf-8
 """
 This module contains the tests which ensure that the flashloan tokens click parameters are respected.
 """
-import subprocess
-
-import pytest
-
 from fastlane_bot import Bot
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+import subprocess, os, sys
+import pytest
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
@@ -38,8 +33,6 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-
-# -
 
 # # Setup
 
@@ -82,14 +75,14 @@ def run_command(arb_mode, expected_log_line):
         "--logging_path=fastlane_bot/data/",
         "--timeout=1",
         "--loglevel=DEBUG",
-        "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2X_FLI-65BD",
+        "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2x_FLI-65BD",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=7)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr or expected_log_line in result.stdout:
@@ -103,6 +96,8 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test flashloan_tokens is Respected
 
-expected_log_line = "Flashloan tokens are set as: ['BNT-FF1C', 'ETH-EEeE']"
+expected_log_line = "Flashloan tokens are set as: ['BNT-FF1C', 'ETH-EEeE', 'ETH2x_FLI-65BD']"
 arb_mode = "multi"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
+
+

@@ -75,9 +75,10 @@ def run_command(mode):
         "python",
         main_script_path,
         f"--arb_mode={mode}",
-        "--use_cached_events=True",
+        # "--use_cached_events=True",
+        "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=45",
+        "--timeout=80",
         f"--target_tokens={T.WETH},{T.DAI}",
         "--blockchain=ethereum"
     ]
@@ -100,4 +101,5 @@ def run_command(mode):
 
 # ## Test Flashloan Tokens b3_two_hop
 
+# + is_executing=true
 run_command("single")
