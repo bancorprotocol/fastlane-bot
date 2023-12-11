@@ -119,8 +119,7 @@ class MultiCaller(ContextManager):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.multicall()
+        pass
 
     def add_call(self, fn: Callable, *args, **kwargs) -> None:
         self._contract_calls.append(partial(fn, *args, **kwargs))
