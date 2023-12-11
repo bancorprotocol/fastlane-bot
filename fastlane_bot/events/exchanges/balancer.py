@@ -25,7 +25,8 @@ class Balancer(Exchange):
     _tokens: List[str] = None
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["cid"]] = pool
+        cid = pool.state.index.get_level_values("cid")[0]
+        self.pools[cid] = pool
 
     def get_abi(self):
         return BALANCER_VAULT_ABI
@@ -50,7 +51,9 @@ class Balancer(Exchange):
         tokens = pool_balances[0]
         return tokens
 
-    async def get_token_balances(self, address: str, contract: Contract, event: Any) -> []:
+    async def get_token_balances(
+        self, address: str, contract: Contract, event: Any
+    ) -> []:
         pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
@@ -68,7 +71,9 @@ class Balancer(Exchange):
         token_balances = pool_balances[1]
         return token_balances[1]
 
-    async def get_tkn_n(self, address: str, contract: Contract, event: Any, index: int) -> str:
+    async def get_tkn_n(
+        self, address: str, contract: Contract, event: Any, index: int
+    ) -> str:
         pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]

@@ -9,6 +9,7 @@ import random
 import time
 from typing import Dict, Any, Optional
 
+import pandas as pd
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI

@@ -24,7 +24,8 @@ class PancakeswapV3(Exchange):
     exchange_name: str = "pancakeswap_v3"
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["address"]] = pool
+        address = pool.state.index.get_level_values("address").tolist()[0]
+        self.pools[address] = pool
 
     def get_abi(self):
         return PANCAKESWAP_V3_POOL_ABI

@@ -54,15 +54,16 @@ class PancakeswapV3Pool(Pool):
         data["sqrt_price_q96"] = event_args["sqrtPriceX96"]
         data["tick"] = event_args["tick"]
 
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
         try:
-            data["cid"] = self.state["cid"]
-            data["exchange_name"] = self.state["exchange_name"]
-            data["fee"] = self.state["fee"]
-            data["fee_float"] = self.state["fee_float"]
-            data["tick_spacing"] = self.state["tick_spacing"]
+            data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+            data["exchange_name"] = self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0]
+            data["fee"] = self.state["fee"].iloc[0]
+            data["fee_float"] = self.state["fee_float"].iloc[0]
+            data["tick_spacing"] = self.state["tick_spacing"].iloc[0]
         except KeyError as e:
             pass
         except Exception as e:
@@ -88,37 +89,38 @@ class PancakeswapV3Pool(Pool):
             "liquidity": contract.caller.liquidity(),
             "fee": fee,
             "fee_float": fee / 1e6,
-            "tick_spacing": contract.caller.tickSpacing(),
+            "tick_spacing": await contract.caller.tickSpacing(),
+            "exchange_name": self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0],
+            "address": self.state.index.get_level_values("address").tolist()[0],
+        }
+        self.update_pool_state_from_data(params)
+        return params
+
+    async def async_update_from_contract(
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        slot0 = await contract.caller.slot0()
+        fee = await contract.caller.fee()
+        params = {
+            "tick": slot0[1],
+            "sqrt_price_q96": slot0[0],
+            "liquidity": await contract.caller.liquidity(),
+            "fee": fee,
+            "fee_float": fee / 1e6,
+            "tick_spacing": await contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
         }
         for key, value in params.items():
             self.state[key] = value
         return params
-
-    async def async_update_from_contract(
-                self,
-                contract: Contract,
-                tenderly_fork_id: str = None,
-                w3_tenderly: Web3 = None,
-                w3: Web3 = None,
-                tenderly_exchanges: List[str] = None,
-        ) -> Dict[str, Any]:
-            """
-            See base class.
-            """
-            slot0 = await contract.caller.slot0()
-            fee = await contract.caller.fee()
-            params = {
-                "tick": slot0[1],
-                "sqrt_price_q96": slot0[0],
-                "liquidity": await contract.caller.liquidity(),
-                "fee": fee,
-                "fee_float": fee / 1e6,
-                "tick_spacing": await contract.caller.tickSpacing(),
-                "exchange_name": self.state["exchange_name"],
-                "address": self.state["address"],
-            }
-            for key, value in params.items():
-                self.state[key] = value
-            return params

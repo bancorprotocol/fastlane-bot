@@ -68,23 +68,25 @@ class BancorPolPool(Pool):
         """
 
         event_type = event_args["event"]
+        tkn0_address = self.state.index.get_level_values("tkn0_address").tolist()[0]
         if event_type in "TradingEnabled":
             data["tkn0_address"] = event_args["args"]["token"]
             data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" if event_args["args"]["token"] not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
 
-        if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
+        if event_args["args"]["token"] == tkn0_address and event_type in [
             "TokenTraded"
         ]:
             # *** Balance now updated from multicall ***
             pass
 
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
-        data["cid"] = self.state["cid"]
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
         data["fee"] = 0
         data["fee_float"] = 0
-        data["exchange_name"] = self.state["exchange_name"]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     def update_from_contract(
@@ -100,7 +102,7 @@ class BancorPolPool(Pool):
 
         This only updates the current price, not the balance.
         """
-        tkn0 = self.state["tkn0_address"]
+        tkn0 = self.state.index.get_level_values("tkn0_address").tolist()[0]
 
         # Use ERC20 token contract to get balance of POL contract
         p0 = 0
@@ -132,8 +134,7 @@ class BancorPolPool(Pool):
             "A_0": 0,
             "B_0": int(str(self.encode_token_price(token_price))),
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params
 
     @staticmethod

@@ -51,13 +51,15 @@ class UniswapV2Pool(Pool):
         event_args = event_args["args"]
         data["tkn0_balance"] = event_args["reserve0"]
         data["tkn1_balance"] = event_args["reserve1"]
-        for key, value in data.items():
-            self.state[key] = value
 
-        data["cid"] = self.state["cid"]
-        data["fee"] = self.state["fee"]
-        data["fee_float"] = self.state["fee_float"]
-        data["exchange_name"] = self.state["exchange_name"]
+        self.update_pool_state_from_data(data)
+
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["fee"] = self.state["fee"].iloc[0]
+        data["fee_float"] = self.state["fee_float"].iloc[0]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     def update_from_contract(
@@ -83,13 +85,14 @@ class UniswapV2Pool(Pool):
             self.state[key] = value
         return params
 
-    async def async_update_from_contract(self,
+    async def async_update_from_contract(
+        self,
         contract: Contract,
         tenderly_fork_id: str = None,
         w3_tenderly: Web3 = None,
         w3: Web3 = None,
-        tenderly_exchanges: List[str] = None
-         ) -> Dict[str, Any]:
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
         """
         See base class.
         """
@@ -101,6 +104,5 @@ class UniswapV2Pool(Pool):
             "tkn1_balance": reserve_balance[1],
             "exchange_name": "uniswap_v2",
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params

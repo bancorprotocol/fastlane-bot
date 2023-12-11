@@ -84,14 +84,15 @@ class BancorV2Pool(Pool):
 
         # print(f"case: {case}, address: {self.state['address']}, event: {event_args}")
 
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
-        data["anchor"] = self.state["anchor"]
-        data["cid"] = self.state["cid"]
-        data["fee"] = self.state["fee"]
-        data["fee_float"] = self.state["fee_float"]
-        data["exchange_name"] = self.state["exchange_name"]
+        data["anchor"] = self.state["anchor"].iloc[0]
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["fee"] = self.state["fee"].iloc[0]
+        data["fee_float"] = self.state["fee_float"].iloc[0]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     def update_from_contract(
@@ -152,14 +153,15 @@ class BancorV2Pool(Pool):
         params = {
             "fee": fee,
             "fee_float": fee / 1e6,
-            "exchange_name": self.state["exchange_name"],
-            "address": self.state["address"],
+            "exchange_name": self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0],
+            "address": self.state["address"].values[0],
             "anchor": await contract.caller.anchor(),
             "tkn0_balance": reserve0,
             "tkn1_balance": reserve1,
             "tkn0_address": tkn0_address,
             "tkn1_address": tkn1_address,
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params

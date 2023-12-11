@@ -24,7 +24,8 @@ class SushiswapV2(Exchange):
     exchange_name: str = "sushiswap_v2"
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["address"]] = pool
+        address = pool.state.index.get_level_values("address").tolist()[0]
+        self.pools[address] = pool
 
     def get_abi(self):
         return SUSHISWAP_POOLS_ABI

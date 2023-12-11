@@ -62,13 +62,15 @@ class BancorV3Pool(Pool):
         else:
             data["tkn1_balance"] = event_args["newLiquidity"]
 
-        for key, value in data.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(data)
 
-        data["cid"] = self.state["cid"]
-        data["fee"] = self.state["fee"]
-        data["fee_float"] = self.state["fee_float"]
-        data["exchange_name"] = self.state["exchange_name"]
+        # print(f"[bancor3] {self.state.index.names}, {self.state.values}")
+        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["fee"] = self.state["fee"].iloc[0]
+        data["fee_float"] = self.state["fee_float"].iloc[0]
+        data["exchange_name"] = self.state.index.get_level_values(
+            "exchange_name"
+        ).tolist()[0]
         return data
 
     def update_from_contract(
@@ -82,16 +84,19 @@ class BancorV3Pool(Pool):
         """
         See base class.
         """
-        pool_balances = contract.caller.tradingLiquidity(self.state["tkn1_address"])
+        pool_balances = await contract.caller.tradingLiquidity(
+            self.state.index.get_level_values("tkn0_address").tolist()[0],
+        )
 
         params = {
             "fee": "0.000",
             "fee_float": 0.000,
             "tkn0_balance": pool_balances[0],
             "tkn1_balance": pool_balances[1],
-            "exchange_name": self.state["exchange_name"],
-            "address": self.state["address"],
+            "exchange_name": self.state.index.get_level_values(
+                "exchange_name"
+            ).tolist()[0],
+            "address": self.state.index.get_level_values("address").tolist()[0],
         }
-        for key, value in params.items():
-            self.state[key] = value
+        self.update_pool_state_from_data(params)
         return params

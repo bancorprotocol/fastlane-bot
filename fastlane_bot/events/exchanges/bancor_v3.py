@@ -25,7 +25,8 @@ class BancorV3(Exchange):
     BNT_ADDRESS: str = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["tkn1_address"]] = pool
+        tkn1_address = pool.state.index.get_level_values("tkn1_address").tolist()[0]
+        self.pools[tkn1_address] = pool
 
     def get_abi(self):
         return BANCOR_V3_POOL_COLLECTION_ABI

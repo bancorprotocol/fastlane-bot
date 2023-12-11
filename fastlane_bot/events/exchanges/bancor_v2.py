@@ -25,7 +25,8 @@ class BancorV2(Exchange):
     _tokens: List[str] = None
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["address"]] = pool
+        address = pool.state.index.get_level_values("address").tolist()[0]
+        self.pools[address] = pool
 
     def get_abi(self):
         return BANCOR_V2_CONVERTER_ABI

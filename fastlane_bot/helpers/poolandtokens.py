@@ -240,6 +240,7 @@ class PoolAndTokens:
         """
         tokens = [self.tkn0_address, self.tkn1_address, self.tkn2_address, self.tkn3_address, self.tkn4_address, self.tkn5_address,
                   self.tkn6_address, self.tkn7_address]
+
         tokens = [tkn for tkn in tokens if type(tkn) == str]
         return [tkn for tkn in tokens if tkn is not None]
 
@@ -320,6 +321,7 @@ class PoolAndTokens:
                         # "alpha": weight0,
                         "eta": eta,
                         "pair": _pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+
                         "fee": self.fee,
                         "cid": self.cid,
                         "descr": self.descr,

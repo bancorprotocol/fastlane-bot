@@ -58,7 +58,7 @@ class BaseManager:
     web3: Web3
     w3_async: AsyncWeb3
     cfg: Config
-    pool_data: List[Dict[str, Any]]
+    pool_data: pd.DataFrame
     alchemy_max_block_fetch: int
     tenderly_event_contracts: Dict[str, Contract or Type[Contract]] = field(
         default_factory=dict
@@ -101,11 +101,50 @@ class BaseManager:
     prefix_path: str = ""
 
     def __post_init__(self):
+
+        self.pool_data = self.setup_pool_data_df(self.pool_data)
+
         for exchange_name in self.SUPPORTED_EXCHANGES:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
+
+    @staticmethod
+    def setup_pool_data_df(pool_data: List[Dict[str, Any]]) -> pd.DataFrame:
+        assert isinstance(pool_data, list), (
+            "pool_data must be a list of dicts created by calling "
+            "pd.DataFrame.to_dict(orient='records')"
+        )
+        # Pandas Structure
+        # Convert the data into a pandas DataFrame with dtype specification to handle NaN and large numbers
+        pool_data_df = pd.DataFrame(pool_data)
+        # Set the appropriate data types
+        for column in pool_data_df.columns:
+            if pool_data_df[column].dtype == float and not any(
+                pool_data_df[column].isnull()
+            ):
+                pool_data_df[column] = pool_data_df[column].astype("int64")
+
+        # Optimize the data types for the 'last_updated_block' column
+        pool_data_df["last_updated_block"] = pool_data_df["last_updated_block"].astype(
+            "int32"
+        )
+
+        # Create indices for the frequently queried columns
+        pool_data_df.set_index(
+            [
+                "exchange_name",
+                "tkn0_address",
+                "tkn1_address",
+                "cid",
+                "address",
+                "last_updated_block",
+            ],
+            inplace=True,
+        )
+
+        return pool_data_df
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -263,6 +302,15 @@ class BaseManager:
         )
         return tkns or (None, None)
 
+    def update_pool_data_from_other_args(self, pool_data, other_args):
+        state_cp = pool_data.copy()
+        for key, value in other_args.items():
+            if key in state_cp.index.names:
+                state_cp = state_cp[state_cp.index.get_level_values(key) == value]
+            else:
+                state_cp[key] = value
+        return state_cp
+
     def get_rows_to_update(self, update_from_contract_block: int) -> List[int]:
         """
         Get the rows to update.
@@ -282,12 +330,15 @@ class BaseManager:
         if "carbon_v1" in self.SUPPORTED_EXCHANGES:
             self.update_carbon(update_from_contract_block)
 
-        return [
-            i
-            for i, pool_info in enumerate(self.pool_data)
-            if pool_info["last_updated_block"]
-            < update_from_contract_block - self.alchemy_max_block_fetch
-        ]
+        threshold_block = update_from_contract_block - self.alchemy_max_block_fetch
+        return (
+            self.pool_data[
+                self.pool_data.index.get_level_values("last_updated_block")
+                < threshold_block
+            ]
+            .index.get_level_values("cid")
+            .tolist()
+        )
 
     def update_carbon(self, current_block: int):
         """
@@ -425,11 +476,13 @@ class BaseManager:
             The carbon pairs.
 
         """
-        return [
-            (p["tkn0_address"], p["tkn1_address"])
-            for p in self.pool_data
-            if p["exchange_name"] == "carbon_v1"
-        ]
+        # return [
+        #     (p["tkn0_address"], p["tkn1_address"])
+        #     for p in self.pool_data
+        #     if p["exchange_name"] == "carbon_v1"
+        # ]
+        carbon_v1_pools = self.pool_data.xs("carbon_v1", level="exchange_name")
+        return [(idx[1], idx[2]) for idx in carbon_v1_pools.index]
 
     def create_or_get_carbon_controller(self):
         """
@@ -515,6 +568,29 @@ class BaseManager:
         )
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
+    def get_cids_by_pairs(self, pairs: List[List[Any]]) -> List[int]:
+        carbon_v1_pools = self.pool_data.xs("carbon_v1", level="exchange_name")
+        # Filter pools that match the pair in any order
+        pair_query = (
+            carbon_v1_pools.index.isin(
+                [pair[0] for pair in pairs], level="tkn0_address"
+            )
+            & carbon_v1_pools.index.isin(
+                [pair[1] for pair in pairs], level="tkn1_address"
+            )
+        ) | (
+            carbon_v1_pools.index.isin(
+                [pair[1] for pair in pairs], level="tkn0_address"
+            )
+            & carbon_v1_pools.index.isin(
+                [pair[0] for pair in pairs], level="tkn1_address"
+            )
+        )
+        return carbon_v1_pools[pair_query].index.get_level_values("cid").tolist()
+
+    def get_pool_info_from_cid(self, cid: str) -> Dict[str, Any]:
+        return self.pool_data.xs(cid, level="cid").iloc[0].to_dict()
+
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:
         """
         Get the strategies by state.
@@ -530,16 +606,18 @@ class BaseManager:
             The strategies retrieved from the state.
 
         """
-        cids = [
-            pool["cid"]
-            for pool in self.pool_data
-            if pool["exchange_name"] == "carbon_v1"
-            and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
-            or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
-        ]
+        # cids = [
+        #     pool["cid"]
+        #     for pool in self.pool_data
+        #     if pool["exchange_name"] == "carbon_v1"
+        #     and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
+        #     or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
+        # ]
+        cids = self.get_cids_by_pairs(pairs)
         strategies = []
         for cid in cids:
-            pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
+            # pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
+            pool_data = self.get_pool_info_from_cid(cid)
 
             # Constructing the orders based on the values from the pool_data dictionary
             order0 = [
@@ -719,7 +797,7 @@ class BaseManager:
             The pool info.
 
         """
-        if key != "cid" and (pool_info is None or not pool_info):
+        if key != "cid" and pool_info is None:
             # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
                 address=addr, event=event, block_number=event["blockNumber"]
@@ -727,10 +805,7 @@ class BaseManager:
 
         if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
             cid = event["args"]["id"] if event is not None else pool_info["cid"]
-            for pool in self.pool_data:
-                if pool["cid"] == cid:
-                    pool_info = pool
-                    break
+            pool_info = self.get_pool_from_cid(cid)
 
         if isinstance(pool_info, float):
             return
@@ -796,21 +871,28 @@ class BaseManager:
             The event.
         """
         cid = event["args"]["id"]
-        self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
+        # filter out the pool data for the deleted strategy (ie remove records where index cid == cid)
+        self.pool_data = self.pool_data.drop(cid, level="cid")
+        # self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
         self.exchanges["carbon_v1"].delete_strategy(event["args"]["id"])
 
     def deduplicate_pool_data(self) -> None:
         """
         Deduplicate the pool data.
         """
-        self.pool_data = sorted(
-            self.pool_data, key=lambda x: x["last_updated_block"], reverse=True
+        self.pool_data = self.pool_data.sort_values(
+            by="last_updated_block", ascending=False
         )
-        seen = set()
-        no_duplicates = [
-            d for d in self.pool_data if d["cid"] not in seen and not seen.add(d["cid"])
-        ]
-        self.pool_data = no_duplicates
+
+        duplicates_mask = self.pool_data.index.get_level_values("cid").duplicated(
+            keep="first"
+        )
+
+        # drop duplicate cid index rows
+        self.pool_data = self.pool_data[~duplicates_mask]
+
+        # assert that the cid index is unique
+        assert self.pool_data.index.get_level_values("cid").is_unique
 
     @staticmethod
     def pool_key_value_from_event(key: str, event: Dict[str, Any]) -> Any:

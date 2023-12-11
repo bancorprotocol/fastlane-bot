@@ -52,9 +52,8 @@ def filter_latest_events(
     # Handles the case where multiple pools are created in the same block
     all_events.reverse()
 
-    bancor_v2_anchor_addresses = {
-        pool["anchor"] for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"
-    }
+    bancor_v2_pools = mgr.pool_data.xs("bancor_v2", level="exchange_name")
+    bancor_v2_anchor_addresses = set(bancor_v2_pools.index.get_level_values("address"))
 
     for event in all_events:
         pool_type = mgr.pool_type_from_exchange_name(
@@ -163,7 +162,10 @@ def add_initial_pool_data(cfg: Config, mgr: Any, n_jobs: int = -1):
     # Add initial pools for each row in the static_pool_data
     start_time = time.time()
     Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.add_pool_to_exchange)(row) for row in mgr.pool_data
+        delayed(mgr.add_pool_to_exchange)(
+            mgr.pool_data.loc[(slice(None), slice(None), slice(None), cid), :]
+        )
+        for cid in mgr.pool_data.index.get_level_values("cid").unique()
     )
     cfg.logger.debug(
         f"[events.utils] Time taken to add initial pools: {time.time() - start_time}"
@@ -217,6 +219,7 @@ def get_tkn_symbol(tkn_address, tokens: pd.DataFrame) -> str:
     except Exception:
         return tkn_address
 
+
 def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
     """
     Gets the token symbol for logging purposes
@@ -230,10 +233,6 @@ def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
     for tkn in flashloan_tokens:
         flashloan_tkn_symbols.append(get_tkn_symbol(tkn_address=tkn, tokens=tokens))
     return flashloan_tkn_symbols
-
-
-
-
 
 
 def get_static_data(
@@ -288,9 +287,7 @@ def get_static_data(
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
-        df = pd.DataFrame(
-            columns=["address", "symbol", "decimals"]
-        )
+        df = pd.DataFrame(columns=["address", "symbol", "decimals"])
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
     tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
@@ -564,7 +561,10 @@ def get_config(
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens)
+    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
+        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
+        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
+    )
     return cfg
 
 
@@ -622,7 +622,9 @@ def get_event_filters(
 
     # Get for exchanges except POL contract
     by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.create_filter)(fromBlock=start_block, toBlock=current_block)
+        delayed(event.create_filter)(
+            fromBlock=int(start_block), toBlock=int(current_block)
+        )
         for event in mgr.events
         if event.__name__ not in bancor_pol_events
     )
@@ -746,9 +748,10 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
         The manager object.
 
     """
-    Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.update_from_event)(event=event) for event in latest_events
-    )
+    # Parallel(n_jobs=n_jobs, backend="threading")(
+    #     delayed(mgr.update_from_event)(event=event) for event in latest_events
+    # )
+    [mgr.update_from_event(event=latest_events[i]) for i in range(len(latest_events))]
 
 
 def write_pool_data_to_disk(
@@ -775,8 +778,8 @@ def write_pool_data_to_disk(
             os.mkdir("pool_data")
         path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.pool_data))
+        # with open(path, "w") as f:
+        mgr.pool_data.to_json(f"{path}", orient="index")
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
@@ -801,12 +804,13 @@ def parse_non_multicall_rows_to_update(
         A tuple of the Bancor v3 pool rows to update and other pool rows to update.
     """
 
-    other_pool_rows = [
-        idx
-        for idx in rows_to_update
-        if mgr.pool_data[idx]["exchange_name"] not in mgr.cfg.MULTICALLABLE_EXCHANGES
-    ]
-    return other_pool_rows
+    # other_pool_rows = [
+    #     idx
+    #     for idx in rows_to_update
+    #     if mgr.pool_data[idx]["exchange_name"] not in mgr.cfg.MULTICALLABLE_EXCHANGES
+    # ]
+    # return the cids of the rows_to_update
+    return mgr.pool_data.loc[rows_to_update, "cid"].tolist()
 
 
 def init_bot(mgr: Any) -> CarbonBot:
@@ -955,11 +959,11 @@ def handle_subsequent_iterations(
 
     """
     if loop_idx > 0 or replay_from_block:
-        #bot.db.handle_token_key_cleanup()
+        # bot.db.handle_token_key_cleanup()
         bot.db.remove_unmapped_uniswap_v2_pools()
         bot.db.remove_zero_liquidity_pools()
         bot.db.remove_unsupported_exchanges()
-        #bot.db.remove_faulty_token_pools()
+        # bot.db.remove_faulty_token_pools()
         # bot.db.remove_pools_with_invalid_tokens()
         # bot.db.ensure_descr_in_pool_data()
 
@@ -1031,7 +1035,7 @@ def handle_duplicates(mgr: Any):
     """
     # check if any duplicate cid's exist in the pool data
     mgr.deduplicate_pool_data()
-    cids = [pool["cid"] for pool in mgr.pool_data]
+    cids = mgr.pool_data.index.get_level_values("cid").tolist()
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
 
 
@@ -1051,11 +1055,12 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
     List[Any]
         A list of pools for the specified exchange.
     """
-    return [
-        idx
-        for idx, pool in enumerate(mgr.pool_data)
-        if pool["exchange_name"] == exchange
-    ]
+    # return [
+    #     idx
+    #     for idx, pool in enumerate(mgr.pool_data)
+    #     if pool["exchange_name"] == exchange
+    # ]
+    return mgr.pool_data.xs(exchange, level="exchange_name")
 
 
 def handle_initial_iteration(
@@ -1286,16 +1291,18 @@ def get_start_block(
         # connect to the Tenderly fork and get the latest block number
         from_block = mgr.w3_tenderly.eth.block_number
         return (
-            max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
+            mgr.pool_data["last_updated_block"].max() - reorg_delay
             if last_block != 0
             else from_block - reorg_delay - alchemy_max_block_fetch
         ), from_block
     else:
         current_block = mgr.web3.eth.block_number
+        max_last_updated_block = mgr.pool_data.index.get_level_values(
+            "last_updated_block"
+        ).max()
         return (
             (
-                max(block["last_updated_block"] for block in mgr.pool_data)
-                - reorg_delay
+                max_last_updated_block - reorg_delay
                 if last_block != 0
                 else current_block - reorg_delay - alchemy_max_block_fetch
             ),

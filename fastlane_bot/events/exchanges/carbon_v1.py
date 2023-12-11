@@ -46,7 +46,8 @@ class CarbonV1(Exchange):
         self._fee_pairs = value
 
     def add_pool(self, pool: Pool):
-        self.pools[pool.state["cid"]] = pool
+        cid = pool.state.index.get_level_values("cid").tolist()[0]
+        self.pools[cid] = pool
 
     def get_abi(self):
         return CARBON_CONTROLLER_ABI
@@ -61,9 +62,7 @@ class CarbonV1(Exchange):
             contract.events.PairCreated,
         ]
 
-    async def get_fee(
-        self, address: str, contract: Contract
-    ) -> Tuple[str, float]:
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         """
         Get the fee from the contract.
 
