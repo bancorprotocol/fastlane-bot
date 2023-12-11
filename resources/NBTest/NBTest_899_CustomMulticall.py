@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -153,6 +153,7 @@ multicaller = MultiCaller(contract)
 
 with patch.object(multicaller, 'multicall') as mock_multicall:
     with multicaller:
+        multicaller.multicall()
         pass
 
     mock_multicall.assert_called_once()
