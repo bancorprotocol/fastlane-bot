@@ -305,7 +305,9 @@ class BaseManager:
 
         """
         start_time = time.time()
-        self.cfg.logger.info("Updating carbon pools w/ multicall...")
+        self.cfg.logger.info(
+            "[events.managers.base] Updating carbon pools w/ multicall..."
+        )
 
         # Create or get CarbonController contract object
         carbon_controller = self.create_or_get_carbon_controller()
@@ -319,11 +321,11 @@ class BaseManager:
         # Get the fee for each pair
         if not self.fee_pairs:
             # Log that the fee pairs are being set
-            self.cfg.logger.info("Setting carbon fee pairs...")
+            self.cfg.logger.debug("[events.managers.base] Setting carbon fee pairs...")
             self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
 
         # Log the time taken for the above operations
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Fetched {len(strategies_by_pair)} carbon strategies in {time.time() - start_time} seconds"
         )
 
@@ -341,7 +343,7 @@ class BaseManager:
                 )
 
         # Log the time taken for the above operations
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Updated {len(strategies_by_pair)} carbon strategies info in {time.time() - start_time} seconds"
         )
 
@@ -370,7 +372,7 @@ class BaseManager:
             else self.get_carbon_pairs_by_contract(carbon_controller)
         )
         # Log whether the carbon pairs were retrieved from the state or the contract
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Retrieved {len(pairs)} carbon pairs from {'state' if self.carbon_inititalized else 'contract'}"
         )
         if target_tokens is None or target_tokens == []:
@@ -505,8 +507,12 @@ class BaseManager:
         self.carbon_inititalized = True
 
         # Log that Carbon is initialized
-        self.cfg.logger.info(f"Carbon is initialized {self.carbon_inititalized}")
-        self.cfg.logger.info(f"Retrieved {len(strategies_by_pair)} carbon strategies")
+        self.cfg.logger.debug(
+            f"[events.managers.base] Carbon is initialized {self.carbon_inititalized}"
+        )
+        self.cfg.logger.debug(
+            f"[events.managers.base] Retrieved {len(strategies_by_pair)} carbon strategies"
+        )
         return [s for strat in strategies_by_pair if strat for s in strat if s]
 
     def get_strats_by_state(self, pairs: List[List[Any]]) -> List[List[int]]:
@@ -580,7 +586,7 @@ class BaseManager:
 
         """
         # Log whether the carbon strats were retrieved from the state or the contract
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Retrieving carbon strategies from {'state' if self.carbon_inititalized else 'contract'}"
         )
         return (
@@ -850,7 +856,7 @@ class BaseManager:
 
         """
         start_time = time.time()
-        self.cfg.logger.info("Updating Bancor POL pools")
+        self.cfg.logger.info("[events.managers.base] Updating Bancor POL pools...")
 
         # Create or get CarbonController contract object
         bancor_pol = self.create_or_get_bancor_pol_contract()

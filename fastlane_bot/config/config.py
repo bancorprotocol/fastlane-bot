@@ -49,6 +49,8 @@ class Config():
 
     SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2', 'bancor_pol', 'pancakeswap_v2', 'pancakeswap_v3']
 
+    logging_header: str = None
+
     @classmethod
     def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, **kwargs):
         """

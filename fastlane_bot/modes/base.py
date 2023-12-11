@@ -102,8 +102,10 @@ class ArbitrageFinderBase:
         Parameters:
 
         """
-        self.ConfigObj.logger.debug("*************")
-        self.ConfigObj.logger.debug(f"New best profit: {profit}")
+        self.ConfigObj.logger.debug("[modes.base._set_best_ops] *************")
+        self.ConfigObj.logger.debug(
+            f"[modes.base._set_best_ops] New best profit: {profit}"
+        )
 
         # Update the best profit and source token
         best_profit = profit
@@ -115,7 +117,7 @@ class ArbitrageFinderBase:
         best_trade_instructions = trade_instructions
 
         self.ConfigObj.logger.debug(
-            f"best_trade_instructions_df: {best_trade_instructions_df}"
+            f"[modes.base._set_best_ops] best_trade_instructions_df: {best_trade_instructions_df}"
         )
 
         # Update the optimal operations
@@ -127,7 +129,7 @@ class ArbitrageFinderBase:
             best_trade_instructions,
         )
 
-        self.ConfigObj.logger.debug("*************")
+        self.ConfigObj.logger.debug("[modes.base.calculate_profit] *************")
 
         return best_profit, ops
 
@@ -170,6 +172,9 @@ class ArbitrageFinderBase:
                     )
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
+                    self.ConfigObj.logger.error(
+                        f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}. Raise exception: {e}"
+                    )
                     raise e
         else:
             best_profit_eth = best_profit_fl_token
@@ -298,7 +303,7 @@ class ArbitrageFinderBase:
                 tkn for tkn in fltkns if tkn in self.flashloan_tokens
             ]
             self.ConfigObj.logger.info(
-                f"limiting flashloan_tokens to {self.flashloan_tokens}"
+                f"[modes.base._check_limit_flashloan_tokens_for_bancor3] limiting flashloan_tokens to {self.flashloan_tokens}"
             )
         else:
             self.flashloan_tokens = fltkns
