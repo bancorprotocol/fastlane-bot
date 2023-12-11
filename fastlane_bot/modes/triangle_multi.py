@@ -91,10 +91,10 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
         pstart = {}
         for tkn0 in tkn0list:
             try:
-                price = CCm.bytknb(tkn0).bytknq(tkn1)[0].p
+                price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
             except:
                 try:
-                    price = 1/CCm.bytknb(tkn1).bytknq(tkn0)[0].p
+                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
                 except Exception as e:
                     print(str(e))
                     self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
