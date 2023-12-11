@@ -175,9 +175,7 @@ class PoolAndTokens:
         self.z_1 = self.z_1 or 0
         self.y_1 = self.y_1 or 0
 
-        self.tokens = (
-            self.get_tokens
-        )
+        self.tokens = self.get_tokens
         self.token_weights = self.remove_nan(
             [
                 self.tkn0_weight,
@@ -238,8 +236,16 @@ class PoolAndTokens:
         """
         returns all tokens in a curve
         """
-        tokens = [self.tkn0_address, self.tkn1_address, self.tkn2_address, self.tkn3_address, self.tkn4_address, self.tkn5_address,
-                  self.tkn6_address, self.tkn7_address]
+        tokens = [
+            self.tkn0_address,
+            self.tkn1_address,
+            self.tkn2_address,
+            self.tkn3_address,
+            self.tkn4_address,
+            self.tkn5_address,
+            self.tkn6_address,
+            self.tkn7_address,
+        ]
 
         tokens = [tkn for tkn in tokens if type(tkn) == str]
         return [tkn for tkn in tokens if tkn is not None]
@@ -320,8 +326,10 @@ class PoolAndTokens:
                         "y": tkn1_balance,
                         # "alpha": weight0,
                         "eta": eta,
-                        "pair": _pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
-
+                        "pair": _pair_name.replace(
+                            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                        ),
                         "fee": self.fee,
                         "cid": self.cid,
                         "descr": self.descr,
@@ -356,7 +364,10 @@ class PoolAndTokens:
         typed_args = {
             "x_tknb": tkn0_balance,
             "y_tknq": tkn1_balance,
-            "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+            "pair": self.pair_name.replace(
+                self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+            ),
             "fee": self.fee,
             "cid": self.cid,
             "descr": self.descr,
@@ -412,7 +423,8 @@ class PoolAndTokens:
             encoded_order = EncodedOrder(
                 **{
                     "token": self.pair_name.split("/")[i].replace(
-                        self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                        self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                        self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
                     ),
                     "A": S,
                     "B": B,
@@ -451,9 +463,13 @@ class PoolAndTokens:
                 "pb": p_end,
                 "pa": p_start,
                 "tkny": self.pair_name.split("/")[tkny].replace(
-                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
                 ),
-                "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+                "pair": self.pair_name.replace(
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                ),
                 "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,

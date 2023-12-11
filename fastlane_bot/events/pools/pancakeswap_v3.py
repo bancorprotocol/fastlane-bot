@@ -89,7 +89,7 @@ class PancakeswapV3Pool(Pool):
             "liquidity": contract.caller.liquidity(),
             "fee": fee,
             "fee_float": fee / 1e6,
-            "tick_spacing": await contract.caller.tickSpacing(),
+            "tick_spacing": contract.caller.tickSpacing(),
             "exchange_name": self.state.index.get_level_values(
                 "exchange_name"
             ).tolist()[0],
