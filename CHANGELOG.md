@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.79...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.80...HEAD)
+
+- Issue with Bancor POL Balance updating after trades [\#249](https://github.com/bancorprotocol/fastlane-bot/issues/249)
+
+Merged pull requests
+
+- 249 issue with bancor pol balance updating after trades [\#250](https://github.com/bancorprotocol/fastlane-bot/pull/250) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.80](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.80) (2023-12-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.79...v2.7.80)
 
 - bugfix pstart [\#248](https://github.com/bancorprotocol/fastlane-bot/pull/248) ([NIXBNT](https://github.com/NIXBNT))
 

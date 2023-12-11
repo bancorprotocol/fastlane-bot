@@ -285,21 +285,9 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
 
     """
     tkn0_address = pool_info["tkn0_address"]
-    if type(result) != int:
-        prices = result
-        p0, p1 = prices
-        token_price = Decimal(p1) / Decimal(p0)
-
-
-        if "y_0" in pool_info:
-            tkn_balance = pool_info["y_0"]
-        else:
-            tkn_balance = 0
-        token_price = int(str(encode_token_price(token_price)))
-
-    else:
-        tkn_balance = result
-        token_price = pool_info["B_0"]
+    p0, p1, tkn_balance = result
+    token_price = Decimal(p1) / Decimal(p0)
+    token_price = int(str(encode_token_price(token_price)))
 
     result = {
         "fee": "0.000",
