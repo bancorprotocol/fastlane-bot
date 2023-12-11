@@ -8,8 +8,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.4"
-__DATE__ = "23/Jan/2024"
+__VERSION__ = "3.5"
+__DATE__ = "22/Apr/2023"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -836,7 +836,7 @@ class ConstantProductCurve(CurveBase):
             constr="uv3",
             params=params,
         )
-
+    
     SOLIDLY_PRICE_SPREAD = 0.06     # 0.06 gives pretty good results for m=2.6
     @classmethod
     def from_solidly(
@@ -982,6 +982,9 @@ class ConstantProductCurve(CurveBase):
             print("[cpc::from_solidly] returning curve directly is deprecated; prepare to accept a list of curves in the future")
             return result
         
+    # minimun range width (pa/pb-1)  for carbon curves and sqrt thereof
+    CARBON_MIN_RANGEWIDTH  = 1e-6 
+    
     @classmethod
     def from_carbon(
         cls,
@@ -999,6 +1002,7 @@ class ConstantProductCurve(CurveBase):
         descr=None,
         params=None,
         isdydx=True,
+        minrw=None,
     ):
         """
         constructor: from a single Carbon order (see class docstring for other parameters) (1)
@@ -1011,6 +1015,7 @@ class ConstantProductCurve(CurveBase):
         :B:         alternative to pa, pb: B = sqrt(pb) in dy/dy
         :tkny:      token y
         :isdydx:    if True prices in dy/dx, if False in quote direction of the pair
+        :minrw:     minimum perc width (pa/pb-1) of range (default CARBON_MIN_RANGEWIDTH)
 
         NOTE 1: that ALL parameters are mandatory, except that EITHER pa, bp OR A, B
         must be given but not both; we do not correct for incorrect assignment of
@@ -1028,7 +1033,10 @@ class ConstantProductCurve(CurveBase):
         # assert not fee is None, "fee must not be None"
         # assert not cid is None, "cid must not be None"
         # assert not descr is None, "descr must not be None"
-
+        
+        if minrw is None:
+            minrw = cls.CARBON_MIN_RANGEWIDTH
+        
         # if yint is None:
         #     yint = y
         assert y <= yint, "y must be <= yint"
@@ -1067,15 +1075,21 @@ class ConstantProductCurve(CurveBase):
                 if not tkny == tknq:
                     pa, pb = 1 / pa, 1 / pb
 
-            # zero-width ranges are somewhat extended for numerical stability
+            # small and zero-width ranges are extended for numerical stability
             pa0, pb0 = pa, pb
+            if pa/pb-1 < minrw:
+                pa = pb = sqrt(pa*pb)
+                assert pa == pb, "just making sure"
             if pa == pb:
-                pa *= 1.0000001
-                pb /= 1.0000001
+                # pa *= 1.0000001
+                # pb /= 1.0000001
+                rw_multiplier = sqrt(1+minrw)
+                pa *= rw_multiplier
+                pb /= rw_multiplier
 
             # validation
-            if not pa > pb:
-                raise cls.CPCValidationError(f"pa > pb required ({pa}, {pb})")
+            if not pa/pb - 1 >= minrw*0.99:
+                raise cls.CPCValidationError(f"pa +> pb required ({pa}, {pb}, {pa/pb-1}, {minrw})")
 
             # finally set A, B
             A = sqrt(pa) - sqrt(pb)
@@ -1094,7 +1108,7 @@ class ConstantProductCurve(CurveBase):
         yasym_times_A = yint * B
         kappa_times_A = yint**2 / A
 
-        params0 = dict(y=y, yint=yint, A=A0, B=B, pa=pa0, pb=pb0)
+        params0 = dict(y=y, yint=yint, A=A0, B=B, pa=pa0, pb=pb0, minrw=minrw)
         if params is None:
             params = AttrDict(params0)
         else:
@@ -1805,13 +1819,15 @@ class CPCContainer:
         """returns the scale of tkn"""
         return self.tokenscale.scale(tkn)
 
-    def asdicts(self):
+    def as_dicts(self):
         """returns list of dictionaries representing the curves"""
         return [c.asdict() for c in self.curves]
-
-    def asdf(self):
+    asdicts = as_dicts # legacy name
+    
+    def as_df(self):
         """returns pandas dataframe representing the curves"""
         return pd.DataFrame.from_dict(self.asdicts()).set_index("cid")
+    asdf = as_df # legacy name
 
     @classmethod
     def from_dicts(cls, dicts, *, tokenscale=None):
@@ -2531,7 +2547,7 @@ class CPCContainer:
     PE_DATA = "data"
 
     def price_estimate(
-        self, *, tknq=None, tknb=None, pair=None, result=None, raiseonerror=True
+        self, *, tknq=None, tknb=None, pair=None, result=None, raiseonerror=True, verbose=False
     ):
         """
         calculates price estimate in the reference token as base token
@@ -2544,6 +2560,7 @@ class CPCContainer:
                         :PE_PAIR:      slashpair
                         :PE_CURVES:    curves
                         :PE_DATA:      prices, weights
+        :verbose:       whether to print some progress
         :returns:       price (quote per base)
         """
         assert tknq is not None and tknb is not None or pair is not None, (
@@ -2570,6 +2587,8 @@ class CPCContainer:
             # return dict(curves=tuple(crvs), rcurves=tuple(rcrvs))
             return tuple(acurves)
         data = tuple((r[1], sqrt(r[2])) for r in acurves)
+        if verbose:
+            print(f"[price_estimate] {tknq}/{tknb} {len(data)} curves")
         if not len(data) > 0:
             if raiseonerror:
                 raise ValueError(f"no curves found for {tknq}/{tknb}")
@@ -2620,13 +2639,13 @@ class CPCContainer:
             tknqs = [t.strip() for t in tknqs.split(",")]
         if isinstance(tknbs, str):
             tknbs = [t.strip() for t in tknbs.split(",")]
-        # print(f"[price_estimates] tknqs [{len(tknqs)}], tknbs [{len(tknbs)}]")
-        # print(f"[price_estimates] tknqs [{len(tknqs)}] = {tknqs} , tknbs [{len(tknbs)}]] = {tknbs} ")
+        if verbose:
+            print(f"[price_estimates] tknqs [{len(tknqs)}] = {tknqs} , tknbs [{len(tknbs)}] = {tknbs} ")
         resulttp = self.PE_PAIR if pairs else None
         result = np.array(
             [
                 [
-                    self.price_estimate(tknb=b, tknq=q, raiseonerror=False, result=resulttp)
+                    self.price_estimate(tknb=b, tknq=q, raiseonerror=False, result=resulttp, verbose=verbose)
                     for b in tknbs
                 ] 
                 for q in tknqs
@@ -2696,12 +2715,7 @@ class CPCContainer:
             }
             # print("[price_estimates] result", result)
             if not len(missing) == 0:
-                raise ValueError(
-                    f"no price found for {len(missing)} pairs",
-                    result,
-                    missing,
-                    len(missing),
-                )
+                raise ValueError(f"no price found for {len(missing)} pairs", missing, result)
 
         #print(f"[price_estimates] DONE [{time.time()-start_time:.2f}s]")
         if unwrapsingle and len(tknqs) == 1:
