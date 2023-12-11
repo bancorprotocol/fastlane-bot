@@ -743,10 +743,10 @@ def run(
             w3 = Web3(HTTPProvider(tenderly_uri))
 
             # Increase time and blocks
-            params = [w3.toHex(increment_time)]  # number of seconds
+            params = [w3.to_hex(increment_time)]  # number of seconds
             w3.provider.make_request(method="evm_increaseTime", params=params)
 
-            params = [w3.toHex(increment_blocks)]  # number of blocks
+            params = [w3.to_hex(increment_blocks)]  # number of blocks
             w3.provider.make_request(method="evm_increaseBlocks", params=params)
         if (
                 loop_idx % version_check_frequency == 0

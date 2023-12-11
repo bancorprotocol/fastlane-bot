@@ -309,7 +309,7 @@ class TxHelpers:
             self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         # Get current block number
-        block_number = self.web3.eth.get_block("latest")["number"]
+        block_number = int(self.web3.eth.get_block("latest")["number"])
         # Get current nonce for our account
         nonce = self.get_nonce()
 
@@ -561,7 +561,7 @@ class TxHelpers:
             return transaction
 
         try:
-            estimated_gas = (
+            estimated_gas = int(
                     self.web3.eth.estimate_gas(transaction=transaction)
                     + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
@@ -651,7 +651,7 @@ class TxHelpers:
         signed_arb_tx = self.sign_transaction(arb_tx)
         self.ConfigObj.logger.info(f"Attempting to submit tx {signed_arb_tx}")
         tx = self.web3.eth.send_raw_transaction(signed_arb_tx.rawTransaction)
-        tx_hash = self.web3.toHex(tx)
+        tx_hash = self.web3.to_hex(tx)
         try:
             tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx)
             return tx_receipt

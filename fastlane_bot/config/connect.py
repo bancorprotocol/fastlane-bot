@@ -140,7 +140,7 @@ class EthereumNetwork(NetworkBase):
         :param tx_receipt:
         :return: the hex string
         """
-        return self.web3.toHex(dict(tx_receipt)["transactionHash"])
+        return self.web3.to_hex(dict(tx_receipt)["transactionHash"])
 
     def sign_transaction(self, transaction: HexBytes) -> HexBytes:
         """
