@@ -2,10 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.78...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.79...HEAD)
+
+- bugfix pstart [\#248](https://github.com/bancorprotocol/fastlane-bot/pull/248) ([NIXBNT](https://github.com/NIXBNT))
+
+- Improve logging error messages [\#243](https://github.com/bancorprotocol/fastlane-bot/issues/243)
+
+## [v2.7.79](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.79) (2023-12-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.78...v2.7.79)
 
 - Update Fast Lane contract address on Base [\#244](https://github.com/bancorprotocol/fastlane-bot/issues/244)
-- Improve logging error messages [\#243](https://github.com/bancorprotocol/fastlane-bot/issues/243)
 - 243 improve logging error messages [\#247](https://github.com/bancorprotocol/fastlane-bot/pull/247) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
