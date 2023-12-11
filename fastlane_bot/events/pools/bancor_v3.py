@@ -84,7 +84,7 @@ class BancorV3Pool(Pool):
         """
         See base class.
         """
-        pool_balances = await contract.caller.tradingLiquidity(
+        pool_balances = contract.caller.tradingLiquidity(
             self.state.index.get_level_values("tkn0_address").tolist()[0],
         )
 
