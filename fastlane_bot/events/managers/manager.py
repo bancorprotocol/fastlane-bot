@@ -55,7 +55,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         pool_info = self.get_pool_info(key, key_value, ex_name)
 
-        if not pool_info:
+        if pool_info is None:
             self.pools_to_add_from_contracts.append(
                 (addr, ex_name, event, key, key_value)
             )
@@ -65,9 +65,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info["descr"] = self.pool_descr_from_info(pool_info)
 
         pool = self.get_or_init_pool(pool_info)
-        data = pool.update_from_event(
-            event or {}, pool.get_common_data(event, pool_info)
-        )
+        event, data = event or {}, pool.get_common_data(event, pool_info)
+        data = pool.update_from_event(event, data)
 
         self.update_pool_data(pool_info, data)
 

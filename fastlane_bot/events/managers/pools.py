@@ -322,10 +322,11 @@ class PoolManager(BaseManager):
             The pool info.
 
         """
+        ex_name = pool_info.index.get_level_values("exchange_name").tolist()[0]
         try:
-            pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
+            pool_type = self.pool_type_from_exchange_name(ex_name)
             pool = pool_type(state=pool_info)
-            self.exchanges[pool_info["exchange_name"]].add_pool(pool)
+            self.exchanges[ex_name].add_pool(pool)
         except Exception as e:
             print(f"Error adding pool to exchange: {e}, skipping...")
 

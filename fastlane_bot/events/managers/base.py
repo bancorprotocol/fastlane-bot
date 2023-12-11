@@ -102,8 +102,6 @@ class BaseManager:
 
     def __post_init__(self):
 
-        self.pool_data = self.setup_pool_data_df(self.pool_data)
-
         for exchange_name in self.SUPPORTED_EXCHANGES:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
         self.init_exchange_contracts()
@@ -537,7 +535,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:
@@ -696,7 +694,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:

@@ -164,7 +164,7 @@ def get_pool_info(
         "tkn0_decimals": tkn0["decimals"],
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
-        "pair_name": tkn0["address"] + "/" + tkn1["address"]
+        "pair_name": tkn0["address"] + "/" + tkn1["address"],
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
@@ -184,6 +184,7 @@ def get_pool_info(
 
     return pool_info
 
+
 def sanitize_token_symbol(token_symbol: str, token_address: str) -> str:
     """
     This function ensures token symbols are compatible with the bot's data structures.
@@ -194,7 +195,9 @@ def sanitize_token_symbol(token_symbol: str, token_address: str) -> str:
 
     returns: str
     """
-    sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
+    sanitization_path = os.path.normpath(
+        "fastlane_bot/data/data_sanitization_center/sanitary_data.csv"
+    )
     try:
         token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
         token_pd.to_csv(sanitization_path)
@@ -208,8 +211,12 @@ def add_token_info(
 ) -> Dict[str, Any]:
     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"])
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"])
+    tkn0_symbol = sanitize_token_symbol(
+        token_symbol=tkn0_symbol, token_address=tkn0["address"]
+    )
+    tkn1_symbol = sanitize_token_symbol(
+        token_symbol=tkn1_symbol, token_address=tkn1["address"]
+    )
     tkn0["symbol"] = tkn0_symbol
     tkn1["symbol"] = tkn1_symbol
 
@@ -247,11 +254,9 @@ def get_new_pool_data(
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
 
     # Convert pool_data_keys to a frozenset for faster containment checks
-    all_keys = set()
-    for pool in mgr.pool_data:
-        all_keys.update(pool.keys())
+    all_keys = list(mgr.pool_data.columns)
     if "last_updated_block" not in all_keys:
-        all_keys.update("last_updated_block")
+        all_keys.append("last_updated_block")
     pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
@@ -495,23 +500,16 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     # print duplicate cid rows
     duplicate_cid_rows = new_pool_data_df[new_pool_data_df.duplicated(subset=["cid"])]
 
-    new_pool_data_df = (
-        new_pool_data_df.sort_values("last_updated_block", ascending=False)
-        .drop_duplicates(subset=["cid"])
-        .set_index("cid")
-    )
+    new_pool_data_df = new_pool_data_df.sort_values(
+        "last_updated_block", ascending=False
+    ).drop_duplicates(subset=["cid"])
+    new_pool_data_df = new_pool_data_df.set_index(mgr.pool_data.index.names)
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
-    # assert len(mgr.pools_to_add_from_contracts) == (
-    #     len(new_pool_data_df) + duplicate_new_pool_ct
-    # )
 
-    all_pools_df = (
-        pd.DataFrame(mgr.pool_data)
-        .sort_values("last_updated_block", ascending=False)
-        .drop_duplicates(subset=["cid"])
-        .set_index("cid")
-    )
+    all_pools_df = mgr.pool_data.sort_values(
+        "last_updated_block", ascending=False
+    ).drop_duplicates()
 
     new_pool_data_df = new_pool_data_df[all_pools_df.columns]
 
