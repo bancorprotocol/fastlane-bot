@@ -33,7 +33,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 # -
 
-# # Optimizer Testing
+# # Optimizer Testing (SEI, May 2024)
 
 # This is a light workbook allowing to look at issues that may arise when running the optimizer on a specific set of curves. 
 #
@@ -226,10 +226,11 @@ O = MargPOptimizer(CC)
 r = O.optimize(sfc="ETH", params=dict(
     pstart=PRICES,
     verbose=True,
-    debug=True,
+    debug=False,
     debug_j=True,
-    debug_dtkn=True,
-    debug_dtkn2=True,
+    debug_dtkn=False,
+    debug_dtkn2=False,
+    debug_dtknd=True,
 ))
 r
 
