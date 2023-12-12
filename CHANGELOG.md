@@ -2,9 +2,21 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.81...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.82...HEAD)
 
+- Fix error caused in poolandtokens for Bancor POL curves [\#254](https://github.com/bancorprotocol/fastlane-bot/issues/254)
 - Issue causing transactions to be submitted without Flashbots by default [\#251](https://github.com/bancorprotocol/fastlane-bot/issues/251)
+- update LYXe token info [\#241](https://github.com/bancorprotocol/fastlane-bot/issues/241)
+- Bancor POL fix for poolandtokens [\#255](https://github.com/bancorprotocol/fastlane-bot/pull/255) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Merged pull requests
+
+- Update tokens.csv [\#242](https://github.com/bancorprotocol/fastlane-bot/pull/242) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v2.7.82](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.82) (2023-12-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.81...v2.7.82)
+
 - Issue with Bancor POL Balance updating after trades [\#249](https://github.com/bancorprotocol/fastlane-bot/issues/249)
 - Update txhelpers.py [\#252](https://github.com/bancorprotocol/fastlane-bot/pull/252) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
