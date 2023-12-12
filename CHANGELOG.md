@@ -2,9 +2,44 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.80...HEAD)
+
+- Issue with Bancor POL Balance updating after trades [\#249](https://github.com/bancorprotocol/fastlane-bot/issues/249)
+
+Merged pull requests
+
+- 249 issue with bancor pol balance updating after trades [\#250](https://github.com/bancorprotocol/fastlane-bot/pull/250) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.80](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.80) (2023-12-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.79...v2.7.80)
+
+- bugfix pstart [\#248](https://github.com/bancorprotocol/fastlane-bot/pull/248) ([NIXBNT](https://github.com/NIXBNT))
+
+- Improve logging error messages [\#243](https://github.com/bancorprotocol/fastlane-bot/issues/243)
+
+## [v2.7.79](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.79) (2023-12-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.78...v2.7.79)
+
+- Update Fast Lane contract address on Base [\#244](https://github.com/bancorprotocol/fastlane-bot/issues/244)
+- 243 improve logging error messages [\#247](https://github.com/bancorprotocol/fastlane-bot/pull/247) ([mikewcasale](https://github.com/mikewcasale))
+
+Closed issues
+
+- Can anyone provide the instructions to use a private eth node? Already have the node [\#246](https://github.com/bancorprotocol/fastlane-bot/issues/246)
+
+## [v2.7.78](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.78) (2023-12-07)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.77...v2.7.78)
 
 - default\_min\_profit\_gas\_token too low by default [\#239](https://github.com/bancorprotocol/fastlane-bot/issues/239)
+- Update network.py [\#245](https://github.com/bancorprotocol/fastlane-bot/pull/245) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.77](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.77) (2023-11-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.76...v2.7.77)
+
 - Add logic for ETH/WETH wrapping & unwrapping [\#214](https://github.com/bancorprotocol/fastlane-bot/issues/214)
 - Arb Bot Upgrade for next POL iteration [\#194](https://github.com/bancorprotocol/fastlane-bot/issues/194)
 - Add triangle arb mode for Bancor POL pools [\#157](https://github.com/bancorprotocol/fastlane-bot/issues/157)
