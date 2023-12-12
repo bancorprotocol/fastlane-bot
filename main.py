@@ -644,6 +644,9 @@ def run(
                 async_update_pools_from_contracts(mgr, current_block, logging_path)
                 mgr.pools_to_add_from_contracts = []
 
+            
+            # Increment the loop index
+            loop_idx += 1
             total_iteration_time += time.time() - iteration_start_time
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
@@ -727,8 +730,6 @@ def run(
                 forked_from_block=forked_from_block,
             )
 
-            # Increment the loop index
-            loop_idx += 1
 
             # Sleep for the polling interval
             if not replay_from_block and polling_interval > 0:
