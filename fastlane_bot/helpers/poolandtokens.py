@@ -1,6 +1,7 @@
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 
+import decimal
 import itertools
 import math
 from typing import Dict, Any, List, Union
@@ -337,13 +338,24 @@ class PoolAndTokens:
         errors = []
         for i in [0, 1]:
             # pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
+            if i == 0:
+                # fix for Bancor POL empty curves
+                if self.B_1 is None:
+                    continue
+
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             if B <= 0:
                 continue
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
             z = yint = Decimal(self.z_1) if i == 0 else Decimal(self.z_0)
-            if y <= 0:
+            try:
+                if y <= Decimal("0"):
+                    continue
+            except decimal.InvalidOperation:
+                # print(
+                #     f"decimal.InvalidOperation attributes: {self.exchange_name}, {self.pair_name}, {self.cid}, y={y}, y_0={self.y_0}, y_1={self.y_1}, skipping..."
+                # )
                 continue
             encoded_order = EncodedOrder(
                 **{
