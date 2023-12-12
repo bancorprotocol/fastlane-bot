@@ -52,6 +52,8 @@ class CarbonV1Pool(Pool):
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
 
         self.update_pool_state_from_data(data)
+
+        print(f"[carbon] success update from event")
         return data
 
     @staticmethod

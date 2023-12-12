@@ -390,6 +390,8 @@ class PoolManager(BaseManager):
             ]
 
         else:
+            if not isinstance(self.pool_data, pd.DataFrame):
+                raise ValueError("pool_data must be a DataFrame")
 
             # Filter the DataFrame for the specified conditions
             filtered_pools = self.pool_data[
@@ -424,11 +426,15 @@ class PoolManager(BaseManager):
         data : Dict[str, Any]
             The data.
         """
+        print("[pools.update_pool_data] Updating pool data")
         cid = pool_info.index.get_level_values("cid")[0]
 
         self.pool_data.loc[
             self.pool_data.index.get_level_values("cid") == cid, :
         ] = pd.DataFrame(data, index=pool_info.index)
+
+        if not isinstance(self.pool_data, pd.DataFrame):
+            raise ValueError("[pools.update_pool_data] pool_data must be a DataFrame")
 
     def get_or_init_pool(self, pool_info: Dict[str, Any]) -> Pool:
         """

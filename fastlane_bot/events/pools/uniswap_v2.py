@@ -54,12 +54,14 @@ class UniswapV2Pool(Pool):
 
         self.update_pool_state_from_data(data)
 
-        data["cid"] = self.state.index.get_level_values("cid").tolist()[0]
+        data["cid"] = self.state.index.get_level_values("cid").tolist()
+
         data["fee"] = self.state["fee"].iloc[0]
         data["fee_float"] = self.state["fee_float"].iloc[0]
         data["exchange_name"] = self.state.index.get_level_values(
             "exchange_name"
         ).tolist()[0]
+        print(f"[uniswap2] success update from event")
         return data
 
     def update_from_contract(

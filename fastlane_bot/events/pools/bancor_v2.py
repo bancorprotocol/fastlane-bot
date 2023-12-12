@@ -93,6 +93,7 @@ class BancorV2Pool(Pool):
         data["exchange_name"] = self.state.index.get_level_values(
             "exchange_name"
         ).tolist()[0]
+        print(f"[bancor2] success update from event")
         return data
 
     def update_from_contract(

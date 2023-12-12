@@ -53,6 +53,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
+        if not isinstance(self.pool_data, pd.DataFrame):
+            raise ValueError("[manager.update_from_event] pool_data is not a dataframe")
+
         pool_info = self.get_pool_info(key, key_value, ex_name)
 
         if pool_info is None:
@@ -62,9 +65,27 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         if "descr" not in pool_info:
-            pool_info["descr"] = self.pool_descr_from_info(pool_info)
+            pool_info["descr"] = [self.pool_descr_from_info(pool_info)]
 
+        print(f"pool_info: {type(pool_info)}")
         pool = self.get_or_init_pool(pool_info)
+        pool_info["cid"] = [
+            self.pool_cid_from_descr(
+                web3=self.web3, descr=pool_info["descr"].tolist()[0]
+            )
+        ]
+
+        print(f"[xxx] pool_info: {pool_info['cid'].values[0]}")
+        pool_info["exchange_name"] = [ex_name]
+        missing_names = []
+        for name in self.pool_data.index.names:
+            if name not in list(pool_info.columns) + pool_info.index.names:
+                missing_names.append(name)
+
+        print(f"missing_names: {self.pool_data.index.names}")
+        if missing_names:
+            raise ValueError(f"Missing names: {pool_info.index.names} {missing_names}")
+
         event, data = event or {}, pool.get_common_data(event, pool_info)
         data = pool.update_from_event(event, data)
 

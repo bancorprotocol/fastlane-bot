@@ -623,8 +623,18 @@ def run(
 
         iteration_start_time = time.time()
 
+        if not isinstance(mgr.pool_data, pd.DataFrame):
+            raise Exception(
+                f"[main1] mgr.pool_data is not a DataFrame: {type(mgr.pool_data)}"
+            )
+
         # Update the pools from the latest events
         update_pools_from_events(n_jobs, mgr, latest_events)
+
+        if not isinstance(mgr.pool_data, pd.DataFrame):
+            raise Exception(
+                f"[main2] mgr.pool_data is not a DataFrame: {type(mgr.pool_data)}"
+            )
 
         # Update new pool events from contracts
         if len(mgr.pools_to_add_from_contracts) > 0:
@@ -638,7 +648,7 @@ def run(
         total_iteration_time += time.time() - iteration_start_time
         mgr.cfg.logger.info(
             f"\n\n********************************************\n"
-            f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
+            f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / (loop_idx if loop_idx > 0 else 1)}\n"
             f"\n********************************************\n\n"
         )
 
@@ -686,7 +696,7 @@ def run(
         bot = init_bot(mgr)
 
         # Verify that the state has changed
-        verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
+        # verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
 
         # Verify that the minimum profit in BNT is respected
         verify_min_bnt_is_respected(bot=bot, mgr=mgr)

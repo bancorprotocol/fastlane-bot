@@ -72,7 +72,8 @@ class QueryInterface:
         self.state = [
             pool
             for pool in self.state
-            if pool["tkn0_address"] in target_tokens and pool["tkn1_address"] in target_tokens
+            if pool["tkn0_address"] in target_tokens
+            and pool["tkn1_address"] in target_tokens
         ]
 
         self.cfg.logger.info(
@@ -169,17 +170,28 @@ class QueryInterface:
             The filtered pools
         """
         if keys:
-            return [
-                pool
-                for pool in self.state
-                if pool["exchange_name"] == exchange_name
-                and self.has_balance(pool, keys)
-                and pool["tkn0_decimals"] is not None
-                and pool["tkn1_decimals"] is not None
+            # convert the following to filter via pd.DataFrame instead
+            # return [
+            #     pool
+            #     for pool in self.state
+            #     if pool["exchange_name"] == exchange_name
+            #     and self.has_balance(pool, keys)
+            #     and pool["tkn0_decimals"] is not None
+            #     and pool["tkn1_decimals"] is not None
+            # ]
+            return self.state[
+                (self.state.index.get_level_values("exchange_name") == exchange_name)
+                & (self.state["tkn0_decimals"].notnull())
+                & (self.state["tkn1_decimals"].notnull())
+                & (self.state.apply(lambda x: self.has_balance(x, keys), axis=1))
             ]
+
         else:
-            return [
-                pool for pool in self.state if pool["exchange_name"] == exchange_name
+            # return [
+            #     pool for pool in self.state if pool["exchange_name"] == exchange_name
+            # ]
+            return self.state[
+                (self.state.index.get_level_values("exchange_name") == exchange_name)
             ]
 
     def log_pool_numbers(self, pools: List[Dict[str, Any]], exchange_name: str) -> None:
@@ -258,17 +270,26 @@ class QueryInterface:
         Remove unmapped uniswap_v2 pools
         """
         initial_state = self.state.copy()
-        self.state = [
-            pool
-            for pool in self.state
-            if pool["exchange_name"] != "uniswap_v2"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
-                and pool["address"] in self.uniswap_v2_event_mappings
+        self.state = self.state[
+            self.state.index.get_level_values("exchange_name").isin(
+                self.cfg.UNI_V2_FORKS
+            )
+            & self.state.index.get_level_values("address").isin(
+                self.uniswap_v2_event_mappings
             )
         ]
+        # self.state = [
+        #     pool
+        #     for pool in self.state
+        #     if pool["exchange_name"] != "uniswap_v2"
+        #     or (
+        #         pool["exchange_name"] in self.cfg.UNI_V2_FORKS
+        #         and pool["address"] in self.uniswap_v2_event_mappings
+        #     )
+        # ]
         self.cfg.logger.debug(
-            f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
+            f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} "
+            f"uniswap_v2/sushi pools remaining"
         )
         self.log_umapped_pools_by_exchange(initial_state)
 
@@ -294,18 +315,21 @@ class QueryInterface:
     def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
         self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
-        unmapped_pools = [pool for pool in initial_state if pool not in self.state]
+        # unmapped_pools = [pool for pool in initial_state if pool not in self.state]
+        unmapped_pools = initial_state[~initial_state.index.isin(self.state.index)]
+
         assert len(unmapped_pools) == len(initial_state) - len(self.state)
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
         # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
-        uniswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
+        uniswap_v2_unmapped = unmapped_pools[
+            unmapped_pools.index.get_level_values("exchange_name") == "uniswap_v2"
         ]
+
         self.log_pool_numbers(uniswap_v2_unmapped, "uniswap_v2")
-        sushiswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
+        sushiswap_v2_unmapped = unmapped_pools[
+            unmapped_pools.index.get_level_values("exchange_name") == "sushiswap_v2"
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
 
@@ -473,8 +497,20 @@ class QueryInterface:
                 except AttributeError:
                     pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
-            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL,
+                    address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL,
+                    address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
         return list(token_set)
 
     def populate_tokens(self):
@@ -490,8 +526,16 @@ class QueryInterface:
                 except AttributeError:
                     pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
-            wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
+            native_gas_tkn = Token(
+                symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL,
+                address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                decimals=18,
+            )
+            wrapped_gas_tkn = Token(
+                symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL,
+                address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                decimals=18,
+            )
             self.token_list[native_gas_tkn.address] = native_gas_tkn
             self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
 
@@ -561,10 +605,14 @@ class QueryInterface:
                 self.populate_tokens()
                 return self.token_list.get(tkn_address)
             except KeyError as e:
-                self.ConfigObj.logger.info(f"[interface.py get_token] Could not find token: {tkn_address} in token_list")
+                self.ConfigObj.logger.info(
+                    f"[interface.py get_token] Could not find token: {tkn_address} in token_list"
+                )
                 tokens = self.get_tokens()
                 if tkn_address.startswith("0x"):
-                    return next((tkn for tkn in tokens if tkn.address == tkn_address), None)
+                    return next(
+                        (tkn for tkn in tokens if tkn.address == tkn_address), None
+                    )
                 else:
                     raise ValueError(f"[get_token] Invalid token: {tkn_address}")
 

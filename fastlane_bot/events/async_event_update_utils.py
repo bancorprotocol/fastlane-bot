@@ -525,11 +525,22 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
     all_pools = (
         all_pools_df.sort_values("last_updated_block", ascending=False)
-        .reset_index()
-        .to_dict(orient="records")
+        # .reset_index()
+        # .to_dict(orient="records")
     )
 
+    if not isinstance(mgr.pool_data, pd.DataFrame):
+        raise Exception(
+            f"[async1] mgr.pool_data is not a DataFrame: {type(mgr.pool_data)}"
+        )
+
     mgr.pool_data = all_pools
+
+    if not isinstance(mgr.pool_data, pd.DataFrame):
+        raise Exception(
+            f"[async2] mgr.pool_data is not a DataFrame: {type(mgr.pool_data)}"
+        )
+
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
 

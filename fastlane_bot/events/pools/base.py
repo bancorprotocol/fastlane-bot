@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Any, List
 
+import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
@@ -30,14 +31,18 @@ class Pool(ABC):
 
     state: Dict[str, Any] = field(default_factory=dict)
 
-    def update_pool_state_from_data(self, data):
+    def update_pool_state_from_data(self, data, index_cols=None):
         state_cp = self.state.copy()
         for key, value in data.items():
             if key in state_cp.index.names:
-                state_cp = state_cp[state_cp.index.get_level_values(key) == value]
+                # state_cp = state_cp[state_cp.index.get_level_values(key) == value]
+                state_cp.index.get_level_values(key) == value
             else:
                 state_cp[key] = value
+
+        # state_cp.set_index(self.state.index.names, inplace=True)
         self.state = state_cp
+        print(f"[pool.base] {self.state.index.names}")
 
     @classmethod
     @abstractmethod
@@ -64,7 +69,7 @@ class Pool(ABC):
 
     @staticmethod
     def get_common_data(
-        event: Dict[str, Any], pool_info: Dict[str, Any]
+        event: Dict[str, Any], pool_info: pd.DataFrame
     ) -> Dict[str, Any]:
         """
         Get common (common to all Pool child classes) data from an event and pool info.
@@ -79,8 +84,8 @@ class Pool(ABC):
         return {
             "last_updated_block": event["blockNumber"],
             "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "pair_name": pool_info["pair_name"],
-            "descr": pool_info["descr"],
+            "pair_name": pool_info["pair_name"].tolist()[0],
+            "descr": pool_info["descr"].tolist()[0],
             "address": event["address"],
         }
 

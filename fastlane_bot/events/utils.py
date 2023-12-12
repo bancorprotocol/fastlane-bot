@@ -1009,11 +1009,15 @@ def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mg
     """
     # Compare the initial state to the final state, and update the state if it has changed
     final_state = mgr.pool_data.copy()
-    final_state_bancor_pol = [
-        final_state[i]
-        for i in range(len(final_state))
-        if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
+    final_state_bancor_pol = final_state[
+        final_state.index.get_level_values("exchange_name") == mgr.cfg.BANCOR_POL_NAME
     ]
+    final_state_bancor_pol = final_state_bancor_pol.to_dict(orient="records")
+    # final_state_bancor_pol = [
+    #     final_state.iloc[i]
+    #     for i in range(len(final_state))
+    #     if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
+    # ]
     # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
     if initial_state != final_state_bancor_pol:
         mgr.cfg.logger.debug("[events.utils.verify_state_changed] State has changed...")

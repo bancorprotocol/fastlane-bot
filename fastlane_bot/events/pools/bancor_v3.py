@@ -62,6 +62,7 @@ class BancorV3Pool(Pool):
         else:
             data["tkn1_balance"] = event_args["newLiquidity"]
 
+        # print(f"[bancor3] {self.state.keys()}")
         self.update_pool_state_from_data(data)
 
         # print(f"[bancor3] {self.state.index.names}, {self.state.values}")
@@ -71,6 +72,7 @@ class BancorV3Pool(Pool):
         data["exchange_name"] = self.state.index.get_level_values(
             "exchange_name"
         ).tolist()[0]
+        print(f"[bancor3] success update from event")
         return data
 
     def update_from_contract(
