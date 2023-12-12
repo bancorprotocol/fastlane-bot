@@ -2,9 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.80...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.81...HEAD)
 
+- Issue causing transactions to be submitted without Flashbots by default [\#251](https://github.com/bancorprotocol/fastlane-bot/issues/251)
 - Issue with Bancor POL Balance updating after trades [\#249](https://github.com/bancorprotocol/fastlane-bot/issues/249)
+- Update txhelpers.py [\#252](https://github.com/bancorprotocol/fastlane-bot/pull/252) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v2.7.81](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.81) (2023-12-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.80...v2.7.81)
 
 Merged pull requests
 
