@@ -423,7 +423,7 @@ class TxHelpers:
 
             # Submit the transaction
 
-            if self.ConfigObj.network == "ethereum":
+            if self.ConfigObj.NETWORK in "ethereum":
 
                 tx_hash = self.submit_private_transaction(
                     arb_tx=arb_tx, block_number=block_number
