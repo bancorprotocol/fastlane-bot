@@ -392,6 +392,10 @@ class PoolAndTokens:
         lst = []
         errors = []
         for i in [0, 1]:
+            if i == 0:
+                # fix for Bancor POL empty curves
+                if self.B_1 is None:
+                    continue
             # pair = self.pair_name.replace("ETH-EEeE", "WETH-6Cc2")
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
@@ -400,7 +404,7 @@ class PoolAndTokens:
             y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
             z = yint = Decimal(self.z_1) if i == 0 else Decimal(self.z_0)
             try:
-                if y <= 0:
+                if y <= Decimal("0"):
                     continue
             except decimal.InvalidOperation:
                 # print(
