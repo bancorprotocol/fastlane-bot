@@ -300,6 +300,10 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
         "z_0": tkn_balance,
         "A_0": 0,
         "B_0": token_price,
+        "y_1": 0,
+        "z_1": 0,
+        "A_1": 0,
+        "B_1": 0,
     }
     return result
 
