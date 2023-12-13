@@ -14,7 +14,6 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 
 @dataclass
 class Token:
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -32,7 +31,6 @@ class Token:
 
 @dataclass
 class Pool(PoolAndTokens):
-
     __VERSION__ = "0.0.1"
     __DATE__ = "2023-07-03"
 
@@ -56,6 +54,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+
     @property
     def cfg(self) -> Config:
         return self.ConfigObj
@@ -77,11 +76,11 @@ class QueryInterface:
         ]
 
         self.cfg.logger.info(
-            f"Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
+            f"[events.interface] Limiting pools by target_tokens. Removed {len(initial_state) - len(self.state)} non target-pools. {len(self.state)} pools remaining"
         )
 
         # Log the total number of pools remaining for each exchange
-        self.ConfigObj.logger.info("Pools remaining per exchange:")
+        self.ConfigObj.logger.debug("Pools remaining per exchange:")
         for exchange_name in self.exchanges:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
@@ -91,12 +90,12 @@ class QueryInterface:
         self.state = [
             pool for pool in self.state if pool["exchange_name"] in self.exchanges
         ]
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Removed {len(initial_state) - len(self.state)} unsupported exchanges. {len(self.state)} pools remaining"
         )
 
         # Log the total number of pools remaining for each exchange
-        self.ConfigObj.logger.info("Pools remaining per exchange:")
+        self.ConfigObj.logger.debug("Pools remaining per exchange:")
         for exchange_name in self.exchanges:
             pools = self.filter_pools(exchange_name)
             self.log_pool_numbers(pools, exchange_name)
@@ -123,7 +122,6 @@ class QueryInterface:
             if key in pool and pool[key] > 0:
                 return True
         return False
-
 
     def get_tokens_from_exchange(self, exchange_name: str) -> List[str]:
         """
@@ -152,7 +150,9 @@ class QueryInterface:
         tokens = list(set(tokens))
         return tokens
 
-    def filter_pools(self, exchange_name: str, keys: List[str] = "") -> List[Dict[str, Any]]:
+    def filter_pools(
+        self, exchange_name: str, keys: List[str] = ""
+    ) -> List[Dict[str, Any]]:
         """
         Filter pools by exchange name and key
 
@@ -174,6 +174,8 @@ class QueryInterface:
                 for pool in self.state
                 if pool["exchange_name"] == exchange_name
                 and self.has_balance(pool, keys)
+                and pool["tkn0_decimals"] is not None
+                and pool["tkn1_decimals"] is not None
             ]
         else:
             return [
@@ -192,7 +194,7 @@ class QueryInterface:
             The exchange name to log
 
         """
-        self.cfg.logger.info(f"{exchange_name}: {len(pools)}")
+        self.cfg.logger.debug(f"[events.interface] {exchange_name}: {len(pools)}")
 
     def remove_zero_liquidity_pools(self) -> None:
         """
@@ -210,7 +212,7 @@ class QueryInterface:
             "carbon_v1",
             "pancakeswap_v2",
             "pancakeswap_v3",
-            "balancer"
+            "balancer",
         ]
         keys = [
             ["liquidity"],
@@ -265,7 +267,7 @@ class QueryInterface:
                 and pool["address"] in self.uniswap_v2_event_mappings
             )
         ]
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
         )
         self.log_umapped_pools_by_exchange(initial_state)
@@ -284,20 +286,20 @@ class QueryInterface:
                 and pool["address"] in self.uniswap_v3_event_mappings
             )
         ]
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
         )
         self.log_umapped_pools_by_exchange(initial_state)
 
     def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
-        self.ConfigObj.logger.info("Unmapped uniswap_v2/sushi pools:")
+        self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
         unmapped_pools = [pool for pool in initial_state if pool not in self.state]
         assert len(unmapped_pools) == len(initial_state) - len(self.state)
         # uniswap_v3_unmapped = [
         #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
         # ]
-        #self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
+        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
         uniswap_v2_unmapped = [
             pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
         ]
@@ -307,14 +309,11 @@ class QueryInterface:
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
 
-
-
-
     def remove_faulty_token_pools(self) -> None:
         """
         Remove pools with faulty tokens
         """
-        self.cfg.logger.info(
+        self.cfg.logger.debug(
             f"Total number of pools. {len(self.state)} before removing faulty token pools"
         )
 
@@ -325,8 +324,8 @@ class QueryInterface:
                 self.get_token(pool["tkn1_key"])
                 safe_pools.append(pool)
             except Exception as e:
-                self.cfg.logger.info(f"Exception: {e}")
-                self.cfg.logger.info(
+                self.cfg.logger.warning(f"[events.interface] Exception: {e}")
+                self.cfg.logger.warning(
                     f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token"
                 )
 
@@ -487,7 +486,7 @@ class QueryInterface:
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
-                    "tkn7_weight"
+                    "tkn7_weight",
                 ]
             },
         )
@@ -510,6 +509,23 @@ class QueryInterface:
         for record in self.state:
             for idx in range(len(record["descr"].split("/"))):
                 token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.NATIVE_GAS_TOKEN_KEY.split("-")[0],
+                    key=self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
+                    address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY.split("-")[0],
+                    key=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+                    address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
         return list(token_set)
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:

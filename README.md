@@ -110,12 +110,21 @@ python main.py
 You can configure the Fastlane Arbitrage Bot using the options in the `@click.option` section of `main.py`. An overview of options is provided below:
 
 - **cache_latest_only** (bool): Whether to cache only the latest events.
-- **arb_mode** (str): Specifies the arbitrage mode. Options include:
-    - **single**: Arbitrage between one Carbon curve and one other exchange curve.
-    - **multi** (default): Arbitrage between multiple Carbon curves and one other exchange curve.
-    - **triangle**: Triangular arbitrage between one Carbon curve and two other exchange curves.
-    - **multi_triangle**: Triangular arbitrage between multiple Carbon curves and two other exchange curves.
-    - **bancor_v3**: Arbitrage between two Bancor v3 pools and one other exchange curve.
+- **arb_mode** (str): Specifies the arbitrage mode. 
+  - **Types of arbitrage**: 
+    - **Pairwise**: This includes arbitrage trades between two liquidity pools that contain the same tokens. For example: USDC > LINK, LINK > USDC
+    - **Triangular**: This includes arbitrage trades between three liquidity pools that can create a triangular route, starting and ending in the same token. For example, USDC > ETH, ETH > LINK, LINK > USDC
+    - **Multi**: These modes can trade through multiple Carbon orders as a single trade.
+  - **arb_mode options**:
+      - **single**: Pairwise arbitrage between one Carbon curve and one other exchange curve.
+      - **multi** Pairwise arbitrage between **multiple** Carbon curves and one other exchange curve.
+      - **triangle**: Triangular arbitrage between one Carbon curve and two other exchange curves.
+      - **multi_triangle**: Triangular arbitrage between **multiple** Carbon curves and two other exchange curves.
+      - **bancor_v3**: Triangular arbitrage between two Bancor v3 pools and one other exchange curve.
+      - **b3_two_hop**: Triangular arbitrage - the same as bancor_v3 mode but more gas-efficient.
+      - **multi_pairwise_pol**: Pairwise multi-mode that always routes through the Bancor protocol-owned liquidity contract.
+      - **multi_pairwise_bal**: Pairwise multi-mode that always routes through Balancer.
+      - **multi_pairwise_all**: **(Default)** Pairwise multi-mode that searches all available exchanges for pairwise arbitrage.
 - **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify tokens as a comma-separated string in TKN-ADDR format (e.g., BNT-FF1C, WETH-6Cc2).
 - **exchanges** (str): Comma-separated string of exchanges to include.
 - **polling_interval** (int): Bot's polling interval for new events.

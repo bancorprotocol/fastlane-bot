@@ -76,7 +76,7 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.network_name = network_name
         self.provider_url = provider_url
         self.provider_name = provider_name
-        self.web3 = Web3(Web3.HTTPProvider(provider_url))
+        self.web3 = Web3(Web3.HTTPProvider(provider_url, request_kwargs={'timeout': 60}))
         self.nonce = nonce
 
 
@@ -167,6 +167,6 @@ class EthereumNetwork(NetworkBase):
         if self.is_connected:
             return
 
-        self.web3 = Web3(Web3.HTTPProvider(self.provider_url))
+        self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

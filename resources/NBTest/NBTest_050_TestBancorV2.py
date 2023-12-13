@@ -269,7 +269,7 @@ best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(cal
 
 # Use helper function to calculate profit
 best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
-    CCm, best_profit, fl_token, fl_token_with_weth
+    CCm, best_profit, fl_token,
 )
 
 # Get the flashloan amount and token address

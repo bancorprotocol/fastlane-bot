@@ -119,8 +119,7 @@ class MultiCaller(ContextManager):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.multicall()
+        pass
 
     def add_call(self, fn: Callable, *args, **kwargs) -> None:
         self._contract_calls.append(partial(fn, *args, **kwargs))
@@ -128,17 +127,40 @@ class MultiCaller(ContextManager):
     def multicall(self) -> List[Any]:
         calls_for_aggregate = []
         output_types_list = []
-
+        _calls_for_aggregate = {}
+        _output_types_list = {}
         for fn in self._contract_calls:
             fn_name = str(fn).split('functools.partial(<Function ')[1].split('>')[0]
-            calls_for_aggregate.append({
+            output_types = get_output_types_from_abi(self.contract.abi, fn_name)
+            if fn_name in _calls_for_aggregate:
+                _calls_for_aggregate[fn_name].append({
                 'target': self.contract.address,
                 'callData': fn()._encode_transaction_data()
             })
-            output_types = get_output_types_from_abi(self.contract.abi, fn_name)
-            output_types_list.append(output_types)
+                _output_types_list[fn_name].append(output_types)
+            else:
+                _calls_for_aggregate[fn_name] = [{
+                'target': self.contract.address,
+                'callData': fn()._encode_transaction_data()
+            }]
+                _output_types_list[fn_name] = [output_types]
+
+        for fn_list in _calls_for_aggregate.keys():
+            calls_for_aggregate += (_calls_for_aggregate[fn_list])
+            output_types_list += (_output_types_list[fn_list])
 
         w3 = self.contract.web3
+        _encoded_data = []
+        function_keys = _calls_for_aggregate.keys()
+        for fn_list in function_keys:
+            _encoded_data.append(w3.eth.contract(
+                abi=MULTICALL_ABI,
+                address=self.MULTICALL_CONTRACT_ADDRESS
+            ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
+
+        if not isinstance(_encoded_data[0], list):
+            raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
+
         encoded_data = w3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
@@ -155,4 +177,17 @@ class MultiCaller(ContextManager):
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]
         return_data += [i[1] for i in decoded_data_list if len(i) > 1]
+
+        # Handling for Bancor POL - combine results into a Tuple
+        if "tokenPrice" in function_keys and "amountAvailableForTrading" in function_keys:
+            new_return = []
+            returned_items = int(len(return_data))
+            total_pools = int(returned_items / 2)
+            assert returned_items % 2 == 0, f"[multicaller.py multicall] non-even number of returned calls for Bancor POL {returned_items}"
+            total_pools = int(total_pools)
+
+            for idx in range(total_pools):
+                new_return.append((return_data[idx][0], return_data[idx][1], return_data[idx + total_pools]))
+            return_data = new_return
+
         return return_data

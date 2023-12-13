@@ -712,7 +712,7 @@ def organize_pool_details_solidly_v2(
 
 
 def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> List:
     """
     This function retrieves Uniswap V3 pool generation events
@@ -740,7 +740,7 @@ def get_uni_pool_creation_events_v3(
 
 
 def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> List:
     """
     This function retrieves Uniswap V2 pool generation events
@@ -767,7 +767,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=500000
+    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> List:
     """
     This function retrieves Solidly pool generation events
@@ -799,6 +799,7 @@ def get_uni_v3_pools(
     factory_contract,
     start_block: int,
     web3: Web3,
+    blockchain: str = "ethereum"
 ) -> DataFrame:
     """
     This function retrieves Uniswap V3 pool generation events and organizes them into two Dataframes
@@ -808,11 +809,12 @@ def get_uni_v3_pools(
     :param start_block: the block number from which to start
     :param web3: the Web3 object
     :param exchange: the name of the exchange
+    :param blockchain: the blockchain name
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_uni_pool_creation_events_v3(
-        factory_contract=factory_contract, block_number=start_block, web3=web3
+        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -845,6 +847,7 @@ def get_uni_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
+    blockchain: str = "ethereum"
 ) -> DataFrame:
     """
     This function retrieves Uniswap V2 pool generation events and organizes them into two Dataframes
@@ -855,10 +858,11 @@ def get_uni_v2_pools(
     :param web3: the Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
+    :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_uni_pool_creation_events_v2(
-        factory_contract=factory_contract, block_number=start_block, web3=web3
+        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -891,6 +895,7 @@ def get_solidly_v2_pools(
     start_block: int,
     default_fee: float,
     web3: Web3,
+    blockchain: str = "ethereum"
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
@@ -900,10 +905,12 @@ def get_solidly_v2_pools(
     :param web3: the Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
+    :param blockchain: the blockchain name
+
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_solidly_pool_creation_events_v2(
-        factory_contract=factory_contract, block_number=start_block, web3=web3
+        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -1111,6 +1118,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     :param web3: the Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
+
+    assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
+
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
 
@@ -1152,7 +1162,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         if fresh_data and not start_block:
             start_block = int(row[1][6]) if not math.isnan(row[1][6]) else 0
         if start_block is None:
-            start_block = get_last_block_updated(df=exchange_df, exchange=exchange_name)
+            start_block = int(row[1][6]) if not math.isnan(row[1][6]) else 0
         if address is None or type(address) != str:
             print(
                 f"Terraformer: No factory contract address for exchange: {exchange_name}"
@@ -1176,6 +1186,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 default_fee=fee,
                 start_block=start_block,
                 web3=web3,
+                blockchain=network_name
             )
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
@@ -1192,6 +1203,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 factory_contract=factory_contract,
                 start_block=start_block,
                 web3=web3,
+                blockchain=network_name
             )
             m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
@@ -1210,6 +1222,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 default_fee=fee,
                 start_block=start_block,
                 web3=web3,
+                blockchain=network_name
             )
             exchange_df = pd.concat([exchange_df, u_df], ignore_index=True)
             exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
@@ -1234,4 +1247,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     return univ2_mapdf, univ3_mapdf
 
-#terraform_blockchain(network_name="coinbase_base")
+#terraform_blockchain(network_name="ethereum", start_block=18400747)

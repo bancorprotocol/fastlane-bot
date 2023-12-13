@@ -55,7 +55,7 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
         fork = row[1][2]
         contract_name = row[1][3]
         address = row[1][4]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
+        if fork in fork_name and contract_name in [S.ROUTER_ADDRESS, S.CARBON_CONTROLLER]:
             fork_map[exchange_name] = address
     return fork_map
 
@@ -214,6 +214,9 @@ class ConfigNetwork(ConfigBase):
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 
+    PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
+    PLATFORM_ID_WRAP_UNWRAP = 10
+
     EXCHANGE_IDS = {
         BANCOR_V2_NAME: 1,
         BANCOR_V3_NAME: 2,
@@ -223,6 +226,7 @@ class ConfigNetwork(ConfigBase):
         CARBON_V1_NAME: 6,
         BALANCER_NAME: 7,
         CARBON_POL_NAME: 8,
+        PLATFORM_ID_WRAP_UNWRAP : 10
     }
 
     # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
@@ -278,6 +282,10 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON = S.NETWORK_POLYGON
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
+
+    # FLAGS
+    #######################################################################################
+    GAS_TKN_IN_FLASHLOAN_TOKENS = None
 
     @classmethod
     def new(cls, network=None):
@@ -483,9 +491,11 @@ class _ConfigNetworkBase(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
     network_df = get_multichain_addresses(network="coinbase_base")
-    FASTLANE_CONTRACT_ADDRESS = "0x8e6AF0013688e5ef92217f23895Ea822cD3051E8"
+    FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
     
+    CARBON_CONTROLLER_ADDRESS = GRAPHENE_CONTROLLER_ADDRESS = "0xfbF069Dbbf453C1ab23042083CFa980B3a672BbA"
+    CARBON_CONTROLLER_VOUCHER = GRAPHENE_CONTROLLER_VOUCHER = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
     NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
     STABLECOIN_KEY = "USDC-2913"

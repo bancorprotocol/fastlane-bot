@@ -192,27 +192,27 @@ class CarbonBotBase:
                 curves += p.to_cpc()
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
+                    f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except CPC.CPCValidationError as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
+                    f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+                    f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
                 )
             except p.DoubleInvalidCurveError as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
+                    f"[bot.get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
                 )
             except Univ3Calculator.DecimalsMissingError as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
+                    f"[bot.get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
                 )
             except Exception as e:
                 self.ConfigObj.logger.error(
-                    f"[get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
+                    f"[bot.get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
 
         return CPCContainer(curves)
@@ -484,10 +484,12 @@ class CarbonBot(CarbonBotBase):
             return r
 
         if r is None or len(r) == 0:
-            self.ConfigObj.logger.info("No eligible arb opportunities.")
+            self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
             return None
 
-        self.ConfigObj.logger.info(f"Found {len(r)} eligible arb opportunities.")
+        self.ConfigObj.logger.info(
+            f"[bot._run] Found {len(r)} eligible arb opportunities."
+        )
         r = self.randomize(arb_opps=r, randomizer=randomizer)
 
         if data_validator:
@@ -496,17 +498,19 @@ class CarbonBot(CarbonBotBase):
                 arb_opp=r, arb_mode=arb_mode, arb_finder=finder
             )
             if r is None:
-                self.ConfigObj.logger.info(
-                    "Math validation eliminated arb opportunity, restarting."
+                self.ConfigObj.logger.warning(
+                    "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )
                 return None
             if replay_mode:
                 pass
             elif self.validate_pool_data(arb_opp=r):
-                self.ConfigObj.logger.info("All data checks passed! Pools in sync!")
+                self.ConfigObj.logger.debug(
+                    "[bot._run] All data checks passed! Pools in sync!"
+                )
             else:
-                self.ConfigObj.logger.info(
-                    "Data validation failed. Updating pools and restarting."
+                self.ConfigObj.logger.warning(
+                    "[bot._run] Data validation failed. Updating pools and restarting."
                 )
                 return None
 
@@ -552,14 +556,14 @@ class CarbonBot(CarbonBotBase):
                 pool_cid = pool["cid"]
                 if "-0" in pool_cid or "-1" in pool_cid:
                     self.ConfigObj.logger.debug(
-                        f"Math arb validation not currently supported for arbs with Carbon, returning to main flow."
+                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
                     )
                     return arb_opp
                     # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
             if len(cids) > 3:
-                self.ConfigObj.logger.info(
-                    f"Math validation not supported for more than 3 pools, returning to main flow."
+                self.ConfigObj.logger.warning(
+                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
                 )
                 return arb_opp
             max_trade_in = arb_finder.get_optimal_arb_trade_amts(
@@ -572,7 +576,7 @@ class CarbonBot(CarbonBotBase):
             if max_trade_in < 0.0:
                 return None
             self.ConfigObj.logger.debug(
-                f"max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
+                f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
             )
             ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
@@ -602,7 +606,7 @@ class CarbonBot(CarbonBotBase):
         -------
         bool
         """
-        self.ConfigObj.logger.info("Validating pool data.")
+        self.ConfigObj.logger.info("[bot.validate_pool_data] Validating pool data...")
         (
             best_profit,
             best_trade_instructions_df,
@@ -631,7 +635,9 @@ class CarbonBot(CarbonBotBase):
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
             if fetched_pool is None:
-                self.ConfigObj.logger.error(f"Could not fetch pool data for {pool_cid}")
+                self.ConfigObj.logger.error(
+                    f"[bot.validate_pool_data] Could not fetch pool data for {pool_cid}"
+                )
 
             ex_name = fetched_pool["exchange_name"]
             self._validate_pool_data_logging(pool_cid, fetched_pool)
@@ -645,14 +651,16 @@ class CarbonBot(CarbonBotBase):
                     or current_pool.y_1 != fetched_pool["y_1"]
                 ):
                     self.ConfigObj.logger.debug(
-                        "Carbon pool not up to date, updating and restarting."
+                        "[bot.validate_pool_data] Carbon pool not up to date, updating and restarting."
                     )
                     return False
-            elif current_pool.exchange_name in ["balancer",]:
+            elif current_pool.exchange_name in [
+                "balancer",
+            ]:
                 for idx, balance in enumerate(current_pool.token_balances):
                     if balance != fetched_pool[f"tkn{idx}_balance"]:
                         self.ConfigObj.logger.debug(
-                            "Balancer pool not up to date, updating and restarting."
+                            "[bot.validate_pool_data] Balancer pool not up to date, updating and restarting."
                         )
                         return False
             elif current_pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
@@ -662,7 +670,7 @@ class CarbonBot(CarbonBotBase):
                     or current_pool.tick != fetched_pool["tick"]
                 ):
                     self.ConfigObj.logger.debug(
-                        "UniV3 pool not up to date, updating and restarting."
+                        "[bot.validate_pool_data] UniV3 pool not up to date, updating and restarting."
                     )
                     return False
 
@@ -671,7 +679,7 @@ class CarbonBot(CarbonBotBase):
                 or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]
             ):
                 self.ConfigObj.logger.debug(
-                    f"{ex_name} pool not up to date, updating and restarting."
+                    f"[bot.validate_pool_data] {ex_name} pool not up to date, updating and restarting."
                 )
                 return False
 
@@ -732,7 +740,6 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         best_profit: Decimal,
         fl_token: str,
-        fl_token_with_weth: str,
     ) -> Tuple[Decimal, Decimal, Decimal]:
         """
         Calculate the actual profit in USD.
@@ -754,20 +761,46 @@ class CarbonBot(CarbonBotBase):
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
         best_profit_fl_token = best_profit
-        if fl_token_with_weth != self.ConfigObj.WRAPPED_GAS_TOKEN_KEY:
+        if fl_token not in [
+            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
+        ]:
             try:
-                fltkn_eth_conversion_rate = Decimal(str(CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}").bytknq(f"{fl_token_with_weth}")[0].p))
+                fltkn_eth_conversion_rate = Decimal(
+                    str(
+                        CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
+                        .bytknq(f"{fl_token}")[0]
+                        .p
+                    )
+                )
                 best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
             except:
                 try:
-                    fltkn_eth_conversion_rate = 1/Decimal(str(CCm.bytknb(f"{fl_token_with_weth}").bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0].p))
+                    fltkn_eth_conversion_rate = 1 / Decimal(
+                        str(
+                            CCm.bytknb(f"{fl_token}")
+                            .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
+                            .p
+                        )
+                    )
                     best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
                 except Exception as e:
-                    raise str(e)
+                    self.ConfigObj.logger.error(
+                        f"[bot.calculate_profit] Could not calculate profit in ETH for {fl_token} [{e}]. Raise exception: {e}"
+                    )
+                    raise e
         else:
             best_profit_eth = best_profit_fl_token
-
-        usd_eth_conversion_rate = Decimal(str(CCm.bypair(pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}")[0].p))
+        try:
+            usd_eth_conversion_rate = Decimal(
+                str(
+                    CCm.bypair(
+                        pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}"
+                    )[0].p
+                )
+            )
+        except Exception:
+            usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
@@ -915,11 +948,7 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the flashloan token
-        fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
-
-        # If the flashloan token is WETH, then use ETH
-        if fl_token == T.WETH:
-            fl_token = T.NATIVE_ETH
+        fl_token = calculated_trade_instructions[0].tknin_key
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -927,7 +956,7 @@ class CarbonBot(CarbonBotBase):
 
         # Use helper function to calculate profit
         best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
-            CCm, best_profit, fl_token, fl_token_with_weth
+            CCm, best_profit, fl_token
         )
 
         # Log the best trade instructions
@@ -951,7 +980,7 @@ class CarbonBot(CarbonBotBase):
         # Check if the best profit is greater than the minimum profit
         if best_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
-                f"Opportunity with profit: {num_format(best_profit_eth)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
+                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_eth)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
             return None, None
 
@@ -979,10 +1008,16 @@ class CarbonBot(CarbonBotBase):
         route_struct = [
             asdict(rs)
             for rs in tx_route_handler.get_route_structs(
-                encoded_trade_instructions, deadline
+                trade_instructions=encoded_trade_instructions, deadline=deadline
             )
         ]
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
+        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
+            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(
+                trade_instructions=calculated_trade_instructions,
+                route_struct=route_struct,
+                flashloan_struct=flashloan_struct,
+            )
         # Check if the result is None
         assert result is None, f"Unknown result requested {result}"
 
@@ -1069,7 +1104,7 @@ class CarbonBot(CarbonBotBase):
             The best profit, by default None
         """
         self.ConfigObj.logger.debug(
-            f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
+            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
         )
 
     def log_calculated_arb(self, log_dict: Optional[Dict] = None):
@@ -1082,7 +1117,7 @@ class CarbonBot(CarbonBotBase):
             The dictionary containing log data, by default None
         """
         self.ConfigObj.logger.info(
-            f"{log_format(log_data=log_dict, log_name='calculated_arb')}"
+            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
         )
 
     def log_flashloan_amount(self, flashloan_amount: Optional[float] = None):
@@ -1094,7 +1129,9 @@ class CarbonBot(CarbonBotBase):
         flashloan_amount : Optional[float], optional
             The flashloan amount, by default None
         """
-        self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount}"
+        )
 
     def log_flashloan_details(
         self,
@@ -1117,13 +1154,17 @@ class CarbonBot(CarbonBotBase):
         best_trade_instructions_dic : Optional[Dict], optional
             The dictionary containing the best trade instructions, by default None
         """
-        self.ConfigObj.logger.debug(f"Flashloan amount: {flashloan_amount}")
         self.ConfigObj.logger.debug(
-            f"Flashloan token address: {flashloan_token_address}"
+            f"[bot.log_flashloan_details] Flashloan amount: {flashloan_amount}"
         )
-        self.ConfigObj.logger.debug(f"Route Struct: \n {route_struct}")
         self.ConfigObj.logger.debug(
-            f"Trade Instructions: \n {best_trade_instructions_dic}"
+            f"[bot.log_flashloan_details] Flashloan token address: {flashloan_token_address}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Route Struct: \n {route_struct}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
     def _validate_and_submit_transaction_tenderly(
@@ -1162,8 +1203,12 @@ class CarbonBot(CarbonBotBase):
             src_address=src_address,
             src_amount=src_amount,
         )
-        self.ConfigObj.logger.debug(f"route_struct: {route_struct}")
-        self.ConfigObj.logger.debug("src_address", src_address)
+        self.ConfigObj.logger.debug(
+            f"[bot._validate_and_submit_transaction_tenderly] route_struct: {route_struct}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot._validate_and_submit_transaction_tenderly] src_address: {src_address}"
+        )
         tx = tx_submit_handler.submit_transaction_tenderly(
             route_struct=route_struct,
             src_address=src_address,
@@ -1221,16 +1266,17 @@ class CarbonBot(CarbonBotBase):
         """
         if CCm is None:
             CCm = self.get_curves()
-            filter_out_weth = [
-                x
-                for x in CCm
-                if (x.params.exchange == "carbon_v1")
-                & (
-                    (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                    or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                )
-            ]
-            CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
+            if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
+                filter_out_weth = [
+                    x
+                    for x in CCm
+                    if (x.params.exchange == "carbon_v1")
+                    & (
+                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
+                    )
+                ]
+                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
     def run_continuous_mode(
@@ -1250,20 +1296,9 @@ class CarbonBot(CarbonBotBase):
         arb_mode: bool
             The arb mode
         """
-        print(f"run_continuous_mode run_data_validator={run_data_validator}")
         while True:
             try:
                 CCm = self.get_curves()
-                filter_out_weth = [
-                    x
-                    for x in CCm
-                    if (x.params.exchange == "carbon_v1")
-                    & (
-                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                    )
-                ]
-                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
                 tx_hash, cids, route_struct = self._run(
                     flashloan_tokens,
                     CCm,
@@ -1276,7 +1311,7 @@ class CarbonBot(CarbonBotBase):
 
                 time.sleep(self.polling_interval)
             except self.NoArbAvailable as e:
-                self.ConfigObj.logger.debug(f"[bot:run:single] {e}")
+                self.ConfigObj.logger.debug(f"[bot:run:continuous] {e}")
             except Exception as e:
                 self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
                 time.sleep(self.polling_interval)
@@ -1321,7 +1356,9 @@ class CarbonBot(CarbonBotBase):
                 replay_mode=replay_mode,
             )
             if tx_hash and tx_hash[0]:
-                self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
+                self.ConfigObj.logger.info(
+                    f"[bot.run_single_mode] Arbitrage executed [hash={tx_hash}]"
+                )
 
                 # Write the tx hash to a file in the logging_path directory
                 if self.logging_path:
@@ -1359,8 +1396,8 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     def get_tokens_in_exchange(
-            self,
-            exchange_name: str,
+        self,
+        exchange_name: str,
     ) -> List[str]:
         """
         Gets all tokens that exist in pools on the specified exchange.
@@ -1428,13 +1465,13 @@ class CarbonBot(CarbonBotBase):
             self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
         assert issubclass(
             self.TxSubmitHandler.__class__, TxSubmitHandlerBase
-        ), f"TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
+        ), f"[bot.run] TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
 
         if arb_mode in {"bancor_v3", "b3_two_hop"}:
             run_data_validator = True
             # The following logs are used for asserting various pytests, do not remove.
-            self.ConfigObj.logger.info(
-                f"Transactions will be required to pass data validation for {arb_mode}"
+            self.ConfigObj.logger.debug(
+                f"[bot.run] Transactions will be required to pass data validation for {arb_mode}"
             )
 
         if mode == "continuous":

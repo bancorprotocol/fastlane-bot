@@ -69,13 +69,13 @@ def run_command(arb_mode, expected_log_line):
         "python",
         main_script_path,
         f"--arb_mode={arb_mode}",
-        "--default_min_profit_bnt=60",
+        "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
         "--logging_path=fastlane_bot/data/",
         "--timeout=1",
         "--loglevel=DEBUG",
-        "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2X-FLI-USD",
+        "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2x_FLI-65BD",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
@@ -96,6 +96,8 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test flashloan_tokens is Respected
 
-expected_log_line = "Flashloan tokens are set as: ['BNT-FF1C', 'ETH-EEeE', 'ETH2X_FLI-USD']"
+expected_log_line = "Flashloan tokens are set as: ['BNT-FF1C', 'ETH-EEeE', 'ETH2x_FLI-65BD']"
 arb_mode = "multi"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
+
+
