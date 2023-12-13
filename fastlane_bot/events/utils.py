@@ -517,7 +517,8 @@ def get_config(
 
     """
     default_min_profit_gas_token = Decimal(default_min_profit_gas_token)
-    rpc_url = get_rpc_url(blockchain, tenderly_fork_id, rpc_url)
+    if rpc_url:
+        rpc_url = get_rpc_url(blockchain, tenderly_fork_id, rpc_url)
 
     if tenderly_fork_id:
         cfg = Config.new(
@@ -537,7 +538,8 @@ def get_config(
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
 
     # create new web3 instance based on the rpc_url
-    cfg.w3 = Web3(Web3.HTTPProvider(rpc_url))
+    if rpc_url:
+        cfg.w3 = Web3(Web3.HTTPProvider(rpc_url))
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
