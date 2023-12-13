@@ -707,8 +707,8 @@ def write_pool_data_to_disk(
             os.mkdir("pool_data")
         path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.pool_data))
+        df = pd.DataFrame(mgr.pool_data)
+        df.to_json(path, orient="records")
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
