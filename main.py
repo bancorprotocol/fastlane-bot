@@ -5,6 +5,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import shutil
 
 from fastlane_bot.events.version_utils import check_version_requirements
 
@@ -17,6 +18,8 @@ from typing import List
 import click
 import pandas as pd
 from dotenv import load_dotenv
+
+load_dotenv()
 from web3 import Web3, HTTPProvider
 
 from fastlane_bot.events.managers.manager import Manager
@@ -245,6 +248,18 @@ load_dotenv()
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
+@click.option(
+    "--rpc",
+    default="",
+    type=str,
+    help="The RPC endpoint to use for the blockchain",
+)
+@click.option(
+    "--disable_logfiles",
+    default=False,
+    type=bool,
+    help="Set to True to disable logfiles",
+)
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -276,6 +291,8 @@ def main(
     use_specific_exchange_for_target_tokens: str,
     prefix_path: str,
     version_check_frequency: int,
+    rpc: str,
+    disable_logfiles: bool,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -312,6 +329,8 @@ def main(
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         prefix_path (str): prefixes the path to the write folders (used for deployment)
         version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
+        rpc (str): the rpc endpoint to use for the blockchain
+        disable_logfiles (bool): set to True to disable logfiles
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -331,6 +350,7 @@ def main(
         blockchain,
         flashloan_tokens,
         tenderly_fork_id,
+        rpc,
     )
     # TODO: add blockchain support
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
@@ -349,6 +369,9 @@ def main(
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
+    if disable_logfiles:
+        shutil.rmtree(logging_path, ignore_errors=True)
+        logging_path = None
 
     # Format the target tokens
     target_tokens = handle_target_tokens(cfg, flashloan_tokens, target_tokens)
