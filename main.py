@@ -340,6 +340,7 @@ def main(
         blockchain,
         flashloan_tokens,
         tenderly_fork_id,
+        use_flashloans,
     )
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
