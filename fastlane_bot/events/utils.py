@@ -539,7 +539,7 @@ def get_config(
 
     # create new web3 instance based on the rpc_url
     if rpc_url:
-        cfg.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        cfg.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
