@@ -341,6 +341,7 @@ def main(
         blockchain,
         flashloan_tokens,
         tenderly_fork_id,
+        use_flashloans,
     )
     # TODO: add blockchain support
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
