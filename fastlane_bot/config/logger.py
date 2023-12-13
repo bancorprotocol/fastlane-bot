@@ -31,7 +31,7 @@ class ConfigLogger(ConfigBase):
 
     _log_path = None
 
-    def get_logger(self, loglevel: str, logging_path: str = None) -> logging.Logger:
+    def get_logger(self, loglevel: str, logging_path: str = None, disable_logfiles: bool = True) -> logging.Logger:
         """
         Returns a logger with the specified logging level
 
@@ -53,12 +53,20 @@ class ConfigLogger(ConfigBase):
         else:
             log_directory = f"logs/{timestamp}"
 
-        os.makedirs(log_directory, exist_ok=True)
+        if not disable_logfiles:
+            os.makedirs(log_directory, exist_ok=True)
 
-        # Create a file handler to write to a .txt file in the timestamped directory
-        log_filename = os.path.join(log_directory, "bot.log")
+            # Create a file handler to write to a .txt file in the timestamped directory
+            log_filename = os.path.join(log_directory, "bot.log")
+
+        else:
+            log_filename = None
+
         self._log_path = log_filename  # Store the log file path for later use
-        handler = logging.FileHandler(log_filename)
+        if disable_logfiles:
+            handler = logging.NullHandler()
+        else:
+            handler = logging.FileHandler(log_filename)
 
         # Create a stream handler to write to the terminal
         stream_handler = logging.StreamHandler()
@@ -107,7 +115,7 @@ class ConfigLogger(ConfigBase):
         return self.logger.error(*args, **kwargs)
 
     @classmethod
-    def new(cls, *, logger=None, loglevel=None, logging_path=None, **kwargs):
+    def new(cls, *, logger=None, loglevel=None, logging_path=None, disable_logfiles=False, **kwargs):
         """
         Return a new ConfigLogger.
         """
@@ -115,11 +123,12 @@ class ConfigLogger(ConfigBase):
             logger = S.LOGGER_DEFAULT
 
         if logger == S.LOGGER_DEFAULT:
-            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, logging_path=logging_path, **kwargs)
+            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, logging_path=logging_path, disable_logfiles=disable_logfiles, **kwargs)
         else:
             raise ValueError(f"Unknown logger: {logger}")
 
-    def __init__(self, loglevel=None, logging_path=None, **kwargs):
+    def __init__(self, loglevel=None, logging_path=None, disable_logfiles=False, **kwargs):
+
         super().__init__(**kwargs)
         #print("[ConfigLogger]", loglevel, self.LOGLEVEL)
         if not loglevel is None:
@@ -130,7 +139,7 @@ class ConfigLogger(ConfigBase):
                 self.LOGLEVEL_ERROR
             }, f"unknown loglevel {loglevel}"
             self.LOGLEVEL = loglevel
-        self._logger = self.get_logger(self.LOGLEVEL, logging_path=logging_path)
+        self._logger = self.get_logger(self.LOGLEVEL, logging_path=logging_path, disable_logfiles=disable_logfiles)
 
 
 class _ConfigLoggerDefault(ConfigLogger):

@@ -487,6 +487,7 @@ def get_config(
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
     rpc_url: str = None,
+    disable_logfiles: bool = False,
 ) -> Config:
     """
     Gets the config object.
@@ -509,6 +510,8 @@ def get_config(
         The Tenderly fork ID, by default None
     rpc_url : str, optional
         The RPC URL, by default None
+    disable_logfiles : bool, optional
+        Whether to disable logfiles, by default False
 
     Returns
     -------
@@ -526,6 +529,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            disable_logfiles=disable_logfiles,
         )
         cfg.logger.info("[events.utils.get_config] Using Tenderly config")
     else:
@@ -534,6 +538,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            disable_logfiles=disable_logfiles,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
 

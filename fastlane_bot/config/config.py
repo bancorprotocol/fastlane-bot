@@ -52,7 +52,7 @@ class Config():
     logging_header: str = None
 
     @classmethod
-    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, **kwargs):
+    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, disable_logfiles=False, **kwargs):
         """
         Alternative constructor: create and return new Config object
         
@@ -65,7 +65,7 @@ class Config():
         if loglevel is None:
             loglevel = cls.LOGLEVEL_INFO
 
-        C_log = logger_.ConfigLogger.new(loglevel=loglevel, logging_path=logging_path)
+        C_log = logger_.ConfigLogger.new(loglevel=loglevel, logging_path=logging_path, disable_logfiles=disable_logfiles)
 
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=blockchain)
