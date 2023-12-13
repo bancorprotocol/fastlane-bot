@@ -371,10 +371,6 @@ def main(
     # Search the logging directory for the latest timestamped folder
     if not disable_logfiles:
         logging_path = find_latest_timestamped_folder(logging_path)
-    # print(f"logging_path: {logging_path}")
-    # if disable_logfiles:
-    #     shutil.rmtree(os.path.normpath(logging_path), ignore_errors=True)
-    #     logging_path = None
 
     # Format the target tokens
     target_tokens = handle_target_tokens(cfg, flashloan_tokens, target_tokens)
