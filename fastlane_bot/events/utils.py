@@ -453,6 +453,31 @@ def handle_flashloan_tokens(
     return flashloan_tokens
 
 
+def get_rpc_url(blockchain: str, tenderly_fork_id: str = None, rpc_url: str = None):
+    if tenderly_fork_id and not rpc_url:
+        rpc_url = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
+    elif rpc_url == "" and blockchain == "ethereum":
+        WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+        rpc_url = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
+    elif rpc_url == "" and blockchain == "polygon":
+        WEB3_ALCHEMY_POLYGON = os.environ.get("WEB3_ALCHEMY_POLYGON")
+        rpc_url = f"https://polygon-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_POLYGON}"
+    elif rpc_url == "" and blockchain == "polygon_zkevm":
+        WEB3_ALCHEMY_POLYGON_ZKEVM = os.environ.get("WEB3_ALCHEMY_POLYGON_ZKEVM")
+        rpc_url = f"https://polygonzkevm-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_POLYGON_ZKEVM}"
+    elif rpc_url == "" and blockchain == "optimism":
+        WEB3_ALCHEMY_OPTIMISM = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
+        rpc_url = f"https://opt-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_OPTIMISM}"
+    elif rpc_url == "" and blockchain == "coinbase_base":
+        WEB3_ALCHEMY_BASE = os.environ.get("WEB3_ALCHEMY_BASE")
+        rpc_url = f"https://base-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_BASE}"
+    elif rpc_url == "" and blockchain == "arbitrum_one":
+        WEB3_ALCHEMY_ARBITRUM = os.environ.get("WEB3_ALCHEMY_ARBITRUM")
+        rpc_url = f"https://arb-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_ARBITRUM}"
+
+    return rpc_url
+
+
 def get_config(
     default_min_profit_gas_token: str,
     limit_bancor3_flashloan_tokens: bool,
@@ -461,6 +486,7 @@ def get_config(
     blockchain: str,
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
+    rpc_url: str = None,
 ) -> Config:
     """
     Gets the config object.
@@ -481,6 +507,8 @@ def get_config(
         Comma seperated list of tokens that the bot can use for flash loans.
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
+    rpc_url : str, optional
+        The RPC URL, by default None
 
     Returns
     -------
@@ -489,6 +517,7 @@ def get_config(
 
     """
     default_min_profit_gas_token = Decimal(default_min_profit_gas_token)
+    rpc_url = get_rpc_url(blockchain, tenderly_fork_id, rpc_url)
 
     if tenderly_fork_id:
         cfg = Config.new(
@@ -506,6 +535,10 @@ def get_config(
             blockchain=blockchain,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
+
+    # create new web3 instance based on the rpc_url
+    cfg.w3 = Web3(Web3.HTTPProvider(rpc_url))
+
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
