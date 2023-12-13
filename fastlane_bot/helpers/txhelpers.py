@@ -941,7 +941,7 @@ class TxHelpers:
             transaction hash
         """
         current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
-        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in "ethereum" else 0
+        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_bse"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
         try:
@@ -969,7 +969,7 @@ class TxHelpers:
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
-
+        self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
         return self.submit_transaction(approve_tx)
 
 
