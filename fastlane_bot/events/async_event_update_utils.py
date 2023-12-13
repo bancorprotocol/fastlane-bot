@@ -175,8 +175,8 @@ def get_pool_info(
         else str(pool["cid"])
     )
 
-    # convert block to timestamp
-    pool_info["last_updated"] = mgr.cfg.w3.eth.get_block(current_block)["timestamp"]
+    # timestamp
+    pool_info["last_updated"] = time.time()
 
     for key in pool_data_keys:
         if key not in pool_info.keys():
