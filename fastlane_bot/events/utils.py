@@ -1963,7 +1963,7 @@ def self_funding_warning_sequence(cfg):
 
     """
     cfg.logger.info(f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n")
-    cfg.logger.info(f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************")
+    cfg.logger.info(f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************")
     time.sleep(5)
     cfg.logger.info(f"Submitting approvals in 15 seconds")
     time.sleep(5)
@@ -1998,8 +1998,7 @@ def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
     """
     unapproved_tokens = []
     for tkn in tokens:
-        approved = tx_helpers.check_if_token_approved(token_address=tkn)
-        if not approved:
+        if not tx_helpers.check_if_token_approved(token_address=tkn):
             unapproved_tokens.append(tkn)
     return unapproved_tokens
 
@@ -2014,13 +2013,17 @@ def check_and_approve_tokens(tokens: List, cfg) -> bool:
     """
     _tokens = []
     for tkn in tokens:
-        try:
-            _tokens.append(cfg.CHAIN_FLASHLOAN_TOKENS[tkn])
-        except KeyError:
-            cfg.logger.info(f"could not find token address for tkn: {tkn}")
+        # If the token is a token key, get the address from the CHAIN_FLASHLOAN_TOKENS dict in the network.py config file
+        if "-" in tkn:
+            try:
+                _tokens.append(cfg.CHAIN_FLASHLOAN_TOKENS[tkn])
+            except KeyError:
+                cfg.logger.info(f"could not find token address for tkn: {tkn}")
+        else:
+            _tokens.append(tkn)
     tokens = _tokens
 
-    #self_funding_warning_sequence(cfg=cfg)
+    self_funding_warning_sequence(cfg=cfg)
     tx_helpers = TxHelpers(ConfigObj=cfg)
     unapproved_tokens = find_unapproved_tokens(tokens=tokens, cfg=cfg, tx_helpers=tx_helpers)
 
