@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Type, Any
 
+import pandas as pd
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.events.pools.base import Pool
@@ -24,6 +25,7 @@ class Exchange(ABC):
     __DATE__ = "2023-08-27"
 
     pools: Dict[str, Pool] = field(default_factory=dict)
+    # pools: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     def get_pools(self) -> List[Pool]:
         """

@@ -109,15 +109,8 @@ class BaseManager:
         self.init_tenderly_event_contracts()
 
     @staticmethod
-    def setup_pool_data_df(pool_data: List[Dict[str, Any]]) -> pd.DataFrame:
-        assert isinstance(pool_data, list), (
-            "pool_data must be a list of dicts created by calling "
-            "pd.DataFrame.to_dict(orient='records')"
-        )
-        # Pandas Structure
-        # Convert the data into a pandas DataFrame with dtype specification to handle NaN and large numbers
-        pool_data_df = pd.DataFrame(pool_data)
-        # Set the appropriate data types
+    def setup_pool_data_df(pool_data_df: pd.DataFrame, index_cols: List[str]):
+
         for column in pool_data_df.columns:
             if pool_data_df[column].dtype == float and not any(
                 pool_data_df[column].isnull()
@@ -131,14 +124,7 @@ class BaseManager:
 
         # Create indices for the frequently queried columns
         pool_data_df.set_index(
-            [
-                "exchange_name",
-                "tkn0_address",
-                "tkn1_address",
-                "cid",
-                "address",
-                "last_updated_block",
-            ],
+            index_cols,
             inplace=True,
         )
 
@@ -330,10 +316,7 @@ class BaseManager:
 
         threshold_block = update_from_contract_block - self.alchemy_max_block_fetch
         return (
-            self.pool_data[
-                self.pool_data.index.get_level_values("last_updated_block")
-                < threshold_block
-            ]
+            self.pool_data[self.pool_data["last_updated_block"] < threshold_block]
             .index.get_level_values("cid")
             .tolist()
         )

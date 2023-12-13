@@ -1301,9 +1301,7 @@ def get_start_block(
         ), from_block
     else:
         current_block = mgr.web3.eth.block_number
-        max_last_updated_block = mgr.pool_data.index.get_level_values(
-            "last_updated_block"
-        ).max()
+        max_last_updated_block = mgr.pool_data["last_updated_block"].max()
         return (
             (
                 max_last_updated_block - reorg_delay
