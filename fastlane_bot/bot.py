@@ -182,6 +182,7 @@ class CarbonBotBase:
         CPCContainer
             The container of curves.
         """
+        self.db.refresh_pool_data()
         pools_and_tokens = self.db.get_pool_data_with_tokens()
         curves = []
         tokens = self.db.get_tokens()

@@ -54,6 +54,8 @@ class QueryInterface:
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
     token_list: Dict[str, Any] = None
+    pool_data = None
+    pool_data_list = None
 
     @property
     def cfg(self) -> Config:
@@ -379,12 +381,29 @@ class QueryInterface:
 
     def get_pool_data_with_tokens(self) -> List[PoolAndTokens]:
         """
-        Get pool data with tokens
+        Get pool data with tokens as a List
         """
-        return [
+        if self.pool_data_list is None:
+            self.refresh_pool_data()
+        return self.pool_data_list
+
+    def get_pool_data_lookup(self) -> Dict[str, PoolAndTokens]:
+        """
+        Get pool data with tokens as a Dict to find specific pools
+        """
+        if self.pool_data is None:
+            self.refresh_pool_data()
+        return self.pool_data
+
+    def refresh_pool_data(self):
+        """
+        Refreshes pool data to ensure it is up-to-date
+        """
+        self.pool_data_list = [
             self.create_pool_and_tokens(idx, record)
             for idx, record in enumerate(self.state)
         ]
+        self.pool_data = {str(pool.cid): pool for pool in self.pool_data_list}
 
     def create_pool_and_tokens(self, idx: int, record: Dict[str, Any]) -> PoolAndTokens:
         """
@@ -631,21 +650,18 @@ class QueryInterface:
             The pool
 
         """
-        pool_data_with_tokens = self.get_pool_data_with_tokens()
-        try:
-            pool = next(
-                (
-                    pool
-                    for pool in pool_data_with_tokens
-                    if all(getattr(pool, key) == kwargs[key] for key in kwargs)
-                ),
-                None,
-            )
-            pool.exchange_name
-        except AttributeError:
-            if "cid" in kwargs:
-                kwargs["cid"] = int(kwargs["cid"])
-                pool = next(
+        pool_data_with_tokens = self.get_pool_data_lookup()
+        if "cid" in kwargs:
+            cid = str(kwargs['cid'])
+            try:
+                return pool_data_with_tokens[cid]
+            except KeyError:
+                # pool not in data
+                self.cfg.logger.error(f"[interface.py get_pool] pool with cid: {cid} not in data")
+                return None
+        else:
+            try:
+                return next(
                     (
                         pool
                         for pool in pool_data_with_tokens
@@ -653,7 +669,8 @@ class QueryInterface:
                     ),
                     None,
                 )
-        return pool
+            except AttributeError:
+                return None
 
     def get_pools(self) -> List[PoolAndTokens]:
         """

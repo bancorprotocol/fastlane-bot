@@ -122,8 +122,7 @@ class MultiCaller(ContextManager):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.multicall()
+        pass
 
     def add_call(self, fn: Callable, *args, **kwargs) -> None:
         self._contract_calls.append(partial(fn, *args, **kwargs))
@@ -154,7 +153,9 @@ class MultiCaller(ContextManager):
             output_types_list += (_output_types_list[fn_list])
 
         _encoded_data = []
-        for fn_list in _calls_for_aggregate.keys():
+
+        function_keys = _calls_for_aggregate.keys()
+        for fn_list in function_keys:
             _encoded_data.append(self.web3.eth.contract(
                 abi=MULTICALL_ABI,
                 address=self.MULTICALL_CONTRACT_ADDRESS
@@ -179,4 +180,17 @@ class MultiCaller(ContextManager):
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]
         return_data += [i[1] for i in decoded_data_list if len(i) > 1]
+
+        # Handling for Bancor POL - combine results into a Tuple
+        if "tokenPrice" in function_keys and "amountAvailableForTrading" in function_keys:
+            new_return = []
+            returned_items = int(len(return_data))
+            total_pools = int(returned_items / 2)
+            assert returned_items % 2 == 0, f"[multicaller.py multicall] non-even number of returned calls for Bancor POL {returned_items}"
+            total_pools = int(total_pools)
+
+            for idx in range(total_pools):
+                new_return.append((return_data[idx][0], return_data[idx][1], return_data[idx + total_pools]))
+            return_data = new_return
+
         return return_data
