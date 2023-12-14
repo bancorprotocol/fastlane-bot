@@ -696,7 +696,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
                     trade_before = calculated_trade_instructions[idx - 1]
                     # This checks for a two-hop trade through BNT and combines them
-                    if trade_before.tknout_address == "BNT-FF1C" and trade.tknin_address == "BNT-FF1C":
+                    if trade_before.tknout_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" and trade.tknin_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
                                                                  tknin=trade_before.tknin_address, tknout=trade.tknout_address,
