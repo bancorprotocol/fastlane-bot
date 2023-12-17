@@ -21,6 +21,12 @@ class SolidlyV2Pool(Pool):
     """
 
     exchange_name: str = "solidly_v2"
+    fee: str = None
+    router_address: str = None
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     @staticmethod
     def unique_key() -> str:
@@ -58,9 +64,10 @@ class SolidlyV2Pool(Pool):
         data["fee"] = self.state["fee"]
         data["fee_float"] = self.state["fee_float"]
         data["exchange_name"] = self.state["exchange_name"]
+        data["router"] = self.router_address
         return data
 
-    def update_from_contract(
+    async def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -71,14 +78,20 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = contract.caller.getReserves()
+        reserve_balance = await contract.caller.getReserves()
+        factory_address = await contract.caller.factory()
         params = {
-            "fee": "0.003",
-            "fee_float": 0.003,
+            "fee": self.fee,
+            "fee_float": self.fee_float,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
-            "exchange_name": "solidly_v2",
+            "exchange_name": self.exchange_name,
+            "router": self.router_address,
+            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value
         return params
+
+
+

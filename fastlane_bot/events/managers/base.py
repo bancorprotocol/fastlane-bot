@@ -101,8 +101,15 @@ class BaseManager:
     prefix_path: str = ""
 
     def __post_init__(self):
+        initialized_exchanges = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
+            initialize_events = False
+            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
+            if base_exchange_name not in initialized_exchanges:
+                initialize_events = True
+                initialized_exchanges.append(base_exchange_name)
+
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()

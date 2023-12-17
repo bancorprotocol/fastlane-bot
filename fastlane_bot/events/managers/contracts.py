@@ -76,11 +76,47 @@ class ContractsManager(BaseManager):
         """
         Initialize the exchange contracts.
         """
+        tracker = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
-            self.event_contracts[exchange_name] = self.web3.eth.contract(
-                abi=self.exchanges[exchange_name].get_abi(),
-            )
-            self.pool_contracts[exchange_name] = {}
+            # include_forks = False
+            # if "_forks" in exchange_name:
+            #     include_forks = True
+            #     exchange_name = exchange_name.split("_forks")[0]
+
+            if exchange_name in tracker:
+                continue
+
+            if exchange_name in self.cfg.UNI_V2_FORKS:
+                fork_contract = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                for fork in self.cfg.UNI_V2_FORKS:
+                    self.event_contracts[fork] = fork_contract
+                    self.pool_contracts[fork] = {}
+                    tracker.append(fork)
+
+            elif exchange_name in self.cfg.UNI_V3_FORKS:
+                fork_contract = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                for fork in self.cfg.UNI_V3_FORKS:
+                    self.event_contracts[fork] = fork_contract
+                    self.pool_contracts[fork] = {}
+                    tracker.append(fork)
+            elif exchange_name in self.cfg.CARBON_V1_FORKS:
+                fork_contract = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                for fork in self.cfg.CARBON_V1_FORKS:
+                    self.event_contracts[fork] = fork_contract
+                    self.pool_contracts[fork] = {}
+                    tracker.append(fork)
+            else:
+                self.event_contracts[exchange_name] = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                self.pool_contracts[exchange_name] = {}
+
             if exchange_name == "bancor_v3":
                 self.pool_contracts[exchange_name][
                     self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS
@@ -102,11 +138,11 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BALANCER_VAULT_ADDRESS,
                     abi=BALANCER_VAULT_ABI,
                 )
-            elif exchange_name == "carbon_v1":
+            elif exchange_name in self.cfg.CARBON_V1_FORKS:
                 self.pool_contracts[exchange_name][
-                    self.cfg.CARBON_CONTROLLER_ADDRESS
+                    self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
                 ] = self.web3.eth.contract(
-                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    address=self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name],
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
 

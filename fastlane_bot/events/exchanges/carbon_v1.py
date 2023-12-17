@@ -25,6 +25,8 @@ class CarbonV1(Exchange):
 
     exchange_name: str = "carbon_v1"
     _fee_pairs: Dict[Tuple[str, str], int] = None
+    router_address: str = None
+    exchange_initialized: bool = False
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -59,7 +61,7 @@ class CarbonV1(Exchange):
             contract.events.PairTradingFeePPMUpdated,
             contract.events.TradingFeePPMUpdated,
             contract.events.PairCreated,
-        ]
+        ] if self.exchange_initialized else []
 
     async def get_fee(
         self, address: str, contract: Contract

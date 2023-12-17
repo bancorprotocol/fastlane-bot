@@ -22,6 +22,13 @@ class UniswapV2(Exchange):
     """
 
     exchange_name: str = "uniswap_v2"
+    fee: str = None
+    router_address: str = None
+    exchange_initialized: bool = False
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
@@ -30,11 +37,10 @@ class UniswapV2(Exchange):
         return UNISWAP_V2_POOL_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.Sync]
+        return [contract.events.Sync] if self.exchange_initialized else []
 
-    @staticmethod
-    async def get_fee(address: str, contract: AsyncContract) -> Tuple[str, float]:
-        return "0.003", 0.003
+    async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
+        return self.fee, self.fee_float
 
     @staticmethod
     async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:

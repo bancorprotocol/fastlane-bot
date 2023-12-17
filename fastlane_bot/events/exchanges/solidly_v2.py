@@ -22,6 +22,13 @@ class SolidlyV2(Exchange):
     """
 
     exchange_name = "solidly_v2"
+    fee: str = None
+    router_address: str = None
+    exchange_initialized: bool = False
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
@@ -30,13 +37,13 @@ class SolidlyV2(Exchange):
         return SOLIDLY_V2_POOL_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.Sync]
+        return [contract.events.Sync] if self.exchange_initialized else []
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        return str(0.003), 0.003
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+        return self.fee, self.fee_float
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         return contract.functions.token0().call()
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return contract.functions.token1().call()

@@ -22,6 +22,8 @@ class PancakeswapV3(Exchange):
     """
 
     exchange_name: str = "pancakeswap_v3"
+    router_address: str = None
+    exchange_initialized: bool = False
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
@@ -30,7 +32,7 @@ class PancakeswapV3(Exchange):
         return PANCAKESWAP_V3_POOL_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.Swap]
+        return [contract.events.Swap] if self.exchange_initialized else []
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         fee = await contract.functions.fee().call()

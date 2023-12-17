@@ -342,13 +342,13 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
-        ex = exchange_factory.get_exchange(exchange_name)
+        ex = exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False)
         abi = ex.get_abi()
         address = event["address"]
         contracts.append(
             {
                 "exchange_name": exchange_name,
-                "ex": exchange_factory.get_exchange(exchange_name),
+                "ex": exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False),
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,

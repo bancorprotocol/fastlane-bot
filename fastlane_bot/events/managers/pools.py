@@ -48,8 +48,8 @@ class PoolManager(BaseManager):
         elif pool_info["exchange_name"] == "bancor_pol":
             return pool_info["tkn0_address"]
 
-    @staticmethod
-    def pool_type_from_exchange_name(exchange_name: str) -> Callable:
+
+    def pool_type_from_exchange_name(self, exchange_name: str) -> Callable:
         """
         Get the pool type from the exchange name.
 
@@ -64,7 +64,24 @@ class PoolManager(BaseManager):
             The pool type class.
 
         """
-        return pool_factory.get_pool(exchange_name)
+        return pool_factory.get_pool(exchange_name, self.cfg)
+
+    def pool_extras_from_exchange_name(self, exchange_name: str) -> Dict:
+        """
+        Get the pool extras from the exchange name.
+
+        Parameters
+        ----------
+        exchange_name : str
+            The exchange name.
+
+        Returns
+        -------
+        Dict
+            The Dict containing any extras for the pool type
+
+        """
+        return pool_factory.get_fork_extras(exchange_name, self.cfg)
 
     @staticmethod
     def pool_descr_from_info(pool_info: Dict[str, Any]) -> str:
@@ -295,12 +312,13 @@ class PoolManager(BaseManager):
             The pool info.
 
         """
-        try:
-            pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
-            pool = pool_type(state=pool_info)
-            self.exchanges[pool_info["exchange_name"]].add_pool(pool)
-        except Exception as e:
-            print(f"Error adding pool to exchange: {e}, skipping...")
+        #try:
+        pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
+        pool_extras = self.pool_extras_from_exchange_name(exchange_name=pool_info["exchange_name"], )
+        pool = pool_type(state=pool_info, **pool_extras)
+        self.exchanges[pool_info["exchange_name"]].add_pool(pool)
+        # except Exception as e:
+        #     print(f"Error adding pool to exchange: {e}, skipping...")
 
     def get_pool_info(
         self,

@@ -401,6 +401,39 @@ def handle_tenderly_event_exchanges(
     return exchanges
 
 
+def add_fork_exchanges(cfg: Config, exchanges: List) -> List[str]:
+
+    """
+    Handles the exchanges parameter.
+
+    Parameters
+    ----------
+    cfg : Config
+        The config object.
+    exchanges : str
+        A comma-separated string of exchanges to fetch data for.
+
+    Returns
+    -------
+    List[str]
+        A list of exchanges to fetch data for.
+
+    """
+    # Check fork settings
+    if "uniswap_v2_forks" in exchanges:
+        exchanges += cfg.UNI_V2_FORKS
+        exchanges.remove("uniswap_v2_forks")
+    if "uniswap_v3_forks" in exchanges:
+        exchanges += cfg.UNI_V3_FORKS
+        exchanges.remove("uniswap_v3_forks")
+    if "solidly_v2_forks" in exchanges:
+        exchanges += cfg.SOLIDLY_V2_FORKS
+        exchanges.remove("solidly_v2_forks")
+    if "carbon_v1_forks" in exchanges:
+        exchanges += cfg.CARBON_V1_FORKS
+        exchanges.remove("carbon_v1_forks")
+    exchanges = list(set(exchanges))
+    return exchanges
 def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     Handles the exchanges parameter.
@@ -420,6 +453,7 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     # Set external exchanges
     exchanges = exchanges.split(",") if exchanges else []
+    exchanges = add_fork_exchanges(cfg=cfg, exchanges=exchanges)
     cfg.logger.info(f"[events.utils] Running data fetching for exchanges: {exchanges}")
     return exchanges
 

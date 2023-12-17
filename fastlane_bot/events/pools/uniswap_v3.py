@@ -20,6 +20,7 @@ class UniswapV3Pool(Pool):
     """
 
     exchange_name: str = "uniswap_v3"
+    router_address: str = None
 
     @staticmethod
     def unique_key() -> str:
@@ -90,6 +91,7 @@ class UniswapV3Pool(Pool):
             "tick_spacing": contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
+            "router": self.router_address,
         }
         for key, value in params.items():
             self.state[key] = value
@@ -108,6 +110,8 @@ class UniswapV3Pool(Pool):
         """
         slot0 = await contract.caller.slot0()
         fee = await contract.caller.fee()
+        factory_address = await contract.caller.factory()
+
         params = {
             "tick": slot0[1],
             "sqrt_price_q96": slot0[0],
@@ -117,6 +121,8 @@ class UniswapV3Pool(Pool):
             "tick_spacing": await contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
+            "router": self.router_address,
+            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value

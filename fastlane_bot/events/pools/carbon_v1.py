@@ -21,6 +21,7 @@ class CarbonV1Pool(Pool):
     """
 
     exchange_name: str = "carbon_v1"
+    router_address: str = None
 
     @staticmethod
     def unique_key() -> str:
@@ -50,6 +51,7 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
+        data["router"] = self.router_address,
         for key, value in data.items():
             self.state[key] = value
         return data
@@ -75,8 +77,6 @@ class CarbonV1Pool(Pool):
         Dict[str, Any]
             The updated data.
         """
-        print(f"event_type: {event_type}")
-        print(f"event_args: {event_args}")
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
         if isinstance(order0, list) and isinstance(order1, list):
@@ -151,7 +151,8 @@ class CarbonV1Pool(Pool):
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
-        params["exchange_name"] = "carbon_v1"
+        params["exchange_name"] = self.exchange_name
+        params["router"] = self.router_address,
         for key, value in params.items():
             self.state[key] = value
 

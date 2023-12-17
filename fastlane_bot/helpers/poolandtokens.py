@@ -249,15 +249,11 @@ class PoolAndTokens:
         """
 
         self.fee = float(Decimal(str(self.fee)))
-        if self.exchange_name in [
-            self.ConfigObj.UNISWAP_V3_NAME,
-            self.ConfigObj.PANCAKESWAP_V3_NAME,
-        ]:
+        if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             out = self._univ3_to_cpc()
         elif self.exchange_name in [
-            self.ConfigObj.CARBON_V1_NAME,
             self.ConfigObj.BANCOR_POL_NAME,
-        ]:
+        ] + self.ConfigObj.CARBON_V1_FORKS:
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()

@@ -137,6 +137,7 @@ class Config():
         assert issubclass(type(self.provider), provider_.ConfigProvider)
 
         assert self.network is self.provider.network, f"Network mismatch: {self.network} != {self.provider.network}"
+        self.SUPPORTED_EXCHANGES = self.network.ALL_KNOWN_EXCHANGES
 
     VISIBLE_FIELDS = "network, db, logger, provider, w3, ZERO_ADDRESS"
 

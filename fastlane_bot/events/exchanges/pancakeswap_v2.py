@@ -22,6 +22,13 @@ class PancakeswapV2(Exchange):
     """
 
     exchange_name: str = "pancakeswap_v2"
+    fee: str = None
+    router_address: str = None
+    exchange_initialized: bool = False
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
@@ -33,7 +40,7 @@ class PancakeswapV2(Exchange):
         return [contract.events.Sync]
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
-        return "0.0025", 0.0025
+        return self.fee, self.fee_float
 
     async def get_tkn0(self, address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.functions.token0().call()

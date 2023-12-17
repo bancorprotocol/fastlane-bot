@@ -21,6 +21,12 @@ class UniswapV2Pool(Pool):
     """
 
     exchange_name: str = "uniswap_v2"
+    fee: str = None
+    router_address: str = None
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     @staticmethod
     def unique_key() -> str:
@@ -73,11 +79,12 @@ class UniswapV2Pool(Pool):
         """
         reserve_balance = contract.caller.getReserves()
         params = {
-            "fee": "0.003",
-            "fee_float": 0.003,
+            "fee": self.fee,
+            "fee_float": self.fee_float,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
-            "exchange_name": "uniswap_v2",
+            "exchange_name": self.exchange_name,
+            "router": self.router_address,
         }
         for key, value in params.items():
             self.state[key] = value
@@ -94,12 +101,15 @@ class UniswapV2Pool(Pool):
         See base class.
         """
         reserve_balance = await contract.caller.getReserves()
+        factory_address = await contract.caller.factory()
         params = {
             "fee": "0.003",
             "fee_float": 0.003,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
-            "exchange_name": "uniswap_v2",
+            "exchange_name": self.exchange_name,
+            "router": self.router_address,
+            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value

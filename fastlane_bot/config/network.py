@@ -79,7 +79,7 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
         contract_name = row[1]["contract_name"]
         fee = row[1]["fee"]
         if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
-            fork_map[exchange_name]: fee
+            fork_map[exchange_name] = fee
     return fork_map
 
 
@@ -345,6 +345,9 @@ class ConfigNetwork(ConfigBase):
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.CARBON_V1
         )
+        self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
+
+        self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.CARBON_V1_FORKS
 
         self.CHAIN_SPECIFIC_EXCHANGES = (
             self.CHAIN_SPECIFIC_EXCHANGES
@@ -357,7 +360,18 @@ class ConfigNetwork(ConfigBase):
         self.CHAIN_SPECIFIC_EXCHANGES = [
             ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None
         ]
+        self.ALL_KNOWN_EXCHANGES = self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES
 
+    def exchange_name_base_from_fork(self, exchange_name):
+        if exchange_name in self.UNI_V2_FORKS:
+            exchange_name = "uniswap_v2"
+        elif exchange_name in self.UNI_V3_FORKS:
+            exchange_name = "uniswap_v3"
+        elif exchange_name in self.SOLIDLY_V2_FORKS:
+            exchange_name = "solidly_v2"
+        elif exchange_name in self.CARBON_V1_FORKS:
+            exchange_name = "carbon_v1"
+        return exchange_name
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
@@ -374,7 +388,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
-    STABLECOIN_KEY = "USDC-eB48"
+    # STABLECOIN_KEY = "USDC-eB48"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
@@ -397,12 +411,12 @@ class _ConfigNetworkMainnet(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {
-        "WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        "BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
-        "WETH-6Cc2": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+        "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        "BNT": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
@@ -422,7 +436,7 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
 
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-bab1"
-    STABLECOIN_KEY = "USDC-5831"
+    # STABLECOIN_KEY = "USDC-5831"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
@@ -433,10 +447,10 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-bab1": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-        "USDC-5831": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-        "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-        "WBTC-5b0f": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+        "WETH": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "WBTC": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
     }
 
     # Add any exchanges unique to the chain here
@@ -456,7 +470,7 @@ class _ConfigNetworkPolygon(ConfigNetwork):
 
     # NATIVE_GAS_TOKEN_KEY = "MATIC-1010"
     # WRAPPED_GAS_TOKEN_KEY = "WMATIC-1270"
-    STABLECOIN_KEY = "USDC-4174"
+    # STABLECOIN_KEY = "USDC-4174"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0x0000000000000000000000000000000000001010"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
@@ -467,11 +481,11 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-        "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-        "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-        "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-        "MATIC-1010": "0x0000000000000000000000000000000000001010",
+        "WETH": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "USDC": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "USDT": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "WBTC": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+        "MATIC": "0x0000000000000000000000000000000000001010",
         "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
     }
 
@@ -491,7 +505,7 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-E6e9"
-    STABLECOIN_KEY = "USDC-c035"
+    # STABLECOIN_KEY = "USDC-c035"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9"
@@ -501,10 +515,10 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-e6e9": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
-        "USDC-c035": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035",
-        "USDT-d41d": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d",
-        "WBTC-08e1": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1",
+        "WETH": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
+        "USDC": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035",
+        "USDT": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d",
+        "WBTC": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1",
     }
 
     # Add any exchanges unique to the chain here
@@ -524,7 +538,7 @@ class _ConfigNetworkOptimism(ConfigNetwork):
 
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
-    STABLECOIN_KEY = "USDC-ff85"
+    # STABLECOIN_KEY = "USDC-ff85"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
@@ -567,7 +581,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     ) = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
-    STABLECOIN_KEY = "USDC-2913"
+    # STABLECOIN_KEY = "USDC-2913"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
@@ -599,7 +613,7 @@ class _ConfigNetworkTenderly(ConfigNetwork):
 
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
-    STABLECOIN_KEY = "USDC-eB48"
+    # STABLECOIN_KEY = "USDC-eB48"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
