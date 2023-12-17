@@ -18,14 +18,13 @@ This module contains the tests which ensure that the flashloan tokens click para
 """
 from fastlane_bot import Bot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 import subprocess, os, sys
 import pytest
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -69,20 +68,19 @@ def run_command(arb_mode, expected_log_line):
         "python",
         main_script_path,
         f"--arb_mode={arb_mode}",
-        "--default_min_profit_gas_token=60",
+        "--default_min_profit_gas_token=0.001",
         "--limit_bancor3_flashloan_tokens=False",
         "--use_cached_events=True",
-        "--logging_path=fastlane_bot/data/",
-        "--timeout=1",
+        "--timeout=60",
         "--loglevel=DEBUG",
-        "--flashloan_tokens=BNT-FF1C,ETH-EEeE,ETH2x_FLI-65BD",
+        "--flashloan_tokens='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C,0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD'",
         "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=7)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr or expected_log_line in result.stdout:
@@ -96,8 +94,10 @@ def run_command(arb_mode, expected_log_line):
 
 # ## Test flashloan_tokens is Respected
 
-expected_log_line = "Flashloan tokens are set as: ['BNT-FF1C', 'ETH-EEeE', 'ETH2x_FLI-65BD']"
+expected_log_line = "Flashloan tokens are set as: ['BNT', 'ETH', 'ETH2x_FLI']"
 arb_mode = "multi"
 run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
+
+
 
 

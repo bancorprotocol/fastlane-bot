@@ -581,8 +581,6 @@ assert r.time < 0.1
 assert r.method == "margp-pair"
 assert r.errormsg is None
 
-round(r.result,5)
-
 # #### trade instructions
 
 ti = r.trade_instructions()

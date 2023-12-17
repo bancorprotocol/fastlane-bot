@@ -22,7 +22,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -39,12 +39,11 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -56,9 +55,9 @@ cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="coinbase_base")
 # ## Config_Test_Multichain
 
 assert cfg.RPC_ENDPOINT in "https://base-mainnet.g.alchemy.com/v2/", f"[TestGenerateNetworkInfo] Wrong RPC endpoint for coinbase_base. Expected: https://base-mainnet.g.alchemy.com/v2/, found {cfg.RPC_ENDPOINT}"
-assert cfg.NATIVE_GAS_TOKEN_KEY in "ETH-EEeE", f"[TestGenerateNetworkInfo] NATIVE_GAS_TOKEN_KEY for coinbase_base. Expected: ETH-EEeE, found {cfg.NATIVE_GAS_TOKEN_KEY}"
-assert cfg.WRAPPED_GAS_TOKEN_KEY in "WETH-0006", f"[TestGenerateNetworkInfo] WRAPPED_GAS_TOKEN_KEY for coinbase_base. Expected: WETH-0006, found {cfg.WRAPPED_GAS_TOKEN_KEY}"
-assert cfg.STABLECOIN_KEY in "USDC-2913", f"[TestGenerateNetworkInfo] STABLECOIN_KEY for coinbase_base. Expected: USDC-2913, found {cfg.STABLECOIN_KEY}"
+assert cfg.NATIVE_GAS_TOKEN_ADDRESS in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", f"[TestGenerateNetworkInfo] NATIVE_GAS_TOKEN_KEY for coinbase_base. Expected: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, found {cfg.NATIVE_GAS_TOKEN_ADDRESS}"
+assert cfg.WRAPPED_GAS_TOKEN_ADDRESS in "0x4200000000000000000000000000000000000006", f"[TestGenerateNetworkInfo] WRAPPED_GAS_TOKEN_KEY for coinbase_base. Expected: 0x4200000000000000000000000000000000000006, found {cfg.WRAPPED_GAS_TOKEN_ADDRESS}"
+assert cfg.STABLECOIN_ADDRESS in "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", f"[TestGenerateNetworkInfo] STABLECOIN_ADDRESS for coinbase_base. Expected: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, found {cfg.STABLECOIN_ADDRESS}"
 
 # ## Multichain_Tests
 

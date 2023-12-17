@@ -80,7 +80,6 @@ from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
-from .modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format, log_format, num_format_float
 
@@ -151,7 +150,7 @@ class CarbonBotBase:
         ), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
-        self.RUN_FLASHLOAN_TOKENS = self.ConfigObj.CHAIN_FLASHLOAN_TOKENS
+        self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
 
     @property
     def C(self) -> Any:
@@ -424,8 +423,6 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleSingle
         elif arb_mode in {"multi_triangle", "triangle_multi"}:
             return ArbitrageFinderTriangleMulti
-        elif arb_mode in {"bancor_v3", "single_triangle_bancor3"}:
-            return ArbitrageFinderTriangleSingleBancor3
         elif arb_mode in {"b3_two_hop"}:
             return ArbitrageFinderTriangleBancor3TwoHop
         elif arb_mode in {"multi_pairwise_pol"}:

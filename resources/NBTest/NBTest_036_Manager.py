@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -20,7 +20,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastlane_bot import Bot, Config
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -29,7 +29,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -67,10 +66,11 @@ cfg = Config.new(config=Config.CONFIG_MAINNET)
     cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], "ethereum",'static_pool_data'
 )
 # create manager instance for all tests
-manager = Manager(cfg.w3, 
-                  cfg, 
-                  pool_data, 
-                  20, 
+manager = Manager(web3=cfg.w3, 
+                  w3_async=cfg.w3_async,
+                  cfg=cfg, 
+                  pool_data=pool_data, 
+                  alchemy_max_block_fetch=20, 
                   SUPPORTED_EXCHANGES=['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'],
                   forked_exchanges=['uniswap_v2', 'uniswap_v3'],
                   uniswap_v2_event_mappings=uniswap_v2_event_mappings,

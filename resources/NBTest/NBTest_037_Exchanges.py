@@ -6,11 +6,11 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: fastlane-bot-38
+#     display_name: Python 3
 #     language: python
-#     name: fastlane-bot-38
+#     name: python3
 # ---
 
 # +
@@ -19,7 +19,7 @@ import json
 from fastlane_bot import Bot
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3, BancorV2, BancorPol
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
     BANCOR_V3_POOL_COLLECTION_ABI, \
     CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI
@@ -36,7 +36,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2))
@@ -84,13 +83,14 @@ assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
 # +
 
 
-uniswap_v2_exchange = UniswapV2()
+uniswap_v2_exchange = UniswapV2(fee="0.003", router_address="bobs_router")
 
 @pytest.mark.asyncio
 async def test_uniswap_v2_exchange():
     assert (uniswap_v2_exchange.get_abi() == UNISWAP_V2_POOL_ABI)
-    assert (await uniswap_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003))
+    assert (await uniswap_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await uniswap_v2_exchange.get_fee('', mocked_contract)}"
     assert (await uniswap_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+    assert (uniswap_v2_exchange.router_address == "bobs_router")
 
 # Run the test in an event loop
 asyncio.run(test_uniswap_v2_exchange())
@@ -99,31 +99,16 @@ asyncio.run(test_uniswap_v2_exchange())
 # ## test_uniswap_v3_exchange
 
 # +
-uniswap_v3_exchange = UniswapV3()
+uniswap_v3_exchange = UniswapV3(router_address="bobs_router")
 
 @pytest.mark.asyncio
 async def test_uniswap_v3_exchange():
     assert (uniswap_v3_exchange.get_abi() == UNISWAP_V3_POOL_ABI)
     assert (await uniswap_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.functions.fee().call(), (float(await mocked_contract.functions.fee().call()) / 1000000.0)))
     assert (await uniswap_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.functions.token0().call())
-    
+    assert (uniswap_v3_exchange.router_address == "bobs_router")
 # Run the test in an event loop
 asyncio.run(test_uniswap_v3_exchange())
-# -
-
-# ## test_sushiswap_v2_exchange
-
-# +
-sushiswap_v2_exchange = SushiswapV2()
-
-@pytest.mark.asyncio
-async def test_sushiswap_v2_exchange():
-    assert (sushiswap_v2_exchange.get_abi() == SUSHISWAP_POOLS_ABI)
-    assert (await sushiswap_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025))
-    assert (await sushiswap_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
-    
-# Run the test in an event loop
-vals = asyncio.run(test_sushiswap_v2_exchange())
 # -
 
 # ## test_bancor_v3_exchange

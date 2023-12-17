@@ -91,7 +91,6 @@ load_dotenv()
             "multi",
             "triangle",
             "multi_triangle",
-            "bancor_v3",
             "b3_two_hop",
             "multi_pairwise_pol",
             "multi_pairwise_bal",
