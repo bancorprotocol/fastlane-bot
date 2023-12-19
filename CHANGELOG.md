@@ -2,9 +2,33 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.82...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.83...HEAD)
 
 - Fix error caused in poolandtokens for Bancor POL curves [\#254](https://github.com/bancorprotocol/fastlane-bot/issues/254)
+- bugfix for missing pool data [\#178](https://github.com/bancorprotocol/fastlane-bot/issues/178)
+- Bug in utils.py update\_pools\_from\_contracts [\#125](https://github.com/bancorprotocol/fastlane-bot/issues/125)
+- Incorrect address field for bancor\_v3 in static\_pool\_data.csv [\#118](https://github.com/bancorprotocol/fastlane-bot/issues/118)
+
+- Remove disabled pools from Bancor V3 static data [\#151](https://github.com/bancorprotocol/fastlane-bot/issues/151)
+- Change tx submit directly to flashbots \(instead of Alchemy\) [\#106](https://github.com/bancorprotocol/fastlane-bot/issues/106)
+- Add Target Token Mode for Recent Events [\#98](https://github.com/bancorprotocol/fastlane-bot/issues/98)
+- Add Support for Curve Exchange [\#75](https://github.com/bancorprotocol/fastlane-bot/issues/75)
+- Generalize `b3_two_hop` to allow handling arbs between external exchanges only. [\#73](https://github.com/bancorprotocol/fastlane-bot/issues/73)
+- Consolidate DEFAULT\_MIN\_PROFIT\_BNT and DEFAULT\_MIN\_PROFIT variables [\#59](https://github.com/bancorprotocol/fastlane-bot/issues/59)
+- Add Support for Bancor V3 Vortex Trigger [\#44](https://github.com/bancorprotocol/fastlane-bot/issues/44)
+- Refactor Code to Prevent Silent Failure of Exceptions [\#39](https://github.com/bancorprotocol/fastlane-bot/issues/39)
+
+Closed issues
+
+- Error writing pool data to disk: Object of type int64 is not JSON serializable [\#259](https://github.com/bancorprotocol/fastlane-bot/issues/259)
+- main.py / env [\#104](https://github.com/bancorprotocol/fastlane-bot/issues/104)
+- Version number via CLI [\#23](https://github.com/bancorprotocol/fastlane-bot/issues/23)
+- Transaction is stuck in mempool [\#5](https://github.com/bancorprotocol/fastlane-bot/issues/5)
+
+## [v2.7.83](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.83) (2023-12-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.82...v2.7.83)
+
 - Issue causing transactions to be submitted without Flashbots by default [\#251](https://github.com/bancorprotocol/fastlane-bot/issues/251)
 - update LYXe token info [\#241](https://github.com/bancorprotocol/fastlane-bot/issues/241)
 - Bancor POL fix for poolandtokens [\#255](https://github.com/bancorprotocol/fastlane-bot/pull/255) ([Lesigh-3100](https://github.com/Lesigh-3100))
