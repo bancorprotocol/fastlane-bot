@@ -542,7 +542,7 @@ class TxHelpers:
 
         returns: the transaction function ready to be submitted
         """
-        if not self.ConfigObj.USE_FLASHLOANS:
+        if self.ConfigObj.SELF_FUND:
             transaction = self.arb_contract.functions.fundAndArb(
                 routes, src_address, src_amt
             ).build_transaction(
@@ -945,7 +945,7 @@ class TxHelpers:
         returns:
             transaction hash
         """
-        current_gas_price = self.web3.eth.getBlock("pending").get("baseFeePerGas")
+        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
         max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_bse"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)

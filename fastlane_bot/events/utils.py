@@ -555,7 +555,7 @@ def get_config(
     blockchain: str,
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
-    use_flashloans: bool = True
+    self_fund: bool = False
 ) -> Config:
     """
     Gets the config object.
@@ -576,8 +576,8 @@ def get_config(
         Comma seperated list of tokens that the bot can use for flash loans.
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
-    use_flashloans : bool
-        The bot will default to using flashloans if True, otherwise it will attempt to use funds from the wallet.
+    self_fund : bool
+        The bot will default to using flashloans if False, otherwise it will attempt to use funds from the wallet.
     Returns
     -------
     Config
@@ -592,7 +592,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
-            use_flashloans=use_flashloans,
+            self_fund=self_fund,
 
         )
         cfg.logger.info("[events.utils.get_config] Using Tenderly config")
@@ -602,7 +602,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
-            use_flashloans=use_flashloans
+            self_fund=self_fund
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens

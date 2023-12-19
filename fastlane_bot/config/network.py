@@ -178,7 +178,7 @@ class ConfigNetwork(ConfigBase):
     # USDC_KEY = "USDC-eB48"
     # LINK_KEY = "LINK-86CA"
     # USDT_KEY = "USDT-1ec7"
-    USE_FLASHLOANS = True
+    SELF_FUND = False
 
     # ACCOUNTS SECTION
     #######################################################################################

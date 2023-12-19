@@ -52,7 +52,7 @@ class Config():
     logging_header: str = None
 
     @classmethod
-    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, use_flashloans=True, **kwargs):
+    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, self_fund=True, **kwargs):
         """
         Alternative constructor: create and return new Config object
         
@@ -70,17 +70,17 @@ class Config():
 
         if config == cls.CONFIG_MAINNET:
             C_nw = network_.ConfigNetwork.new(network=blockchain)
-            C_nw.USE_FLASHLOANS = use_flashloans
+            C_nw.SELF_FUND = self_fund
             return cls(network=C_nw, logger=C_log, **kwargs)
         elif config == cls.CONFIG_TENDERLY:
             C_db = db_.ConfigDB.new(db=S.DATABASE_POSTGRES, POSTGRES_DB="tenderly")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_TENDERLY)
-            C_nw.USE_FLASHLOANS = use_flashloans
+            C_nw.SELF_FUND = self_fund
             return cls(db=C_db, logger=C_log, network=C_nw, **kwargs)
         elif config == cls.CONFIG_UNITTEST:
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST, POSTGRES_DB="unittest")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
-            C_nw.USE_FLASHLOANS = use_flashloans
+            C_nw.SELF_FUND = self_fund
             C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
             return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")

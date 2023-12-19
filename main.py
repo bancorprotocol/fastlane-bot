@@ -248,10 +248,10 @@ load_dotenv()
     help="How frequently pool data should be updated, in main loop iterations.",
 )
 @click.option(
-    "--use_flashloans",
-    default=True,
+    "--self_fund",
+    default=False,
     type=bool,
-    help="If False, the bot will attempt to submit arbitrage transactions using funds in your wallet when possible.",
+    help="If True, the bot will attempt to submit arbitrage transactions using funds in your wallet when possible.",
 )
 
 def main(
@@ -284,7 +284,7 @@ def main(
     use_specific_exchange_for_target_tokens: str,
     prefix_path: str,
     version_check_frequency: int,
-    use_flashloans: bool,
+    self_fund: bool,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -320,7 +320,7 @@ def main(
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         prefix_path (str): prefixes the path to the write folders (used for deployment)
         version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
-        use_flashloans (bool): If True, the bot will use Flashloans to fund arbitrage trades. If False, the bot will use funds in the wallet to perform arbitrage trades.
+        self_fund (bool): If False, the bot will use Flashloans to fund arbitrage trades. If True, the bot will use funds in the wallet to perform arbitrage trades.
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -340,7 +340,7 @@ def main(
         blockchain,
         flashloan_tokens,
         tenderly_fork_id,
-        use_flashloans,
+        self_fund,
     )
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
@@ -358,7 +358,7 @@ def main(
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
 
-    if not use_flashloans:
+    if self_fund:
         check_and_approve_tokens(tokens=flashloan_tokens, cfg=cfg)
 
     # Search the logging directory for the latest timestamped folder
@@ -423,7 +423,7 @@ def main(
             pool_data_update_frequency: {pool_data_update_frequency}
             prefix_path: {prefix_path}
             version_check_frequency: {version_check_frequency}
-            use_flashloans: {use_flashloans}
+            use_flashloans: {self_fund}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
