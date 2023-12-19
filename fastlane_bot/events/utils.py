@@ -221,6 +221,7 @@ def get_tkn_symbol(tkn_address, tokens: pd.DataFrame) -> str:
     except Exception:
         return tkn_address
 
+
 def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
     """
     Gets the token symbol for logging purposes
@@ -234,10 +235,6 @@ def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
     for tkn in flashloan_tokens:
         flashloan_tkn_symbols.append(get_tkn_symbol(tkn_address=tkn, tokens=tokens))
     return flashloan_tkn_symbols
-
-
-
-
 
 
 def get_static_data(
@@ -292,9 +289,7 @@ def get_static_data(
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
-        df = pd.DataFrame(
-            columns=["address", "symbol", "decimals"]
-        )
+        df = pd.DataFrame(columns=["address", "symbol", "decimals"])
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
     tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
@@ -438,6 +433,8 @@ def add_fork_exchanges(cfg: Config, exchanges: List) -> List[str]:
         exchanges.remove("carbon_v1_forks")
     exchanges = list(set(exchanges))
     return exchanges
+
+
 def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     Handles the exchanges parameter.
@@ -555,7 +552,7 @@ def get_config(
     blockchain: str,
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
-    self_fund: bool = False
+    self_fund: bool = False,
 ) -> Config:
     """
     Gets the config object.
@@ -593,7 +590,6 @@ def get_config(
             logging_path=logging_path,
             blockchain=blockchain,
             self_fund=self_fund,
-
         )
         cfg.logger.info("[events.utils.get_config] Using Tenderly config")
     else:
@@ -602,12 +598,15 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
-            self_fund=self_fund
+            self_fund=self_fund,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens)
+    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
+        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
+        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
+    )
     return cfg
 
 
@@ -819,7 +818,13 @@ def write_pool_data_to_disk(
         path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
         df = pd.DataFrame(mgr.pool_data)
-        df.to_json(path, orient="records")
+
+        def remove_nan(row):
+            return {col: val for col, val in row.items() if pd.notna(val)}
+
+        # Apply the function to each row
+        cleaned_df = df.apply(remove_nan, axis=1)
+        cleaned_df.to_json(path, orient="records")
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
@@ -998,11 +1003,11 @@ def handle_subsequent_iterations(
 
     """
     if loop_idx > 0 or replay_from_block:
-        #bot.db.handle_token_key_cleanup()
+        # bot.db.handle_token_key_cleanup()
         bot.db.remove_unmapped_uniswap_v2_pools()
         bot.db.remove_zero_liquidity_pools()
         bot.db.remove_unsupported_exchanges()
-        #bot.db.remove_faulty_token_pools()
+        # bot.db.remove_faulty_token_pools()
         # bot.db.remove_pools_with_invalid_tokens()
         # bot.db.ensure_descr_in_pool_data()
 
@@ -1962,8 +1967,12 @@ def self_funding_warning_sequence(cfg):
     :param cfg: the config object
 
     """
-    cfg.logger.info(f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n")
-    cfg.logger.info(f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************")
+    cfg.logger.info(
+        f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n"
+    )
+    cfg.logger.info(
+        f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************"
+    )
     time.sleep(5)
     cfg.logger.info(f"Submitting approvals in 15 seconds")
     time.sleep(5)
@@ -1971,8 +1980,11 @@ def self_funding_warning_sequence(cfg):
     time.sleep(5)
     cfg.logger.info(f"Submitting approvals in 5 seconds")
     time.sleep(5)
-    cfg.logger.info(f"*********************************************************************************\n\nSelf-funding mode activated.")
-    cfg.logger.info(f"""\n\n
+    cfg.logger.info(
+        f"*********************************************************************************\n\nSelf-funding mode activated."
+    )
+    cfg.logger.info(
+        f"""\n\n
           _____
          |A .  | _____
          | /.\ ||A ^  | _____
@@ -1982,7 +1994,8 @@ def self_funding_warning_sequence(cfg):
                 |____V||  |  || \ / |
                        |____V||  .  |
                               |____V|
-    \n\n""")
+    \n\n"""
+    )
 
 
 def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
@@ -2001,6 +2014,7 @@ def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
         if not tx_helpers.check_if_token_approved(token_address=tkn):
             unapproved_tokens.append(tkn)
     return unapproved_tokens
+
 
 def check_and_approve_tokens(tokens: List, cfg) -> bool:
     """
@@ -2025,7 +2039,9 @@ def check_and_approve_tokens(tokens: List, cfg) -> bool:
 
     self_funding_warning_sequence(cfg=cfg)
     tx_helpers = TxHelpers(ConfigObj=cfg)
-    unapproved_tokens = find_unapproved_tokens(tokens=tokens, cfg=cfg, tx_helpers=tx_helpers)
+    unapproved_tokens = find_unapproved_tokens(
+        tokens=tokens, cfg=cfg, tx_helpers=tx_helpers
+    )
 
     if len(unapproved_tokens) == 0:
         return True
@@ -2035,9 +2051,13 @@ def check_and_approve_tokens(tokens: List, cfg) -> bool:
         if tx is not None:
             continue
         else:
-            assert False, f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
+            assert (
+                False
+            ), f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
 
-    unapproved_tokens = find_unapproved_tokens(tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers)
+    unapproved_tokens = find_unapproved_tokens(
+        tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers
+    )
     if len(unapproved_tokens) == 0:
         return True
     else:
