@@ -13,6 +13,7 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -44,6 +45,7 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Test NoEmptyCarbonOrders
 
@@ -72,7 +74,7 @@ uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mapp
         
 tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
         
-exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2"
+exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,bancor_v2,bancor_pol,pancakeswap_v2,pancakeswap_v3"
 
 exchanges = exchanges.split(",")
 
@@ -95,7 +97,7 @@ mgr = Manager(
     web3=cfg.w3,
     w3_async=cfg.w3_async,
     cfg=cfg,
-    pool_data=static_pool_data.to_dict(orient="records"),
+    pool_data=state,
     SUPPORTED_EXCHANGES=exchanges,
     alchemy_max_block_fetch=alchemy_max_block_fetch,
     uniswap_v2_event_mappings=uniswap_v2_event_mappings,
@@ -172,22 +174,22 @@ r = finder.find_arbitrage()
         
 best_trade_instructions_dic
 # Check that this gets filtered out
-test_trade = [{'cid': '0x36445535fc762f6c53277a667500a41e31b51bec800e76aab33dafab75da4eaa',
-  'tknin': 'WBTC-C599',
+test_trade = [{'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
+  'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
   'amtin': 0.008570336169213988,
-  'tknout': 'WETH-6Cc2',
+  'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   'amtout': -0.13937506393995136,
   'error': None},
  {'cid': '9187623906865338513511114400657741709420-1',
-  'tknin': 'WETH-6Cc2',
+  'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   'amtin': 0,
-  'tknout': 'WBTC-C599',
+  'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
   'amtout': 0,
   'error': None},
  {'cid': '9187623906865338513511114400657741709458-1',
-  'tknin': 'WETH-6Cc2',
+  'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   'amtin': 0.13937506393995136,
-  'tknout': 'WBTC-C599',
+  'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
   'amtout': 0.008870336169213988,
   'error': None}]
 
@@ -200,7 +202,20 @@ test_trade, best_src_token
 ordered_scaled_dcts = bot._basic_scaling(
             ordered_trade_instructions_dct, best_src_token
         )
-ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
+
+ordered_scaled_dcts[0]["tknin_dec_override"] = 8
+ordered_scaled_dcts[0]["tknout_dec_override"] = 18
+ordered_scaled_dcts[0]["exchange_override"] = "uniswap_v2"
+ordered_scaled_dcts[1]["tknin_dec_override"] = 18
+ordered_scaled_dcts[1]["tknout_dec_override"] = 8
+ordered_scaled_dcts[1]["exchange_override"] = "carbon_v1"
+ordered_scaled_dcts[2]["tknin_dec_override"] = 18
+ordered_scaled_dcts[2]["tknout_dec_override"] = 8
+ordered_scaled_dcts[2]["exchange_override"] = "carbon_v1"
+
+print(ordered_scaled_dcts)
+
+ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
 tx_route_handler = bot.TxRouteHandlerClass(
             trade_instructions=ordered_trade_instructions_objects
         )
