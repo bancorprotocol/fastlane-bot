@@ -62,6 +62,9 @@ class ExchangeFactory:
         Gets extra information necessary for forked exchanges
 
         """
+
+        exchange_initialized = False if exchange_initialized is None else exchange_initialized
+
         # Logic to handle assigning the correct router address and fee
         extras = {'exchange_name': exchange_name}
         if exchange_name in cfg.UNI_V2_FORKS:

@@ -14,6 +14,6 @@ def get_abis_and_exchanges(mgr: Any) -> Dict[str, Any]:
     abis = {}
     exchanges = {}
     for exchange in mgr.exchanges:
-        exchanges[exchange] = exchange_factory.get_exchange(exchange)
+        exchanges[exchange] = exchange_factory.get_exchange(key=exchange, cfg=mgr.cfg, exchange_initialized=False)
         abis[exchange] = exchanges[exchange].get_abi()
     return abis
