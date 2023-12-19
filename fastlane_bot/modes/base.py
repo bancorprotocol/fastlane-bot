@@ -7,7 +7,7 @@ Licensed under MIT
 """
 import abc
 from typing import Any, Tuple, Dict, List, Union
-
+from _decimal import Decimal
 import pandas as pd
 
 from fastlane_bot.tools.cpc import T
@@ -133,6 +133,32 @@ class ArbitrageFinderBase:
 
         return best_profit, ops
 
+    def get_prices_simple(self, CCm, tkn0, tkn1):
+        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
+        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
+        return curve_prices
+    
+    # Global constant for 'carbon_v1' order
+    CARBON_SORTING_ORDER = float('inf')
+
+    # Create a sort order mapping function
+    def create_sort_order(self, sort_sequence):
+        # Create a dictionary mapping from sort sequence to indices, except for 'carbon_v1'
+        return {key: index for index, key in enumerate(sort_sequence) if key != 'carbon_v1'}
+
+    # Define the sort key function separately
+    def sort_key(self, item, sort_order):
+        # Check if the item is 'carbon_v1'
+        if item[0] == 'carbon_v1':
+            return self.CARBON_SORTING_ORDER
+        # Otherwise, use the sort order from the dictionary, or a default high value
+        return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
+
+    # Define the custom sort function
+    def custom_sort(self, data, sort_sequence):
+        sort_order = self.create_sort_order(sort_sequence)
+        return sorted(data, key=lambda item: self.sort_key(item, sort_order))
+
     def calculate_profit(
         self,
         src_token: str,
@@ -147,35 +173,29 @@ class ArbitrageFinderBase:
 
         best_profit_fl_token = profit_src
         if src_token not in [
-            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
-            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
+            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
         ]:
-            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_KEY:
-                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
+            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS:
+                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
             else:
                 fl_token_with_weth = src_token
 
-            try:
-                fltkn_eth_conversion_rate = (
-                    CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
-                    .bytknq(f"{fl_token_with_weth}")[0]
-                    .p
+            sort_sequence = ['bancor_v2','bancor_v3','uniswap_v2','uniswap_v3']
+            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token_with_weth)
+            sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
+            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sort_sequence] {sort_sequence}")
+            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit price_curves] {price_curves}")
+            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
+            if len(sorted_price_curves)>0:
+                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
+                self.ConfigObj.logger.debug(f"[modes.base.calculate_profit] {src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
+            else:
+                self.ConfigObj.logger.error(
+                    f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
                 )
-                best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-            except:
-                try:
-                    fltkn_eth_conversion_rate = (
-                        1
-                        / CCm.bytknb(f"{fl_token_with_weth}")
-                        .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
-                        .p
-                    )
-                    best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                except Exception as e:
-                    self.ConfigObj.logger.error(
-                        f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}. Raise exception: {e}"
-                    )
-                    raise e
+                raise
         else:
             best_profit_eth = best_profit_fl_token
         return best_profit_eth

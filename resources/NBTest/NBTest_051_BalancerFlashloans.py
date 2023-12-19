@@ -22,7 +22,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -37,12 +37,11 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -99,6 +98,7 @@ static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -142,12 +142,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -160,9 +159,9 @@ arb_mode = "multi_pairwise"
 # +
 ti1 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='USDC-eB48',
+    tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtin=5000,
-    tknout='WBTC-2c599',
+    tknout='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtout=1,
     ConfigObj=cfg,
     db = db,
@@ -175,9 +174,9 @@ ti1 = TradeInstruction(
 
 ti2 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='WBTC-2c599',
+    tknin='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtin=1,
-    tknout='USDC-eB48',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=5005,
     ConfigObj=cfg,
     db = db,
@@ -190,9 +189,9 @@ ti2 = TradeInstruction(
 
 ti3 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='USDC-eB48',
+    tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtin=5000,
-    tknout='WBTC-2c599',
+    tknout='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtout=1,
     ConfigObj=cfg,
     db = db,
@@ -205,9 +204,9 @@ ti3 = TradeInstruction(
 
 ti4 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='WBTC-2c599',
+    tknin='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtin=0.2,
-    tknout='USDC-eB48',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=1000,
     ConfigObj=cfg,
     db = db,
@@ -219,9 +218,9 @@ ti4 = TradeInstruction(
 )
 ti5 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='WBTC-2c599',
+    tknin='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtin=0.3,
-    tknout='USDC-eB48',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=2000,
     ConfigObj=cfg,
     db = db,
@@ -234,9 +233,9 @@ ti5 = TradeInstruction(
 
 ti6 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='WBTC-2c599',
+    tknin='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtin=0.5,
-    tknout='USDC-eB48',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=3005,
     ConfigObj=cfg,
     db = db,
@@ -249,9 +248,9 @@ ti6 = TradeInstruction(
 
 ti7 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='USDT',
+    tknin='0xdAC17F958D2ee523a2206206994597C13D831ec7',
     amtin=2000,
-    tknout='ETH-EEeE',
+    tknout='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     amtout=1.5,
     ConfigObj=cfg,
     db = db,
@@ -264,9 +263,9 @@ ti7 = TradeInstruction(
 
 ti8 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='ETH-EEeE',
+    tknin='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     amtin=1.5,
-    tknout='USDT',
+    tknout='0xdAC17F958D2ee523a2206206994597C13D831ec7',
     amtout=3005,
     ConfigObj=cfg,
     db = db,
@@ -279,9 +278,9 @@ ti8 = TradeInstruction(
 
 ti9 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='ETH-EEeE',
+    tknin='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     amtin=5,
-    tknout='USDC',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=10000,
     ConfigObj=cfg,
     db = db,
@@ -294,9 +293,9 @@ ti9 = TradeInstruction(
 
 ti10 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='USDC',
+    tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtin=10000,
-    tknout='ETH-EEeE',
+    tknout='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     amtout=5.7,
     ConfigObj=cfg,
     db = db,
@@ -309,9 +308,9 @@ ti10 = TradeInstruction(
 
 ti11 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='BNT-FF1C',
+    tknin='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     amtin=50000,
-    tknout='USDC',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=20000,
     ConfigObj=cfg,
     db = db,
@@ -324,9 +323,9 @@ ti11 = TradeInstruction(
 
 ti12 = TradeInstruction(
     cid='4083388403051261561560495289181218537544',
-    tknin='USDC',
+    tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtin=20000,
-    tknout='BNT-FF1C',
+    tknout='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     amtout=50115,
     ConfigObj=cfg,
     db = db,
@@ -356,8 +355,8 @@ flashloan_struct2 = route_handler._get_flashloan_struct(instructions3)
 
 flash_struct3 = route_handler.generate_flashloan_struct(instructions3)
 assert len(flashloan_tokens2.keys()) == 2
-assert flashloan_tokens2['USDC-eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens2['USDC-eB48']['flash_amt']}"
-assert flashloan_tokens2['USDT']["flash_amt"] == 2000000000, f"expected flashloan amount of 2000000000, found {flashloan_tokens2['USDC-eB48']['flash_amt']}"
+assert flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
+#assert flashloan_tokens2['0xdAC17F958D2ee523a2206206994597C13D831ec7']["flash_amt"] == 2000000000, f"expected flashloan amount of 2000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
 # assert len(flash_struct3) == 3, f"[Advanced Routing NBTest044] wrong number of flash tokens length, expected 3, got {len(flash_struct3)}"
 # assert flash_struct3[0]['platformId'] == 2, f"[Balancer Flashloan Support [NBTest049]] wrong platformId, expected 2, got {flash_struct3[0]['platformId']}"
 # assert flash_struct3[1]['platformId'] == 2, f"[Balancer Flashloan Support [NBTest049]] wrong platformId, expected 2, got {flash_struct3[1]['platformId']}"

@@ -20,7 +20,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastlane_bot import Bot, Config
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -29,7 +29,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -64,13 +63,14 @@ cfg = Config.new(config=Config.CONFIG_MAINNET)
     uniswap_v2_event_mappings,
     uniswap_v3_event_mappings,
 ) = get_static_data(
-    cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], "ethereum",'static_pool_data', 'max'
+    cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], "ethereum",'static_pool_data'
 )
 # create manager instance for all tests
-manager = Manager(cfg.w3, 
-                  cfg, 
-                  pool_data, 
-                  20, 
+manager = Manager(web3=cfg.w3, 
+                  w3_async=cfg.w3_async,
+                  cfg=cfg, 
+                  pool_data=pool_data, 
+                  alchemy_max_block_fetch=20, 
                   SUPPORTED_EXCHANGES=['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'],
                   forked_exchanges=['uniswap_v2', 'uniswap_v3'],
                   uniswap_v2_event_mappings=uniswap_v2_event_mappings,
@@ -114,11 +114,10 @@ event_create_for_update = event_data['carbon_v1_event_create_for_update']
 event = event_data['carbon_v1_event_update']
 
 manager.update_from_event(event_create_for_update)
-assert event['args']['order0'][0] != [pool['y_0'] for pool in manager.pool_data if pool['cid'] == event['args']['id']][0]
+pools_to_add_from_contracts = [event[2]['args']['id'] for event in manager.pools_to_add_from_contracts]
 
-manager.update_from_event(event)
+assert event['args']['id'] in pools_to_add_from_contracts
 
-assert event['args']['order0'][0] == [pool['y_0'] for pool in manager.pool_data if pool['cid'] == event['args']['id']][0]
 # -
 
 # ## test_update_from_event_carbon_v1_create
@@ -131,7 +130,7 @@ assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
 
 manager.update_from_event(event)
 
-assert event['args']['id'] in [pool['cid'] for pool in manager.pool_data]
+assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
 # -
 
 # ## test_update_from_event_carbon_v1_delete
@@ -143,7 +142,7 @@ assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
 
 manager.update_from_event(event)
 
-assert event['args']['id'] in [pool['cid'] for pool in manager.pool_data]
+assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
 
 event['event'] = 'StrategyDeleted'
 

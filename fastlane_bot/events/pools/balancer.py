@@ -53,7 +53,7 @@ class BalancerPool(Pool):
 
         return data
 
-    def update_from_contract(
+    async def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -64,7 +64,7 @@ class BalancerPool(Pool):
         """
         See base class.
         """
-        pool_balances = contract.caller.getPoolTokens(self.state["anchor"])
+        pool_balances = await contract.caller.getPoolTokens(self.state["anchor"])
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         params = {key: self.state[key] for key in self.state.keys()}

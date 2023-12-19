@@ -35,13 +35,13 @@ class BancorPol(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenTraded, contract.events.TradingEnabled]
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         return event["args"]["token"]
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return self.ETH_ADDRESS if event["args"]["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
 
     def save_strategy(
@@ -72,8 +72,8 @@ class BancorPol(Exchange):
 
         """
         cid = f"{self.exchange_name}_{token}"
-        tkn0_address = cfg.w3.toChecksumAddress(token)
-        tkn1_address = cfg.w3.toChecksumAddress(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS
+        tkn0_address = cfg.w3.to_checksum_address(token)
+        tkn1_address = cfg.w3.to_checksum_address(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS
 
         return func(
             address=cfg.BANCOR_POL_ADDRESS,

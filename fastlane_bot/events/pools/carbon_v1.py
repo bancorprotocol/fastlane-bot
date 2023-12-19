@@ -21,6 +21,7 @@ class CarbonV1Pool(Pool):
     """
 
     exchange_name: str = "carbon_v1"
+    router_address: str = None
 
     @staticmethod
     def unique_key() -> str:
@@ -50,6 +51,7 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
+        data["router"] = self.router_address,
         for key, value in data.items():
             self.state[key] = value
         return data
@@ -77,14 +79,25 @@ class CarbonV1Pool(Pool):
         """
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
-        data["y_0"] = order0[0]
-        data["z_0"] = order0[1]
-        data["A_0"] = order0[2]
-        data["B_0"] = order0[3]
-        data["y_1"] = order1[0]
-        data["z_1"] = order1[1]
-        data["A_1"] = order1[2]
-        data["B_1"] = order1[3]
+        if isinstance(order0, list) and isinstance(order1, list):
+            data["y_0"] = order0[0]
+            data["z_0"] = order0[1]
+            data["A_0"] = order0[2]
+            data["B_0"] = order0[3]
+            data["y_1"] = order1[0]
+            data["z_1"] = order1[1]
+            data["A_1"] = order1[2]
+            data["B_1"] = order1[3]
+        else:
+            data["y_0"] = order0["y"]
+            data["z_0"] = order0["z"]
+            data["A_0"] = order0["A"]
+            data["B_0"] = order0["B"]
+            data["y_1"] = order1["y"]
+            data["z_1"] = order1["z"]
+            data["A_1"] = order1["A"]
+            data["B_1"] = order1["B"]
+
         return data
 
     @staticmethod
@@ -138,7 +151,8 @@ class CarbonV1Pool(Pool):
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
-        params["exchange_name"] = "carbon_v1"
+        params["exchange_name"] = self.exchange_name
+        params["router"] = self.router_address,
         for key, value in params.items():
             self.state[key] = value
 

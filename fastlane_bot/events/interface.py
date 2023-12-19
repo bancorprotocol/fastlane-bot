@@ -20,13 +20,12 @@ class Token:
     symbol: str
     address: str
     decimals: int
-    key: str
 
     def __eq__(self, other):
-        return self.key == other.key if isinstance(other, Token) else False
+        return self.address == other.address if isinstance(other, Token) else False
 
     def __hash__(self):
-        return hash(self.key)
+        return hash(self.address)
 
 
 @dataclass
@@ -54,6 +53,9 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
+    token_list: Dict[str, Any] = None
+    pool_data = None
+    pool_data_list = None
 
     @property
     def cfg(self) -> Config:
@@ -72,7 +74,7 @@ class QueryInterface:
         self.state = [
             pool
             for pool in self.state
-            if pool["tkn0_key"] in target_tokens and pool["tkn1_key"] in target_tokens
+            if pool["tkn0_address"] in target_tokens and pool["tkn1_address"] in target_tokens
         ]
 
         self.cfg.logger.info(
@@ -141,7 +143,7 @@ class QueryInterface:
         for pool in pools:
             for idx in range(8):
                 try:
-                    tkn = pool[f"tkn{idx}_key"]
+                    tkn = pool[f"tkn{idx}_address"]
                     if type(tkn) == str:
                         tokens.append(tkn)
                 except KeyError:
@@ -319,51 +321,19 @@ class QueryInterface:
 
         safe_pools = []
         for pool in self.state:
+            self.cfg.logger.info(pool)
             try:
-                self.get_token(pool["tkn0_key"])
-                self.get_token(pool["tkn1_key"])
+                self.get_token(pool["tkn0_address"])
+                self.get_token(pool["tkn1_address"])
                 safe_pools.append(pool)
             except Exception as e:
+
                 self.cfg.logger.warning(f"[events.interface] Exception: {e}")
                 self.cfg.logger.warning(
                     f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token"
                 )
 
         self.state = safe_pools
-
-    @staticmethod
-    def cleanup_token_key(token_key: str) -> str:
-        """
-        Cleanup token key. This renames keys that have more than 1 '-' in them.
-
-        Parameters
-        ----------
-        token_key: str
-            The token key to cleanup
-
-        Returns
-        -------
-        str
-            The cleaned up token key
-
-        """
-        split_key = token_key.split("-", 2)
-        return (
-            f"{split_key[0]}_{split_key[1]}-{split_key[2]}"
-            if len(split_key) > 2
-            else token_key
-        )
-
-    def handle_token_key_cleanup(self) -> None:
-        """
-        Cleanup token keys in state
-        """
-        for idx, pool in enumerate(self.state):
-            key0 = self.cleanup_token_key(pool["tkn0_key"])
-            key1 = self.cleanup_token_key(pool["tkn1_key"])
-            self.state[idx]["tkn0_key"] = key0
-            self.state[idx]["tkn1_key"] = key1
-            self.state[idx]["pair_name"] = key0 + "/" + key1
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
@@ -387,12 +357,29 @@ class QueryInterface:
 
     def get_pool_data_with_tokens(self) -> List[PoolAndTokens]:
         """
-        Get pool data with tokens
+        Get pool data with tokens as a List
         """
-        return [
+        if self.pool_data_list is None:
+            self.refresh_pool_data()
+        return self.pool_data_list
+
+    def get_pool_data_lookup(self) -> Dict[str, PoolAndTokens]:
+        """
+        Get pool data with tokens as a Dict to find specific pools
+        """
+        if self.pool_data is None:
+            self.refresh_pool_data()
+        return self.pool_data
+
+    def refresh_pool_data(self):
+        """
+        Refreshes pool data to ensure it is up-to-date
+        """
+        self.pool_data_list = [
             self.create_pool_and_tokens(idx, record)
             for idx, record in enumerate(self.state)
         ]
+        self.pool_data = {str(pool.cid): pool for pool in self.pool_data_list}
 
     def create_pool_and_tokens(self, idx: int, record: Dict[str, Any]) -> PoolAndTokens:
         """
@@ -443,8 +430,6 @@ class QueryInterface:
                     "anchor",
                     "tkn0",
                     "tkn1",
-                    "tkn0_key",
-                    "tkn1_key",
                     "tkn0_address",
                     "tkn0_decimals",
                     "tkn1_address",
@@ -452,37 +437,31 @@ class QueryInterface:
                     "tkn0_weight",
                     "tkn1_weight",
                     "tkn2",
-                    "tkn2_key",
                     "tkn2_balance",
                     "tkn2_address",
                     "tkn2_decimals",
                     "tkn2_weight",
                     "tkn3",
-                    "tkn3_key",
                     "tkn3_balance",
                     "tkn3_address",
                     "tkn3_decimals",
                     "tkn3_weight",
                     "tkn4",
-                    "tkn4_key",
                     "tkn4_balance",
                     "tkn4_address",
                     "tkn4_decimals",
                     "tkn4_weight",
                     "tkn5",
-                    "tkn5_key",
                     "tkn5_balance",
                     "tkn5_address",
                     "tkn5_decimals",
                     "tkn5_weight",
                     "tkn6",
-                    "tkn6_key",
                     "tkn6_balance",
                     "tkn6_address",
                     "tkn6_decimals",
                     "tkn6_weight",
                     "tkn7",
-                    "tkn7_key",
                     "tkn7_balance",
                     "tkn7_address",
                     "tkn7_decimals",
@@ -492,8 +471,8 @@ class QueryInterface:
         )
         result.tkn0 = result.pair_name.split("/")[0].split("-")[0]
         result.tkn1 = result.pair_name.split("/")[1].split("-")[0]
-        result.tkn0_key = result.pair_name.split("/")[0]
-        result.tkn1_key = result.pair_name.split("/")[1]
+        result.tkn0_address = result.pair_name.split("/")[0]
+        result.tkn1_address = result.pair_name.split("/")[1]
         return result
 
     def get_tokens(self) -> List[Token]:
@@ -508,25 +487,32 @@ class QueryInterface:
         token_set = set()
         for record in self.state:
             for idx in range(len(record["descr"].split("/"))):
-                token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+                try:
+                    token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
+                except AttributeError:
+                    pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(
-                Token(
-                    symbol=self.ConfigObj.NATIVE_GAS_TOKEN_KEY.split("-")[0],
-                    key=self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
-                    address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
-                    decimals=18,
-                )
-            )
-            token_set.add(
-                Token(
-                    symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY.split("-")[0],
-                    key=self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
-                    address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
-                    decimals=18,
-                )
-            )
+            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
+
+    def populate_tokens(self):
+        """
+        Populate the token Dict with tokens using the available pool data.
+        """
+        self.token_list = {}
+        for record in self.state:
+            for idx in range(len(record["descr"].split("/"))):
+                try:
+                    token = self.create_token(record, f"tkn{str(idx)}_")
+                    self.token_list[token.address] = token
+                except AttributeError:
+                    pass
+        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
+            native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
+            wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
+            self.token_list[native_gas_tkn.address] = native_gas_tkn
+            self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
         """
@@ -548,7 +534,6 @@ class QueryInterface:
         return Token(
             symbol=record.get(f"{prefix}symbol"),
             decimals=record.get(f"{prefix}decimals"),
-            key=record.get(f"{prefix}key"),
             address=record.get(f"{prefix}address"),
         )
 
@@ -571,14 +556,14 @@ class QueryInterface:
         """
         raise DeprecationWarning("Method not implemented")
 
-    def get_token(self, key: str) -> Optional[Token]:
+    def get_token(self, tkn_address: str) -> Optional[Token]:
         """
         Get a token from the state
 
         Parameters
         ----------
-        key: str
-            The token key
+        tkn_address: str
+            The token address
 
         Returns
         -------
@@ -586,13 +571,21 @@ class QueryInterface:
             The token
 
         """
-        tokens = self.get_tokens()
-        if "-" in key:
-            return next((tkn for tkn in tokens if tkn.key == key), None)
-        elif key.startswith("0x"):
-            return next((tkn for tkn in tokens if tkn.address == key), None)
-        else:
-            raise ValueError(f"[get_token] Invalid token: {key}")
+        if self.token_list is None:
+            self.populate_tokens()
+        try:
+            return self.token_list.get(tkn_address)
+        except KeyError:
+            try:
+                self.populate_tokens()
+                return self.token_list.get(tkn_address)
+            except KeyError as e:
+                self.ConfigObj.logger.info(f"[interface.py get_token] Could not find token: {tkn_address} in token_list")
+                tokens = self.get_tokens()
+                if tkn_address.startswith("0x"):
+                    return next((tkn for tkn in tokens if tkn.address == tkn_address), None)
+                else:
+                    raise ValueError(f"[get_token] Invalid token: {tkn_address}")
 
     def get_pool(self, **kwargs) -> Optional[PoolAndTokens]:
         """
@@ -609,21 +602,18 @@ class QueryInterface:
             The pool
 
         """
-        pool_data_with_tokens = self.get_pool_data_with_tokens()
-        try:
-            pool = next(
-                (
-                    pool
-                    for pool in pool_data_with_tokens
-                    if all(getattr(pool, key) == kwargs[key] for key in kwargs)
-                ),
-                None,
-            )
-            pool.exchange_name
-        except AttributeError:
-            if "cid" in kwargs:
-                kwargs["cid"] = int(kwargs["cid"])
-                pool = next(
+        pool_data_with_tokens = self.get_pool_data_lookup()
+        if "cid" in kwargs:
+            cid = str(kwargs['cid'])
+            try:
+                return pool_data_with_tokens[cid]
+            except KeyError:
+                # pool not in data
+                self.cfg.logger.error(f"[interface.py get_pool] pool with cid: {cid} not in data")
+                return None
+        else:
+            try:
+                return next(
                     (
                         pool
                         for pool in pool_data_with_tokens
@@ -631,7 +621,8 @@ class QueryInterface:
                     ),
                     None,
                 )
-        return pool
+            except AttributeError:
+                return None
 
     def get_pools(self) -> List[PoolAndTokens]:
         """

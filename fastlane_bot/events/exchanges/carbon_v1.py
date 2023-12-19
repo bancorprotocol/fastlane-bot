@@ -25,6 +25,8 @@ class CarbonV1(Exchange):
 
     exchange_name: str = "carbon_v1"
     _fee_pairs: Dict[Tuple[str, str], int] = None
+    router_address: str = None
+    exchange_initialized: bool = False
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -59,9 +61,9 @@ class CarbonV1(Exchange):
             contract.events.PairTradingFeePPMUpdated,
             contract.events.TradingFeePPMUpdated,
             contract.events.PairCreated,
-        ]
+        ] if self.exchange_initialized else []
 
-    def get_fee(
+    async def get_fee(
         self, address: str, contract: Contract
     ) -> Tuple[str, float]:
         """
@@ -77,12 +79,12 @@ class CarbonV1(Exchange):
 
         """
         try:
-            fee = contract.functions.tradingFeePPM().call()
+            fee = await contract.functions.tradingFeePPM().call()
         except AttributeError:
-            fee = contract.tradingFeePPM()
+            fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         """
         Get the token0 address from the contract or event.
 
@@ -102,11 +104,11 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return contract.functions.token0().call()
+            return await contract.functions.token0().call()
         else:
             return event["args"]["token0"]
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         """
         Get the token1 address from the contract or event.
 
@@ -126,7 +128,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return contract.functions.token1().call()
+            return await contract.functions.token1().call()
         else:
             return event["args"]["token1"]
 
@@ -174,9 +176,9 @@ class CarbonV1(Exchange):
         """
         cid = strategy[0]
         order0, order1 = strategy[3][0], strategy[3][1]
-        tkn0_address, tkn1_address = cfg.w3.toChecksumAddress(
+        tkn0_address, tkn1_address = cfg.w3.to_checksum_address(
             strategy[2][0]
-        ), cfg.w3.toChecksumAddress(strategy[2][1])
+        ), cfg.w3.to_checksum_address(strategy[2][1])
 
         try:
             fee = self.fee_pairs[(tkn0_address, tkn1_address)]

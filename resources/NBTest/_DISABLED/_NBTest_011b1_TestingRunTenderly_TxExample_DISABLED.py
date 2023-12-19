@@ -17,12 +17,15 @@
 from fastlane_bot import Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonBot))
 from fastlane_bot.testing import *
-plt.style.use('seaborn-dark')
-plt.rcParams['figure.figsize'] = [12,6]
+
+plt.style.use("seaborn-dark")
+plt.rcParams["figure.figsize"] = [12, 6]
 from fastlane_bot import __VERSION__
+
 require("2.0", __VERSION__)
 
 # # Testing the _run functions on TENDERLY EXAMPLE TX [NBTest011b1]
@@ -120,21 +123,21 @@ flashloan_amount, flashloan_token_address
 # +
 # route_struct = [
 #   {'exchangeId': 6,
-#   'targetToken': C.w3.toChecksumAddress('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'),
+#   'targetToken': C.w3.to_checksum_address('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'),
 #   'minTargetAmount': 1,
 #   'deadline': deadline,
-#   'customAddress': C.w3.toChecksumAddress('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'),
+#   'customAddress': C.w3.to_checksum_address('0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'),
 #   'customInt': 0,
 #   'customData': '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000c00000000000000000000000000000048000000000000000000000000000000000000000000000000000000012a05f200'},
 #  {'exchangeId': 2,
-#   'targetToken': C.w3.toChecksumAddress('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
+#   'targetToken': C.w3.to_checksum_address('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
 #   'minTargetAmount': 1,
 #   'deadline': deadline,
-#   'customAddress': C.w3.toChecksumAddress('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
+#   'customAddress': C.w3.to_checksum_address('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
 #   'customInt': 0,
 #   'customData': '0x'}
 # ]
-# flashloan_token_address =C.w3.toChecksumAddress('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')
+# flashloan_token_address =C.w3.to_checksum_address('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')
 # flashloan_amount = 5000000000
 
 # +

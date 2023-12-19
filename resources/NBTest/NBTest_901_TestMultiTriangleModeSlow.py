@@ -21,7 +21,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -35,11 +35,10 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
+
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
@@ -93,6 +92,7 @@ static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -136,12 +136,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -183,6 +182,7 @@ assert len(combos) >= 1225, f"[TestMultiTriangleMode] Using wrong dataset, expec
 
 # ### Test_find_arbitrage
 
+# +
 arb_finder = bot._get_arb_finder("multi_triangle")
 finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
@@ -203,13 +203,22 @@ for arb in r:
         ) = arb
     if len(best_trade_instructions_dic) > 3:
         multi_carbon_count += 1
-        has_zero_curves = False
-        has_one_curves = False
+        tkn_in = None
+        tkn_out = None
+        # Find the first Carbon Curve to establish tknin and tknout
         for curve in best_trade_instructions_dic:
-            if "-0" in curve['cid']:
-                has_zero_curves = True
-            if "-1" in curve['cid']:
-                has_one_curves = True
-        assert not has_zero_curves or not has_one_curves, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
+            if "-0" in curve['cid'] or "-1" in curve['cid']:
+                tkn_in = curve["tknin"]
+                tknout = curve["tknout"]
+                break
+        for curve in best_trade_instructions_dic:
+            if "-0" in curve['cid'] or "-1" in curve['cid']:
+                if curve["tknin"] in [tkn_in, tkn_out] and curve["tknout"] in [tkn_in, tkn_out]:
+                    assert curve["tknin"] in tkn_in, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
+                    assert curve["tknout"] in tkn_out, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
+
 assert multi_carbon_count > 0, f"[TestMultiTriangleMode] Not finding arbs with multiple Carbon curves."
 assert len(r) >= 58, f"[TestMultiTriangleMode] Expected at least 58 arbs, found {len(r)}"
+# -
+
+

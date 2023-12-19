@@ -48,8 +48,8 @@ class PoolManager(BaseManager):
         elif pool_info["exchange_name"] == "bancor_pol":
             return pool_info["tkn0_address"]
 
-    @staticmethod
-    def pool_type_from_exchange_name(exchange_name: str) -> Callable:
+
+    def pool_type_from_exchange_name(self, exchange_name: str) -> Callable:
         """
         Get the pool type from the exchange name.
 
@@ -64,7 +64,24 @@ class PoolManager(BaseManager):
             The pool type class.
 
         """
-        return pool_factory.get_pool(exchange_name)
+        return pool_factory.get_pool(exchange_name, self.cfg)
+
+    def pool_extras_from_exchange_name(self, exchange_name: str) -> Dict:
+        """
+        Get the pool extras from the exchange name.
+
+        Parameters
+        ----------
+        exchange_name : str
+            The exchange name.
+
+        Returns
+        -------
+        Dict
+            The Dict containing any extras for the pool type
+
+        """
+        return pool_factory.get_fork_extras(exchange_name, self.cfg)
 
     @staticmethod
     def pool_descr_from_info(pool_info: Dict[str, Any]) -> str:
@@ -184,9 +201,7 @@ class PoolManager(BaseManager):
             "tkn0_decimals": t0_decimals,
             "tkn1_decimals": t1_decimals,
             "cid": cid,
-            "tkn0_key": f"{t0_symbol}-{tkn0_address[-4:]}",
-            "tkn1_key": f"{t1_symbol}-{tkn1_address[-4:]}",
-            "pair_name": f"{t0_symbol}-{tkn0_address[-4:]}/{t1_symbol}-{tkn1_address[-4:]}",
+            "pair_name": f"{tkn0_address}/{tkn1_address}",
             "fee_float": fee_float,
             "fee": fee,
         }
@@ -276,7 +291,11 @@ class PoolManager(BaseManager):
         if contract:
             pool_info.update(
                 pool.update_from_contract(
-                    contract, self.tenderly_fork_id, self.w3_tenderly, self.web3, tenderly_exchanges
+                    contract,
+                    self.tenderly_fork_id,
+                    self.w3_tenderly,
+                    self.web3,
+                    tenderly_exchanges,
                 )
             )
 
@@ -293,9 +312,13 @@ class PoolManager(BaseManager):
             The pool info.
 
         """
+        #try:
         pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
-        pool = pool_type(state=pool_info)
+        pool_extras = self.pool_extras_from_exchange_name(exchange_name=pool_info["exchange_name"], )
+        pool = pool_type(state=pool_info, **pool_extras)
         self.exchanges[pool_info["exchange_name"]].add_pool(pool)
+        # except Exception as e:
+        #     print(f"Error adding pool to exchange: {e}, skipping...")
 
     def get_pool_info(
         self,
@@ -323,21 +346,23 @@ class PoolManager(BaseManager):
         Optional[Dict[str, Any]]
             The pool info.
         """
-        if ex_name in self.cfg.UNI_V2_FORKS:
-            ex_name = "uniswap_v2"
+        # if ex_name in self.cfg.UNI_V2_FORKS:
+        #     ex_name = "uniswap_v2"
 
         if key == "address":
-            key_value = self.web3.toChecksumAddress(key_value)
+            key_value = self.web3.to_checksum_address(key_value)
 
         if ex_name == "bancor_pol":
             key = "tkn0_address"
-            
+
         if ex_name == "bancor_v2":
             return next(
                 (
                     self.validate_pool_info(key_value, event, pool, key)
                     for pool in self.pool_data
-                    if pool[key[0]] == key_value[0] and pool[key[1]] == key_value[1] and pool["exchange_name"] == ex_name
+                    if pool[key[0]] == key_value[0]
+                    and pool[key[1]] == key_value[1]
+                    and pool["exchange_name"] == ex_name
                 ),
                 None,
             )

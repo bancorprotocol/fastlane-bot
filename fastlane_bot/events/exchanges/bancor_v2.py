@@ -8,7 +8,7 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
@@ -33,28 +33,30 @@ class BancorV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+    # def async convert_address(self, address: str, contract: Contract) -> str:
+    #     return
+
+    async def get_connector_tokens(self, contract, i: int) -> str:
+        return await contract.functions.connectorTokens(i).call()
+
+    async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         pool = self.get_pool(address)
-        fee, fee_float = (
-            (pool.state["fee"], pool.state["fee_float"])
-            if pool
-            else (
-                contract.functions.conversionFee().call(),
-                float(contract.functions.conversionFee().call()) / 1e6,
-            )
-        )
+        if pool:
+            fee, fee_float = pool.state["fee"], pool.state["fee_float"]
+        else:
+            fee = await contract.functions.conversionFee().call()
+            fee_float = float(fee) / 1e6
         return fee, fee_float
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return (
-            event["args"]["_token1"]
-            if event
-            else contract.functions.reserveTokens().call()[0]
-        )
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        if event:
+            return event["args"]["_token1"]
+        return await contract.functions.reserveTokens().call()[0]
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return (
-            event["args"]["_token2"]
-            if event
-            else contract.functions.reserveTokens().call()[1]
-        )
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        if event:
+            return event["args"]["_token2"]
+        return await contract.functions.reserveTokens().call()[1]
+
+    async def get_anchor(self, contract: Contract) -> str:
+        return await contract.caller.anchor()

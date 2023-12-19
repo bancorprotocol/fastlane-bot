@@ -5,6 +5,7 @@ Contains the utils functions for events
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import base64
 import json
 import os
 import random
@@ -14,9 +15,9 @@ from glob import glob
 from typing import Any, Union, Dict, Set, Tuple, Hashable
 from typing import List
 
+import numpy as np
 import pandas as pd
 import requests
-import web3
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
 from web3 import Web3
@@ -27,6 +28,10 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
+
+from fastlane_bot.events.multicall_utils import encode_token_price
+from fastlane_bot.events.pools import CarbonV1Pool
+from fastlane_bot.helpers import TxHelpers
 
 
 def filter_latest_events(
@@ -203,35 +208,33 @@ def read_csv_file(filepath: str, low_memory: bool = False) -> pd.DataFrame:
         raise CSVReadError(f"Error parsing the CSV file {filepath}") from e
 
 
-def filter_static_pool_data(
-    pool_data: pd.DataFrame, exchanges: List[str], sample_size: int or str
-) -> pd.DataFrame:
-    """Helper function to filter static pool data.
-
-    Parameters
-    ----------
-    pool_data : pd.DataFrame
-        The pool data.
-    exchanges : List[str]
-        A list of exchanges to fetch data for.
-    sample_size : int or str
-        The number of Bancor v3 pools to fetch.
-
-    Returns
-    -------
-    pd.DataFrame
-        The filtered pool data.
+def get_tkn_symbol(tkn_address, tokens: pd.DataFrame) -> str:
     """
-    filtered_data = pool_data[pool_data["exchange_name"].isin(exchanges)]
+    Gets the token symbol for logging purposes
+    :param tkn_address: the token address
+    :param tokens: the Dataframe containing token information
 
-    if sample_size != "max":
-        bancor_data = filtered_data[filtered_data["exchange_name"] == "bancor_v3"]
-        non_bancor_data = filtered_data[
-            filtered_data["exchange_name"] != "bancor_v3"
-        ].sample(n=sample_size)
-        filtered_data = pd.concat([bancor_data, non_bancor_data])
+    returns: str
+    """
+    try:
+        return tokens.loc[tokens["address"] == tkn_address]["symbol"].values[0]
+    except Exception:
+        return tkn_address
 
-    return filtered_data
+
+def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
+    """
+    Gets the token symbol for logging purposes
+    :param flashloan_tokens: the flashloan token addresses
+    :param tokens: the Dataframe containing token information
+
+    returns: list
+    """
+    flashloan_tokens = flashloan_tokens.split(",")
+    flashloan_tkn_symbols = []
+    for tkn in flashloan_tokens:
+        flashloan_tkn_symbols.append(get_tkn_symbol(tkn_address=tkn, tokens=tokens))
+    return flashloan_tkn_symbols
 
 
 def get_static_data(
@@ -239,7 +242,6 @@ def get_static_data(
     exchanges: List[str],
     blockchain: str,
     static_pool_data_filename: str,
-    static_pool_data_sample_sz: int or str,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -254,8 +256,6 @@ def get_static_data(
         The name of the blockchain being used
     static_pool_data_filename : str
         The filename of the static pool data CSV file.
-    static_pool_data_sample_sz : int or str
-        The number of Bancor v3 pools to fetch.
 
     Returns
     -------
@@ -264,15 +264,14 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
-    # token_path = os.path.normpath(f"fastlane_bot/data/")
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
     )
     static_pool_data = read_csv_file(static_pool_data_filepath)
-    static_pool_data = filter_static_pool_data(
-        static_pool_data, exchanges, static_pool_data_sample_sz
-    )
+    static_pool_data = static_pool_data[
+        static_pool_data["exchange_name"].isin(exchanges)
+    ]
 
     # Read Uniswap v2 event mappings and tokens
     uniswap_v2_filepath = os.path.join(base_path, "uniswap_v2_event_mappings.csv")
@@ -290,17 +289,74 @@ def get_static_data(
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
-        df = pd.DataFrame(
-            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
-        )
+        df = pd.DataFrame(columns=["address", "symbol", "decimals"])
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
+    tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
+    tokens = tokens.drop_duplicates(subset=["address"])
+    tokens = tokens.dropna(subset=["decimals", "symbol", "address"])
+    tokens["symbol"] = (
+        tokens["symbol"]
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+        .str.replace("-", "_")
+    )
 
+    def correct_tkn(tkn_address, keyname):
+        try:
+            return tokens[tokens["address"] == tkn_address][keyname].values[0]
+        except IndexError:
+            return np.nan
+
+    static_pool_data["tkn0_address"] = static_pool_data["tkn0_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn1_address"] = static_pool_data["tkn1_address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    static_pool_data["tkn0_decimals"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+    static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "decimals")
+    )
+
+    static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["tkn1_symbol"] = static_pool_data["tkn1_address"].apply(
+        lambda x: correct_tkn(x, "symbol")
+    )
+    static_pool_data["pair_name"] = (
+        static_pool_data["tkn0_address"] + "/" + static_pool_data["tkn1_address"]
+    )
+    static_pool_data = static_pool_data.dropna(
+        subset=[
+            "pair_name",
+            "exchange_name",
+            "fee",
+            "tkn0_symbol",
+            "tkn1_symbol",
+            "tkn0_decimals",
+            "tkn1_decimals",
+        ]
+    )
+
+    static_pool_data["descr"] = (
+        static_pool_data["exchange_name"]
+        + " "
+        + static_pool_data["pair_name"]
+        + " "
+        + static_pool_data["fee"].astype(str)
+    )
     # Initialize web3
     static_pool_data["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
         for index, row in static_pool_data.iterrows()
     ]
+
+    static_pool_data = static_pool_data.drop_duplicates(subset=["cid"])
+    static_pool_data.reset_index(drop=True, inplace=True)
 
     return (
         static_pool_data,
@@ -344,6 +400,41 @@ def handle_tenderly_event_exchanges(
     return exchanges
 
 
+def add_fork_exchanges(cfg: Config, exchanges: List) -> List[str]:
+
+    """
+    Handles the exchanges parameter.
+
+    Parameters
+    ----------
+    cfg : Config
+        The config object.
+    exchanges : str
+        A comma-separated string of exchanges to fetch data for.
+
+    Returns
+    -------
+    List[str]
+        A list of exchanges to fetch data for.
+
+    """
+    # Check fork settings
+    if "uniswap_v2_forks" in exchanges:
+        exchanges += cfg.UNI_V2_FORKS
+        exchanges.remove("uniswap_v2_forks")
+    if "uniswap_v3_forks" in exchanges:
+        exchanges += cfg.UNI_V3_FORKS
+        exchanges.remove("uniswap_v3_forks")
+    if "solidly_v2_forks" in exchanges:
+        exchanges += cfg.SOLIDLY_V2_FORKS
+        exchanges.remove("solidly_v2_forks")
+    if "carbon_v1_forks" in exchanges:
+        exchanges += cfg.CARBON_V1_FORKS
+        exchanges.remove("carbon_v1_forks")
+    exchanges = list(set(exchanges))
+    return exchanges
+
+
 def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     Handles the exchanges parameter.
@@ -363,6 +454,7 @@ def handle_exchanges(cfg: Config, exchanges: str) -> List[str]:
     """
     # Set external exchanges
     exchanges = exchanges.split(",") if exchanges else []
+    exchanges = add_fork_exchanges(cfg=cfg, exchanges=exchanges)
     cfg.logger.info(f"[events.utils] Running data fetching for exchanges: {exchanges}")
     return exchanges
 
@@ -396,9 +488,9 @@ def handle_target_tokens(
             target_tokens = flashloan_tokens
         else:
             target_tokens = target_tokens.split(",")
-            target_tokens = [
-                QueryInterface.cleanup_token_key(token) for token in target_tokens
-            ]
+            # target_tokens = [
+            #     QueryInterface.cleanup_token_key(token) for token in target_tokens
+            # ]
 
             # Ensure that the target tokens are a subset of the flashloan tokens
             for token in flashloan_tokens:
@@ -433,22 +525,21 @@ def handle_flashloan_tokens(
     List[str]
         A list of flashloan tokens to fetch data for.
     """
+    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
     flashloan_tokens = flashloan_tokens.split(",")
-    flashloan_tokens = [
-        QueryInterface.cleanup_token_key(token) for token in flashloan_tokens
-    ]
+    unique_tokens = len(tokens["address"].unique())
+    cfg.logger.info(f"unique_tokens: {unique_tokens}")
 
-    unique_tokens = len(tokens["key"].unique())
     cfg.logger.info(
         f"[events.utils.handle_flashloan_tokens] unique_tokens: {unique_tokens}"
     )
     flashloan_tokens = [
-        tkn for tkn in flashloan_tokens if tkn in tokens["key"].unique()
+        tkn for tkn in flashloan_tokens if tkn in tokens["address"].unique()
     ]
 
     # Log the flashloan tokens
     cfg.logger.info(
-        f"[events.utils.handle_flashloan_tokens] Flashloan tokens are set as: {flashloan_tokens}, {type(flashloan_tokens)}"
+        f"[events.utils.handle_flashloan_tokens] Flashloan tokens are set as: {flt_symbols}, {type(flashloan_tokens)}"
     )
     return flashloan_tokens
 
@@ -461,6 +552,7 @@ def get_config(
     blockchain: str,
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
+    self_fund: bool = False,
 ) -> Config:
     """
     Gets the config object.
@@ -481,7 +573,8 @@ def get_config(
         Comma seperated list of tokens that the bot can use for flash loans.
     tenderly_fork_id : str, optional
         The Tenderly fork ID, by default None
-
+    self_fund : bool
+        The bot will default to using flashloans if False, otherwise it will attempt to use funds from the wallet.
     Returns
     -------
     Config
@@ -496,6 +589,7 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            self_fund=self_fund,
         )
         cfg.logger.info("[events.utils.get_config] Using Tenderly config")
     else:
@@ -504,13 +598,14 @@ def get_config(
             loglevel=loglevel,
             logging_path=logging_path,
             blockchain=blockchain,
+            self_fund=self_fund,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
-        cfg.NATIVE_GAS_TOKEN_KEY in flashloan_tokens
-        or cfg.WRAPPED_GAS_TOKEN_KEY in flashloan_tokens
+        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
+        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
     )
     return cfg
 
@@ -569,14 +664,14 @@ def get_event_filters(
 
     # Get for exchanges except POL contract
     by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=start_block, toBlock=current_block)
+        delayed(event.create_filter)(fromBlock=start_block, toBlock=current_block)
         for event in mgr.events
         if event.__name__ not in bancor_pol_events
     )
 
     # Get all events since the beginning of time for Bancor POL contract
     max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.createFilter)(fromBlock=0, toBlock="latest")
+        delayed(event.create_filter)(fromBlock=0, toBlock="latest")
         for event in mgr.events
         if event.__name__ in bancor_pol_events
     )
@@ -616,6 +711,19 @@ def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     )
 
 
+def convert_to_serializable(data: Any) -> Any:
+    if isinstance(data, bytes):
+        return base64.b64encode(data).decode("ascii")
+    elif isinstance(data, dict):
+        return {key: convert_to_serializable(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_to_serializable(item) for item in data]
+    elif hasattr(data, "__dict__"):
+        return convert_to_serializable(data.__dict__)
+    else:
+        return data
+
+
 def save_events_to_json(
     cache_latest_only,
     logging_path,
@@ -652,17 +760,19 @@ def save_events_to_json(
         )
     try:
         with open(path, "w") as f:
-            latest_events = [
-                _["args"].pop("contextId", None) for _ in latest_events
-            ] and latest_events
+            # Remove contextId from the latest events
+            latest_events = convert_to_serializable(latest_events)
+            # latest_events = [
+            #     _["args"].pop("contextId", None) for _ in latest_events
+            # ] and latest_events
             f.write(json.dumps(latest_events))
+            mgr.cfg.logger.info(f"Saved events to {path}")
     except Exception as e:
         mgr.cfg.logger.warning(
             f"[events.utils.save_events_to_json]: {e}. "
             f"This will not impact bot functionality. "
             f"Skipping..."
         )
-
     mgr.cfg.logger.debug(f"[events.utils.save_events_to_json] Saved events to {path}")
 
 
@@ -679,7 +789,7 @@ def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
 
     """
     Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.update)(event=event) for event in latest_events
+        delayed(mgr.update_from_event)(event=event) for event in latest_events
     )
 
 
@@ -707,8 +817,14 @@ def write_pool_data_to_disk(
             os.mkdir("pool_data")
         path = f"pool_data/{mgr.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
-        with open(path, "w") as f:
-            f.write(json.dumps(mgr.pool_data))
+        df = pd.DataFrame(mgr.pool_data)
+
+        def remove_nan(row):
+            return {col: val for col, val in row.items() if pd.notna(val)}
+
+        # Apply the function to each row
+        cleaned_df = df.apply(remove_nan, axis=1)
+        cleaned_df.to_json(path, orient="records")
     except Exception as e:
         mgr.cfg.logger.error(f"Error writing pool data to disk: {e}")
 
@@ -887,10 +1003,13 @@ def handle_subsequent_iterations(
 
     """
     if loop_idx > 0 or replay_from_block:
-        bot.db.handle_token_key_cleanup()
+        # bot.db.handle_token_key_cleanup()
         bot.db.remove_unmapped_uniswap_v2_pools()
         bot.db.remove_zero_liquidity_pools()
         bot.db.remove_unsupported_exchanges()
+        # bot.db.remove_faulty_token_pools()
+        # bot.db.remove_pools_with_invalid_tokens()
+        # bot.db.ensure_descr_in_pool_data()
 
         # Filter the target tokens
         if target_tokens:
@@ -1213,14 +1332,14 @@ def get_start_block(
         ), replay_from_block
     elif mgr.tenderly_fork_id:
         # connect to the Tenderly fork and get the latest block number
-        from_block = mgr.w3_tenderly.eth.blockNumber
+        from_block = mgr.w3_tenderly.eth.block_number
         return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
             else from_block - reorg_delay - alchemy_max_block_fetch
         ), from_block
     else:
-        current_block = mgr.web3.eth.blockNumber
+        current_block = mgr.web3.eth.block_number
         return (
             (
                 max(block["last_updated_block"] for block in mgr.pool_data)
@@ -1249,7 +1368,7 @@ def get_tenderly_block_number(tenderly_fork_id: str) -> int:
     """
     provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
     web3 = Web3(provider)
-    return web3.eth.blockNumber
+    return web3.eth.block_number
 
 
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
@@ -1365,7 +1484,7 @@ def set_network_connection_to_tenderly(
         mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
     if tenderly_fork_id and not forked_from_block:
-        forked_from_block = mgr.cfg.w3.eth.blockNumber
+        forked_from_block = mgr.cfg.w3.eth.block_number
 
     assert (
         mgr.cfg.w3.provider.endpoint_uri == tenderly_uri
@@ -1683,13 +1802,13 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
         for token in target_tokens:
             target_token_addresses = (
                 target_token_addresses
-                + static_pool_data[static_pool_data["tkn0_key"] == token][
+                + static_pool_data[static_pool_data["tkn0_address"] == token][
                     "tkn0_address"
                 ].tolist()
             )
             target_token_addresses = (
                 target_token_addresses
-                + static_pool_data[static_pool_data["tkn1_key"] == token][
+                + static_pool_data[static_pool_data["tkn1_address"] == token][
                     "tkn1_address"
                 ].tolist()
             )
@@ -1753,11 +1872,11 @@ def get_current_block(
 
     """
     if not replay_from_block and not tenderly_fork_id:
-        current_block = mgr.web3.eth.blockNumber - reorg_delay
+        current_block = mgr.web3.eth.block_number - reorg_delay
     elif last_block == 0 and replay_from_block:
         current_block = replay_from_block - reorg_delay
     elif tenderly_fork_id:
-        current_block = mgr.w3_tenderly.eth.blockNumber
+        current_block = mgr.w3_tenderly.eth.block_number
     else:
         current_block = last_block + 1
     return current_block
@@ -1839,3 +1958,107 @@ def handle_tokens_csv(mgr, prefix_path):
         mgr.cfg.logger.info(
             f"[events.utils.handle_tokens_csv] Updated token data with {len(extra_info)} new tokens"
         )
+
+
+def self_funding_warning_sequence(cfg):
+    """
+    This function initiates a warning sequence if the user has specified to use their own funds.
+
+    :param cfg: the config object
+
+    """
+    cfg.logger.info(
+        f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n"
+    )
+    cfg.logger.info(
+        f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************"
+    )
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 15 seconds")
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 10 seconds")
+    time.sleep(5)
+    cfg.logger.info(f"Submitting approvals in 5 seconds")
+    time.sleep(5)
+    cfg.logger.info(
+        f"*********************************************************************************\n\nSelf-funding mode activated."
+    )
+    cfg.logger.info(
+        f"""\n\n
+          _____
+         |A .  | _____
+         | /.\ ||A ^  | _____
+         |(_._)|| / \ ||A _  | _____
+         |  |  || \ / || ( ) ||A_ _ |
+         |____V||  .  ||(_'_)||( v )|
+                |____V||  |  || \ / |
+                       |____V||  .  |
+                              |____V|
+    \n\n"""
+    )
+
+
+def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
+    """
+    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
+    :param tokens: the list of tokens to check/approve
+    :param cfg: the config object
+    :param tx_helpers: the TxHelpers instantiated class
+
+    returns: List of tokens that have not been approved
+
+    """
+    unapproved_tokens = []
+    for tkn in tokens:
+        if not tx_helpers.check_if_token_approved(token_address=tkn):
+            unapproved_tokens.append(tkn)
+    return unapproved_tokens
+
+
+def check_and_approve_tokens(tokens: List, cfg) -> bool:
+    """
+    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
+
+    :param tokens: the list of tokens to check/approve
+    :param cfg: the config object
+
+    """
+    _tokens = []
+    for tkn in tokens:
+        # If the token is a token key, get the address from the CHAIN_FLASHLOAN_TOKENS dict in the network.py config file
+        if "-" in tkn:
+            try:
+                _tokens.append(cfg.CHAIN_FLASHLOAN_TOKENS[tkn])
+            except KeyError:
+                cfg.logger.info(f"could not find token address for tkn: {tkn}")
+        else:
+            _tokens.append(tkn)
+    tokens = _tokens
+
+    self_funding_warning_sequence(cfg=cfg)
+    tx_helpers = TxHelpers(ConfigObj=cfg)
+    unapproved_tokens = find_unapproved_tokens(
+        tokens=tokens, cfg=cfg, tx_helpers=tx_helpers
+    )
+
+    if len(unapproved_tokens) == 0:
+        return True
+
+    for _tkn in unapproved_tokens:
+        tx = tx_helpers.approve_token_for_arb_contract(token_address=_tkn)
+        if tx is not None:
+            continue
+        else:
+            assert (
+                False
+            ), f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
+
+    unapproved_tokens = find_unapproved_tokens(
+        tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers
+    )
+    if len(unapproved_tokens) == 0:
+        return True
+    else:
+        return False

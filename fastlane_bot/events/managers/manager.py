@@ -18,9 +18,7 @@ from fastlane_bot.events.managers.pools import PoolManager
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-    def update_from_event(
-        self, event: Dict[str, Any], block_number: int = None
-    ) -> None:
+    def update_from_event(self, event: Dict[str, Any]) -> None:
         """
         Updates the state of the pool data from an event.
 
@@ -47,35 +45,27 @@ class Manager(PoolManager, EventManager, ContractsManager):
             self.handle_strategy_deleted(event)
             return
 
-        addr = self.web3.toChecksumAddress(event["address"])
-
-        # if event["event"] == "TradingEnabled":
-        #     addr = self.cfg.BANCOR_POL_ADDRESS
-
+        addr = self.web3.to_checksum_address(event["address"])
         ex_name = self.exchange_name_from_event(event)
-
         if not ex_name:
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
-        if ex_name in "bancor_v2":
-            pool_info = self.get_pool_info(
-                key, key_value, ex_name
-            )
-        else:
-            pool_info = self.get_pool_info(
-                key, key_value, ex_name
-            ) or self.add_pool_info_from_contract(
-                address=addr, event=event, exchange_name=ex_name, tenderly_exchanges=self.tenderly_event_exchanges
-            )
+        pool_info = self.get_pool_info(key, key_value, ex_name)
 
         if not pool_info:
+            self.pools_to_add_from_contracts.append(
+                (addr, ex_name, event, key, key_value)
+            )
             return
+
+        if "descr" not in pool_info:
+            pool_info["descr"] = self.pool_descr_from_info(pool_info)
 
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(
-            event or {}, pool.get_common_data(event, pool_info) or {}
+            event or {}, pool.get_common_data(event, pool_info)
         )
 
         self.update_pool_data(pool_info, data)
@@ -109,8 +99,14 @@ class Manager(PoolManager, EventManager, ContractsManager):
         current_block : int, optional
             The current block, by default None.
         """
-
-        pool_info["last_updated_block"] = current_block
+        if "last_updated_block" in pool_info:
+            if (
+                type(pool_info["last_updated_block"]) == int
+                and pool_info["last_updated_block"] == current_block
+            ):
+                return pool_info
+        else:
+            pool_info["last_updated_block"] = current_block
 
         if pool_info["exchange_name"] == self.cfg.BANCOR_V3_NAME:
             contract = self.pool_contracts[pool_info["exchange_name"]].get(
@@ -142,6 +138,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         for key, value in params.items():
             pool_info[key] = value
+
+        if "descr" not in pool_info or not pool_info["descr"]:
+            pool_info["descr"] = self.pool_descr_from_info(pool_info)
+
+        # update the pool_data where the cids match
+        for idx, pool in enumerate(self.pool_data):
+            if pool["cid"] == pool_info["cid"]:
+                self.pool_data[idx] = pool_info
+                break
         return pool_info
 
     def update_from_contract(
@@ -170,39 +175,40 @@ class Manager(PoolManager, EventManager, ContractsManager):
         Dict[str, Any]
             The pool info.
         """
-        if pool_info:
-            address = pool_info["address"]
-
-        addr = self.web3.toChecksumAddress(address)
-
-        if not pool_info:
-            for pool in self.pool_data:
-                if pool["address"] == addr:
-                    pool_info = pool
-                    break
-
-        pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
-        if not pool_info:
-            return
-
-        pool_info["last_updated_block"] = block_number
-        if contract is None:
-            contract = self.pool_contracts[pool_info["exchange_name"]].get(
-                pool_info["address"],
-                self.web3.eth.contract(
-                    address=pool_info["address"],
-                    abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
-                ),
-            )
-        pool = self.get_or_init_pool(pool_info)
-        params = pool.update_from_contract(
-            contract,
-            tenderly_fork_id=self.tenderly_fork_id,
-            w3_tenderly=self.w3_tenderly,
-            w3=self.web3,
-        )
-        for key, value in params.items():
-            pool_info[key] = value
+        # if pool_info:
+        #     address = pool_info["address"]
+        #
+        # addr = self.web3.to_checksum_address(address)
+        #
+        # if not pool_info:
+        #     for pool in self.pool_data:
+        #         if pool["address"] == addr:
+        #             pool_info = pool
+        #             break
+        #
+        # pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
+        # if not pool_info:
+        #     return
+        #
+        # pool_info["descr"] = self.pool_descr_from_info(pool_info)
+        # pool_info["last_updated_block"] = block_number
+        # if contract is None:
+        #     contract = self.pool_contracts[pool_info["exchange_name"]].get(
+        #         pool_info["address"],
+        #         self.web3.eth.contract(
+        #             address=pool_info["address"],
+        #             abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
+        #         ),
+        #     )
+        # pool = self.get_or_init_pool(pool_info)
+        # params = pool.update_from_contract(
+        #     contract,
+        #     tenderly_fork_id=self.tenderly_fork_id,
+        #     w3_tenderly=self.w3_tenderly,
+        #     w3=self.web3,
+        # )
+        # for key, value in params.items():
+        #     pool_info[key] = value
         return pool_info
 
     def update(
@@ -260,15 +266,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     break
                 break
             except Exception as e:
-                if 'Too Many Requests for url' in str(e):
+                if "Too Many Requests for url" in str(e):
                     time.sleep(random.random())
                     return self.update(
-                            event,
-                            address,
-                            token_address,
-                            pool_info,
-                            contract,
-                            block_number,
+                        event,
+                        address,
+                        token_address,
+                        pool_info,
+                        contract,
+                        block_number,
                     )
                 elif "format_name" not in str(e):
                     self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
@@ -278,7 +284,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 else:
                     rate_limiter = 0.1 + 0.9 * random.random()
                     time.sleep(random.random())
-
 
     def handle_pair_trading_fee_updated(
         self,

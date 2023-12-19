@@ -71,4 +71,5 @@ missing_events.json
 logs/*
 /token_details.csv
 /fastlane_bot/data/blockchain_data/*/token_detail/
-tx_log.txt
+missing_tokens_df.csv
+tokens_and_fee_df.csv

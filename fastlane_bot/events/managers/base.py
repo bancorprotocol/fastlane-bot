@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
 import pandas as pd
-from web3 import Web3
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot import Config
@@ -56,6 +56,7 @@ class BaseManager:
     """
 
     web3: Web3
+    w3_async: AsyncWeb3
     cfg: Config
     pool_data: List[Dict[str, Any]]
     alchemy_max_block_fetch: int
@@ -75,8 +76,10 @@ class BaseManager:
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
     tenderly_fork_id: str = None
-    prefix_path: str = ""
-
+    pools_to_add_from_contracts: List[Tuple[str, str, Any, str, str]] = field(
+        default_factory=list
+    )
+    blockchain: str = None
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
             "ETH_ADDRESS": ("ETH", 18),
@@ -95,9 +98,18 @@ class BaseManager:
     forked_exchanges: List[str] = field(default_factory=list)
     static_pools: Dict[str, List[str]] = field(default_factory=dict)
 
+    prefix_path: str = ""
+
     def __post_init__(self):
+        initialized_exchanges = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(exchange_name)
+            initialize_events = False
+            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
+            if base_exchange_name not in initialized_exchanges:
+                initialize_events = True
+                initialized_exchanges.append(base_exchange_name)
+
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
@@ -167,8 +179,8 @@ class BaseManager:
         fees_by_pair = self.get_fees_by_pair(all_pairs, carbon_controller)
         fee_pairs = {
             (
-                self.web3.toChecksumAddress(pair[0]),
-                self.web3.toChecksumAddress(pair[1]),
+                self.web3.to_checksum_address(pair[0]),
+                self.web3.to_checksum_address(pair[1]),
             ): fee
             for pair, fee in zip(all_pairs, fees_by_pair)
         }
@@ -176,8 +188,8 @@ class BaseManager:
         fee_pairs.update(
             {
                 (
-                    self.web3.toChecksumAddress(pair[1]),
-                    self.web3.toChecksumAddress(pair[0]),
+                    self.web3.to_checksum_address(pair[1]),
+                    self.web3.to_checksum_address(pair[0]),
                 ): fee
                 for pair, fee in zip(all_pairs, fees_by_pair)
             }
@@ -202,6 +214,7 @@ class BaseManager:
             (
                 exchange_name
                 for exchange_name, pool_class in pool_factory._creators.items()
+                if exchange_name in self.exchanges
                 if pool_class.event_matches_format(event, self.static_pools)
             ),
             None,
@@ -253,7 +266,7 @@ class BaseManager:
             self.web3,
             self.erc20_contracts,
             self.cfg,
-            self.web3.toChecksumAddress(address),
+            self.web3.to_checksum_address(address),
         )
         return tkns or (None, None)
 
@@ -478,6 +491,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+            web3=self.web3
         )
 
         with multicaller as mc:
@@ -611,6 +625,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
+            web3=self.web3
         )
 
         with multicaller as mc:
@@ -774,6 +789,9 @@ class BaseManager:
                 else event["args"]["pool"]
             )
             return "tkn1_address", value
+        raise ValueError(
+            f"[managers.base.get_key_and_value] Exchange {ex_name} not supported"
+        )
 
     def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
         """

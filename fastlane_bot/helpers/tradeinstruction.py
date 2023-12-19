@@ -87,14 +87,14 @@ class TradeInstruction:
     tknout_is_wrapped = None
 
     @property
-    def tknin_key(self) -> str:
+    def tknin_address(self) -> str:
         """
         The input token key (e.g. 'DAI-1d46')
         """
         return self.tknin
 
     @property
-    def tknout_key(self) -> str:
+    def tknout_address(self) -> str:
         """
         The output token key (e.g. 'DAI-1d46')
         """
@@ -108,9 +108,10 @@ class TradeInstruction:
         self._is_carbon = self._check_if_carbon()
         
         if self.tknin_dec_override is None:
-            TokenIn = self.db.get_token(key =self.tknin)
+            TokenIn = self.db.get_token(tkn_address=self.tknin)
             self._tknin_address = TokenIn.address
             self._tknin_decimals = int(TokenIn.decimals)
+            self._tknin_symbol = TokenIn.symbol
         else:
             self._tknin_address = self.tknin_addr_override
             self._tknin_decimals = self.tknin_dec_override
@@ -126,9 +127,10 @@ class TradeInstruction:
         )
         
         if self.tknout_dec_override is None:
-            TokenOut = self.db.get_token(key =self.tknout)
+            TokenOut = self.db.get_token(tkn_address=self.tknout)
             self._tknout_address = TokenOut.address
             self._tknout_decimals = int(TokenOut.decimals)
+            self._tknout_symbol = TokenOut.symbol
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
@@ -220,29 +222,29 @@ class TradeInstruction:
 
 
 
-    def _get_token_address(self, token_key: str) -> str:
-        """
-        Gets the token address based on the token key.
+    # def _get_token_address(self, token_address: str) -> str:
+    #     """
+    #     Gets the token address based on the token key.
+    #
+    #     Parameters
+    #     ----------
+    #     token_address: str
+    #         The token key (e.g. 'DAI-1d46')
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The token address.
+    #     """
+    #     return self._get_token(token_address).address
 
-        Parameters
-        ----------
-        token_key: str
-            The token key (e.g. 'DAI-1d46')
-
-        Returns
-        -------
-        str
-            The token address.
-        """
-        return self._get_token(token_key).address
-
-    def _get_token_decimals(self, token_key: str) -> int:
+    def _get_token_decimals(self, token_address: str) -> int:
         """
         Gets the token decimals based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -250,15 +252,15 @@ class TradeInstruction:
         int
             The token decimals.
         """
-        return self._get_token(token_key).decimals
+        return self._get_token(token_address).decimals
 
-    def _get_token(self, token_key: str) -> Token:
+    def _get_token(self, token_address: str) -> Token:
         """
         Gets the token object based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -267,7 +269,7 @@ class TradeInstruction:
             The token object.
         """
 
-        return self.db.get_token(key=token_key)
+        return self.db.get_token(tkn_address=token_address)
 
     def _get_pool(self) -> Pool:
         """
@@ -360,6 +362,13 @@ class TradeInstruction:
         return self._tknin_decimals
 
     @property
+    def tknin_symbol(self) -> int:
+        """
+        The input token decimals.
+        """
+        return self._tknin_symbol
+
+    @property
     def amtin_wei(self) -> int:
         """
         The input amount in wei.
@@ -386,6 +395,13 @@ class TradeInstruction:
         The output token decimals.
         """
         return self._tknout_decimals
+
+    @property
+    def tknout_symbol(self) -> int:
+        """
+        The output token decimals.
+        """
+        return self._tknout_symbol
 
     @property
     def amtout_wei(self) -> int:

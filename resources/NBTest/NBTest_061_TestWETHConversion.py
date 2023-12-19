@@ -22,7 +22,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -59,7 +59,6 @@ from fastlane_bot.modes.pairwise_multi import FindArbitrageMultiPairwise
 from fastlane_bot.modes.pairwise_single import FindArbitrageSinglePairwise
 from fastlane_bot.modes.triangle_multi import ArbitrageFinderTriangleMulti
 from fastlane_bot.modes.triangle_single import ArbitrageFinderTriangleSingle
-from fastlane_bot.modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
 from fastlane_bot.modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from fastlane_bot.utils import num_format, log_format, num_format_float
 from joblib import Parallel, delayed
@@ -71,11 +70,10 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
+
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
@@ -95,10 +93,10 @@ Put path to log file here >>>
 ###
 
 
-with open("fastlane_bot/data/tests/latest_pool_data_testing_balancer.json") as f:
+with open("fastlane_bot/data/tests/latest_pool_data_testing.json") as f:
     pools = json.load(f)
 
-flashloan_tokens = ["BNT-FF1C","WETH-6Cc2","USDC-eB48","LINK-86CA"]
+flashloan_tokens = ["0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","0x514910771AF9Ca656af840dff83E8264EcF986CA"]
 #flashloan_tokens = ["WETH-0006,USDC-2913"]
 
 pools = [pool for pool in pools]
@@ -139,6 +137,7 @@ static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -183,12 +182,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 #bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 #bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 #flashloan_tokens = bot.setup_flashloan_tokens(None)
 #flashloan_tokens = ['WBTC-2c599', 'USDC-eB48', 'LINK-86CA', 'USDT-1ec7']
 
@@ -273,7 +271,7 @@ for arb in r:
         trade_instructions_objects=calculated_trade_instructions)
 
     # Get the flashloan token
-    fl_token = calculated_trade_instructions[0].tknin_key
+    fl_token = calculated_trade_instructions[0].tknin_address
 
 
     best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
@@ -313,8 +311,8 @@ for arb in r:
 
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-    flashloan_token_address = bot.ConfigObj.w3.toChecksumAddress(
-        bot.db.get_token(key=fl_token).address
+    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
+        bot.db.get_token(tkn_address=fl_token).address
     )
 
     # Log the flashloan amount and token address

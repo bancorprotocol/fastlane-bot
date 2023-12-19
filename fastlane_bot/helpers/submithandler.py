@@ -23,6 +23,8 @@ from .routehandler import RouteStruct
 from ..data.abi import ERC20_ABI, FAST_LANE_CONTRACT_ABI
 from fastlane_bot.config import Config
 
+ContractFunction = Any
+
 
 @dataclass
 class TxSubmitHandlerBase:
@@ -90,7 +92,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
             The deadline.
         """
         return (
-            self.w3.eth.getBlock(self.w3.eth.block_number).timestamp
+            self.w3.eth.get_block(self.w3.eth.block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
@@ -253,9 +255,11 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         return {
             "gasPrice": self.ConfigObj.DEFAULT_GAS_PRICE,
             "gas": self.ConfigObj.DEFAULT_GAS,
-            "from": self.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS),
+            "from": self.w3.to_checksum_address(
+                self.ConfigObj.FASTLANE_CONTRACT_ADDRESS
+            ),
             "nonce": self.w3.eth.get_transaction_count(
-                self.w3.toChecksumAddress(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS)
+                self.w3.to_checksum_address(self.ConfigObj.FASTLANE_CONTRACT_ADDRESS)
             ),
         }
 
@@ -288,10 +292,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         # print(
         #     f"Submitting transaction to Tenderly...src_amount={src_amount} src_address={src_address}"
         # )
-        print(f"self.ConfigObj.network: {self.ConfigObj.network}")
 
         self.arb_contract = self.w3.eth.contract(
-            address=self.w3.toChecksumAddress(
+            address=self.w3.to_checksum_address(
                 self.ConfigObj.network.FASTLANE_CONTRACT_ADDRESS
             ),
             abi=FAST_LANE_CONTRACT_ABI,
@@ -299,9 +302,22 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         print(
             f"Submitting transaction to Tenderly with endpoint_uri: {self.ConfigObj.w3.provider.endpoint_uri}"
         )
-        address = self.ConfigObj.w3.toChecksumAddress(
+        address = self.ConfigObj.w3.to_checksum_address(
             self.ConfigObj.BINANCE14_WALLET_ADDRESS
         )
+        if not self.ConfigObj.USE_FLASHLOANS:
+            return self.arb_contract.functions.fundAndArb(
+                route_struct, src_address, src_amount
+            ).transact(
+                {
+                    "gas": self.ConfigObj.DEFAULT_GAS,
+                    "from": address,
+                    "nonce": self._get_nonce(address),
+                    "gasPrice": 0,
+                    "value": src_amount if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
+                }
+            )
+
         return (
             self.arb_contract.functions.flashloanAndArb(
                 route_struct, src_address, src_amount
@@ -396,7 +412,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         int
             The nonce for the transaction.
         """
-        return self.ConfigObj.w3.eth.getTransactionCount(address)
+        return self.ConfigObj.w3.eth.get_transaction_count(address)
 
     _get_gas_estimate = _get_gas
 

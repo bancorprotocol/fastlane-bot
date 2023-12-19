@@ -280,9 +280,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             The route struct.
         """
         target_address = self.wrapped_gas_token_to_native(target_address)
-        target_address = self.ConfigObj.w3.toChecksumAddress(target_address)
+        target_address = self.ConfigObj.w3.to_checksum_address(target_address)
         source_token = self.wrapped_gas_token_to_native(source_token)
-        source_token = self.ConfigObj.w3.toChecksumAddress(source_token)
+        source_token = self.ConfigObj.w3.to_checksum_address(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
 
         return RouteStruct(
@@ -492,7 +492,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_KEY, self.ConfigObj.ETH_KEY, self.ConfigObj.WBTC_KEY, self.ConfigObj.LINK_KEY]:
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
             return 2
         else:
             return 7
@@ -538,8 +538,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
             return tkn
 
-        if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_KEY, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            return self.ConfigObj.NATIVE_GAS_TOKEN_KEY if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_KEY else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
         else:
             return tkn
 
@@ -550,27 +550,27 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
 
         if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            tknin_key = None
+            tknin_address = None
             tknin_address = None
             if trade_instructions[0].tknin_is_native:
-                tknin_key = self.ConfigObj.NATIVE_GAS_TOKEN_KEY
+                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
                 tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
             elif trade_instructions[0].tknin_is_wrapped:
-                tknin_key = self.ConfigObj.WRAPPED_GAS_TOKEN_KEY
+                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
                 tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
             else:
-                tknin_key = trade_instructions[0].tknin_key
                 tknin_address = trade_instructions[0].tknin_address
-            assert  tknin_key is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_key is {tknin_key} and tknin_address is {tknin_address}, must not be None"
+                tknin_address = trade_instructions[0].tknin_address
+            assert  tknin_address is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_address is {tknin_address} and tknin_address is {tknin_address}, must not be None"
             flash_tokens = {
-                tknin_key :
+                tknin_address :
                 {
                 "tkn": tknin_address,
                 "flash_amt": trade_instructions[0].amtin_wei,
                 "decimals": trade_instructions[0].tknin_decimals}
             }
         else:
-            flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_key): {
+            flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_address): {
                 "tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
                 "flash_amt": trade_instructions[0].amtin_wei,
                 "decimals": trade_instructions[0].tknin_decimals}}
@@ -584,23 +584,23 @@ class TxRouteHandler(TxRouteHandlerBase):
         token_change = {}
         flash_tokens = {}
         for trade in trade_instructions:
-            tknin_key = self.wrapped_gas_token_to_native(trade.tknin_key)
-            tknout_key = self.wrapped_gas_token_to_native(trade.tknout_key)
+            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
+            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
 
-            token_change[tknin_key] = {"tkn": tknin_key, "amtin": 0, "amtout": 0, "balance": 0}
-            token_change[tknout_key] = {"tkn": tknout_key, "amtin": 0, "amtout": 0, "balance": 0}
+            token_change[tknin_address] = {"tkn": tknin_address, "amtin": 0, "amtout": 0, "balance": 0}
+            token_change[tknout_address] = {"tkn": tknout_address, "amtin": 0, "amtout": 0, "balance": 0}
 
         for trade in trade_instructions:
-            tknin_key = self.wrapped_gas_token_to_native(trade.tknin_key)
-            tknout_key = self.wrapped_gas_token_to_native(trade.tknout_key)
+            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
+            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
 
-            token_change[tknin_key]["amtin"] = token_change[tknin_key]["amtin"] + trade.amtin_wei
-            token_change[tknin_key]["balance"] = token_change[tknin_key]["balance"] - trade.amtin_wei
-            token_change[tknout_key]["amtout"] = token_change[tknout_key]["amtout"] + trade.amtout_wei
-            token_change[tknout_key]["balance"] = token_change[tknout_key]["balance"] + trade.amtout_wei
+            token_change[tknin_address]["amtin"] = token_change[tknin_address]["amtin"] + trade.amtin_wei
+            token_change[tknin_address]["balance"] = token_change[tknin_address]["balance"] - trade.amtin_wei
+            token_change[tknout_address]["amtout"] = token_change[tknout_address]["amtout"] + trade.amtout_wei
+            token_change[tknout_address]["balance"] = token_change[tknout_address]["balance"] + trade.amtout_wei
 
-            if token_change[tknin_key]["balance"] < 0:
-                flash_tokens[tknin_key] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_key]["amtin"],
+            if token_change[tknin_address]["balance"] < 0:
+                flash_tokens[tknin_address] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_address]["amtin"],
                                            "decimals": trade.tknin_decimals}
 
         return flash_tokens
@@ -696,10 +696,10 @@ class TxRouteHandler(TxRouteHandlerBase):
                 if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
                     trade_before = calculated_trade_instructions[idx - 1]
                     # This checks for a two-hop trade through BNT and combines them
-                    if trade_before.tknout_key == "BNT-FF1C" and trade.tknin_key == "BNT-FF1C":
+                    if trade_before.tknout_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" and trade.tknin_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
-                                                                 tknin=trade_before.tknin_key, tknout=trade.tknout_key,
+                                                                 tknin=trade_before.tknin_address, tknout=trade.tknout_address,
                                                                  pair_sorting="", raw_txs="[]", db=trade.db)
                         new_trade_instruction.tknout_is_native = trade.tknout_is_native
                         new_trade_instruction.tknout_is_wrapped = trade.tknout_is_wrapped
@@ -1150,8 +1150,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         decimal_tkn1_modifier: Decimal,
         tkn_in: str,
         tkn_out: str,
-        tkn_0_key: str,
-        tkn_1_key: str
+        tkn_0_address: str,
+        tkn_1_address: str
     ) -> Decimal:
         """
         Refactored calc uniswap v3 output.
@@ -1172,7 +1172,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             The decimal tkn1 modifier.
         tkn_in: str
             The token in.
-        tkn_0_key: str
+        tkn_0_address: str
             The token 0 key.
 
         Returns
@@ -1180,8 +1180,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        assert tkn_in == tkn_0_key or tkn_out == tkn_0_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
-        assert tkn_in == tkn_1_key or tkn_out == tkn_1_key, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_key: {tkn_0_key}, tkn_1_key: {tkn_1_key}"
+        assert tkn_in == tkn_0_address or tkn_out == tkn_0_address, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_address: {tkn_0_address}, tkn_1_address: {tkn_1_address}"
+        assert tkn_in == tkn_1_address or tkn_out == tkn_1_address, f"Uniswap V3 swap token mismatch, tkn_in: {tkn_in}, tkn_0_address: {tkn_0_address}, tkn_1_address: {tkn_1_address}"
 
         liquidity = Decimal(str(liquidity))
         fee = Decimal(str(fee))
@@ -1189,7 +1189,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         decimal_tkn0_modifier = Decimal(str(decimal_tkn0_modifier))
         decimal_tkn1_modifier = Decimal(str(decimal_tkn1_modifier))
 
-        #print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_key={tkn_0_key}, tkn_1_key={tkn_1_key}, tkn0_in={tkn_in == tkn_0_key}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
+        #print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_address={tkn_0_address}, tkn_1_address={tkn_1_address}, tkn0_in={tkn_in == tkn_0_address}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
 
         return (
             self._swap_token0_in(
@@ -1200,7 +1200,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 decimal_tkn0_modifier=decimal_tkn0_modifier,
                 decimal_tkn1_modifier=decimal_tkn1_modifier,
             )
-            if tkn_in == tkn_0_key
+            if tkn_in == tkn_0_address
             else self._swap_token1_in(
                 amount_in=amount_in,
                 fee=fee,
@@ -1328,21 +1328,21 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         amount_in = Decimal(str(amount_in))
 
-        tkn0_key = curve.pair_name.split("/")[0]
-        tkn1_key = curve.pair_name.split("/")[1]
+        tkn0_address = curve.pair_name.split("/")[0]
+        tkn1_address = curve.pair_name.split("/")[1]
 
         if self.ConfigObj.NETWORK in "ethereum":
-            tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn0_key
-            tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and tkn_in == "WETH-6Cc2" else tkn1_key
+            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn0_address
+            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn1_address
 
-        #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, ")
+        #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
-        assert tkn_in == tkn0_key or tkn_in == tkn1_key, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_key} & {tkn1_key}"
+        assert tkn_in == tkn0_address or tkn_in == tkn1_address, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_address} & {tkn1_address}"
 
-        #print(f"[_calc_carbon_output] tkn0_key={tkn0_key}, tkn1_key={tkn1_key}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_key}")
+        #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_address}")
         y, z, A, B = (
             (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
-            if tkn_in == tkn1_key
+            if tkn_in == tkn1_address
             else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
         )
 
@@ -1470,60 +1470,60 @@ class TxRouteHandler(TxRouteHandlerBase):
             raise Exception("trade in must be a TradeInstruction object.")
 
         if curve.exchange_name != "balancer":
-            tkn0_key = curve.pair_name.split("/")[0]
-            tkn1_key = curve.pair_name.split("/")[1]
-            tkn0_decimals = int(trade.db.get_token(key=tkn0_key).decimals)
-            tkn1_decimals = int(trade.db.get_token(key=tkn1_key).decimals)
-            if self.ConfigObj.NETWORK in ["ethereum", "tenderly"]:
-                tkn0_key = "WETH-6Cc2" if tkn0_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn0_key
-                tkn1_key = "WETH-6Cc2" if tkn1_key == "ETH-EEeE" and (trade.tknin_key == "WETH-6Cc2" or trade.tknout_key == "WETH-6Cc2") else tkn1_key
+            tkn0_address = curve.pair_name.split("/")[0]
+            tkn1_address = curve.pair_name.split("/")[1]
+            tkn0_decimals = int(trade.db.get_token(tkn_address=tkn0_address).decimals)
+            tkn1_decimals = int(trade.db.get_token(tkn_address=tkn1_address).decimals)
 
-            assert tkn0_key == trade.tknin_key or tkn0_key == trade.tknout_key, f"[_solve_trade_output] tkn0_key {tkn0_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
-            assert tkn1_key == trade.tknin_key or tkn1_key == trade.tknout_key, f"[_solve_trade_output] tkn1_key {tkn1_key} !=  trade.tknin_key {trade.tknin_key} or trade.tknout_key {trade.tknout_key}"
-            assert tkn0_key != tkn1_key, f"[_solve_trade_output] tkn0_key == tkn_1_key {tkn0_key}, {tkn1_key}"
+            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
+            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
+
+            assert tkn0_address == trade.tknin_address or tkn0_address == trade.tknout_address, f"[_solve_trade_output] tkn0_address {tkn0_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
+            assert tkn1_address == trade.tknin_address or tkn1_address == trade.tknout_address, f"[_solve_trade_output] tkn1_address {tkn1_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
+            assert tkn0_address != tkn1_address, f"[_solve_trade_output] tkn0_address == tkn_1_address {tkn0_address}, {tkn1_address}"
 
         else:
             tokens = curve.get_tokens
-            assert trade.tknin_key in tokens, f"[_solve_trade_output] trade.tknin_key {trade.tknin_key} not in Balancer curve tokens: {tokens}"
-            assert trade.tknout_key in tokens, f"[_solve_trade_output] trade.tknout_key {trade.tknout_key} not in Balancer curve tokens: {tokens}"
+            assert trade.tknin_address in tokens, f"[_solve_trade_output] trade.tknin_address {trade.tknin_address} not in Balancer curve tokens: {tokens}"
+            assert trade.tknout_address in tokens, f"[_solve_trade_output] trade.tknout_address {trade.tknout_address} not in Balancer curve tokens: {tokens}"
 
-        tkn_in_decimals = int(trade.db.get_token(key=trade.tknin_key).decimals)
-        tkn_out_decimals = int(trade.db.get_token(key=trade.tknout_key).decimals)
+        tkn_in_decimals = int(trade.db.get_token(tkn_address=trade.tknin_address).decimals)
+        tkn_out_decimals = int(trade.db.get_token(tkn_address=trade.tknout_address).decimals)
 
         amount_in = TradeInstruction._quantize(amount_in, tkn_in_decimals)
 
         if curve.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             amount_out = self._calc_uniswap_v3_output(
-                tkn_in=trade.tknin_key,
-                tkn_out=trade.tknout_key,
+                tkn_in=trade.tknin_address,
+                tkn_out=trade.tknout_address,
                 amount_in=amount_in,
                 fee=Decimal(curve.fee_float),
                 liquidity=curve.liquidity,
                 sqrt_price=curve.sqrt_price_q96,
                 decimal_tkn0_modifier=Decimal(10**tkn0_decimals),
                 decimal_tkn1_modifier=Decimal(10**tkn1_decimals),
-                tkn_0_key=tkn0_key,
-                tkn_1_key=tkn1_key
+                tkn_0_address=tkn0_address,
+                tkn_1_address=tkn1_address
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME or curve.exchange_name == self.ConfigObj.BANCOR_POL_NAME:
             amount_in, amount_out = self._calc_carbon_output(
-                            curve=curve, tkn_in=trade.tknin_key, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
+                            curve=curve, tkn_in=trade.tknin_address, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
                         )
         elif curve.exchange_name == self.ConfigObj.BALANCER_NAME:
-            amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_key, tkn_out=trade.tknout_key, amount_in=amount_in)
+            amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_address, tkn_out=trade.tknout_address, amount_in=amount_in)
 
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
-                if trade.tknin_key == tkn0_key
+                if trade.tknin_address == tkn0_address
                 else (curve.tkn1_balance, curve.tkn0_balance)
             )
-            tkn0_dec = tkn0_decimals if trade.tknin_key == tkn0_key else tkn1_decimals
-            tkn1_dec = tkn1_decimals if trade.tknout_key == tkn1_key else tkn0_decimals
+            tkn0_dec = tkn0_decimals if trade.tknin_address == tkn0_address else tkn1_decimals
+            tkn1_dec = tkn1_decimals if trade.tknout_address == tkn1_address else tkn0_decimals
 
             tkn0_amt = self._from_wei_to_decimals(tkn0_amt, tkn0_dec)
             tkn1_amt = self._from_wei_to_decimals(tkn1_amt, tkn1_dec)
-            #print(f"[_solve_trade_output] constant product solve: tkn0_amt={tkn0_amt}, tkn1_amt={tkn1_amt}, tkn0_dec={tkn0_dec}, tkn1_dec={tkn1_dec}, tkn_in={trade.tknin_key}, tkn_out={trade.tknout_key} ,tkn0_key={tkn0_key}, tkn1_key={tkn1_key}")
+            #print(f"[_solve_trade_output] constant product solve: tkn0_amt={tkn0_amt}, tkn1_amt={tkn1_amt}, tkn0_dec={tkn0_dec}, tkn1_dec={tkn1_dec}, tkn_in={trade.tknin_address}, tkn_out={trade.tknout_address} ,tkn0_address={tkn0_address}, tkn1_address={tkn1_address}")
 
             amount_out = self._single_trade_result_constant_product(
                 tokens_in=amount_in,
@@ -1545,12 +1545,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         sum_in = 0
         sum_out = 0
-        flt = trade_instructions[0].tknin_key
+        flt = trade_instructions[0].tknin_address
 
         for trade in trade_instructions:
-            if trade.tknin_key == flt:
+            if trade.tknin_address == flt:
                 sum_in += abs(trade.amtin)
-            elif trade.tknout_key == flt:
+            elif trade.tknout_address == flt:
                 sum_out += abs(trade.amtout)
         sum_profit = sum_out - sum_in
         return sum_profit
@@ -1602,7 +1602,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 for _idx, tx in enumerate(data):
                     cid = tx["cid"]
                     cid = cid.split("-")[0]
-                    tknin_key = tx["tknin"]
+                    tknin_address = tx["tknin"]
 
                     _next_amt_in = Decimal(str(next_amount_in)) * tx["percent_in"]
                     if _next_amt_in > remaining_tkn_in:

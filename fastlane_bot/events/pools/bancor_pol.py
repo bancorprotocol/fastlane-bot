@@ -77,10 +77,6 @@ class BancorPolPool(Pool):
         ]:
             # *** Balance now updated from multicall ***
             pass
-            # if self.state['last_updated_block'] < event_args['blockNumber']:
-            #     data["y_0"] = (
-            #         self.state["y_0"] - event_args["args"]["amount"]
-            #     )
 
         for key, value in data.items():
             self.state[key] = value

@@ -80,7 +80,6 @@ from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
-from .modes.triangle_single_bancor3 import ArbitrageFinderTriangleSingleBancor3
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format, log_format, num_format_float
 
@@ -151,7 +150,7 @@ class CarbonBotBase:
         ), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
-        self.RUN_FLASHLOAN_TOKENS = self.ConfigObj.CHAIN_FLASHLOAN_TOKENS
+        self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
 
     @property
     def C(self) -> Any:
@@ -182,10 +181,12 @@ class CarbonBotBase:
         CPCContainer
             The container of curves.
         """
+        self.db.refresh_pool_data()
         pools_and_tokens = self.db.get_pool_data_with_tokens()
         curves = []
         tokens = self.db.get_tokens()
-        ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens}
+        ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens}
+
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
@@ -408,7 +409,7 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.w3.eth.block_number if block_number is None else block_number
         )
         return (
-            self.ConfigObj.w3.eth.getBlock(block_number).timestamp
+            self.ConfigObj.w3.eth.get_block(block_number).timestamp
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
@@ -422,8 +423,6 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleSingle
         elif arb_mode in {"multi_triangle", "triangle_multi"}:
             return ArbitrageFinderTriangleMulti
-        elif arb_mode in {"bancor_v3", "single_triangle_bancor3"}:
-            return ArbitrageFinderTriangleSingleBancor3
         elif arb_mode in {"b3_two_hop"}:
             return ArbitrageFinderTriangleBancor3TwoHop
         elif arb_mode in {"multi_pairwise_pol"}:
@@ -628,8 +627,8 @@ class CarbonBot(CarbonBotBase):
                 "exchange_name": current_pool.exchange_name,
                 "tkn0_address": current_pool.tkn0_address,
                 "tkn1_address": current_pool.tkn1_address,
-                "tkn0_key": current_pool.tkn0_key,
-                "tkn1_key": current_pool.tkn1_key,
+                "tkn0_symbol": current_pool.tkn0_symbol,
+                "tkn1_symbol": current_pool.tkn1_symbol,
                 "args": {"id": current_pool.cid},
             }
 
@@ -734,6 +733,32 @@ class CarbonBot(CarbonBotBase):
         Returns True if the exchange route includes Carbon
         """
         return any(trade.is_carbon for trade in trade_instructions)
+    
+    def get_prices_simple(self, CCm, tkn0, tkn1):
+        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
+        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
+        return curve_prices
+    
+    # Global constant for Carbon Forks ordering
+    CARBON_SORTING_ORDER = float('inf')
+
+    # Create a sort order mapping function
+    def create_sort_order(self, sort_sequence):
+        # Create a dictionary mapping from sort sequence to indices, except for Carbon Forks
+        return {key: index for index, key in enumerate(sort_sequence) if key not in self.ConfigObj.CARBON_V1_FORKS}
+
+    # Define the sort key function separately
+    def sort_key(self, item, sort_order):
+        # Check if the item is Carbon Forks
+        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
+            return self.CARBON_SORTING_ORDER
+        # Otherwise, use the sort order from the dictionary, or a default high value
+        return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
+
+    # Define the custom sort function
+    def custom_sort(self, data, sort_sequence):
+        sort_order = self.create_sort_order(sort_sequence)
+        return sorted(data, key=lambda item: self.sort_key(item, sort_order))
 
     def calculate_profit(
         self,
@@ -760,48 +785,38 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
+        sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
+
         best_profit_fl_token = best_profit
-        if fl_token not in [
-            self.ConfigObj.WRAPPED_GAS_TOKEN_KEY,
-            self.ConfigObj.NATIVE_GAS_TOKEN_KEY,
-        ]:
-            try:
-                fltkn_eth_conversion_rate = Decimal(
-                    str(
-                        CCm.bytknb(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")
-                        .bytknq(f"{fl_token}")[0]
-                        .p
-                    )
+        if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
+            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
+            sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit sort_sequence] {sort_sequence}")
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
+            if len(sorted_price_curves)>0:
+                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
+                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth, 'ETH'}")
+            else:
+                self.ConfigObj.logger.error(
+                    f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
                 )
-                best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-            except:
-                try:
-                    fltkn_eth_conversion_rate = 1 / Decimal(
-                        str(
-                            CCm.bytknb(f"{fl_token}")
-                            .bytknq(f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}")[0]
-                            .p
-                        )
-                    )
-                    best_profit_eth = best_profit_fl_token * fltkn_eth_conversion_rate
-                except Exception as e:
-                    self.ConfigObj.logger.error(
-                        f"[bot.calculate_profit] Could not calculate profit in ETH for {fl_token} [{e}]. Raise exception: {e}"
-                    )
-                    raise e
+                raise
         else:
             best_profit_eth = best_profit_fl_token
+
         try:
-            usd_eth_conversion_rate = Decimal(
-                str(
-                    CCm.bypair(
-                        pair=f"{self.ConfigObj.WRAPPED_GAS_TOKEN_KEY}/{self.ConfigObj.STABLECOIN_KEY}"
-                    )[0].p
-                )
-            )
+            price_curves_usd = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
+            sorted_price_curves_usd = self.custom_sort(price_curves_usd, sort_sequence)
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
+            if len(sorted_price_curves_usd)>0:
+                usd_eth_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
         except Exception:
             usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'ETH', best_profit_eth, usd_eth_conversion_rate, best_profit_usd, 'USD'}")
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
     @staticmethod
@@ -852,13 +867,15 @@ class CarbonBot(CarbonBotBase):
         }
 
         for idx, trade in enumerate(calculated_trade_instructions):
+            tknin = {trade.tknin_symbol, trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
+            tknout = {trade.tknout_symbol, trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
             log_dict["trades"].append(
                 {
                     "trade_index": idx,
                     "exchange": trade.exchange_name,
-                    "tkn_in": trade.tknin,
+                    "tkn_in": tknin,
                     "amount_in": num_format_float(trade.amtin),
-                    "tkn_out": trade.tknout,
+                    "tkn_out": tknout,
                     "amt_out": num_format_float(trade.amtout),
                     "cid0": trade.cid[-10:],
                 }
@@ -948,7 +965,8 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the flashloan token
-        fl_token = calculated_trade_instructions[0].tknin_key
+        fl_token = calculated_trade_instructions[0].tknin_address
+        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -971,7 +989,7 @@ class CarbonBot(CarbonBotBase):
             best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
-            fl_token,
+            fl_token_symbol,
         )
 
         # Log the log dict
@@ -986,9 +1004,7 @@ class CarbonBot(CarbonBotBase):
 
         # Get the flashloan amount and token address
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-        flashloan_token_address = self.ConfigObj.w3.toChecksumAddress(
-            self.db.get_token(key=fl_token).address
-        )
+        flashloan_token_address = fl_token
 
         # Log the flashloan amount and token address
         self.handle_logging_for_trade_instructions(
@@ -1043,6 +1059,7 @@ class CarbonBot(CarbonBotBase):
         self.handle_logging_for_trade_instructions(
             4,  # The log id
             flashloan_amount=flashloan_amount,
+            flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
             route_struct=route_struct,
             best_trade_instructions_dic=best_trade_instructions_dic,
@@ -1137,6 +1154,7 @@ class CarbonBot(CarbonBotBase):
         self,
         flashloan_amount: Optional[float] = None,
         flashloan_token_address: Optional[str] = None,
+        flashloan_token_symbol: Optional[str] = None,
         route_struct: Optional[List[Dict]] = None,
         best_trade_instructions_dic: Optional[Dict] = None,
     ):
@@ -1147,6 +1165,8 @@ class CarbonBot(CarbonBotBase):
         ----------
         flashloan_amount : Optional[float], optional
             The flashloan amount, by default None
+        flashloan_token_symbol : Optional[str], optional
+            The flashloan token symbol, by default None
         flashloan_token_address : Optional[str], optional
             The flashloan token address, by default None
         route_struct : Optional[List[Dict]], optional
@@ -1155,7 +1175,7 @@ class CarbonBot(CarbonBotBase):
             The dictionary containing the best trade instructions, by default None
         """
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan amount: {flashloan_amount}"
+            f"[bot.log_flashloan_details] Flashloan of {flashloan_token_symbol}, amount: {flashloan_amount}"
         )
         self.ConfigObj.logger.debug(
             f"[bot.log_flashloan_details] Flashloan token address: {flashloan_token_address}"

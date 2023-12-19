@@ -5,10 +5,10 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-
 from fastlane_bot.events.version_utils import check_version_requirements
+from fastlane_bot.tools.cpc import T
 
-check_version_requirements()
+check_version_requirements(required_version="6.11.0", package_name="web3")
 
 import os, sys
 import time
@@ -19,6 +19,13 @@ import pandas as pd
 from dotenv import load_dotenv
 from web3 import Web3, HTTPProvider
 
+from fastlane_bot import __version__ as bot_version
+from fastlane_bot.events.async_backdate_utils import (
+    async_handle_initial_iteration,
+)
+from fastlane_bot.events.async_event_update_utils import (
+    async_update_pools_from_contracts,
+)
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
 from fastlane_bot.events.utils import (
@@ -36,7 +43,6 @@ from fastlane_bot.events.utils import (
     handle_subsequent_iterations,
     verify_state_changed,
     handle_duplicates,
-    handle_initial_iteration,
     get_latest_events,
     get_start_block,
     set_network_to_mainnet_if_replay,
@@ -49,10 +55,12 @@ from fastlane_bot.events.utils import (
     handle_static_pools_update,
     read_csv_file,
     handle_tokens_csv,
+    get_tkn_symbols,
+    check_and_approve_tokens,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
-from fastlane_bot import __version__ as bot_version
 from run_blockchain_terraformer import terraform_blockchain
+
 
 load_dotenv()
 
@@ -85,7 +93,6 @@ load_dotenv()
             "multi",
             "triangle",
             "multi_triangle",
-            "bancor_v3",
             "b3_two_hop",
             "multi_pairwise_pol",
             "multi_pairwise_bal",
@@ -95,7 +102,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"WBTC-c599,BNT-FF1C,WETH-6Cc2,USDC-eB48,USDT-1ec7,LINK-86CA",
+    default=f"{T.LINK},{T.ETH},{T.BNT},{T.WBTC}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -106,7 +113,7 @@ load_dotenv()
 @click.option(
     "--exchanges",
     default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
-    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included on Ethereum.",
+    help="Comma separated external exchanges. Note that carbon_v1 and bancor_v3 must be included on Ethereum. To include known forks for Uniswap V2/3, use uniswap_v2_forks or uniswap_v3_forks",
 )
 @click.option(
     "--polling_interval",
@@ -133,12 +140,6 @@ load_dotenv()
     default="INFO",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
-)
-@click.option(
-    "--static_pool_data_sample_sz",
-    default="max",
-    type=str,
-    help="The sample size of the static pool data. Set to 'max' for production.",
 )
 @click.option(
     "--use_cached_events",
@@ -218,7 +219,8 @@ load_dotenv()
 @click.option(
     "--blockchain",
     default="ethereum",
-    help="Select a blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
+    help="""A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and 
+    are not supported.""",
     type=click.Choice(["ethereum", "coinbase_base"]),
 )
 @click.option(
@@ -245,6 +247,13 @@ load_dotenv()
     type=int,
     help="How frequently pool data should be updated, in main loop iterations.",
 )
+@click.option(
+    "--self_fund",
+    default=False,
+    type=bool,
+    help="If True, the bot will attempt to submit arbitrage transactions using funds in your wallet when possible.",
+)
+
 def main(
     cache_latest_only: bool,
     backdate_pools: bool,
@@ -258,7 +267,6 @@ def main(
     reorg_delay: int,
     logging_path: str,
     loglevel: str,
-    static_pool_data_sample_sz: str,
     use_cached_events: bool,
     run_data_validator: bool,
     randomizer: int,
@@ -276,6 +284,7 @@ def main(
     use_specific_exchange_for_target_tokens: str,
     prefix_path: str,
     version_check_frequency: int,
+    self_fund: bool,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -294,7 +303,6 @@ def main(
         reorg_delay (int): The number of blocks to wait to avoid reorgs.
         logging_path (str): The logging path.
         loglevel (str): The logging level.
-        static_pool_data_sample_sz (str): The sample size of the static pool data.
         use_cached_events (bool): Whether to use cached events or not.
         run_data_validator (bool): Whether to run the data validator or not.
         randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
@@ -312,6 +320,7 @@ def main(
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         prefix_path (str): prefixes the path to the write folders (used for deployment)
         version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
+        self_fund (bool): If False, the bot will use Flashloans to fund arbitrage trades. If True, the bot will use funds in the wallet to perform arbitrage trades.
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -331,21 +340,26 @@ def main(
         blockchain,
         flashloan_tokens,
         tenderly_fork_id,
+        self_fund,
     )
-    # TODO: add blockchain support
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(
-            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+            columns=["address", "decimals"]
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
 
-    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['key'].tolist()[0]}")
+    cfg.logger.info(f"tokens: {len(tokens)}, {tokens['address'].tolist()[0]}")
+
+    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
+
+    if self_fund:
+        check_and_approve_tokens(tokens=flashloan_tokens, cfg=cfg)
 
     # Search the logging directory for the latest timestamped folder
     logging_path = find_latest_timestamped_folder(logging_path)
@@ -371,57 +385,57 @@ def main(
 
     # Log the run configuration
     logging_header = f"""
-        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        
-        Starting fastlane bot with the following configuration:
-        bot_version: {bot_version}
-        os_system: {os_system}
-        python_version: {python_version}
-        python_info: {python_info}
-        
-        logging_path: {logging_path}
-        arb_mode: {arb_mode}
-        blockchain: {blockchain}
-        default_min_profit_gas_token: {default_min_profit_gas_token}
-        exchanges: {exchanges}
-        flashloan_tokens: {flashloan_tokens}
-        target_tokens: {target_tokens}
-        use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
-        loglevel: {loglevel}
-        backdate_pools: {backdate_pools}
-        alchemy_max_block_fetch: {alchemy_max_block_fetch}
-        static_pool_data_filename: {static_pool_data_filename}
-        cache_latest_only: {cache_latest_only}
-        n_jobs: {n_jobs}
-        polling_interval: {polling_interval}
-        reorg_delay: {reorg_delay}
-        static_pool_data_sample_sz: {static_pool_data_sample_sz}
-        use_cached_events: {use_cached_events}
-        run_data_validator: {run_data_validator}
-        randomizer: {randomizer}
-        limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
-        timeout: {timeout}
-        replay_from_block: {replay_from_block}
-        tenderly_fork_id: {tenderly_fork_id}
-        tenderly_event_exchanges: {tenderly_event_exchanges}
-        increment_time: {increment_time}
-        increment_blocks: {increment_blocks}
-        pool_data_update_frequency: {pool_data_update_frequency}
-        prefix_path: {prefix_path}
-        version_check_frequency: {version_check_frequency}
-        
-        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        
-        Copy and paste the above configuration when reporting a bug. Please also include the error message and stack trace below:
-        
-        <INSERT ERROR MESSAGE AND STACK TRACE HERE>
-        
-        Please direct all questions/reporting to the Fastlane Telegram channel: https://t.me/BancorDevelopers
-        
-        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        """
+            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            Starting fastlane bot with the following configuration:
+            bot_version: {bot_version}
+            os_system: {os_system}
+            python_version: {python_version}
+            python_info: {python_info}
+
+            logging_path: {logging_path}
+            arb_mode: {arb_mode}
+            blockchain: {blockchain}
+            default_min_profit_gas_token: {default_min_profit_gas_token}
+            exchanges: {exchanges}
+            flashloan_tokens: {flashloan_tokens}
+            target_tokens: {target_tokens}
+            use_specific_exchange_for_target_tokens: {use_specific_exchange_for_target_tokens}
+            loglevel: {loglevel}
+            backdate_pools: {backdate_pools}
+            alchemy_max_block_fetch: {alchemy_max_block_fetch}
+            static_pool_data_filename: {static_pool_data_filename}
+            cache_latest_only: {cache_latest_only}
+            n_jobs: {n_jobs}
+            polling_interval: {polling_interval}
+            reorg_delay: {reorg_delay}
+            use_cached_events: {use_cached_events}
+            run_data_validator: {run_data_validator}
+            randomizer: {randomizer}
+            limit_bancor3_flashloan_tokens: {limit_bancor3_flashloan_tokens}
+            timeout: {timeout}
+            replay_from_block: {replay_from_block}
+            tenderly_fork_id: {tenderly_fork_id}
+            tenderly_event_exchanges: {tenderly_event_exchanges}
+            increment_time: {increment_time}
+            increment_blocks: {increment_blocks}
+            pool_data_update_frequency: {pool_data_update_frequency}
+            prefix_path: {prefix_path}
+            version_check_frequency: {version_check_frequency}
+            use_flashloans: {self_fund}
+
+            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+            Copy and paste the above configuration when reporting a bug. Please also include the error message and stack trace below:
+
+            <INSERT ERROR MESSAGE AND STACK TRACE HERE>
+
+            Please direct all questions/reporting to the Fastlane Telegram channel: https://t.me/BancorDevelopers
+
+            +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            """
 
     cfg.logging_header = logging_header
     cfg.logger.info(logging_header)
@@ -437,7 +451,6 @@ def main(
         exchanges,
         blockchain,
         static_pool_data_filename,
-        static_pool_data_sample_sz,
     )
 
     target_token_addresses = handle_target_token_addresses(
@@ -459,6 +472,7 @@ def main(
     # Initialize data fetch manager
     mgr = Manager(
         web3=cfg.w3,
+        w3_async=cfg.w3_async,
         cfg=cfg,
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,
@@ -472,6 +486,7 @@ def main(
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
         forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS,
+        blockchain=blockchain,
         prefix_path=prefix_path,
     )
 
@@ -502,7 +517,7 @@ def main(
         blockchain,
         pool_data_update_frequency,
         use_specific_exchange_for_target_tokens,
-        version_check_frequency,
+        version_check_frequency
     )
 
 
@@ -558,6 +573,7 @@ def run(
         pool_data_update_frequency (int): the frequency to update static pool data, defined as the number of main loop cycles
         use_specific_exchange_for_target_tokens (str): use only the tokens that exist on a specific exchange
         version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
+
     """
 
     bot = tenderly_uri = forked_from_block = None
@@ -569,12 +585,22 @@ def run(
     handle_static_pools_update(mgr)
     total_iteration_time = 0
     while True:
-        try:
 
-            iteration_start_time = time.time()
+        try:
 
             # Save initial state of pool data to assert whether it has changed
             initial_state = mgr.pool_data.copy()
+
+            # ensure 'last_updated_block' is in pool_data for all pools
+            for idx, pool in enumerate(mgr.pool_data):
+                if "last_updated_block" not in pool:
+                    # print(f"pool missing 'last_updated_block` {pool}")
+                    pool["last_updated_block"] = last_block_queried
+                    mgr.pool_data[idx] = pool
+                if not pool["last_updated_block"]:
+                    # print(f"pool missing 'last_updated_block` {pool}")
+                    pool["last_updated_block"] = last_block_queried
+                    mgr.pool_data[idx] = pool
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block, replay_from_block = get_start_block(
@@ -588,7 +614,7 @@ def run(
 
             # Log the current start, end and last block
             mgr.cfg.logger.info(
-                f"[main] Fetching events from {start_block} to {current_block}... {last_block}"
+                f"Fetching events from {start_block} to {current_block}... {last_block}"
             )
 
             # Set the network connection to Mainnet if replaying from a block
@@ -615,8 +641,23 @@ def run(
                 )
             )
 
+            iteration_start_time = time.time()
+
             # Update the pools from the latest events
             update_pools_from_events(n_jobs, mgr, latest_events)
+
+            # Update new pool events from contracts
+            if len(mgr.pools_to_add_from_contracts) > 0:
+                mgr.cfg.logger.info(
+                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts,"
+                    f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
+                )
+                async_update_pools_from_contracts(mgr, current_block, logging_path)
+                mgr.pools_to_add_from_contracts = []
+
+            
+            # Increment the loop index
+            loop_idx += 1
 
             # Set the network connection to Tenderly if replaying from a block
             mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
@@ -630,12 +671,11 @@ def run(
             )
 
             # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
-            handle_initial_iteration(
+            async_handle_initial_iteration(
                 backdate_pools=backdate_pools,
                 current_block=current_block,
                 last_block=last_block,
                 mgr=mgr,
-                n_jobs=n_jobs,
                 start_block=start_block,
             )
 
@@ -695,18 +735,12 @@ def run(
                 forked_from_block=forked_from_block,
             )
 
-            # Increment the loop index
-            loop_idx += 1
-
-            total_iteration_time += time.time() - iteration_start_time
-            mgr.cfg.logger.info(
-                f"\n\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
-                f"\n********************************************\n\n"
-            )
 
             # Sleep for the polling interval
-            if not replay_from_block:
+            if not replay_from_block and polling_interval > 0:
+                mgr.cfg.logger.info(
+                    f"[main] Sleeping for polling_interval={polling_interval} seconds..."
+                )
                 time.sleep(polling_interval)
 
             # Check if timeout has been hit, and if so, break the loop for tests
@@ -730,20 +764,19 @@ def run(
                   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                   """
                 )
-                last_block_queried = current_block
+
             if tenderly_fork_id:
                 w3 = Web3(HTTPProvider(tenderly_uri))
 
                 # Increase time and blocks
-                params = [w3.toHex(increment_time)]  # number of seconds
+                params = [w3.to_hex(increment_time)]  # number of seconds
                 w3.provider.make_request(method="evm_increaseTime", params=params)
 
-                params = [w3.toHex(increment_blocks)]  # number of blocks
+                params = [w3.to_hex(increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
-                loop_idx % version_check_frequency == 0
-                and version_check_frequency != -1
-                and blockchain in "ethereum"
+                    loop_idx % version_check_frequency == 0
+                    and version_check_frequency != -1 and blockchain in "ethereum"
             ):
                 # Check the version of the deployed arbitrage contract
                 mgr.cfg.provider.check_version_of_arb_contract()
@@ -751,12 +784,11 @@ def run(
                     f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
                 )
             if (
-                loop_idx % pool_data_update_frequency == 0
-                and pool_data_update_frequency != -1
+                    loop_idx % pool_data_update_frequency == 0
+                    and pool_data_update_frequency != -1
             ):
-                mgr.cfg.logger.info(
-                    f"[main] Terraforming {blockchain}. Standby for oxygen levels."
-                )
+
+                mgr.cfg.logger.info(f"[main] Terraforming {blockchain}. Standby for oxygen levels.")
                 sblock = (
                     (current_block - (current_block - last_block_queried))
                     if loop_idx > 1
@@ -778,7 +810,15 @@ def run(
                 )
                 last_block_queried = current_block
 
+                total_iteration_time += time.time() - iteration_start_time
+                mgr.cfg.logger.info(
+                    f"\n\n********************************************\n"
+                    f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
+                    f"\n********************************************\n\n"
+                )
+
         except Exception as e:
+            mgr.cfg.logger.error(f"Error in main loop: {e}")
             mgr.cfg.logger.error(
                 f"[main] Error in main loop: {e}. Continuing... "
                 f"Please report this error to the Fastlane Telegram channel if it persists."
@@ -786,6 +826,7 @@ def run(
             )
             time.sleep(polling_interval)
             if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("Timeout hit... stopping bot")
                 mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
                 break
 
