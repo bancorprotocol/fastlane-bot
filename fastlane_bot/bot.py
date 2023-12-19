@@ -739,18 +739,18 @@ class CarbonBot(CarbonBotBase):
         curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
         return curve_prices
     
-    # Global constant for 'carbon_v1' order
+    # Global constant for Carbon Forks ordering
     CARBON_SORTING_ORDER = float('inf')
 
     # Create a sort order mapping function
     def create_sort_order(self, sort_sequence):
-        # Create a dictionary mapping from sort sequence to indices, except for 'carbon_v1'
-        return {key: index for index, key in enumerate(sort_sequence) if key != 'carbon_v1'}
+        # Create a dictionary mapping from sort sequence to indices, except for Carbon Forks
+        return {key: index for index, key in enumerate(sort_sequence) if key not in self.ConfigObj.CARBON_V1_FORKS}
 
     # Define the sort key function separately
     def sort_key(self, item, sort_order):
-        # Check if the item is 'carbon_v1'
-        if item[0] == 'carbon_v1':
+        # Check if the item is Carbon Forks
+        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
             return self.CARBON_SORTING_ORDER
         # Otherwise, use the sort order from the dictionary, or a default high value
         return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
@@ -785,7 +785,7 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        sort_sequence = ['bancor_v2','bancor_v3','uniswap_v2','uniswap_v3']
+        sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
         best_profit_fl_token = best_profit
         if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
