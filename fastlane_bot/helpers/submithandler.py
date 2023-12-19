@@ -412,7 +412,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         int
             The nonce for the transaction.
         """
-        return self.ConfigObj.w3.eth.getTransactionCount(address)
+        return self.ConfigObj.w3.eth.get_transaction_count(address)
 
     _get_gas_estimate = _get_gas
 
