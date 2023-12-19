@@ -98,7 +98,10 @@ class FindArbitrageMultiPairwiseBalancer(ArbitrageFinderPairwiseBase):
 
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
-
+                if trade_instructions_dic is None:
+                    continue
+                if len(trade_instructions_dic) < 2:
+                    continue
                 # Get the cids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
 

@@ -70,7 +70,10 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                 except Exception as e:
                     print("[FindArbitrageSinglePairwise] Exception: ", e)
                     continue
-
+                if trade_instructions_dic is None:
+                    continue
+                if len(trade_instructions_dic) < 2:
+                    continue
                 # Get the candidate ids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
 
