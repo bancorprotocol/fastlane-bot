@@ -658,12 +658,6 @@ def run(
             
             # Increment the loop index
             loop_idx += 1
-            total_iteration_time += time.time() - iteration_start_time
-            mgr.cfg.logger.info(
-                f"\n\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
-                f"\n********************************************\n\n"
-            )
 
             # Set the network connection to Tenderly if replaying from a block
             mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
@@ -815,6 +809,13 @@ def run(
                     uniswap_v3_event_mappings[["address", "exchange"]].values
                 )
                 last_block_queried = current_block
+
+                total_iteration_time += time.time() - iteration_start_time
+                mgr.cfg.logger.info(
+                    f"\n\n********************************************\n"
+                    f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
+                    f"\n********************************************\n\n"
+                )
 
         except Exception as e:
             mgr.cfg.logger.error(f"Error in main loop: {e}")
