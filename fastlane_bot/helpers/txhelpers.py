@@ -422,9 +422,9 @@ class TxHelpers:
             )
 
             # Submit the transaction
-
+            if "tenderly" in self.web3.provider.endpoint_uri:
+                tx_hash = self.submit_transaction(arb_tx=arb_tx)
             if self.ConfigObj.NETWORK in "ethereum":
-
                 tx_hash = self.submit_private_transaction(
                     arb_tx=arb_tx, block_number=block_number
                 )
