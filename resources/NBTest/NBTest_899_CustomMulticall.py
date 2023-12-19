@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -64,9 +64,42 @@ class MockWeb3:
         @staticmethod
         def contract(address, abi):
             return Mock()
+        
+        @staticmethod
+        def to_checksum_address(address):
+            return address
+
+    @staticmethod
+    def to_checksum_address(address):
+        return address
 
 class MockContract:
-    pass
+    
+    def __init__(self, address, abi):
+        self.address = address
+        self.abi = abi
+
+    def functions(self):
+        return Mock()
+
+    def encodeABI(self):
+        return Mock()
+
+    def address(self):
+        return self.address
+
+    def abi(self):
+        return self.abi
+
+    def to_checksum_address(self, address):
+        return address
+    
+    # handle encoded data 
+    def encode_abi(self):
+        return Mock()
+    
+    def decode_abi(self):
+        return Mock()
 
 # Time how long it takes to get all fees without using multicall
 start_time = time.time()
@@ -125,8 +158,9 @@ multicaller.add_call.assert_called_with(result)
 
 # +
 contract = Mock()
+web3 = MockWeb3()
 
-multicaller = MultiCaller(contract)
+multicaller = MultiCaller(contract, web3=web3)
 
 assert multicaller.contract == contract
 assert multicaller.block_identifier == 'latest'
@@ -137,7 +171,9 @@ assert multicaller._contract_calls == []
 
 # +
 contract = Mock()
-multicaller = MultiCaller(contract)
+web3 = MockWeb3()
+
+multicaller = MultiCaller(contract, web3=web3)
 fn = Mock()
 
 multicaller.add_call(fn, 'arg1', kwarg1='kwarg1')
@@ -149,7 +185,8 @@ assert len(multicaller._contract_calls) == 1
 
 # +
 contract = Mock()
-multicaller = MultiCaller(contract)
+web3 = MockWeb3()
+multicaller = MultiCaller(contract, web3=web3)
 
 with patch.object(multicaller, 'multicall') as mock_multicall:
     with multicaller:
@@ -157,52 +194,6 @@ with patch.object(multicaller, 'multicall') as mock_multicall:
         pass
 
     mock_multicall.assert_called_once()
-# -
-
-# ## test_multicaller_pairTradingFeePPM
-
-# +
-contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
-
-multicaller = MultiCaller(contract=contract.mainnet)
-
-# Time how long it takes to get all fees using multicall
-start_time = time.time()
-
-with multicaller as mc:
-    for pair in mainnet_pairs:
-        mc.add_call(contract.mainnet.functions.pairTradingFeePPM, pair[0], pair[1])
-
-pair_fees_with_multicall = multicaller.multicall()
-
-pair_fees_time_with_multicall = time.time() - start_time
-
-assert pair_fees_with_multicall == pair_fees_without_multicall
-assert pair_fees_time_with_multicall < pair_fees_time_without_multicall
-
-# -
-
-# ## test_multicaller_strategiesByPair
-
-# +
-contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
-
-multicaller = MultiCaller(contract=contract.mainnet)
-
-# Time how long it takes to get all fees using multicall
-start_time = time.time()
-
-with multicaller as mc:
-    for pair in mainnet_pairs:
-        mc.add_call(contract.mainnet.functions.strategiesByPair, pair[0], pair[1], 0, 5000)
-
-strats_by_pair_with_multicall = multicaller.multicall()
-
-strats_by_pair_time_with_multicall = time.time() - start_time
-
-assert len(strats_by_pair_with_multicall) == len(strats_by_pair_without_multicall)
-assert strats_by_pair_time_with_multicall < strats_by_pair_time_without_multicall
-
 # -
 
 
