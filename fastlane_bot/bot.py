@@ -795,8 +795,8 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
-                fltkn_eth_conversion_rate = Decimal(str(sorted_price_curves[0][-1]))
-                best_profit_eth = best_profit_fl_token / fltkn_eth_conversion_rate
+                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
                 self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth, 'ETH'}")
             else:
                 self.ConfigObj.logger.error(

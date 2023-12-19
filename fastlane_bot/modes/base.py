@@ -7,7 +7,7 @@ Licensed under MIT
 """
 import abc
 from typing import Any, Tuple, Dict, List, Union
-
+from _decimal import Decimal
 import pandas as pd
 
 from fastlane_bot.tools.cpc import T
@@ -189,7 +189,7 @@ class ArbitrageFinderBase:
             self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
                 fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
-                best_profit_eth = best_profit_fl_token / fltkn_eth_conversion_rate
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
                 self.ConfigObj.logger.debug(f"[modes.base.calculate_profit] {src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
             else:
                 self.ConfigObj.logger.error(
