@@ -98,7 +98,7 @@ class TxHelper:
 
     @property
     def nonce(self):
-        return self.ConfigObj.w3.eth.getTransactionCount(
+        return self.ConfigObj.w3.eth.get_transaction_count(
             self.ConfigObj.LOCAL_ACCOUNT.address
         )
 
