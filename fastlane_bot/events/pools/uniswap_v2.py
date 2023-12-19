@@ -103,8 +103,8 @@ class UniswapV2Pool(Pool):
         reserve_balance = await contract.caller.getReserves()
         factory_address = await contract.caller.factory()
         params = {
-            "fee": "0.003",
-            "fee_float": 0.003,
+            "fee": self.fee,
+            "fee_float": self.fee_float,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
             "exchange_name": self.exchange_name,
