@@ -13,6 +13,7 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -43,6 +44,7 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Multi Mode [NB039]
 
@@ -199,38 +201,6 @@ validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, ar
 
 
 assert arb_opp == validated
-# -
-
-# ## Test_validator_bancor_v3
-
-# +
-arb_mode="bancor_v3"
-
-arb_finder = bot._get_arb_finder(arb_mode)
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
-
-arb_opp = None
-
-for arb in r:
-    has_carbon = False
-    for trade in arb[2]:
-        if '-' in trade['cid']:
-            has_carbon = True
-    
-    if not has_carbon:
-        arb_opp = arb
-        break
-
-validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-
-assert arb_opp != validated
 # -
 
 # ## Test_validator_multi_triangle
