@@ -2,7 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.83...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.1...HEAD)
+
+- Minor bugs in Bot V3 [\#264](https://github.com/bancorprotocol/fastlane-bot/issues/264)
+- Fixes to Multichain addresses & static data for Base, Polygon, and Arbitrum [\#265](https://github.com/bancorprotocol/fastlane-bot/pull/265) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add support for trades without Flashloans [\#200](https://github.com/bancorprotocol/fastlane-bot/issues/200)
+
+## [v3.0.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.1) (2023-12-19)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.83...v3.0.1)
 
 - Fix error caused in poolandtokens for Bancor POL curves [\#254](https://github.com/bancorprotocol/fastlane-bot/issues/254)
 - bugfix for missing pool data [\#178](https://github.com/bancorprotocol/fastlane-bot/issues/178)
@@ -17,6 +26,7 @@
 - Consolidate DEFAULT\_MIN\_PROFIT\_BNT and DEFAULT\_MIN\_PROFIT variables [\#59](https://github.com/bancorprotocol/fastlane-bot/issues/59)
 - Add Support for Bancor V3 Vortex Trigger [\#44](https://github.com/bancorprotocol/fastlane-bot/issues/44)
 - Refactor Code to Prevent Silent Failure of Exceptions [\#39](https://github.com/bancorprotocol/fastlane-bot/issues/39)
+- Bot 3.0 [\#262](https://github.com/bancorprotocol/fastlane-bot/pull/262) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 Closed issues
 
