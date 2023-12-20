@@ -27,7 +27,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "polygon_zkevm": 500000,
     "arbitrum_one": 500000,
     "optimism": 500000,
-    "coinbase_base": 500000,
+    "coinbase_base": 250000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -719,7 +719,7 @@ def get_uni_pool_creation_events_v3(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        events += factory_contract.events.PoolCreated.getLogs(
+        events += factory_contract.events.PoolCreated.get_logs(
             fromBlock=from_block, toBlock=to_block
         )
     return events
@@ -746,7 +746,7 @@ def get_uni_pool_creation_events_v2(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        events += factory_contract.events.PairCreated.getLogs(
+        events += factory_contract.events.PairCreated.get_logs(
             fromBlock=from_block, toBlock=to_block
         )
     return events
@@ -773,7 +773,7 @@ def get_solidly_pool_creation_events_v2(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        events += factory_contract.events.PoolCreated.getLogs(
+        events += factory_contract.events.PoolCreated.get_logs(
             fromBlock=from_block, toBlock=to_block
         )
     return events
@@ -1099,7 +1099,7 @@ def save_token_data(token_dict: TokenManager, write_path: str):
 
     """
 
-    token_path = os.path.join(write_path, "tokens.parquet")
+    token_path = os.path.join(write_path, "tokens.csv")
     token_list = []
 
     for key in token_dict.token_dict.keys():
@@ -1107,7 +1107,7 @@ def save_token_data(token_dict: TokenManager, write_path: str):
 
     token_df = pd.DataFrame(token_list, columns=["address", "decimals", "symbol"])
     token_df.set_index("address", inplace=True)
-    token_df.to_parquet(token_path)
+    token_df.to_csv(token_path)
 
 
 def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int = None, save_tokens: bool = False):
@@ -1131,13 +1131,12 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         f"{PROJECT_PATH}/fastlane_bot/data/blockchain_data/{network_name}"
     )
     path_exists = os.path.exists(write_path)
-    data_exists = os.path.exists(write_path + "/static_pool_data.csv")
+    data_path = os.path.normpath(write_path + "/static_pool_data.csv")
+    data_exists = os.path.exists(data_path)
     fresh_data = False
-
     token_manager = get_all_token_details(web3, network=network_name, write_path=write_path)
 
     if not path_exists:
-        print(f"Terraformer: generating folder: {write_path}")
         os.makedirs(write_path)
     if not data_exists:
         exchange_df = pd.DataFrame(columns=dataframe_key)
@@ -1164,17 +1163,17 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     multichain_df = get_multichain_addresses(network=network_name)
 
     for row in multichain_df.iterrows():
-        exchange_name = row[1][0]
-        chain = row[1][1]
-        fork = row[1][2]
-        contract_name = row[1][3]
-        address = row[1][4]
-        fee = row[1][5]
+        exchange_name = row[1]["exchange_name"]
+        chain = row[1]["chain"]
+        fork = row[1]["fork"]
+        contract_name = row[1]["contract_name"]
+        address = row[1]["address"]
+        fee = row[1]["fee"]
 
         if fresh_data and not start_block:
-            start_block = int(row[1][6]) if not math.isnan(row[1][6]) else 0
+            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
         if start_block is None:
-            start_block = int(row[1][6]) if not math.isnan(row[1][6]) else 0
+            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
         if address is None or type(address) != str:
             print(
                 f"Terraformer: No factory contract address for exchange: {exchange_name}"
@@ -1196,7 +1195,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 exchange=exchange_name,
                 factory_contract=factory_contract,
                 default_fee=fee,
-                start_block=start_block,
+                start_block=from_block,
                 web3=web3,
                 blockchain=network_name
             )
@@ -1213,7 +1212,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 token_manager=token_manager,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
-                start_block=start_block,
+                start_block=from_block,
                 web3=web3,
                 blockchain=network_name
             )
@@ -1232,7 +1231,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 exchange=exchange_name,
                 factory_contract=factory_contract,
                 default_fee=fee,
-                start_block=start_block,
+                start_block=from_block,
                 web3=web3,
                 blockchain=network_name
             )
@@ -1253,11 +1252,11 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     if save_tokens:
         save_token_data(token_dict=token_manager, write_path=write_path)
 
-    exchange_df.to_parquet((write_path + "/static_pool_data.parquet"), index=False)
-    univ2_mapdf.to_parquet((write_path + "/uniswap_v2_event_mappings.parquet"), index=False)
-    univ3_mapdf.to_parquet((write_path + "/uniswap_v3_event_mappings.parquet"), index=False)
+    exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
+    univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
+    univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
 
     return univ2_mapdf, univ3_mapdf
 
 
-#terraform_blockchain(network_name="ethereum", save_tokens=True)
+#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
