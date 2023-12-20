@@ -20,6 +20,7 @@ class UniswapV2Pool(Pool):
     Class representing a Uniswap v2 pool.
     """
 
+    base_exchange_name: str = "uniswap_v2"
     exchange_name: str = "uniswap_v2"
     fee: str = None
     router_address: str = None
@@ -37,7 +38,7 @@ class UniswapV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
@@ -45,7 +46,7 @@ class UniswapV2Pool(Pool):
         event_args = event["args"]
         return (
             "reserve0" in event_args
-            and event["address"] in static_pools["uniswap_v2_pools"]
+            and event["address"] in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(

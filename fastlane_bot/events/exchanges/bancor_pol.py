@@ -32,6 +32,11 @@ class BancorPol(Exchange):
     def get_abi(self):
         return BANCOR_POL_ABI
 
+    @property
+    def get_factory_abi(self):
+        # Not used for Bancor POL
+        return BANCOR_POL_ABI
+
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenTraded, contract.events.TradingEnabled]
 

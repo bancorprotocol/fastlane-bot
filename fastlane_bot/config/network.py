@@ -63,6 +63,28 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     return fork_map
 
 
+def get_factory_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
+    """
+    Get a Dict of factory : exchange name
+    :param df: the dataframe containing exchange details
+    :param fork_names: the list of fork names
+
+    returns: Dict containing: factory_address : exchange_name
+
+    """
+    fork_map = {}
+    for row in df.iterrows():
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        contract_name = row[1]["contract_name"]
+        address = row[1]["address"]
+        if fork in fork_names and contract_name in [
+            S.FACTORY_ADDRESS,
+        ]:
+            fork_map[address] = exchange_name
+            fork_map[exchange_name] = address
+    return fork_map
+
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     Get a Dict of exchange_name : router
@@ -221,24 +243,9 @@ class ConfigNetwork(ConfigBase):
     PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
     PLATFORM_ID_WRAP_UNWRAP = 10
 
-    EXCHANGE_IDS = {
-        BANCOR_V2_NAME: 1,
-        BANCOR_V3_NAME: 2,
-        UNISWAP_V2_NAME: 3,
-        PANCAKESWAP_V2_NAME: 3,
-        UNISWAP_V3_NAME: 4,
-        PANCAKESWAP_V3_NAME: 4,
-        SUSHISWAP_V2_NAME: 5,
-        CARBON_V1_NAME: 6,
-        BALANCER_NAME: 7,
-        CARBON_POL_NAME: 8,
-        PLATFORM_ID_WRAP_UNWRAP : 10
-    }
 
-    # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
     CARBON_V1_FORKS = [CARBON_V1_NAME]
 
-    SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
     BANCOR_POL_START_BLOCK = 18184448
@@ -336,27 +343,30 @@ class ConfigNetwork(ConfigBase):
         self.UNI_V3_ROUTER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.UNISWAP_V3
         )
-        self.SOLIDLY_ROUTER_MAPPING = get_fork_map(
-            df=self.network_df, fork_name=S.SOLIDLY
-        )
-        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY)
+        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY_V2)
         self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + [
             "uniswap_v2"
         ]
         self.UNI_V3_FORKS = [key for key in self.UNI_V3_ROUTER_MAPPING.keys()]
-        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_ROUTER_MAPPING.keys()]
+
+        self.SOLIDLY_V2_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.SOLIDLY_V2
+        )
+        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.CARBON_V1
         )
         self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
 
         self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.CARBON_V1_FORKS
+        self.ALL_FORK_NAMES_WITHOUT_CARBON = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS
+        self.FACTORY_MAPPING = get_factory_map(df=self.network_df, fork_names=[S.UNISWAP_V2, S.UNISWAP_V3, S.SOLIDLY_V2])
 
         self.CHAIN_SPECIFIC_EXCHANGES = (
             self.CHAIN_SPECIFIC_EXCHANGES
             + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()]
-            + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()]
             + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
         )
@@ -364,6 +374,22 @@ class ConfigNetwork(ConfigBase):
             ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None
         ]
         self.ALL_KNOWN_EXCHANGES = self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES
+
+        self.EXCHANGE_IDS = {
+            self.BANCOR_V2_NAME: 1,
+            self.BANCOR_V3_NAME: 2,
+            self.BALANCER_NAME: 7,
+            self.CARBON_POL_NAME: 8,
+            self.PLATFORM_ID_WRAP_UNWRAP: 10
+        }
+        for ex in self.UNI_V2_FORKS + self.SOLIDLY_V2_FORKS:
+            self.EXCHANGE_IDS[ex] = 3
+        for ex in self.UNI_V3_FORKS:
+            self.EXCHANGE_IDS[ex] = 4
+        for ex in self.CARBON_V1_FORKS:
+            self.EXCHANGE_IDS[ex] = 6
+        self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
+
 
     def exchange_name_base_from_fork(self, exchange_name):
         if exchange_name in self.UNI_V2_FORKS:
@@ -551,10 +577,10 @@ class _ConfigNetworkOptimism(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-0006": "0x4200000000000000000000000000000000000006",
-        "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-        "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-        "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "WBTC": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
@@ -596,8 +622,8 @@ class _ConfigNetworkBase(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-0006": "0x4200000000000000000000000000000000000006",
-        "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []

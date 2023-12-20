@@ -16,8 +16,7 @@ from fastlane_bot.events.pools import pool_factory
 
 
 class PoolManager(BaseManager):
-    @staticmethod
-    def pool_key_from_info(pool_info: Dict[str, Any]) -> str:
+    def pool_key_from_info(self, pool_info: Dict[str, Any]) -> str:
         """
         Get the pool key from the pool info.
 
@@ -32,12 +31,7 @@ class PoolManager(BaseManager):
             The pool key.
 
         """
-        if pool_info["exchange_name"] in [
-            "uniswap_v2",
-            "sushiswap_v2",
-            "uniswap_v3",
-            "pancakeswap_v2",
-            "pancakeswap_v3",
+        if pool_info["exchange_name"] in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON + [
             "bancor_v2",
         ]:
             return pool_info["address"]

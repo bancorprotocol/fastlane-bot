@@ -15,7 +15,7 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.events.exchanges import exchange_factory
+from fastlane_bot.events.exchanges import exchange_factory, SolidlyV2
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools import pool_factory
 
@@ -70,8 +70,10 @@ class BaseManager:
     token_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
+    factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
+    solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
@@ -91,6 +93,7 @@ class BaseManager:
     )
 
     SUPPORTED_EXCHANGES: List[str] = None
+    SUPPORTED_BASE_EXCHANGES: List[str] = None
     _fee_pairs: Dict[Tuple[str, str], int] = field(default_factory=dict)
     carbon_inititalized: bool = None
     replay_from_block: int = None
@@ -102,17 +105,40 @@ class BaseManager:
 
     def __post_init__(self):
         initialized_exchanges = []
+        self.SUPPORTED_BASE_EXCHANGES = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
             base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
-            if base_exchange_name not in initialized_exchanges:
+            if exchange_name in ["pancakeswap_v2", "pancakeswap_v3", "velocimeter_v2"]:
+                initialize_events = True
+            elif base_exchange_name not in initialized_exchanges:
                 initialize_events = True
                 initialized_exchanges.append(base_exchange_name)
 
+            if base_exchange_name not in self.SUPPORTED_BASE_EXCHANGES:
+                self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
             self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
+            if base_exchange_name in "solidly_v2":
+                self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
+
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
+
+
+    def handle_solidly_exchanges(self, exchange):
+        """
+        Handles getting stable & volatile fees for Solidly forks
+        """
+        exchange_name = exchange.exchange_name
+        self.factory_contracts[exchange_name] = self.web3.eth.contract(
+            address=self.cfg.FACTORY_MAPPING[exchange_name],
+            abi=exchange.get_factory_abi,
+        )
+        exchange.factory_contract = self.factory_contracts[exchange.exchange_name]
+        #exchange.set_stable_volatile_fee()
+
+        return exchange
 
     @property
     def fee_pairs(self) -> Dict[Tuple[str, str], int]:
@@ -210,15 +236,14 @@ class BaseManager:
         str
             The exchange name.
         """
-        return next(
-            (
-                exchange_name
-                for exchange_name, pool_class in pool_factory._creators.items()
-                if exchange_name in self.exchanges
-                if pool_class.event_matches_format(event, self.static_pools)
-            ),
-            None,
-        )
+
+        for exchange_name, pool_class in pool_factory._creators.items():
+            for _ex_name in self.SUPPORTED_EXCHANGES:
+                if exchange_name not in self.cfg.network.exchange_name_base_from_fork(_ex_name):
+                    continue
+                if pool_class.event_matches_format(event, self.static_pools, exchange_name=_ex_name):
+                    return _ex_name
+        return None
 
     def check_forked_exchange_names(
         self, exchange_name_default: str = None, address: str = None, event: Any = None
@@ -767,15 +792,9 @@ class BaseManager:
         """
         if ex_name == "bancor_pol":
             return "token", event["args"]["token"]
-        if ex_name == "carbon_v1":
+        if ex_name in self.cfg.CARBON_V1_FORKS:
             return "cid", event["args"]["id"]
-        if ex_name in {
-            "uniswap_v2",
-            "sushiswap_v2",
-            "uniswap_v3",
-            "pancakeswap_v2",
-            "pancakeswap_v3",
-        }:
+        if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":
             return ("tkn0_address", "tkn1_address"), (

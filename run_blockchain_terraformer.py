@@ -73,8 +73,9 @@ AERODROME_V2_NAME = "aerodrome_v2"
 VELOCIMETER_V1_NAME = "velocimeter_v1"
 CARBON_POL_NAME = "bancor_pol"
 SHIBA_V2_NAME = "shiba_v2"
+SCALE_V2 = "scale_v2"
 
-SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V1_NAME]
+SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V1_NAME, SCALE_V2]
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
@@ -633,7 +634,7 @@ def organize_pool_details_uni_v2(
 
 
 def organize_pool_details_solidly_v2(
-        pool_data, token_manager, exchange, default_fee, web3
+        pool_data, token_manager, exchange, default_fee, factory_contract, web3
 ):
     """
     This function organizes pool details for Solidly pools.
@@ -642,19 +643,42 @@ def organize_pool_details_solidly_v2(
     :param token_manager: the token lookup dict
     :param exchange: the exchange name
     :param default_fee: the fee for the exchange
+    :param factory_contract: the exchange's Factory contract - initialized
     :param web3: the Web3 object
 
     returns: dict of pool information
     """
     skip_pool = False
-    pool_address = pool_data["args"]["pool"]
+    if "pool" in pool_data or "pool" in pool_data["args"]:
+        pool_address = pool_data["args"]["pool"]
+    elif "pair" in pool_data or "pair" in pool_data["args"]:
+        pool_address = pool_data["args"]["pair"]
+    else:
+        print(f"COULD NOT FIND KEY IN EVENT for exchange {exchange}: {pool_data}")
     pool_address = web3.to_checksum_address(pool_address)
 
     last_updated_block = pool_data["blockNumber"]
 
+    stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+
     token_info = {}
     pair = ""
-    default_fee = float(default_fee)
+
+    is_stable = stable_pool
+
+    if "velocimeter" in exchange:
+        default_fee = factory_contract.caller.getFee(pool_address)
+        default_fee = float(default_fee)
+        default_fee = default_fee / 10 ** 18
+    elif "scale" in exchange:
+        default_fee = factory_contract.caller.getRealFee(pool_address)
+        default_fee = float(default_fee)
+        default_fee = default_fee / 10 ** 18
+    elif "aerodrome" in exchange:
+        default_fee = factory_contract.caller.getFee(pool_address, is_stable)
+        default_fee = float(default_fee)
+        default_fee = default_fee / 10000
+
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
     if len(tokens) > 2:
@@ -666,7 +690,7 @@ def organize_pool_details_solidly_v2(
         return None
     description = exchange + " " + pair
 
-    stable_pool = pool_data["args"]["stable"]
+
 
     pool_info = {
         "cid": pool_address,
@@ -675,8 +699,8 @@ def organize_pool_details_solidly_v2(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": default_fee,
-        "fee_float": default_fee / 1000000,
+        "fee": str(default_fee),
+        "fee_float": default_fee,
         "address": pool_address,
         "anchor": "",
         "tkn0_address": token_info["tkn0_address"],
@@ -753,7 +777,7 @@ def get_uni_pool_creation_events_v2(
 
 
 def get_solidly_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
+    exchange, factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
 ) -> List:
     """
     This function retrieves Solidly pool generation events
@@ -773,9 +797,14 @@ def get_solidly_pool_creation_events_v2(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        events += factory_contract.events.PoolCreated.get_logs(
-            fromBlock=from_block, toBlock=to_block
-        )
+        if exchange in ["aerodrome_v2",]:
+            events += factory_contract.events.PoolCreated.get_logs(
+                fromBlock=from_block, toBlock=to_block
+            )
+        elif exchange in ["velocimeter_v2", "scale_v2"]:
+            events += factory_contract.events.PairCreated.get_logs(
+                fromBlock=from_block, toBlock=to_block
+            )
     return events
 
 
@@ -894,7 +923,7 @@ def get_solidly_v2_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_solidly_pool_creation_events_v2(
-        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
+        exchange=exchange, factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -902,8 +931,9 @@ def get_solidly_v2_pools(
             delayed(organize_pool_details_solidly_v2)(
                 pool_data=pool,
                 token_manager=token_manager,
-                default_fee=default_fee,
+                default_fee=0,
                 exchange=exchange,
+                factory_contract=factory_contract,
                 web3=web3,
             )
             for pool in pool_data
@@ -1142,6 +1172,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         exchange_df = pd.DataFrame(columns=dataframe_key)
         univ2_mapdf = pd.DataFrame(columns=["exchange", "address"])
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
+        solidly_v2_mapdf = pd.DataFrame(columns=["exchange", "address"])
         fresh_data = True
     else:
         exchange_df = pd.read_csv(
@@ -1155,6 +1186,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         )
         univ3_mapdf = pd.read_csv(
             write_path + "/uniswap_v3_event_mappings.csv", index_col=False
+        )
+        solidly_v2_mapdf = pd.read_csv(
+            write_path + "/solidly_v2_event_mappings.csv", index_col=False
         )
 
     if save_tokens:
@@ -1219,11 +1253,16 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
-            if fee == "TBD":
-                continue
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
+            if exchange_name in ["velocimeter_v2", ]:
+                factory_abi = VELOCIMETER_V2_FACTORY_ABI
+            elif exchange_name in ["scale_v2"]:
+                factory_abi = SCALE_V2_FACTORY_ABI
+            else:
+                # Aerodrome ABI
+                factory_abi = SOLIDLY_V2_FACTORY_ABI
             factory_contract = web3.eth.contract(
-                address=address, abi=SOLIDLY_FACTORY_ABI_V2
+                address=address, abi=factory_abi
             )
 
             u_df, m_df = get_solidly_v2_pools(
@@ -1236,7 +1275,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 blockchain=network_name
             )
             m_df = m_df.reset_index(drop=True)
-            univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
+            solidly_v2_mapdf = pd.concat([solidly_v2_mapdf, m_df], ignore_index=True)
         elif "balancer" in fork:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
@@ -1255,8 +1294,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
-
-    return univ2_mapdf, univ3_mapdf
+    solidly_v2_mapdf.to_csv((write_path + "/solidly_v2_event_mappings.csv"), index=False)
+    return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
 #terraform_blockchain(network_name="coinbase_base", save_tokens=True)

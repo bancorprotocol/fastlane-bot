@@ -102,7 +102,7 @@ load_dotenv()
 )
 @click.option(
     "--flashloan_tokens",
-    default=f"{T.LINK},{T.ETH},{T.BNT},{T.WBTC}",
+    default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
     type=str,
     help="The --flashloan_tokens flag refers to those token denominations which the bot can take a flash loan in. By "
     "default, these are [WETH, DAI, USDC, USDT, WBTC, BNT, NATIVE_ETH]. If you override the default to TKN, "
@@ -117,7 +117,7 @@ load_dotenv()
 )
 @click.option(
     "--polling_interval",
-    default=12,
+    default=0,
     help="Polling interval in seconds",
 )
 @click.option(
@@ -127,7 +127,7 @@ load_dotenv()
 )
 @click.option(
     "--reorg_delay",
-    default=2,
+    default=0,
     help="Number of blocks delayed to avoid reorgs",
 )
 @click.option(
@@ -423,7 +423,7 @@ def main(
             pool_data_update_frequency: {pool_data_update_frequency}
             prefix_path: {prefix_path}
             version_check_frequency: {version_check_frequency}
-            use_flashloans: {self_fund}
+            self_fund: {self_fund}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -446,6 +446,7 @@ def main(
         tokens,
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
+        solidly_v2_event_mappings,
     ) = get_static_data(
         cfg,
         exchanges,
@@ -479,13 +480,14 @@ def main(
         alchemy_max_block_fetch=alchemy_max_block_fetch,
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         uniswap_v3_event_mappings=uniswap_v3_event_mappings,
+        solidly_v2_event_mappings=solidly_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,
         tenderly_fork_id=tenderly_fork_id,
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
-        forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS,
+        forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS + cfg.SOLIDLY_V2_FORKS,
         blockchain=blockchain,
         prefix_path=prefix_path,
     )
@@ -640,7 +642,6 @@ def run(
                     logging_path,
                 )
             )
-
             iteration_start_time = time.time()
 
             # Update the pools from the latest events
@@ -655,7 +656,7 @@ def run(
                 async_update_pools_from_contracts(mgr, current_block, logging_path)
                 mgr.pools_to_add_from_contracts = []
 
-            
+
             # Increment the loop index
             loop_idx += 1
 
@@ -795,8 +796,10 @@ def run(
                     else None
                 )
                 (
+                    exchange_df,
                     uniswap_v2_event_mappings,
                     uniswap_v3_event_mappings,
+                    solidly_v2_event_mappings,
                 ) = terraform_blockchain(
                     network_name=blockchain,
                     web3=mgr.web3,
@@ -807,6 +810,9 @@ def run(
                 )
                 mgr.uniswap_v3_event_mappings = dict(
                     uniswap_v3_event_mappings[["address", "exchange"]].values
+                )
+                mgr.solidly_v2_event_mappings = dict(
+                    solidly_v2_event_mappings[["address", "exchange"]].values
                 )
                 last_block_queried = current_block
 

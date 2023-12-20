@@ -461,6 +461,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             return self.ConfigObj.CARBON_CONTROLLER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
+        elif pool.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            return self.ConfigObj.SOLIDLY_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
             return self.ConfigObj.CARBON_CONTROLLER_ADDRESS
         elif pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:

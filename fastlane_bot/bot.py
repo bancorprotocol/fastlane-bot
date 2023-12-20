@@ -191,6 +191,14 @@ class CarbonBotBase:
             try:
                 p.ADDRDEC = ADDRDEC
                 curves += p.to_cpc()
+            except NotImplementedError as e:
+                # Currently not supporting Solidly V2 Stable pools. This will be removed when support is added, but for now the error message is suppressed.
+                if "Stable Solidly V2" in str(e):
+                    continue
+                else:
+                    self.ConfigObj.logger.error(
+                        f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
+                    )
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"

@@ -78,13 +78,13 @@ class ContractsManager(BaseManager):
         """
         tracker = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
-            # include_forks = False
-            # if "_forks" in exchange_name:
-            #     include_forks = True
-            #     exchange_name = exchange_name.split("_forks")[0]
 
             if exchange_name in tracker:
                 continue
+            self.event_contracts[exchange_name] = self.web3.eth.contract(
+                abi=self.exchanges[exchange_name].get_abi(),
+            )
+            self.pool_contracts[exchange_name] = {}
 
             if exchange_name in self.cfg.UNI_V2_FORKS:
                 fork_contract = self.web3.eth.contract(
@@ -111,6 +111,16 @@ class ContractsManager(BaseManager):
                     self.event_contracts[fork] = fork_contract
                     self.pool_contracts[fork] = {}
                     tracker.append(fork)
+            elif exchange_name in self.cfg.SOLIDLY_V2_FORKS:
+                fork_contract = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                for fork in self.cfg.SOLIDLY_V2_FORKS:
+                    self.event_contracts[fork] = fork_contract
+                    self.pool_contracts[fork] = {}
+
+                    tracker.append(fork)
+
             else:
                 self.event_contracts[exchange_name] = self.web3.eth.contract(
                     abi=self.exchanges[exchange_name].get_abi(),

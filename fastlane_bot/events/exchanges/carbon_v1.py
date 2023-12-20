@@ -53,6 +53,10 @@ class CarbonV1(Exchange):
     def get_abi(self):
         return CARBON_CONTROLLER_ABI
 
+    @property
+    def get_factory_abi(self):
+        return CARBON_CONTROLLER_ABI
+
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [
             contract.events.StrategyCreated,
