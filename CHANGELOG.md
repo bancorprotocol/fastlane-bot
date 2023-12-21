@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.1...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.2...HEAD)
 
+- Bug in POL Mode & Carbon Curve creation [\#266](https://github.com/bancorprotocol/fastlane-bot/issues/266)
 - Minor bugs in Bot V3 [\#264](https://github.com/bancorprotocol/fastlane-bot/issues/264)
+- Remove token key in POL mode & add try/except for Carbon curve creation [\#267](https://github.com/bancorprotocol/fastlane-bot/pull/267) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.2) (2023-12-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.1...v3.0.2)
+
 - Fixes to Multichain addresses & static data for Base, Polygon, and Arbitrum [\#265](https://github.com/bancorprotocol/fastlane-bot/pull/265) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Add support for trades without Flashloans [\#200](https://github.com/bancorprotocol/fastlane-bot/issues/200)
