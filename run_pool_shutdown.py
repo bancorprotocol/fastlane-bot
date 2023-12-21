@@ -193,7 +193,6 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
-        prefix_path=prefix_path,
         cfg=cfg,
         exchanges=exchanges,
         blockchain=blockchain,

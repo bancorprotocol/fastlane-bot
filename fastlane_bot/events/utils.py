@@ -238,7 +238,6 @@ def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
 
 
 def get_static_data(
-    prefix_path: str,
     cfg: Config,
     exchanges: List[str],
     blockchain: str,
@@ -265,9 +264,6 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
-    base_prefix_path = os.path.normpath(
-        f"{prefix_path}fastlane_bot/data/blockchain_data/{blockchain}/"
-    )
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -306,19 +302,6 @@ def get_static_data(
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
-
-    tokens_filepath_prefix = os.path.join(base_prefix_path, "tokens.csv")
-    check_path = ""
-    for p in tokens_filepath_prefix.replace("/tokens.csv", "").split("/"):
-        check_path = os.path.join(check_path, p)
-        if check_path == "dbfs":
-            check_path = "/dbfs"
-        if not os.path.exists(check_path):
-            try:
-                os.mkdir(check_path)
-            except Exception as e:
-                cfg.logger.error(f"Error creating directory: {e}")
-    tokens.to_csv(tokens_filepath_prefix, index=False)
 
     def correct_tkn(tkn_address, keyname):
         try:
