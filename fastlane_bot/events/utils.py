@@ -312,7 +312,10 @@ def get_static_data(
     for p in tokens_filepath_prefix.replace("/tokens.csv", "").split("/"):
         check_path = os.path.join(check_path, p)
         if not os.path.exists(check_path):
-            os.mkdir(check_path)
+            try:
+                os.mkdir(check_path)
+            except Exception as e:
+                cfg.logger.error(f"Error creating directory: {e}")
     tokens.to_csv(tokens_filepath_prefix, index=False)
 
     def correct_tkn(tkn_address, keyname):
