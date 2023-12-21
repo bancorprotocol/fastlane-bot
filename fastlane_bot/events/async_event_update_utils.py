@@ -164,7 +164,7 @@ def get_pool_info(
         "tkn0_decimals": tkn0["decimals"],
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
-        "pair_name": tkn0["address"] + "/" + tkn1["address"]
+        "pair_name": tkn0["address"] + "/" + tkn1["address"],
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
@@ -184,44 +184,46 @@ def get_pool_info(
 
     return pool_info
 
-def sanitize_token_symbol(token_symbol: str, token_address: str) -> str:
-    """
-    This function ensures token symbols are compatible with the bot's data structures.
-    If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
 
-    :param token_symbol: the token's symbol
-    :param token_address: the token's address
+#
+# def sanitize_token_symbol(path_prefix:str, token_symbol: str, token_address: str) -> str:
+#     """
+#     This function ensures token symbols are compatible with the bot's data structures.
+#     If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
+#
+#     :param token_symbol: the token's symbol
+#     :param token_address: the token's address
+#
+#     returns: str
+#     """
+#     sanitization_path = os.path.normpath(f"{path_prefix}fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
+#     try:
+#         token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
+#         token_pd.to_csv(sanitization_path)
+#         return token_symbol
+#     except Exception:
+#         return token_address
 
-    returns: str
-    """
-    sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
-    try:
-        token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
-        token_pd.to_csv(sanitization_path)
-        return token_symbol
-    except Exception:
-        return token_address
-
-
-def add_token_info(
-    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
-) -> Dict[str, Any]:
-    tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
-    tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"])
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"])
-    tkn0["symbol"] = tkn0_symbol
-    tkn1["symbol"] = tkn1_symbol
-
-    pool_info["tkn0_symbol"] = tkn0_symbol
-    pool_info["tkn0_decimals"] = tkn0["decimals"]
-    pool_info["tkn1_symbol"] = tkn1_symbol
-    pool_info["tkn1_decimals"] = tkn1["decimals"]
-    pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
-
-    if len(pool_info["pair_name"].split("/")) != 2:
-        raise Exception(f"pair_name is not valid for {pool_info}")
-    return pool_info
+#
+# def add_token_info(
+#         path_prefix: str, pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
+# ) -> Dict[str, Any]:
+#     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
+#     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
+#     tkn0_symbol = sanitize_token_symbol(path_prefix=path_prefix, token_symbol=tkn0_symbol, token_address=tkn0["address"])
+#     tkn1_symbol = sanitize_token_symbol(path_prefix=path_prefix, token_symbol=tkn1_symbol, token_address=tkn1["address"])
+#     tkn0["symbol"] = tkn0_symbol
+#     tkn1["symbol"] = tkn1_symbol
+#
+#     pool_info["tkn0_symbol"] = tkn0_symbol
+#     pool_info["tkn0_decimals"] = tkn0["decimals"]
+#     pool_info["tkn1_symbol"] = tkn1_symbol
+#     pool_info["tkn1_decimals"] = tkn1["decimals"]
+#     pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
+#
+#     if len(pool_info["pair_name"].split("/")) != 2:
+#         raise Exception(f"pair_name is not valid for {pool_info}")
+#     return pool_info
 
 
 def add_missing_keys(
@@ -342,13 +344,17 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
-        ex = exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False)
+        ex = exchange_factory.get_exchange(
+            key=exchange_name, cfg=mgr.cfg, exchange_initialized=False
+        )
         abi = ex.get_abi()
         address = event["address"]
         contracts.append(
             {
                 "exchange_name": exchange_name,
-                "ex": exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False),
+                "ex": exchange_factory.get_exchange(
+                    key=exchange_name, cfg=mgr.cfg, exchange_initialized=False
+                ),
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,
@@ -360,7 +366,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
 def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path):
     global cfg
     cfg = mgr.cfg
-    dirname = "temp"
+    dirname = f"{mgr.prefix_path}temp"
     keys = [
         "liquidity",
         "tkn0_balance",
@@ -371,6 +377,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     ]
     if not os.path.exists(dirname):
         os.mkdir(dirname)
+
     start_time = time.time()
     # deplicate pool data
 
@@ -413,7 +420,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         .str.replace("-", "_")
     )
     tokens_df.to_csv(
-        f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
+        f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv",
+        index=False,
     )
     tokens_df["address"] = tokens_df["address"].apply(
         lambda x: Web3.to_checksum_address(x)
@@ -439,44 +447,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             "tkn1_decimals",
         ]
     )
-
-    # def correct_tkn(tkn_address, keyname):
-    #     try:
-    #         return tokens_df[tokens_df["address"] == tkn_address][keyname].values[0]
-    #     except IndexError:
-    #         return np.nan
-    #
-    # static_pool_data = new_pool_data_df.copy()
-    # static_pool_data["tkn0_address"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: Web3.to_checksum_address(x)
-    # )
-    # static_pool_data["tkn1_address"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: Web3.to_checksum_address(x)
-    # )
-    # static_pool_data["tkn0_decimals"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "decimals")
-    # )
-    # static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "decimals")
-    # )
-    # static_pool_data["tkn0_key"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "key")
-    # )
-    # static_pool_data["tkn1_key"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "key")
-    # )
-    # static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "symbol")
-    # )
-    # static_pool_data["tkn1_symbol"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "symbol")
-    # )
-    # static_pool_data["pair_name"] = (
-    #     static_pool_data["tkn0_key"] + "/" + static_pool_data["tkn1_key"]
-    # )
-    #
-    # new_pool_data_df = static_pool_data.copy()
-    # del static_pool_data
 
     new_pool_data_df["descr"] = (
         new_pool_data_df["exchange_name"]
