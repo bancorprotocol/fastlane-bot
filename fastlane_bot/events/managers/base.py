@@ -74,6 +74,7 @@ class BaseManager:
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
+    tokens_df: pd.DataFrame = None
     target_tokens: List[str] = field(default_factory=list)
     tenderly_fork_id: str = None
     pools_to_add_from_contracts: List[Tuple[str, str, Any, str, str]] = field(
@@ -104,12 +105,16 @@ class BaseManager:
         initialized_exchanges = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
-            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
+            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(
+                exchange_name=exchange_name
+            )
             if base_exchange_name not in initialized_exchanges:
                 initialize_events = True
                 initialized_exchanges.append(base_exchange_name)
 
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(
+                key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events
+            )
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
@@ -491,7 +496,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:
@@ -625,7 +630,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:

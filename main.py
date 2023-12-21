@@ -478,6 +478,7 @@ def main(
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         uniswap_v3_event_mappings=uniswap_v3_event_mappings,
         tokens=tokens.to_dict(orient="records"),
+        tokens_df=tokens,
         replay_from_block=replay_from_block,
         target_tokens=target_token_addresses,
         tenderly_fork_id=tenderly_fork_id,

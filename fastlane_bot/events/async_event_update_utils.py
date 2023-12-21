@@ -317,6 +317,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     if not os.path.exists(dirname):
         os.mkdir(dirname)
 
+    tokens_df_initial = mgr.tokens_df
+
     start_time = time.time()
     # deplicate pool data
 
@@ -350,9 +352,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         filename="missing_tokens_df.csv",
         subset=["address"],
         func=main_get_missing_tkn,
-        df_combined=pd.read_csv(
-            f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
-        ),
+        df_combined=tokens_df_initial,
     )
     tokens_df["symbol"] = (
         tokens_df["symbol"]
@@ -360,14 +360,13 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
-    tokens_df.to_csv(
-        f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv",
-        index=False,
-    )
     tokens_df["address"] = tokens_df["address"].apply(
         lambda x: Web3.to_checksum_address(x)
     )
     tokens_df = tokens_df.drop_duplicates(subset=["address"])
+
+    mgr.tokens_df = tokens_df
+    mgr.tokens = tokens_df.to_dict(orient="records")
 
     new_pool_data = get_new_pool_data(
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
