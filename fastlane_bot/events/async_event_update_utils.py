@@ -14,6 +14,9 @@ from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.utils import update_pools_from_events
+import nest_asyncio
+
+nest_asyncio.apply()
 
 
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
