@@ -402,7 +402,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         subset=["address"],
         func=main_get_missing_tkn,
         df_combined=pd.read_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+            f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
     )
     tokens_df["symbol"] = (
