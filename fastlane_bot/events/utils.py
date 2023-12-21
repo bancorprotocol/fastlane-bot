@@ -311,6 +311,8 @@ def get_static_data(
     check_path = ""
     for p in tokens_filepath_prefix.replace("/tokens.csv", "").split("/"):
         check_path = os.path.join(check_path, p)
+        if check_path == "dbfs":
+            check_path = "/dbfs"
         if not os.path.exists(check_path):
             try:
                 os.mkdir(check_path)
