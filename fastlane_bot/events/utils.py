@@ -238,6 +238,7 @@ def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
 
 
 def get_static_data(
+    prefix_path: str,
     cfg: Config,
     exchanges: List[str],
     blockchain: str,
@@ -264,6 +265,9 @@ def get_static_data(
 
     """
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    base_prefix_path = os.path.normpath(
+        f"{prefix_path}fastlane_bot/data/blockchain_data/{blockchain}/"
+    )
     # Read static pool data from CSV
     static_pool_data_filepath = os.path.join(
         base_path, f"{static_pool_data_filename}.csv"
@@ -291,6 +295,7 @@ def get_static_data(
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(columns=["address", "symbol", "decimals"])
         df.to_csv(tokens_filepath)
+
     tokens = read_csv_file(tokens_filepath)
     tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
     tokens = tokens.drop_duplicates(subset=["address"])
@@ -301,6 +306,14 @@ def get_static_data(
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
+
+    tokens_filepath_prefix = os.path.join(base_prefix_path, "tokens.csv")
+    check_path = ""
+    for p in tokens_filepath_prefix.replace("/tokens.csv", "").split("/"):
+        check_path = os.path.join(check_path, p)
+        if not os.path.exists(check_path):
+            os.mkdir(check_path)
+    tokens.to_csv(tokens_filepath_prefix, index=False)
 
     def correct_tkn(tkn_address, keyname):
         try:
@@ -320,7 +333,6 @@ def get_static_data(
     static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
         lambda x: correct_tkn(x, "decimals")
     )
-
     static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
         lambda x: correct_tkn(x, "symbol")
     )

@@ -62,6 +62,11 @@ load_dotenv()
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     help="The logging level.",
 )
+@click.option(
+    "--prefix_path",
+    default="",
+    help="The prefix path.",
+)
 def main(
     logging_path: str,
     loglevel: str,
@@ -79,6 +84,7 @@ def main(
     target_tokens: str = None,
     replay_from_block: int = None,
     blockchain: str = "ethereum",
+    prefix_path: str = None,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -100,6 +106,8 @@ def main(
         timeout (int): The timeout in seconds.
         target_tokens (str): A comma-separated string of tokens to target. Use None to target all tokens. Use `flashloan_tokens` to target only the flashloan tokens.
         replay_from_block (int): The block number to replay from. (For debugging / testing)
+        blockchain (str): The blockchain to run on.
+        prefix_path (str): The prefix path.
 
     """
 
@@ -131,6 +139,7 @@ def main(
         )
         df.to_csv(tokens_filepath)
     tokens = read_csv_file(tokens_filepath)
+    tokens.to_csv(f"{prefix_path}tokens_filepath", index=False)
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
@@ -184,6 +193,7 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
+        prefix_path=prefix_path,
         cfg=cfg,
         exchanges=exchanges,
         blockchain=blockchain,

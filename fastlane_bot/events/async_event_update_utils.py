@@ -288,7 +288,7 @@ def get_token_contracts(
     )
     tokens = list(set(tokens))
     tokens_df = pd.read_csv(
-        f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+        f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
     )
     missing_tokens = [tkn for tkn in tokens if tkn not in tokens_df["address"].tolist()]
     contracts = []
@@ -331,7 +331,7 @@ def process_contract_chunks(
             pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
         )
         df_combined = df_combined.drop_duplicates(subset=subset)
-        df_combined.to_csv(filename, index=False)
+        df_combined.to_csv(f"{dirname}/{filename}", index=False)
 
     # clear temp dir
     for filepath in filepaths:
@@ -413,7 +413,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         subset=["address"],
         func=main_get_missing_tkn,
         df_combined=pd.read_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+            f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
     )
     tokens_df["symbol"] = (

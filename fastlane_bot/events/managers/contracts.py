@@ -284,7 +284,6 @@ class ContractsManager(BaseManager):
             ),
         )
 
-
     def get_token_info_from_contract(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
     ) -> Tuple[str, int]:
@@ -308,7 +307,7 @@ class ContractsManager(BaseManager):
         """
         contract = self.get_or_create_token_contracts(web3, erc20_contracts, addr)
         tokens_filepath = os.path.normpath(
-            f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv"
+            f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv"
         )
         token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
