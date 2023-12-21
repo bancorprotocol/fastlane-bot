@@ -109,10 +109,6 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
     )
 
 
-# def get_tkn_key(t0_symbol: str, tkn0_address: str, key_digits: int = 4) -> str:
-#     return f"{t0_symbol}-{tkn0_address[-key_digits:]}"
-
-
 def pair_name(
     t0_symbol: str,
     tkn0_address: str,
@@ -168,47 +164,6 @@ def get_pool_info(
     return pool_info
 
 
-#
-# def sanitize_token_symbol(path_prefix:str, token_symbol: str, token_address: str) -> str:
-#     """
-#     This function ensures token symbols are compatible with the bot's data structures.
-#     If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
-#
-#     :param token_symbol: the token's symbol
-#     :param token_address: the token's address
-#
-#     returns: str
-#     """
-#     sanitization_path = os.path.normpath(f"{path_prefix}fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
-#     try:
-#         token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
-#         token_pd.to_csv(sanitization_path)
-#         return token_symbol
-#     except Exception:
-#         return token_address
-
-#
-# def add_token_info(
-#         path_prefix: str, pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
-# ) -> Dict[str, Any]:
-#     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
-#     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-#     tkn0_symbol = sanitize_token_symbol(path_prefix=path_prefix, token_symbol=tkn0_symbol, token_address=tkn0["address"])
-#     tkn1_symbol = sanitize_token_symbol(path_prefix=path_prefix, token_symbol=tkn1_symbol, token_address=tkn1["address"])
-#     tkn0["symbol"] = tkn0_symbol
-#     tkn1["symbol"] = tkn1_symbol
-#
-#     pool_info["tkn0_symbol"] = tkn0_symbol
-#     pool_info["tkn0_decimals"] = tkn0["decimals"]
-#     pool_info["tkn1_symbol"] = tkn1_symbol
-#     pool_info["tkn1_decimals"] = tkn1["decimals"]
-#     pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
-#
-#     if len(pool_info["pair_name"].split("/")) != 2:
-#         raise Exception(f"pair_name is not valid for {pool_info}")
-#     return pool_info
-
-
 def add_missing_keys(
     pool_info: Dict[str, Any], pool_data_keys: frozenset, keys: List[str]
 ) -> Dict[str, Any]:
@@ -246,7 +201,7 @@ def get_new_pool_data(
             mgr.cfg.logger.info(
                 f"tkn0 or tkn1 not found: {pool['tkn0_address']}, {pool['tkn1_address']}, {pool['address']} "
             )
-            raise Exception("tkn0 or tkn1 not found")
+            continue
         tkn0["address"] = pool["tkn0_address"]
         tkn1["address"] = pool["tkn1_address"]
         pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
@@ -313,12 +268,6 @@ def process_contract_chunks(
             pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
         )
         df_combined = df_combined.drop_duplicates(subset=subset)
-        # if prefix_path == "":
-        #     p = f"{filename}"
-        # else:
-        #     p = f"{prefix_path}/{filename}"
-        # print(f"df_combined: {p}")
-        # df_combined.to_csv(p, index=False)
 
     # clear temp dir
     for filepath in filepaths:
@@ -464,9 +413,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
-    # assert len(mgr.pools_to_add_from_contracts) == (
-    #     len(new_pool_data_df) + duplicate_new_pool_ct
-    # )
 
     all_pools_df = (
         pd.DataFrame(mgr.pool_data)
