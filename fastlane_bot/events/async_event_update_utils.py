@@ -80,27 +80,7 @@ async def get_token_and_fee(
                 tkn1 = connector_token
             elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                 tkn0 = connector_token
-            # tkn0 = (
-            #     connector_token
-            #     if tkn0 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     else tkn0
-            # )
-            # tkn1 = (
-            #     connector_token
-            #     if tkn1 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     else tkn1
-            # )
-            # if address in [
-            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
-            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
-            #     "0x079cA3f710599739a22673c2856202F90D3A8806",
-            # ]:
-            #     print(
-            #         f"\n#2 connector_token: {connector_token}, anchor: {anchor}, tkn0: {tkn0}, tkn1: {tkn1}"
-            #     )
-            #     raise Exception("test")
+
         cid = str(event["args"]["id"]) if exchange_name == "carbon_v1" else None
 
         return exchange_name, address, tkn0, tkn1, fee, cid, anchor
@@ -266,7 +246,7 @@ def get_new_pool_data(
             mgr.cfg.logger.info(
                 f"tkn0 or tkn1 not found: {pool['tkn0_address']}, {pool['tkn1_address']}, {pool['address']} "
             )
-            continue
+            raise Exception("tkn0 or tkn1 not found")
         tkn0["address"] = pool["tkn0_address"]
         tkn1["address"] = pool["tkn1_address"]
         pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
@@ -288,7 +268,7 @@ def get_token_contracts(
     )
     tokens = list(set(tokens))
     tokens_df = pd.read_csv(
-        f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+        f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
     )
     missing_tokens = [tkn for tkn in tokens if tkn not in tokens_df["address"].tolist()]
     contracts = []
@@ -308,6 +288,7 @@ def get_token_contracts(
 
 
 def process_contract_chunks(
+    prefix_path: str,
     base_filename: str,
     chunks: List[Any],
     dirname: str,
@@ -316,6 +297,7 @@ def process_contract_chunks(
     func: Callable,
     df_combined: pd.DataFrame = None,
 ) -> pd.DataFrame:
+
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
@@ -331,7 +313,12 @@ def process_contract_chunks(
             pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
         )
         df_combined = df_combined.drop_duplicates(subset=subset)
-        df_combined.to_csv(f"{dirname}/{filename}", index=False)
+        # if prefix_path == "":
+        #     p = f"{filename}"
+        # else:
+        #     p = f"{prefix_path}/{filename}"
+        # print(f"df_combined: {p}")
+        # df_combined.to_csv(p, index=False)
 
     # clear temp dir
     for filepath in filepaths:
@@ -396,6 +383,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     contracts = get_pool_contracts(mgr)
     chunks = get_contract_chunks(contracts)
     tokens_and_fee_df = process_contract_chunks(
+        prefix_path=mgr.prefix_path,
         base_filename="tokens_and_fee_df_",
         chunks=chunks,
         dirname=dirname,
@@ -406,6 +394,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
 
     contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
     tokens_df = process_contract_chunks(
+        prefix_path=mgr.prefix_path,
         base_filename="missing_tokens_df_",
         chunks=get_contract_chunks(contracts),
         dirname=dirname,
@@ -413,7 +402,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         subset=["address"],
         func=main_get_missing_tkn,
         df_combined=pd.read_csv(
-            f"{mgr.prefix_path}fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
     )
     tokens_df["symbol"] = (
