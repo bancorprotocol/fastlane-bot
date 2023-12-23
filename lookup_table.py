@@ -2,14 +2,15 @@ from copy import copy
 from dataclasses import field, dataclass
 from typing import Dict, Any, List, Union
 import pandas as pd
-import json
 
-json_path = "/Users/mikewcasale/Documents/GitHub/bancor/fastlane-bot/logs/20231220-110314/latest_pool_data.json"
-
-with open(json_path) as f:
-    json_data = json.load(f)
-
-type(json_data)
+# import json
+#
+# json_path = "/Users/mikewcasale/Documents/GitHub/bancor/fastlane-bot/logs/20231220-110314/latest_pool_data.json"
+#
+# with open(json_path) as f:
+#     json_data = json.load(f)
+#
+# type(json_data)
 
 
 @dataclass
@@ -46,6 +47,7 @@ class LookupTable:
     tkn1_address_dict: Dict[str, List[str]] = field(default_factory=dict)
     exchange_name_dict: Dict[str, List[str]] = field(default_factory=dict)
     last_updated_block_dict: Dict[str, List[str]] = field(default_factory=dict)
+    numerical_index_dict: Dict[str, int] = field(default_factory=dict)
     keys: List[str] = field(default_factory=list)
     _all_keys: List[str] = field(default_factory=list)
 
@@ -64,6 +66,7 @@ class LookupTable:
             "tkn1_address",
             "exchange_name",
             "last_updated_block",
+            "numerical_index",
         ]
 
         self.df = pd.DataFrame(
@@ -91,8 +94,17 @@ class LookupTable:
             ],
         )
         self.df["cid_index"] = self.df["cid"]
+        self.df["last_updated_block_index"] = self.df["last_updated_block"].astype(int)
+        self.df["address_index"] = self.df["address"]
+        self.df["tkn0_address_index"] = self.df["tkn0_address"]
+        self.df["tkn1_address_index"] = self.df["tkn1_address"]
+        self.df["exchange_name_index"] = self.df["exchange_name"]
+
         self.df.set_index("cid_index", inplace=True)
         self.df["info"] = self.json_data
+
+        self.numerical_index_dict = {self.df.index[i]: i for i in range(len(self.df))}
+        self.df["numerical_index"] = self.df.index.map(self.numerical_index_dict)
 
         # Create a dictionary which reorganizes the json_data from a list of dictionaries to a dictionary of
         # dictionaries, where the key is the cid
@@ -117,9 +129,9 @@ class LookupTable:
             if isinstance(cids, int):
                 cids = [self.json_data[cids]["cid"]]
             cids = [cids]
-            # raise ValueError(
-            #     f"\nWarning: cids must be a list. Converting to list: {cids}\n"
-            # )
+            raise ValueError(
+                f"\nWarning: cids must be a list. Converting to list: {cids}\n"
+            )
 
         new_instance = copy(self)
         try:
@@ -163,9 +175,12 @@ class LookupTable:
         except KeyError:
             return []
 
+    def get_indices(self, cids: List[str]) -> List[int]:
+        return self.df.loc[cids]["numerical_index"].tolist()
+
     def get_records(
         self, key: str, value: str, condition: str = None, in_chain: bool = False
-    ) -> Union["LookupTable", List[Dict[str, Any]]]:
+    ) -> "LookupTable" or List[Dict[str, Any]]:
 
         if value != "":
             cids = self.get_cids(key, value)
