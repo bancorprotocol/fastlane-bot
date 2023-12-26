@@ -24,5 +24,8 @@
 - **Question:** What steps should be taken if the bot displays a 'gas required exceeds allowance' error during transaction building?
 - **Answer:** The most common cause of this is not having enough ETH on the address used by the bot to execute transactions. 
 
+### **7. Addressing 'Reverted SafeMath: subtraction overflow' Error in the Fastlane Bot**
+- **Question:** I see the error: "Reverted SafeMath: subtraction overflow" when my bot tries to build a transaction, what's wrong?
+- **Answer:** This typically happens due to the a tax token being included in the arbitrage route. Tax tokens are not supported by the bot and transactions that include them will typically fail.  
 
 
