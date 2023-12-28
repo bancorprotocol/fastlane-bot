@@ -2,9 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.3...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.4...HEAD)
 
 - minor spelling issue txhelpers \(coinbase\_bse\) [\#269](https://github.com/bancorprotocol/fastlane-bot/issues/269)
+
+Merged pull requests
+
+- Create pull\_request\_template.md [\#272](https://github.com/bancorprotocol/fastlane-bot/pull/272) ([zavelevsky](https://github.com/zavelevsky))
+- Update issue templates [\#271](https://github.com/bancorprotocol/fastlane-bot/pull/271) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.0.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.4) (2023-12-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.3...v3.0.4)
+
 - Bug in POL Mode & Carbon Curve creation [\#266](https://github.com/bancorprotocol/fastlane-bot/issues/266)
 - Update txhelpers.py [\#270](https://github.com/bancorprotocol/fastlane-bot/pull/270) ([NIXBNT](https://github.com/NIXBNT))
 
