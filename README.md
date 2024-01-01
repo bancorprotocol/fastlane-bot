@@ -6,9 +6,25 @@ The Fastlane Bot requires an Ethereum private key. **Your funds are AT RISK when
 
 ## Overview
 
-The Fastlane Arbitrage Bot identifies and executes arbitrage opportunities between Carbon, Bancor, and the broader market, enhancing market efficiency by aligning Carbon and Bancor with market trends.
+Arbitrage opportunities occur when token prices between DEXes are imbalanced, and can be closed by making specific trades on the imbalanced DEXes.
+
+The Fastlane is an open-source system that anyone can run, consisting of the Fastlane smart contract, and the Fastlane Arbitrage Bot.
+
+The Fastlane Arbitrage Bot identifies arbitrage opportunities and closes them by executing trades using the Fastlane Smart Contract. The bot can search for opportunities between Carbon and Carbon forks, Bancor, and other DEXes. This enhances market efficiency by aligning Carbon, Carbon forks, and Bancor with market trends.
+
+The system works by executing atomic transactions that take flashloans to fulfill the capital requirements of trades, meaning only gas costs are required to submit transactions.
 
 Permanent URL for this repository: [github.com/bancorprotocol/fastlane-bot][repo]
+
+For frequently asked questions, see [FAQ](FAQ.md).
+
+### Profit Split
+Any profit from an arbitrage trade is split between the contract caller & the Protocol. 
+
+### Competition
+
+The Fastlane Arbitrage Bot is competitive in nature. Bot operators compete to close arbitrage opportunities. There are many ways to improve a bot's competitiveness; the following document contains a short list of ideas on how to make a bot more competitive: [How to make your bot competitive](How_to_make_your_bot_competitive.md).
+
 
 [repo]:https://github.com/bancorprotocol/fastlane-bot
 
@@ -110,6 +126,8 @@ python main.py
 You can configure the Fastlane Arbitrage Bot using the options in the `@click.option` section of `main.py`. An overview of options is provided below:
 
 - **cache_latest_only** (bool): Whether to cache only the latest events.
+- **backdate_pools** (bool): If True, the bot will collect pool data from pools that were not traded on within the number of blocks specified in alchemy_max_block_fetch. This is useful to search pools that are traded infrequently.
+- **static_pool_data_filename** (str): The name of the static pool data file. **Recommended not to modify.**
 - **arb_mode** (str): Specifies the arbitrage mode. 
   - **Types of arbitrage**: 
     - **Pairwise**: This includes arbitrage trades between two liquidity pools that contain the same tokens. For example: USDC > LINK, LINK > USDC
@@ -120,17 +138,37 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
       - **multi** Pairwise arbitrage between **multiple** Carbon curves and one other exchange curve.
       - **triangle**: Triangular arbitrage between one Carbon curve and two other exchange curves.
       - **multi_triangle**: Triangular arbitrage between **multiple** Carbon curves and two other exchange curves.
-      - **bancor_v3**: Triangular arbitrage between two Bancor v3 pools and one other exchange curve.
       - **b3_two_hop**: Triangular arbitrage - the same as bancor_v3 mode but more gas-efficient.
       - **multi_pairwise_pol**: Pairwise multi-mode that always routes through the Bancor protocol-owned liquidity contract.
       - **multi_pairwise_bal**: Pairwise multi-mode that always routes through Balancer.
       - **multi_pairwise_all**: **(Default)** Pairwise multi-mode that searches all available exchanges for pairwise arbitrage.
-- **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify tokens as a comma-separated string in TKN-ADDR format (e.g., BNT-FF1C, WETH-6Cc2).
-- **exchanges** (str): Comma-separated string of exchanges to include.
-- **polling_interval** (int): Bot's polling interval for new events.
+- **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify token addresses as a comma-separated string (e.g., 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C, 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2).
+- **n_jobs** (int): The number of parallel jobs to run. The default, -1, will use all available cores for the process.
+- **exchanges** (str): Comma-separated string of exchanges to include. To include all known forks for Uniswap V2/3, use "uniswap_v2_forks" & "uniswap_v3_forks".
+- **polling_interval** (int): Bot's polling interval for new events in seconds. 
 - **alchemy_max_block_fetch** (int): Maximum number of blocks to fetch in a single request.
 - **reorg_delay** (int): Number of blocks to wait to avoid reorgs.
+- **logging_path** (str): The path for log files. **Recommended not to modify.**
 - **loglevel** (str): Logging level, which can be DEBUG, INFO, WARNING, or ERROR.
+- **use_cached_events** (bool): **Testing option.**  This option runs the bot using historical cached events.
+- **run_data_validator** (bool): This option validates that pool data hasn't changed from the time an opportunity was found. This can be useful if the bot has slow cycles, for example if an arb mode takes a long time to run. 
+- **randomizer** (int): The bot will randomly select an opportunity from the number of opportunities specified in this configuration after sorting by profit. For example the default setting 3 means the bot will randomly pick one of the 3 most profitable opportunities it found in the randomizer.
+- **limit_bancor3_flashloan_tokens** (bool): If True, this limits the flashloan tokens to tokens supported by Bancor V3.
+- **default_min_profit_gas_token** (float): The minimum amount of expected profit, denominated in the gas token, to consider executing an arbitrage trade.
+- **timeout** (int): **Testing option.** This will stop the bot after the specified amount of time has passed.
+- **target_tokens** (str): This option filters pools to only include the tokens specified in this comma-separated list of token addresses. This can be used to significantly limit the scope of the bot.
+- **replay_from_block** (int): **Testing option.**  The bot will search the specified historical block & attempt to submit a transaction on Tenderly. This requires a Tenderly account to use. 
+- **tenderly_fork_id** (str): **Testing option.** Specified exchanges will be searched on Tenderly.
+- **tenderly_event_exchanges** (str): **Testing option.**  Exchanges for which to get events on Tenderly.
+- **increment_time** (int): **Testing option.** This option increments the specified amount of time on Tenderly if a value for tenderly_fork_id is provided.
+- **increment_blocks** (int): **Testing option.** This option increments the specified number of blocks on Tenderly if a value for tenderly_fork_id is provided.
+- **blockchain** (str): The blockchain on which to search for arbitrage. Currently only Ethereum & Base are supported.
+- **pool_data_update_frequency** (int): The frequency in bot cycles in which the bot will search for new pools. **Recommended not to modify.**
+- **use_specific_exchange_for_target_tokens** (str): This filter will limit pool data to include only tokens contained by the specified exchange. For example "carbon_v1" would limit the scope of pool data to only include pools that have tokens currently traded on Carbon.
+- **prefix_path** (str): An optional file path modification, intended for cloud deployment requirements. **Recommended not to modify.**
+- **version_check_frequency** (int): The frequency (in bot cycles) the bot will check the version of the Fastlane smart contract. Set to -1 to disable. 
+- **self_fund** (bool): **USE AT YOUR OWN RISK** If set to True, the bot will use funds in the user's wallet to execute trades. Note that upon start, the bot will attempt to set an approval for all tokens specified in the flashloan_tokens field. 
+
 
 Specify options in the command line. For example:
 
@@ -154,3 +192,25 @@ We follow [semantic versioning][semver] (`major.minor.patch`), updating the majo
 
 - **v2.0** - Complete rewrite to include Carbon along with Bancor.
 - **v1.0** - Initial bot version for Bancor protocol pools only.
+
+### Example Start Configurations
+The following examples are command-line inputs that start the bot with different configurations:
+
+#### Bancor V3-focused arbitrage
+
+```commandline
+python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --limit_bancor3_flashloan_tokens=True --randomizer=2 --default_min_profit_gas_token=0.01 --exchanges=carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA"
+```
+
+#### Carbon-focused pairwise arbitrage
+```commandline
+python main.py --arb_mode=multi --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+```
+#### Unfocused pairwise arbitrage
+```commandline
+python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+```
+#### Triangular Carbon-focused arbitrage
+```commandline
+python main.py --arb_mode=multi_triangle --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+```
