@@ -16,6 +16,8 @@ The system works by executing atomic transactions that take flashloans to fulfil
 
 Permanent URL for this repository: [github.com/bancorprotocol/fastlane-bot][repo]
 
+For frequently asked questions, see [FAQ](FAQ.md).
+
 ### Profit Split
 Any profit from an arbitrage trade is split between the contract caller & the Protocol. 
 
