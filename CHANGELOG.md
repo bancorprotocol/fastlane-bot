@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.4...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.5...HEAD)
+
+Merged pull requests
+
+- update default click params [\#278](https://github.com/bancorprotocol/fastlane-bot/pull/278) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.5) (2023-12-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.4...v3.0.5)
 
 - minor spelling issue txhelpers \(coinbase\_bse\) [\#269](https://github.com/bancorprotocol/fastlane-bot/issues/269)
 
