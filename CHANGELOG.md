@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.5...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.6...HEAD)
+
+Merged pull requests
+
+- Create FAQ.md [\#273](https://github.com/bancorprotocol/fastlane-bot/pull/273) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.0.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.6) (2023-12-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.5...v3.0.6)
 
 Merged pull requests
 
