@@ -53,13 +53,10 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     for row in df.iterrows():
         exchange_name = row[1]["exchange_name"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        address = row[1]["address"]
-        if fork in fork_name and contract_name in [
-            S.ROUTER_ADDRESS,
-            S.CARBON_CONTROLLER,
-        ]:
-            fork_map[exchange_name] = address
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_name:
+            fork_map[exchange_name] = router_address
     return fork_map
 
 
@@ -76,13 +73,11 @@ def get_factory_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
     for row in df.iterrows():
         exchange_name = row[1]["exchange_name"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        address = row[1]["address"]
-        if fork in fork_names and contract_name in [
-            S.FACTORY_ADDRESS,
-        ]:
-            fork_map[address] = exchange_name
-            fork_map[exchange_name] = address
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_names:
+            fork_map[factory_address] = exchange_name
+            fork_map[exchange_name] = factory_address
     return fork_map
 
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
@@ -98,16 +93,17 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     for row in df.iterrows():
         exchange_name = row[1]["exchange_name"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
         fee = row[1]["fee"]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
+        if fork in fork_name:
             fork_map[exchange_name] = fee
     return fork_map
 
 
 def get_row_from_address(address: str, df: pd.DataFrame) -> pd.DataFrame:
-    if df["address"].isin([address]).any():
-        return df[df["address"] == address]
+    if df["router_address"].isin([address]).any():
+        return df[df["router_address"] == address]
+    elif df["factory_address"].isin([address]).any():
+        return df[df["factory_address"] == address]
     return None
 
 
@@ -121,14 +117,12 @@ def get_exchange_from_address(address: str, df: pd.DataFrame) -> str or None:
 def get_items_from_exchange(
     item_names: List[str],
     exchange_name: str,
-    contract_name: str,
     fork: str,
     df: pd.DataFrame,
 ) -> List[str or float]:
     df_ex = df[
         (df["exchange_name"] == exchange_name)
         & (df["fork"] == fork)
-        & (df["contract_name"] == contract_name)
     ]
     if len(df_ex.index) == 0:
         return None
@@ -142,10 +136,9 @@ def get_router_address_for_exchange(
     exchange_name: str, fork: str, df: pd.DataFrame
 ) -> str:
     router_address = get_items_from_exchange(
-        item_names=["address"],
+        item_names=["router_address"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="ROUTER_ADDRESS",
         df=df,
     )
     if router_address is None:
@@ -162,7 +155,6 @@ def get_fee_for_exchange(
         item_names=["fee"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="FACTORY_ADDRESS",
         df=df,
     )
     if exchange_fee is None:
@@ -380,14 +372,20 @@ class ConfigNetwork(ConfigBase):
             self.BANCOR_V3_NAME: 2,
             self.BALANCER_NAME: 7,
             self.CARBON_POL_NAME: 8,
-            self.PLATFORM_ID_WRAP_UNWRAP: 10
+            self.PLATFORM_ID_WRAP_UNWRAP: 10,
+            self.UNISWAP_V2_NAME: 3,
+            self.UNISWAP_V3_NAME: 4,
+            self.SOLIDLY_V2_NAME: 11,
+            self.CARBON_V1_NAME: 6,
         }
-        for ex in self.UNI_V2_FORKS + self.SOLIDLY_V2_FORKS:
+        for ex in self.UNI_V2_FORKS:
             self.EXCHANGE_IDS[ex] = 3
         for ex in self.UNI_V3_FORKS:
             self.EXCHANGE_IDS[ex] = 4
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
+        for ex in self.SOLIDLY_V2_FORKS:
+            self.EXCHANGE_IDS[ex] = 11
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 

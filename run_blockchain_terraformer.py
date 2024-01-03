@@ -74,6 +74,7 @@ VELOCIMETER_V1_NAME = "velocimeter_v1"
 CARBON_POL_NAME = "bancor_pol"
 SHIBA_V2_NAME = "shiba_v2"
 SCALE_V2 = "scale_v2"
+SOLIDLY_V2_NAME = "solidly_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V1_NAME, SCALE_V2]
 
@@ -89,6 +90,7 @@ EXCHANGE_IDS = {
     CARBON_POL_NAME: 8,
     PANCAKESWAP_V2_NAME: 3,
     PANCAKESWAP_V3_NAME: 4,
+    SOLIDLY_V2_NAME: 11,
 }
 
 dataframe_key = [
@@ -393,7 +395,13 @@ def organize_pool_details_uni_v3(
     token_info = {}
     pair = ""
     tick_spacing = pool_data["args"]["tickSpacing"]
-    tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
+    if "tkn0_address" in pool_data["args"]:
+        tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
+    elif "token0" in pool_data["args"]:
+        tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
+    else:
+        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
+        assert False
     if len(tokens) > 2:
         return None
     token_info, pair, skip_pool = process_token_details(
@@ -421,7 +429,7 @@ def organize_pool_details_uni_v3(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get(exchange),
+        "exchange_id": EXCHANGE_IDS.get("uniswap_v3"),
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -595,7 +603,13 @@ def organize_pool_details_uni_v2(
     if default_fee == "TBD":
         return None
     default_fee = float(default_fee)
-    tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
+    if "tkn0_address" in pool_data["args"]:
+        tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
+    elif "token0" in pool_data["args"]:
+        tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
+    else:
+        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
+        assert False
     if len(tokens) > 2:
         return None
     token_info, pair, skip_pool = process_token_details(
@@ -620,7 +634,7 @@ def organize_pool_details_uni_v2(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get(exchange),
+        "exchange_id": EXCHANGE_IDS.get("uniswap_v2"),
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -664,17 +678,21 @@ def organize_pool_details_solidly_v2(
     token_info = {}
     pair = ""
 
-    is_stable = stable_pool
+    is_stable = True if "stable" in stable_pool else False
 
     if "velocimeter" in exchange:
         default_fee = factory_contract.caller.getFee(pool_address)
         default_fee = float(default_fee)
+        if default_fee <= 1000:
+            default_fee = default_fee / 10000
+        else:
+            default_fee = default_fee / 10 ** 18
         default_fee = default_fee / 10 ** 18
     elif "scale" in exchange:
         default_fee = factory_contract.caller.getRealFee(pool_address)
         default_fee = float(default_fee)
         default_fee = default_fee / 10 ** 18
-    elif "aerodrome" in exchange:
+    else:
         default_fee = factory_contract.caller.getFee(pool_address, is_stable)
         default_fee = float(default_fee)
         default_fee = default_fee / 10000
@@ -707,7 +725,7 @@ def organize_pool_details_solidly_v2(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get(exchange),
+        "exchange_id": EXCHANGE_IDS.get("solidly_v2"),
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -970,26 +988,15 @@ def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.Da
 
 
 def get_items_from_exchange(
-        item_names: List[str],
-        exchange_name: str,
-        contract_name: str,
-        fork: str,
-        df: pd.DataFrame,
+    item_names: List[str],
+    exchange_name: str,
+    fork: str,
+    df: pd.DataFrame,
 ) -> List[str or float]:
-    """
-    :param item_names: the list of items to extract
-    :param exchange_name: the exchange name from which to get itmes
-    :param contract_name: the name of relevant contract
-    :param fork: the fork name
-    :param df: the dataframe
-
-    returns: list containing the items
-    """
     df_ex = df[
         (df["exchange_name"] == exchange_name)
         & (df["fork"] == fork)
-        & (df["contract_name"] == contract_name)
-        ]
+    ]
     if len(df_ex.index) == 0:
         return None
     items_to_return = []
@@ -1200,29 +1207,39 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         exchange_name = row[1]["exchange_name"]
         chain = row[1]["chain"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        address = row[1]["address"]
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
         fee = row[1]["fee"]
 
         if fresh_data and not start_block:
             from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
         if start_block is None:
             from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
-        if address is None or type(address) != str:
+        if factory_address is None or type(factory_address) != str:
             print(
                 f"Terraformer: No factory contract address for exchange: {exchange_name}"
             )
             continue
-        elif address == "TBD":
+        elif factory_address == "TBD":
             continue
+        print(f"********************** Terraforming **********************\nStarting exchange: {exchange_name} from block {from_block}")
+
         if fork in "uniswap_v2":
             if fee == "TBD":
                 continue
             if fork in SOLIDLY_FORKS:
                 continue
+
+            if exchange_name in "alienbase_v2":
+                factory_abi = ALIENBASE_V2_FACTORY_ABI
+            elif exchange_name in ["pancakeswap_v2", "alienbase_v2", "baseswap_v2"]:
+                factory_abi = PANCAKESWAP_V2_FACTORY_ABI
+            else:
+                factory_abi = UNISWAP_V2_FACTORY_ABI
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
+
             factory_contract = web3.eth.contract(
-                address=address, abi=UNISWAP_V2_FACTORY_ABI
+                address=factory_address, abi=factory_abi
             )
             u_df, m_df = get_uni_v2_pools(
                 token_manager=token_manager,
@@ -1239,8 +1256,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             if fee == "TBD":
                 continue
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
+            factory_abi = UNISWAP_V3_FACTORY_ABI if exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_FACTORY_ABI
             factory_contract = web3.eth.contract(
-                address=address, abi=UNISWAP_V3_FACTORY_ABI
+                address=factory_address, abi=factory_abi
             )
             u_df, m_df = get_uni_v3_pools(
                 token_manager=token_manager,
@@ -1262,7 +1280,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 # Aerodrome ABI
                 factory_abi = SOLIDLY_V2_FACTORY_ABI
             factory_contract = web3.eth.contract(
-                address=address, abi=factory_abi
+                address=factory_address, abi=factory_abi
             )
 
             u_df, m_df = get_solidly_v2_pools(

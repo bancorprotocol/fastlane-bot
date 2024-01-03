@@ -108,9 +108,9 @@ class UniswapV3Pool(Pool):
         """
         See base class.
         """
-        slot0 = await contract.caller.slot0()
         fee = await contract.caller.fee()
         factory_address = await contract.caller.factory()
+        slot0 = await contract.caller.slot0()
 
         params = {
             "tick": slot0[1],

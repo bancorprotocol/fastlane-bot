@@ -168,8 +168,10 @@ class TradeInstruction:
         """
         if self._exchange_name in self.ConfigObj.EXCHANGE_IDS:
             return self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
-        elif self._exchange_name in self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.SOLIDLY_V2_FORKS:
+        elif self._exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V2_NAME]
+        elif self._exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.SOLIDLY_V2_NAME]
         elif self._exchange_name in self.ConfigObj.UNI_V3_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V3_NAME]
 
