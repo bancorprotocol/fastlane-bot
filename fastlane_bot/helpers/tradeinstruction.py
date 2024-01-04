@@ -162,6 +162,25 @@ class TradeInstruction:
             self._exchange_name = self.exchange_override
         self._exchange_id = self.get_platform_id()
 
+    def get_custom_int(self, pool_info) -> int:
+        """
+        Gets the custom int field for the pool
+
+        Uni V3 & forks: the fee
+        Balancer: the pool ID
+        Solidly V2 & forks: 0 for volatile, 1 for stable
+        """
+        custom_int = 0
+        if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
+            custom_int = int(pool_info.fee)
+        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            custom_int = 0 if not pool_info.is_stable else 1
+        elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
+            custom_int = pool_info.anchor
+
+        return custom_int
+
+
     def get_platform_id(self):
         """
         Gets the platform id. For Uni V2 & V3 forks, this is the Uniswap V2/V3 platform id.
