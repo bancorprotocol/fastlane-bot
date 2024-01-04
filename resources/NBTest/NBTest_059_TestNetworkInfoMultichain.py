@@ -14,6 +14,7 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -47,6 +48,7 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Multichain Network Configuration Test [NBTest059]
 
@@ -75,19 +77,22 @@ assert type(fork_map['uniswap_v3']) == str
 
 addr_row = get_row_from_address(address="0xBA12222222228d8Ba445958a75a0704d566BF2C8", df=exchange_df)
 assert type(addr_row) == pd.DataFrame
-assert type(addr_row['address'].values[0]) == str
+assert type(addr_row['factory_address'].values[0]) == str
 
 exchange = get_exchange_from_address(address="0xBA12222222228d8Ba445958a75a0704d566BF2C8", df=exchange_df)
 assert type(exchange) == str
 
-items_to_get = ["address", "exchange_name"]
-get_items_test_1 = (get_items_from_exchange(item_names=items_to_get, exchange_name="aerodrome_v2", fork="solidly_v2", contract_name="ROUTER_ADDRESS", df=exchange_df))
+items_to_get = ["router_address", "exchange_name"]
+get_items_test_1 = (get_items_from_exchange(item_names=items_to_get, exchange_name="aerodrome_v2", fork="solidly_v2", df=exchange_df))
 assert len(items_to_get) == len(get_items_test_1)
 
-items_to_get_2 = ["address"]
-get_items_test_2 = (get_items_from_exchange(item_names=["address"], exchange_name="aerodrome_v2", fork="solidly_v2", contract_name="ROUTER_ADDRESS", df=exchange_df))
+items_to_get_2 = ["router_address"]
+get_items_test_2 = (get_items_from_exchange(item_names=["router_address"], exchange_name="aerodrome_v2", fork="solidly_v2", df=exchange_df))
 assert len(items_to_get_2) == len(get_items_test_2)
 assert type(get_items_test_2[0]) == str
 
 get_router_for_ex_test = get_router_address_for_exchange(exchange_name="aerodrome_v2", fork="solidly_v2", df=exchange_df)
 assert type(get_router_for_ex_test) == str
+# -
+
+

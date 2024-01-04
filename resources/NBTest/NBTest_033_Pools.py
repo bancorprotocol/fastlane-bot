@@ -20,7 +20,7 @@ import pytest
 
 from fastlane_bot import Bot
 from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
-    BancorV2Pool, BancorPolPool, PancakeswapV2Pool, PancakeswapV3Pool
+    BancorV2Pool, BancorPolPool, SolidlyV2Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -31,8 +31,8 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorPolPool))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PancakeswapV2Pool))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PancakeswapV3Pool))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SolidlyV2Pool))
+
 
 from fastlane_bot.testing import *
 
@@ -51,6 +51,12 @@ uniswap_v2_pool = UniswapV2Pool()
 uniswap_v2_pool.update_from_event(setup_data['uniswap_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'sushiswap_v2', 'reserve0': setup_data['uniswap_v2_event']['args']['reserve0'], 'reserve1': setup_data['uniswap_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (uniswap_v2_pool.state['tkn0_balance'] == setup_data['uniswap_v2_event']['args']['reserve0'])
 
+# ## test_solidly_v2_pool
+
+solidly_v2_pool = SolidlyV2Pool()
+solidly_v2_pool.update_from_event(setup_data['solidly_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'velocimeter_v2', 'reserve0': setup_data['solidly_v2_event']['args']['reserve0'], 'reserve1': setup_data['solidly_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
+assert (solidly_v2_pool.state['tkn0_balance'] == setup_data['solidly_v2_event']['args']['reserve0'])
+
 # ## test_bancor_v2_pool
 
 bancor_v2_pool = BancorV2Pool()
@@ -63,7 +69,7 @@ assert (1404376232459809237924 == setup_data['bancor_v2_event']['args']['_rateD'
 
 # ## test_pancakeswap_v2_pool
 
-pancakeswap_v2_pool = PancakeswapV2Pool()
+pancakeswap_v2_pool = UniswapV2Pool()
 pancakeswap_v2_pool.update_from_event(setup_data['pancakeswap_v2_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'pancakeswap_v2', 'reserve0': setup_data['pancakeswap_v2_event']['args']['reserve0'], 'reserve1': setup_data['pancakeswap_v2_event']['args']['reserve1'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (pancakeswap_v2_pool.state['tkn0_balance'] == setup_data['pancakeswap_v2_event']['args']['reserve0'])
 
@@ -76,7 +82,7 @@ assert (uniswap_v3_pool.state['sqrt_price_q96'] == setup_data['uniswap_v3_event'
 
 # ## test_pancakeswap_v3_pool
 
-pancakeswap_v3_pool = PancakeswapV3Pool()
+pancakeswap_v3_pool = UniswapV3Pool()
 pancakeswap_v3_pool.update_from_event(setup_data['pancakeswap_v3_event'], {'cid': '0x', 'fee': '0.000', 'fee_float': 0.0, 'exchange_name': 'pancakeswap_v3', 'liquidity': setup_data['pancakeswap_v3_event']['args']['liquidity'], 'sqrtPriceX96': setup_data['pancakeswap_v3_event']['args']['sqrtPriceX96'], 'tick': setup_data['pancakeswap_v3_event']['args']['tick'], 'tkn0_symbol': 'tkn0', 'tkn1_symbol': 'tkn1'})
 assert (pancakeswap_v3_pool.state['liquidity'] == setup_data['pancakeswap_v3_event']['args']['liquidity'])
 assert (pancakeswap_v3_pool.state['sqrt_price_q96'] == setup_data['pancakeswap_v3_event']['args']['sqrtPriceX96'])

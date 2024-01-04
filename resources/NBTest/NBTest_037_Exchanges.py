@@ -19,10 +19,10 @@ import json
 from fastlane_bot import Bot
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
     BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_POOL_ABI
 
 from unittest.mock import Mock
 import nest_asyncio
@@ -40,7 +40,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Balancer))
-
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SolidlyV2))
 
 from fastlane_bot.testing import *
 
@@ -78,6 +78,42 @@ assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
 #assert (balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
 #assert (balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
 
+# ## test_solidly_v2_exchange
+
+# +
+
+
+solidly_v2_exchange = SolidlyV2(exchange_name="solidly_v2", fee="0.003", router_address="jeffs_router")
+
+@pytest.mark.asyncio
+async def test_uniswap_v2_exchange():
+    assert (solidly_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
+    #assert (await solidly_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await solidly_v2_exchange.get_fee('', mocked_contract)}"
+    assert (await solidly_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+    assert (solidly_v2_exchange.router_address == "jeffs_router")
+
+# Run the test in an event loop
+asyncio.run(test_uniswap_v2_exchange())
+# -
+
+# ## test_solidly_v2_exchange_fork
+
+# +
+velocimeter_v2_exchange = SolidlyV2(exchange_name="velocimeter_v2", fee="0.0025", router_address="jjs_router")
+
+@pytest.mark.asyncio
+async def test_uniswap_v2_exchange():
+    assert (velocimeter_v2_exchange.exchange_name in "velocimeter_v2"), f"Wrong exchange name. Expected velocimeter_v2, got {velocimeter_v2_exchange.exchange_name}"
+    assert (velocimeter_v2_exchange.base_exchange_name in "solidly_v2"), f"Wrong base exchange name. Expected solidly_v2, got {velocimeter_v2_exchange.base_exchange_name}"    
+    assert (velocimeter_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
+    #assert (await velocimeter_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await velocimeter_v2_exchange.get_fee('', mocked_contract)}"
+    assert (await velocimeter_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+    assert (velocimeter_v2_exchange.router_address == "jjs_router")
+
+# Run the test in an event loop
+asyncio.run(test_uniswap_v2_exchange())
+# -
+
 # ## test_uniswap_v2_exchange
 
 # +
@@ -96,6 +132,26 @@ async def test_uniswap_v2_exchange():
 asyncio.run(test_uniswap_v2_exchange())
 # -
 
+# ## test_uniswap_v2_exchange_fork
+
+# +
+
+
+pancake_v2_exchange = UniswapV2(exchange_name="pancakeswap_v2",fee="0.0025", router_address="freds_router")
+
+@pytest.mark.asyncio
+async def test_uniswap_v2_exchange_fork():
+    assert (pancake_v2_exchange.exchange_name in "pancakeswap_v2"), f"Wrong exchange name. Expected pancakeswap_v2, got {pancake_v2_exchange.exchange_name}"
+    assert (pancake_v2_exchange.base_exchange_name in "uniswap_v2"), f"Wrong base exchange name. Expected uniswap_v2, got {pancake_v2_exchange.base_exchange_name}"    
+    assert (pancake_v2_exchange.get_abi() == PANCAKESWAP_V2_POOL_ABI)
+    assert (await pancake_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await uniswap_v2_exchange.get_fee('', mocked_contract)}"
+    assert (await pancake_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+    assert (pancake_v2_exchange.router_address == "freds_router")
+
+# Run the test in an event loop
+asyncio.run(test_uniswap_v2_exchange_fork())
+# -
+
 # ## test_uniswap_v3_exchange
 
 # +
@@ -107,6 +163,23 @@ async def test_uniswap_v3_exchange():
     assert (await uniswap_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.functions.fee().call(), (float(await mocked_contract.functions.fee().call()) / 1000000.0)))
     assert (await uniswap_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.functions.token0().call())
     assert (uniswap_v3_exchange.router_address == "bobs_router")
+# Run the test in an event loop
+asyncio.run(test_uniswap_v3_exchange())
+# -
+
+# ## test_uniswap_v3_exchange_fork
+
+# +
+pancake_v3_exchange = UniswapV3(exchange_name="pancakeswap_v3",router_address="bobs_router")
+
+@pytest.mark.asyncio
+async def test_uniswap_v3_exchange():
+    assert (pancake_v3_exchange.exchange_name in "pancakeswap_v3"), f"Wrong exchange name. Expected pancakeswap_v3, got {pancake_v3_exchange.exchange_name}"
+    assert (pancake_v3_exchange.base_exchange_name in "uniswap_v3"), f"Wrong base exchange name. Expected uniswap_v3, got {pancake_v3_exchange.base_exchange_name}"    
+    assert (pancake_v3_exchange.get_abi() == PANCAKESWAP_V3_POOL_ABI)
+    assert (await pancake_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.functions.fee().call(), (float(await mocked_contract.functions.fee().call()) / 1000000.0)))
+    assert (await pancake_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.functions.token0().call())
+    assert (pancake_v3_exchange.router_address == "bobs_router")
 # Run the test in an event loop
 asyncio.run(test_uniswap_v3_exchange())
 # -
