@@ -208,7 +208,6 @@ class QueryInterface:
         exchanges = []
         keys = []
 
-
         for ex in self.cfg.ALL_KNOWN_EXCHANGES:
             if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + ["bancor_v2", "bancor_v3"]:
                 exchanges.append(ex)
@@ -218,10 +217,10 @@ class QueryInterface:
                 keys.append(["liquidity"])
             elif ex in self.cfg.CARBON_V1_FORKS:
                 exchanges.append(ex)
-                keys.append(["y_0"])
+                keys.append(["y_0", "y_1"])
             elif ex in "bancor_pol":
                 exchanges.append(ex)
-                keys.append(["y_0", "y_1"])
+                keys.append(["y_0"])
             elif ex in "balancer":
                 exchanges.append(ex)
                 keys.append(["tkn0_balance"])

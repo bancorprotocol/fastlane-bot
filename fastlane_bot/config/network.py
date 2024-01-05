@@ -365,7 +365,7 @@ class ConfigNetwork(ConfigBase):
         self.CHAIN_SPECIFIC_EXCHANGES = [
             ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None
         ]
-        self.ALL_KNOWN_EXCHANGES = self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES
+        self.ALL_KNOWN_EXCHANGES = list(set(self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES))
 
         self.EXCHANGE_IDS = {
             self.BANCOR_V2_NAME: 1,
