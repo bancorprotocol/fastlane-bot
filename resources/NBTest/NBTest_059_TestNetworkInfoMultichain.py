@@ -77,7 +77,7 @@ assert type(fork_map['uniswap_v3']) == str
 
 addr_row = get_row_from_address(address="0xBA12222222228d8Ba445958a75a0704d566BF2C8", df=exchange_df)
 assert type(addr_row) == pd.DataFrame
-assert type(addr_row['factory_address'].values[0]) == str
+assert type(addr_row['router_address'].values[0]) == str
 
 exchange = get_exchange_from_address(address="0xBA12222222228d8Ba445958a75a0704d566BF2C8", df=exchange_df)
 assert type(exchange) == str
