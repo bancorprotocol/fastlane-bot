@@ -95,4 +95,22 @@ get_router_for_ex_test = get_router_address_for_exchange(exchange_name="aerodrom
 assert type(get_router_for_ex_test) == str
 # -
 
+# ## Test_default_fees_uni_v2_forks
+
+# +
+multichain_address_path = os.path.normpath(
+        "fastlane_bot/data/multichain_addresses.csv"
+    )
+chain_addresses_df = pd.read_csv(multichain_address_path)
+
+for idx, row in chain_addresses_df.iterrows():
+    exchange_name = row["exchange_name"]
+    fork = row["fork"]
+    fee = row["fee"]
+    if exchange_name in ["uniswap_v2", "sushiswap_v2"]:
+        assert float(fee) == 0.003, f"[NBTest_059_TestNetworkInfoMultichain] Wrong default set for {exchange_name}. Expected 0.003, found {fee}"
+    elif exchange_name in ["pancakeswap_v2"]:
+        assert float(fee) == 0.0025, f"[NBTest_059_TestNetworkInfoMultichain] Wrong default set for {exchange_name}. Expected 0.0025, found {fee}"    
+# -
+
 
