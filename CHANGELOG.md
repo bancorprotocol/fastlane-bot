@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.6...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.7...HEAD)
+
+- Incorrect fee for sushiswap v2 ethereum in multichain\_addresses.csv [\#283](https://github.com/bancorprotocol/fastlane-bot/issues/283)
+- 283 incorrect fee for sushiswap v2 ethereum in multichain addressescsv [\#284](https://github.com/bancorprotocol/fastlane-bot/pull/284) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.7) (2024-01-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.6...v3.0.7)
 
 Merged pull requests
 
