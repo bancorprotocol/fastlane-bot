@@ -14,6 +14,7 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -47,6 +48,7 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Multichain Network Configuration Test [NBTest059]
 
@@ -91,3 +93,24 @@ assert type(get_items_test_2[0]) == str
 
 get_router_for_ex_test = get_router_address_for_exchange(exchange_name="aerodrome_v2", fork="solidly_v2", df=exchange_df)
 assert type(get_router_for_ex_test) == str
+# -
+
+# ## Test_default_fees_uni_v2_forks
+
+# +
+multichain_address_path = os.path.normpath(
+        "fastlane_bot/data/multichain_addresses.csv"
+    )
+chain_addresses_df = pd.read_csv(multichain_address_path)
+
+for idx, row in chain_addresses_df.iterrows():
+    exchange_name = row["exchange_name"]
+    fork = row["fork"]
+    fee = row["fee"]
+    if exchange_name in ["uniswap_v2", "sushiswap_v2"]:
+        assert float(fee) == 0.003, f"[NBTest_059_TestNetworkInfoMultichain] Wrong default set for {exchange_name}. Expected 0.003, found {fee}"
+    elif exchange_name in ["pancakeswap_v2"]:
+        assert float(fee) == 0.0025, f"[NBTest_059_TestNetworkInfoMultichain] Wrong default set for {exchange_name}. Expected 0.0025, found {fee}"    
+# -
+
+
