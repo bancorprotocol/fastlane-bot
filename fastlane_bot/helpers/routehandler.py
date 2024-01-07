@@ -1514,6 +1514,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         elif curve.exchange_name == self.ConfigObj.BALANCER_NAME:
             amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_address, tkn_out=trade.tknout_address, amount_in=amount_in)
 
+        elif curve.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS and curve.pool_type in "stable":
+            raise ExchangeNotSupportedError(f"[routerhandler.py _solve_trade_output] Solidly V2 stable pools are not yet supported")
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
@@ -1759,4 +1761,7 @@ def powDown(a: Decimal, b: Decimal) -> Decimal:
 class BalancerInputTooLargeError(AssertionError):
     pass
 class BalancerOutputTooLargeError(AssertionError):
+    pass
+
+class ExchangeNotSupportedError(AssertionError):
     pass
