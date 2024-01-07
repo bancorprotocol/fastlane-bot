@@ -305,7 +305,7 @@ class TxSubmitHandler(TxSubmitHandlerBase):
         address = self.ConfigObj.w3.to_checksum_address(
             self.ConfigObj.BINANCE14_WALLET_ADDRESS
         )
-        if not self.ConfigObj.USE_FLASHLOANS:
+        if self.ConfigObj.SELF_FUND:
             return self.arb_contract.functions.fundAndArb(
                 route_struct, src_address, src_amount
             ).transact(
