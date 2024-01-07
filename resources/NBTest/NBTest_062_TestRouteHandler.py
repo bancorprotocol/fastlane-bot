@@ -19,8 +19,7 @@
 """
 This module contains the tests for the exchanges classes
 """
-import unittest
-from unittest.mock import Mock, call, MagicMock
+from unittest.mock import Mock
 
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
@@ -33,7 +32,6 @@ from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHand
 from fastlane_bot.helpers.routehandler import ExchangeNotSupportedError
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
-from joblib import Parallel, delayed
 from dataclasses import dataclass, asdict, field
 from fastlane_bot.testing import *
 from fastlane_bot.config.network import *
@@ -54,11 +52,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 # -
 
-#
-
-# +
 cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
-
+cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
 setup_bot = CarbonBot(ConfigObj=cfg)
 pools = None
 with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
@@ -70,17 +65,16 @@ state = pools
 exchanges = list({ex['exchange_name'] for ex in state})
 db = QueryInterface(state=state, ConfigObj=cfg, exchanges=exchanges)
 
-# -
 
 # # Test_Route_Handler_Solve_Trade_Output [NBTest062]
 
-# ## Test Solve Trade Output
+# ## Test_Solve_Trade_Output
 
 # +
-cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
+
 
 trade_instruction_0 = TradeInstruction(
-    cid='4083388403051261561560495289181218537544',
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
     tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtin=5000,
     tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
@@ -94,7 +88,7 @@ trade_instruction_0 = TradeInstruction(
     exchange_override = 'solidly_v2'
 )
 trade_instruction_1 = TradeInstruction(
-    cid='4083388403051261561560495289181218537544',
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
     tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtin=5000,
     tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
@@ -159,9 +153,6 @@ mock_curve_3.fee_float = Decimal("0.003")
 mock_curve_3.pool_type = "stable"
 
 txroutehandler = TxRouteHandler(trade_instructions=[trade_instruction_0, trade_instruction_1])
-# -
-
-
 
 # +
 # Test that a Solidly V2 Stable pool throws an error since it isn't supported yet
