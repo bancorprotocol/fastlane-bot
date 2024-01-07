@@ -20,9 +20,7 @@
 This module contains the tests for the exchanges classes
 """
 import unittest
-from unittest.mock import Mock, patch, call, MagicMock
-import pytest
-from unittest import TestCase
+from unittest.mock import Mock, call, MagicMock
 
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
@@ -72,6 +70,9 @@ state = pools
 exchanges = list({ex['exchange_name'] for ex in state})
 db = QueryInterface(state=state, ConfigObj=cfg, exchanges=exchanges)
 
+# -
+
+# ## Test Solve Trade Output
 
 # +
 cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
@@ -112,14 +113,13 @@ mock_trade_instruction_0.tknin_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C75
 mock_trade_instruction_0.tknout_address = "0x514910771AF9Ca656af840dff83E8264EcF986CA"
 mock_trade_instruction_0._is_carbon = False
 mock_trade_instruction_0.amt_out=Decimal('4.98450E-13')
-mock_trade_instruction_0.quantize = TradeInstruction._quantize
 
-mock_trade_instruction_1 = Mock(TradeInstruction) #TradeInstruction(mocker, ConfigObj=cfg)
-mock_trade_instruction_1.ConfigObj = cfg
-mock_trade_instruction_1.db = db
-mock_trade_instruction_1.tknout_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-mock_trade_instruction_1.tknin_address = "0x514910771AF9Ca656af840dff83E8264EcF986CA"
-mock_trade_instruction_1._is_carbon = False
+# mock_trade_instruction_1 = Mock(TradeInstruction) #TradeInstruction(mocker, ConfigObj=cfg)
+# mock_trade_instruction_1.ConfigObj = cfg
+# mock_trade_instruction_1.db = db
+# mock_trade_instruction_1.tknout_address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+# mock_trade_instruction_1.tknin_address = "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+# mock_trade_instruction_1._is_carbon = False
 
 mock_curve_0 = Mock()
 mock_curve_0.exchange_name = "uniswap_v2"
@@ -156,11 +156,12 @@ mock_curve_3.fee = Decimal("0.003")
 mock_curve_3.fee_float = Decimal("0.003")
 mock_curve_3.pool_type = "stable"
 
-txroutehandler = TxRouteHandler(trade_instructions=[mock_trade_instruction_0, mock_trade_instruction_1])
+txroutehandler = TxRouteHandler(trade_instructions=[trade_instruction_0, trade_instruction_1])
 # -
 
-# ## Test Solve Trade Output
 
+
+# +
 # Test that a Solidly V2 Stable pool throws an error since it isn't supported yet
 assert raises(txroutehandler._solve_trade_output, mock_curve_3, mock_trade_instruction_0, Decimal("0.05")).startswith("[routerhandler.py _solve_trade_output] Solidly V2 stable pools are not yet supported"), f"[NBTest 062 TestRouteHandler] Expected _solve_trade_output to raise an error for a Solidly V2 Stable pool"
 
@@ -169,6 +170,7 @@ solidly_output = txroutehandler._solve_trade_output(curve=mock_curve_0, trade=tr
 uni_v2_output = txroutehandler._solve_trade_output(curve=mock_curve_0, trade=trade_instruction_1, amount_in=Decimal("0.05"))[0]
 assert type(solidly_output) == Decimal, f"[NBTest 062 TestRouteHandler] Expected type of output for Solidly V2 Volatile pool to be of type Decimal, found {type(solidly_output)}"
 assert solidly_output == uni_v2_output, f"[NBTest 062 TestRouteHandler] Expected output for Solidly V2 Volatile pool to the same as Uni V2 pool, found {solidly_output} vs {uni_v2_output}"
+# -
 
 
 
