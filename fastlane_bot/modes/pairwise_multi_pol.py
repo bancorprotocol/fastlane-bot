@@ -28,6 +28,8 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
 
         all_tokens, combos = self.get_combos_pol(self.CCm, self.flashloan_tokens)
+        if self.result == self.AO_TOKENS:
+            return all_tokens, combos
 
         candidates = []
         self.ConfigObj.logger.debug(
@@ -191,7 +193,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
 
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
-        bancor_pol_tkns = [tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]]
+        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]])
 
         combos = [
             (tkn0, tkn1)
