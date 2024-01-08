@@ -181,6 +181,7 @@ assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at l
 
 # ### Test_Single_Arb_Finder_vs_run
 
+# +
 run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
 arb_finder = bot._get_arb_finder("single")
 finder = arb_finder(
@@ -191,21 +192,7 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
-assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
-# ## Test_no_multi_carbon
-
-# +
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
 multi_carbon_count = 0
 
 for arb in r:
@@ -220,6 +207,8 @@ for arb in r:
         multi_carbon_count += 1
 
 assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
+assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 # -
 
 

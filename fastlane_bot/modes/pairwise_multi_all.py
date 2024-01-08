@@ -31,7 +31,8 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             candidates = []
 
         all_tokens, combos = self.get_combos(self.CCm, self.flashloan_tokens)
-
+        if self.result == self.AO_TOKENS:
+            return all_tokens, combos
         #print(f"combos = {combos}")
 
         candidates = []
