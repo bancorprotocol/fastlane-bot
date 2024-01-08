@@ -75,7 +75,6 @@ from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
-from .modes.pairwise_multi_bal import FindArbitrageMultiPairwiseBalancer
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
@@ -427,8 +426,6 @@ class CarbonBot(CarbonBotBase):
             return ArbitrageFinderTriangleBancor3TwoHop
         elif arb_mode in {"multi_pairwise_pol"}:
             return FindArbitrageMultiPairwisePol
-        elif arb_mode in {"multi_pairwise_bal"}:
-            return FindArbitrageMultiPairwiseBalancer
         elif arb_mode in {"multi_pairwise_all"}:
             return FindArbitrageMultiPairwiseAll
 
