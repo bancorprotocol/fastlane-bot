@@ -95,7 +95,6 @@ load_dotenv()
             "multi_triangle",
             "b3_two_hop",
             "multi_pairwise_pol",
-            "multi_pairwise_bal",
             "multi_pairwise_all",
         ]
     ),

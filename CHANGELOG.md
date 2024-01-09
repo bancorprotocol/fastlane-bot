@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.7...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.8...HEAD)
 
 - Incorrect fee for sushiswap v2 ethereum in multichain\_addresses.csv [\#283](https://github.com/bancorprotocol/fastlane-bot/issues/283)
+
+- Add Test Coverage: Arb Modes [\#281](https://github.com/bancorprotocol/fastlane-bot/issues/281)
+- 281 add test coverage arb modes [\#286](https://github.com/bancorprotocol/fastlane-bot/pull/286) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.8) (2024-01-05)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.7...v3.0.8)
+
 - 283 incorrect fee for sushiswap v2 ethereum in multichain addressescsv [\#284](https://github.com/bancorprotocol/fastlane-bot/pull/284) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.0.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.7) (2024-01-01)
