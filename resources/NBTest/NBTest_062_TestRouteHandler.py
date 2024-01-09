@@ -135,4 +135,77 @@ assert type(solidly_output) == Decimal, f"[NBTest 062 TestRouteHandler] Expected
 assert solidly_output == uni_v2_output, f"[NBTest 062 TestRouteHandler] Expected output for Solidly V2 Volatile pool to the same as Uni V2 pool, found {solidly_output} vs {uni_v2_output}"
 # -
 
+# ## Test_Uniswap_V3_Router_Switch
+
+# +
+
+
+trade_instruction_0 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'solidly_v2'
+)
+trade_instruction_1 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'uniswap_v3'
+)
+
+
+txroutehandler = TxRouteHandler(trade_instructions=[trade_instruction_0, trade_instruction_1])
+
+
+custom_data_input = "0x"
+cfg.network.NETWORK = "ethereum"
+
+platform_id_uni_v2 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V2_NAME)
+platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
+
+
+custom_data_not_uni_v3_ethereum = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v2, custom_data=custom_data_input)
+custom_data_uni_v3_ethereum = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v3, custom_data=custom_data_input)
+
+cfg.network.NETWORK = "coinbase_base"
+custom_data_not_uni_v3_base = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v2, custom_data=custom_data_input)
+custom_data_uni_v3_base = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v3, custom_data=custom_data_input)
+
+# Non Uni V3 pool custom data field on Ethereum
+assert custom_data_not_uni_v3_ethereum in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field to not be changed, however {custom_data_not_uni_v3_ethereum} not in {custom_data_input}"
+assert type(custom_data_not_uni_v3_ethereum) == type(custom_data_input), f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field type to equal its original type, however {type(custom_data_not_uni_v3_ethereum)} != {type(custom_data_input)}"
+
+# Uni V3 custom data field on Ethereum
+assert custom_data_uni_v3_ethereum not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to be changed, found {(custom_data_uni_v3_ethereum)} vs {custom_data_input}"
+assert type(custom_data_uni_v3_ethereum)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_ethereum)}"
+assert custom_data_uni_v3_ethereum in "0x0", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x0', found {custom_data_uni_v3_ethereum}"
+
+# Non Uni V3 pool custom data field NOT on Ethereum
+assert custom_data_not_uni_v3_base in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field to not be changed, however {custom_data_not_uni_v3_base} not in {custom_data_input}"
+assert type(custom_data_not_uni_v3_ethereum) == type(custom_data_input), f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field type to equal its original type, however {type(custom_data_not_uni_v3_base)} != {type(custom_data_input)}"
+
+# Uni V3 custom data field NOT on Ethereum
+assert custom_data_uni_v3_base not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to be changed, found {(custom_data_uni_v3_base)} vs {custom_data_input}"
+assert type(custom_data_uni_v3_base)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_base)}"
+assert custom_data_uni_v3_base in "0x1", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x1', found {custom_data_uni_v3_base}"
+# -
+
+
+
 
