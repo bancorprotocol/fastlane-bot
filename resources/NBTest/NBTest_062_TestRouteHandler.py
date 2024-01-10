@@ -230,13 +230,4 @@ assert custom_data_pancake_v3_base in "0x0", f"[NBTest 062 TestRouteHandler] Exp
 
 
 
-# +
-# flag = 1 << 7
-# custom_data = "0x0"
-# assert (custom_data[-1] & flag) == 0
-
-
-# #return custom_data[:-1] + [custom_data[-1] | flag]
-# -
-
 

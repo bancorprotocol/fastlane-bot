@@ -317,6 +317,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             return custom_data
 
+        assert "0x" in custom_data, f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
+
         if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
             custom_data = '0x0'
         else:
