@@ -701,13 +701,14 @@ def run(
             # Update the last block number
             last_block = current_block
 
-            # Write the pool data to disk
-            write_pool_data_to_disk(
-                cache_latest_only=cache_latest_only,
-                logging_path=logging_path,
-                mgr=mgr,
-                current_block=current_block,
-            )
+            if not mgr.read_only:
+                # Write the pool data to disk
+                write_pool_data_to_disk(
+                    cache_latest_only=cache_latest_only,
+                    logging_path=logging_path,
+                    mgr=mgr,
+                    current_block=current_block,
+                )
 
             # Handle/remove duplicates in the pool data
             handle_duplicates(mgr)
@@ -732,7 +733,8 @@ def run(
                     f"[main] Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
                 )
 
-            handle_tokens_csv(mgr, mgr.prefix_path)
+            if not mgr.read_only:
+                handle_tokens_csv(mgr, mgr.prefix_path)
 
             # Handle subsequent iterations
             handle_subsequent_iterations(
