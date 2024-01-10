@@ -288,7 +288,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         source_token = self.wrapped_gas_token_to_native(source_token)
         source_token = self.ConfigObj.w3.to_checksum_address(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
-        customData = self.handle_uni_v3_router_switch(platform_id=platform_id, custom_data=customData)
+        customData = self.handle_uni_v3_router_switch(platform_id=platform_id, custom_data=customData, exchange_name=exchange_name)
 
         return RouteStruct(
             platformId=platform_id,
