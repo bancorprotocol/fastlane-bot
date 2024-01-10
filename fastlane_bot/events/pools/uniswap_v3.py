@@ -39,8 +39,7 @@ class UniswapV3Pool(Pool):
         event_args = event["args"]
         return (
             "sqrtPriceX96" in event_args
-            and event["address"] in static_pools[f"{cls.exchange_name}_pools"]
-            and "protocolFeesToken0" not in event_args
+            and event["address"] in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
