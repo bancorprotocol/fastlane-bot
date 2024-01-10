@@ -247,6 +247,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         customInt: int = None,
         source_token: str = None,
         source_amount: Decimal = None,
+        exchange_name: str = None,
 
     ) -> RouteStruct:
         """
@@ -274,6 +275,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             The source token of the trade. V2 routes only.
         sourceAmount: float,
             The source token amount for the trade. V2 routes only.
+        exchange_name: str
+            The name of the exchange. This is specifically for toggling router overrides.
+
         Returns
         -------
         RouteStruct
@@ -298,12 +302,13 @@ class TxRouteHandler(TxRouteHandlerBase):
             customData=customData,
         )
 
-    def handle_uni_v3_router_switch(self, platform_id: int, custom_data: bytes):
+    def handle_uni_v3_router_switch(self, platform_id: int, custom_data: bytes, exchange_name: str):
         """
         This function toggles between Uniswap V3 routers used by the Fast Lane contract. This is input in the customData field.
 
         :param platform_id: int
         :param custom_data: bytes
+        :param exchange_name: str
 
         returns:
             custom_data: bytes
@@ -312,7 +317,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             return custom_data
 
-        if self.ConfigObj.network.NETWORK in "ethereum":
+        if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
             custom_data = '0x0'
         else:
             custom_data = '0x1'
@@ -464,6 +469,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 override_min_target_amount=True,
                 source_token=trade_instructions[idx].tknin_address,
                 source_amount=Decimal(str(trade_instructions[idx].amtin_wei)),
+                exchange_name=trade_instructions[idx].exchange_name,
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
