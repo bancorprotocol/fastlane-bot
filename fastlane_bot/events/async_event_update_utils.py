@@ -148,7 +148,7 @@ def get_pool_info(
     tkn1: Dict[str, Any],
     pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
-    fee_raw = eval(pool["fee"])
+    fee_raw = pool["fee"]
     pool_info = {
         "exchange_name": pool["exchange_name"],
         "address": pool["address"],
@@ -184,32 +184,35 @@ def get_pool_info(
 
     return pool_info
 
-def sanitize_token_symbol(token_symbol: str, token_address: str) -> str:
+def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool) -> str:
     """
     This function ensures token symbols are compatible with the bot's data structures.
     If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
 
     :param token_symbol: the token's symbol
     :param token_address: the token's address
+    :param read_only: bool indicating whether the bot is running in read_only mode
 
     returns: str
     """
     sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
     try:
-        token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
-        token_pd.to_csv(sanitization_path)
+        if not read_only:
+            token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
+            token_pd.to_csv(sanitization_path)
         return token_symbol
     except Exception:
         return token_address
 
 
 def add_token_info(
-    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
+    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
 ) -> Dict[str, Any]:
+    print(f"called add_token_info")
     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"])
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"])
+    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"], read_only=read_only)
+    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"], read_only=read_only)
     tkn0["symbol"] = tkn0_symbol
     tkn1["symbol"] = tkn1_symbol
 
@@ -310,30 +313,45 @@ def process_contract_chunks(
     subset: List[str],
     func: Callable,
     df_combined: pd.DataFrame = None,
+    read_only: bool = False,
 ) -> pd.DataFrame:
+    lst = []
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
         df = loop.run_until_complete(func(chunk))
-        df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
+        if not read_only:
+            df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
+        else:
+            lst.append(df)
 
-    # concatenate and deduplicate
     filepaths = glob(f"{dirname}/*.csv")
-    if filepaths:
-        df_orig = df_combined.copy() if df_combined is not None else None
-        df_combined = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
-        df_combined = (
-            pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
-        )
-        df_combined = df_combined.drop_duplicates(subset=subset)
-        df_combined.to_csv(filename, index=False)
 
-    # clear temp dir
-    for filepath in filepaths:
-        try:
-            os.remove(filepath)
-        except Exception as e:
-            cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
+    if not read_only:
+        # concatenate and deduplicate
+
+        if filepaths:
+            df_orig = df_combined.copy() if df_combined is not None else None
+            df_combined = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
+            df_combined = (
+                pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
+            )
+            df_combined = df_combined.drop_duplicates(subset=subset)
+            df_combined.to_csv(filename, index=False)
+            # clear temp dir
+            for filepath in filepaths:
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
+    else:
+        if lst:
+            dfs = pd.concat(lst)
+            dfs = dfs.drop_duplicates(subset=subset)
+            if df_combined is not None:
+                df_combined = pd.concat([df_combined, dfs])
+            else:
+                df_combined = dfs
 
     return df_combined
 
@@ -392,6 +410,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         filename="tokens_and_fee_df.csv",
         subset=["exchange_name", "address", "cid", "tkn0_address", "tkn1_address"],
         func=main_get_tokens_and_fee,
+        read_only=mgr.read_only,
     )
 
     contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
@@ -405,6 +424,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         df_combined=pd.read_csv(
             f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
+        read_only=mgr.read_only,
     )
     tokens_df["symbol"] = (
         tokens_df["symbol"]
@@ -412,9 +432,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
-    tokens_df.to_csv(
-        f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
-    )
+    if not mgr.read_only:
+        tokens_df.to_csv(
+            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
+        )
     tokens_df["address"] = tokens_df["address"].apply(
         lambda x: Web3.to_checksum_address(x)
     )
@@ -440,44 +461,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         ]
     )
 
-    # def correct_tkn(tkn_address, keyname):
-    #     try:
-    #         return tokens_df[tokens_df["address"] == tkn_address][keyname].values[0]
-    #     except IndexError:
-    #         return np.nan
-    #
-    # static_pool_data = new_pool_data_df.copy()
-    # static_pool_data["tkn0_address"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: Web3.to_checksum_address(x)
-    # )
-    # static_pool_data["tkn1_address"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: Web3.to_checksum_address(x)
-    # )
-    # static_pool_data["tkn0_decimals"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "decimals")
-    # )
-    # static_pool_data["tkn1_decimals"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "decimals")
-    # )
-    # static_pool_data["tkn0_key"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "key")
-    # )
-    # static_pool_data["tkn1_key"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "key")
-    # )
-    # static_pool_data["tkn0_symbol"] = static_pool_data["tkn0_address"].apply(
-    #     lambda x: correct_tkn(x, "symbol")
-    # )
-    # static_pool_data["tkn1_symbol"] = static_pool_data["tkn1_address"].apply(
-    #     lambda x: correct_tkn(x, "symbol")
-    # )
-    # static_pool_data["pair_name"] = (
-    #     static_pool_data["tkn0_key"] + "/" + static_pool_data["tkn1_key"]
-    # )
-    #
-    # new_pool_data_df = static_pool_data.copy()
-    # del static_pool_data
-
     new_pool_data_df["descr"] = (
         new_pool_data_df["exchange_name"]
         + " "
@@ -502,9 +485,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
-    # assert len(mgr.pools_to_add_from_contracts) == (
-    #     len(new_pool_data_df) + duplicate_new_pool_ct
-    # )
 
     all_pools_df = (
         pd.DataFrame(mgr.pool_data)
