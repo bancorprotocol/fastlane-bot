@@ -244,7 +244,7 @@ def get_static_data(
     blockchain: str,
     static_pool_data_filename: str,
     read_only: bool = False,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
 
