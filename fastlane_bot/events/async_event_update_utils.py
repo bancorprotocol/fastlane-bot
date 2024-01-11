@@ -325,9 +325,11 @@ def process_contract_chunks(
         else:
             lst.append(df)
 
+    filepaths = glob(f"{dirname}/*.csv")
+
     if not read_only:
         # concatenate and deduplicate
-        filepaths = glob(f"{dirname}/*.csv")
+
         if filepaths:
             df_orig = df_combined.copy() if df_combined is not None else None
             df_combined = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
@@ -336,20 +338,20 @@ def process_contract_chunks(
             )
             df_combined = df_combined.drop_duplicates(subset=subset)
             df_combined.to_csv(filename, index=False)
+            # clear temp dir
+            for filepath in filepaths:
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
     else:
-        dfs = pd.concat(lst)
-        dfs = dfs.drop_duplicates(subset=subset)
-        if df_combined is not None:
-            df_combined = pd.concat([df_combined, dfs])
-        else:
-            df_combined = dfs
-
-    # clear temp dir
-    for filepath in filepaths:
-        try:
-            os.remove(filepath)
-        except Exception as e:
-            cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
+        if lst:
+            dfs = pd.concat(lst)
+            dfs = dfs.drop_duplicates(subset=subset)
+            if df_combined is not None:
+                df_combined = pd.concat([df_combined, dfs])
+            else:
+                df_combined = dfs
 
     return df_combined
 
