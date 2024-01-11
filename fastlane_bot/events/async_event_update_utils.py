@@ -148,7 +148,7 @@ def get_pool_info(
     tkn1: Dict[str, Any],
     pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
-    fee_raw = eval(pool["fee"])
+    fee_raw = pool["fee"]
     pool_info = {
         "exchange_name": pool["exchange_name"],
         "address": pool["address"],
@@ -206,12 +206,13 @@ def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool
 
 
 def add_token_info(
-    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any]
+    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
 ) -> Dict[str, Any]:
+    print(f"called add_token_info")
     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"])
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"])
+    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"], read_only=read_only)
+    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"], read_only=read_only)
     tkn0["symbol"] = tkn0_symbol
     tkn1["symbol"] = tkn1_symbol
 
@@ -407,6 +408,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         filename="tokens_and_fee_df.csv",
         subset=["exchange_name", "address", "cid", "tkn0_address", "tkn1_address"],
         func=main_get_tokens_and_fee,
+        read_only=mgr.read_only,
     )
 
     contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
@@ -420,6 +422,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         df_combined=pd.read_csv(
             f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
+        read_only=mgr.read_only,
     )
     tokens_df["symbol"] = (
         tokens_df["symbol"]
