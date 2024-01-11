@@ -627,7 +627,7 @@ def organize_pool_details_uni_v2(
         "pair_name": pair,
         "exchange_name": exchange,
         "fee": default_fee,
-        "fee_float": default_fee / 1000000,
+        "fee_float": default_fee,
         "address": pool_address,
         "anchor": "",
         "tkn0_address": token_info["tkn0_address"],
