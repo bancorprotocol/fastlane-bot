@@ -328,7 +328,7 @@ class ContractsManager(BaseManager):
                 contract=contract,
                 addr=addr,
                 token_data=token_data,
-                tokens_filepath=tokens_filepath,
+                tokens_filepath=tokens_filepath
             )
         except self.FailedToGetTokenDetailsException as e:
             self.cfg.logger.debug(
@@ -420,14 +420,15 @@ class ContractsManager(BaseManager):
             except FileExistsError:
                 pass
 
-        collision_safety = str(random.randrange(1, 1000))
-        ts = datetime.now().strftime("%d-%H-%M-%S-%f")
-        ts += collision_safety
-        row.to_csv(
-            os.path.normpath(
-                f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"
-            ),
-            index=False,
-        )
+        if not self.read_only:
+            collision_safety = str(random.randrange(1, 1000))
+            ts = datetime.now().strftime("%d-%H-%M-%S-%f")
+            ts += collision_safety
+            row.to_csv(
+                os.path.normpath(
+                    f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail/{ts}.csv"
+                ),
+                index=False,
+            )
 
         return (symbol, decimals)

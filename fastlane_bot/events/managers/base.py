@@ -53,6 +53,8 @@ class BaseManager:
         The tokens mapping.
     SUPPORTED_EXCHANGES : Dict[str, Any]
         The supported exchanges.
+    read_only : bool
+        Whether the bot is running in read only mode.
     """
 
     web3: Web3
@@ -99,6 +101,7 @@ class BaseManager:
     static_pools: Dict[str, List[str]] = field(default_factory=dict)
 
     prefix_path: str = ""
+    read_only: bool = False
 
     def __post_init__(self):
         initialized_exchanges = []

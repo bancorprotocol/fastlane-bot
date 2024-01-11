@@ -26,6 +26,7 @@ from web3.datastructures import AttributeDict
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
+from fastlane_bot.events.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
@@ -242,6 +243,7 @@ def get_static_data(
     exchanges: List[str],
     blockchain: str,
     static_pool_data_filename: str,
+    read_only: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
@@ -256,6 +258,8 @@ def get_static_data(
         The name of the blockchain being used
     static_pool_data_filename : str
         The filename of the static pool data CSV file.
+    read_only : bool, optional
+        Whether to run the bot in read-only mode, by default False
 
     Returns
     -------
@@ -288,9 +292,13 @@ def get_static_data(
     )
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
-    if not os.path.exists(tokens_filepath):
+    if not os.path.exists(tokens_filepath) and not read_only:
         df = pd.DataFrame(columns=["address", "symbol", "decimals"])
         df.to_csv(tokens_filepath)
+    elif not os.path.exists(tokens_filepath) and read_only:
+        raise ReadOnlyException(
+            f"Tokens file {tokens_filepath} does not exist. Please run the bot in non-read-only mode to create it."
+        )
     tokens = read_csv_file(tokens_filepath)
     tokens["address"] = tokens["address"].apply(lambda x: Web3.to_checksum_address(x))
     tokens = tokens.drop_duplicates(subset=["address"])
@@ -1921,18 +1929,22 @@ def handle_static_pools_update(mgr: Any):
             mgr.static_pools[attr_name] = exchange_pools
 
 
-def handle_tokens_csv(mgr, prefix_path):
+def handle_tokens_csv(mgr, prefix_path, read_only: bool = False):
     tokens_filepath = os.path.normpath(
         f"{prefix_path}fastlane_bot/data/blockchain_data/{mgr.cfg.NETWORK}/tokens.csv"
     )
+
     try:
         token_data = pd.read_csv(tokens_filepath)
     except Exception as e:
-        mgr.cfg.logger.info(
-            f"[events.utils.handle_tokens_csv] Error reading token data: {e}... creating new file"
-        )
-        token_data = pd.DataFrame(mgr.tokens)
-        token_data.to_csv(tokens_filepath, index=False)
+        if not read_only:
+            mgr.cfg.logger.info(
+                f"[events.utils.handle_tokens_csv] Error reading token data: {e}... creating new file"
+            )
+            token_data = pd.DataFrame(mgr.tokens)
+            token_data.to_csv(tokens_filepath, index=False)
+        else:
+            raise ReadOnlyException(tokens_filepath) from e
 
     extra_info = glob(
         os.path.normpath(
@@ -1945,19 +1957,22 @@ def handle_tokens_csv(mgr, prefix_path):
         )
         token_data = pd.concat([token_data, extra_info_df], ignore_index=True)
         token_data = token_data.drop_duplicates(subset=["address"])
-        token_data.to_csv(tokens_filepath, index=False)
-        mgr.tokens = token_data.to_dict(orient="records")
 
-        # delete all files in token_detail
-        for f in extra_info:
-            try:
-                os.remove(f)
-            except FileNotFoundError:
-                pass
+        if not read_only:
+            token_data.to_csv(tokens_filepath, index=False)
 
-        mgr.cfg.logger.info(
-            f"[events.utils.handle_tokens_csv] Updated token data with {len(extra_info)} new tokens"
-        )
+            # delete all files in token_detail
+            for f in extra_info:
+                try:
+                    os.remove(f)
+                except FileNotFoundError:
+                    pass
+
+    mgr.tokens = token_data.to_dict(orient="records")
+
+    mgr.cfg.logger.info(
+        f"[events.utils.handle_tokens_csv] Updated token data with {len(extra_info)} new tokens"
+    )
 
 
 def self_funding_warning_sequence(cfg):
