@@ -255,7 +255,7 @@ load_dotenv()
 )
 @click.option(
     "--read_only",
-    default=False,
+    default=True,
     type=bool,
     help="If True, the bot will skip all operations which write to disk. Use this flag if you're running the bot in "
          "an environment with restricted write permissions.",

@@ -420,7 +420,7 @@ class ContractsManager(BaseManager):
             except FileExistsError:
                 pass
 
-        if self.read_only:
+        if not self.read_only:
             collision_safety = str(random.randrange(1, 1000))
             ts = datetime.now().strftime("%d-%H-%M-%S-%f")
             ts += collision_safety
