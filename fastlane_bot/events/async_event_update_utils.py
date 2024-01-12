@@ -387,8 +387,9 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         "y_1",
         "liquidity",
     ]
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
+    if not mgr.read_only:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
     start_time = time.time()
     # deplicate pool data
 
