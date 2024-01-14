@@ -2,9 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.9...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.10...HEAD)
+
+- Hex string without 0x prefix [\#287](https://github.com/bancorprotocol/fastlane-bot/issues/287)
+- Bugfixes for production environment [\#297](https://github.com/bancorprotocol/fastlane-bot/pull/297) ([mikewcasale](https://github.com/mikewcasale))
 
 - Add read-only setting [\#288](https://github.com/bancorprotocol/fastlane-bot/issues/288)
+
+## [v3.0.10](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.10) (2024-01-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.9...v3.0.10)
+
 - Add Test Coverage: Arb Modes [\#281](https://github.com/bancorprotocol/fastlane-bot/issues/281)
 - 288 add read only setting [\#290](https://github.com/bancorprotocol/fastlane-bot/pull/290) ([mikewcasale](https://github.com/mikewcasale))
 
