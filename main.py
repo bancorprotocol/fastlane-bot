@@ -602,251 +602,251 @@ def run(
     total_iteration_time = 0
     while True:
 
-        # try:
+        try:
 
-        # Save initial state of pool data to assert whether it has changed
-        initial_state = mgr.pool_data.copy()
+            # Save initial state of pool data to assert whether it has changed
+            initial_state = mgr.pool_data.copy()
 
-        # ensure 'last_updated_block' is in pool_data for all pools
-        for idx, pool in enumerate(mgr.pool_data):
-            if "last_updated_block" not in pool:
-                # print(f"pool missing 'last_updated_block` {pool}")
-                pool["last_updated_block"] = last_block_queried
-                mgr.pool_data[idx] = pool
-            if not pool["last_updated_block"]:
-                # print(f"pool missing 'last_updated_block` {pool}")
-                pool["last_updated_block"] = last_block_queried
-                mgr.pool_data[idx] = pool
+            # ensure 'last_updated_block' is in pool_data for all pools
+            for idx, pool in enumerate(mgr.pool_data):
+                if "last_updated_block" not in pool:
+                    # print(f"pool missing 'last_updated_block` {pool}")
+                    pool["last_updated_block"] = last_block_queried
+                    mgr.pool_data[idx] = pool
+                if not pool["last_updated_block"]:
+                    # print(f"pool missing 'last_updated_block` {pool}")
+                    pool["last_updated_block"] = last_block_queried
+                    mgr.pool_data[idx] = pool
 
-        # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
-        start_block, replay_from_block = get_start_block(
-            alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
-        )
+            # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
+            start_block, replay_from_block = get_start_block(
+                alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
+            )
 
-        # Get all events from the last block to the current block
-        current_block = get_current_block(
-            last_block, mgr, reorg_delay, replay_from_block, tenderly_fork_id
-        )
+            # Get all events from the last block to the current block
+            current_block = get_current_block(
+                last_block, mgr, reorg_delay, replay_from_block, tenderly_fork_id
+            )
 
-        # Log the current start, end and last block
-        mgr.cfg.logger.info(
-            f"Fetching events from {start_block} to {current_block}... {last_block}"
-        )
+            # Log the current start, end and last block
+            mgr.cfg.logger.info(
+                f"Fetching events from {start_block} to {current_block}... {last_block}"
+            )
 
-        # Set the network connection to Mainnet if replaying from a block
-        mgr = set_network_to_mainnet_if_replay(
-            last_block,
-            loop_idx,
-            mainnet_uri,
-            mgr,
-            replay_from_block,
-            use_cached_events,
-        )
-
-        # Get the events
-        latest_events = (
-            get_cached_events(mgr, logging_path)
-            if use_cached_events
-            else get_latest_events(
-                current_block,
+            # Set the network connection to Mainnet if replaying from a block
+            mgr = set_network_to_mainnet_if_replay(
+                last_block,
+                loop_idx,
+                mainnet_uri,
                 mgr,
-                n_jobs,
-                start_block,
-                cache_latest_only,
-                logging_path,
+                replay_from_block,
+                use_cached_events,
             )
-        )
 
-        iteration_start_time = time.time()
-
-        # Update the pools from the latest events
-        update_pools_from_events(n_jobs, mgr, latest_events)
-
-        # Update new pool events from contracts
-        if len(mgr.pools_to_add_from_contracts) > 0:
-            mgr.cfg.logger.info(
-                f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts,"
-                f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
+            # Get the events
+            latest_events = (
+                get_cached_events(mgr, logging_path)
+                if use_cached_events
+                else get_latest_events(
+                    current_block,
+                    mgr,
+                    n_jobs,
+                    start_block,
+                    cache_latest_only,
+                    logging_path,
+                )
             )
-            async_update_pools_from_contracts(mgr, current_block, logging_path)
-            mgr.pools_to_add_from_contracts = []
+
+            iteration_start_time = time.time()
+
+            # Update the pools from the latest events
+            update_pools_from_events(n_jobs, mgr, latest_events)
+
+            # Update new pool events from contracts
+            if len(mgr.pools_to_add_from_contracts) > 0:
+                mgr.cfg.logger.info(
+                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts,"
+                    f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
+                )
+                async_update_pools_from_contracts(mgr, current_block, logging_path)
+                mgr.pools_to_add_from_contracts = []
 
 
-        # Increment the loop index
-        loop_idx += 1
+            # Increment the loop index
+            loop_idx += 1
 
-        # Set the network connection to Tenderly if replaying from a block
-        mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
-            last_block=last_block,
-            loop_idx=loop_idx,
-            mgr=mgr,
-            replay_from_block=replay_from_block,
-            tenderly_uri=tenderly_uri,
-            use_cached_events=use_cached_events,
-            tenderly_fork_id=tenderly_fork_id,
-        )
-
-        # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
-        async_handle_initial_iteration(
-            backdate_pools=backdate_pools,
-            current_block=current_block,
-            last_block=last_block,
-            mgr=mgr,
-            start_block=start_block,
-        )
-
-        # Run multicall every iteration
-        multicall_every_iteration(current_block=current_block, mgr=mgr)
-
-        # Update the last block number
-        last_block = current_block
-
-        if not mgr.read_only:
-            # Write the pool data to disk
-            write_pool_data_to_disk(
-                cache_latest_only=cache_latest_only,
-                logging_path=logging_path,
+            # Set the network connection to Tenderly if replaying from a block
+            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+                last_block=last_block,
+                loop_idx=loop_idx,
                 mgr=mgr,
+                replay_from_block=replay_from_block,
+                tenderly_uri=tenderly_uri,
+                use_cached_events=use_cached_events,
+                tenderly_fork_id=tenderly_fork_id,
+            )
+
+            # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
+            async_handle_initial_iteration(
+                backdate_pools=backdate_pools,
                 current_block=current_block,
+                last_block=last_block,
+                mgr=mgr,
+                start_block=start_block,
             )
 
-        # Handle/remove duplicates in the pool data
-        handle_duplicates(mgr)
+            # Run multicall every iteration
+            multicall_every_iteration(current_block=current_block, mgr=mgr)
 
-        # Delete the bot (if it exists) to avoid memory leaks
-        del bot
+            # Update the last block number
+            last_block = current_block
 
-        # Re-initialize the bot
-        bot = init_bot(mgr)
+            if not mgr.read_only:
+                # Write the pool data to disk
+                write_pool_data_to_disk(
+                    cache_latest_only=cache_latest_only,
+                    logging_path=logging_path,
+                    mgr=mgr,
+                    current_block=current_block,
+                )
 
-        # Verify that the state has changed
-        verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
+            # Handle/remove duplicates in the pool data
+            handle_duplicates(mgr)
 
-        # Verify that the minimum profit in BNT is respected
-        verify_min_bnt_is_respected(bot=bot, mgr=mgr)
+            # Delete the bot (if it exists) to avoid memory leaks
+            del bot
 
-        if use_specific_exchange_for_target_tokens is not None:
-            target_tokens = bot.get_tokens_in_exchange(
-                exchange_name=use_specific_exchange_for_target_tokens
+            # Re-initialize the bot
+            bot = init_bot(mgr)
+
+            # Verify that the state has changed
+            verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
+
+            # Verify that the minimum profit in BNT is respected
+            verify_min_bnt_is_respected(bot=bot, mgr=mgr)
+
+            if use_specific_exchange_for_target_tokens is not None:
+                target_tokens = bot.get_tokens_in_exchange(
+                    exchange_name=use_specific_exchange_for_target_tokens
+                )
+                mgr.cfg.logger.info(
+                    f"[main] Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
+                )
+
+            if not mgr.read_only:
+                handle_tokens_csv(mgr, mgr.prefix_path)
+
+            # Handle subsequent iterations
+            handle_subsequent_iterations(
+                arb_mode=arb_mode,
+                bot=bot,
+                flashloan_tokens=flashloan_tokens,
+                polling_interval=polling_interval,
+                randomizer=randomizer,
+                run_data_validator=run_data_validator,
+                target_tokens=target_tokens,
+                loop_idx=loop_idx,
+                logging_path=logging_path,
+                replay_from_block=replay_from_block,
+                tenderly_uri=tenderly_uri,
+                mgr=mgr,
+                forked_from_block=forked_from_block,
             )
-            mgr.cfg.logger.info(
-                f"[main] Using only tokens in: {use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
-            )
-
-        if not mgr.read_only:
-            handle_tokens_csv(mgr, mgr.prefix_path)
-
-        # Handle subsequent iterations
-        handle_subsequent_iterations(
-            arb_mode=arb_mode,
-            bot=bot,
-            flashloan_tokens=flashloan_tokens,
-            polling_interval=polling_interval,
-            randomizer=randomizer,
-            run_data_validator=run_data_validator,
-            target_tokens=target_tokens,
-            loop_idx=loop_idx,
-            logging_path=logging_path,
-            replay_from_block=replay_from_block,
-            tenderly_uri=tenderly_uri,
-            mgr=mgr,
-            forked_from_block=forked_from_block,
-        )
 
 
-        # Sleep for the polling interval
-        if not replay_from_block and polling_interval > 0:
-            mgr.cfg.logger.info(
-                f"[main] Sleeping for polling_interval={polling_interval} seconds..."
+            # Sleep for the polling interval
+            if not replay_from_block and polling_interval > 0:
+                mgr.cfg.logger.info(
+                    f"[main] Sleeping for polling_interval={polling_interval} seconds..."
+                )
+                time.sleep(polling_interval)
+
+            # Check if timeout has been hit, and if so, break the loop for tests
+            if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
+                break
+
+            # Delete all Tenderly forks except the most recent one
+            if replay_from_block and not tenderly_fork_id:
+                break
+
+            if loop_idx == 1:
+                mgr.cfg.logger.info(
+                    """
+                  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+                  Finished first iteration of data sync. Now starting main loop arbitrage search.
+    
+                  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                  """
+                )
+
+            if tenderly_fork_id:
+                w3 = Web3(HTTPProvider(tenderly_uri))
+
+                # Increase time and blocks
+                params = [w3.to_hex(increment_time)]  # number of seconds
+                w3.provider.make_request(method="evm_increaseTime", params=params)
+
+                params = [w3.to_hex(increment_blocks)]  # number of blocks
+                w3.provider.make_request(method="evm_increaseBlocks", params=params)
+            if (
+                    loop_idx % version_check_frequency == 0
+                    and version_check_frequency != -1 and blockchain in "ethereum"
+            ):
+                # Check the version of the deployed arbitrage contract
+                mgr.cfg.provider.check_version_of_arb_contract()
+                mgr.cfg.logger.info(
+                    f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
+                )
+            if (
+                    loop_idx % pool_data_update_frequency == 0
+                    and pool_data_update_frequency != -1
+            ):
+
+                mgr.cfg.logger.info(f"[main] Terraforming {blockchain}. Standby for oxygen levels.")
+                sblock = (
+                    (current_block - (current_block - last_block_queried))
+                    if loop_idx > 1
+                    else None
+                )
+                (
+                    uniswap_v2_event_mappings,
+                    uniswap_v3_event_mappings,
+                ) = terraform_blockchain(
+                    network_name=blockchain,
+                    web3=mgr.web3,
+                    start_block=sblock,
+                )
+                mgr.uniswap_v2_event_mappings = dict(
+                    uniswap_v2_event_mappings[["address", "exchange"]].values
+                )
+                mgr.uniswap_v3_event_mappings = dict(
+                    uniswap_v3_event_mappings[["address", "exchange"]].values
+                )
+                last_block_queried = current_block
+
+                total_iteration_time += time.time() - iteration_start_time
+                mgr.cfg.logger.info(
+                    f"\n\n********************************************\n"
+                    f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
+                    f"\n********************************************\n\n"
+                )
+
+        except Exception as e:
+            mgr.cfg.logger.error(f"Error in main loop: {e}")
+            mgr.cfg.logger.error(
+                f"[main] Error in main loop: {e}. Continuing... "
+                f"Please report this error to the Fastlane Telegram channel if it persists."
+                f"{mgr.cfg.logging_header}"
             )
             time.sleep(polling_interval)
-
-        # Check if timeout has been hit, and if so, break the loop for tests
-        if timeout is not None and time.time() - start_timeout > timeout:
-            mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
-            break
-
-        # Delete all Tenderly forks except the most recent one
-        if replay_from_block and not tenderly_fork_id:
-            break
-
-        if loop_idx == 1:
-            mgr.cfg.logger.info(
-                """
-              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-              Finished first iteration of data sync. Now starting main loop arbitrage search.
-
-              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-              """
-            )
-
-        if tenderly_fork_id:
-            w3 = Web3(HTTPProvider(tenderly_uri))
-
-            # Increase time and blocks
-            params = [w3.to_hex(increment_time)]  # number of seconds
-            w3.provider.make_request(method="evm_increaseTime", params=params)
-
-            params = [w3.to_hex(increment_blocks)]  # number of blocks
-            w3.provider.make_request(method="evm_increaseBlocks", params=params)
-        if (
-                loop_idx % version_check_frequency == 0
-                and version_check_frequency != -1 and blockchain in "ethereum"
-        ):
-            # Check the version of the deployed arbitrage contract
-            mgr.cfg.provider.check_version_of_arb_contract()
-            mgr.cfg.logger.info(
-                f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
-            )
-        if (
-                loop_idx % pool_data_update_frequency == 0
-                and pool_data_update_frequency != -1
-        ):
-
-            mgr.cfg.logger.info(f"[main] Terraforming {blockchain}. Standby for oxygen levels.")
-            sblock = (
-                (current_block - (current_block - last_block_queried))
-                if loop_idx > 1
-                else None
-            )
-            (
-                uniswap_v2_event_mappings,
-                uniswap_v3_event_mappings,
-            ) = terraform_blockchain(
-                network_name=blockchain,
-                web3=mgr.web3,
-                start_block=sblock,
-            )
-            mgr.uniswap_v2_event_mappings = dict(
-                uniswap_v2_event_mappings[["address", "exchange"]].values
-            )
-            mgr.uniswap_v3_event_mappings = dict(
-                uniswap_v3_event_mappings[["address", "exchange"]].values
-            )
-            last_block_queried = current_block
-
-            total_iteration_time += time.time() - iteration_start_time
-            mgr.cfg.logger.info(
-                f"\n\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
-                f"\n********************************************\n\n"
-            )
-
-        # except Exception as e:
-        #     mgr.cfg.logger.error(f"Error in main loop: {e}")
-        #     mgr.cfg.logger.error(
-        #         f"[main] Error in main loop: {e}. Continuing... "
-        #         f"Please report this error to the Fastlane Telegram channel if it persists."
-        #         f"{mgr.cfg.logging_header}"
-        #     )
-        #     time.sleep(polling_interval)
-        #     if timeout is not None and time.time() - start_timeout > timeout:
-        #         mgr.cfg.logger.info("Timeout hit... stopping bot")
-        #         mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
-        #         break
+            if timeout is not None and time.time() - start_timeout > timeout:
+                mgr.cfg.logger.info("Timeout hit... stopping bot")
+                mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
+                break
 
 
 if __name__ == "__main__":
