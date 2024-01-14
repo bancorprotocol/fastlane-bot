@@ -671,7 +671,7 @@ def run(
                 async_update_pools_from_contracts(mgr, current_block, logging_path)
                 mgr.pools_to_add_from_contracts = []
 
-            
+
             # Increment the loop index
             loop_idx += 1
 
