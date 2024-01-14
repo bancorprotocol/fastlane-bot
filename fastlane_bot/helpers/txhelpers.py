@@ -610,6 +610,7 @@ class TxHelpers:
                     message = str(e)
                     split1 = message.split("maxFeePerGas: ")[1]
                     split2 = split1.split(" baseFee: ")
+                    split2 = [split2[0], split2[1].replace("'}","")]
                     split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
                     split_maxPriorityFeePerGas = int(
                         int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
