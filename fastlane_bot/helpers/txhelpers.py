@@ -30,228 +30,7 @@ from web3.types import TxReceipt
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.utils import num_format, log_format, num_format_float
-
-
-@dataclass
-class TxHelper:
-    """
-    A class to represent a flashloan arbitrage.
-
-    Attributes
-    ----------
-    usd_gas_limit : float
-        The USD gas limit.
-    gas_price_multiplier : float
-        The gas price multiplier.
-    """
-
-    __VERSION__ = __VERSION__
-    __DATE__ = __DATE__
-
-    ConfigObj: Config
-    usd_gas_limit: float = 20  # TODO this needs to be dynamic
-    gas_price_multiplier: float = 1.2
-
-    def __post_init__(self):
-        self.PRIVATE_KEY: str = self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        self.COINGECKO_URL: str = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true"
-        self.arb_contract: Any = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.w3: Web3 = self.ConfigObj.w3
-
-    @property
-    def wallet_address(self) -> str:
-        """Get the wallet address.
-
-        Returns:
-            str: The wallet address.
-        """
-        return self.ConfigObj.LOCAL_ACCOUNT.address
-
-    @property
-    def wallet_balance(self) -> Tuple[Any, int]:
-        """Get the wallet balance in Ether.
-
-        Returns:
-            float: The wallet balance in Ether.
-        """
-        balance = self.w3.eth.getBalance(self.wallet_address)
-        return balance, self.w3.fromWei(balance, "ether")
-
-    @property
-    def wei_balance(self) -> int:
-        """Get the wallet balance in Wei.
-
-        Returns:
-            int: The wallet balance in Wei.
-        """
-        return self.wallet_balance[0]
-
-    @property
-    def ether_balance(self) -> float:
-        """Get the wallet balance in Ether.
-
-        Returns:
-            float: The wallet balance in Ether.
-        """
-        return self.wallet_balance[1]
-
-    @property
-    def nonce(self):
-        return self.ConfigObj.w3.eth.get_transaction_count(
-            self.ConfigObj.LOCAL_ACCOUNT.address
-        )
-
-    @property
-    def gas_limit(self):
-        return self.get_gas_limit_from_usd(self.usd_gas_limit)
-
-    @property
-    def base_gas_price(self):
-        """
-        Get the base gas price from the Web3 instance.
-        """
-        return self.ConfigObj.w3.eth.gasPrice
-
-    @property
-    def gas_price_gwei(self):
-        """
-        Get the gas price from the Web3 instance (gwei).
-        """
-        return self.base_gas_price / 1e9
-
-    @property
-    def ether_price_usd(self):
-        """
-        Get the ether price in USD.
-        """
-        response = requests.get(self.COINGECKO_URL)
-        data = response.json()
-        return data["ethereum"]["usd"]
-
-    @property
-    def deadline(self):
-        return (
-            self.ConfigObj.w3.eth.getBlock("latest")["timestamp"]
-            + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
-        )
-
-    def get_gas_limit_from_usd(self, gas_cost_usd: float) -> int:
-        """Calculate the gas limit based on the desired gas cost in USD.
-
-        Args:
-            gas_cost_usd (float): The desired gas cost in USD.
-
-        Returns:
-            int: The calculated gas limit.
-        """
-        ether_cost = gas_cost_usd / self.ether_price_usd
-        gas_limit = ether_cost / self.gas_price_gwei * 1e9
-        return int(gas_limit)
-
-    XS_WETH = "weth"
-    XS_TRANSACTION = "transaction_built"
-    XS_SIGNED = "transaction_signed"
-
-    def submit_flashloan_arb_tx(
-        self,
-        arb_data: List[Dict[str, Any]],
-        flashloan_token_address: str,
-        flashloan_amount: int or float,
-        verbose: bool = True,
-        result=None,
-    ) -> str:
-        """Submit a flashloan arbitrage transaction.
-
-        Parameters
-        ----------
-        arb_data : List[Dict[str, Any]]
-            The arbitrage data.
-        flashloan_token_address : str
-            The flashloan token address.
-        flashloan_amount : int or float
-            The flashloan amount.
-        verbose : bool, optional
-            Whether to print the transaction details, by default True
-        result: XS_XXX or None
-            What intermediate result to return (default: None)
-        Returns
-        -------
-        str
-            The transaction hash.
-        """
-
-        if not isinstance(flashloan_amount, int):
-            flashloan_amount = int(flashloan_amount)
-
-        if flashloan_token_address == self.ConfigObj.WETH_ADDRESS:
-            flashloan_token_address = self.ConfigObj.ETH_ADDRESS
-
-        if result == self.XS_WETH:
-            return flashloan_token_address
-
-        assert (
-            flashloan_token_address != arb_data[0]["targetToken"]
-        ), "The flashloan token address must be different from the first targetToken address in the arb data."
-
-        if verbose:
-            self._print_verbose(flashloan_amount, flashloan_token_address)
-        # Set the gas price (gwei)
-        gas_price = int(self.base_gas_price * self.gas_price_multiplier)
-
-        # Prepare the transaction
-        transaction = self.arb_contract.functions.flashloanAndArb(
-            arb_data, flashloan_token_address, flashloan_amount
-        ).buildTransaction(
-            {
-                "gas": self.gas_limit,
-                "gasPrice": gas_price,
-                "nonce": self.nonce,
-            }
-        )
-        if result == self.XS_TRANSACTION:
-            return transaction
-
-        # Sign the transaction
-        signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
-            transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        )
-        if result == self.XS_SIGNED:
-            return signed_txn
-        # Send the transaction
-        tx_hash = self.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-        self.ConfigObj.logger.info(
-            f"[helpers.txhelpers.submit_flashloan_arb_tx] Transaction sent with hash: {tx_hash}"
-        )
-        return tx_hash.hex()
-
-    def _print_verbose(
-        self, flashloan_amount: int or float, flashloan_token_address: str
-    ):
-        """
-        Print the transaction details.
-
-        Parameters
-        ----------
-        flashloan_amount : int or float
-            The flashloan amount.
-        flashloan_token_address : str
-            The flashloan token address.
-
-        """
-        print(f"flashloan amount: {flashloan_amount}")
-        print(f"flashloan token address: {flashloan_token_address}")
-        print(f"Gas price: {self.gas_price_gwei} gwei")
-        print(
-            f"Gas limit in USD ${self.usd_gas_limit} " f"Gas limit: {self.gas_limit} "
-        )
-
-        balance = self.ConfigObj.w3.eth.getBalance(self.ConfigObj.LOCAL_ACCOUNT.address)
-        print(
-            f"Balance of the sender's account: \n"
-            f"{balance} Wei \n"
-            f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether"
-        )
+from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
 
 
 @dataclass
@@ -608,18 +387,14 @@ class TxHelpers:
             if "max fee per gas less than block base fee" in str(e):
                 try:
                     message = str(e)
-                    split1 = message.split("maxFeePerGas: ")[1]
-                    split2 = split1.split(" baseFee: ")
-                    split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
-                    split_maxPriorityFeePerGas = int(
-                        int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-                    )
+                    baseFee = int_prefix(message.split("baseFee: ")[1])
+                    maxFeePerGas = int_prefix(message.split("maxFeePerGas: ")[1])
                     transaction = self.construct_contract_function(
                         routes=routes,
                         src_amt=src_amt,
                         src_address=src_address,
-                        gas_price=split_baseFee,
-                        max_priority=split_maxPriorityFeePerGas,
+                        gas_price=baseFee,
+                        max_priority=maxFeePerGas * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET,
                         nonce=nonce,
                         flashloan_struct=flashloan_struct,
                     )
@@ -960,13 +735,11 @@ class TxHelpers:
             if "max fee per gas less than block base fee" in str(e):
                 try:
                     message = str(e)
-                    split1 = message.split('maxFeePerGas: ')[1]
-                    split2 = split1.split(' baseFee: ')
-                    split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
+                    baseFee = int_prefix(message.split("baseFee: ")[1])
                     approve_tx = token_contract.functions.approve(self.arb_contract.address,
                                                                   approval_amount).build_transaction(
                         self.build_tx(
-                            base_gas_price=split_baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
+                            base_gas_price=baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
                         )
                     )
                 except Exception as e:

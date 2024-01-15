@@ -15,7 +15,7 @@ from fastlane_bot.data.abi import (
     BANCOR_V3_POOL_COLLECTION_ABI,
 )
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.helpers.txhelpers import TxHelpers
+from fastlane_bot.helpers.txhelpers import TxHelpers, int_prefix
 
 
 @dataclass
@@ -262,18 +262,14 @@ class AutomaticPoolShutdown:
 
         """
         message = str(e)
-        split1 = message.split("maxFeePerGas: ")[1]
-        split2 = split1.split(" baseFee: ")
-        split_base_fee = int(split2[1].split(" (supplied gas")[0])
-        split_max_priority_fee_per_gas = int(
-            int(split2[0]) * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET
-        )
+        baseFee = int_prefix(message.split("baseFee: ")[1])
+        maxFeePerGas = int_prefix(message.split("maxFeePerGas: ")[1])
         return self.bancor_network_contract.functions.withdrawPOL(
             self.mgr.web3.to_checksum_address(tkn)
         ).build_transaction(
             self.tx_helpers.build_tx(
-                base_gas_price=split_base_fee,
-                max_priority_fee=split_max_priority_fee_per_gas,
+                base_gas_price=baseFee,
+                max_priority_fee=maxFeePerGas * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET,
                 nonce=nonce,
             )
         )
