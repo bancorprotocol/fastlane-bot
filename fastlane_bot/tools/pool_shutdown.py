@@ -269,7 +269,7 @@ class AutomaticPoolShutdown:
         ).build_transaction(
             self.tx_helpers.build_tx(
                 base_gas_price=baseFee,
-                max_priority_fee=maxFeePerGas * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET,
+                max_priority_fee=int(maxFeePerGas * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET),
                 nonce=nonce,
             )
         )

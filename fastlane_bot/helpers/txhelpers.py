@@ -615,7 +615,7 @@ class TxHelpers:
                         src_amt=src_amt,
                         src_address=src_address,
                         gas_price=baseFee,
-                        max_priority=maxFeePerGas * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET,
+                        max_priority=int(maxFeePerGas * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET),
                         nonce=nonce,
                         flashloan_struct=flashloan_struct,
                     )
