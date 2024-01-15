@@ -2,7 +2,13 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.10...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.11...HEAD)
+
+- Update uniswap\_v3\_event\_mappings.csv [\#298](https://github.com/bancorprotocol/fastlane-bot/pull/298) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.11](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.11) (2024-01-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.10...v3.0.11)
 
 - Hex string without 0x prefix [\#287](https://github.com/bancorprotocol/fastlane-bot/issues/287)
 - Bugfixes for production environment [\#297](https://github.com/bancorprotocol/fastlane-bot/pull/297) ([mikewcasale](https://github.com/mikewcasale))
