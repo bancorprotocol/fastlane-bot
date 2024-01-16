@@ -14,7 +14,8 @@ from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.utils import update_pools_from_events
-
+import nest_asyncio
+nest_asyncio.apply()
 
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     try:
@@ -148,7 +149,7 @@ def get_pool_info(
     tkn1: Dict[str, Any],
     pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
-    fee_raw = pool["fee"]
+    fee_raw = eval(str(pool["fee"]))
     pool_info = {
         "exchange_name": pool["exchange_name"],
         "address": pool["address"],
@@ -387,8 +388,9 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         "y_1",
         "liquidity",
     ]
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
+    if not mgr.read_only:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
     start_time = time.time()
     # deplicate pool data
 
