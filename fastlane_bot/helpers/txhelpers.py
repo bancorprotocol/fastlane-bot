@@ -611,15 +611,12 @@ class TxHelpers:
                     split1 = message.split("maxFeePerGas: ")[1]
                     split2 = split1.split(" baseFee: ")
                     split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
-                    split_maxPriorityFeePerGas = int(
-                        int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-                    )
                     transaction = self.construct_contract_function(
                         routes=routes,
                         src_amt=src_amt,
                         src_address=src_address,
                         gas_price=split_baseFee,
-                        max_priority=split_maxPriorityFeePerGas,
+                        max_priority=max_priority,
                         nonce=nonce,
                         flashloan_struct=flashloan_struct,
                     )
