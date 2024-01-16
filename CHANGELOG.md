@@ -2,10 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.14...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.15...HEAD)
+
+- Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
+
+Merged pull requests
+
+- Log the type and value of each variable passed to function `get_start_block` [\#303](https://github.com/bancorprotocol/fastlane-bot/pull/303) ([barakman](https://github.com/barakman))
+
+## [v3.0.15](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.15) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.14...v3.0.15)
 
 - Bancor V2 ETH pool has wrong Anchor address [\#309](https://github.com/bancorprotocol/fastlane-bot/issues/309)
-- Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
 
 Merged pull requests
 
