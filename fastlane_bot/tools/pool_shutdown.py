@@ -235,14 +235,14 @@ class AutomaticPoolShutdown:
             )
             if "max fee per gas less than block base fee" in str(e):
                 try:
-                    return self._build_transaction(e, tkn, nonce)
+                    return self._build_transaction(e, max_priority_gas, tkn, nonce)
                 except Exception as e:
                     self.mgr.cfg.logger.debug(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}"
                     )
                     return None
 
-    def _build_transaction(self, e: Exception, tkn: str, nonce: int):
+    def _build_transaction(self, e: Exception, max_priority: int, tkn: str, nonce: int):
         """
         Handles the transaction generation logic.
 
@@ -250,6 +250,8 @@ class AutomaticPoolShutdown:
         ----------
         e: Exception
             The exception
+        max_priority: int
+            The max priority fee input
         tkn: str
             The token address
         nonce: int
@@ -263,13 +265,12 @@ class AutomaticPoolShutdown:
         """
         message = str(e)
         baseFee = int_prefix(message.split("baseFee: ")[1])
-        maxFeePerGas = int_prefix(message.split("maxFeePerGas: ")[1])
         return self.bancor_network_contract.functions.withdrawPOL(
             self.mgr.web3.to_checksum_address(tkn)
         ).build_transaction(
             self.tx_helpers.build_tx(
                 base_gas_price=baseFee,
-                max_priority_fee=int(maxFeePerGas * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET),
+                max_priority_fee=max_priority,
                 nonce=nonce,
             )
         )

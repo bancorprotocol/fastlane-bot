@@ -149,7 +149,7 @@ def get_pool_info(
     tkn1: Dict[str, Any],
     pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
-    fee_raw = pool["fee"]
+    fee_raw = eval(str(pool["fee"]))
     pool_info = {
         "exchange_name": pool["exchange_name"],
         "address": pool["address"],

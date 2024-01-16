@@ -609,13 +609,12 @@ class TxHelpers:
                 try:
                     message = str(e)
                     baseFee = int_prefix(message.split("baseFee: ")[1])
-                    maxFeePerGas = int_prefix(message.split("maxFeePerGas: ")[1])
                     transaction = self.construct_contract_function(
                         routes=routes,
                         src_amt=src_amt,
                         src_address=src_address,
                         gas_price=baseFee,
-                        max_priority=int(maxFeePerGas * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET),
+                        max_priority=max_priority,
                         nonce=nonce,
                         flashloan_struct=flashloan_struct,
                     )

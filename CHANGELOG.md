@@ -2,7 +2,30 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.11...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.14...HEAD)
+
+- Bancor V2 ETH pool has wrong Anchor address [\#309](https://github.com/bancorprotocol/fastlane-bot/issues/309)
+- Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
+
+Merged pull requests
+
+- Fix max\_priority usage in txhelpers & pool\_shutdown [\#308](https://github.com/bancorprotocol/fastlane-bot/pull/308) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.14](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.14) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.13...v3.0.14)
+
+- Update static\_pool\_data.csv [\#310](https://github.com/bancorprotocol/fastlane-bot/pull/310) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.13](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.13) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.12...v3.0.13)
+
+- Add eval back due to bug [\#305](https://github.com/bancorprotocol/fastlane-bot/pull/305) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.12](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.12) (2024-01-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.11...v3.0.12)
 
 - Update uniswap\_v3\_event\_mappings.csv [\#298](https://github.com/bancorprotocol/fastlane-bot/pull/298) ([mikewcasale](https://github.com/mikewcasale))
 
