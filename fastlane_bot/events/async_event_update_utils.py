@@ -434,6 +434,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         .str.replace("/", "_")
         .str.replace("-", "_")
     )
+    tokens_df = tokens_df.dropna(subset=['decimals'])
+    tokens_df['decimals'] = tokens_df['decimals'].astype(int)
     if not mgr.read_only:
         tokens_df.to_csv(
             f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
