@@ -214,6 +214,7 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
+    VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
 
     # Base Exchanges
@@ -376,6 +377,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V2_NAME: 3,
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
+            self.VELODROME_V2_NAME: 12,
             self.CARBON_V1_NAME: 6,
         }
         for ex in self.UNI_V2_FORKS:
@@ -385,7 +387,10 @@ class ConfigNetwork(ConfigBase):
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
         for ex in self.SOLIDLY_V2_FORKS:
-            self.EXCHANGE_IDS[ex] = 11
+            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
+                self.EXCHANGE_IDS[ex] = 11
+            else:
+                self.EXCHANGE_IDS[ex] = 12
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 
