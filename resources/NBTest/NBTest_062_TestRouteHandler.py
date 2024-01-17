@@ -65,7 +65,6 @@ db = QueryInterface(state=state, ConfigObj=cfg, exchanges=exchanges)
 
 # +
 
-
 trade_instruction_0 = TradeInstruction(
     cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
     tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -138,7 +137,9 @@ assert solidly_output == uni_v2_output, f"[NBTest 062 TestRouteHandler] Expected
 # ## Test_Uniswap_V3_Router_Switch
 
 # +
-
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
+cfg.network.NETWORK = "ethereum"
 
 trade_instruction_0 = TradeInstruction(
     cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
@@ -188,9 +189,8 @@ trade_instruction_2 = TradeInstruction(
 txroutehandler = TxRouteHandler(trade_instructions=[trade_instruction_0, trade_instruction_1, trade_instruction_2])
 
 
-
 custom_data_input = "0x"
-cfg.network.NETWORK = "ethereum"
+
 
 platform_id_uni_v2 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V2_NAME)
 platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
