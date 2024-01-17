@@ -152,7 +152,7 @@ trade_instruction_0 = TradeInstruction(
     tknout_dec_override = 18,
     tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-    exchange_override = 'solidly_v2'
+    exchange_override = 'uniswap_v3'
 )
 trade_instruction_1 = TradeInstruction(
     cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
@@ -166,7 +166,7 @@ trade_instruction_1 = TradeInstruction(
     tknout_dec_override = 18,
     tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-    exchange_override = 'uniswap_v3'
+    exchange_override = 'baseswap_v2'
 )
 
 trade_instruction_2 = TradeInstruction(
@@ -184,7 +184,9 @@ trade_instruction_2 = TradeInstruction(
     exchange_override = 'pancakeswap_v3'
 )
 
+
 txroutehandler = TxRouteHandler(trade_instructions=[trade_instruction_0, trade_instruction_1, trade_instruction_2])
+
 
 
 custom_data_input = "0x"
@@ -194,14 +196,8 @@ platform_id_uni_v2 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V2_NAME)
 platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
 
 
-custom_data_not_uni_v3_ethereum = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name=trade_instruction_0.exchange_name)
-custom_data_uni_v3_ethereum = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name=trade_instruction_0.exchange_name)
-
-cfg.network.NETWORK = "coinbase_base"
-custom_data_not_uni_v3_base = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name=trade_instruction_0.exchange_name)
-custom_data_uni_v3_base = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name=trade_instruction_0.exchange_name)
-
-custom_data_pancake_v3_base = txroutehandler.handle_uni_v3_router_switch(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name=trade_instruction_2.exchange_name)
+custom_data_not_uni_v3_ethereum = txroutehandler.handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="uniswap_v2")
+custom_data_uni_v3_ethereum = txroutehandler.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v2")
 
 # Non Uni V3 pool custom data field on Ethereum
 assert custom_data_not_uni_v3_ethereum in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field to not be changed, however {custom_data_not_uni_v3_ethereum} not in {custom_data_input}"
@@ -212,12 +208,67 @@ assert custom_data_uni_v3_ethereum not in custom_data_input, f"[NBTest 062 TestR
 assert type(custom_data_uni_v3_ethereum)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_ethereum)}"
 assert custom_data_uni_v3_ethereum in "0x0", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x0', found {custom_data_uni_v3_ethereum}"
 
+
+# +
+
+################### Base #####################
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="coinbase_base")
+
+platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
+platform_id_solidly = cfg.network.EXCHANGE_IDS.get(cfg.network.SOLIDLY_V2_NAME)
+platform_id_aerodrome = cfg.network.EXCHANGE_IDS.get(cfg.network.AERODROME_V2_NAME)
+
+trade_instruction_3 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'aerodrome_v2'
+)
+
+trade_instruction_4 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'velocimeter_v2'
+)
+txroutehandler_base = TxRouteHandler(trade_instructions=[trade_instruction_3, trade_instruction_4])
+
+custom_data_not_uni_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="sushiswap_v2")
+custom_data_uni_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v3")
+
+custom_data_pancake_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="pancakeswap_v3")
+
+custom_data_aerodrome = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_aerodrome, custom_data=custom_data_input, exchange_name="aerodrome_v2")
+custom_data_velocimeter = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_solidly, custom_data=custom_data_input, exchange_name="velocimeter_v2")
+
+
+assert type(platform_id_uni_v3) == int
+assert type(platform_id_solidly) == int
+assert type(platform_id_aerodrome) == int
+
+
 # Non Uni V3 pool custom data field NOT on Ethereum
 assert custom_data_not_uni_v3_base in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field to not be changed, however {custom_data_not_uni_v3_base} not in {custom_data_input}"
 assert type(custom_data_not_uni_v3_ethereum) == type(custom_data_input), f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field type to equal its original type, however {type(custom_data_not_uni_v3_base)} != {type(custom_data_input)}"
 
 # Uni V3 custom data field NOT on Ethereum
-assert custom_data_uni_v3_base not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to be changed, found {(custom_data_uni_v3_base)} vs {custom_data_input}"
+assert custom_data_uni_v3_base not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field to be changed, found {(custom_data_uni_v3_base)} vs {custom_data_input}"
 assert type(custom_data_uni_v3_base)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_base)}"
 assert custom_data_uni_v3_base in "0x1", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x1', found {custom_data_uni_v3_base}"
 
@@ -226,6 +277,16 @@ assert custom_data_pancake_v3_base not in custom_data_input, f"[NBTest 062 TestR
 assert type(custom_data_pancake_v3_base)  == str, f"[NBTest 062 TestRouteHandler] Expected Pancakeswap V3 route custom data field type to equal str, found {type(custom_data_uni_v3_base)}"
 assert custom_data_pancake_v3_base in "0x0", f"[NBTest 062 TestRouteHandler] Expected Uni Pancakeswap route custom data field type to equal '0x0', found {custom_data_pancake_v3_base}"
 
+# Aerodrome on Base - ensure we make changes nothing
+
+assert custom_data_aerodrome not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to be changed, found {(custom_data_aerodrome)} vs {custom_data_input}"
+assert type(custom_data_aerodrome)  == str, f"[NBTest 062 TestRouteHandler] Expected Aerodromeroute custom data field type to equal str, found {type(custom_data_aerodrome)}"
+assert custom_data_aerodrome in "0x420DD381b31aEf6683db6B902084cB0FFECe40Da", f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to equal '0x0', found {custom_data_aerodrome}"
+
+# Velocimeter on Base - ensure we add the Factory address
+assert custom_data_velocimeter in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Velocimeter route custom data field type to not be changed, found {(custom_data_velocimeter)} vs {custom_data_input}"
+assert type(custom_data_velocimeter)  == str, f"[NBTest 062 TestRouteHandler] Expected Velocimeter route custom data field type to equal str, found {type(custom_data_velocimeter)}"
+assert custom_data_velocimeter in "0x", f"[NBTest 062 TestRouteHandler] Expected Velocimeterroute custom data field type to equal '0x', found {custom_data_velocimeter}"
 # -
 
 

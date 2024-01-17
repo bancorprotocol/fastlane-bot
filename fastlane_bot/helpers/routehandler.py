@@ -288,7 +288,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         source_token = self.wrapped_gas_token_to_native(source_token)
         source_token = self.ConfigObj.w3.to_checksum_address(source_token)
         fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
-        customData = self.handle_uni_v3_router_switch(platform_id=platform_id, custom_data=customData, exchange_name=exchange_name)
+        customData = self.handle_custom_data_extras(platform_id=platform_id, custom_data=customData, exchange_name=exchange_name)
 
         return RouteStruct(
             platformId=platform_id,
@@ -302,7 +302,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             customData=customData,
         )
 
-    def handle_uni_v3_router_switch(self, platform_id: int, custom_data: bytes, exchange_name: str):
+    def handle_custom_data_extras(self, platform_id: int, custom_data: bytes, exchange_name: str):
         """
         This function toggles between Uniswap V3 routers used by the Fast Lane contract. This is input in the customData field.
 
@@ -314,15 +314,20 @@ class TxRouteHandler(TxRouteHandlerBase):
             custom_data: bytes
         """
 
-        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
+        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.VELODROME_V2_NAME):
             return custom_data
 
-        assert "0x" in custom_data, f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
+        assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
 
-        if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
-            custom_data = '0x0'
-        else:
-            custom_data = '0x1'
+        if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
+            if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
+                custom_data = '0x0'
+            else:
+                custom_data = '0x1'
+        elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
+            custom_data = self.ConfigObj.network.FACTORY_MAPPING[exchange_name]
+
+
         return custom_data
 
 
