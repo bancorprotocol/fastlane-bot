@@ -45,6 +45,7 @@ __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"
 
 import random
+import numpy as np
 import time
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
@@ -732,8 +733,8 @@ class CarbonBot(CarbonBotBase):
         return any(trade.is_carbon for trade in trade_instructions)
     
     def get_prices_simple(self, CCm, tkn0, tkn1):
-        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
-        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
+        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.y_act,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
+        curve_prices += [(x.params['exchange'],x.descr,x.cid,x.y_act,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
         return curve_prices
     
     # Global constant for Carbon Forks ordering
@@ -757,7 +758,7 @@ class CarbonBot(CarbonBotBase):
         sort_order = self.create_sort_order(sort_sequence)
         return sorted(data, key=lambda item: self.sort_key(item, sort_order))
 
-    def calculate_profit(
+    def calculate_profit_old(
         self,
         CCm: CPCContainer,
         best_profit: Decimal,
@@ -814,6 +815,92 @@ class CarbonBot(CarbonBotBase):
             usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
         self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'ETH', best_profit_eth, usd_eth_conversion_rate, best_profit_usd, 'USD'}")
+        return best_profit_fl_token, best_profit_eth, best_profit_usd
+    
+    def filter_and_calculate_median(self, prices):
+        if len(prices) == 1:
+            return prices[0]
+        
+        prices_np = np.array(prices)
+        avg = np.mean(prices_np)
+        std_dev = np.std(prices_np)
+
+        # Filtering out prices greater than 1 standard deviation from the mean
+        filtered_prices = prices_np[np.abs(prices_np - avg) <= std_dev]
+
+        return np.median(filtered_prices)
+
+    def get_best_price(self, not_carbon_price_curves):
+        # Selects a representative price from a list of curves
+
+        # only one curve can only be one price
+        if len(not_carbon_price_curves)==1:
+            price = not_carbon_price_curves[0][-1]
+        # two curves take the one with the largest liquidity
+        elif len(not_carbon_price_curves)==2:
+            # x[-2] is the y_act, [-1][-1] last curve price
+            price = sorted(not_carbon_price_curves, key=lambda x: x[-2])[-1][-1]
+        # more than two curves, filter out outliers and return median price
+        else:
+            curve_prices = [x[-1] for x in not_carbon_price_curves]
+            price = self.filter_and_calculate_median(curve_prices)
+        return price
+
+    def calculate_profit(
+        self,
+        CCm: CPCContainer,
+        best_profit: Decimal,
+        fl_token: str,
+    ) -> Tuple[Decimal, Decimal, Decimal]:
+        """
+        Calculate the actual profit in USD.
+
+        Parameters
+        ----------
+        CCm: CPCContainer
+            The container.
+        best_profit: Decimal
+            The best profit.
+        fl_token: str
+            The flashloan token.
+        fl_token_with_weth: str
+            The flashloan token with weth.
+
+        Returns
+        -------
+        Tuple[Decimal, Decimal, Decimal]
+            The updated best_profit, flt_per_bnt, and profit_usd.
+        """
+
+        best_profit_fl_token = best_profit
+        if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
+            # get the relevant curves
+            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
+            # filter out the Carbon and POL curves
+            not_carbon_price_curves = [x for x in price_curves if (x[0] not in self.ConfigObj.CARBON_V1_FORKS and x[0] != 'bancor_pol')]
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit not_carbon_price_curves] {not_carbon_price_curves}")
+            if len(not_carbon_price_curves)>0:
+                fltkn_eth_conversion_rate = self.get_best_price(not_carbon_price_curves)
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
+                self.ConfigObj.logger.debug(f"[bot.calculate_profit] fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth {fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
+            else:
+                self.ConfigObj.logger.error(
+                    f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
+                )
+                raise
+        else:
+            best_profit_eth = best_profit_fl_token
+
+        try:
+            price_curves_usd = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
+            not_carbon_price_curves_usd = [x for x in price_curves_usd if (x[0] not in self.ConfigObj.CARBON_V1_FORKS and x[0] != 'bancor_pol')]
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit not_carbon_price_curves_usd] {not_carbon_price_curves_usd}")
+            if len(not_carbon_price_curves_usd)>0:
+                usd_eth_conversion_rate = Decimal(str(self.get_best_price(not_carbon_price_curves_usd)))
+        except Exception:
+            usd_eth_conversion_rate = Decimal("NaN")
+        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] best_profit_eth, usd_eth_conversion_rate, best_profit_usd {best_profit_eth, usd_eth_conversion_rate, best_profit_usd}")
         return best_profit_fl_token, best_profit_eth, best_profit_usd
 
     @staticmethod

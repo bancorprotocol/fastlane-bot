@@ -9,6 +9,7 @@ import abc
 from typing import Any, Tuple, Dict, List, Union
 from _decimal import Decimal
 import pandas as pd
+import numpy as np
 
 from fastlane_bot.tools.cpc import T
 from fastlane_bot.utils import num_format
@@ -134,8 +135,8 @@ class ArbitrageFinderBase:
         return best_profit, ops
 
     def get_prices_simple(self, CCm, tkn0, tkn1):
-        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
-        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
+        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.y_act,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
+        curve_prices += [(x.params['exchange'],x.descr,x.cid,x.y_act,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
         return curve_prices
     
     # Global constant for 'carbon_v1' order
@@ -159,7 +160,7 @@ class ArbitrageFinderBase:
         sort_order = self.create_sort_order(sort_sequence)
         return sorted(data, key=lambda item: self.sort_key(item, sort_order))
 
-    def calculate_profit(
+    def calculate_profit_old(
         self,
         src_token: str,
         profit_src: float,
@@ -191,6 +192,73 @@ class ArbitrageFinderBase:
                 fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
                 best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
                 self.ConfigObj.logger.debug(f"[modes.base.calculate_profit] {src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
+            else:
+                self.ConfigObj.logger.error(
+                    f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
+                )
+                raise
+        else:
+            best_profit_eth = best_profit_fl_token
+        return best_profit_eth
+    
+    def filter_and_calculate_median(self, prices):
+        if len(prices) == 1:
+            return prices[0]
+        
+        prices_np = np.array(prices)
+        avg = np.mean(prices_np)
+        std_dev = np.std(prices_np)
+
+        # Filtering out prices greater than 1 standard deviation from the mean
+        filtered_prices = prices_np[np.abs(prices_np - avg) <= std_dev]
+
+        return np.median(filtered_prices)
+
+    def get_best_price(self, not_carbon_price_curves):
+        # Selects a representative price from a list of curves
+
+        # only one curve can only be one price
+        if len(not_carbon_price_curves)==1:
+            price = not_carbon_price_curves[0][-1]
+        # two curves take the one with the largest liquidity
+        elif len(not_carbon_price_curves)==2:
+            # x[-2] is the y_act, [-1][-1] last curve price
+            price = sorted(not_carbon_price_curves, key=lambda x: x[-2])[-1][-1]
+        # more than two curves, filter out outliers and return median price
+        else:
+            curve_prices = [x[-1] for x in not_carbon_price_curves]
+            price = self.filter_and_calculate_median(curve_prices)
+        return price
+
+    def calculate_profit(
+        self,
+        src_token: str,
+        profit_src: float,
+        CCm: Any,
+        cids: List[str],
+        profit: int = 0,
+    ) -> float:
+        """
+        Calculate profit based on the source token.
+        """
+
+        best_profit_fl_token = profit_src
+        if src_token not in [
+            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+        ]:
+            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS:
+                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            else:
+                fl_token_with_weth = src_token
+
+            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token_with_weth)
+            not_carbon_price_curves = [x for x in price_curves if (x[0] not in self.ConfigObj.CARBON_V1_FORKS and x[0] != 'bancor_pol')]
+            self.ConfigObj.logger.debug(f"[bot.calculate_profit not_carbon_price_curves] {not_carbon_price_curves}")
+            if len(not_carbon_price_curves)>0:
+                fltkn_eth_conversion_rate = self.get_best_price(not_carbon_price_curves)
+                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
+                self.ConfigObj.logger.debug(f"[modes.base.calculate_profit src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth] {src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
             else:
                 self.ConfigObj.logger.error(
                     f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
