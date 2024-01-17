@@ -206,7 +206,7 @@ assert type(custom_data_not_uni_v3_ethereum) == type(custom_data_input), f"[NBTe
 # Uni V3 custom data field on Ethereum
 assert custom_data_uni_v3_ethereum not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to be changed, found {(custom_data_uni_v3_ethereum)} vs {custom_data_input}"
 assert type(custom_data_uni_v3_ethereum)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_ethereum)}"
-assert custom_data_uni_v3_ethereum in "0x0", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x0', found {custom_data_uni_v3_ethereum}"
+assert custom_data_uni_v3_ethereum in "0x0000000000000000000000000000000000000000000000000000000000000000", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x0000000000000000000000000000000000000000000000000000000000000000', found {custom_data_uni_v3_ethereum}"
 
 
 # +
@@ -270,18 +270,18 @@ assert type(custom_data_not_uni_v3_ethereum) == type(custom_data_input), f"[NBTe
 # Uni V3 custom data field NOT on Ethereum
 assert custom_data_uni_v3_base not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field to be changed, found {(custom_data_uni_v3_base)} vs {custom_data_input}"
 assert type(custom_data_uni_v3_base)  == str, f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal str, found {type(custom_data_uni_v3_base)}"
-assert custom_data_uni_v3_base in "0x1", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x1', found {custom_data_uni_v3_base}"
+assert custom_data_uni_v3_base in "0x0100000000000000000000000000000000000000000000000000000000000000", f"[NBTest 062 TestRouteHandler] Expected Uni V3 route custom data field type to equal '0x0100000000000000000000000000000000000000000000000000000000000000', found {custom_data_uni_v3_base}"
 
 # Pancakeswap V3 on Base - ensure we use the original Uni V3 router
 assert custom_data_pancake_v3_base not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Pancakeswap V3 route custom data field type to be changed, found {(custom_data_uni_v3_base)} vs {custom_data_input}"
 assert type(custom_data_pancake_v3_base)  == str, f"[NBTest 062 TestRouteHandler] Expected Pancakeswap V3 route custom data field type to equal str, found {type(custom_data_uni_v3_base)}"
-assert custom_data_pancake_v3_base in "0x0", f"[NBTest 062 TestRouteHandler] Expected Uni Pancakeswap route custom data field type to equal '0x0', found {custom_data_pancake_v3_base}"
+assert custom_data_pancake_v3_base in "0x0000000000000000000000000000000000000000000000000000000000000000", f"[NBTest 062 TestRouteHandler] Expected Uni Pancakeswap route custom data field type to equal '0x0000000000000000000000000000000000000000000000000000000000000000', found {custom_data_pancake_v3_base}"
 
 # Aerodrome on Base - ensure we make changes nothing
 
 assert custom_data_aerodrome not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to be changed, found {(custom_data_aerodrome)} vs {custom_data_input}"
 assert type(custom_data_aerodrome)  == str, f"[NBTest 062 TestRouteHandler] Expected Aerodromeroute custom data field type to equal str, found {type(custom_data_aerodrome)}"
-assert custom_data_aerodrome in "0x420DD381b31aEf6683db6B902084cB0FFECe40Da", f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to equal '0x0', found {custom_data_aerodrome}"
+assert custom_data_aerodrome in "0x420DD381b31aEf6683db6B902084cB0FFECe40Da", f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to equal '0x420DD381b31aEf6683db6B902084cB0FFECe40Da', found {custom_data_aerodrome}"
 
 # Velocimeter on Base - ensure we add the Factory address
 assert custom_data_velocimeter in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Velocimeter route custom data field type to not be changed, found {(custom_data_velocimeter)} vs {custom_data_input}"

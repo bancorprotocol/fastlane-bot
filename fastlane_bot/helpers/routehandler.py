@@ -321,9 +321,9 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
-                custom_data = '0x0000000000000000000000000000000000000000'
+                custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
-                custom_data = '0x1000000000000000000000000000000000000000'
+                custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
         elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
             custom_data = self.ConfigObj.network.FACTORY_MAPPING[exchange_name]
 
