@@ -625,6 +625,7 @@ class TxHelpers:
                         f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
                         f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
                     )
+                    return None
             else:
                 self.ConfigObj.logger.warning(
                     f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
