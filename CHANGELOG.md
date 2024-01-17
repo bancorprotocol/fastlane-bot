@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.15...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.16...HEAD)
+
+Merged pull requests
+
+- Return `None` when the 2nd call to `construct_contract_function` fails [\#312](https://github.com/bancorprotocol/fastlane-bot/pull/312) ([barakman](https://github.com/barakman))
+
+## [v3.0.16](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.16) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.15...v3.0.16)
 
 - Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
 
