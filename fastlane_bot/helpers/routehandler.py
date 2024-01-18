@@ -325,7 +325,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             else:
                 custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
         elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
-            custom_data = self.ConfigObj.network.FACTORY_MAPPING[exchange_name]
+            custom_data = '0x'+ eth_abi.encode(['address'], [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
 
 
         return custom_data
