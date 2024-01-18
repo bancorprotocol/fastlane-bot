@@ -5,8 +5,8 @@ USAGE
 
     from fastlane_bot.testing import *
 """
-__VERSION__ = "1.2"
-__DATE__ = "07/May/2023"
+__VERSION__ = "1.3"
+__DATE__ = "15/Jan/2024"
 
 import math as m
 import numpy as np
@@ -112,6 +112,59 @@ def _require_version(rl, al):
         elif r < a:
             return True
     return True
+
+class Timer():
+    """
+    times functions calls; timer as arg, kwargs; timer1/2 have 1/2 args respectively
     
     
-print("imported m, np, pd, plt, os, sys, decimal; defined iseq, raises, require")
+    USAGE
+        Timer.t(func, *args, *kwargs, N=100_000)
+        Timer.t1(func, args, N=100_000)
+        Timer.t2(func, arg1, arg2, N=100_000)
+        
+    Note: the default value for N can be changed by using a derived class, eg:
+        
+        class MyTimer(Timer):
+            N = 1_000_000
+        MyTimer.t(func, *args, *kwargs)
+    """
+    N = 1_000_000
+        
+    @classmethod
+    def timer(cls, func, *args, N=None, **kwargs):
+        """times the calls to func; func is called with args and kwargs; returns time in msec per 1m calls"""
+        if N is None:
+            N = cls.N
+        start_time = time.time()
+        for _ in range(N):
+            func(*args, **kwargs)
+        end_time = time.time()
+        return (end_time - start_time)/N*1_000_000*1000
+
+    @classmethod
+    def timer1(cls, func, arg, N=None):
+        """times the calls to func; func is called with arg; returns time in msec per 1m calls"""
+        if N is None:
+            N = cls.N
+        start_time = time.time()
+        for _ in range(N):
+            func(arg)
+        end_time = time.time()
+        return (end_time - start_time)/N*1_000_000*1000
+
+    @classmethod
+    def timer2(cls, func, arg1, arg2, N=None):
+        """times the calls to func; func is called with arg1, arg2; returns time in msec per 1m calls"""
+        if N is None:
+            N = cls.N
+        start_time = time.time()
+        for _ in range(N):
+            func(arg1, arg2)
+        end_time = time.time()
+        return (end_time - start_time)/N*1_000_000*1000
+timer = Timer.timer
+timer1 = Timer.timer1
+timer2 = Timer.timer2
+    
+print("imported m, np, pd, plt, os, sys, decimal; defined iseq, raises, require, Timer")
