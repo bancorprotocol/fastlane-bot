@@ -897,6 +897,8 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.debug(f"[bot.calculate_profit not_carbon_price_curves_usd] {not_carbon_price_curves_usd}")
             if len(not_carbon_price_curves_usd)>0:
                 usd_eth_conversion_rate = Decimal(str(self.get_best_price(not_carbon_price_curves_usd)))
+            else:
+                usd_eth_conversion_rate = Decimal("NaN")
         except Exception:
             usd_eth_conversion_rate = Decimal("NaN")
         best_profit_usd = best_profit_eth * usd_eth_conversion_rate
