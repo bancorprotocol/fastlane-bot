@@ -241,7 +241,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         target_address: str,
         platform_id: int,
         custom_address: str = None,
-        fee_float: Any = None,
         customData: Any = None,
         override_min_target_amount: bool = True,
         customInt: int = None,
@@ -265,8 +264,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             The exchange id.
         custom_address: str
             The custom address.
-        fee_float: Any
-            The fee_float.
         customData: Any
             The custom data.
         override_min_target_amount: bool
@@ -287,7 +284,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         target_address = self.ConfigObj.w3.to_checksum_address(target_address)
         source_token = self.wrapped_gas_token_to_native(source_token)
         source_token = self.ConfigObj.w3.to_checksum_address(source_token)
-        fee_customInt_specifier = int(Decimal(fee_float)*Decimal(1000000)) if platform_id != 7 else int(eval(fee_float))
         customData = self.handle_custom_data_extras(platform_id=platform_id, custom_data=customData, exchange_name=exchange_name)
 
         return RouteStruct(
@@ -298,7 +294,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             minTargetAmount=int(min_target_amount),
             deadline=deadline,
             customAddress=custom_address,
-            customInt=fee_customInt_specifier,
+            customInt=customInt,
             customData=customData,
         )
 
@@ -318,7 +314,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             return custom_data
 
         assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
-
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
                 custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -471,7 +466,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 target_address=trade_instructions[idx].tknout_address,
                 custom_address=self.get_custom_address(pool=pools[idx]),
                 platform_id=trade_instructions[idx].platform_id,
-                fee_float=fee_float[idx] if trade_instructions[idx].platform_id != 7 else pools[idx].anchor,
+                customInt=trade_instructions[idx].custom_int,
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
                 source_token=trade_instructions[idx].tknin_address,

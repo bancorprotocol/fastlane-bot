@@ -289,6 +289,87 @@ assert type(custom_data_velocimeter)  == str, f"[NBTest 062 TestRouteHandler] Ex
 assert custom_data_velocimeter in "0x", f"[NBTest 062 TestRouteHandler] Expected Velocimeterroute custom data field type to equal '0x', found {custom_data_velocimeter}"
 # -
 
+# ## Test get_custom_int
+
+# +
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="coinbase_base")
+cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2", "velocimeter_v2"]
+cfg.network.NETWORK = "coinbase_base"
+
+trade_instruction_0 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'uniswap_v3'
+)
+trade_instruction_5 = TradeInstruction(
+    cid='0x94b2e6453bf0532ca7f2b046099e805b60a40b4f89d938f7d9f92c560513103e',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'balancer'
+)
+trade_instruction_4 = TradeInstruction(
+    cid='0x43aab96c7ac642d2f543e56ea23981a2796496f769898371827a3a3301e0f0ed',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'velocimeter_v2'
+)
+trade_instruction_6 = TradeInstruction(
+    cid='0x7859232d6c4abd5d093b86f49aeca311a515e3714f0d4fb2a45942a0a8e2b0d2',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'velocimeter_v2'
+)
+
+uni_v3_custom_int = trade_instruction_0.custom_int
+solidly_custom_int_volatile = trade_instruction_4.custom_int
+solidly_custom_int_stable = trade_instruction_6.custom_int
+balancer_custom_int = trade_instruction_5.custom_int
+
+
+assert type(uni_v3_custom_int) == int, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected type == int, found {type(uni_v3_custom_int)}]"
+assert type(solidly_custom_int_volatile) == int, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected type == int, found {type(solidly_custom_int_volatile)}]"
+assert type(solidly_custom_int_stable) == int, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected type == int, found {type(solidly_custom_int_stable)}]"
+assert type(balancer_custom_int) == int, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected type == int, found {type(balancer_custom_int)}]"
+
+assert uni_v3_custom_int == 10000, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected 10000, found {uni_v3_custom_int}]"
+assert solidly_custom_int_volatile == 0, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected 0, found {solidly_custom_int_volatile}]"
+assert solidly_custom_int_stable == 1, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected 1, found {solidly_custom_int_stable}]"
+assert balancer_custom_int == 70911184602319403714296547319574681768227301686592151818369995176900963599553, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected 0x9cc64ee4cb672bc04c54b00a37e1ed75b2cc19dd0002000000000000000004c1, found {balancer_custom_int}]"
+# -
+
 
 
 
