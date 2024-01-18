@@ -252,6 +252,11 @@ class ConfigNetwork(ConfigBase):
     CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
     CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
+    # POOL IDENTIFIERS SECTION
+    #######################################################################################
+    POOL_TYPE_STABLE = "stable"
+    POOL_TYPE_VOLATILE = "volatile"
+
     # DEFAULT VALUES SECTION
     #######################################################################################
     UNIV3_FEE_LIST = [80, 100, 450, 500, 2500, 3000, 10000]
@@ -377,7 +382,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V2_NAME: 3,
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
-            self.VELODROME_V2_NAME: 12,
+            self.AERODROME_V2_NAME: 12,
             self.CARBON_V1_NAME: 6,
         }
         for ex in self.UNI_V2_FORKS:
