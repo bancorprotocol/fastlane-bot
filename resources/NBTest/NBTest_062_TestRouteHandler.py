@@ -218,6 +218,7 @@ platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
 platform_id_solidly = cfg.network.EXCHANGE_IDS.get(cfg.network.SOLIDLY_V2_NAME)
 platform_id_aerodrome = cfg.network.EXCHANGE_IDS.get(cfg.network.AERODROME_V2_NAME)
 
+
 trade_instruction_3 = TradeInstruction(
     cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
     tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -253,7 +254,6 @@ custom_data_not_uni_v3_base = txroutehandler_base.handle_custom_data_extras(plat
 custom_data_uni_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v3")
 
 custom_data_pancake_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="pancakeswap_v3")
-
 custom_data_aerodrome = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_aerodrome, custom_data=custom_data_input, exchange_name="aerodrome_v2")
 custom_data_velocimeter = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_solidly, custom_data=custom_data_input, exchange_name="velocimeter_v2")
 
@@ -281,7 +281,7 @@ assert custom_data_pancake_v3_base in "0x000000000000000000000000000000000000000
 
 assert custom_data_aerodrome not in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to be changed, found {(custom_data_aerodrome)} vs {custom_data_input}"
 assert type(custom_data_aerodrome)  == str, f"[NBTest 062 TestRouteHandler] Expected Aerodromeroute custom data field type to equal str, found {type(custom_data_aerodrome)}"
-assert custom_data_aerodrome in "0x420DD381b31aEf6683db6B902084cB0FFECe40Da", f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to equal '0x420DD381b31aEf6683db6B902084cB0FFECe40Da', found {custom_data_aerodrome}"
+assert custom_data_aerodrome in "0x000000000000000000000000420dd381b31aef6683db6b902084cb0ffece40da", f"[NBTest 062 TestRouteHandler] Expected Aerodrome route custom data field type to equal '0x000000000000000000000000420dd381b31aef6683db6b902084cb0ffece40da', found {custom_data_aerodrome}"
 
 # Velocimeter on Base - ensure we add the Factory address
 assert custom_data_velocimeter in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected Velocimeter route custom data field type to not be changed, found {(custom_data_velocimeter)} vs {custom_data_input}"
