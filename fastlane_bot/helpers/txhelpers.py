@@ -714,6 +714,11 @@ class TxHelpers:
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
+            
+        if "tenderly" in self.web3.provider.endpoint_uri:
+            print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
+            max_gas_price = 3
+            max_priority_fee = 3
 
         if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             tx_details = {
