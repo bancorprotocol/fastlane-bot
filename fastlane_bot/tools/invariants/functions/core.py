@@ -4,8 +4,8 @@ functions library -- core objects (Function, FunctionVector)
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9.2'
-__DATE__ = "20/Jan/2024"
+__VERSION__ = '0.9.4'
+__DATE__ = "22/Jan/2024"
 
 from dataclasses import dataclass, asdict
 from abc import ABC, abstractmethod
@@ -17,14 +17,28 @@ from inspect import signature
 from ..vector import DictVector
 from ..kernel import Kernel
 
+def _fmt(x, format_string, as_float=True):
+    """formats as float (if possible and requested)"""
+    if as_float:
+        try: x = float(x)
+        except: pass
+    try: x = format(x, format_string)
+    except: pass
+    if as_float:
+        try: x = float(x)
+        except: pass
+    return x
+    
 def fmt(dct_or_list, format_string=None, as_float=True):
     """format dct key=>value -> key: str"""
     format_string = format_string or ".4f"
-    fmt2 = (lambda x: float(x)) if as_float else lambda x: x
     if isinstance(dct_or_list, dict):
-        return {key: fmt2(format(value, format_string)) for key, value in dct_or_list.items()}
+        return {key: _fmt(value, format_string, as_float) for key, value in dct_or_list.items()}
+        #return {key: fmt2(format(fmt2(value), format_string)) for key, value in dct_or_list.items()}
     else: 
-        return [fmt2(format(value, format_string)) for value in dct_or_list]
+        return [_fmt(value, format_string, as_float) for value in dct_or_list]
+        #return [fmt2(format(fmt2(value), format_string)) for value in dct_or_list]
+
 
 ##############################################################################
 ## CLASS FUNCTION  
@@ -71,7 +85,10 @@ class Function(ABC):
             h = self.DERIV_H
         if precision:
             h *= precision
-        return (self.f(x+h)-self.f(x-h)) / (2*h)
+        try:
+            return (self.f(x+h)-self.f(x-h)) / (2*h)
+        except TypeError:
+            return None
     
     def d2f_dx2_abs(self, x, *, h=None, precision=None):
         """
@@ -81,8 +98,11 @@ class Function(ABC):
             h = self.DERIV_H
         if precision:
             h *= precision
-        return (self.f(x+h)+self.f(x-h)-2*self.f(x)) / (h*h)
-    
+        try:
+            return (self.f(x+h)-2*self.f(x)+self.f(x-h)) / (h*h)
+        except TypeError: # None values
+            return None
+        
     def df_dx_rel(self, x, *, eta=None, precision=None):
         """
         calculates the derivative of f(x) at x with relative step size eta (h=x*eta*precision)
@@ -101,21 +121,30 @@ class Function(ABC):
     
     def p(self, x, *, precision=None):
         """alias for -f prime = -df_dx_xxx"""
-        if self.DERIV_IS_ABS:
-            return -self.df_dx_abs(x, precision=precision)
-        else:
-            return -self.df_dx_rel(x, precision=precision)
+        try:
+            if self.DERIV_IS_ABS:
+                return -self.df_dx_abs(x, precision=precision)
+            else:
+                return -self.df_dx_rel(x, precision=precision)
+        except TypeError:
+            return None
     
     def df_dx(self, x, *, precision=None):
         """alias for df_dx_xxx, equals to -p"""
-        return -self.p(x, precision=precision)
+        try:
+            return -self.p(x, precision=precision)
+        except TypeError:
+            return None
     
     def pp(self, x, *, precision=None):
         """alias for -f prime prime = -d2f_dx2_xxx"""
-        if self.DERIV_IS_ABS:
-            return -self.d2f_dx2_abs(x, precision=precision)
-        else:
-            return -self.d2f_dx2_rel(x, precision=precision)
+        try:
+            if self.DERIV_IS_ABS:
+                return -self.d2f_dx2_abs(x, precision=precision)
+            else:
+                return -self.d2f_dx2_rel(x, precision=precision)
+        except TypeError:
+            return None
     
     def p_func(self, *, precision=None):
         """returns the derivative as a function object"""
@@ -153,19 +182,29 @@ class Function(ABC):
         """
         return self.f(x)
     
-    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=False, **kwargs):
+    PLT_STEPS = 100
+    PLT_SHOW = False
+    PLT_GRID = True
+    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, legend=None, grid=None, show=None, **kwargs):
         """
         plots the function
         
         :x_min:     lower bound
         :x_max:     upper bound
         :func:      function to plot (default: self.f)
-        :steps:     number of steps (default: np.linspace defaults)
+        :steps:     number of steps (default: PLT_STEPS)
         :show:      whether to call plt.show() (default: True)
         :grid:      whether to show a grid (default: True)
         :returns:   the result of plt.plot
         """
+        if xlabel is None: xlabel = "x"
+        if ylabel is None and func is None: ylabel = "y"
         func = func or self.f
+        if legend is None:
+            legend = not show # not show -> probably multiple line -> legend
+        if show is None: show = self.PLT_SHOW
+        if grid is None: grid = self.PLT_GRID
+        steps = steps or self.PLT_STEPS
         x = np.linspace(x_min, x_max, steps) if steps else np.linspace(x_min, x_max)
         y = [func(x) for x in x]
         plot = plt.plot(x, y, **kwargs)
@@ -173,6 +212,7 @@ class Function(ABC):
         if xlabel: plt.xlabel(xlabel)
         if ylabel: plt.ylabel(ylabel)
         if grid: plt.grid(True)
+        if legend: plt.legend()
         if show: plt.show()
         return plot
     

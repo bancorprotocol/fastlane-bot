@@ -10,6 +10,7 @@ from .core import __VERSION__, __DATE__
 from .core import Function, FunctionVector
 from .core import DerivativeFunction, Derivative2Function
 from .core import minimize, goalseek
+from .core import fmt
 
 # objects defined in funcs and funcsAMM
 from .funcs import *
