@@ -1,19 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py:light
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.5
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
-# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -45,45 +29,54 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
-# -
+
 
 # # Test NoEmptyCarbonOrders
 
-# +
-C = cfg = Config.new(config=Config.CONFIG_MAINNET)
+# In[3]:
+
+
+C = cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain='coinbase_base')
 cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
-assert (C.NETWORK == C.NETWORK_MAINNET)
+# assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
+
+
+exchanges = "carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3,velocimeter_v2"
+exchanges = exchanges.split(",")
+
 pools = None
 with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
-pools = [pool for pool in pools]
+pools = [pool for pool in pools if pool['exchange_name'] in exchanges]
 pools[0]
 static_pools = pools
 state = pools
-exchanges = list({ex['exchange_name'] for ex in state})
+# exchanges = list({ex['exchange_name'] for ex in state})
 db = QueryInterface(state=state, ConfigObj=C, exchanges=exchanges)
 setup_bot.db = db
 
 static_pool_data_filename = "static_pool_data"
 
 static_pool_data = pd.read_csv(f"fastlane_bot/data/{static_pool_data_filename}.csv", low_memory=False)
-    
-uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False)
-        
-tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
-        
-exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,bancor_v2,bancor_pol,pancakeswap_v2,pancakeswap_v3"
 
-exchanges = exchanges.split(",")
+uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False)
+
+tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
+
+
 
 
 alchemy_max_block_fetch = 20
 static_pool_data["cid"] = [
-        cfg.w3.keccak(text=f"{row['descr']}").hex()
-        for index, row in static_pool_data.iterrows()
-    ]
+    cfg.w3.keccak(text=f"{row['descr']}").hex()
+    for index, row in static_pool_data.iterrows()
+]
+
+static_pool_data = static_pool_data[static_pool_data["exchange_name"].isin(exchanges)]
+uniswap_v2_event_mappings = uniswap_v2_event_mappings[uniswap_v2_event_mappings["exchange"].isin(exchanges)]
+
 # Filter out pools that are not in the supported exchanges
 static_pool_data = [
     row for index, row in static_pool_data.iterrows()
@@ -91,7 +84,6 @@ static_pool_data = [
 ]
 
 static_pool_data = pd.DataFrame(static_pool_data)
-static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
@@ -137,6 +129,7 @@ def init_bot(mgr: Manager) -> CarbonBot:
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
     return bot
+
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
 bot.db.remove_unmapped_uniswap_v2_pools()
@@ -144,16 +137,18 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
+flashloan_tokens = ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE','0x4200000000000000000000000000000000000006','0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA']
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi"
-# -
+
 
 # ## Test_Empty_Carbon_Orders_Removed
 
-# +
+# In[ ]:
+
+
 arb_finder = bot._get_arb_finder("multi")
 finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
@@ -246,6 +241,16 @@ for route in route_struct:
         encoded_trades = [encoded_trade[i:i+64] for i in range(0, len(encoded_trade), 64)]
         for trade in encoded_trades:
             assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
-# -
+
+
+# In[ ]:
+
+
+r
+
+
+# In[ ]:
+
+
 
 
