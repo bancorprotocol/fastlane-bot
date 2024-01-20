@@ -627,6 +627,7 @@ class TxHelpers:
                     )
                     return None
             else:
+                self.ConfigObj.logger.info(f"gas_price = {gas_price}, max_priority = {max_priority}")
                 self.ConfigObj.logger.warning(
                     f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
                     f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
