@@ -1,11 +1,11 @@
 """
-object representing a function y = f(x; params)
+functions library -- core objects (Function, FunctionVector)
 
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9.1'
-__DATE__ = "19/Jan/2024"
+__VERSION__ = '0.9.2'
+__DATE__ = "20/Jan/2024"
 
 from dataclasses import dataclass, asdict
 from abc import ABC, abstractmethod
@@ -14,8 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from inspect import signature
 
-from .vector import DictVector
-from .kernel import Kernel
+from ..vector import DictVector
+from ..kernel import Kernel
 
 def fmt(dct_or_list, format_string=None, as_float=True):
     """format dct key=>value -> key: str"""
@@ -26,6 +26,8 @@ def fmt(dct_or_list, format_string=None, as_float=True):
     else: 
         return [fmt2(format(value, format_string)) for value in dct_or_list]
 
+##############################################################################
+## CLASS FUNCTION  
 @dataclass(frozen=True)
 class Function(ABC):
     """
@@ -151,7 +153,7 @@ class Function(ABC):
         """
         return self.f(x)
     
-    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=True, **kwargs):
+    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=False, **kwargs):
         """
         plots the function
         
@@ -191,70 +193,8 @@ class Function(ABC):
     
     
 
-@dataclass(frozen=True)
-class QuadraticFunction(Function):
-    """represents a quadratic function y = ax^2 + bx + c"""
-    a: float = 0
-    b: float = 0
-    c: float = 0
-    
-    def f(self, x):
-        return self.a*x**2 + self.b*x + self.c
-
-@dataclass(frozen=True)
-class TrigFunction(Function):
-    """represents a trigonometric function y = amp*sin( (omega*x+phase)*pi )"""
-    amp: float = 1
-    omega: float = 1
-    phase: float = 0
-    PI = m.pi
-    
-    def f(self, x):
-        fx = self.amp * m.sin( (self.omega*x+self.phase)*self.PI )
-        #print(f"x={x}, f(x) = {fx}, sin({(self.omega*x+self.phase)*self.PI})")
-        return fx
-
-@dataclass(frozen=True)
-class HyperbolaFunction(Function):
-    """represents a hyperbolic function y-y0 = k/(x-x0)"""
-    k: float = 1
-    x0: float = 0
-    y0: float = 0
-    
-    def f(self, x):
-        return self.y0 + self.k/(x-self.x0)
-
-@dataclass(frozen=True)
-class DerivativeFunction(Function):
-    """represents a derivative function y = f'(x)"""
-    func: Function
-    precision: float = None
-    
-    def __post_init__(self):
-        assert isinstance(self.func, Function), "f must be a Function"
-        if not self.precision is None:
-            self.precision = float(self.precision)
-    
-    def f(self, x):
-        """the derivative f'(x) of self.func(x)"""
-        return self.func.p(x, precision=self.precision)  
-    
-@dataclass(frozen=True)
-class Derivative2Function(Function):
-    """represents a second derivative function y = f''(x)"""
-    func: Function
-    precision: float = None
-    
-    def __post_init__(self):
-        assert isinstance(self.func, Function), "f must be a Function"
-        if not self.precision is None:
-            self.precision = float(self.precision)
-    
-    def f(self, x):
-        """the second derivative f''(x) of self.func(x)"""
-        return self.func.pp(x, precision=self.precision)  
-    
-    
+##############################################################################
+## CLASS FUNCTION VECTOR    
 @dataclass
 class FunctionVector(DictVector):
     """a vector of functions"""
@@ -486,18 +426,19 @@ class FunctionVector(DictVector):
         return self.dist_L1(func=None, steps=steps, method=method)
     norm1 = norm_L1
     
-    def goalseek(self, target=0, *, x0=1):
+    def goalseek(self, target=0, *, func=None, x0=1):
         """
         very simple gradient descent implementation for a goal seek
         
         :target:    target value (default: 0)
+        :func:      function for goal seek (default: self.f)
         :x0:        starting estimate
         """
         x = x0
         iterations = self.GS_ITERATIONS
         tolerance = self.GS_TOLERANCE
         h = x0*self.GS_ETA if x0 else self.GS_H
-        func = self.f
+        func = func or self.f
         for i in range(iterations):
             y = func(x)
             m = (func(x+h)-func(x-h)) / (2*h)
@@ -679,15 +620,15 @@ class FunctionVector(DictVector):
         x = {**x0}
         path = [{**x}]
         if verbose:
-            print(f"[_minimize_dct] x0={x}")
+            print(f"[_minimize_dct] x0={fmt(x, '.4f')}")
         for iteration in range(iterations):
             f0 = func(**x)
             dfdx = {
                 k: (func( **(cls.bump(x, k, deriv_h)) ) - f0) / deriv_h 
                 for k in x.keys()
             }
-            dx = {k: learning_rate * dfdx[k] for k in x.keys()}
-            x = {k: x[k] - dx[k] for k in x.keys()}
+            dx = {k: -learning_rate * dfdx[k] for k in x.keys()}
+            x = {k: x[k] + dx[k] for k in x.keys()}
             path.append({**x})
             norm2_dfdx = sum(vv**2 for vv in dfdx.values())  
             if verbose:
@@ -710,12 +651,13 @@ class FunctionVector(DictVector):
         """
         
         def optimizer_func(**params):
+            #print("[optimizer_func] updating", params)
             func1 = func.update(**params)
             return self.dist2_L2(func=func1)
         
         return self.minimize(optimizer_func, x0=params0, **kwargs)
         
-    def plot(self, func=None, *, x_min=None, x_max=None, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=True, **kwargs):
+    def plot(self, func=None, *, x_min=None, x_max=None, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=False, **kwargs):
         """
         plots the function
         
@@ -756,10 +698,41 @@ class FunctionVector(DictVector):
         if not other is None:
             assert self.kernel == other.kernel, f"kernels must be equal {self.kernel} != {other.kernel}"
         return dict(kernel=self.kernel)
-    
 minimize = FunctionVector.minimize
 goalseek = FunctionVector.goalseek_cls
+
     
+##################################################################################
+## FUNCTIONAL OBJECTS
+@dataclass(frozen=True)
+class DerivativeFunction(Function):
+    """derivative function y = f'(x)"""
+    func: Function
+    precision: float = None
+    
+    def __post_init__(self):
+        assert isinstance(self.func, Function), "f must be a Function"
+        if not self.precision is None:
+            self.precision = float(self.precision)
+    
+    def f(self, x):
+        """the derivative f'(x) of self.func(x)"""
+        return self.func.p(x, precision=self.precision)  
+    
+@dataclass(frozen=True)
+class Derivative2Function(Function):
+    """second derivative function y = f''(x)"""
+    func: Function
+    precision: float = None
+    
+    def __post_init__(self):
+        assert isinstance(self.func, Function), "f must be a Function"
+        if not self.precision is None:
+            self.precision = float(self.precision)
+    
+    def f(self, x):
+        """the second derivative f''(x) of self.func(x)"""
+        return self.func.pp(x, precision=self.precision)  
     
     
     
