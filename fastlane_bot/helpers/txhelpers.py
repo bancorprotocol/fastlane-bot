@@ -611,15 +611,12 @@ class TxHelpers:
                     split1 = message.split("maxFeePerGas: ")[1]
                     split2 = split1.split(" baseFee: ")
                     split_baseFee = int(int(split2[1].split(" (supplied gas")[0]))
-                    split_maxPriorityFeePerGas = int(
-                        int(split2[0]) * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-                    )
                     transaction = self.construct_contract_function(
                         routes=routes,
                         src_amt=src_amt,
                         src_address=src_address,
                         gas_price=split_baseFee,
-                        max_priority=split_maxPriorityFeePerGas,
+                        max_priority=max_priority,
                         nonce=nonce,
                         flashloan_struct=flashloan_struct,
                     )
@@ -628,6 +625,7 @@ class TxHelpers:
                         f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
                         f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
                     )
+                    return None
             else:
                 self.ConfigObj.logger.warning(
                     f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"

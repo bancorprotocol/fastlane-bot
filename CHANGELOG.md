@@ -2,9 +2,44 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.13...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.17...HEAD)
+
+Merged pull requests
+
+- Solidly Analytics [\#315](https://github.com/bancorprotocol/fastlane-bot/pull/315) ([sklbancor](https://github.com/sklbancor))
+
+## [v3.0.17](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.17) (2024-01-17)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.16...v3.0.17)
+
+Merged pull requests
+
+- Return `None` when the 2nd call to `construct_contract_function` fails [\#312](https://github.com/bancorprotocol/fastlane-bot/pull/312) ([barakman](https://github.com/barakman))
+
+## [v3.0.16](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.16) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.15...v3.0.16)
+
+- Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
+
+Merged pull requests
+
+- Log the type and value of each variable passed to function `get_start_block` [\#303](https://github.com/bancorprotocol/fastlane-bot/pull/303) ([barakman](https://github.com/barakman))
+
+## [v3.0.15](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.15) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.14...v3.0.15)
 
 - Bancor V2 ETH pool has wrong Anchor address [\#309](https://github.com/bancorprotocol/fastlane-bot/issues/309)
+
+Merged pull requests
+
+- Fix max\_priority usage in txhelpers & pool\_shutdown [\#308](https://github.com/bancorprotocol/fastlane-bot/pull/308) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.14](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.14) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.13...v3.0.14)
+
 - Update static\_pool\_data.csv [\#310](https://github.com/bancorprotocol/fastlane-bot/pull/310) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.0.13](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.13) (2024-01-16)
