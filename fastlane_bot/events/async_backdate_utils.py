@@ -103,5 +103,5 @@ def async_handle_initial_iteration(
                 rows=other_pool_rows,
             )
             mgr.cfg.logger.info(
-                f"Backdating {len(other_pool_rows)} pools took {time.time() - start_time} seconds"
+                f"Backdating {len(other_pool_rows)} pools took {(time.time() - start_time):0.4f} seconds"
             )

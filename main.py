@@ -672,7 +672,7 @@ def run(
             # Update new pool events from contracts
             if len(mgr.pools_to_add_from_contracts) > 0:
                 mgr.cfg.logger.info(
-                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts,"
+                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
                     f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
                 async_update_pools_from_contracts(mgr, current_block, logging_path)
