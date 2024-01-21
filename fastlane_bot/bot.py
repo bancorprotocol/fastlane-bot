@@ -635,7 +635,8 @@ class CarbonBot(CarbonBotBase):
                 "tkn1_address": current_pool.tkn1_address,
                 "tkn0_symbol": current_pool.tkn0_symbol,
                 "tkn1_symbol": current_pool.tkn1_symbol,
-                "args": {"id": current_pool.cid},
+                "tkn0_decimals" : current_pool.tkn0_decimals,
+                "tkn1_decimals": current_pool.tkn1_decimals,
             }
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
