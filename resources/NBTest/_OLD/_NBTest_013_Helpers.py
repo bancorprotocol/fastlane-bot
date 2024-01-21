@@ -192,8 +192,8 @@ assert (
 assert (
     ti0._tknout_address != ti1._tknout_address
 ), f"ti0 tknout address == ti1 tkout address, order mismatch!"
-assert ti0.raw_txs == "[]", "ti0 raw tx should not be populated yet"
-assert ti1.raw_txs == "[]", "ti1 raw tx should not be populated yet"
+assert len(ti0.raw_txs) == 0, "ti0 raw tx should not be populated yet"
+assert len(ti1.raw_txs) == 0, "ti1 raw tx should not be populated yet"
 
 
 # +

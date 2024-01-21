@@ -222,8 +222,8 @@ def calculate_trade_outputs(tx_route_handler: TxRouteHandler,
         if trade.amtin <=0:
             trade_instructions.pop(idx)
             continue
-        if trade.raw_txs != "[]":
-            data = eval(trade.raw_txs)
+        if len(trade.raw_txs) != 0:
+            data = trade.raw_txs
             total_out = 0
             total_in = 0
             total_in_wei = 0
@@ -341,7 +341,7 @@ def calculate_trade_outputs(tx_route_handler: TxRouteHandler,
             trade_instructions[idx].amtout = amount_out
             trade_instructions[idx]._amtin_wei = total_in_wei
             trade_instructions[idx]._amtout_wei = total_out_wei
-            trade_instructions[idx].raw_txs = str(raw_txs_lst)
+            trade_instructions[idx].raw_txs = raw_txs_lst
 
         else:
 

@@ -166,11 +166,11 @@ class TxRouteHandler(TxRouteHandlerBase):
     ) -> List[TradeInstruction]:
         for i in range(len(agg_trade_instructions)):
             instr = agg_trade_instructions[i]
-            if instr.raw_txs == "[]":
+            if len(instr.raw_txs) == 0:
                 instr.custom_data = "0x"
                 agg_trade_instructions[i] = instr
             else:
-                tradeInfo = eval(instr.raw_txs)
+                tradeInfo = instr.raw_txs
                 tradeActions = []
                 for trade in tradeInfo:
                     tradeActions += [
@@ -700,7 +700,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
                                                                  tknin=trade_before.tknin_address, tknout=trade.tknout_address,
-                                                                 pair_sorting="", raw_txs="[]", db=trade.db)
+                                                                 pair_sorting="", raw_txs=[], db=trade.db)
                         new_trade_instruction.tknout_is_native = trade.tknout_is_native
                         new_trade_instruction.tknout_is_wrapped = trade.tknout_is_wrapped
                         calculated_trade_instructions[idx - 1] = new_trade_instruction
@@ -742,7 +742,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         carbons = df[df['carbon']].copy()
         nocarbons = df[~df['carbon']].copy()
-        nocarbons["raw_txs"] = str([])
+        nocarbons["raw_txs"] = []
         nocarbons["ConfigObj"] = config_object
         nocarbons["db"] = db
 
@@ -762,7 +762,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "tknout": newdf.tknout.values[0],
                 "amtout": newdf.amtout.sum(),
                 "_amtout_wei": newdf._amtout_wei.sum(),
-                "raw_txs": str(newdf.to_dict(orient="records")),
+                "raw_txs": newdf.to_dict(orient="records"),
                 "ConfigObj" : config_object,
                 "db" : db,
             }
@@ -1579,8 +1579,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             if trade.amtin <=0:
                 trade_instructions.pop(idx)
                 continue
-            if trade.raw_txs != "[]":
-                data = eval(trade.raw_txs)
+            if len(trade.raw_txs) != 0:
+                data = trade.raw_txs
                 total_out = 0
                 total_in = 0
                 total_in_wei = 0
@@ -1690,7 +1690,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 trade_instructions[idx].amtout = _total_out
                 trade_instructions[idx]._amtin_wei = _total_in_wei
                 trade_instructions[idx]._amtout_wei = _total_out_wei
-                trade_instructions[idx].raw_txs = str(raw_txs_lst)
+                trade_instructions[idx].raw_txs = raw_txs_lst
 
                 amount_out = _total_out
 

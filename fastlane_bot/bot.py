@@ -343,7 +343,7 @@ class CarbonBot(CarbonBotBase):
         result = (
             {
                 **ti,
-                "raw_txs": "[]",
+                "raw_txs": [],
                 "pair_sorting": "",
                 "ConfigObj": self.ConfigObj,
                 "db": self.db,

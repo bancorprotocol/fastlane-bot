@@ -51,13 +51,13 @@ def _aggregate_carbon_trades(listti: List[dict]) -> List[TradeInstruction]:
             "amtin": newdf.amtin.sum(),
             "tknout": newdf.tknout.values[0],
             "amtout": newdf.amtout.sum(),
-            "raw_txs": str(newdf.to_dict(orient="records")),
+            "raw_txs": newdf.to_dict(orient="records"),
         }
         for pair_sorting, newdf in carbons.groupby("pair_sorting")
     ]
 
     nocarbons["pair_sorting"] = nocarbons.tknin + nocarbons.tknout
-    nocarbons["raw_txs"] = str([])
+    nocarbons["raw_txs"] = []
     new_trade_instructions.extend(nocarbons.to_dict(orient="records"))
 
     trade_instructions = [
@@ -74,12 +74,12 @@ def _aggregate_carbon_trades(listti: List[dict]) -> List[TradeInstruction]:
 original_input = [{'cid': '3743106036130323098097120681749450326030-0', 'tknin': 'WETH-6Cc2', 'amtin': 0.1265443077509661, 'tknout': 'BNT-FF1C', 'amtout': -500.0}, {'cid': '8847341539944400050047739793225973497926', 'tknin': 'BNT-FF1C', 'amtin': 485.1494996276915, 'tknout': 'WETH-6Cc2', 'amtout': -0.12919924675225047}]
 
 
-old_incorrect_output = [TradeInstruction(cid='3743106036130323098097120681749450326030-0', tknin='WETH-6Cc2', amtin=0.12655696344731082, tknout='BNT-FF1C', amtout=-500.0, pair_sorting='WETH-6Cc2BNT-FF1C', raw_txs="[{'cid': '3743106036130323098097120681749450326030-0', 'tknin': 'WETH-6Cc2', 'amtin': 0.12655696344731082, 'tknout': 'BNT-FF1C', 'amtout': -500.0, 'pair_sorting': 'WETH-6Cc2BNT-FF1C'}]", custom_data=''),
-                  TradeInstruction(cid='8847341539944400050047739793225973497926', tknin='BNT-FF1C', amtin=490.04999962393083, tknout='WETH-6Cc2', amtout=-0.12919924675225047, pair_sorting='BNT-FF1CWETH-6Cc2', raw_txs='[]', custom_data='')]
+old_incorrect_output = [TradeInstruction(cid='3743106036130323098097120681749450326030-0', tknin='WETH-6Cc2', amtin=0.12655696344731082, tknout='BNT-FF1C', amtout=-500.0, pair_sorting='WETH-6Cc2BNT-FF1C', raw_txs=[{'cid': '3743106036130323098097120681749450326030-0', 'tknin': 'WETH-6Cc2', 'amtin': 0.12655696344731082, 'tknout': 'BNT-FF1C', 'amtout': -500.0, 'pair_sorting': 'WETH-6Cc2BNT-FF1C'}], custom_data=''),
+                  TradeInstruction(cid='8847341539944400050047739793225973497926', tknin='BNT-FF1C', amtin=490.04999962393083, tknout='WETH-6Cc2', amtout=-0.12919924675225047, pair_sorting='BNT-FF1CWETH-6Cc2', raw_txs=[], custom_data='')]
 
 
-correct_output = [TradeInstruction(cid='8847341539944400050047739793225973497926', tknin='BNT-FF1C', amtin=485.1494996276915, tknout='WETH-6Cc2', amtout=-0.12919924675225047, pair_sorting='BNT-FF1CWETH-6Cc2', raw_txs='[]', custom_data=''),
-                  TradeInstruction(cid='3743106036130323098097120681749450326030-0', tknin='WETH-6Cc2', amtin=0.1265443077509661, tknout='BNT-FF1C', amtout=-500.0, pair_sorting='WETH-6Cc2BNT-FF1C', raw_txs="[{'cid': '3743106036130323098097120681749450326030-0', 'tknin': 'WETH-6Cc2', 'amtin': 0.1265443077509661, 'tknout': 'BNT-FF1C', 'amtout': -500.0, 'pair_sorting': 'WETH-6Cc2BNT-FF1C'}]", custom_data='')]
+correct_output = [TradeInstruction(cid='8847341539944400050047739793225973497926', tknin='BNT-FF1C', amtin=485.1494996276915, tknout='WETH-6Cc2', amtout=-0.12919924675225047, pair_sorting='BNT-FF1CWETH-6Cc2', raw_txs=[], custom_data=''),
+                  TradeInstruction(cid='3743106036130323098097120681749450326030-0', tknin='WETH-6Cc2', amtin=0.1265443077509661, tknout='BNT-FF1C', amtout=-500.0, pair_sorting='WETH-6Cc2BNT-FF1C', raw_txs=[{'cid': '3743106036130323098097120681749450326030-0', 'tknin': 'WETH-6Cc2', 'amtin': 0.1265443077509661, 'tknout': 'BNT-FF1C', 'amtout': -500.0, 'pair_sorting': 'WETH-6Cc2BNT-FF1C'}], custom_data='')]
 
 
 new_output = _aggregate_carbon_trades(original_input)

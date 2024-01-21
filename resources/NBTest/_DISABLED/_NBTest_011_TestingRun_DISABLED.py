@@ -154,8 +154,8 @@ assert xsti[0].ConfigObj is not None, "A configobj should be present"
 agg = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_AGGTI)
 agg
 
-assert agg[0].raw_txs != "[]", "In this case, the carbon order is first, when agg correctly the raw_txs should not be empty"
-assert agg[1].raw_txs == "[]", "In this case, the univ3 order is second, when agg correctly the raw_txs should be empty"
+assert len(agg[0].raw_txs) != 0, "In this case, the carbon order is first, when agg correctly the raw_txs should not be empty"
+assert len(agg[1].raw_txs) == 0, "In this case, the univ3 order is second, when agg correctly the raw_txs should be empty"
 
 # #### XS_ORDINFO
 

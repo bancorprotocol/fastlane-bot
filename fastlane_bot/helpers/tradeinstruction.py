@@ -33,7 +33,7 @@ class TradeInstruction:
     cid_tkn: str
         If the curve is a Carbon curve, the cid will have a "-1" or "-0" to denote which side of the strategy the trade is on.
         This parameter is used to remove the "-1" or "-0" from the cid.
-    raw_txs: str
+    raw_txs: list
     pair_sorting: str
 
     Attributes
@@ -153,7 +153,7 @@ class TradeInstruction:
             self._amtout_decimals, self._tknout_decimals
         )
         if self.raw_txs is None:
-            self.raw_txs = "[]"
+            self.raw_txs = []
         if self.pair_sorting is None:
             self.pair_sorting = ""
         if self.exchange_override is None:
