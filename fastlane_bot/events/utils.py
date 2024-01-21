@@ -1347,7 +1347,7 @@ def get_start_block(
             for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
         ]
         if non_int_values:
-            mgr.cfg.logger.info(f"get_start_block (tenderly {mgr.tenderly_fork_id}): {non_int_values}")
+            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
         return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
@@ -1361,7 +1361,7 @@ def get_start_block(
             for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
         ]
         if non_int_values:
-            mgr.cfg.logger.info(f"get_start_block (non-tenderly): {non_int_values}")
+            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
         return (
             (
                 max(block["last_updated_block"] for block in mgr.pool_data)
