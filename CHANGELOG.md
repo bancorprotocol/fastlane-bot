@@ -2,7 +2,14 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.18...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.19...HEAD)
+
+- Add support for Solidly Uni V2-style pools [\#274](https://github.com/bancorprotocol/fastlane-bot/issues/274)
+- 274 add support for solidly uni v2 style pools [\#282](https://github.com/bancorprotocol/fastlane-bot/pull/282) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.19](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.19) (2024-01-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.18...v3.0.19)
 
 - Production monitoring spreadsheet [\#275](https://github.com/bancorprotocol/fastlane-bot/issues/275)
 
