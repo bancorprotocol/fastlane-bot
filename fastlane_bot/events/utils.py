@@ -1346,29 +1346,38 @@ def get_start_block(
         ), replay_from_block
     elif mgr.tenderly_fork_id:
         # connect to the Tenderly fork and get the latest block number
-        current_block = mgr.w3_tenderly.eth.block_number
-        from_block = (
+        from_block = mgr.w3_tenderly.eth.block_number
+        # Log all non-integer block numbers
+        non_int_values = [
+            (index, block["last_updated_block"], type(block["last_updated_block"]))
+            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
+        ]
+        if non_int_values:
+            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
+        return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
-            else current_block - reorg_delay - alchemy_max_block_fetch
-        )
-        if (current_block - from_block) > 2000:
-            from_block = current_block - 2000
-        return from_block, current_block
+            else from_block - reorg_delay - alchemy_max_block_fetch
+        ), from_block
     else:
         current_block = mgr.web3.eth.block_number
-        from_block = (
-            max(block["last_updated_block"] for block in mgr.pool_data)
-            - reorg_delay
-            if last_block != 0
-            else current_block - reorg_delay - alchemy_max_block_fetch
-        )
-        if (current_block - from_block) > 2000:
-            from_block = current_block - 2000
+        # Log all non-integer block numbers
+        non_int_values = [
+            (index, block["last_updated_block"], type(block["last_updated_block"]))
+            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
+        ]
+        if non_int_values:
+            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
         return (
-            from_block,
+            (
+                max(block["last_updated_block"] for block in mgr.pool_data)
+                - reorg_delay
+                if last_block != 0
+                else current_block - reorg_delay - alchemy_max_block_fetch
+            ),
             None,
         )
+
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:
