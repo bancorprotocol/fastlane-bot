@@ -14,6 +14,7 @@ check_version_requirements(required_version="6.11.0", package_name="web3")
 import os, sys
 import time
 from typing import List
+from traceback import format_exc
 
 import click
 import pandas as pd
@@ -836,7 +837,7 @@ def run(
                 )
 
         except Exception as e:
-            mgr.cfg.logger.error(f"Error in main loop: {e}")
+            mgr.cfg.logger.error(f"Error in main loop: {format_exc()}")
             mgr.cfg.logger.error(
                 f"[main] Error in main loop: {e}. Continuing... "
                 f"Please report this error to the Fastlane Telegram channel if it persists."
