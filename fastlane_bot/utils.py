@@ -23,6 +23,10 @@ from fastlane_bot.config import config as cfg
 from fastlane_bot.data.abi import *
 
 
+def int_prefix(string: str) -> int:
+    return int(string[:-len(string.lstrip("0123456789"))])
+
+
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """
     param: tkn_amt: the number of tokens to convert
