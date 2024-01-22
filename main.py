@@ -618,12 +618,6 @@ def run(
                     pool["last_updated_block"] = last_block_queried
                     mgr.pool_data[idx] = pool
 
-            # Log the input passed to function `get_start_block`
-            mgr.cfg.logger.info(
-                "get_start_block input: " +
-                ", ".join([f"({x}, {type(x)})" for x in [alchemy_max_block_fetch, last_block, reorg_delay, replay_from_block]])
-            )
-
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block, replay_from_block = get_start_block(
                 alchemy_max_block_fetch, last_block, mgr, reorg_delay, replay_from_block
