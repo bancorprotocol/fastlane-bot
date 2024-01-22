@@ -1127,7 +1127,15 @@ def get_last_block_updated(df: pd.DataFrame, exchange: str) -> int:
     """
 
     ex_df = df[df["exchange"] == exchange]
-    return ex_df["last_updated_block"].max()
+
+    # if the `last_updated_block` column contains `None` values, then `max` returns a value of type `float`:
+    max_last_updated_block = ex_df["last_updated_block"].max()
+
+    # therefore, we should verify that this value is nevertheless integer:
+    assert max_last_updated_block == int(max_last_updated_block), f"max_last_updated_block = {max_last_updated_block}, which is not integer"
+
+    # and only then can we safely convert it to type `int`
+    return int(max_last_updated_block)
 
 
 def save_token_data(token_dict: TokenManager, write_path: str):
