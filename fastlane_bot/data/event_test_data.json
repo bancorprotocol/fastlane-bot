@@ -12,6 +12,19 @@
     "blockHash": "0x859b0803d75c861baa46e4e02be794187fd9a28a048f19ca148ff7f22e80c8ff",
     "blockNumber": 17613636
   },
+  "solidly_v2_event": {
+    "args": {
+      "reserve0": 19080146287,
+      "reserve1": 2535973648121
+    },
+    "event": "Sync",
+    "logIndex": 255,
+    "transactionIndex": 115,
+    "transactionHash": "0xecca41359219ee5a0e73652d1bea48bdc73216f294e865416da3f27232fee6e8",
+    "address": "0x3041CbD36888bECc7bbCBc0045E3B1f144466f5f",
+    "blockHash": "0x859b0803d75c861baa46e4e02be794187fd9a28a048f19ca148ff7f22e80c8ff",
+    "blockNumber": 17613636
+  },
   "sushiswap_v2_event": {
     "args": {
       "reserve0": 6543521908014628725401090,

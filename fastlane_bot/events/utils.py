@@ -244,7 +244,7 @@ def get_static_data(
     blockchain: str,
     static_pool_data_filename: str,
     read_only: bool = False,
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str]]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, str], Dict[str, str], Dict[str, str]]:
     """
     Helper function to get static pool data, tokens, and Uniswap v2 event mappings.
 
@@ -289,6 +289,12 @@ def get_static_data(
     uniswap_v3_event_mappings_df = read_csv_file(uniswap_v3_filepath)
     uniswap_v3_event_mappings = dict(
         uniswap_v3_event_mappings_df[["address", "exchange"]].values
+    )
+    # Read Solidly v2 event mappings and tokens
+    solidly_v2_filepath = os.path.join(base_path, "solidly_v2_event_mappings.csv")
+    solidly_v2_event_mappings_df = read_csv_file(solidly_v2_filepath)
+    solidly_v2_event_mappings = dict(
+        solidly_v2_event_mappings_df[["address", "exchange"]].values
     )
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
@@ -371,6 +377,7 @@ def get_static_data(
         tokens,
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
+        solidly_v2_event_mappings,
     )
 
 
@@ -1271,7 +1278,6 @@ def get_latest_events(
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
-
     if mgr.tenderly_fork_id:
         if tenderly_events:
             latest_tenderly_events = filter_latest_events(mgr, tenderly_events)
@@ -1371,6 +1377,7 @@ def get_start_block(
             ),
             None,
         )
+
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:
@@ -1926,11 +1933,24 @@ def handle_static_pools_update(mgr: Any):
             for k, v in mgr.uniswap_v3_event_mappings.items()
         ]
     )
+    solidly_v2_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.solidly_v2_event_mappings.items()
+        ]
+    )
     all_event_mappings = (
-        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings])
+        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings, solidly_v2_event_mappings])
         .drop_duplicates("address")
         .to_dict(orient="records")
     )
+    if "uniswap_v2_pools" not in mgr.static_pools:
+        mgr.static_pools["uniswap_v2_pools"] = []
+    if "uniswap_v3_pools" not in mgr.static_pools:
+        mgr.static_pools["uniswap_v3_pools"] = []
+    if "solidly_v2_pools" not in mgr.static_pools:
+        mgr.static_pools["solidly_v2_pools"] = []
+
     for ex in mgr.forked_exchanges:
         if ex in mgr.exchanges:
             exchange_pools = [

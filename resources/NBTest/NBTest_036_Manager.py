@@ -62,6 +62,7 @@ cfg = Config.new(config=Config.CONFIG_MAINNET)
     tokens,
     uniswap_v2_event_mappings,
     uniswap_v3_event_mappings,
+    solidly_v2_event_mappings,
 ) = get_static_data(
     cfg, ['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'], "ethereum",'static_pool_data'
 )
@@ -74,7 +75,8 @@ manager = Manager(web3=cfg.w3,
                   SUPPORTED_EXCHANGES=['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'],
                   forked_exchanges=['uniswap_v2', 'uniswap_v3'],
                   uniswap_v2_event_mappings=uniswap_v2_event_mappings,
-                  uniswap_v3_event_mappings=uniswap_v3_event_mappings)
+                  uniswap_v3_event_mappings=uniswap_v3_event_mappings,
+                  solidly_v2_event_mappings=solidly_v2_event_mappings)
 
 handle_static_pools_update(manager)
 # -

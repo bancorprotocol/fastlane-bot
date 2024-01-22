@@ -161,6 +161,26 @@ class TradeInstruction:
         else:
             self._exchange_name = self.exchange_override
         self._exchange_id = self.get_platform_id()
+        self.custom_int = self.get_custom_int()
+
+    def get_custom_int(self) -> int:
+        """
+        Gets the custom int field for the pool
+
+        Uni V3 & forks: the fee
+        Balancer: the pool ID
+        Solidly V2 & forks: 0 for volatile, 1 for stable
+        """
+        pool = self.pool
+        custom_int = 0
+        if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
+            custom_int = int(Decimal(pool.fee_float) * Decimal("1000000"))
+        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            custom_int = 0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
+        elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
+            custom_int = int(pool.anchor, 16)
+        return custom_int
+
 
     def get_platform_id(self):
         """
@@ -170,6 +190,8 @@ class TradeInstruction:
             return self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
         elif self._exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V2_NAME]
+        elif self._exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.SOLIDLY_V2_NAME]
         elif self._exchange_name in self.ConfigObj.UNI_V3_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V3_NAME]
 

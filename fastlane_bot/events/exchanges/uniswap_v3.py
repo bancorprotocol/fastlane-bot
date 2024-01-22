@@ -10,7 +10,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI
+from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -20,7 +20,7 @@ class UniswapV3(Exchange):
     """
     UniswapV3 exchange class
     """
-
+    base_exchange_name: str = "uniswap_v3"
     exchange_name: str = "uniswap_v3"
     router_address: str = None
     exchange_initialized: bool = False
@@ -29,7 +29,11 @@ class UniswapV3(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI
+        return UNISWAP_V3_POOL_ABI if self.exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_POOL_ABI
+
+    @property
+    def get_factory_abi(self):
+        return UNISWAP_V3_FACTORY_ABI if self.exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_FACTORY_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap] if self.exchange_initialized else []

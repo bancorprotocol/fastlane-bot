@@ -52,6 +52,7 @@ class QueryInterface:
     ConfigObj: Config = None
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
+    solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
     token_list: Dict[str, Any] = None
     pool_data = None
@@ -204,30 +205,25 @@ class QueryInterface:
         """
         initial_state = self.state.copy()
 
-        exchanges = [
-            "uniswap_v3",
-            "sushiswap_v2",
-            "uniswap_v2",
-            "bancor_v2",
-            "bancor_v3",
-            "bancor_pol",
-            "carbon_v1",
-            "pancakeswap_v2",
-            "pancakeswap_v3",
-            "balancer",
-        ]
-        keys = [
-            ["liquidity"],
-            ["tkn0_balance"],
-            ["tkn0_balance"],
-            ["tkn0_balance"],
-            ["tkn0_balance"],
-            ["y_0"],
-            ["y_0", "y_1"],
-            ["tkn0_balance"],
-            ["liquidity"],
-            ["tkn0_balance"],
-        ]
+        exchanges = []
+        keys = []
+
+        for ex in self.cfg.ALL_KNOWN_EXCHANGES:
+            if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + ["bancor_v2", "bancor_v3"]:
+                exchanges.append(ex)
+                keys.append(["tkn0_balance"])
+            elif ex in self.cfg.UNI_V3_FORKS:
+                exchanges.append(ex)
+                keys.append(["liquidity"])
+            elif ex in self.cfg.CARBON_V1_FORKS:
+                exchanges.append(ex)
+                keys.append(["y_0", "y_1"])
+            elif ex in "bancor_pol":
+                exchanges.append(ex)
+                keys.append(["y_0"])
+            elif ex in "balancer":
+                exchanges.append(ex)
+                keys.append(["tkn0_balance"])
 
         self.state = [
             pool
@@ -466,6 +462,7 @@ class QueryInterface:
                     "tkn7_address",
                     "tkn7_decimals",
                     "tkn7_weight",
+                    "pool_type",
                 ]
             },
         )

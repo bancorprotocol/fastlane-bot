@@ -46,6 +46,7 @@ __DATE__ = "20/June/2023"
 
 import random
 import time
+import json
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
@@ -190,6 +191,14 @@ class CarbonBotBase:
             try:
                 p.ADDRDEC = ADDRDEC
                 curves += p.to_cpc()
+            except NotImplementedError as e:
+                # Currently not supporting Solidly V2 Stable pools. This will be removed when support is added, but for now the error message is suppressed.
+                if "Stable Solidly V2" in str(e):
+                    continue
+                else:
+                    self.ConfigObj.logger.error(
+                        f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
+                    )
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
@@ -626,7 +635,8 @@ class CarbonBot(CarbonBotBase):
                 "tkn1_address": current_pool.tkn1_address,
                 "tkn0_symbol": current_pool.tkn0_symbol,
                 "tkn1_symbol": current_pool.tkn1_symbol,
-                "args": {"id": current_pool.cid},
+                "tkn0_decimals" : current_pool.tkn0_decimals,
+                "tkn1_decimals": current_pool.tkn1_decimals,
             }
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
@@ -864,8 +874,8 @@ class CarbonBot(CarbonBotBase):
         }
 
         for idx, trade in enumerate(calculated_trade_instructions):
-            tknin = {trade.tknin_symbol, trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
-            tknout = {trade.tknout_symbol, trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
+            tknin = {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
+            tknout = {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
             log_dict["trades"].append(
                 {
                     "trade_index": idx,
@@ -1389,7 +1399,10 @@ class CarbonBot(CarbonBotBase):
                         for record in tx_hash:
                             f.write("\n")
                             f.write("\n")
-                            f.write(str(record))
+                            try:
+                                json.dump(record, f, indent=4)
+                            except:
+                                f.write(str(record))
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")

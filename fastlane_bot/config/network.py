@@ -53,15 +53,32 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     for row in df.iterrows():
         exchange_name = row[1]["exchange_name"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
-        address = row[1]["address"]
-        if fork in fork_name and contract_name in [
-            S.ROUTER_ADDRESS,
-            S.CARBON_CONTROLLER,
-        ]:
-            fork_map[exchange_name] = address
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_name:
+            fork_map[exchange_name] = router_address
     return fork_map
 
+
+def get_factory_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
+    """
+    Get a Dict of factory : exchange name
+    :param df: the dataframe containing exchange details
+    :param fork_names: the list of fork names
+
+    returns: Dict containing: factory_address : exchange_name
+
+    """
+    fork_map = {}
+    for row in df.iterrows():
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_names:
+            fork_map[factory_address] = exchange_name
+            fork_map[exchange_name] = factory_address
+    return fork_map
 
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
@@ -76,16 +93,17 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     for row in df.iterrows():
         exchange_name = row[1]["exchange_name"]
         fork = row[1]["fork"]
-        contract_name = row[1]["contract_name"]
         fee = row[1]["fee"]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
+        if fork in fork_name:
             fork_map[exchange_name] = fee
     return fork_map
 
 
 def get_row_from_address(address: str, df: pd.DataFrame) -> pd.DataFrame:
-    if df["address"].isin([address]).any():
-        return df[df["address"] == address]
+    if df["router_address"].isin([address]).any():
+        return df[df["router_address"] == address]
+    elif df["factory_address"].isin([address]).any():
+        return df[df["factory_address"] == address]
     return None
 
 
@@ -99,14 +117,12 @@ def get_exchange_from_address(address: str, df: pd.DataFrame) -> str or None:
 def get_items_from_exchange(
     item_names: List[str],
     exchange_name: str,
-    contract_name: str,
     fork: str,
     df: pd.DataFrame,
 ) -> List[str or float]:
     df_ex = df[
         (df["exchange_name"] == exchange_name)
         & (df["fork"] == fork)
-        & (df["contract_name"] == contract_name)
     ]
     if len(df_ex.index) == 0:
         return None
@@ -120,10 +136,9 @@ def get_router_address_for_exchange(
     exchange_name: str, fork: str, df: pd.DataFrame
 ) -> str:
     router_address = get_items_from_exchange(
-        item_names=["address"],
+        item_names=["router_address"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="ROUTER_ADDRESS",
         df=df,
     )
     if router_address is None:
@@ -140,7 +155,6 @@ def get_fee_for_exchange(
         item_names=["fee"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="FACTORY_ADDRESS",
         df=df,
     )
     if exchange_fee is None:
@@ -200,6 +214,7 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
+    VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
 
     # Base Exchanges
@@ -221,24 +236,9 @@ class ConfigNetwork(ConfigBase):
     PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
     PLATFORM_ID_WRAP_UNWRAP = 10
 
-    EXCHANGE_IDS = {
-        BANCOR_V2_NAME: 1,
-        BANCOR_V3_NAME: 2,
-        UNISWAP_V2_NAME: 3,
-        PANCAKESWAP_V2_NAME: 3,
-        UNISWAP_V3_NAME: 4,
-        PANCAKESWAP_V3_NAME: 4,
-        SUSHISWAP_V2_NAME: 5,
-        CARBON_V1_NAME: 6,
-        BALANCER_NAME: 7,
-        CARBON_POL_NAME: 8,
-        PLATFORM_ID_WRAP_UNWRAP : 10
-    }
 
-    # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
     CARBON_V1_FORKS = [CARBON_V1_NAME]
 
-    SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
     BANCOR_POL_START_BLOCK = 18184448
@@ -251,6 +251,11 @@ class ConfigNetwork(ConfigBase):
     CARBON_STRATEGY_DELETED = f"{CARBON_V1_NAME}_StrategyDeleted"
     CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
     CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
+
+    # POOL IDENTIFIERS SECTION
+    #######################################################################################
+    POOL_TYPE_STABLE = "stable"
+    POOL_TYPE_VOLATILE = "volatile"
 
     # DEFAULT VALUES SECTION
     #######################################################################################
@@ -336,34 +341,63 @@ class ConfigNetwork(ConfigBase):
         self.UNI_V3_ROUTER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.UNISWAP_V3
         )
-        self.SOLIDLY_ROUTER_MAPPING = get_fork_map(
-            df=self.network_df, fork_name=S.SOLIDLY
-        )
-        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY)
+        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY_V2)
         self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + [
             "uniswap_v2"
         ]
         self.UNI_V3_FORKS = [key for key in self.UNI_V3_ROUTER_MAPPING.keys()]
-        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_ROUTER_MAPPING.keys()]
+
+        self.SOLIDLY_V2_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.SOLIDLY_V2
+        )
+        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.CARBON_V1
         )
         self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
 
         self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.CARBON_V1_FORKS
+        self.ALL_FORK_NAMES_WITHOUT_CARBON = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS
+        self.FACTORY_MAPPING = get_factory_map(df=self.network_df, fork_names=[S.UNISWAP_V2, S.UNISWAP_V3, S.SOLIDLY_V2])
 
         self.CHAIN_SPECIFIC_EXCHANGES = (
             self.CHAIN_SPECIFIC_EXCHANGES
             + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()]
-            + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()]
             + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
         )
         self.CHAIN_SPECIFIC_EXCHANGES = [
             ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None
         ]
-        self.ALL_KNOWN_EXCHANGES = self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES
+        self.ALL_KNOWN_EXCHANGES = list(set(self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES))
+
+        self.EXCHANGE_IDS = {
+            self.BANCOR_V2_NAME: 1,
+            self.BANCOR_V3_NAME: 2,
+            self.BALANCER_NAME: 7,
+            self.CARBON_POL_NAME: 8,
+            self.PLATFORM_ID_WRAP_UNWRAP: 10,
+            self.UNISWAP_V2_NAME: 3,
+            self.UNISWAP_V3_NAME: 4,
+            self.SOLIDLY_V2_NAME: 11,
+            self.AERODROME_V2_NAME: 12,
+            self.CARBON_V1_NAME: 6,
+        }
+        for ex in self.UNI_V2_FORKS:
+            self.EXCHANGE_IDS[ex] = 3
+        for ex in self.UNI_V3_FORKS:
+            self.EXCHANGE_IDS[ex] = 4
+        for ex in self.CARBON_V1_FORKS:
+            self.EXCHANGE_IDS[ex] = 6
+        for ex in self.SOLIDLY_V2_FORKS:
+            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
+                self.EXCHANGE_IDS[ex] = 11
+            else:
+                self.EXCHANGE_IDS[ex] = 12
+        self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
+
 
     def exchange_name_base_from_fork(self, exchange_name):
         if exchange_name in self.UNI_V2_FORKS:
@@ -551,10 +585,10 @@ class _ConfigNetworkOptimism(ConfigNetwork):
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-0006": "0x4200000000000000000000000000000000000006",
-        "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-        "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-        "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "WBTC": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
@@ -596,8 +630,8 @@ class _ConfigNetworkBase(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
     CHAIN_FLASHLOAN_TOKENS = {
-        "WETH-0006": "0x4200000000000000000000000000000000000006",
-        "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []

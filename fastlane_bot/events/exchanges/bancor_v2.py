@@ -30,6 +30,11 @@ class BancorV2(Exchange):
     def get_abi(self):
         return BANCOR_V2_CONVERTER_ABI
 
+    @property
+    def get_factory_abi(self):
+        # Not used for Bancor V2
+        return BANCOR_V2_CONVERTER_ABI
+
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
 

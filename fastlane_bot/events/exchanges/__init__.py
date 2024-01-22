@@ -9,8 +9,6 @@ Licensed under MIT
 from fastlane_bot.events.exchanges.bancor_v3 import BancorV3
 from fastlane_bot.events.exchanges.carbon_v1 import CarbonV1
 from fastlane_bot.events.exchanges.factory import ExchangeFactory
-from fastlane_bot.events.exchanges.pancakeswap_v2 import PancakeswapV2
-from fastlane_bot.events.exchanges.pancakeswap_v3 import PancakeswapV3
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
 from fastlane_bot.events.exchanges.uniswap_v2 import UniswapV2
 from fastlane_bot.events.exchanges.uniswap_v3 import UniswapV3
@@ -28,7 +26,5 @@ exchange_factory.register_exchange("bancor_v3", BancorV3)
 exchange_factory.register_exchange("carbon_v1", CarbonV1)
 exchange_factory.register_exchange("bancor_v2", BancorV2)
 exchange_factory.register_exchange("bancor_pol", BancorPol)
-exchange_factory.register_exchange("pancakeswap_v2", PancakeswapV2)
-exchange_factory.register_exchange("pancakeswap_v3", PancakeswapV3)
 exchange_factory.register_exchange("balancer", Balancer)
-#exchange_factory.register_exchange("solidly_v2", SolidlyV2)
+exchange_factory.register_exchange("solidly_v2", SolidlyV2)

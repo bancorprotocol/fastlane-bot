@@ -164,6 +164,9 @@ class PoolAndTokens:
     tkn7_symbol: str = None
     ADDRDEC = None
 
+    pool_type: str = None
+
+
     def __post_init__(self):
 
         self.A_1 = self.A_1 or 0
@@ -257,6 +260,11 @@ class PoolAndTokens:
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()
+        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            if self.pool_type in "volatile":
+                out = self._other_to_cpc()
+            else:
+                raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:

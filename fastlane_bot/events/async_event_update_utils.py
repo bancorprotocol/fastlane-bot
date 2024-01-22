@@ -300,8 +300,8 @@ def get_token_contracts(
         for tkn in missing_tokens
         if tkn is not None and str(tkn) != "nan"
     )
-    mgr.cfg.logger.info(
-        f"\n\n successful token contracts: {len(contracts) - len(failed_contracts)} of {len(contracts)} "
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.get_token_contracts] successful token contracts: {len(contracts) - len(failed_contracts)} of {len(contracts)} "
     )
     return contracts, tokens_df
 
@@ -517,20 +517,20 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
 
-    mgr.cfg.logger.info(f"\n\nasync new_pools_added: {new_pools_added}")
-    mgr.cfg.logger.info(f"async  orig_num_pools_in_data: {orig_num_pools_in_data}")
-    mgr.cfg.logger.info(f"async  duplicate_new_pool_ct: {duplicate_new_pool_ct}")
-    mgr.cfg.logger.info(
-        f"async  pools_to_add_from_contracts: {len(mgr.pools_to_add_from_contracts)}"
+    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] new_pools_added: {new_pools_added}")
+    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] orig_num_pools_in_data: {orig_num_pools_in_data}")
+    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] duplicate_new_pool_ct: {duplicate_new_pool_ct}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] pools_to_add_from_contracts: {len(mgr.pools_to_add_from_contracts)}"
     )
-    mgr.cfg.logger.info(f"async final pool_data ct: {len(mgr.pool_data)}")
-    mgr.cfg.logger.info(
-        f"compare {new_pools_added + duplicate_new_pool_ct},{len(mgr.pools_to_add_from_contracts)}"
+    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] final pool_data ct: {len(mgr.pool_data)}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] compare {new_pools_added + duplicate_new_pool_ct},{len(mgr.pools_to_add_from_contracts)}"
     )
 
     # update the pool_data from events
     update_pools_from_events(-1, mgr, all_events)
 
     mgr.cfg.logger.info(
-        f"Async Updating pools from contracts took {time.time() - start_time} seconds"
+        f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
     )

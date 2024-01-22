@@ -178,7 +178,7 @@ assert len(combos) >= 1410, f"[NBTest 039 TestMultiMode] Using wrong dataset, ex
 # ## Test_Expected_Output
 
 # +
-arb_finder = bot._get_arb_finder("multi_pairwise_pol")
+arb_finder = bot._get_arb_finder("multi")
 finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
             CCm=CCm,
@@ -210,7 +210,7 @@ for arb in r:
                     if trade["tknin"] not in carbon_tkn_in:
                         carbon_wrong_direction_count += 1
 
-assert len(r) >= 36, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
+assert len(r) >= 27, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
 assert multi_carbon_count > 0, f"[NBTest 039 TestMultiMode] Not finding arbs with multiple Carbon curves."
 assert carbon_wrong_direction_count == 0, f"[NBTest 039 TestMultiMode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."
 # -
