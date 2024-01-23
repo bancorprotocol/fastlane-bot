@@ -474,6 +474,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     # Initialize web3
     new_pool_data_df["cid"] = [
         cfg.w3.keccak(text=f"{row['descr']}").hex()
+        if row["exchange_name"] not in mgr.cfg.CARBON_V1_FORKS
+        else int(row['cid'])
         for index, row in new_pool_data_df.iterrows()
     ]
 
