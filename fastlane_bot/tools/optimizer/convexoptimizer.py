@@ -13,8 +13,8 @@ Licensed under MIT
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
-__VERSION__ = "5.0"
-__DATE__ = "26/Jul/2023"
+__VERSION__ = "5.0.1"
+__DATE__ = "23/Jan/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -33,8 +33,9 @@ except:
     # if cvxpy is not installed on the system then the convex optimization methods will not work
     # however, the (superior) marginal price based methods will still work and we do not want to
     # force installation of an otherwise unused package onto the user's system
-    cp = None
-
+    from types import SimpleNamespace
+    cp = SimpleNamespace(Variable=0, ECOS=0, SCS=0, OSQP=0, CVXOPT=0, CBC=0)
+    
 from .dcbase import DCBase
 from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer

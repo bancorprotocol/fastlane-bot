@@ -48,9 +48,9 @@ class MargPOptimizer(CPCArbOptimizer):
         """
         computes the Jacobian of func at point x
 
-        :func:    a callable x=(x1..xn) -> (y1..ym), taking and returning np.arrays
-                  must also take a quiet parameter, which if True suppresses output
-        :x:       a vector x=(x1..xn) as np.array
+        :func:  a callable x=(x1..xn) -> (y1..ym), taking and returning np.arrays
+                must also take a quiet parameter, which if True suppresses output
+        :x:     a vector x=(x1..xn) as np.array
         """
         if eps is None:
             eps = cls.JACEPS
