@@ -33,6 +33,7 @@ from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import encode_token_price
 from fastlane_bot.events.pools import CarbonV1Pool
 from fastlane_bot.helpers import TxHelpers
+from fastlane_bot.utils import safe_int
 
 
 def filter_latest_events(
@@ -1338,16 +1339,6 @@ def get_start_block(
         The starting block number and the block number to replay from.
 
     """
-    def int_max():
-        # if the `last_updated_block` column contains `None` values, then `max` returns a value of type `float`:
-        max_last_updated_block = max(block["last_updated_block"] for block in mgr.pool_data)
-
-        # therefore, we should verify that this value is nevertheless integer:
-        assert max_last_updated_block == int(max_last_updated_block), f"max_last_updated_block = {max_last_updated_block}, which is not integer"
-
-        # and only then can we safely convert it to type `int`
-        return int(max_last_updated_block)
-
     if last_block == 0:
         if replay_from_block:
             return replay_from_block - reorg_delay - alchemy_max_block_fetch, replay_from_block
@@ -1359,9 +1350,9 @@ def get_start_block(
         if replay_from_block:
             return replay_from_block - 1, replay_from_block
         elif mgr.tenderly_fork_id:
-            return int_max() - reorg_delay, mgr.w3_tenderly.eth.block_number
+            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, mgr.w3_tenderly.eth.block_number
         else:
-            return int_max() - reorg_delay, None
+            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:

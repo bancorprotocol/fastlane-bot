@@ -13,6 +13,7 @@ import requests
 from web3 import Web3
 
 from fastlane_bot.data.abi import *
+from fastlane_bot.utils import safe_int
 
 ETHEREUM = "ethereum"
 POLYGON = "polygon"
@@ -1128,14 +1129,10 @@ def get_last_block_updated(df: pd.DataFrame, exchange: str) -> int:
 
     ex_df = df[df["exchange"] == exchange]
 
-    # if the `last_updated_block` column contains `None` values, then `max` returns a value of type `float`:
-    max_last_updated_block = ex_df["last_updated_block"].max()
-
-    # therefore, we should verify that this value is nevertheless integer:
-    assert max_last_updated_block == int(max_last_updated_block), f"max_last_updated_block = {max_last_updated_block}, which is not integer"
-
+    # if the `last_updated_block` column contains `None` values, then `max` returns a value of type `float`
+    # we should therefore verify that this value is nevertheless integer
     # and only then can we safely convert it to type `int`
-    return int(max_last_updated_block)
+    return safe_int(ex_df["last_updated_block"].max())
 
 
 def save_token_data(token_dict: TokenManager, write_path: str):
