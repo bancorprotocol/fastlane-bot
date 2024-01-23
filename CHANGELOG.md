@@ -2,9 +2,22 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.19...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.20...HEAD)
+
+- hex string without 0x prefix [\#306](https://github.com/bancorprotocol/fastlane-bot/issues/306)
+- max priority fee overridden in build\_transaction\_with\_gas when gas base fee fails [\#300](https://github.com/bancorprotocol/fastlane-bot/issues/300)
+- hex string without 0x prefix [\#324](https://github.com/bancorprotocol/fastlane-bot/pull/324) ([mikewcasale](https://github.com/mikewcasale))
 
 - Add support for Solidly Uni V2-style pools [\#274](https://github.com/bancorprotocol/fastlane-bot/issues/274)
+
+Closed issues
+
+- Fix production job alert spam \(time-outs\) [\#325](https://github.com/bancorprotocol/fastlane-bot/issues/325)
+
+## [v3.0.20](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.20) (2024-01-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.19...v3.0.20)
+
 - 274 add support for solidly uni v2 style pools [\#282](https://github.com/bancorprotocol/fastlane-bot/pull/282) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.0.19](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.19) (2024-01-22)
