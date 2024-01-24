@@ -23,6 +23,11 @@ from fastlane_bot.config import config as cfg
 from fastlane_bot.data.abi import *
 
 
+def safe_int(value: int or float) -> int:
+    assert value == int(value), f"non-integer `float` value {value}"
+    return int(value)
+
+
 def int_prefix(string: str) -> int:
     return int(string[:-len(string.lstrip("0123456789"))])
 
