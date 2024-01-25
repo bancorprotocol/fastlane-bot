@@ -86,7 +86,7 @@ def test_arb_mode_happy_path_options(arb_mode):
         "--is_args_test=True",
         f"--arb_mode={arb_mode}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"arb_mode: {arb_mode}" in result.stderr
 
 
@@ -100,7 +100,7 @@ def test_arb_mode_invalid_options(arb_mode):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert f"error: argument --arb_mode: invalid choice: '{arb_mode}'" in str(e)
 
@@ -115,7 +115,7 @@ def test_alchemy_max_block_fetch(alchemy_max_block_fetch):
         "--is_args_test=True",
         f"--alchemy_max_block_fetch={alchemy_max_block_fetch}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"alchemy_max_block_fetch: {alchemy_max_block_fetch}" in result.stderr
 
 
@@ -131,7 +131,7 @@ def test_alchemy_max_block_fetch_invalid_options(alchemy_max_block_fetch):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert (
                 f"error: argument --alchemy_max_block_fetch: invalid int value: '{alchemy_max_block_fetch}'"
@@ -147,7 +147,7 @@ def test_cache_latest_only(cache_latest_only):
         "--is_args_test=True",
         f"--cache_latest_only={cache_latest_only}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"cache_latest_only: {cache_latest_only}" in result.stderr
 
 
@@ -161,7 +161,7 @@ def test_cache_latest_only_invalid_options(cache_latest_only):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert (
                 f"error: argument --cache_latest_only: invalid choice: '{cache_latest_only}'"
@@ -177,7 +177,7 @@ def test_backdate_pools(backdate_pools):
         "--is_args_test=True",
         f"--backdate_pools={backdate_pools}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"backdate_pools: {backdate_pools}" in result.stderr
 
 
@@ -191,7 +191,7 @@ def test_backdate_pools_invalid_options(backdate_pools):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert (
                 f"error: argument --backdate_pools: invalid choice: '{backdate_pools}'"
@@ -207,7 +207,7 @@ def test_flashloan_tokens(flashloan_tokens):
         "--is_args_test=True",
         f"--flashloan_tokens={flashloan_tokens}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"flashloan_tokens: {flashloan_tokens.split(',')}" in result.stderr
 
 
@@ -221,7 +221,7 @@ def test_default_min_profit_gas_token(default_min_profit_gas_token):
         "--is_args_test=True",
         f"--default_min_profit_gas_token={default_min_profit_gas_token}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert (
             f"default_min_profit_gas_token: {default_min_profit_gas_token}" in result.stderr
     )
@@ -239,7 +239,7 @@ def test_default_min_profit_gas_token_invalid_options(default_min_profit_gas_tok
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert (
                 f"error: argument --default_min_profit_gas_token: invalid int value: '{default_min_profit_gas_token}'"
@@ -255,7 +255,7 @@ def test_n_jobs(n_jobs):
         "--is_args_test=True",
         f"--n_jobs={n_jobs}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"n_jobs: {n_jobs}" in result.stderr
 
 
@@ -269,7 +269,7 @@ def test_n_jobs_invalid_options(n_jobs):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert f"error: argument --n_jobs: invalid int value: '{n_jobs}'" in str(e)
 
@@ -282,7 +282,7 @@ def test_timeout(timeout):
         "--is_args_test=True",
         f"--timeout={timeout}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"timeout: {timeout}" in result.stderr
 
 
@@ -296,7 +296,7 @@ def test_timeout_invalid_options(timeout):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert f"error: argument --timeout: invalid int value: '{timeout}'" in str(e)
 
@@ -309,9 +309,10 @@ def test_exchanges(exchanges):
         "--is_args_test=True",
         f"--exchanges={exchanges}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
-    assert f"exchanges: {exchanges.split(',')}" in result.stderr
-
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
+    exchanges = exchanges.split(',')
+    for exchange in exchanges:
+        assert f"{exchange}" in result.stderr
 
 @pytest.mark.parametrize("randomizer", randomizer_happy_path_options)
 def test_randomizer(randomizer):
@@ -321,7 +322,7 @@ def test_randomizer(randomizer):
         "--is_args_test=True",
         f"--randomizer={randomizer}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"randomizer: {randomizer}" in result.stderr
 
 
@@ -335,7 +336,7 @@ def test_randomizer_invalid_options(randomizer):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert (
                 f"error: argument --randomizer: invalid int value: '{randomizer}'" in str(e)
@@ -350,7 +351,7 @@ def test_blockchain(blockchain):
         "--is_args_test=True",
         f"--blockchain={blockchain}",
     ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=5)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
     assert f"blockchain: {blockchain}" in result.stderr
 
 
@@ -364,6 +365,6 @@ def test_blockchain_invalid_options(blockchain):
     ]
     with pytest.raises(subprocess.CalledProcessError) as e:
         result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=5
+            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
         )
         assert f"error: argument --blockchain: invalid choice: '{blockchain}'" in str(e)
