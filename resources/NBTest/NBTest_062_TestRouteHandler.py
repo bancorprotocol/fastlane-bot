@@ -411,9 +411,9 @@ input_token_1 = native_gas_token
 input_token_2 = wrapped_gas_token
 
 
-test_input_0 = TxRouteHandler.native_gas_token_to_wrapped(tkn=input_token_0, wrapped_address=wrapped_gas_token, native_address=native_gas_token)
-test_input_1 = TxRouteHandler.native_gas_token_to_wrapped(tkn=input_token_1, wrapped_address=wrapped_gas_token, native_address=native_gas_token)
-test_input_2 = TxRouteHandler.native_gas_token_to_wrapped(tkn=input_token_2, wrapped_address=wrapped_gas_token, native_address=native_gas_token)
+test_input_0 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_0)
+test_input_1 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_1)
+test_input_2 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_2)
 
 assert test_input_0 == input_token_0, f"Expected input token to not change, went from {input_token_0} to {test_input_0}"
 assert test_input_1 == wrapped_gas_token, f"Expected input token to be converted from native token to wrapped, result = {test_input_1}, expected = {wrapped_gas_token}"
