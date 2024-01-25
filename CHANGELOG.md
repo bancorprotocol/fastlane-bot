@@ -2,9 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.20...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.21...HEAD)
 
 - hex string without 0x prefix [\#306](https://github.com/bancorprotocol/fastlane-bot/issues/306)
+- Block number can be float when fetching events leading to failure [\#301](https://github.com/bancorprotocol/fastlane-bot/issues/301)
+
+Merged pull requests
+
+- Fix the calculation of a non-integer block number [\#320](https://github.com/bancorprotocol/fastlane-bot/pull/320) ([barakman](https://github.com/barakman))
+
+## [v3.0.21](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.21) (2024-01-23)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.20...v3.0.21)
+
 - max priority fee overridden in build\_transaction\_with\_gas when gas base fee fails [\#300](https://github.com/bancorprotocol/fastlane-bot/issues/300)
 - hex string without 0x prefix [\#324](https://github.com/bancorprotocol/fastlane-bot/pull/324) ([mikewcasale](https://github.com/mikewcasale))
 
