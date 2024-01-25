@@ -367,7 +367,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
         contracts.append(
             {
                 "exchange_name": exchange_name,
-                "ex": exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False),
+                "ex": ex,
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,
