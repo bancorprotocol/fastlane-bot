@@ -79,7 +79,7 @@ class CarbonV1Pool(Pool):
         """
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
-        if isinstance(order0, list) and isinstance(order1, list):
+        if (isinstance(order0, list) or isinstance(order0, Tuple)) and (isinstance(order1, list) or isinstance(order1, Tuple)):
             data["y_0"] = order0[0]
             data["z_0"] = order0[1]
             data["A_0"] = order0[2]
