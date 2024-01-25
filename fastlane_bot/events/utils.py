@@ -33,6 +33,7 @@ from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import encode_token_price
 from fastlane_bot.events.pools import CarbonV1Pool
 from fastlane_bot.helpers import TxHelpers
+from fastlane_bot.utils import safe_int
 
 
 def filter_latest_events(
@@ -1335,49 +1336,23 @@ def get_start_block(
     Returns
     -------
     Tuple[int, int or None]
-        The starting block number.
+        The starting block number and the block number to replay from.
 
     """
-    if replay_from_block:
-        return (
-            replay_from_block - 1
-            if last_block != 0
-            else replay_from_block - reorg_delay - alchemy_max_block_fetch
-        ), replay_from_block
-    elif mgr.tenderly_fork_id:
-        # connect to the Tenderly fork and get the latest block number
-        from_block = mgr.w3_tenderly.eth.block_number
-        # Log all non-integer block numbers
-        non_int_values = [
-            (index, block["last_updated_block"], type(block["last_updated_block"]))
-            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
-        ]
-        if non_int_values:
-            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
-        return (
-            max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
-            if last_block != 0
-            else from_block - reorg_delay - alchemy_max_block_fetch
-        ), from_block
+    if last_block == 0:
+        if replay_from_block:
+            return replay_from_block - reorg_delay - alchemy_max_block_fetch, replay_from_block
+        elif mgr.tenderly_fork_id:
+            return mgr.w3_tenderly.eth.block_number - reorg_delay - alchemy_max_block_fetch, mgr.w3_tenderly.eth.block_number
+        else:
+            return mgr.web3.eth.block_number - reorg_delay - alchemy_max_block_fetch, None
     else:
-        current_block = mgr.web3.eth.block_number
-        # Log all non-integer block numbers
-        non_int_values = [
-            (index, block["last_updated_block"], type(block["last_updated_block"]))
-            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
-        ]
-        if non_int_values:
-            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
-        return (
-            (
-                max(block["last_updated_block"] for block in mgr.pool_data)
-                - reorg_delay
-                if last_block != 0
-                else current_block - reorg_delay - alchemy_max_block_fetch
-            ),
-            None,
-        )
-
+        if replay_from_block:
+            return replay_from_block - 1, replay_from_block
+        elif mgr.tenderly_fork_id:
+            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, mgr.w3_tenderly.eth.block_number
+        else:
+            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:
