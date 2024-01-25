@@ -373,6 +373,7 @@ assert balancer_custom_int == 70911184602319403714296547319574681768227301686592
 # ## Test_native_gas_token_to_wrapped
 
 # +
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
 trade_instruction_3 = TradeInstruction(
     cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
     tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -405,7 +406,7 @@ txroutehandler_base = TxRouteHandler(trade_instructions=[trade_instruction_3, tr
 
 
 native_gas_token = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-wrapped_gas_token = "0x4200000000000000000000000000000000000006"
+wrapped_gas_token = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 input_token_0 = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 input_token_1 = native_gas_token
 input_token_2 = wrapped_gas_token
