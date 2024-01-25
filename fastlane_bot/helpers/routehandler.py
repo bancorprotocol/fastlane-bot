@@ -555,22 +555,16 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return flashloans
 
-    @staticmethod
-    def native_gas_token_to_wrapped(tkn: str, wrapped_address: str, native_address: str):
+    def native_gas_token_to_wrapped(self, tkn: str):
         """
         This function returns the wrapped gas token address if the input token is the native gas token, otherwise it returns the input token address.
         :param tkn: str
             The token address
-        :param wrapped_address: str
-            The wrapped gas token address
-        :param native_address: str
-            The native gas token address
-
         returns: str
             The token address, converted to wrapped gas token if the input was the native gas token
 
         """
-        return wrapped_address if tkn in native_address else tkn
+        return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
 
     def wrapped_gas_token_to_native(self, tkn: str):
         """
