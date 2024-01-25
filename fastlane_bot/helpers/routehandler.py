@@ -564,7 +564,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             The token address, converted to wrapped gas token if the input was the native gas token
 
         """
-        return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
+        return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
 
     def wrapped_gas_token_to_native(self, tkn: str):
         """
