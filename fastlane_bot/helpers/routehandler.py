@@ -1374,8 +1374,8 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         tkn0_address = curve.pair_name.split("/")[0]
         tkn1_address = curve.pair_name.split("/")[1]
-        tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address, wrapped_address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, native_address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS)
-        tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address, wrapped_address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, native_address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS)
+        tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address)
+        tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address)
 
         #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
