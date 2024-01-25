@@ -66,10 +66,72 @@ class VirtualTokenBalancesCPMMFunction(_Function):
         """create a CPMMFunction from kbar"""
         return cls(k=kbar**2, x0=x0, y0=y0)
     
+    @classmethod
+    def from_xpxp(cls, *, xa, pa, xb, pb, y0=None, ya=None, yb=None):
+        """
+        create a CPMMFunction from two x values and the associated prices
+        
+        :xa, xb:        virtual pool liquidity at the two fixed points (xa<xb)
+        :pa, pb:        associated prices at the two fixed points (pa>pb)
+        :y0, ya, yb:    y0, or y(xa), y(xb) [at most one given; if none, y0=0]
+        """
+        # alternative constructor, determining the curve by two points on a x-axis 
+        # $x_a, x_b$ and the associated prices $p_a, p_b$; note that we are missing 
+        # a parameter, $y_0$, which is a non-financial parameter in this case as a 
+        # shift in the y direction does not affect prices as long as the curve does 
+        # not run out of tokens
+        # We have the following equations:
+
+        # $$
+        # \frac k {(x_0+x_a)^2} = p_a,\quad \frac k {(x_0+x_b)^2} = p_b
+        # $$
+        # Solving for $x_0, k$ we find
+        # $$
+        # x_0 = \frac{-(p_a x_a) + \sqrt{p_a p_b (x_a - x_b)^2} + p_b x_b}{p_a - p_b} \\
+        # k = p_a \left(x_a + \frac{-(p_a x_a) + \sqrt{p_a p_b (x_a - x_b)^2} + p_b x_b}{p_a - p_b}\right)^2
+        # = p_a (x_a + x_0)^2
+        # $$
+        # or 
+        #     x0 = (-(pa * xa) + m.sqrt(pa * pb * (xa - xb)**2) + pb * xb) / (pa - pb)
+        #     k  = pa * ((xa + (-(pa * xa) + m.sqrt(pa * pb * (xa - xb)**2) + pb * xb) / (pa - pb)) ** 2)
+        #     k = pa * (xa + x0) ** 2
+
+        assert xa<xb, f"xa={xa} must be < xb={xb}"
+        assert pa>pb, f"pa={pa} must be > pb={pb}"
+        
+        # core calculation
+        x0 = (-(pa * xa) + _m.sqrt(pa * pb * (xa - xb)**2) + pb * xb) / (pa - pb)
+        k  = pa * (xa + x0) ** 2
+        
+        # now deal with y0
+        ny = len([y for y in [y0, ya, yb] if y is not None])
+        if ny>1:
+            raise ValueError(f"at most 1 of y0, ya, yb can be given, but got {ny} [y0={y0}, ya={ya}, yb={yb}]")
+        elif ny==0:
+            y0 = 0
+        else:
+            if not y0 is None:
+                pass
+            elif not ya is None:
+                # ya = k/(xa+x0) - y0 ==> y0 = k/(xa+x0) - ya
+                y0 = k / (xa+x0) - ya
+                #print(f"[y0] f(a)={ k / (xa+x0)}, ya={ya}, y0={y0}, k={k}, x0={x0}, xa={xa}")
+            elif not yb is None:
+                # yb = k/(xb+x0) - y0 ==> y0 = k/(xb+x0) - yb
+                y0 = k / (xb+x0) - yb
+        
+        # return the new object
+        #print(f"[LCPMM] k={k}, x0={x0}, y0={y0}")
+        return cls(k=k, x0=x0, y0=y0)
+    
     def f(self, x):
-        if x<0: return None
+        if x<0:
+            #print("[f] x<0", x) 
+            return None
         y = self.k/(x+self.x0) - self.y0
-        if y<0: return None
+        if y<0:
+            #print(f"[f] y<0; y={y}, x={x}, x0={self.x0}, y0={self.y0}, k={self.k}")  
+            return None
         return y
     
     # def p(self, x):
@@ -145,7 +207,7 @@ class UniV3Function(_Function):
         #super().__post_init__()
         super().__setattr__("x0", self.L / _m.sqrt(self.Pa))
         super().__setattr__("y0", self.L * _m.sqrt(self.Pb))
-        print("[UniV3Function] x0, y0:", self.x0, self.y0)
+        #print("[UniV3Function] x0, y0:", self.x0, self.y0)
         
     @property
     def kbar(self):
@@ -356,7 +418,7 @@ class SolidlyFunction(_Function):
     @staticmethod    
     def _L1_float(x, k):
         """using float (precision issues)"""
-        return -27*k/(2*x) + m.sqrt(729*k**2/x**2 + 108*x**6)/2
+        return -27*k/(2*x) + _m.sqrt(729*k**2/x**2 + 108*x**6)/2
     
     @staticmethod
     def _L1_dec(x, k, *, precision):

@@ -4,8 +4,8 @@ functions library -- core objects (Function, FunctionVector)
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9.4'
-__DATE__ = "22/Jan/2024"
+__VERSION__ = '0.9.5'
+__DATE__ = "25/Jan/2024"
 
 from dataclasses import dataclass, asdict
 from abc import ABC, abstractmethod
@@ -86,9 +86,19 @@ class Function(ABC):
         if precision:
             h *= precision
         try:
+            #print("[df_dx_abs] trying double-sided")
             return (self.f(x+h)-self.f(x-h)) / (2*h)
         except TypeError:
-            return None
+            try:
+                #print(f"[df_dx_abs] double-sided failed, trying top (x={x})")
+                return (self.f(x+h)-self.f(x)) / h
+            except TypeError:
+                try:
+                    #print(f"[df_dx_abs] top failed, trying bottom (x={x})")
+                    return (self.f(x)-self.f(x-h)) / h
+                except TypeError:
+                    #print(f"[df_dx_abs] all failed (x={x})")
+                    return None
     
     def d2f_dx2_abs(self, x, *, h=None, precision=None):
         """
@@ -185,7 +195,7 @@ class Function(ABC):
     PLT_STEPS = 100
     PLT_SHOW = False
     PLT_GRID = True
-    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, legend=None, grid=None, show=None, **kwargs):
+    def plot(self, x_min, x_max, func=None, *, steps=None, title=None, xlabel=None, ylabel=None, grid=None, show=None, **kwargs):
         """
         plots the function
         
@@ -200,8 +210,6 @@ class Function(ABC):
         if xlabel is None: xlabel = "x"
         if ylabel is None and func is None: ylabel = "y"
         func = func or self.f
-        if legend is None:
-            legend = not show # not show -> probably multiple line -> legend
         if show is None: show = self.PLT_SHOW
         if grid is None: grid = self.PLT_GRID
         steps = steps or self.PLT_STEPS
@@ -212,7 +220,6 @@ class Function(ABC):
         if xlabel: plt.xlabel(xlabel)
         if ylabel: plt.ylabel(ylabel)
         if grid: plt.grid(True)
-        if legend: plt.legend()
         if show: plt.show()
         return plot
     
@@ -336,7 +343,8 @@ class FunctionVector(DictVector):
         """
         returns \sum_i vec[i] * f_i(x) where f_i is actually the dict key
         """
-        return sum([f(x) * v for f, v in self.vec.items()])
+        fv_t = ((f(x), v) for f, v in self.vec.items())
+        return sum([f_x * v for f_x, v in fv_t if not f_x is None])
     
     def f_r(self, x):
         """alias for self.restricted(self.f, x)"""
