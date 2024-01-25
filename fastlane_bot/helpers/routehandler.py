@@ -555,6 +555,23 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return flashloans
 
+    @staticmethod
+    def native_gas_token_to_wrapped(tkn: str, wrapped_address: str, native_address: str):
+        """
+        This function returns the wrapped gas token address if the input token is the native gas token, otherwise it returns the input token address.
+        :param tkn: str
+            The token address
+        :param wrapped_address: str
+            The wrapped gas token address
+        :param native_address: str
+            The native gas token address
+
+        returns: str
+            The token address, converted to wrapped gas token if the input was the native gas token
+
+        """
+        return wrapped_address if tkn in native_address else tkn
+
     def wrapped_gas_token_to_native(self, tkn: str):
         """
         Checks if a Token is a wrapped gas token and converts it to the native gas token.
@@ -1358,14 +1375,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
+        assert tkn_in not in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,"[routehandler.py _calc_carbon_output] This error is appearing because the function does not expect an input of the native gas token. Please post this error with your run configuration in the Bancor Developers Telegram channel."
         amount_in = Decimal(str(amount_in))
 
         tkn0_address = curve.pair_name.split("/")[0]
         tkn1_address = curve.pair_name.split("/")[1]
-
-        if self.ConfigObj.NETWORK in "ethereum":
-            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn0_address
-            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn1_address
+        tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address, wrapped_address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, native_address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS)
+        tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address, wrapped_address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, native_address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS)
 
         #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
