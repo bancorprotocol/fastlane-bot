@@ -603,6 +603,7 @@ def run(
     last_block_queried = 0
     handle_static_pools_update(mgr)
     total_iteration_time = 0
+    failed_async_calls = 0
     while True:
 
         try:
@@ -670,7 +671,13 @@ def run(
                     f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
                     f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
-                async_update_pools_from_contracts(mgr, current_block, logging_path)
+                try:
+                    async_update_pools_from_contracts(mgr, current_block, logging_path)
+                    failed_async_calls = 0
+                except Exception:
+                    failed_async_calls += 1
+                    if failed_async_calls >= 3:
+                        raise Exception(f"[main run.py] async_update_pools_from_contracts failed. List of failed pools: {mgr.pools_to_add_from_contracts}")
                 mgr.pools_to_add_from_contracts = []
 
 
