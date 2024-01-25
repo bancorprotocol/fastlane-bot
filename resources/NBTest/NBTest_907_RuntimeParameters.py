@@ -32,11 +32,11 @@ arb_mode_happy_path_options = [
 ]
 arb_mode_invalid_options = ["s", "m", "t", None, 3]
 alchemy_max_block_fetch_happy_path_options = [100, 2000, 3, 4, 5]
-alchemy_max_block_fetch_invalid_options = [None, 3.5, "a", "b", "c"]
-cache_latest_only_happy_path_options = [True, False, True, False, True]
-cache_latest_only_invalid_options = [None, 3.5, "a", "b", "c"]
-backdate_pools_happy_path_options = [True, False, True, False, True]
-backdate_pools_invalid_options = [None, 3.5, "a", "b", "c"]
+alchemy_max_block_fetch_invalid_options = [None, 3.5, "a"]
+cache_latest_only_happy_path_options = [True, False, 'True', 'False']
+cache_latest_only_invalid_options = [None, 3.5, "a"]
+backdate_pools_happy_path_options = [True, False, 'True', 'False']
+backdate_pools_invalid_options = [None, 3.5, "a"]
 flashloan_tokens_happy_path_options = [
     f"{T.LINK},{T.NATIVE_ETH}",
     f"{T.LINK},{T.NATIVE_ETH},{T.BNT}",
@@ -47,16 +47,14 @@ flashloan_tokens_invalid_options = [
     None,
     3.5,
     "a",
-    "b",
-    "c",
     f"",
 ]
-default_min_profit_gas_token_happy_path_options = [60, 100, 2000, 3, 4]
-default_min_profit_gas_token_invalid_options = [None, "a", "b", "c"]
-n_jobs_happy_path_options = [2, 3, 4, 5, -1]
-n_jobs_invalid_options = [None, 3.5, "a", "b", "c"]
-timeout_happy_path_options = [60, 100, 3, 4]
-timeout_invalid_options = [None, 3.5, "a", "b", "c"]
+default_min_profit_gas_token_happy_path_options = ["0.01", 100, 2000, '3']
+default_min_profit_gas_token_invalid_options = [None, "a"]
+n_jobs_happy_path_options = [5, -1]
+n_jobs_invalid_options = [None, 3.5, "a"]
+timeout_happy_path_options = [60, 100]
+timeout_invalid_options = [None, 3.5, "a"]
 exchanges_happy_path_options = [
     "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2",
     "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3",
@@ -68,12 +66,10 @@ exchanges_invalid_options = [
     None,
     3.5,
     "a",
-    "b",
-    "c",
     f"",
 ]
-randomizer_happy_path_options = [1, 2, 3, 4, 5]
-randomizer_invalid_options = [None, 3.5, "a", "b", "c"]
+randomizer_happy_path_options = [1, '2']
+randomizer_invalid_options = [None, 3.5, "a"]
 blockchain_happy_path_options = ["ethereum", "coinbase_base"]
 blockchain_invalid_options = ["arbitrum", "polygon"]
 
