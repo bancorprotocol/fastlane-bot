@@ -4,8 +4,8 @@ functions library -- core objects (Function, FunctionVector)
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9.5'
-__DATE__ = "25/Jan/2024"
+__VERSION__ = '0.9.6'
+__DATE__ = "26/Jan/2024"
 
 from dataclasses import dataclass, asdict
 from abc import ABC, abstractmethod
@@ -565,6 +565,11 @@ class FunctionVector(DictVector):
         return {kk: v+h if kk==k else v for kk,v in dct.items()}
     
     MM_DERIV_H = 1e-6
+    MM_VERBOSITY_QUIET = 0
+    MM_VERBOSITY_MIN = 1
+    MM_VERBOSITY_LOW = 10
+    MM_VERBOSITY_HIGH = 20
+    
     @classmethod
     def minimize(cls, func, *, 
                 x0=None, 
@@ -573,7 +578,7 @@ class FunctionVector(DictVector):
                 tolerance=None, 
                 deriv_h=None, 
                 return_path=False,
-                verbose = False,
+                verbosity = MM_VERBOSITY_QUIET,
         ):
         """
         minimizes the function `func` using gradient descent (multiple dimensions)
@@ -612,24 +617,24 @@ class FunctionVector(DictVector):
         
         # that's where the magic happens
         _minimize = cls._minimize_dct if isinstance(x0, dict) else cls._minimize_lst
-        path, dfdx, norm2_dfdx = _minimize(func, x0, learning_rate, iterations, tol_squared, deriv_h, verbose)
+        path, dfdx, norm2_dfdx = _minimize(func, x0, learning_rate, iterations, tol_squared, deriv_h, verbosity)
         
-        if verbose:
+        if verbosity >= cls.MM_VERBOSITY_HIGH:
             print(f"[minimize] algorithm returned, norm={m.sqrt(norm2_dfdx)}")
         if return_path:
-            if verbose:
+            if verbosity >= cls.MM_VERBOSITY_HIGH:
                 print(f"[minimize] return path (len={len(path)}), final point={path[-1]})")
             return path, dfdx
         if norm2_dfdx < tol_squared:
-            if verbose:
-                print(f"[minimize] converged in {len(path)} iterations, norm={m.sqrt(norm2_dfdx):.4f}, x={path[-1]})")
+            if verbosity >= cls.MM_VERBOSITY_LOW:
+                print(f"[minimize] converged in {len(path)} iterations, norm={m.sqrt(norm2_dfdx):.6f}\nx={path[-1]})")
             return path[-1]
-        if verbose:
-            print(f"[minimize] did not converged in {len(path)} iterations, norm={m.sqrt(norm2_dfdx):.4f}, x={path[-1]})")
+        if verbosity >= cls.MM_VERBOSITY_MIN:
+            print(f"[minimize] did not converge in {len(path)} iterations, norm={m.sqrt(norm2_dfdx):.4f}, x={path[-1]})")
         raise ValueError(f"gradient descent failed to converge")
     
     @classmethod
-    def _minimize_lst(cls, func, x0, learning_rate, iterations, tol_squared, deriv_h, verbose):
+    def _minimize_lst(cls, func, x0, learning_rate, iterations, tol_squared, deriv_h, verbosity):
         """
         executes the minimize algorithm when the x-values are in a list
         
@@ -638,7 +643,7 @@ class FunctionVector(DictVector):
         x = np.array(x0, dtype=float)
         n = len(x)
         path = [tuple(x)]
-        if verbose:
+        if verbosity >= cls.MM_VERBOSITY_HIGH:
             print(f"[_minimize_lst] x0={fmt(x, '.4f')}")
         
         for iteration in range(iterations):
@@ -652,14 +657,14 @@ class FunctionVector(DictVector):
             path.append(tuple(x))
             #print(f"[_minimize_lst] {iteration}: adding x={x}, gradient={dfdx}")  
             norm2_dfdx = np.dot(dfdx, dfdx)
-            if verbose:
+            if verbosity >= cls.MM_VERBOSITY_HIGH:
                 print(f"[_minimize_lst] {iteration}: norm={m.sqrt(norm2_dfdx):.4f}\nx={fmt(x, '.4f')}\ngradient={fmt(dfdx, '.4f')}\ndx={fmt(dx, '.4f')}\n\n")
             if norm2_dfdx < tol_squared:
                 break
         return path, dfdx, norm2_dfdx
     
     @classmethod
-    def _minimize_dct(cls, func, x0, learning_rate, iterations, tol_squared, deriv_h, verbose):
+    def _minimize_dct(cls, func, x0, learning_rate, iterations, tol_squared, deriv_h, verbosity):
         """
         executes the minimize algorithm when the x-values are in a dict
         
@@ -667,7 +672,7 @@ class FunctionVector(DictVector):
         """
         x = {**x0}
         path = [{**x}]
-        if verbose:
+        if verbosity >= cls.MM_VERBOSITY_HIGH:
             print(f"[_minimize_dct] x0={fmt(x, '.4f')}")
         for iteration in range(iterations):
             f0 = func(**x)
@@ -679,13 +684,17 @@ class FunctionVector(DictVector):
             x = {k: x[k] + dx[k] for k in x.keys()}
             path.append({**x})
             norm2_dfdx = sum(vv**2 for vv in dfdx.values())  
-            if verbose:
-                print(f"[_minimize_dct] {iteration}: norm={m.sqrt(norm2_dfdx):.2f}\nx={fmt(x, '.4f')}\ngradient={fmt(dfdx, '.4f')}\ndx={fmt(dx, '.4f')}\n\n")
+            if verbosity >= cls.MM_VERBOSITY_HIGH:
+                print(f"[_minimize_dct] {iteration}: norm={m.sqrt(norm2_dfdx):.8f}\nx={fmt(x, '.4f')}\ngradient={fmt(dfdx, '.4f')}\ndx={fmt(dx, '.4f')}\n\n")
             if norm2_dfdx < tol_squared:
                 break
         return path, dfdx, norm2_dfdx
     
-    def curve_fit(self, func, params0, **kwargs):
+    CF_NORM_L1 = "L1"       # L1 norm for distance
+    CF_NORM_L2 = "L2"       # ditto L2
+    CF_NORM_L2S = "L2S"     # ditto L2, but don't bother with sqrt
+    
+    def curve_fit(self, func, params0, norm=None, **kwargs):
         """
         fits a function to self using gradient descent
         
@@ -697,11 +706,22 @@ class FunctionVector(DictVector):
         *The func object must have and update method that accepts a dict of parameters
         with the keys of `params0` and returns a new object with the updated parameters.
         """
+        if norm is None:
+            norm = self.CF_NORM_L2S
+        if norm == self.CF_NORM_L1:
+            #print("[curve_fit] using L1 norm")
+            dist_func = self.dist_L1
+        elif norm == self.CF_NORM_L2:
+            #print("[curve_fit] using L2 norm")
+            dist_func = self.dist_L2
+        elif norm == self.CF_NORM_L2S:
+            #print("[curve_fit] using L2S norm")
+            dist_func = self.dist2_L2
         
         def optimizer_func(**params):
             #print("[optimizer_func] updating", params)
             func1 = func.update(**params)
-            return self.dist2_L2(func=func1)
+            return dist_func(func=func1)
         
         return self.minimize(optimizer_func, x0=params0, **kwargs)
         

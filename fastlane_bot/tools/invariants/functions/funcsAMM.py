@@ -51,10 +51,15 @@ class VirtualTokenBalancesCPMMFunction(_Function):
     
     :k:         pool constant (scales with square of pool liquidity)
     :x0, y0:    virtual pool liquidity
+    :clip:      if True, don't allow negative values for x and y
     """
     k: float = 1
     x0: float = 0
     y0: float = 0
+    
+    def __post_init__(self, clip=False):
+        #super().__post_init__()
+        super().__setattr__("clip", clip)
     
     @property
     def kbar(self):
@@ -125,11 +130,11 @@ class VirtualTokenBalancesCPMMFunction(_Function):
         return cls(k=k, x0=x0, y0=y0)
     
     def f(self, x):
-        if x<0:
+        if x<0 and self.clip:
             #print("[f] x<0", x) 
             return None
         y = self.k/(x+self.x0) - self.y0
-        if y<0:
+        if y<0 and self.clip:
             #print(f"[f] y<0; y={y}, x={x}, x0={self.x0}, y0={self.y0}, k={self.k}")  
             return None
         return y
