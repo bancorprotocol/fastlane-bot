@@ -435,6 +435,11 @@ class FunctionVector(DictVector):
         """integrates self.f using the kernel [convenience access for integrate_func(func=None)]"""
         return self.integrate_func(func=self.f, steps=steps, method=method) 
     
+    ########################################################################
+    ## distance functions
+    
+    ###################################
+    ## ...on self.f
     def dist2_L2(self, func=None, *, steps=None, method=None):
         """
         calculates the L2 distance^2 between self and func (L2 norm squared)
@@ -459,6 +464,37 @@ class FunctionVector(DictVector):
             f = lambda x: abs(self.f(x)) * self.kernel(x)
         return self.integrate_func(func=f, steps=steps, method=method)
 
+    ###################################
+    ## ...on self.p
+    def distp2_L2(self, func=None, *, steps=None, method=None):
+        """
+        calculates the L2 distance^2 between self.p and func (L2 norm squared)
+        """
+        if not func is None:
+            f = lambda x: (self.p(x)-func(x))**2 * self.kernel(x)
+        else:
+            f = lambda x: self.p(x)**2 * self.kernel(x)
+        return self.integrate_func(func=f, steps=steps, method=method)
+    
+    def distp_L2(self, func=None, *, steps=None, method=None):
+        """calculates the distance between self.p and func (L2 norm)"""
+        return m.sqrt(self.distp2_L2(func=func, steps=steps, method=method))
+    
+    def distp_L1(self, func=None, *, steps=None, method=None):
+        """
+        calculates the L1 distance between self.p and func (L1 norm)
+        """
+        if not func is None:
+            f = lambda x: (abs(self.p(x)-func(x))) * self.kernel(x)
+        else:
+            f = lambda x: abs(self.p(x)) * self.kernel(x)
+        return self.integrate_func(func=f, steps=steps, method=method)
+    
+    ########################################################################
+    ## norm functions
+    
+    ###################################
+    ## ...on self.f
     def norm2_L2(self, *, steps=None, method=None):
         """calculates the L2 norm squared of self"""
         return self.dist2_L2(func=None, steps=steps, method=method)
@@ -474,6 +510,29 @@ class FunctionVector(DictVector):
         return self.dist_L1(func=None, steps=steps, method=method)
     norm1 = norm_L1
     
+    ###################################
+    ## ...on self.p
+    def normp2_L2(self, *, steps=None, method=None):
+        """calculates the L2 norm squared of self.p"""
+        return self.distp2_L2(func=None, steps=steps, method=method)
+    normp2 = normp2_L2
+    
+    def normp_L2(self, *, steps=None, method=None):
+        """calculates the L2 norm of self"""
+        return m.sqrt(self.normp2(steps=steps, method=method))
+    normp = normp_L2
+    
+    def normp_L1(self, *, steps=None, method=None):
+        """calculates the L1 norm of self"""
+        return self.distp_L1(func=None, steps=steps, method=method)
+    normp1 = normp_L1
+
+
+    ########################################################################
+    ## goalseek and minimization
+    
+    ###################################
+    ## goalseek
     def goalseek(self, target=0, *, func=None, x0=1):
         """
         very simple gradient descent implementation for a goal seek
@@ -523,7 +582,9 @@ class FunctionVector(DictVector):
         if abs(func(x)-target) > tolerance:
             raise ValueError(f"gradient descent failed to converge on {target}")
         return x
-    
+
+    ###################################
+    ## minimization   
     MM_LEARNING_RATE = 0.2
     MM_ITERATIONS = 1000
     MM_TOLERANCE = 1e-3
@@ -547,22 +608,6 @@ class FunctionVector(DictVector):
             return x
         raise ValueError(f"gradient descent failed to converge")
     
-    @staticmethod
-    def e_i(i, n):
-        """returns the i'th unit vector of size n"""
-        result = np.zeros(n)
-        result[i] = 1
-        return result
-    
-    @staticmethod
-    def e_k(k, dct):
-        """returns the unit vector of key k in dct"""
-        return {kk: 1 if kk==k else 0 for kk in dct.keys()}
-    
-    @staticmethod
-    def bump(dct, k, h):
-        """bumps dct[k] by +h; everthing else unmodified (returns a new dict)"""
-        return {kk: v+h if kk==k else v for kk,v in dct.items()}
     
     MM_DERIV_H = 1e-6
     MM_VERBOSITY_QUIET = 0
@@ -724,7 +769,27 @@ class FunctionVector(DictVector):
             return dist_func(func=func1)
         
         return self.minimize(optimizer_func, x0=params0, **kwargs)
-        
+    
+    ###############################
+    ## helpers and utilities
+    @staticmethod    
+    def e_i(i, n):
+        """returns the i'th unit vector of size n"""
+        result = np.zeros(n)
+        result[i] = 1
+        return result
+    
+    @staticmethod
+    def e_k(k, dct):
+        """returns the unit vector of key k in dct"""
+        return {kk: 1 if kk==k else 0 for kk in dct.keys()}
+    
+    @staticmethod
+    def bump(dct, k, h):
+        """bumps dct[k] by +h; everthing else unmodified (returns a new dict)"""
+        return {kk: v+h if kk==k else v for kk,v in dct.items()}    
+    
+    
     def plot(self, func=None, *, x_min=None, x_max=None, steps=None, title=None, xlabel=None, ylabel=None, grid=True, show=False, **kwargs):
         """
         plots the function
