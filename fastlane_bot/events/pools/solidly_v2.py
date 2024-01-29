@@ -74,7 +74,7 @@ class SolidlyV2Pool(Pool):
         data["router"] = self.router_address
         return data
 
-    async def update_from_contract(
+    def update_from_contract(
         self,
         contract: Contract,
         tenderly_fork_id: str = None,
@@ -85,15 +85,15 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = await contract.caller.getReserves()
+        reserve_balance = contract.caller.getReserves()
 
         try:
-            factory_address = await contract.caller.factory()
+            factory_address = contract.caller.factory()
         except Exception:
             # Velocimeter does not expose factory function - call voter to get an address that is the same for all Velcoimeter pools
-            factory_address = await contract.caller.voter()
+            factory_address = contract.caller.voter()
 
-        self.is_stable = await contract.caller.stable()
+        self.is_stable = contract.caller.stable()
         params = {
 
             "tkn0_balance": reserve_balance[0],
