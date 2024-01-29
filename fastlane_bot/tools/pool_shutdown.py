@@ -15,7 +15,7 @@ from fastlane_bot.data.abi import (
     BANCOR_V3_POOL_COLLECTION_ABI,
 )
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.helpers.txhelpers import TxHelpers
+from fastlane_bot.helpers.txhelpers import TxHelpers, int_prefix
 
 
 @dataclass
@@ -46,19 +46,19 @@ class AutomaticPoolShutdown:
     def __post_init__(self):
         self.tx_helpers = TxHelpers(ConfigObj=self.mgr.cfg)
         self.bancor_network_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_NETWORK_ADDRESS
             ),
             abi=BANCOR_V3_NETWORK_ABI,
         )
         self.bancor_settings_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_NETWORK_SETTINGS
             ),
             abi=BANCOR_V3_NETWORK_SETTINGS,
         )
         self.pool_collection_contract = self.mgr.web3.eth.contract(
-            address=self.mgr.web3.toChecksumAddress(
+            address=self.mgr.web3.to_checksum_address(
                 self.mgr.cfg.BANCOR_V3_POOL_COLLECTOR_ADDRESS
             ),
             abi=BANCOR_V3_POOL_COLLECTION_ABI,
@@ -136,7 +136,7 @@ class AutomaticPoolShutdown:
         for tkn in self.active_pools.keys():
             if tkn == self.mgr.cfg.ETH_ADDRESS:
                 eth_balance = self.mgr.web3.eth.get_balance(
-                    self.mgr.web3.toChecksumAddress(self.mgr.cfg.BANCOR_V3_VAULT)
+                    self.mgr.web3.to_checksum_address(self.mgr.cfg.BANCOR_V3_VAULT)
                 )
                 if eth_balance > 0 and eth_balance > self.active_pools[tkn]:
                     return tkn
@@ -165,7 +165,7 @@ class AutomaticPoolShutdown:
         tkn_contract = self.mgr.get_or_create_token_contracts(
             self.mgr.web3,
             self.mgr.erc20_contracts,
-            self.mgr.web3.toChecksumAddress(tkn),
+            self.mgr.web3.to_checksum_address(tkn),
         )
         return tkn_contract.functions.balanceOf(self.mgr.cfg.BANCOR_V3_VAULT).call()
 
@@ -176,7 +176,7 @@ class AutomaticPoolShutdown:
         Generates and submits the pool shutdown transaction
         """
         # Get current base fee for pending block
-        gas_price = self.mgr.web3.eth.getBlock("pending").get("baseFeePerGas")
+        gas_price = self.mgr.web3.eth.get_block("pending").get("baseFeePerGas")
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         max_priority_gas = int(
             self.tx_helpers.get_max_priority_fee_per_gas_alchemy()
@@ -221,7 +221,7 @@ class AutomaticPoolShutdown:
 
         try:
             return self.bancor_network_contract.functions.withdrawPOL(
-                self.mgr.web3.toChecksumAddress(tkn)
+                self.mgr.web3.to_checksum_address(tkn)
             ).build_transaction(
                 self.tx_helpers.build_tx(
                     base_gas_price=gas_price,
@@ -235,14 +235,14 @@ class AutomaticPoolShutdown:
             )
             if "max fee per gas less than block base fee" in str(e):
                 try:
-                    return self._build_transaction(e, tkn, nonce)
+                    return self._build_transaction(e, max_priority_gas, tkn, nonce)
                 except Exception as e:
                     self.mgr.cfg.logger.debug(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}"
                     )
                     return None
 
-    def _build_transaction(self, e: Exception, tkn: str, nonce: int):
+    def _build_transaction(self, e: Exception, max_priority: int, tkn: str, nonce: int):
         """
         Handles the transaction generation logic.
 
@@ -250,6 +250,8 @@ class AutomaticPoolShutdown:
         ----------
         e: Exception
             The exception
+        max_priority: int
+            The max priority fee input
         tkn: str
             The token address
         nonce: int
@@ -262,18 +264,13 @@ class AutomaticPoolShutdown:
 
         """
         message = str(e)
-        split1 = message.split("maxFeePerGas: ")[1]
-        split2 = split1.split(" baseFee: ")
-        split_base_fee = int(split2[1].split(" (supplied gas")[0])
-        split_max_priority_fee_per_gas = int(
-            int(split2[0]) * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET
-        )
+        baseFee = int_prefix(message.split("baseFee: ")[1])
         return self.bancor_network_contract.functions.withdrawPOL(
-            self.mgr.web3.toChecksumAddress(tkn)
+            self.mgr.web3.to_checksum_address(tkn)
         ).build_transaction(
             self.tx_helpers.build_tx(
-                base_gas_price=split_base_fee,
-                max_priority_fee=split_max_priority_fee_per_gas,
+                base_gas_price=baseFee,
+                max_priority_fee=max_priority,
                 nonce=nonce,
             )
         )

@@ -13,6 +13,7 @@
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -21,7 +22,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -35,15 +36,15 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
+
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Single Mode [NB038]
 
@@ -93,6 +94,7 @@ static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -136,12 +138,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -180,6 +181,7 @@ assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at l
 
 # ### Test_Single_Arb_Finder_vs_run
 
+# +
 run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
 arb_finder = bot._get_arb_finder("single")
 finder = arb_finder(
@@ -190,21 +192,7 @@ finder = arb_finder(
             ConfigObj=bot.ConfigObj,
         )
 r = finder.find_arbitrage()
-assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
-assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 
-# ## Test_no_multi_carbon
-
-# +
-arb_finder = bot._get_arb_finder("single")
-finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=bot.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
-r = finder.find_arbitrage()
 multi_carbon_count = 0
 
 for arb in r:
@@ -219,6 +207,8 @@ for arb in r:
         multi_carbon_count += 1
 
 assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
+assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
 # -
 
 

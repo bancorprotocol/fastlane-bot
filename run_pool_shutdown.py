@@ -35,7 +35,8 @@ from fastlane_bot.events.utils import (
     handle_flashloan_tokens,
     get_config,
     get_loglevel,
-    handle_target_token_addresses, read_csv_file,
+    handle_target_token_addresses,
+    read_csv_file,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
 
@@ -77,6 +78,7 @@ def main(
     timeout: int = 0,
     target_tokens: str = None,
     replay_from_block: int = None,
+    blockchain: str = "ethereum",
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -119,8 +121,16 @@ def main(
         loglevel=loglevel,
         logging_path=logging_path,
         blockchain="ethereum",
-
     )
+
+    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
+    tokens_filepath = os.path.join(base_path, "tokens.csv")
+    if not os.path.exists(tokens_filepath):
+        df = pd.DataFrame(
+            columns=["key", "symbol", "name", "address", "decimals", "blockchain"]
+        )
+        df.to_csv(tokens_filepath)
+    tokens = read_csv_file(tokens_filepath)
 
     # Format the flashloan tokens
     flashloan_tokens = handle_flashloan_tokens(cfg, flashloan_tokens, tokens)
@@ -174,11 +184,10 @@ def main(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
     ) = get_static_data(
-        cfg,
-        exchanges,
-        "ethereum",
-        static_pool_data_filename,
-        static_pool_data_sample_sz,
+        cfg=cfg,
+        exchanges=exchanges,
+        blockchain=blockchain,
+        static_pool_data_filename=static_pool_data_filename,
     )
 
     target_token_addresses = handle_target_token_addresses(

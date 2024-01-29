@@ -11,7 +11,7 @@ from abc import ABCMeta, ABC
 
 from eth_typing import HexStr
 from hexbytes import HexBytes
-from web3 import Web3
+from web3 import Web3, AsyncWeb3
 from web3.types import TxReceipt
 
 import os
@@ -59,6 +59,7 @@ class NetworkBase(ABC, metaclass=Singleton):
     """
 
     web3: Web3
+    w3_async: AsyncWeb3
 
     def __init__(
         self,
@@ -76,7 +77,6 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.network_name = network_name
         self.provider_url = provider_url
         self.provider_name = provider_name
-        self.web3 = Web3(Web3.HTTPProvider(provider_url, request_kwargs={'timeout': 60}))
         self.nonce = nonce
 
 
@@ -140,7 +140,7 @@ class EthereumNetwork(NetworkBase):
         :param tx_receipt:
         :return: the hex string
         """
-        return self.web3.toHex(dict(tx_receipt)["transactionHash"])
+        return self.web3.to_hex(dict(tx_receipt)["transactionHash"])
 
     def sign_transaction(self, transaction: HexBytes) -> HexBytes:
         """
@@ -168,5 +168,6 @@ class EthereumNetwork(NetworkBase):
             return
 
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
+        self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

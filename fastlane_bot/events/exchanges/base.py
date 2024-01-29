@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Type, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.events.pools.base import Pool
 
@@ -84,8 +84,9 @@ class Exchange(ABC):
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def get_fee(self, address: str, contract: Contract) -> float:
+    async def get_fee(address: str, contract: AsyncContract) -> float:
         """
         Get the fee of the exchange
 
@@ -104,8 +105,9 @@ class Exchange(ABC):
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:
         """
         Get the tkn0 of the exchange
 
@@ -125,8 +127,9 @@ class Exchange(ABC):
         """
         pass
 
+    @staticmethod
     @abstractmethod
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
         """
         Get the tkn1 of the exchange
 
@@ -164,3 +167,16 @@ class Exchange(ABC):
 
         """
         return self.pools[key] if key in self.pools else None
+
+    @abstractmethod
+    def get_factory_abi(self):
+        """
+                Get the ABI of the exchange's Factory contract
+
+                Returns
+                -------
+                ABI
+                    The ABI of the exchange Factory
+
+                """
+        pass

@@ -33,7 +33,7 @@ class Pool(ABC):
     @classmethod
     @abstractmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format for a given pool type.
@@ -44,7 +44,8 @@ class Pool(ABC):
             The event arguments.
         static_pools : Dict[str, Any]
             The static pools.
-
+        exchange_name : str
+            The name of the exchange in order to match forks
         Returns
         -------
         bool

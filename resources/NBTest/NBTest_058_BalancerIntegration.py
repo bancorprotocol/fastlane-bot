@@ -24,7 +24,7 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -39,14 +39,13 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Balancer))
 
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
-plt.style.use('seaborn-dark')
+
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -62,7 +61,7 @@ assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
 
-with open('fastlane_bot/data/tests/latest_pool_data_testing_balancer.json') as f:
+with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 
 pool_data_raw = [pool for pool in pools]
@@ -103,6 +102,7 @@ static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -146,12 +146,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     return bot
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 #bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -161,9 +160,11 @@ arb_mode = "multi_pairwise"
 
 # ## Test_PoolAndTokens_Balancer
 
+
+
 # +
-pool0 = [pool for pool in pool_data_raw if pool['cid'] == '0xbf57d1286a9c8c8d06c92d7481c01f6fb2a4bfd9616bc8754e0cfa84f6940bea'][0]
-pool1 = [pool for pool in pool_data_raw if pool['cid'] == '0x71cf25cc991284d537ebd71f83555551fa0ab1471f4d93c4af34d958ed757ec9'][0]
+pool0 = [pool for pool in pool_data_raw if pool['cid'] == '0x157a028048d6012956119dab5126fc0507c03cfb67a9cb88f309d3380e2cab4c'][0]
+pool1 = [pool for pool in pool_data_raw if pool['cid'] == '0xba841adabcc7402bf7410b86b86d3941171b4178df699611eda851e12ed0fe10'][0]
 
 pool0_processed = db.create_pool_and_tokens(idx=0, record=pool0)
 pool1_processed = db.create_pool_and_tokens(idx=1, record=pool1)
@@ -183,9 +184,9 @@ assert len(pool1_processed.token_weights) == 5, f"[NB058 BalancerIntegration] wr
 
 assert len(pool1_processed.token_decimals) == len(pool1_processed.token_weights) and len(pool1_processed.tokens) == len(pool1_processed.token_weights) and len(pool1_processed.token_weights) == len(pool1_processed.token_balances), f"[NB058 BalancerIntegration] issue with pool creation, should have the same number of tokens, weights, decimals, and balances. Found {len(pool1_processed.token_decimals)}"
 
-assert type(pool1_processed.get_token_balance('LUSD-8bA0')) == float or int, f"[NB058 BalancerIntegration] wrong type for get_token_balance, expected float or int, found {type(pool1_processed.get_token_balance('LUSD-8bA0'))}"
-assert type(pool1_processed.get_token_weight('LUSD-8bA0')) == float, f"[NB058 BalancerIntegration] wrong type for get_token_weight, expected float, found  {type(pool1_processed.get_token_weight('LUSD-8bA0'))}"
-assert pool1_processed.get_token_decimals('LUSD-8bA0') == 18, f"[NB058 BalancerIntegration] wrong token weight found for LUSD-8bA0, expected 18, found {pool1_processed.get_token_decimals('LUSD-8bA0')}"
+assert type(pool1_processed.get_token_balance('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0')) == float or int, f"[NB058 BalancerIntegration] wrong type for get_token_balance, expected float or int, found {type(pool1_processed.get_token_balance('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0'))}"
+assert type(pool1_processed.get_token_weight('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0')) == float, f"[NB058 BalancerIntegration] wrong type for get_token_weight, expected float, found  {type(pool1_processed.get_token_weight('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0'))}"
+assert pool1_processed.get_token_decimals('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0') == 18, f"[NB058 BalancerIntegration] wrong token weight found for 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0, expected 18, found {pool1_processed.get_token_decimals('0x5f98805A4E8be255a32880FDeC7F6728C6568bA0')}"
 
 
 # -
@@ -210,8 +211,8 @@ for pool in pool1_to_cpc:
 # ## Test_TxRouteHandler_Balancer
 
 # +
-pool0 = [pool for pool in pool_data_raw if pool['cid'] == '0xbf57d1286a9c8c8d06c92d7481c01f6fb2a4bfd9616bc8754e0cfa84f6940bea'][0]
-pool1 = [pool for pool in pool_data_raw if pool['cid'] == '0x71cf25cc991284d537ebd71f83555551fa0ab1471f4d93c4af34d958ed757ec9'][0]
+pool0 = [pool for pool in pool_data_raw if pool['cid'] == '0x157a028048d6012956119dab5126fc0507c03cfb67a9cb88f309d3380e2cab4c'][0]
+pool1 = [pool for pool in pool_data_raw if pool['cid'] == '0xba841adabcc7402bf7410b86b86d3941171b4178df699611eda851e12ed0fe10'][0]
 
 pool0_processed = db.create_pool_and_tokens(idx=0, record=pool0)
 pool1_processed = db.create_pool_and_tokens(idx=1, record=pool1)
@@ -220,20 +221,20 @@ pool0_to_cpc = pool0_processed.to_cpc()
 pool1_to_cpc = pool1_processed.to_cpc()
 
 ti1 = TradeInstruction(
-    cid='0x71cf25cc991284d537ebd71f83555551fa0ab1471f4d93c4af34d958ed757ec9',
-    tknin='LUSD-8bA0',
+    cid='0x157a028048d6012956119dab5126fc0507c03cfb67a9cb88f309d3380e2cab4c',
+    tknin='0x5f98805A4E8be255a32880FDeC7F6728C6568bA0',
     amtin=100,
-    tknout='WETH-6Cc2',
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtout=1,
     ConfigObj=cfg,
     db = db,
 )
 
 ti2 = TradeInstruction(
-    cid='0xbf57d1286a9c8c8d06c92d7481c01f6fb2a4bfd9616bc8754e0cfa84f6940bea',
-    tknin='WBTC-2c599',
+    cid='0xba841adabcc7402bf7410b86b86d3941171b4178df699611eda851e12ed0fe10',
+    tknin='0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     amtin=1,
-    tknout='USDC-eB48',
+    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=5005,
     ConfigObj=cfg,
     db = db,
@@ -250,6 +251,9 @@ instructions = [ti1, ti2]
 route_handler = TxRouteHandler(instructions)
 
 
-assert not raises(route_handler._calc_balancer_output, curve=pool1_processed, tkn_in='LUSD-8bA0', tkn_out='WETH-6Cc2', amount_in=Decimal("10000")), f"[NB058 BalancerIntegration] should not raise an error"
-assert raises(route_handler._calc_balancer_output, curve=pool1_processed, tkn_in='LUSD-8bA0', tkn_out='WETH-6Cc2', amount_in=Decimal("100000000000")), f"[NB058 BalancerIntegration] expected BalancerInputTooLargeError error"
+assert not raises(route_handler._calc_balancer_output, curve=pool1_processed, tkn_in='0x5f98805A4E8be255a32880FDeC7F6728C6568bA0', tkn_out='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', amount_in=Decimal("10000")), f"[NB058 BalancerIntegration] should not raise an error"
+assert raises(route_handler._calc_balancer_output, curve=pool1_processed, tkn_in='0x5f98805A4E8be255a32880FDeC7F6728C6568bA0', tkn_out='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', amount_in=Decimal("100000000000")), f"[NB058 BalancerIntegration] expected BalancerInputTooLargeError error"
+# -
+
+
 

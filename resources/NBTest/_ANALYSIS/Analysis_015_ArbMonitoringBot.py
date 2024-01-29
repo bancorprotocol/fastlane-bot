@@ -49,7 +49,7 @@ class TokenAddress():
         self._db = db
         
     def addr_from_ticker(self, ticker):
-        return self._db.get_token(key=ticker).address
+        return self._db.get_token(tkn_address=ticker).address
     a = addr_from_ticker
     
     def ticker_from_addr(self, addr):

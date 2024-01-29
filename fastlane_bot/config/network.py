@@ -4,15 +4,14 @@ Fastlane bot config -- network
 __VERSION__ = "1.0.3-RESTRICTED"
 __DATE__ = "02/May 2023"
 
+import os
 from typing import List, Dict
 
 import pandas as pd
-
-from .base import ConfigBase
-from . import selectors as S
-
-import os
 from dotenv import load_dotenv
+
+from . import selectors as S
+from .base import ConfigBase
 
 load_dotenv()
 
@@ -23,6 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()  # take environment variables from .env.
 
 TENDERLY_FORK = os.environ.get("TENDERLY_FORK_ID")
+
 
 def get_multichain_addresses(network: str):
     """
@@ -51,12 +51,33 @@ def get_fork_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1][0]
-        fork = row[1][2]
-        contract_name = row[1][3]
-        address = row[1][4]
-        if fork in fork_name and contract_name in [S.ROUTER_ADDRESS, S.CARBON_CONTROLLER]:
-            fork_map[exchange_name] = address
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_name:
+            fork_map[exchange_name] = router_address
+    return fork_map
+
+
+def get_factory_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
+    """
+    Get a Dict of factory : exchange name
+    :param df: the dataframe containing exchange details
+    :param fork_names: the list of fork names
+
+    returns: Dict containing: factory_address : exchange_name
+
+    """
+    fork_map = {}
+    for row in df.iterrows():
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        factory_address = row[1]["factory_address"]
+        router_address = row[1]["router_address"]
+        if fork in fork_names:
+            fork_map[factory_address] = exchange_name
+            fork_map[exchange_name] = factory_address
     return fork_map
 
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
@@ -70,17 +91,19 @@ def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     fork_map = {}
     for row in df.iterrows():
-        exchange_name = row[1][0]
-        fork = row[1][2]
-        contract_name = row[1][3]
-        fee = row[1][5]
-        if fork in fork_name and contract_name == S.ROUTER_ADDRESS:
-            fork_map[exchange_name] : fee
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        fee = row[1]["fee"]
+        if fork in fork_name:
+            fork_map[exchange_name] = fee
     return fork_map
 
+
 def get_row_from_address(address: str, df: pd.DataFrame) -> pd.DataFrame:
-    if df["address"].isin([address]).any():
-        return df[df["address"] == address]
+    if df["router_address"].isin([address]).any():
+        return df[df["router_address"] == address]
+    elif df["factory_address"].isin([address]).any():
+        return df[df["factory_address"] == address]
     return None
 
 
@@ -94,14 +117,12 @@ def get_exchange_from_address(address: str, df: pd.DataFrame) -> str or None:
 def get_items_from_exchange(
     item_names: List[str],
     exchange_name: str,
-    contract_name: str,
     fork: str,
     df: pd.DataFrame,
 ) -> List[str or float]:
     df_ex = df[
         (df["exchange_name"] == exchange_name)
         & (df["fork"] == fork)
-        & (df["contract_name"] == contract_name)
     ]
     if len(df_ex.index) == 0:
         return None
@@ -115,10 +136,9 @@ def get_router_address_for_exchange(
     exchange_name: str, fork: str, df: pd.DataFrame
 ) -> str:
     router_address = get_items_from_exchange(
-        item_names=["address"],
+        item_names=["router_address"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="ROUTER_ADDRESS",
         df=df,
     )
     if router_address is None:
@@ -135,7 +155,6 @@ def get_fee_for_exchange(
         item_names=["fee"],
         exchange_name=exchange_name,
         fork=fork,
-        contract_name="FACTORY_ADDRESS",
         df=df,
     )
     if exchange_fee is None:
@@ -167,13 +186,13 @@ class ConfigNetwork(ConfigBase):
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    BNT_KEY = "BNT-FF1C"
-    ETH_KEY = "ETH-EEeE"
-    WBTC_KEY = "WBTC-c599"
-    USDC_KEY = "USDC-eB48"
-    LINK_KEY = "LINK-86CA"
-    USDT_KEY = "USDT-1ec7"
-
+    # BNT_KEY = "BNT-FF1C"
+    # ETH_KEY = "ETH-EEeE"
+    # WBTC_KEY = "WBTC-c599"
+    # USDC_KEY = "USDC-eB48"
+    # LINK_KEY = "LINK-86CA"
+    # USDT_KEY = "USDT-1ec7"
+    SELF_FUND = False
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -195,6 +214,7 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
+    VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
 
     # Base Exchanges
@@ -216,22 +236,9 @@ class ConfigNetwork(ConfigBase):
     PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
     PLATFORM_ID_WRAP_UNWRAP = 10
 
-    EXCHANGE_IDS = {
-        BANCOR_V2_NAME: 1,
-        BANCOR_V3_NAME: 2,
-        UNISWAP_V2_NAME: 3,
-        UNISWAP_V3_NAME: 4,
-        SUSHISWAP_V2_NAME: 5,
-        CARBON_V1_NAME: 6,
-        BALANCER_NAME: 7,
-        CARBON_POL_NAME: 8,
-        PLATFORM_ID_WRAP_UNWRAP : 10
-    }
 
-    # SOLIDLY_V2_FORKS = [AERODROME_V3_NAME, VELOCIMETER_V2_NAME, SOLIDLY_V2_NAME]
     CARBON_V1_FORKS = [CARBON_V1_NAME]
 
-    SUPPORTED_EXCHANGES = list(EXCHANGE_IDS)
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
     BANCOR_POL_START_BLOCK = 18184448
@@ -244,6 +251,11 @@ class ConfigNetwork(ConfigBase):
     CARBON_STRATEGY_DELETED = f"{CARBON_V1_NAME}_StrategyDeleted"
     CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
     CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
+
+    # POOL IDENTIFIERS SECTION
+    #######################################################################################
+    POOL_TYPE_STABLE = "stable"
+    POOL_TYPE_VOLATILE = "volatile"
 
     # DEFAULT VALUES SECTION
     #######################################################################################
@@ -316,20 +328,87 @@ class ConfigNetwork(ConfigBase):
 
     def __post_init__(self):
         assert self.NETWORK is not None
-        self.network_df = get_multichain_addresses(network=self.NETWORK)
 
-        self.UNI_V2_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.UNISWAP_V2)
-        self.UNI_V2_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.UNISWAP_V2)
-        self.UNI_V3_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.UNISWAP_V3)
-        self.SOLIDLY_ROUTER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.SOLIDLY)
-        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY)
-        self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + ["uniswap_v2"]
+        network = self.NETWORK if "tenderly" not in self.NETWORK else "ethereum"
+        self.network_df = get_multichain_addresses(network=network)
+
+        self.UNI_V2_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.UNISWAP_V2
+        )
+        self.UNI_V2_FEE_MAPPING = get_fee_map(
+            df=self.network_df, fork_name=S.UNISWAP_V2
+        )
+        self.UNI_V3_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.UNISWAP_V3
+        )
+        self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY_V2)
+        self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + [
+            "uniswap_v2"
+        ]
         self.UNI_V3_FORKS = [key for key in self.UNI_V3_ROUTER_MAPPING.keys()]
-        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_ROUTER_MAPPING.keys()]
-        self.CARBON_CONTROLLER_MAPPING = get_fork_map(df=self.network_df, fork_name=S.CARBON_V1)
 
-        self.CHAIN_SPECIFIC_EXCHANGES = self.CHAIN_SPECIFIC_EXCHANGES + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()] + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()] + [ex for ex in self.SOLIDLY_ROUTER_MAPPING.keys()] + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()] + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
-        self.CHAIN_SPECIFIC_EXCHANGES = [ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None]
+        self.SOLIDLY_V2_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.SOLIDLY_V2
+        )
+        self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
+        self.CARBON_CONTROLLER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.CARBON_V1
+        )
+        self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
+
+        self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.CARBON_V1_FORKS
+        self.ALL_FORK_NAMES_WITHOUT_CARBON = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS
+        self.FACTORY_MAPPING = get_factory_map(df=self.network_df, fork_names=[S.UNISWAP_V2, S.UNISWAP_V3, S.SOLIDLY_V2])
+
+        self.CHAIN_SPECIFIC_EXCHANGES = (
+            self.CHAIN_SPECIFIC_EXCHANGES
+            + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()]
+            + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
+        )
+        self.CHAIN_SPECIFIC_EXCHANGES = [
+            ex for ex in self.CHAIN_SPECIFIC_EXCHANGES if ex is not None
+        ]
+        self.ALL_KNOWN_EXCHANGES = list(set(self.ALL_FORK_NAMES + self.CHAIN_SPECIFIC_EXCHANGES))
+
+        self.EXCHANGE_IDS = {
+            self.BANCOR_V2_NAME: 1,
+            self.BANCOR_V3_NAME: 2,
+            self.BALANCER_NAME: 7,
+            self.CARBON_POL_NAME: 8,
+            self.PLATFORM_ID_WRAP_UNWRAP: 10,
+            self.UNISWAP_V2_NAME: 3,
+            self.UNISWAP_V3_NAME: 4,
+            self.SOLIDLY_V2_NAME: 11,
+            self.AERODROME_V2_NAME: 12,
+            self.CARBON_V1_NAME: 6,
+        }
+        for ex in self.UNI_V2_FORKS:
+            self.EXCHANGE_IDS[ex] = 3
+        for ex in self.UNI_V3_FORKS:
+            self.EXCHANGE_IDS[ex] = 4
+        for ex in self.CARBON_V1_FORKS:
+            self.EXCHANGE_IDS[ex] = 6
+        for ex in self.SOLIDLY_V2_FORKS:
+            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
+                self.EXCHANGE_IDS[ex] = 11
+            else:
+                self.EXCHANGE_IDS[ex] = 12
+        self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
+
+
+    def exchange_name_base_from_fork(self, exchange_name):
+        if exchange_name in self.UNI_V2_FORKS:
+            exchange_name = "uniswap_v2"
+        elif exchange_name in self.UNI_V3_FORKS:
+            exchange_name = "uniswap_v3"
+        elif exchange_name in self.SOLIDLY_V2_FORKS:
+            exchange_name = "solidly_v2"
+        elif exchange_name in self.CARBON_V1_FORKS:
+            exchange_name = "carbon_v1"
+        return exchange_name
 
 class _ConfigNetworkMainnet(ConfigNetwork):
     """
@@ -344,12 +423,14 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
-    STABLECOIN_KEY = "USDC-eB48"
-    
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
+    # STABLECOIN_KEY = "USDC-eB48"
+
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
@@ -366,11 +447,17 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-    CHAIN_FLASHLOAN_TOKENS = {"WBTC-C599": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599","BNT-FF1C": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","WETH-6Cc2":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" ,"USDC-eB48": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "USDT-1ec7": "0xdAC17F958D2ee523a2206206994597C13D831ec7",  "LINK-86CA": "0x514910771AF9Ca656af840dff83E8264EcF986CA"}
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        "BNT": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+    }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = ["carbon_v1", "bancor_v2", "bancor_v3", "bancor_pol"]
     CHAIN_SPECIFIC_EXCHANGES = [ex for ex in CHAIN_SPECIFIC_EXCHANGES if ex is not None]
-
 
 
 class _ConfigNetworkArbitrumOne(ConfigNetwork):
@@ -382,22 +469,30 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_ARBITRUM")
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
-    MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-bab1"
-    STABLECOIN_KEY = "USDC-5831"
-    
+    MULTICALL_CONTRACT_ADDRESS = ""  # TODO
+
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-bab1"
+    # STABLECOIN_KEY = "USDC-5831"
+
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-bab1": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", "USDC-5831": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", "WBTC-5b0f": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", }
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WETH": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "WBTC": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+    }
 
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
 
 class _ConfigNetworkPolygon(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON
@@ -408,22 +503,32 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_POLYGON")
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
-    MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    
-    NATIVE_GAS_TOKEN_KEY = "MATIC-1010"
-    WRAPPED_GAS_TOKEN_KEY = "WMATIC-1270"
-    STABLECOIN_KEY = "USDC-4174"
+    MULTICALL_CONTRACT_ADDRESS = ""  # TODO
+
+    # NATIVE_GAS_TOKEN_KEY = "MATIC-1010"
+    # WRAPPED_GAS_TOKEN_KEY = "WMATIC-1270"
+    # STABLECOIN_KEY = "USDC-4174"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0x0000000000000000000000000000000000001010"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+    NATIVE_GAS_TOKEN_SYMBOL = "MATIC"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WMATIC"
     STABLECOIN_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-f619": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", "USDC-4174": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "USDT-8e8f": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", "WBTC-bfd6": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", "MATIC-1010": "0x0000000000000000000000000000000000001010", "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"}
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WETH": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "USDC": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "USDT": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "WBTC": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+        "MATIC": "0x0000000000000000000000000000000000001010",
+        "WMATIC": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+    }
 
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
 
 class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     NETWORK = S.NETWORK_POLYGON_ZKEVM
@@ -434,20 +539,28 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_POLYGON_ZKEVM")
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
-    MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-E6e9"
-    STABLECOIN_KEY = "USDC-c035"
+    MULTICALL_CONTRACT_ADDRESS = ""  # TODO
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-E6e9"
+    # STABLECOIN_KEY = "USDC-c035"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-e6e9": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9", "USDC-c035": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035", "USDT-d41d": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d", "WBTC-08e1": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1", }
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WETH": "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
+        "USDC": "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035",
+        "USDT": "0x1E4a5963aBFD975d8c9021ce480b42188849D41d",
+        "WBTC": "0xEA034fb02eB1808C2cc3adbC15f447B93CbE08e1",
+    }
 
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
 
 class _ConfigNetworkOptimism(ConfigNetwork):
     NETWORK = S.NETWORK_OPTIMISM
@@ -458,19 +571,25 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
 
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
-    MULTICALL_CONTRACT_ADDRESS = "" # TODO
-    
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
-    STABLECOIN_KEY = "USDC-ff85"
+    MULTICALL_CONTRACT_ADDRESS = ""  # TODO
+
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    # STABLECOIN_KEY = "USDC-ff85"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
 
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006", "USDC-ff85": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", "USDT-cbb9": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-                              "WBTC-2095": "0x68f180fcCe6836688e9084f035309E29Bf0A2095", }
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "WBTC": "0x68f180fcCe6836688e9084f035309E29Bf0A2095",
+    }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
 
@@ -490,24 +609,33 @@ class _ConfigNetworkBase(ConfigNetwork):
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
-    
-    CARBON_CONTROLLER_ADDRESS = GRAPHENE_CONTROLLER_ADDRESS = "0xfbF069Dbbf453C1ab23042083CFa980B3a672BbA"
-    CARBON_CONTROLLER_VOUCHER = GRAPHENE_CONTROLLER_VOUCHER = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
-    STABLECOIN_KEY = "USDC-2913"
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0xfbF069Dbbf453C1ab23042083CFa980B3a672BbA"
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    # STABLECOIN_KEY = "USDC-2913"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x4200000000000000000000000000000000000006"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 
     # Balancer
     BALANCER_VAULT_ADDRESS = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
 
-    CHAIN_FLASHLOAN_TOKENS = {"WETH-0006": "0x4200000000000000000000000000000000000006",
-                              "USDC-2913": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"}
+    CHAIN_FLASHLOAN_TOKENS = {
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
@@ -520,12 +648,14 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     NETWORK_NAME = "tenderly"
     TENDERLY_FORK = TENDERLY_FORK
 
-    NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
-    WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
-    STABLECOIN_KEY = "USDC-eB48"
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
+    # STABLECOIN_KEY = "USDC-eB48"
 
     NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
@@ -571,5 +701,3 @@ class _ConfigNetworkTenderly(ConfigNetwork):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-

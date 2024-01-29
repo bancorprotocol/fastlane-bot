@@ -9,7 +9,8 @@ from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 
 import web3
-from eth_abi import decode_abi
+from eth_abi import decode
+from web3 import Web3
 
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
@@ -109,11 +110,13 @@ class MultiCaller(ContextManager):
 
 
     def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
+                 web3: Web3,
                  block_identifier: Any = 'latest', multicall_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
         self._contract_calls: List[Callable] = []
         self.contract = contract
         self.block_identifier = block_identifier
-        self.MULTICALL_CONTRACT_ADDRESS = multicall_address
+        self.web3 = web3
+        self.MULTICALL_CONTRACT_ADDRESS = self.web3.to_checksum_address(multicall_address)
 
     def __enter__(self) -> 'MultiCaller':
         return self
@@ -149,11 +152,11 @@ class MultiCaller(ContextManager):
             calls_for_aggregate += (_calls_for_aggregate[fn_list])
             output_types_list += (_output_types_list[fn_list])
 
-        w3 = self.contract.web3
         _encoded_data = []
+
         function_keys = _calls_for_aggregate.keys()
         for fn_list in function_keys:
-            _encoded_data.append(w3.eth.contract(
+            _encoded_data.append(self.web3.eth.contract(
                 abi=MULTICALL_ABI,
                 address=self.MULTICALL_CONTRACT_ADDRESS
             ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
@@ -161,7 +164,7 @@ class MultiCaller(ContextManager):
         if not isinstance(_encoded_data[0], list):
             raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
 
-        encoded_data = w3.eth.contract(
+        encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
         ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
@@ -172,7 +175,7 @@ class MultiCaller(ContextManager):
         encoded_data = encoded_data[1]
         decoded_data_list = []
         for output_types, encoded_output in zip(output_types_list, encoded_data):
-            decoded_data = decode_abi(output_types, encoded_output)
+            decoded_data = decode(output_types, encoded_output)
             decoded_data_list.append(decoded_data)
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]

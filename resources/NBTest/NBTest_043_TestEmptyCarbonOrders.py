@@ -1,17 +1,8 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py:light
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.5
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
 
 # coding=utf-8
 """
@@ -21,7 +12,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
@@ -36,53 +27,62 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-from fastlane_bot.modes import triangle_single_bancor3
+
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
+
 # # Test NoEmptyCarbonOrders
 
-# +
-C = cfg = Config.new(config=Config.CONFIG_MAINNET)
+# In[2]:
+
+
+C = cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain='ethereum')
 cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
+
+
+exchanges = "carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3,bancor_v3,bancor_v2,bancor_pol"
+exchanges = exchanges.split(",")
+
 pools = None
 with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
-pools = [pool for pool in pools]
-pools[0]
+pools = [pool for pool in pools if pool['exchange_name'] in exchanges]
+print(f"len(pools): {len(pools)}, {pools}")
 static_pools = pools
 state = pools
-exchanges = list({ex['exchange_name'] for ex in state})
+# exchanges = list({ex['exchange_name'] for ex in state})
 db = QueryInterface(state=state, ConfigObj=C, exchanges=exchanges)
 setup_bot.db = db
 
 static_pool_data_filename = "static_pool_data"
 
 static_pool_data = pd.read_csv(f"fastlane_bot/data/{static_pool_data_filename}.csv", low_memory=False)
-    
-uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False)
-        
-tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
-        
-exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2"
 
-exchanges = exchanges.split(",")
+uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mappings.csv", low_memory=False)
+
+tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
+
+
 
 
 alchemy_max_block_fetch = 20
 static_pool_data["cid"] = [
-        cfg.w3.keccak(text=f"{row['descr']}").hex()
-        for index, row in static_pool_data.iterrows()
-    ]
+    cfg.w3.keccak(text=f"{row['descr']}").hex()
+    for index, row in static_pool_data.iterrows()
+]
+
+static_pool_data = static_pool_data[static_pool_data["exchange_name"].isin(exchanges)]
+uniswap_v2_event_mappings = uniswap_v2_event_mappings[uniswap_v2_event_mappings["exchange"].isin(exchanges)]
+
 # Filter out pools that are not in the supported exchanges
 static_pool_data = [
     row for index, row in static_pool_data.iterrows()
@@ -90,12 +90,12 @@ static_pool_data = [
 ]
 
 static_pool_data = pd.DataFrame(static_pool_data)
-static_pool_data['exchange_name'].unique()
 # Initialize data fetch manager
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
-    pool_data=static_pool_data.to_dict(orient="records"),
+    pool_data=state,
     SUPPORTED_EXCHANGES=exchanges,
     alchemy_max_block_fetch=alchemy_max_block_fetch,
     uniswap_v2_event_mappings=uniswap_v2_event_mappings,
@@ -135,88 +135,105 @@ def init_bot(mgr: Manager) -> CarbonBot:
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
     return bot
+
 bot = init_bot(mgr)
 # add data cleanup steps from main.py
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
+
+# flashloan_tokens = ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE','0x4200000000000000000000000000000000000006','0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913','0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA']
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi"
-# -
+
 
 # ## Test_Empty_Carbon_Orders_Removed
 
-# +
+# In[3]:
+
+
 arb_finder = bot._get_arb_finder("multi")
 finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=arb_finder.AO_CANDIDATES,
-            ConfigObj=bot.ConfigObj,
-        )
+    flashloan_tokens=flashloan_tokens,
+    CCm=CCm,
+    mode="bothin",
+    result=arb_finder.AO_CANDIDATES,
+    ConfigObj=bot.ConfigObj,
+)
 r = finder.find_arbitrage()
 
 (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = r[11]
-        
+    best_profit,
+    best_trade_instructions_df,
+    best_trade_instructions_dic,
+    best_src_token,
+    best_trade_instructions,
+) = r[11]
+
 best_trade_instructions_dic
 # Check that this gets filtered out
-test_trade = [{'cid': '0x36445535fc762f6c53277a667500a41e31b51bec800e76aab33dafab75da4eaa',
-  'tknin': 'WBTC-C599',
-  'amtin': 0.008570336169213988,
-  'tknout': 'WETH-6Cc2',
-  'amtout': -0.13937506393995136,
-  'error': None},
- {'cid': '9187623906865338513511114400657741709420-1',
-  'tknin': 'WETH-6Cc2',
-  'amtin': 0,
-  'tknout': 'WBTC-C599',
-  'amtout': 0,
-  'error': None},
- {'cid': '9187623906865338513511114400657741709458-1',
-  'tknin': 'WETH-6Cc2',
-  'amtin': 0.13937506393995136,
-  'tknout': 'WBTC-C599',
-  'amtout': 0.008870336169213988,
-  'error': None}]
+test_trade = [{'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
+               'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+               'amtin': 0.008570336169213988,
+               'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+               'amtout': -0.13937506393995136,
+               'error': None},
+              {'cid': '9187623906865338513511114400657741709420-1',
+               'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+               'amtin': 0,
+               'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+               'amtout': 0,
+               'error': None},
+              {'cid': '9187623906865338513511114400657741709458-1',
+               'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+               'amtin': 0.13937506393995136,
+               'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+               'amtout': 0.008870336169213988,
+               'error': None}]
 
 (
-ordered_trade_instructions_dct,
-tx_in_count,
+    ordered_trade_instructions_dct,
+    tx_in_count,
 ) = bot._simple_ordering_by_src_token(
-test_trade, best_src_token
+    test_trade, best_src_token
 )
 ordered_scaled_dcts = bot._basic_scaling(
-            ordered_trade_instructions_dct, best_src_token
-        )
-ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
+    ordered_trade_instructions_dct, best_src_token
+)
+
+ordered_scaled_dcts[0]["tknin_dec_override"] = 8
+ordered_scaled_dcts[0]["tknout_dec_override"] = 18
+ordered_scaled_dcts[0]["exchange_override"] = "uniswap_v2"
+ordered_scaled_dcts[1]["tknin_dec_override"] = 18
+ordered_scaled_dcts[1]["tknout_dec_override"] = 8
+ordered_scaled_dcts[1]["exchange_override"] = "carbon_v1"
+ordered_scaled_dcts[2]["tknin_dec_override"] = 18
+ordered_scaled_dcts[2]["tknout_dec_override"] = 8
+ordered_scaled_dcts[2]["exchange_override"] = "carbon_v1"
+
+print(ordered_scaled_dcts)
+
+ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
 tx_route_handler = bot.TxRouteHandlerClass(
-            trade_instructions=ordered_trade_instructions_objects
-        )
+    trade_instructions=ordered_trade_instructions_objects
+)
 agg_trade_instructions = (
-            tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-            if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
-            else ordered_trade_instructions_objects
-        )
+    tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+    if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+    else ordered_trade_instructions_objects
+)
 # Calculate the trade instructions
 calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
     agg_trade_instructions
 )
 encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-            calculated_trade_instructions
-        )
+    calculated_trade_instructions
+)
 deadline = bot._get_deadline(1)
 
 # Get the route struct
@@ -232,6 +249,10 @@ for route in route_struct:
         encoded_trades = [encoded_trade[i:i+64] for i in range(0, len(encoded_trade), 64)]
         for trade in encoded_trades:
             assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
-# -
+
+
+# In[4]:
+
+
 
 

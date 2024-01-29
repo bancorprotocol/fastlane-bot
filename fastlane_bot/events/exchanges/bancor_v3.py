@@ -30,6 +30,11 @@ class BancorV3(Exchange):
     def get_abi(self):
         return BANCOR_V3_POOL_COLLECTION_ABI
 
+    @property
+    def get_factory_abi(self):
+        # Not used for Bancor V3
+        return BANCOR_V3_POOL_COLLECTION_ABI
+
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TradingLiquidityUpdated]
 

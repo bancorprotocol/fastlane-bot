@@ -2,9 +2,209 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.82...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.21...HEAD)
+
+- hex string without 0x prefix [\#306](https://github.com/bancorprotocol/fastlane-bot/issues/306)
+- Block number can be float when fetching events leading to failure [\#301](https://github.com/bancorprotocol/fastlane-bot/issues/301)
+
+Merged pull requests
+
+- Fix the calculation of a non-integer block number [\#320](https://github.com/bancorprotocol/fastlane-bot/pull/320) ([barakman](https://github.com/barakman))
+
+## [v3.0.21](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.21) (2024-01-23)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.20...v3.0.21)
+
+- max priority fee overridden in build\_transaction\_with\_gas when gas base fee fails [\#300](https://github.com/bancorprotocol/fastlane-bot/issues/300)
+- hex string without 0x prefix [\#324](https://github.com/bancorprotocol/fastlane-bot/pull/324) ([mikewcasale](https://github.com/mikewcasale))
+
+- Add support for Solidly Uni V2-style pools [\#274](https://github.com/bancorprotocol/fastlane-bot/issues/274)
+
+Closed issues
+
+- Fix production job alert spam \(time-outs\) [\#325](https://github.com/bancorprotocol/fastlane-bot/issues/325)
+
+## [v3.0.20](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.20) (2024-01-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.19...v3.0.20)
+
+- 274 add support for solidly uni v2 style pools [\#282](https://github.com/bancorprotocol/fastlane-bot/pull/282) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.19](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.19) (2024-01-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.18...v3.0.19)
+
+- Production monitoring spreadsheet [\#275](https://github.com/bancorprotocol/fastlane-bot/issues/275)
+
+Merged pull requests
+
+- Log the entire stack-trace upon main-loop exceptions [\#318](https://github.com/bancorprotocol/fastlane-bot/pull/318) ([barakman](https://github.com/barakman))
+- Log all non-integer block numbers in function `get_start_block` [\#316](https://github.com/bancorprotocol/fastlane-bot/pull/316) ([barakman](https://github.com/barakman))
+- Improve the handling of the error-message returned from the node [\#304](https://github.com/bancorprotocol/fastlane-bot/pull/304) ([barakman](https://github.com/barakman))
+
+## [v3.0.18](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.18) (2024-01-18)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.17...v3.0.18)
+
+Merged pull requests
+
+- Solidly Analytics [\#315](https://github.com/bancorprotocol/fastlane-bot/pull/315) ([sklbancor](https://github.com/sklbancor))
+
+## [v3.0.17](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.17) (2024-01-17)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.16...v3.0.17)
+
+Merged pull requests
+
+- Return `None` when the 2nd call to `construct_contract_function` fails [\#312](https://github.com/bancorprotocol/fastlane-bot/pull/312) ([barakman](https://github.com/barakman))
+
+## [v3.0.16](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.16) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.15...v3.0.16)
+
+- Max priority fee input overridden when handling incorrect base fee input error [\#307](https://github.com/bancorprotocol/fastlane-bot/issues/307)
+
+Merged pull requests
+
+- Log the type and value of each variable passed to function `get_start_block` [\#303](https://github.com/bancorprotocol/fastlane-bot/pull/303) ([barakman](https://github.com/barakman))
+
+## [v3.0.15](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.15) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.14...v3.0.15)
+
+- Bancor V2 ETH pool has wrong Anchor address [\#309](https://github.com/bancorprotocol/fastlane-bot/issues/309)
+
+Merged pull requests
+
+- Fix max\_priority usage in txhelpers & pool\_shutdown [\#308](https://github.com/bancorprotocol/fastlane-bot/pull/308) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.14](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.14) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.13...v3.0.14)
+
+- Update static\_pool\_data.csv [\#310](https://github.com/bancorprotocol/fastlane-bot/pull/310) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.13](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.13) (2024-01-16)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.12...v3.0.13)
+
+- Add eval back due to bug [\#305](https://github.com/bancorprotocol/fastlane-bot/pull/305) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.12](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.12) (2024-01-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.11...v3.0.12)
+
+- Update uniswap\_v3\_event\_mappings.csv [\#298](https://github.com/bancorprotocol/fastlane-bot/pull/298) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.11](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.11) (2024-01-14)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.10...v3.0.11)
+
+- Hex string without 0x prefix [\#287](https://github.com/bancorprotocol/fastlane-bot/issues/287)
+- Bugfixes for production environment [\#297](https://github.com/bancorprotocol/fastlane-bot/pull/297) ([mikewcasale](https://github.com/mikewcasale))
+
+- Add read-only setting [\#288](https://github.com/bancorprotocol/fastlane-bot/issues/288)
+
+## [v3.0.10](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.10) (2024-01-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.9...v3.0.10)
+
+- Add Test Coverage: Arb Modes [\#281](https://github.com/bancorprotocol/fastlane-bot/issues/281)
+- 288 add read only setting [\#290](https://github.com/bancorprotocol/fastlane-bot/pull/290) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.9](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.9) (2024-01-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.8...v3.0.9)
+
+- Incorrect fee for sushiswap v2 ethereum in multichain\_addresses.csv [\#283](https://github.com/bancorprotocol/fastlane-bot/issues/283)
+
+- 281 add test coverage arb modes [\#286](https://github.com/bancorprotocol/fastlane-bot/pull/286) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.8) (2024-01-05)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.7...v3.0.8)
+
+- 283 incorrect fee for sushiswap v2 ethereum in multichain addressescsv [\#284](https://github.com/bancorprotocol/fastlane-bot/pull/284) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.7) (2024-01-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.6...v3.0.7)
+
+Merged pull requests
+
+- Create FAQ.md [\#273](https://github.com/bancorprotocol/fastlane-bot/pull/273) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.0.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.6) (2023-12-28)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.5...v3.0.6)
+
+Merged pull requests
+
+- update default click params [\#278](https://github.com/bancorprotocol/fastlane-bot/pull/278) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.5) (2023-12-25)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.4...v3.0.5)
+
+- minor spelling issue txhelpers \(coinbase\_bse\) [\#269](https://github.com/bancorprotocol/fastlane-bot/issues/269)
+
+Merged pull requests
+
+- Create pull\_request\_template.md [\#272](https://github.com/bancorprotocol/fastlane-bot/pull/272) ([zavelevsky](https://github.com/zavelevsky))
+- Update issue templates [\#271](https://github.com/bancorprotocol/fastlane-bot/pull/271) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.0.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.4) (2023-12-22)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.3...v3.0.4)
+
+- Bug in POL Mode & Carbon Curve creation [\#266](https://github.com/bancorprotocol/fastlane-bot/issues/266)
+- Update txhelpers.py [\#270](https://github.com/bancorprotocol/fastlane-bot/pull/270) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v3.0.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.3) (2023-12-21)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.2...v3.0.3)
+
+- Minor bugs in Bot V3 [\#264](https://github.com/bancorprotocol/fastlane-bot/issues/264)
+- Remove token key in POL mode & add try/except for Carbon curve creation [\#267](https://github.com/bancorprotocol/fastlane-bot/pull/267) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.2) (2023-12-20)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.1...v3.0.2)
+
+- Fixes to Multichain addresses & static data for Base, Polygon, and Arbitrum [\#265](https://github.com/bancorprotocol/fastlane-bot/pull/265) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add support for trades without Flashloans [\#200](https://github.com/bancorprotocol/fastlane-bot/issues/200)
+
+## [v3.0.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.1) (2023-12-19)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.83...v3.0.1)
 
 - Fix error caused in poolandtokens for Bancor POL curves [\#254](https://github.com/bancorprotocol/fastlane-bot/issues/254)
+- bugfix for missing pool data [\#178](https://github.com/bancorprotocol/fastlane-bot/issues/178)
+- Bug in utils.py update\_pools\_from\_contracts [\#125](https://github.com/bancorprotocol/fastlane-bot/issues/125)
+- Incorrect address field for bancor\_v3 in static\_pool\_data.csv [\#118](https://github.com/bancorprotocol/fastlane-bot/issues/118)
+
+- Remove disabled pools from Bancor V3 static data [\#151](https://github.com/bancorprotocol/fastlane-bot/issues/151)
+- Change tx submit directly to flashbots \(instead of Alchemy\) [\#106](https://github.com/bancorprotocol/fastlane-bot/issues/106)
+- Add Target Token Mode for Recent Events [\#98](https://github.com/bancorprotocol/fastlane-bot/issues/98)
+- Add Support for Curve Exchange [\#75](https://github.com/bancorprotocol/fastlane-bot/issues/75)
+- Generalize `b3_two_hop` to allow handling arbs between external exchanges only. [\#73](https://github.com/bancorprotocol/fastlane-bot/issues/73)
+- Consolidate DEFAULT\_MIN\_PROFIT\_BNT and DEFAULT\_MIN\_PROFIT variables [\#59](https://github.com/bancorprotocol/fastlane-bot/issues/59)
+- Add Support for Bancor V3 Vortex Trigger [\#44](https://github.com/bancorprotocol/fastlane-bot/issues/44)
+- Refactor Code to Prevent Silent Failure of Exceptions [\#39](https://github.com/bancorprotocol/fastlane-bot/issues/39)
+- Bot 3.0 [\#262](https://github.com/bancorprotocol/fastlane-bot/pull/262) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Closed issues
+
+- Error writing pool data to disk: Object of type int64 is not JSON serializable [\#259](https://github.com/bancorprotocol/fastlane-bot/issues/259)
+- main.py / env [\#104](https://github.com/bancorprotocol/fastlane-bot/issues/104)
+- Version number via CLI [\#23](https://github.com/bancorprotocol/fastlane-bot/issues/23)
+- Transaction is stuck in mempool [\#5](https://github.com/bancorprotocol/fastlane-bot/issues/5)
+
+## [v2.7.83](https://github.com/bancorprotocol/fastlane-bot/tree/v2.7.83) (2023-12-12)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v2.7.82...v2.7.83)
+
 - Issue causing transactions to be submitted without Flashbots by default [\#251](https://github.com/bancorprotocol/fastlane-bot/issues/251)
 - update LYXe token info [\#241](https://github.com/bancorprotocol/fastlane-bot/issues/241)
 - Bancor POL fix for poolandtokens [\#255](https://github.com/bancorprotocol/fastlane-bot/pull/255) ([Lesigh-3100](https://github.com/Lesigh-3100))

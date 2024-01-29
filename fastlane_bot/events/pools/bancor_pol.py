@@ -39,7 +39,7 @@ class BancorPolPool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Bancor pol event.
@@ -77,10 +77,6 @@ class BancorPolPool(Pool):
         ]:
             # *** Balance now updated from multicall ***
             pass
-            # if self.state['last_updated_block'] < event_args['blockNumber']:
-            #     data["y_0"] = (
-            #         self.state["y_0"] - event_args["args"]["amount"]
-            #     )
 
         for key, value in data.items():
             self.state[key] = value

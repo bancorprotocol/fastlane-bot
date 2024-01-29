@@ -31,7 +31,7 @@ class BancorV3Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Bancor v3 event.
