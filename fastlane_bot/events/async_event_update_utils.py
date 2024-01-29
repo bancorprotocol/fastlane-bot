@@ -548,10 +548,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
 
 def update_remaining_pools(mgr):
     remaining_pools = []
-    all_events = [
-        event
-        for _, _, event, _, _ in mgr.pools_to_add_from_contracts
-    ]
+    all_events = [pool[2] for pool in mgr.pools_to_add_from_contracts]
     for event in all_events:
         addr = mgr.web3.to_checksum_address(event["address"])
         ex_name = mgr.exchange_name_from_event(event)
