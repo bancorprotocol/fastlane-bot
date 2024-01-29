@@ -1350,6 +1350,39 @@ def get_latest_events(
     return latest_events
 
 
+def validate_max_block_fetch(
+        start_block: int,
+        replay_from_block: int,
+        alchemy_max_block_fetch: int,
+        current_block: int,
+        reorg_delay: int = 0,
+) -> Tuple[int, int or None]:
+    """
+    Validates the maximum block fetch.
+
+    Parameters
+    ----------
+    start_block : int
+        The starting block number.
+    current_block : int
+        The current block number.
+    alchemy_max_block_fetch : int
+        The maximum number of blocks to fetch.
+    reorg_delay : int
+        The reorg delay.
+
+    Returns
+    -------
+    Tuple[int, int or None]
+        The starting block number and the block number to replay from.
+
+    """
+    if current_block is not None and start_block is not None:
+        if current_block - start_block > alchemy_max_block_fetch:
+            start_block = current_block - (alchemy_max_block_fetch + reorg_delay)
+    return start_block, replay_from_block
+
+
 def get_start_block(
     alchemy_max_block_fetch: int,
     last_block: int,
@@ -1381,18 +1414,22 @@ def get_start_block(
     """
     if last_block == 0:
         if replay_from_block:
-            return replay_from_block - reorg_delay - alchemy_max_block_fetch, replay_from_block
+            return validate_max_block_fetch(replay_from_block - reorg_delay - alchemy_max_block_fetch, replay_from_block, alchemy_max_block_fetch, None, reorg_delay)
         elif mgr.tenderly_fork_id:
-            return mgr.w3_tenderly.eth.block_number - reorg_delay - alchemy_max_block_fetch, mgr.w3_tenderly.eth.block_number
+            current_block = mgr.w3_tenderly.eth.block_number
+            return validate_max_block_fetch(current_block - reorg_delay - alchemy_max_block_fetch, current_block, alchemy_max_block_fetch, current_block, reorg_delay)
         else:
-            return mgr.web3.eth.block_number - reorg_delay - alchemy_max_block_fetch, None
+            current_block = mgr.web3.eth.block_number
+            return validate_max_block_fetch(current_block - reorg_delay - alchemy_max_block_fetch, None, alchemy_max_block_fetch, current_block, reorg_delay)
     else:
         if replay_from_block:
-            return replay_from_block - 1, replay_from_block
+            return validate_max_block_fetch(replay_from_block - 1, replay_from_block, alchemy_max_block_fetch, None, reorg_delay)
         elif mgr.tenderly_fork_id:
-            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, mgr.w3_tenderly.eth.block_number
+            current_block = mgr.w3_tenderly.eth.block_number
+            return validate_max_block_fetch(safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, current_block, alchemy_max_block_fetch, current_block, reorg_delay)
         else:
-            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
+            current_block = mgr.web3.eth.block_number
+            return validate_max_block_fetch(safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None, alchemy_max_block_fetch, current_block, reorg_delay)
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:

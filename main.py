@@ -460,6 +460,8 @@ def main(
             version_check_frequency: {version_check_frequency}
             self_fund: {self_fund}
             read_only: {read_only}
+            rpc: {rpc}
+            disable_logfiles: {disable_logfiles}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
