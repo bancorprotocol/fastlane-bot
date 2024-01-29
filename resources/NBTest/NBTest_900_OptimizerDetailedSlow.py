@@ -15,11 +15,12 @@
 # ---
 
 #from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
 from fastlane_bot.tools.analyzer import CPCAnalyzer
 from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
 from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
 from fastlane_bot.tools.arbgraphs import ArbGraph
+from fastlane_bot.tools.cpcbase import AttrDict
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(OptimizerBase))
@@ -36,6 +37,32 @@ import collections as cl
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+
+T = AttrDict(
+    NATIVE_ETH="ETH-EEeE",
+    AAVE="AAVE-DaE9",
+    WETH="WETH-6Cc2",
+    ETH="WETH-6Cc2",
+    WBTC="WBTC-C599",
+    BTC="WBTC-C599",
+    USDC="USDC-eB48",
+    USDT="USDT-1ec7",
+    DAI="DAI-1d0F",
+    LINK="LINK-86CA",
+    MKR="MKR-79A2",
+    BNT="BNT-FF1C",
+    UNI="UNI-F984",
+    SUSHI="SUSHI-0fE2",
+    CRV="CRV-cd52",
+    FRAX="FRAX-b99e",
+    HEX="HEX-eb39",
+    MATIC="MATIC-eBB0",
+    HDRN="HDRN-5e06",
+    SHIB="SHIB-C4cE",
+    ICHI="ICHI-C4d6",
+    OCTO="OCTO-2BA3",
+    ECO="ECO-5727",
+)
 
 # # Mostly Optimizer Tests [NB006]
 
@@ -580,8 +607,6 @@ assert round(r.result, 5) == -1217.2442, f"{round(r.result, 5)}"
 assert r.time < 0.1
 assert r.method == "margp-pair"
 assert r.errormsg is None
-
-round(r.result,5)
 
 # #### trade instructions
 

@@ -23,6 +23,15 @@ from fastlane_bot.config import config as cfg
 from fastlane_bot.data.abi import *
 
 
+def safe_int(value: int or float) -> int:
+    assert value == int(value), f"non-integer `float` value {value}"
+    return int(value)
+
+
+def int_prefix(string: str) -> int:
+    return int(string[:-len(string.lstrip("0123456789"))])
+
+
 def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
     """
     param: tkn_amt: the number of tokens to convert
@@ -73,7 +82,7 @@ def get_coingecko_token_table() -> List[Dict[str, Any]]:
 
     tokens = [
         {
-            "address": cfg.w3.toChecksumAddress(token["address"]),
+            "address": cfg.w3.to_checksum_address(token["address"]),
             "symbol": token["symbol"],
             "decimals": token["decimals"],
             "name": token["name"],

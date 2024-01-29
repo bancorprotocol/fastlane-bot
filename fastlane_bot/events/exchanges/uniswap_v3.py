@@ -10,7 +10,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI
+from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -20,32 +20,31 @@ class UniswapV3(Exchange):
     """
     UniswapV3 exchange class
     """
-
+    base_exchange_name: str = "uniswap_v3"
     exchange_name: str = "uniswap_v3"
+    router_address: str = None
+    exchange_initialized: bool = False
 
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI
+        return UNISWAP_V3_POOL_ABI if self.exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_POOL_ABI
+
+    @property
+    def get_factory_abi(self):
+        return UNISWAP_V3_FACTORY_ABI if self.exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_FACTORY_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.Swap]
+        return [contract.events.Swap] if self.exchange_initialized else []
 
-    def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        pool = self.get_pool(address)
-        fee, fee_float = (
-            (pool.state["fee"], pool.state["fee_float"])
-            if pool
-            else (
-                contract.functions.fee().call(),
-                float(contract.functions.fee().call()) / 1e6,
-            )
-        )
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+        fee = await contract.functions.fee().call()
+        fee_float = float(fee) / 1e6
         return fee, fee_float
 
-    def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token0().call()
+    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        return await contract.functions.token0().call()
 
-    def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return contract.functions.token1().call()
+    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+        return await contract.functions.token1().call()

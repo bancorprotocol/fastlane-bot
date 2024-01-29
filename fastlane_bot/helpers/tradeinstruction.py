@@ -87,14 +87,14 @@ class TradeInstruction:
     tknout_is_wrapped = None
 
     @property
-    def tknin_key(self) -> str:
+    def tknin_address(self) -> str:
         """
         The input token key (e.g. 'DAI-1d46')
         """
         return self.tknin
 
     @property
-    def tknout_key(self) -> str:
+    def tknout_address(self) -> str:
         """
         The output token key (e.g. 'DAI-1d46')
         """
@@ -108,9 +108,10 @@ class TradeInstruction:
         self._is_carbon = self._check_if_carbon()
         
         if self.tknin_dec_override is None:
-            TokenIn = self.db.get_token(key =self.tknin)
+            TokenIn = self.db.get_token(tkn_address=self.tknin)
             self._tknin_address = TokenIn.address
             self._tknin_decimals = int(TokenIn.decimals)
+            self._tknin_symbol = TokenIn.symbol
         else:
             self._tknin_address = self.tknin_addr_override
             self._tknin_decimals = self.tknin_dec_override
@@ -126,9 +127,10 @@ class TradeInstruction:
         )
         
         if self.tknout_dec_override is None:
-            TokenOut = self.db.get_token(key =self.tknout)
+            TokenOut = self.db.get_token(tkn_address=self.tknout)
             self._tknout_address = TokenOut.address
             self._tknout_decimals = int(TokenOut.decimals)
+            self._tknout_symbol = TokenOut.symbol
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
@@ -159,6 +161,26 @@ class TradeInstruction:
         else:
             self._exchange_name = self.exchange_override
         self._exchange_id = self.get_platform_id()
+        self.custom_int = self.get_custom_int()
+
+    def get_custom_int(self) -> int:
+        """
+        Gets the custom int field for the pool
+
+        Uni V3 & forks: the fee
+        Balancer: the pool ID
+        Solidly V2 & forks: 0 for volatile, 1 for stable
+        """
+        pool = self.pool
+        custom_int = 0
+        if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
+            custom_int = int(Decimal(pool.fee_float) * Decimal("1000000"))
+        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            custom_int = 0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
+        elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
+            custom_int = int(pool.anchor, 16)
+        return custom_int
+
 
     def get_platform_id(self):
         """
@@ -168,6 +190,8 @@ class TradeInstruction:
             return self.ConfigObj.EXCHANGE_IDS[self._exchange_name]
         elif self._exchange_name in self.ConfigObj.UNI_V2_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V2_NAME]
+        elif self._exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.SOLIDLY_V2_NAME]
         elif self._exchange_name in self.ConfigObj.UNI_V3_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V3_NAME]
 
@@ -220,29 +244,29 @@ class TradeInstruction:
 
 
 
-    def _get_token_address(self, token_key: str) -> str:
-        """
-        Gets the token address based on the token key.
+    # def _get_token_address(self, token_address: str) -> str:
+    #     """
+    #     Gets the token address based on the token key.
+    #
+    #     Parameters
+    #     ----------
+    #     token_address: str
+    #         The token key (e.g. 'DAI-1d46')
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The token address.
+    #     """
+    #     return self._get_token(token_address).address
 
-        Parameters
-        ----------
-        token_key: str
-            The token key (e.g. 'DAI-1d46')
-
-        Returns
-        -------
-        str
-            The token address.
-        """
-        return self._get_token(token_key).address
-
-    def _get_token_decimals(self, token_key: str) -> int:
+    def _get_token_decimals(self, token_address: str) -> int:
         """
         Gets the token decimals based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -250,15 +274,15 @@ class TradeInstruction:
         int
             The token decimals.
         """
-        return self._get_token(token_key).decimals
+        return self._get_token(token_address).decimals
 
-    def _get_token(self, token_key: str) -> Token:
+    def _get_token(self, token_address: str) -> Token:
         """
         Gets the token object based on the token key.
 
         Parameters
         ----------
-        token_key: str
+        token_address: str
             The token key (e.g. 'DAI-1d46')
 
         Returns
@@ -267,7 +291,7 @@ class TradeInstruction:
             The token object.
         """
 
-        return self.db.get_token(key=token_key)
+        return self.db.get_token(tkn_address=token_address)
 
     def _get_pool(self) -> Pool:
         """
@@ -360,6 +384,13 @@ class TradeInstruction:
         return self._tknin_decimals
 
     @property
+    def tknin_symbol(self) -> int:
+        """
+        The input token decimals.
+        """
+        return self._tknin_symbol
+
+    @property
     def amtin_wei(self) -> int:
         """
         The input amount in wei.
@@ -386,6 +417,13 @@ class TradeInstruction:
         The output token decimals.
         """
         return self._tknout_decimals
+
+    @property
+    def tknout_symbol(self) -> int:
+        """
+        The output token decimals.
+        """
+        return self._tknout_symbol
 
     @property
     def amtout_wei(self) -> int:

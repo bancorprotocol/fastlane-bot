@@ -52,6 +52,10 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             except Exception as e:
                 self.ConfigObj.logger.debug(f"[triangle multi] {str(e)}")
                 continue
+            if trade_instructions_dic is None:
+                continue
+            if len(trade_instructions_dic) < 2:
+                continue
             profit_src = -r.result
 
             # Get the cids

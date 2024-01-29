@@ -78,10 +78,16 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                     (O, profit_src, r, trade_instructions_df,) = self.run_main_flow(
                         curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1
                     )
+
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
 
                 except Exception:
+                    continue
+
+                if trade_instructions_dic is None:
+                    continue
+                if len(trade_instructions_dic) < 2:
                     continue
 
                 # Get the cids
@@ -140,7 +146,7 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             for idx, row in trade_instructions_df.iterrows()
             if (
                 (tkn0_into_carbon and row[0] < 0)
-                or (not tkn0_into_carbon and row[0] > 0)
+                or (not tkn0_into_carbon and row.iloc[0] > 0)
             )
             and ("-0" in idx or "-1" in idx)
         ]

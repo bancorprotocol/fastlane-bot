@@ -63,30 +63,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
                     trade_instructions_dic,
                 ) = self.run_main_flow(miniverse, src_token)
 
-                # Get the cids of the carbon pools
-                carbon_cids = [
-                    curve.cid
-                    for curve in miniverse
-                    if curve.params.get("exchange") == "carbon_v1"
-                ]
-
-                if carbon_cids:
-
-                    # Get the new set of curves
-                    new_curves = self.get_mono_direction_carbon_curves(
-                        miniverse=miniverse, trade_instructions_df=trade_instructions_df
-                    )
-
-                    # Rerun main flow with the new set of curves
-                    (
-                        profit_src,
-                        trade_instructions,
-                        trade_instructions_df,
-                        trade_instructions_dic,
-                    ) = self.run_main_flow(new_curves, src_token)
             except Exception:
                 continue
-
+            if trade_instructions_dic is None:
+                continue
+            if len(trade_instructions_dic) < 3:
+                continue
             # Get the candidate ids
             cids = [ti["cid"] for ti in trade_instructions_dic]
 
@@ -270,8 +252,7 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         val = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
         return val
 
-    @staticmethod
-    def run_main_flow(
+    def run_main_flow(self,
         miniverse: List, src_token: str
     ) -> Tuple[float, Any, Any, Any]:
         """
@@ -294,9 +275,9 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         # Instantiate the container and optimizer objects
         CC_cc = CPCContainer(miniverse)
         O = MargPOptimizer(CC_cc)
-
+        pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
         # Perform the optimization
-        r = O.margp_optimizer(src_token)
+        r = O.optimize(src_token, params=dict(pstart=pstart))
 
         # Get the profit in the source token
         profit_src = -r.result
@@ -362,10 +343,22 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
                 continue
 
             miniverses = []
-            if external_curves:
+            if len(external_curves) > 0:
                 for curve in external_curves:
                     miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve]]
-            if carbon_curves:
+            if len(carbon_curves) > 0:
+
+                if len(carbon_curves) > 0:
+                    base_direction_pair = carbon_curves[0].pair
+                    base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
+                    base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+
+                    if len(base_direction_one) > 0:
+                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one]
+
+                    if len(base_direction_two) > 0:
+                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two]
+
                 miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
 
             if len(miniverses) > 0:

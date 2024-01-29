@@ -8,20 +8,18 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.14.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
-from dataclasses import asdict
+
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 
-import pytest
-
 from fastlane_bot import Bot
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface, Token
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
@@ -29,7 +27,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(QueryInterface))
@@ -65,10 +62,6 @@ assert (qi.has_balance(qi.state[1], ['liquidity']) == False)
 
 assert (len(qi.filter_pools('uniswap_v2')) == 1)
 
-# ## test_cleanup_token_key
-
-assert (qi.cleanup_token_key('TKN-Hello-0x123') == 'TKN_Hello-0x123')
-
 # ## test_update_state
 
 new_state = [{'exchange_name': 'bancor_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0xabc', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10}]
@@ -77,9 +70,10 @@ qi.update_state(new_state)
 # ## test_get_token
 
 # +
-new_state = [{'exchange_name': 'bancor_v2', 'address': '0xabc', 'descr': 'TKN-0x123/TKN-0xdef', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 10}]
-qi.update_state(new_state)
-token = qi.get_token('TKN-0x123')
+new_state = {'fee':'0','exchange_name': 'bancor_v2', 'address': '0xabc', 'pair_name': 'Pair-0xghi', 'liquidity': 10, 'tkn0_decimals': 18, 'tkn1_decimals': 6, 'tkn0_symbol': 'ETH', 'tkn1_symbol': 'USDC', 'tkn0_address': 'Ox9er', 'tkn1_address': 'Ox8er'}
+new_state['descr'] = new_state['exchange_name'] + ' ' + new_state['pair_name'] + ' ' + new_state['fee']
+qi.update_state([new_state])
+token = qi.get_token('Ox9er')
 
 assert isinstance(token, Token)
 # -

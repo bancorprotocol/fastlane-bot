@@ -12,6 +12,7 @@ from .network import ConfigNetwork
 from .connect import EthereumNetwork
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from ..data.abi import (
@@ -21,25 +22,26 @@ from ..data.abi import (
 )
 
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
-#WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+# WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+
 
 class ConfigProvider(ConfigBase):
     """
     Fastlane bot config -- provider
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
-    RPC_URL = None # set in derived class init
-    
+
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
+    RPC_URL = None  # set in derived class init
+
     PROVIDER_DEFAULT = S.PROVIDER_DEFAULT
     PROVIDER_INFURA = S.PROVIDER_INFURA
     PROVIDER_ALCHEMY = S.PROVIDER_ALCHEMY
     PROVIDER_TENDERLY = S.PROVIDER_TENDERLY
     PROVIDER_UNITTEST = S.PROVIDER_UNITTEST
     ETH_PRIVATE_KEY_BE_CAREFUL = ETH_PRIVATE_KEY_BE_CAREFUL
-    #WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
-
+    # WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
 
     @classmethod
     def new(cls, network: ConfigNetwork, provider=None, **kwargs):
@@ -48,13 +50,13 @@ class ConfigProvider(ConfigBase):
         """
         if not issubclass(type(network), ConfigNetwork):
             raise TypeError(f"Invalid network type: {type(network)}")
-        
+
         if provider is None:
             provider = cls.PROVIDER_DEFAULT
-            
+
         if provider == S.PROVIDER_DEFAULT:
             provider = network.DEFAULT_PROVIDER
-        
+
         if provider == S.PROVIDER_ALCHEMY:
             return _ConfigProviderAlchemy(network, _direct=False, **kwargs)
         elif provider == S.PROVIDER_TENDERLY:
@@ -65,7 +67,7 @@ class ConfigProvider(ConfigBase):
             return _ConfigProviderUnitTest(network, _direct=False, **kwargs)
         else:
             raise ValueError(f"Unknown provider: {provider}")
-        
+
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(**kwargs)
         self.ARB_CONTRACT_VERSION = None
@@ -84,12 +86,13 @@ class _ConfigProviderAlchemy(ConfigProvider):
     """
     Fastlane bot config -- provider [Alchemy]
     """
+
     PROVIDER = S.PROVIDER_ALCHEMY
-    #WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
-    
+    # WEB3_ALCHEMY_PROJECT_ID = WEB3_ALCHEMY_PROJECT_ID
+
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        #assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        # assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
         self.WEB3_ALCHEMY_PROJECT_ID = network.WEB3_ALCHEMY_PROJECT_ID
         self.RPC_URL = f"{network.RPC_ENDPOINT}{self.WEB3_ALCHEMY_PROJECT_ID}"
         N = self.network
@@ -101,6 +104,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
+        self.w3_async = self.connection.w3_async
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
 
@@ -110,7 +114,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=CARBON_CONTROLLER_ABI,
             )
             self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.toChecksumAddress(network.FASTLANE_CONTRACT_ADDRESS),
+                address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
 
@@ -128,24 +132,32 @@ class _ConfigProviderAlchemy(ConfigProvider):
 
         if self.BANCOR_ARBITRAGE_CONTRACT is not None:
             try:
-                reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+                (
+                    reward_percent,
+                    max_profit,
+                ) = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
                 self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-                self.ARB_MAX_PROFIT = 1000000 # This is no longer used
+                self.ARB_MAX_PROFIT = 1000000  # This is no longer used
             except:
                 self.ARB_REWARD_PERCENTAGE = "0.5"
         else:
             self.ARB_REWARD_PERCENTAGE = "0.5"
-            
+
         self.EXPECTED_GAS_MODIFIER = "0.85"
+
+
 class _ConfigProviderTenderly(ConfigProvider):
     """
     Fastlane bot config -- provider [Tenderly]
     """
+
     PROVIDER = S.PROVIDER_TENDERLY
-    
+
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        assert self.network.NETWORK == ConfigNetwork.NETWORK_TENDERLY, f"Tenderly only supports Tenderly {self.network}"
+        assert (
+            self.network.NETWORK == ConfigNetwork.NETWORK_TENDERLY
+        ), f"Tenderly only supports Tenderly {self.network}"
         self.RPC_URL = f"https://rpc.tenderly.co/fork/{self.network.TENDERLY_FORK}"
 
         N = self.network
@@ -168,7 +180,7 @@ class _ConfigProviderTenderly(ConfigProvider):
             abi=CARBON_CONTROLLER_ABI,
         )
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-            address=self.w3.toChecksumAddress(N.FASTLANE_CONTRACT_ADDRESS),
+            address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
         self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
@@ -176,35 +188,37 @@ class _ConfigProviderTenderly(ConfigProvider):
         reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
 
         self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-        self.ARB_MAX_PROFIT = str(int(max_profit) / (10 ** 18))
+        self.ARB_MAX_PROFIT = str(int(max_profit) / (10**18))
 
-    
+
 class _ConfigProviderInfura(ConfigProvider):
     """
     Fastlane bot config -- provider [Infura]
     """
+
     PROVIDER = S.PROVIDER_INFURA
-    
+
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        assert (
+            self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM
+        ), f"Alchemy only supports Ethereum {self.network}"
         raise NotImplementedError("Infura not implemented")
+
 
 class _ConfigProviderUnitTest(ConfigProvider):
     """
     Fastlane bot config -- provider [UnitTest]
     """
+
     PROVIDER = S.PROVIDER_UNITTEST
-    
+
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(network, **kwargs)
-        #assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
-        #raise NotImplementedError("Infura not implemented")
+        # assert self.network.NETWORK == ConfigNetwork.NETWORK_ETHEREUM, f"Alchemy only supports Ethereum {self.network}"
+        # raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
         self.BANCOR_NETWORK_INFO_CONTRACT = None
         self.CARBON_CONTROLLER_CONTRACT = None
         self.BANCOR_ARBITRAGE_CONTRACT = None
-        
-
-    

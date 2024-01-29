@@ -18,8 +18,9 @@ class UniswapV3Pool(Pool):
     """
     Class representing a Uniswap v3 pool.
     """
-
+    base_exchange_name: str = "uniswap_v3"
     exchange_name: str = "uniswap_v3"
+    router_address: str = None
 
     @staticmethod
     def unique_key() -> str:
@@ -30,7 +31,7 @@ class UniswapV3Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.
@@ -38,8 +39,7 @@ class UniswapV3Pool(Pool):
         event_args = event["args"]
         return (
             "sqrtPriceX96" in event_args
-            and event["address"] in static_pools["uniswap_v3_pools"]
-            and "protocolFeesToken0" not in event_args
+            and event["address"] in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
@@ -90,6 +90,38 @@ class UniswapV3Pool(Pool):
             "tick_spacing": contract.caller.tickSpacing(),
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
+            "router": self.router_address,
+        }
+        for key, value in params.items():
+            self.state[key] = value
+        return params
+
+    async def async_update_from_contract(
+        self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Any = None,
+        w3: Any = None,
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        fee = await contract.caller.fee()
+        factory_address = await contract.caller.factory()
+        slot0 = await contract.caller.slot0()
+
+        params = {
+            "tick": slot0[1],
+            "sqrt_price_q96": slot0[0],
+            "liquidity": await contract.caller.liquidity(),
+            "fee": fee,
+            "fee_float": fee / 1e6,
+            "tick_spacing": await contract.caller.tickSpacing(),
+            "exchange_name": self.state["exchange_name"],
+            "address": self.state["address"],
+            "router": self.router_address,
+            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value

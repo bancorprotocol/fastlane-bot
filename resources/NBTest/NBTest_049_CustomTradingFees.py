@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -20,16 +20,18 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastlane_bot import Bot, Config
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, SushiswapV2, CarbonV1, BancorV3
+from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-
+import asyncio
+from unittest.mock import AsyncMock
+import nest_asyncio
+nest_asyncio.apply()
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -42,6 +44,8 @@ require("3.0", __VERSION__)
 # -
 
 #
+
+nest_asyncio
 
 # +
 import json
@@ -58,7 +62,12 @@ with open("fastlane_bot/data/test_pool_data.json", "r") as f:
 cfg = Config.new(config=Config.CONFIG_MAINNET)
 
 # create manager instance for all tests
-manager = Manager(cfg.w3, cfg, pool_data, 20, SUPPORTED_EXCHANGES=['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'])
+manager = Manager(web3=cfg.w3,
+    w3_async=cfg.w3_async,
+    cfg=cfg, 
+    pool_data=pool_data, 
+    alchemy_max_block_fetch=20, 
+    SUPPORTED_EXCHANGES=['bancor_v3', 'carbon_v1', 'uniswap_v2', 'uniswap_v3'])
 
 # -
 
@@ -78,25 +87,34 @@ assert (event['args']['token0'], event['args']['token1']) in manager.fee_pairs
 #
 
 # +
+
 event = event_data['carbon_v1_trading_fee_updated']
 prevFeePPM = event['args']['prevFeePPM']
 newFeePPM = event['args']['newFeePPM']
 
 mocked_contract = Mock()
-mocked_contract.functions.tradingFeePPM.return_value.call.return_value = prevFeePPM
-assert int(manager.exchanges['carbon_v1'].get_fee('', mocked_contract)[0]) == prevFeePPM
+new_mocked_contract = Mock()
+mocked_contract.functions.tradingFeePPM.return_value.call =  AsyncMock(return_value=prevFeePPM)
+new_mocked_contract.functions.tradingFeePPM.return_value.call = AsyncMock(return_value=newFeePPM)
 
-# find all pools with fee==prevFeePPM
-prev_default_pools = [idx for idx, pool in enumerate(manager.pool_data) if pool['fee'] == prevFeePPM]
+@pytest.mark.asyncio
+async def test_update_from_event_carbon_v1_trading_fee_updated():
+    val = await manager.exchanges['carbon_v1'].get_fee('', mocked_contract)
+    assert int(val[0]) == prevFeePPM
+    
+    # find all pools with fee==prevFeePPM
+    prev_default_pools = [idx for idx, pool in enumerate(manager.pool_data) if pool['fee'] == prevFeePPM]
+    
+    manager.update_from_event(event)
 
-manager.update_from_event(event)
+    for idx in prev_default_pools:
+        assert manager.pool_data[idx]['fee'] == newFeePPM
+    
+    val2 = await manager.exchanges['carbon_v1'].get_fee('', new_mocked_contract)
+    assert int(val2[0]) == newFeePPM
 
-for idx in prev_default_pools:
-    assert manager.pool_data[idx]['fee'] == newFeePPM
-
-mocked_contract.functions.tradingFeePPM.return_value.call.return_value = newFeePPM
-
-assert int(manager.exchanges['carbon_v1'].get_fee('', mocked_contract)[0]) == newFeePPM
+# Run the test in an event loop
+asyncio.run(test_update_from_event_carbon_v1_trading_fee_updated())
 # -
 
 # ## test_update_from_event_carbon_v1_pair_trading_fee_updated

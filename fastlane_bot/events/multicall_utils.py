@@ -137,7 +137,7 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
         The current block.
 
     """
-    multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block, multicall_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
+    multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block, web3=mgr.web3, multicall_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
     with multicaller as mc:
         for row in rows_to_update:
             pool_info = mgr.pool_data[row]
@@ -285,10 +285,9 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
 
     """
     tkn0_address = pool_info["tkn0_address"]
-
     p0, p1, tkn_balance = result
     token_price = Decimal(p1) / Decimal(p0)
-    token_price= int(str(encode_token_price(token_price)))
+    token_price = int(str(encode_token_price(token_price)))
 
     result = {
         "fee": "0.000",
@@ -301,6 +300,10 @@ def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) ->
         "z_0": tkn_balance,
         "A_0": 0,
         "B_0": token_price,
+        "y_1": 0,
+        "z_1": 0,
+        "A_1": 0,
+        "B_1": 0,
     }
     return result
 

@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.14.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -44,9 +44,9 @@ data = {
 help(U3.from_dict)
 
 u1 = U3(
-    tkn0="USDC-eB48", 
+    tkn0="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 
     tkn0decv=6, 
-    tkn1="WETH-6Cc2", 
+    tkn1="0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 
     tkn1decv=18,
     sp96=data["sqrt_price_q96"],
     tick=data["tick"],
@@ -57,15 +57,15 @@ u2 = U3.from_dict(data, U3.FEE500)
 #assert u1 == u2
 u = u2
 assert asdict(u) == {
-    'tkn0': 'USDC-eB48',
-    'tkn1': 'WETH-6Cc2',
+    'tkn0': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    'tkn1': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     'sp96': int(data["sqrt_price_q96"]),
     'tick': int(data["tick"]),
     'liquidity': int(data["liquidity"]),
     'fee_const': U3.FEE500
-}
-assert u.tkn0 == "USDC-eB48"
-assert u.tkn1 == "WETH-6Cc2"
+}, f"{asdict(u)}"
+assert u.tkn0 == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+assert u.tkn1 == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 assert u.tkn0dec == 6
 assert u.tkn1dec == 18
 assert u.decf == 1e-12
@@ -74,7 +74,7 @@ assert iseq(u.p, 0.00047422968986928404)
 assert iseq(1/u.p, 2108.6828205033694)
 assert u.p == u.price_tkn1_per_tkn0
 assert 1/u.p == u.price_tkn0_per_tkn1
-assert u.price_convention == 'USDC-eB48/WETH-6Cc2 [WETH-6Cc2 per USDC-eB48]'
+assert u.price_convention == '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 [0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 per 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48]'
 assert iseq(u._price_f(1725337071198080486317035748446190), 474229689.86928403)
 assert iseq(u._price_f(u.sp96), 474229689.86928403)
 assert u.ticksize == 10
@@ -138,14 +138,14 @@ u3data = dict(
     tick_spacing=10, 
     liquidity=Decimal('420303555647537236581'), 
     address='0x5720EB958685dEEEB5AA0b34F677861cE3a8c7F5', 
-    anchor='NaN', tkn0='USDP-89E1', 
-    tkn1='USDC-eB48', 
+    anchor='NaN', tkn0='0x8E870D67F660D95d5be530380D0eC0bd388289E1', 
+    tkn1='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
     tkn0_address='0x8E870D67F660D95d5be530380D0eC0bd388289E1', 
     tkn0_decimals=18, 
     tkn1_address='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
     tkn1_decimals=6, 
-    tkn0_key='USDP-89E1',
-    tkn1_key='USDC-eB48'
+    tkn0_key='0x8E870D67F660D95d5be530380D0eC0bd388289E1',
+    tkn1_key='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
 )
 u3data["token0"] = u3data["tkn0_address"]
 u3data["token1"] = u3data["tkn1_address"]

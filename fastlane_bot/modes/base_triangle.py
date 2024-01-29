@@ -101,7 +101,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         """
         combos = []
-        if arb_mode in ["single_triangle_bancor3", "bancor_v3", "b3_two_hop"]:
+        if arb_mode in ["b3_two_hop"]:
             combos = [
                 (tkn0, tkn1)
                 for tkn0, tkn1 in itertools.product(flashloan_tokens, flashloan_tokens)
@@ -217,3 +217,18 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 wrong_direction_cids.append(idx)
 
         return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
+    def build_pstart(self, CCm, tkn0list, tkn1):
+        tkn0list = [x for x in tkn0list if x not in [tkn1]]
+        pstart = {}
+        for tkn0 in tkn0list:
+            try:
+                price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
+            except:
+                try:
+                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
+                except Exception as e:
+                    print(str(e))
+                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
+            pstart[tkn0]=price
+        pstart[tkn1] = 1
+        return pstart

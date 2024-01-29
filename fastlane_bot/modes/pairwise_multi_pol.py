@@ -12,6 +12,7 @@ import itertools
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
+from fastlane_bot.tools.cpc import T
 
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
@@ -25,9 +26,6 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
         see base.py
         """
-
-        if candidates is None:
-            candidates = []
 
         all_tokens, combos = self.get_combos_pol(self.CCm, self.flashloan_tokens)
         if self.result == self.AO_TOKENS:
@@ -81,7 +79,10 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
 
                 except Exception:
                     continue
-
+                if trade_instructions_dic is None:
+                    continue
+                if len(trade_instructions_dic) < 2:
+                    continue
                 # Get the cids
                 cids = [ti["cid"] for ti in trade_instructions_dic]
 
@@ -192,11 +193,11 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
 
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
-        bancor_pol_tkns = [tkn for tkn in bancor_pol_tkns if tkn not in ["WETH-6Cc2", "ETH-EEeE"]]
+        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]])
 
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, ["WETH-6Cc2", "ETH-EEeE"])
+            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, [T.ETH, T.WETH])
             # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1

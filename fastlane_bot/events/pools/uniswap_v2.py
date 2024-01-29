@@ -20,7 +20,14 @@ class UniswapV2Pool(Pool):
     Class representing a Uniswap v2 pool.
     """
 
+    base_exchange_name: str = "uniswap_v2"
     exchange_name: str = "uniswap_v2"
+    fee: str = None
+    router_address: str = None
+
+    @property
+    def fee_float(self):
+        return float(self.fee)
 
     @staticmethod
     def unique_key() -> str:
@@ -31,7 +38,7 @@ class UniswapV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any]
+        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
@@ -39,7 +46,7 @@ class UniswapV2Pool(Pool):
         event_args = event["args"]
         return (
             "reserve0" in event_args
-            and event["address"] in static_pools["uniswap_v2_pools"]
+            and event["address"] in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
@@ -73,11 +80,37 @@ class UniswapV2Pool(Pool):
         """
         reserve_balance = contract.caller.getReserves()
         params = {
-            "fee": "0.003",
-            "fee_float": 0.003,
+            "fee": self.fee,
+            "fee_float": self.fee_float,
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
-            "exchange_name": "uniswap_v2",
+            "exchange_name": self.exchange_name,
+            "router": self.router_address,
+        }
+        for key, value in params.items():
+            self.state[key] = value
+        return params
+
+    async def async_update_from_contract(self,
+        contract: Contract,
+        tenderly_fork_id: str = None,
+        w3_tenderly: Web3 = None,
+        w3: Web3 = None,
+        tenderly_exchanges: List[str] = None
+         ) -> Dict[str, Any]:
+        """
+        See base class.
+        """
+        reserve_balance = await contract.caller.getReserves()
+        factory_address = await contract.caller.factory()
+        params = {
+            "fee": self.fee,
+            "fee_float": self.fee_float,
+            "tkn0_balance": reserve_balance[0],
+            "tkn1_balance": reserve_balance[1],
+            "exchange_name": self.exchange_name,
+            "router": self.router_address,
+            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value
