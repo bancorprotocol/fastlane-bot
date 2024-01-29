@@ -1369,7 +1369,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        assert tkn_in not in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,"[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
+        assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,"[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
         amount_in = Decimal(str(amount_in))
 
         tkn0_address = curve.pair_name.split("/")[0]
