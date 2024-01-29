@@ -598,11 +598,9 @@ def run(
     loop_idx = last_block = 0
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
-    forks_to_cleanup = []
     last_block_queried = 0
     handle_static_pools_update(mgr)
     total_iteration_time = 0
-    failed_async_calls = 0
     while True:
 
         try:
