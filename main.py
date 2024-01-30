@@ -5,7 +5,6 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from random import shuffle
 
 from fastlane_bot.events.exceptions import ReadOnlyException, AyncUpdateRetryException
 from fastlane_bot.events.version_utils import check_version_requirements
@@ -866,9 +865,7 @@ def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=
             return  # Successful execution
         except AyncUpdateRetryException as e:
             failed_async_calls += 1
-            remaining_pools = mgr.update_remaining_pools()
-            shuffle(remaining_pools)  # shuffle to avoid repeated immediate failure of the same pool
-            mgr.pools_to_add_from_contracts = remaining_pools
+            mgr.update_remaining_pools()
             mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
 
     # Handling failure after retries
