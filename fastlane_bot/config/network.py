@@ -194,6 +194,7 @@ class ConfigNetwork(ConfigBase):
     # USDT_KEY = "USDT-1ec7"
     SELF_FUND = False
 
+    HAS_LAYER_ONE_GAS_FEE: bool
     # ACCOUNTS SECTION
     #######################################################################################
     BINANCE8_WALLET_ADDRESS = "0xF977814e90dA44bFA03b6295A0616a897441aceC"
@@ -421,6 +422,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
     RPC_ENDPOINT = "https://eth-mainnet.alchemyapi.io/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
+    HAS_LAYER_ONE_GAS_FEE = False
 
     MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
@@ -468,6 +470,7 @@ class _ConfigNetworkArbitrumOne(ConfigNetwork):
     RPC_ENDPOINT = "https://arb-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_ARBITRUM")
 
+    HAS_LAYER_ONE_GAS_FEE = False
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
 
@@ -502,6 +505,7 @@ class _ConfigNetworkPolygon(ConfigNetwork):
     RPC_ENDPOINT = "https://polygon-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_POLYGON")
 
+    HAS_LAYER_ONE_GAS_FEE = False
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
 
@@ -538,6 +542,7 @@ class _ConfigNetworkPolygonZkevm(ConfigNetwork):
     RPC_ENDPOINT = "https://polygonzkevm-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_POLYGON_ZKEVM")
 
+    HAS_LAYER_ONE_GAS_FEE = False
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
@@ -570,6 +575,8 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     RPC_ENDPOINT = "https://opt-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
 
+    HAS_LAYER_ONE_GAS_FEE = True
+    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
 
@@ -606,6 +613,8 @@ class _ConfigNetworkBase(ConfigNetwork):
     RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
+    HAS_LAYER_ONE_GAS_FEE = True
+    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
