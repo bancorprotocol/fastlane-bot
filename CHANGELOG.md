@@ -2,9 +2,16 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.22...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.23...HEAD)
 
 - Trading on aerodrome\_v2 is not properly supported [\#331](https://github.com/bancorprotocol/fastlane-bot/issues/331)
+- AssertionError for Graphene on Base for strategies that include native ETH [\#330](https://github.com/bancorprotocol/fastlane-bot/issues/330)
+- Add function native\_gas\_token\_to\_wrapped and remove Ethereum only forconversion in routehandler.py \_calc\_carbon\_output [\#332](https://github.com/bancorprotocol/fastlane-bot/pull/332) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.23](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.23) (2024-01-29)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.22...v3.0.23)
+
 - Block number can be float when fetching events leading to failure [\#301](https://github.com/bancorprotocol/fastlane-bot/issues/301)
 - 331 trading on aerodrome v2 is not properly supported [\#333](https://github.com/bancorprotocol/fastlane-bot/pull/333) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
