@@ -386,7 +386,7 @@ class TxHelpers:
             * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
             / Decimal("10") ** Decimal("18")
         )
-        if self.ConfigObj.network.HAS_LAYER_ONE_GAS_FEE:
+        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
             layer_one_gas_fee = asyncio.get_event_loop().run_until_complete(self.get_layer_one_gas_fee(signed_transaction=signed_arb_tx))
             gas_cost_eth += layer_one_gas_fee
 
@@ -1018,10 +1018,10 @@ class TxHelpers:
 
 def count_bytes(data: HexBytes) -> (int, int):
     """
+    This function counts the number of zero and non-zero bytes in a given input data.
     :param data: HexBytes
-        This is the HexBytes object from a signed TX
     returns Tuple(int, int):
-        The zero & non zero count of bytes in a transaction
+        The zero & non zero count of bytes in the input
     """
     zero_bytes = len([byte for byte in data if byte == 0])
     non_zero_bytes = len(data) - zero_bytes
