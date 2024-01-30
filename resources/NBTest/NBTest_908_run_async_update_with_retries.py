@@ -93,6 +93,21 @@ def test_successful_execution_first_try(mock_get_new_pool_data, mocker):
     mgr.cfg.logger.error.assert_not_called()
 
 
+@patch("fastlane_bot.events.async_event_update_utils.get_new_pool_data")
+def test_pools_to_add_from_contracts_is_cleared_upon_success(mock_get_new_pool_data, mocker):
+    mgr = setup_mock_mgr()
+    mocker.patch("time.sleep")  # To avoid actual sleep calls
+    current_block = max(
+        int(pool[2]["blockNumber"])
+        for pool in mgr.pools_to_add_from_contracts
+        if "blockNumber" in pool[2]
+    )
+    mock_get_new_pool_data.return_value = mgr.pool_data
+    run_async_update_with_retries(mgr, current_block=current_block, logging_path="")
+
+    assert mgr.pools_to_add_from_contracts == [], "mgr.pools_to_add_from_contracts is not reset to [] upon success"
+
+
 @patch("fastlane_bot.events.async_event_update_utils.async_update_pools_from_contracts")
 def test_successful_execution_after_retries(
     mock_async_update_pools_from_contracts, mocker

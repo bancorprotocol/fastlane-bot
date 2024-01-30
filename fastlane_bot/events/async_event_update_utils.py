@@ -572,6 +572,7 @@ def run_async_update_with_retries(mgr, current_block, logging_path, retry_interv
     while failed_async_calls < max_retries:
         try:
             async_update_pools_from_contracts(mgr, current_block, logging_path)
+            mgr.pools_to_add_from_contracts = []
             return  # Successful execution
         except AyncUpdateRetryException as e:
             failed_async_calls += 1
