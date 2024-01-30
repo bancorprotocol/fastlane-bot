@@ -376,7 +376,7 @@ class TxHelpers:
         else:
             current_gas_price = arb_tx["gasPrice"]
 
-        signed_arb_tx = self.sign_transaction(arb_tx)
+        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
 
 
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
