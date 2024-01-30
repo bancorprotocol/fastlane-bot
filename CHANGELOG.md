@@ -2,10 +2,17 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.21...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.22...HEAD)
+
+- Trading on aerodrome\_v2 is not properly supported [\#331](https://github.com/bancorprotocol/fastlane-bot/issues/331)
+- Block number can be float when fetching events leading to failure [\#301](https://github.com/bancorprotocol/fastlane-bot/issues/301)
+- 331 trading on aerodrome v2 is not properly supported [\#333](https://github.com/bancorprotocol/fastlane-bot/pull/333) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.22](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.22) (2024-01-24)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.21...v3.0.22)
 
 - hex string without 0x prefix [\#306](https://github.com/bancorprotocol/fastlane-bot/issues/306)
-- Block number can be float when fetching events leading to failure [\#301](https://github.com/bancorprotocol/fastlane-bot/issues/301)
 
 Merged pull requests
 
