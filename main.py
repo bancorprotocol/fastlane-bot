@@ -865,8 +865,8 @@ def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=
             return  # Successful execution
         except AyncUpdateRetryException as e:
             failed_async_calls += 1
-            mgr.update_remaining_pools()
             mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
+            mgr.update_remaining_pools()
 
     # Handling failure after retries
     mgr.cfg.logger.error(
