@@ -717,7 +717,8 @@ def run(mgr, args, tenderly_uri=None) -> None:
             total_iteration_time += time.time() - iteration_start_time
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
-                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}"
+                f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}\n"
+                f"{mgr.cfg.logging_header}\n"
                 f"\n********************************************\n\n"
             )
 
