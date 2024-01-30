@@ -370,6 +370,57 @@ assert solidly_custom_int_stable == 1, f"[NBTest 062, testing get_custom_int in 
 assert balancer_custom_int == 70911184602319403714296547319574681768227301686592151818369995176900963599553, f"[NBTest 062, testing get_custom_int in tradeinstruction.py, expected 0x9cc64ee4cb672bc04c54b00a37e1ed75b2cc19dd0002000000000000000004c1, found {balancer_custom_int}]"
 # -
 
+# ## Test_native_gas_token_to_wrapped
 
+# +
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+trade_instruction_3 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'velocimeter_v2'
+)
+trade_instruction_4 = TradeInstruction(
+    cid='0xaf541ca0647c91d8e84500ed7bc4ab47d259a8f62c088731b73999d976155839',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=5000,
+    tknout='0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    exchange_override = 'velocimeter_v2'
+)
+txroutehandler_base = TxRouteHandler(trade_instructions=[trade_instruction_3, trade_instruction_4])
+
+
+native_gas_token = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+wrapped_gas_token = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+input_token_0 = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+input_token_1 = native_gas_token
+input_token_2 = wrapped_gas_token
+
+
+test_input_0 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_0)
+test_input_1 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_1)
+test_input_2 = txroutehandler_base.native_gas_token_to_wrapped(tkn=input_token_2)
+
+assert test_input_0 == input_token_0, f"Expected input token to not change, went from {input_token_0} to {test_input_0}"
+assert test_input_1 == wrapped_gas_token, f"Expected input token to be converted from native token to wrapped, result = {test_input_1}, expected = {wrapped_gas_token}"
+assert test_input_2 == wrapped_gas_token, f"Expected input token not to change, result = {test_input_2}, expected = {wrapped_gas_token}"
+
+
+# -
 
 
