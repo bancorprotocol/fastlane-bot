@@ -6,7 +6,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 
-from fastlane_bot.events.exceptions import ReadOnlyException, AyncUpdateRetryException
+from fastlane_bot.events.exceptions import ReadOnlyException, AsyncUpdateRetryException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
 
@@ -863,7 +863,7 @@ def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=
         try:
             async_update_pools_from_contracts(mgr, current_block, logging_path)
             return  # Successful execution
-        except AyncUpdateRetryException as e:
+        except AsyncUpdateRetryException as e:
             failed_async_calls += 1
             mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
             mgr.update_remaining_pools()
@@ -874,7 +874,7 @@ def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=
         f"{len(mgr.pools_to_add_from_contracts)} attempts. List of failed pools: {mgr.pools_to_add_from_contracts}"
     )
 
-    raise AyncUpdateRetryException("[main.py] async_update_pools_from_contracts failed after maximum retries.")
+    raise AsyncUpdateRetryException("[main.py] async_update_pools_from_contracts failed after maximum retries.")
 
 
 if __name__ == "__main__":

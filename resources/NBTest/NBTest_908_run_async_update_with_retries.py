@@ -8,7 +8,7 @@ from fastlane_bot.events.async_event_update_utils import (
     update_remaining_pools,
     run_async_update_with_retries,
 )  # replace with your actual module name
-from fastlane_bot.events.exceptions import AyncUpdateRetryException
+from fastlane_bot.events.exceptions import AsyncUpdateRetryException
 
 
 @pytest.fixture
@@ -115,7 +115,7 @@ def test_successful_execution_after_retries(
     mgr = setup_mock_mgr()
     mgr.get_key_and_value.side_effect = ("key1", "value1"), ("key2", "value2")
     mock_async_update_pools_from_contracts.side_effect = [
-        AyncUpdateRetryException,
+        AsyncUpdateRetryException,
         None,
     ]
     mocker.patch("time.sleep")  # To avoid actual sleep calls
@@ -130,7 +130,7 @@ def test_failure_after_max_retries(
     mock_async_update_pools_from_contracts, mock_get_new_pool_data, mocker
 ):
     mgr = setup_mock_mgr()
-    mock_async_update_pools_from_contracts.side_effect = AyncUpdateRetryException
+    mock_async_update_pools_from_contracts.side_effect = AsyncUpdateRetryException
     mocker.patch("time.sleep")  # To avoid actual sleep calls
     current_block = max(
         int(pool[2]["blockNumber"])
