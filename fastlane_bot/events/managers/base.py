@@ -322,7 +322,7 @@ class BaseManager:
             for i, pool_info in enumerate(self.pool_data)
             if pool_info["last_updated_block"]
             < update_from_contract_block - self.alchemy_max_block_fetch
-            or str(pool_info["last_updated_block"]) is "nan"
+            or str(pool_info["last_updated_block"]) == "nan"
         ]
 
     def update_carbon(self, current_block: int):
