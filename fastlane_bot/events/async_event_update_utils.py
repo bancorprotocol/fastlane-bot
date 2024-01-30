@@ -2,7 +2,6 @@ import asyncio
 import os
 import time
 from glob import glob
-from random import shuffle
 from typing import Any, List, Dict, Tuple, Type, Callable
 
 import nest_asyncio
@@ -14,7 +13,6 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
-from fastlane_bot.events.exceptions import AyncUpdateRetryException
 from fastlane_bot.events.utils import update_pools_from_events
 
 nest_asyncio.apply()
