@@ -2,8 +2,10 @@ import asyncio
 import os
 import time
 from glob import glob
+from random import shuffle
 from typing import Any, List, Dict, Tuple, Type, Callable
 
+import nest_asyncio
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
@@ -12,10 +14,11 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
-from fastlane_bot.events.exchanges import exchange_factory
+from fastlane_bot.events.exceptions import AyncUpdateRetryException
 from fastlane_bot.events.utils import update_pools_from_events
-import nest_asyncio
+
 nest_asyncio.apply()
+
 
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     try:
@@ -58,7 +61,7 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
 
 
 async def get_token_and_fee(
-    exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
+        exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
 ) -> Tuple[str, str, str, str, str, int or None, str or None] or Tuple[
     str, str, None, None, None, None, None
 ]:
@@ -132,22 +135,22 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
 
 
 def pair_name(
-    t0_symbol: str,
-    tkn0_address: str,
-    t1_symbol: str,
-    tkn1_address: str,
-    key_digits: int = 4,
+        t0_symbol: str,
+        tkn0_address: str,
+        t1_symbol: str,
+        tkn1_address: str,
+        key_digits: int = 4,
 ) -> str:
     return f"{t0_symbol}-{tkn0_address[-key_digits:]}/{t1_symbol}-{tkn1_address[-key_digits:]}"
 
 
 def get_pool_info(
-    pool: pd.Series,
-    mgr: Any,
-    current_block: int,
-    tkn0: Dict[str, Any],
-    tkn1: Dict[str, Any],
-    pool_data_keys: frozenset,
+        pool: pd.Series,
+        mgr: Any,
+        current_block: int,
+        tkn0: Dict[str, Any],
+        tkn1: Dict[str, Any],
+        pool_data_keys: frozenset,
 ) -> Dict[str, Any]:
     fee_raw = eval(str(pool["fee"]))
     pool_info = {
@@ -185,6 +188,7 @@ def get_pool_info(
 
     return pool_info
 
+
 def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool) -> str:
     """
     This function ensures token symbols are compatible with the bot's data structures.
@@ -207,7 +211,7 @@ def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool
 
 
 def add_token_info(
-    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
+        pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
 ) -> Dict[str, Any]:
     print(f"called add_token_info")
     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
@@ -229,7 +233,7 @@ def add_token_info(
 
 
 def add_missing_keys(
-    pool_info: Dict[str, Any], pool_data_keys: frozenset, keys: List[str]
+        pool_info: Dict[str, Any], pool_data_keys: frozenset, keys: List[str]
 ) -> Dict[str, Any]:
     for key in pool_data_keys:
         if key in pool_info:
@@ -241,11 +245,11 @@ def add_missing_keys(
 
 
 def get_new_pool_data(
-    current_block: int,
-    keys: List[str],
-    mgr: Any,
-    tokens_and_fee_df: pd.DataFrame,
-    tokens_df: pd.DataFrame,
+        current_block: int,
+        keys: List[str],
+        mgr: Any,
+        tokens_and_fee_df: pd.DataFrame,
+        tokens_df: pd.DataFrame,
 ) -> List[Dict]:
     # Convert tokens_df to a dictionary keyed by address for faster access
     tokens_dict = tokens_df.set_index("address").to_dict(orient="index")
@@ -274,7 +278,7 @@ def get_new_pool_data(
 
 
 def get_token_contracts(
-    mgr: Any, tokens_and_fee_df: pd.DataFrame
+        mgr: Any, tokens_and_fee_df: pd.DataFrame
 ) -> Tuple[
     List[Dict[str, Type[AsyncContract] or AsyncContract or Any] or None or Any],
     DataFrame,
@@ -282,8 +286,8 @@ def get_token_contracts(
     # for each token in the pools, check whether we have the token info in the tokens.csv static data, and ifr not,
     # add it
     tokens = (
-        tokens_and_fee_df["tkn0_address"].tolist()
-        + tokens_and_fee_df["tkn1_address"].tolist()
+            tokens_and_fee_df["tkn0_address"].tolist()
+            + tokens_and_fee_df["tkn1_address"].tolist()
     )
     tokens = list(set(tokens))
     tokens_df = pd.read_csv(
@@ -307,14 +311,14 @@ def get_token_contracts(
 
 
 def process_contract_chunks(
-    base_filename: str,
-    chunks: List[Any],
-    dirname: str,
-    filename: str,
-    subset: List[str],
-    func: Callable,
-    df_combined: pd.DataFrame = None,
-    read_only: bool = False,
+        base_filename: str,
+        chunks: List[Any],
+        dirname: str,
+        filename: str,
+        subset: List[str],
+        func: Callable,
+        df_combined: pd.DataFrame = None,
+        read_only: bool = False,
 ) -> pd.DataFrame:
     lst = []
     # write chunks to csv
@@ -361,13 +365,13 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
-        ex = exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False)
+        ex = mgr.exchanges[exchange_name]
         abi = ex.get_abi()
         address = event["address"]
         contracts.append(
             {
                 "exchange_name": exchange_name,
-                "ex": exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False),
+                "ex": ex,
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,
@@ -464,11 +468,11 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
 
     new_pool_data_df["descr"] = (
-        new_pool_data_df["exchange_name"]
-        + " "
-        + new_pool_data_df["pair_name"]
-        + " "
-        + new_pool_data_df["fee"].astype(str)
+            new_pool_data_df["exchange_name"]
+            + " "
+            + new_pool_data_df["pair_name"]
+            + " "
+            + new_pool_data_df["fee"].astype(str)
     )
 
     # Initialize web3
@@ -519,13 +523,17 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
 
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] new_pools_added: {new_pools_added}")
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] orig_num_pools_in_data: {orig_num_pools_in_data}")
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] duplicate_new_pool_ct: {duplicate_new_pool_ct}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] new_pools_added: {new_pools_added}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] orig_num_pools_in_data: {orig_num_pools_in_data}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] duplicate_new_pool_ct: {duplicate_new_pool_ct}")
     mgr.cfg.logger.debug(
         f"[async_event_update_utils.async_update_pools_from_contracts] pools_to_add_from_contracts: {len(mgr.pools_to_add_from_contracts)}"
     )
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] final pool_data ct: {len(mgr.pool_data)}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] final pool_data ct: {len(mgr.pool_data)}")
     mgr.cfg.logger.debug(
         f"[async_event_update_utils.async_update_pools_from_contracts] compare {new_pools_added + duplicate_new_pool_ct},{len(mgr.pools_to_add_from_contracts)}"
     )
@@ -536,3 +544,45 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
     )
+
+
+def update_remaining_pools(mgr):
+    remaining_pools = []
+    all_events = [pool[2] for pool in mgr.pools_to_add_from_contracts]
+    for event in all_events:
+        addr = mgr.web3.to_checksum_address(event["address"])
+        ex_name = mgr.exchange_name_from_event(event)
+        if not ex_name:
+            mgr.cfg.logger.warning("[run_async_update_with_retries] ex_name not found from event")
+            continue
+
+        key, key_value = mgr.get_key_and_value(event, addr, ex_name)
+        pool_info = mgr.get_pool_info(key, key_value, ex_name)
+
+        if not pool_info:
+            remaining_pools.append((addr, ex_name, event, key, key_value))
+
+    shuffle(remaining_pools)  # shuffle to avoid repeated immediate failure of the same pool
+    return remaining_pools
+
+
+def run_async_update_with_retries(mgr, current_block, logging_path, retry_interval=1, max_retries=5):
+    failed_async_calls = 0
+
+    while failed_async_calls < max_retries:
+        try:
+            async_update_pools_from_contracts(mgr, current_block, logging_path)
+            return  # Successful execution
+        except AyncUpdateRetryException as e:
+            failed_async_calls += 1
+            mgr.pools_to_add_from_contracts = update_remaining_pools(mgr)
+            mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
+
+    # Handling failure after retries
+    mgr.cfg.logger.error(
+        f"[main run.py] async_update_pools_from_contracts failed after {len(mgr.pools_to_add_from_contracts)} attempts. List of failed pools: {mgr.pools_to_add_from_contracts}"
+    )
+    mgr.pools_to_add_from_contracts = []
+    raise Exception("[main run.py] async_update_pools_from_contracts failed after maximum retries.")
+
+

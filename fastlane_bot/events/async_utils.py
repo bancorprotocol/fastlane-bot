@@ -12,8 +12,6 @@ def get_contract_chunks(contracts: List[Dict[str, Any]]) -> List[List[Dict[str, 
 
 def get_abis_and_exchanges(mgr: Any) -> Dict[str, Any]:
     abis = {}
-    exchanges = {}
-    for exchange in mgr.exchanges:
-        exchanges[exchange] = exchange_factory.get_exchange(key=exchange, cfg=mgr.cfg, exchange_initialized=False)
-        abis[exchange] = exchanges[exchange].get_abi()
+    for exchange_name, exchange in mgr.exchanges.items():
+        abis[exchange_name] = exchange.get_abi()
     return abis

@@ -555,6 +555,17 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         return flashloans
 
+    def native_gas_token_to_wrapped(self, tkn: str):
+        """
+        This function returns the wrapped gas token address if the input token is the native gas token, otherwise it returns the input token address.
+        :param tkn: str
+            The token address
+        returns: str
+            The token address, converted to wrapped gas token if the input was the native gas token
+
+        """
+        return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
+
     def wrapped_gas_token_to_native(self, tkn: str):
         """
         Checks if a Token is a wrapped gas token and converts it to the native gas token.
@@ -1358,14 +1369,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
+        assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,"[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
         amount_in = Decimal(str(amount_in))
 
         tkn0_address = curve.pair_name.split("/")[0]
         tkn1_address = curve.pair_name.split("/")[1]
-
-        if self.ConfigObj.NETWORK in "ethereum":
-            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn0_address
-            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn1_address
+        tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address)
+        tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address)
 
         #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
