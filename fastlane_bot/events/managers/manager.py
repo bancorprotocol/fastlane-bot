@@ -377,4 +377,4 @@ class Manager(PoolManager, EventManager, ContractsManager):
             if not pool_info:
                 remaining_pools.append((addr, ex_name, event, key, key_value))
 
-        return remaining_pools
+        self.pools_to_add_from_contracts = remaining_pools
