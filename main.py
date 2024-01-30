@@ -25,7 +25,7 @@ from fastlane_bot.events.async_backdate_utils import (
     async_handle_initial_iteration,
 )
 from fastlane_bot.events.async_event_update_utils import (
-    async_update_pools_from_contracts,
+    async_update_pools_from_contracts, run_async_update_with_retries,
 )
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
@@ -549,8 +549,11 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
                     f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
-                async_update_pools_from_contracts(mgr, current_block, args.logging_path)
-                mgr.pools_to_add_from_contracts = []
+                run_async_update_with_retries(
+                    mgr,
+                    current_block=current_block,
+                    logging_path=args.logging_path,
+                )
 
             # Increment the loop index
             loop_idx += 1
