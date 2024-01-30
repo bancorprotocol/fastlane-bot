@@ -376,7 +376,7 @@ class TxHelpers:
         else:
             current_gas_price = arb_tx["gasPrice"]
 
-        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+        signed_arb_tx = self.sign_transaction(arb_tx)
 
 
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
@@ -389,6 +389,8 @@ class TxHelpers:
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
             layer_one_gas_fee = asyncio.get_event_loop().run_until_complete(self.get_layer_one_gas_fee(signed_transaction=signed_arb_tx))
             gas_cost_eth += layer_one_gas_fee
+
+        signed_arb_tx = signed_arb_tx.rawTransaction
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
