@@ -23,7 +23,7 @@ import requests
 from alchemy import Network, Alchemy
 from web3 import Web3
 from web3.exceptions import TimeExhausted
-from web3.types import TxReceipt, HexBytes
+from web3.types import TxReceipt
 
 # from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
 # from fastlane_bot.db.models import Token, Pool
@@ -31,7 +31,7 @@ from web3.types import TxReceipt, HexBytes
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
+from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix, count_bytes
 
 
 @dataclass
@@ -387,7 +387,7 @@ class TxHelpers:
             / Decimal("10") ** Decimal("18")
         )
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = asyncio.get_event_loop().run_until_complete(self.get_layer_one_gas_fee(signed_transaction=signed_arb_tx))
+            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_transaction=signed_arb_tx)
             gas_cost_eth += layer_one_gas_fee
 
         signed_arb_tx = signed_arb_tx.rawTransaction
@@ -983,7 +983,7 @@ class TxHelpers:
             else:
                 return None
 
-    async def get_layer_one_gas_fee(self, signed_transaction) -> Decimal:
+    def _get_layer_one_gas_fee_loop(self, signed_transaction) -> Decimal:
         """
         Returns the expected layer one gas fee for a layer 2 Optimism transaction
         :param signed_transaction: the signed ethereum TX
@@ -991,41 +991,25 @@ class TxHelpers:
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
-        ethereum_base_fee = await self._get_layer_one_gas_price()
-        fixed_overhead = await self._get_layer_one_fee_overhead()
-        dynamic_overhead = await self._get_layer_one_fee_scalar()
+        return asyncio.get_event_loop().run_until_complete(self._get_layer_one_gas_fee(signed_transaction=signed_transaction))
+
+    async def _get_layer_one_gas_fee(self, signed_transaction) -> Decimal:
+        """
+        Returns the expected layer one gas fee for a layer 2 Optimism transaction
+        :param signed_transaction: the signed ethereum TX
+
+        returns: Decimal
+            The total fee (in gas token) for the l1 gas fee
+        """
+        ethereum_base_fee = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee()
+        fixed_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead()
+        dynamic_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
         zero_bytes, non_zero_bytes = count_bytes(signed_transaction["rawTransaction"])
         tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
         tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
         l1_data_fee = tx_total_gas * ethereum_base_fee
         ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
-        l1_data_fee = Decimal(str(l1_data_fee)) / Decimal(str(10 ** 24))
-        return l1_data_fee
-
-    async def _get_layer_one_gas_price(self):
-        """
-        Returns the layer one base fee from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee()
-    async def _get_layer_one_fee_overhead(self):
-        """
-        Returns the layer one fee overhead from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead()
-    async def _get_layer_one_fee_scalar(self):
-        """
-        Returns the layer one fee overhead from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
+        return Decimal(f"{l1_data_fee}e-24")
 
 
-def count_bytes(data: HexBytes) -> (int, int):
-    """
-    This function counts the number of zero and non-zero bytes in a given input data.
-    :param data: HexBytes
-    returns Tuple(int, int):
-        The zero & non zero count of bytes in the input
-    """
-    zero_bytes = len([byte for byte in data if byte == 0])
-    non_zero_bytes = len(data) - zero_bytes
-    return zero_bytes, non_zero_bytes
+
