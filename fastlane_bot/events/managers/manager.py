@@ -87,7 +87,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.fee_pairs.update(fee_pairs)
 
     def update_from_pool_info(
-        self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
+            self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
     ) -> Dict[str, Any]:
         """
         Update the pool info.
@@ -101,8 +101,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
         """
         if "last_updated_block" in pool_info:
             if (
-                type(pool_info["last_updated_block"]) == int
-                and pool_info["last_updated_block"] == current_block
+                    type(pool_info["last_updated_block"]) == int
+                    and pool_info["last_updated_block"] == current_block
             ):
                 return pool_info
         else:
@@ -150,11 +150,11 @@ class Manager(PoolManager, EventManager, ContractsManager):
         return pool_info
 
     def update_from_contract(
-        self,
-        address: str = None,
-        contract: Optional[Contract] = None,
-        pool_info: Optional[Dict[str, Any]] = None,
-        block_number: int = None,
+            self,
+            address: str = None,
+            contract: Optional[Contract] = None,
+            pool_info: Optional[Dict[str, Any]] = None,
+            block_number: int = None,
     ) -> Dict[str, Any]:
         """
         Update the state from the contract (instead of events).
@@ -212,13 +212,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
         return pool_info
 
     def update(
-        self,
-        event: Dict[str, Any] = None,
-        address: str = None,
-        token_address: bool = False,
-        pool_info: Dict[str, Any] = None,
-        contract: Contract = None,
-        block_number: int = None,
+            self,
+            event: Dict[str, Any] = None,
+            address: str = None,
+            token_address: bool = False,
+            pool_info: Dict[str, Any] = None,
+            contract: Contract = None,
+            block_number: int = None,
     ) -> None:
         """
         Update the state.
@@ -286,8 +286,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     time.sleep(random.random())
 
     def handle_pair_trading_fee_updated(
-        self,
-        event: Dict[str, Any] = None,
+            self,
+            event: Dict[str, Any] = None,
     ):
         """
         Handle the pair trading fee updated event by updating the fee pairs and pool info for the given pair.
@@ -305,20 +305,20 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         for idx, pool in enumerate(self.pool_data):
             if (
-                pool["tkn0_address"] == tkn0_address
-                and pool["tkn1_address"] == tkn1_address
-                and pool["exchange_name"] == "carbon_v1"
+                    pool["tkn0_address"] == tkn0_address
+                    and pool["tkn1_address"] == tkn1_address
+                    and pool["exchange_name"] == "carbon_v1"
             ):
                 self._handle_pair_trading_fee_updated(fee, pool, idx)
             elif (
-                pool["tkn0_address"] == tkn1_address
-                and pool["tkn1_address"] == tkn0_address
-                and pool["exchange_name"] == "carbon_v1"
+                    pool["tkn0_address"] == tkn1_address
+                    and pool["tkn1_address"] == tkn0_address
+                    and pool["exchange_name"] == "carbon_v1"
             ):
                 self._handle_pair_trading_fee_updated(fee, pool, idx)
 
     def _handle_pair_trading_fee_updated(
-        self, fee: int, pool: Dict[str, Any], idx: int
+            self, fee: int, pool: Dict[str, Any], idx: int
     ):
         """
         Handle the pair trading fee updated event by updating the fee pairs and pool info for the given pair.
@@ -360,3 +360,22 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 ]
                 pool["fee_float"] = pool["fee"] / 1e6
                 pool["descr"] = self.pool_descr_from_info(pool)
+
+    def update_remaining_pools(self):
+        remaining_pools = []
+        all_events = [pool[2] for pool in self.pools_to_add_from_contracts]
+        for event in all_events:
+            addr = self.web3.to_checksum_address(event["address"])
+            ex_name = self.exchange_name_from_event(event)
+            if not ex_name:
+                self.cfg.logger.warning("[run_async_update_with_retries] ex_name not found from event")
+                continue
+
+            key, key_value = self.get_key_and_value(event, addr, ex_name)
+            pool_info = self.get_pool_info(key, key_value, ex_name)
+
+            if not pool_info:
+                remaining_pools.append((addr, ex_name, event, key, key_value))
+
+        random.shuffle(remaining_pools)
+        self.pools_to_add_from_contracts = remaining_pools
