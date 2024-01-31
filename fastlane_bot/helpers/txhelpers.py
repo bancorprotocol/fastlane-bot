@@ -998,7 +998,8 @@ class TxHelpers:
         tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
         tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
         l1_data_fee = tx_total_gas * ethereum_base_fee
-        l1_data_fee = Decimal(str(l1_data_fee)) / Decimal("1000000") / Decimal(str(10 ** 18))
+        ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
+        l1_data_fee = Decimal(str(l1_data_fee)) / Decimal(str(10 ** 24))
         return l1_data_fee
 
     async def _get_layer_one_gas_price(self):
