@@ -5,7 +5,8 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from fastlane_bot.events.exceptions import ReadOnlyException
+
+from fastlane_bot.events.exceptions import ReadOnlyException, AsyncUpdateRetryException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
 
@@ -26,7 +27,7 @@ from fastlane_bot.events.async_backdate_utils import (
     async_handle_initial_iteration,
 )
 from fastlane_bot.events.async_event_update_utils import (
-    async_update_pools_from_contracts, run_async_update_with_retries,
+    async_update_pools_from_contracts,
 )
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.multicall_utils import multicall_every_iteration
@@ -673,6 +674,7 @@ def run(
                     current_block=current_block,
                     logging_path=logging_path,
                 )
+                mgr.pools_to_add_from_contracts = []
 
             # Increment the loop index
             loop_idx += 1
@@ -852,6 +854,27 @@ def run(
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
                 break
+
+
+def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=5):
+    failed_async_calls = 0
+
+    while failed_async_calls < max_retries:
+        try:
+            async_update_pools_from_contracts(mgr, current_block, logging_path)
+            return  # Successful execution
+        except AsyncUpdateRetryException as e:
+            failed_async_calls += 1
+            mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
+            mgr.update_remaining_pools()
+
+    # Handling failure after retries
+    mgr.cfg.logger.error(
+        f"[main run.py] async_update_pools_from_contracts failed after "
+        f"{len(mgr.pools_to_add_from_contracts)} attempts. List of failed pools: {mgr.pools_to_add_from_contracts}"
+    )
+
+    raise AsyncUpdateRetryException("[main.py] async_update_pools_from_contracts failed after maximum retries.")
 
 
 if __name__ == "__main__":
