@@ -209,6 +209,8 @@ class TxHelper:
                 "nonce": self.nonce,
             }
         )
+        if result == self.XS_TRANSACTION:
+            return transaction
 
         # Sign the transaction
         signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
@@ -359,8 +361,6 @@ class TxHelpers:
             test_fake_gas=True if result is not None else False,
             flashloan_struct=flashloan_struct,
         )
-        if result == self.XS_TRANSACTION:
-            return arb_tx
 
         if arb_tx is None:
             self.ConfigObj.logger.info(
