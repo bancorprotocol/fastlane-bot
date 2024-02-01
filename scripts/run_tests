@@ -2,5 +2,18 @@
 cd "$(dirname "$0")"
 
 pwd
+rm -rf tests/nbtest/*
+mkdir tests/nbtest/
+mkdir tests/nbtest/_data/
+cp fastlane_bot/tools/resources/NBTest/_data/* tests/nbtest/_data/
+touch tests/__init__.py
+touch tests/nbtest/__init__.py
+
+# convert .ipynb to .py here...
+for notebook in fastlane_bot/tools/resources/NBTest/*.ipynb; do
+    jupytext --to py "$notebook"
+done
+
+python fastlane_bot/tools/resources/NBTest/ConvertNBTest.py >/dev/null
 
 pytest tests -v $1

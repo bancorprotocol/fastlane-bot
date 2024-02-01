@@ -44,7 +44,7 @@ else:
     SCRIPTPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 SRCPATH = os.path.join(SCRIPTPATH, "")
-TRGPATH = os.path.join(SCRIPTPATH, f"../../{LIBRARY}/tests/nbtest")
+TRGPATH = os.path.join(SCRIPTPATH, "tests/nbtest")
 print(TRGPATH)
 
 print("JUPYTER", JUPYTER)
