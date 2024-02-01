@@ -441,7 +441,6 @@ class CarbonBot(CarbonBotBase):
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer,
-        *,
         arb_mode: str = None,
         randomizer=int
     ) -> dict:
@@ -489,7 +488,7 @@ class CarbonBot(CarbonBotBase):
             The result.
 
         """
-        arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm)
+        arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
         finder, r = [arbitrage[key] for key in ["finder", "r"]]
 
         if r is None or len(r) == 0:
