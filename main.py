@@ -259,7 +259,7 @@ load_dotenv()
     default=False,
     type=bool,
     help="If True, the bot will skip all operations which write to disk. Use this flag if you're running the bot in "
-         "an environment with restricted write permissions.",
+    "an environment with restricted write permissions.",
 )
 def main(
     cache_latest_only: bool,
@@ -356,9 +356,7 @@ def main(
     tokens_filepath = os.path.join(base_path, "tokens.csv")
 
     if not os.path.exists(tokens_filepath) and not read_only:
-        df = pd.DataFrame(
-            columns=["address", "decimals"]
-        )
+        df = pd.DataFrame(columns=["address", "decimals"])
         df.to_csv(tokens_filepath)
     elif not os.path.exists(tokens_filepath) and read_only:
         raise ReadOnlyException(tokens_filepath)
@@ -463,11 +461,7 @@ def main(
         uniswap_v3_event_mappings,
         solidly_v2_event_mappings,
     ) = get_static_data(
-        cfg,
-        exchanges,
-        blockchain,
-        static_pool_data_filename,
-        read_only
+        cfg, exchanges, blockchain, static_pool_data_filename, read_only
     )
 
     target_token_addresses = handle_target_token_addresses(
@@ -536,7 +530,7 @@ def main(
         blockchain,
         pool_data_update_frequency,
         use_specific_exchange_for_target_tokens,
-        version_check_frequency
+        version_check_frequency,
     )
 
 
@@ -604,9 +598,7 @@ def run(
     handle_static_pools_update(mgr)
     total_iteration_time = 0
     while True:
-
         try:
-
             # Save initial state of pool data to assert whether it has changed
             initial_state = mgr.pool_data.copy()
 
@@ -672,7 +664,6 @@ def run(
                 )
                 async_update_pools_from_contracts(mgr, current_block, logging_path)
                 mgr.pools_to_add_from_contracts = []
-
 
             # Increment the loop index
             loop_idx += 1
@@ -755,7 +746,6 @@ def run(
                 forked_from_block=forked_from_block,
             )
 
-
             # Sleep for the polling interval
             if not replay_from_block and polling_interval > 0:
                 mgr.cfg.logger.info(
@@ -795,8 +785,9 @@ def run(
                 params = [w3.to_hex(increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
-                    loop_idx % version_check_frequency == 0
-                    and version_check_frequency != -1 and blockchain in "ethereum"
+                loop_idx % version_check_frequency == 0
+                and version_check_frequency != -1
+                and blockchain in "ethereum"
             ):
                 # Check the version of the deployed arbitrage contract
                 mgr.cfg.provider.check_version_of_arb_contract()
@@ -804,11 +795,12 @@ def run(
                     f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
                 )
             if (
-                    loop_idx % pool_data_update_frequency == 0
-                    and pool_data_update_frequency != -1
+                loop_idx % pool_data_update_frequency == 0
+                and pool_data_update_frequency != -1
             ):
-
-                mgr.cfg.logger.info(f"[main] Terraforming {blockchain}. Standby for oxygen levels.")
+                mgr.cfg.logger.info(
+                    f"[main] Terraforming {blockchain}. Standby for oxygen levels."
+                )
                 sblock = (
                     (current_block - (current_block - last_block_queried))
                     if loop_idx > 1
