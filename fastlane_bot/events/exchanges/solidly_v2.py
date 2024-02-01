@@ -38,11 +38,6 @@ class SolidlyV2(Exchange):
         return float(self.fee)
 
     def add_pool(self, pool: Pool):
-
-        # pool_fee = self._get_pool_fee(pool=pool)
-        # pool.fee = pool_fee
-        # pool.state["fee"] = pool_fee
-        # pool.state["fee_float"] = pool_fee
         self.pools[pool.state["address"]] = pool
 
     async def _get_pool_fee(self, pool: Pool):
@@ -61,20 +56,15 @@ class SolidlyV2(Exchange):
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         if "velocimeter" in self.exchange_name:
             default_fee = await self.factory_contract.caller.getFee(address)
-            default_fee = float(default_fee)
-            if default_fee <= 1000:
-                default_fee = default_fee / 10000
-            else:
-                default_fee = default_fee / 10 ** 18
+            default_fee = float(default_fee) / 10000
+
         elif "scale" in self.exchange_name:
             default_fee = await self.factory_contract.caller.getRealFee(address)
-            default_fee = float(default_fee)
-            default_fee = default_fee / 10 ** 18
+            default_fee = float(default_fee) / 10 ** 18
         else:
             is_stable = await contract.caller.stable()
             default_fee = await self.factory_contract.caller.getFee(address, is_stable)
-            default_fee = float(default_fee)
-            default_fee = default_fee / 10000
+            default_fee = float(default_fee) / 10000
         return str(default_fee), default_fee
 
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
