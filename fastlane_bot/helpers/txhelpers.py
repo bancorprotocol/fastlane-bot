@@ -444,7 +444,7 @@ class TxHelpers:
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Arbitrage executed, tx hash: {tx_hash}"
             )
-            return tx_hash if tx_hash is not None else None
+            return tx_hash
         else:
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward_eth)} GAS TOKEN vs gas cost of {num_format(gas_cost_eth)} GAS TOKEN. Abort, abort!\n\n"
