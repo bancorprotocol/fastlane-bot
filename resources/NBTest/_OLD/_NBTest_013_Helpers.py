@@ -677,30 +677,83 @@ assert (
     > h.w3.eth.getBlock("latest")["timestamp"] + C.DEFAULT_BLOCKTIME_DEVIATION - 1
 )
 
-flash_tkn_normal = h.submit_flashloan_arb_tx(
+XS_WETH = "weth"
+XS_TRANSACTION = "transaction_built"
+XS_SIGNED = "transaction_signed"
+
+def submit_flashloan_arb_tx(
+    h,
+    arb_data: list[dict[str, any]],
+    flashloan_token_address: str,
+    flashloan_amount: int or float,
+    verbose: bool = True,
+    result=None,
+) -> str:
+    if not isinstance(flashloan_amount, int):
+        flashloan_amount = int(flashloan_amount)
+
+    if flashloan_token_address == h.ConfigObj.WETH_ADDRESS:
+        flashloan_token_address = h.ConfigObj.ETH_ADDRESS
+
+    if result == XS_WETH:
+        return flashloan_token_address
+
+    assert (
+        flashloan_token_address != arb_data[0]["targetToken"]
+    ), "The flashloan token address must be different from the first targetToken address in the arb data."
+
+    if verbose:
+        h._print_verbose(flashloan_amount, flashloan_token_address)
+    # Set the gas price (gwei)
+    gas_price = int(h.base_gas_price * h.gas_price_multiplier)
+
+    # Prepare the transaction
+    transaction = h.arb_contract.functions.flashloanAndArb(
+        arb_data, flashloan_token_address, flashloan_amount
+    ).buildTransaction(
+        {
+            "gas": h.gas_limit,
+            "gasPrice": gas_price,
+            "nonce": h.nonce,
+        }
+    )
+    if result == XS_TRANSACTION:
+        return transaction
+
+    # Sign the transaction
+    signed_txn = h.ConfigObj.w3.eth.account.signTransaction(
+        transaction, h.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
+    )
+    if result == XS_SIGNED:
+        return signed_txn
+    # Send the transaction
+    tx_hash = h.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    return tx_hash.hex()
+
+flash_tkn_normal = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_WETH,
+    result=XS_WETH,
 )
-flash_tkn_weth = h.submit_flashloan_arb_tx(
+flash_tkn_weth = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct_weth_test,
     flashloan_token_address=flash_tkn_weth_test,
     flashloan_amount=flash_amt_weth_test,
     verbose=False,
-    result=h.XS_WETH,
+    result=XS_WETH,
 )
 
 assert flash_tkn_normal == flash_tkn
 assert flash_tkn_weth == C.ETH_ADDRESS
 
-transaction = h.submit_flashloan_arb_tx(
+transaction = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_TRANSACTION,
+    result=XS_TRANSACTION,
 )
 
 # TODO these values should change for EIP 1559 style transactions
@@ -711,12 +764,12 @@ assert transaction["nonce"] >= 0
 assert transaction["to"] == C.FASTLANE_CONTRACT_ADDRESS
 assert transaction["data"] is not None
 
-signed_transaction = h.submit_flashloan_arb_tx(
+signed_transaction = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_SIGNED,
+    result=XS_SIGNED,
 )
 assert signed_transaction
 

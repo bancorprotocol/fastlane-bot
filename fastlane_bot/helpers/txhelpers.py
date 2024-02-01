@@ -149,82 +149,6 @@ class TxHelper:
         gas_limit = ether_cost / self.gas_price_gwei * 1e9
         return int(gas_limit)
 
-    XS_WETH = "weth"
-    XS_TRANSACTION = "transaction_built"
-    XS_SIGNED = "transaction_signed"
-
-    def submit_flashloan_arb_tx(
-        self,
-        arb_data: List[Dict[str, Any]],
-        flashloan_token_address: str,
-        flashloan_amount: int or float,
-        verbose: bool = True,
-        result=None,
-    ) -> str:
-        """Submit a flashloan arbitrage transaction.
-
-        Parameters
-        ----------
-        arb_data : List[Dict[str, Any]]
-            The arbitrage data.
-        flashloan_token_address : str
-            The flashloan token address.
-        flashloan_amount : int or float
-            The flashloan amount.
-        verbose : bool, optional
-            Whether to print the transaction details, by default True
-        result: XS_XXX or None
-            What intermediate result to return (default: None)
-        Returns
-        -------
-        str
-            The transaction hash.
-        """
-
-        if not isinstance(flashloan_amount, int):
-            flashloan_amount = int(flashloan_amount)
-
-        if flashloan_token_address == self.ConfigObj.WETH_ADDRESS:
-            flashloan_token_address = self.ConfigObj.ETH_ADDRESS
-
-        if result == self.XS_WETH:
-            return flashloan_token_address
-
-        assert (
-            flashloan_token_address != arb_data[0]["targetToken"]
-        ), "The flashloan token address must be different from the first targetToken address in the arb data."
-
-        if verbose:
-            self._print_verbose(flashloan_amount, flashloan_token_address)
-        # Set the gas price (gwei)
-        gas_price = int(self.base_gas_price * self.gas_price_multiplier)
-
-        # Prepare the transaction
-        transaction = self.arb_contract.functions.flashloanAndArb(
-            arb_data, flashloan_token_address, flashloan_amount
-        ).buildTransaction(
-            {
-                "gas": self.gas_limit,
-                "gasPrice": gas_price,
-                "nonce": self.nonce,
-            }
-        )
-        if result == self.XS_TRANSACTION:
-            return transaction
-
-        # Sign the transaction
-        signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
-            transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        )
-        if result == self.XS_SIGNED:
-            return signed_txn
-        # Send the transaction
-        tx_hash = self.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-        self.ConfigObj.logger.info(
-            f"[helpers.txhelpers.submit_flashloan_arb_tx] Transaction sent with hash: {tx_hash}"
-        )
-        return tx_hash.hex()
-
     def _print_verbose(
         self, flashloan_amount: int or float, flashloan_token_address: str
     ):
@@ -287,8 +211,6 @@ class TxHelpers:
 
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
-
-    XS_TRANSACTION = "transaction_built"
 
     def _get_transaction_info(self) -> (int, int, int, int):
         # Get current base fee for pending block
