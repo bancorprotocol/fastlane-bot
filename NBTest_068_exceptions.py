@@ -1,7 +1,7 @@
 # Happy path test with various realistic test values
 import pytest
 
-from fastlane_bot.events.exceptions import AyncUpdateRetryException
+from fastlane_bot.events.exceptions import AsyncUpdateRetryException
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ from fastlane_bot.events.exceptions import AyncUpdateRetryException
 )
 def test_aync_update_retry_exception_with_message(message, id):
     # Act
-    exception = AyncUpdateRetryException(message)
+    exception = AsyncUpdateRetryException(message)
 
     # Assert
     assert str(exception) == message, f"Test case {id} failed: The exception message does not match the expected message."
@@ -28,7 +28,7 @@ def test_aync_update_retry_exception_with_message(message, id):
 )
 def test_aync_update_retry_exception_with_empty_message(message, id):
     # Act
-    exception = AyncUpdateRetryException(message)
+    exception = AsyncUpdateRetryException(message)
 
     # Assert
     assert str(exception) == message, f"Test case {id} failed: The exception message should be empty."
@@ -44,5 +44,5 @@ def test_aync_update_retry_exception_with_empty_message(message, id):
 )
 def test_aync_update_retry_exception_raises(message, id):
     # Act & Assert
-    with pytest.raises(AyncUpdateRetryException, match=message):
-        raise AyncUpdateRetryException(message)
+    with pytest.raises(AsyncUpdateRetryException, match=message):
+        raise AsyncUpdateRetryException(message)

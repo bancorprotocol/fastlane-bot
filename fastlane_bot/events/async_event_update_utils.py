@@ -2,7 +2,6 @@ import asyncio
 import os
 import time
 from glob import glob
-from random import shuffle
 from typing import Any, List, Dict, Tuple, Type, Callable
 
 import nest_asyncio
@@ -14,7 +13,6 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
-from fastlane_bot.events.exceptions import AyncUpdateRetryException
 from fastlane_bot.events.utils import update_pools_from_events
 
 nest_asyncio.apply()
@@ -544,45 +542,3 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
     )
-
-
-def update_remaining_pools(mgr):
-    remaining_pools = []
-    all_events = [pool[2] for pool in mgr.pools_to_add_from_contracts]
-    for event in all_events:
-        addr = mgr.web3.to_checksum_address(event["address"])
-        ex_name = mgr.exchange_name_from_event(event)
-        if not ex_name:
-            mgr.cfg.logger.warning("[run_async_update_with_retries] ex_name not found from event")
-            continue
-
-        key, key_value = mgr.get_key_and_value(event, addr, ex_name)
-        pool_info = mgr.get_pool_info(key, key_value, ex_name)
-
-        if not pool_info:
-            remaining_pools.append((addr, ex_name, event, key, key_value))
-
-    shuffle(remaining_pools)  # shuffle to avoid repeated immediate failure of the same pool
-    return remaining_pools
-
-
-def run_async_update_with_retries(mgr, current_block, logging_path, retry_interval=1, max_retries=5):
-    failed_async_calls = 0
-
-    while failed_async_calls < max_retries:
-        try:
-            async_update_pools_from_contracts(mgr, current_block, logging_path)
-            return  # Successful execution
-        except AyncUpdateRetryException as e:
-            failed_async_calls += 1
-            mgr.pools_to_add_from_contracts = update_remaining_pools(mgr)
-            mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
-
-    # Handling failure after retries
-    mgr.cfg.logger.error(
-        f"[main run.py] async_update_pools_from_contracts failed after {len(mgr.pools_to_add_from_contracts)} attempts. List of failed pools: {mgr.pools_to_add_from_contracts}"
-    )
-    mgr.pools_to_add_from_contracts = []
-    raise Exception("[main run.py] async_update_pools_from_contracts failed after maximum retries.")
-
-
