@@ -40,9 +40,6 @@ class SolidlyV2(Exchange):
     def add_pool(self, pool: Pool):
         self.pools[pool.state["address"]] = pool
 
-    async def _get_pool_fee(self, pool: Pool):
-        return await self.get_pool_fee(pool=pool)
-
     def get_abi(self):
         return VELOCIMETER_V2_POOL_ABI if "velocimeter" in self.exchange_name else SOLIDLY_V2_POOL_ABI
 
@@ -72,22 +69,3 @@ class SolidlyV2(Exchange):
 
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.functions.token1().call()
-
-    def set_stable_volatile_fee(self):
-        stable_fee = self.factory_contract.caller.stableFee()
-        volatile_fee = self.factory_contract.caller.volatileFee()
-
-        self.stable_fee = float(stable_fee) / 10000
-        self.volatile_fee = float(volatile_fee) / 10000
-
-    async def get_pool_fee(self, pool: Pool) -> float:
-        """
-        This function gets the pool fee in float format with special handling for Velocimeter
-        """
-        if "velocimeter" in self.exchange_name:
-            fee = await self.factory_contract.caller.getRealFee()
-            fee = int(fee)
-            fee = float(fee / 10 ** 18)
-        else:
-            fee = self.stable_fee if pool.state["pool_type"] in "stable" else self.volatile_fee
-        return fee
