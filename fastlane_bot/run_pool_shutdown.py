@@ -13,10 +13,10 @@ from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 
 try:
     env_var = "TENDERLY_FORK_ID"
-    with open(".env", "r") as file:
+    with open("../.env", "r") as file:
         lines = file.readlines()
 
-    with open(".env", "w") as file:
+    with open("../.env", "w") as file:
         for line in lines:
             if line.startswith(f"{env_var}=") or line.startswith(f"export {env_var}="):
                 line = f"{env_var}="
@@ -105,7 +105,7 @@ def main(
 
     # Set config
     loglevel = get_loglevel(loglevel)
-    base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/ethereum/")
+    base_path = os.path.normpath(f"data/blockchain_data/ethereum/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(
