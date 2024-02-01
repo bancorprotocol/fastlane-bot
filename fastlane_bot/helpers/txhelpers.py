@@ -293,6 +293,27 @@ class TxHelpers:
     XS_GAS_IN_BNT = "gas_in_bnt"
     XS_MIN_PROFIT_CHECK = "min_profit_check"
 
+    def _get_transaction_info(self) -> (int, int, int, int):
+        # Get current base fee for pending block
+        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+
+        # Get the current recommended priority fee from Alchemy, and increase it by our offset
+        current_max_priority_gas = (
+            int(
+                self.get_max_priority_fee_per_gas_alchemy()
+                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+            )
+            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+            else 0
+        )
+
+        # Get current block number
+        block_number = int(self.web3.eth.get_block("latest")["number"])
+        # Get current nonce for our account
+        nonce = self.get_nonce()
+
+        return current_gas_price, current_max_priority_gas, block_number, nonce
+
     def validate_and_submit_transaction(
         self,
         route_struct: List[Dict[str, Any]],
@@ -320,9 +341,6 @@ class TxHelpers:
             )
             return None
 
-        # Get current base fee for pending block
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-
         if verbose:
             self.ConfigObj.logger.info(
                 "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
@@ -331,20 +349,8 @@ class TxHelpers:
                 f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_eth)} \n\n"
             )
 
-        # Get the current recommended priority fee from Alchemy, and increase it by our offset
-        current_max_priority_gas = (
-            int(
-                self.get_max_priority_fee_per_gas_alchemy()
-                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-            )
-            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
-            else 0
-        )
-
-        # Get current block number
-        block_number = int(self.web3.eth.get_block("latest")["number"])
-        # Get current nonce for our account
-        nonce = self.get_nonce()
+        # Get current base fee for pending block
+        current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
 
         if result == self.XS_API_CALLS:
             return current_gas_price, current_max_priority_gas, block_number, nonce
