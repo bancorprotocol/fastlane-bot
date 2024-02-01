@@ -61,7 +61,7 @@ from fastlane_bot.events.utils import (
     check_and_approve_tokens,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
-from fastlane_bot.run_blockchain_terraformer import terraform_blockchain
+from scripts.run_blockchain_terraformer import terraform_blockchain
 
 
 load_dotenv()

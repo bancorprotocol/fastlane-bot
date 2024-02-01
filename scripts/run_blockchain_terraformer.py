@@ -977,7 +977,7 @@ def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.Da
     A dataframe that contains items from the selected network
     """
     multichain_address_path = os.path.normpath(
-        "data/multichain_addresses.csv"
+        "../fastlane_bot/data/multichain_addresses.csv"
     )
     chain_addresses_df = pd.read_csv(multichain_address_path)
     network_df = chain_addresses_df.loc[chain_addresses_df["chain"] == network]

@@ -105,7 +105,7 @@ def main(
 
     # Set config
     loglevel = get_loglevel(loglevel)
-    base_path = os.path.normpath(f"data/blockchain_data/ethereum/")
+    base_path = os.path.normpath(f"../fastlane_bot/data/blockchain_data/ethereum/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath):
         df = pd.DataFrame(
