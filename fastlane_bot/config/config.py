@@ -1,20 +1,21 @@
 """
 Fastlane bot configuration object -- main object
+
+(c) Copyright Bprotocol foundation 2024.
+Licensed under MIT
 """
+from typing import Any
 
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
 
 import os
-from dataclasses import dataclass, field, InitVar, asdict
+from dataclasses import dataclass, field
 
-# from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
 from . import selectors as S
 from dotenv import load_dotenv
-
-from .connect import EthereumNetwork
 
 load_dotenv()
 TENDERLY_FORK_ID = os.environ.get("TENDERLY_FORK_ID")
@@ -74,14 +75,29 @@ class Config:
         blockchain=None,
         self_fund=True,
         **kwargs,
-    ):
+    ) -> "Config":
         """
-        Alternative constructor: create and return new Config object
+        Fastlane bot configuration object -- main object
 
-        :config:    CONFIG_MAINNET(default), CONFIG_TENDERLY, CONFIG_UNITTEST
-        :loglevel:  LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
-        :use_flashloans:
+        Args:
+            config: The configuration type. Defaults to None.
+            loglevel: The log level. Defaults to None.
+            logging_path: The logging path. Defaults to None.
+            blockchain: The blockchain network. Defaults to None.
+            self_fund: Whether to self fund. Defaults to True.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Config: The Config object.
+
+        Raises:
+            ValueError: If the config is invalid.
+
+        Examples:
+            # Create a new Config object
+            config = Config.new(config="mainnet", loglevel="info", logging_path="/path/to/logs")
         """
+
         if config is None:
             config = cls.CONFIG_MAINNET
 
@@ -109,9 +125,17 @@ class Config:
             return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")
 
-    def is_config_item(self, item):
-        """returns True if item is a (possible) configuration item [uppercase, numbers, underscore; len>2]"""
-        # print("[is_config_item]", item)
+    def is_config_item(self, item: str) -> bool:
+        """
+        Checks if an item is a valid configuration item.
+
+        Args:
+            item: The item to check.
+
+        Returns:
+            bool: True if the item is a valid configuration item, False otherwise.
+        """
+
         if item in {"w3", "connection", "w3_async"}:
             return True
         if len(item) < 3:
@@ -123,9 +147,18 @@ class Config:
                 return False
         return True
 
-    def get_attribute_from_config(self, name: str):
+    def get_attribute_from_config(self, name: str) -> Any:
         """
-        gets the attribute from the constituent config objects, raises if not found
+        Gets the attribute from the constituent config objects.
+
+        Args:
+            name: The name of the attribute to retrieve.
+
+        Returns:
+            Any: The value of the attribute.
+
+        Raises:
+            AttributeError: If the attribute is not found in any of the config objects.
         """
         for obj in [self.network, self.db, self.provider, self.logger]:
             if hasattr(obj, name):
@@ -134,9 +167,18 @@ class Config:
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         """
-        If of type attribute, return it.
+        Gets the attribute dynamically from the config objects.
+
+        Args:
+            name: The name of the attribute to retrieve.
+
+        Returns:
+            Any: The value of the attribute.
+
+        Raises:
+            AttributeError: If the attribute is not found in any of the config objects.
         """
         if self.is_config_item(name):
             return self.get_attribute_from_config(name)
@@ -144,9 +186,12 @@ class Config:
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
-        Post-initialization initialization.
+        Performs post-initialization initialization.
+
+        Raises:
+            AssertionError: If the network, db, logger, or provider objects are not of the expected types or if there is a network mismatch.
         """
         if self.network is None:
             self.network = network_.ConfigNetwork.new(
@@ -157,10 +202,6 @@ class Config:
         if self.db is None:
             self.db = db_.ConfigDB.new(db_.ConfigDB.DATABASE_POSTGRES)
         assert issubclass(type(self.db), db_.ConfigDB)
-
-        # if self.fastlane is None:
-        #     self.fastlane = fastlane_.ConfigFastlane.new()
-        # assert issubclass(type(self.fastlane), fastlane_.ConfigFastlane)
 
         if self.logger is None:
             self.logger = logger_.ConfigLogger.new()
@@ -179,10 +220,14 @@ class Config:
 
     def cloaked(self, incl=None, excl=None):
         """
-        returns a cloaked version of the object
+        Returns a cloaked version of the object.
 
-        :incl:  fields to _include_ in the cloaked version (plus those in VISIBLE_FIELDS)
-        :excl:  fields to _exclude_ from the cloaked version
+        Args:
+            incl: Fields to include in the cloaked version (in addition to those in VISIBLE_FIELDS). Defaults to None.
+            excl: Fields to exclude from the cloaked version. Defaults to None.
+
+        Returns:
+            CloakerL: The cloaked version of the object.
         """
         visible = self.VISIBLE_FIELDS
         if isinstance(visible, str):
