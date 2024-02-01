@@ -11,17 +11,10 @@ topaze
 
 .sourcery.yaml
 .DS_Store
-.idea/*
-.idea/modules.xml
-.idea/v4-math-and-theory.iml
-*.xml
-*.iml
 *.sqlite
 .hypothesis
 .ipynb_checkpoints
 carbon/tools/*
-*/.idea/*
-*/.vscode/*
 */.pytest_cache/*
 */.cache/*
 */.coverage

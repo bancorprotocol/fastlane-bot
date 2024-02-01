@@ -1,0 +1,37 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="17">
+            <item index="0" class="java.lang.String" itemvalue="pyarrow" />
+            <item index="1" class="java.lang.String" itemvalue="protobuf" />
+            <item index="2" class="java.lang.String" itemvalue="hexbytes" />
+            <item index="3" class="java.lang.String" itemvalue="cvxpy" />
+            <item index="4" class="java.lang.String" itemvalue="alchemy-sdk" />
+            <item index="5" class="java.lang.String" itemvalue="python-dotenv" />
+            <item index="6" class="java.lang.String" itemvalue="web3" />
+            <item index="7" class="java.lang.String" itemvalue="packaging" />
+            <item index="8" class="java.lang.String" itemvalue="typing-extensions" />
+            <item index="9" class="java.lang.String" itemvalue="setuptools" />
+            <item index="10" class="java.lang.String" itemvalue="psutil" />
+            <item index="11" class="java.lang.String" itemvalue="tqdm" />
+            <item index="12" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="13" class="java.lang.String" itemvalue="dataclass_wizard" />
+            <item index="14" class="java.lang.String" itemvalue="nest-asyncio" />
+            <item index="15" class="java.lang.String" itemvalue="python-dateutil" />
+            <item index="16" class="java.lang.String" itemvalue="requests" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N803" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
