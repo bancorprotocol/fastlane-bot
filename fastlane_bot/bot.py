@@ -519,7 +519,7 @@ class CarbonBot(CarbonBotBase):
                 )
                 return None
 
-        return self._handle_trade_instructions(CCm, arb_mode, r, result)
+        return self._handle_trade_instructions(CCm, arb_mode, r)
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
         """
@@ -894,9 +894,7 @@ class CarbonBot(CarbonBotBase):
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any,
-        result: str,
-        block_number: int = None,
+        r: Any
     ) -> Any:
         """
         Handles the trade instructions.
@@ -909,10 +907,6 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         r: Any
             The result.
-        result: str
-            The result type.
-        block_number: int
-            The block number.
 
         Returns
         -------
@@ -1041,8 +1035,6 @@ class CarbonBot(CarbonBotBase):
                 route_struct=route_struct,
                 flashloan_struct=flashloan_struct,
             )
-        # Check if the result is None
-        assert result is None, f"Unknown result requested {result}"
 
         # Get the cids
         cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})

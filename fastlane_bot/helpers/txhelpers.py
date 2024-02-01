@@ -265,7 +265,6 @@ class TxHelpers:
         src_address: str,
         expected_profit_eth: Decimal,
         expected_profit_usd: Decimal,
-        result: str = None,
         verbose: bool = False,
         safety_override: bool = False,
         log_object: Dict[str, Any] = None,
@@ -302,7 +301,7 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
-            test_fake_gas=True if result is not None else False,
+            test_fake_gas=False,
             flashloan_struct=flashloan_struct,
         )
 
