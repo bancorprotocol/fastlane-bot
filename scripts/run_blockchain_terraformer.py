@@ -186,16 +186,27 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
         token_dict = {}
         for idx, row in token_df.iterrows():
             address, decimals, symbol = row
-            token_dict[address] = {"address": address, "decimals": decimals, "symbol": symbol}
+            token_dict[address] = {
+                "address": address,
+                "decimals": decimals,
+                "symbol": symbol,
+            }
 
         return TokenManager(token_dict)
 
     url = f"https://tokens.coingecko.com/{network_map[network]}/all.json"
     response = requests.get(url).json()["tokens"]
-    token_dict = {
-        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-                                                       "decimals": 18, "symbol": "ETH"}
-    } if network in ["ethereum", "coinbase_base", "arbitrum_one", "optimism"] else {}
+    token_dict = (
+        {
+            "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {
+                "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                "decimals": 18,
+                "symbol": "ETH",
+            }
+        }
+        if network in ["ethereum", "coinbase_base", "arbitrum_one", "optimism"]
+        else {}
+    )
     for token in response:
         address = web3.to_checksum_address(token.get("address"))
         symbol = token.get("symbol")
@@ -217,7 +228,7 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
 
 
 def get_token_details_from_contract(
-        token: str, web3
+    token: str, web3
 ) -> Tuple[str, int] or Tuple[None, None]:
     """
     This function collects the number of decimals and symbol of a token, and formats it for use in a dataframe.
@@ -260,7 +271,7 @@ def get_token_details_from_contract(
 
 
 def get_token_details(
-        tkn: str, token_manager: TokenManager, web3: Web3
+    tkn: str, token_manager: TokenManager, web3: Web3
 ) -> Tuple[str, int] or Tuple[None, None]:
     """
     :param tkn: the token address
@@ -276,7 +287,11 @@ def get_token_details(
     else:
         symbol, decimal = get_token_details_from_contract(token=tkn, web3=web3)
         if type(decimal) == int and type(symbol) == str:
-            token_manager.token_dict[tkn] = {"address": tkn, "decimals": decimal, "symbol": symbol}
+            token_manager.token_dict[tkn] = {
+                "address": tkn,
+                "decimals": decimal,
+                "symbol": symbol,
+            }
     return symbol, decimal
 
 
@@ -292,8 +307,8 @@ def fix_missing_symbols(symbol: str, addr: str) -> str:
     if addr == "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2":
         return "MKR"
     elif (
-            addr == "0xF1290473E210b2108A85237fbCd7b6eb42Cc654F"
-            or addr.lower() == "0xF1290473E210b2108A85237fbCd7b6eb42Cc654F".lower()
+        addr == "0xF1290473E210b2108A85237fbCd7b6eb42Cc654F"
+        or addr.lower() == "0xF1290473E210b2108A85237fbCd7b6eb42Cc654F".lower()
     ):
         return "HEDG"
     else:
@@ -323,7 +338,7 @@ def get_token_prices_coingecko(token_list: Dict) -> Dict:
     max_size = 100
     tkn_addresses = list(token_list.keys())
     tkn_sublists = [
-        tkn_addresses[x: x + max_size] for x in range(0, len(tkn_addresses), max_size)
+        tkn_addresses[x : x + max_size] for x in range(0, len(tkn_addresses), max_size)
     ]
 
     for tkn_sublist in tkn_sublists:
@@ -377,7 +392,7 @@ def generate_token_price_map(pool_data: Dict, web3: Web3) -> Dict:
 
 
 def organize_pool_details_uni_v3(
-        pool_data: Dict, token_manager: TokenManager, exchange: str, web3: Web3
+    pool_data: Dict, token_manager: TokenManager, exchange: str, web3: Web3
 ) -> Dict:
     """
     This function organizes pool details for Uni V3 pools.
@@ -400,7 +415,9 @@ def organize_pool_details_uni_v3(
     elif "token0" in pool_data["args"]:
         tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
     else:
-        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
+        print(
+            f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}"
+        )
         assert False
     if len(tokens) > 2:
         return None
@@ -446,7 +463,7 @@ def organize_pool_details_uni_v3(
 
 
 def process_token_details(
-        tokens: List[str], token_manager: TokenManager, web3: Web3
+    tokens: List[str], token_manager: TokenManager, web3: Web3
 ) -> Tuple[Dict, str, bool] or Tuple[None, None, bool]:
     """
     This function processes token details & generates the token pair
@@ -484,7 +501,7 @@ def process_token_details(
 
 
 def organize_pool_details_balancer(
-        pool_data: Dict, token_prices: Dict, web3: Web3, min_usd: int = 100000
+    pool_data: Dict, token_prices: Dict, web3: Web3, min_usd: int = 100000
 ):
     """
     This function organizes pool details for Uni V3 pools.
@@ -555,7 +572,7 @@ def organize_pool_details_balancer(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": float(fee) * 10 ** 18,
+        "fee": float(fee) * 10**18,
         "fee_float": float(fee),
         "address": pool_address,
         "anchor": pool_id,
@@ -582,7 +599,7 @@ def organize_pool_details_balancer(
 
 
 def organize_pool_details_uni_v2(
-        pool_data, token_manager: TokenManager, exchange, default_fee, web3
+    pool_data, token_manager: TokenManager, exchange, default_fee, web3
 ):
     """
     This function organizes pool details for Uni V2 pools.
@@ -608,7 +625,9 @@ def organize_pool_details_uni_v2(
     elif "token0" in pool_data["args"]:
         tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
     else:
-        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
+        print(
+            f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}"
+        )
         assert False
     if len(tokens) > 2:
         return None
@@ -648,7 +667,7 @@ def organize_pool_details_uni_v2(
 
 
 def organize_pool_details_solidly_v2(
-        pool_data, token_manager, exchange, default_fee, factory_contract, web3
+    pool_data, token_manager, exchange, default_fee, factory_contract, web3
 ):
     """
     This function organizes pool details for Solidly pools.
@@ -686,12 +705,12 @@ def organize_pool_details_solidly_v2(
         if default_fee <= 1000:
             default_fee = default_fee / 10000
         else:
-            default_fee = default_fee / 10 ** 18
-        default_fee = default_fee / 10 ** 18
+            default_fee = default_fee / 10**18
+        default_fee = default_fee / 10**18
     elif "scale" in exchange:
         default_fee = factory_contract.caller.getRealFee(pool_address)
         default_fee = float(default_fee)
-        default_fee = default_fee / 10 ** 18
+        default_fee = default_fee / 10**18
     else:
         default_fee = factory_contract.caller.getFee(pool_address, is_stable)
         default_fee = float(default_fee)
@@ -707,8 +726,6 @@ def organize_pool_details_solidly_v2(
     if skip_pool:
         return None
     description = exchange + " " + pair
-
-
 
     pool_info = {
         "cid": pool_address,
@@ -815,7 +832,9 @@ def get_solidly_pool_creation_events_v2(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        if exchange in ["aerodrome_v2",]:
+        if exchange in [
+            "aerodrome_v2",
+        ]:
             events += factory_contract.events.PoolCreated.get_logs(
                 fromBlock=from_block, toBlock=to_block
             )
@@ -827,12 +846,12 @@ def get_solidly_pool_creation_events_v2(
 
 
 def get_uni_v3_pools(
-        token_manager: TokenManager,
-        exchange: str,
-        factory_contract,
-        start_block: int,
-        web3: Web3,
-        blockchain: str
+    token_manager: TokenManager,
+    exchange: str,
+    factory_contract,
+    start_block: int,
+    web3: Web3,
+    blockchain: str,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Uniswap V3 pool generation events and organizes them into two Dataframes
@@ -847,7 +866,10 @@ def get_uni_v3_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_uni_pool_creation_events_v3(
-        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
+        factory_contract=factory_contract,
+        block_number=start_block,
+        web3=web3,
+        block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain],
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -869,17 +891,18 @@ def get_uni_v3_pools(
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
     # mapdf = mapdf.set_index("exchange")
-    #return mapdf
+    # return mapdf
     return df, mapdf
 
+
 def get_uni_v2_pools(
-        token_manager: TokenManager,
-        exchange: str,
-        factory_contract,
-        start_block: int,
-        default_fee: float,
-        web3: Web3,
-        blockchain: str
+    token_manager: TokenManager,
+    exchange: str,
+    factory_contract,
+    start_block: int,
+    default_fee: float,
+    web3: Web3,
+    blockchain: str,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Uniswap V2 pool generation events and organizes them into two Dataframes
@@ -894,7 +917,10 @@ def get_uni_v2_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_uni_pool_creation_events_v2(
-        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
+        factory_contract=factory_contract,
+        block_number=start_block,
+        web3=web3,
+        block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain],
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -916,17 +942,18 @@ def get_uni_v2_pools(
 
     mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
     mapdf = mapdf.reset_index(drop=True)
-    #return mapdf
+    # return mapdf
     return df, mapdf
 
+
 def get_solidly_v2_pools(
-        token_manager: TokenManager,
-        exchange: str,
-        factory_contract,
-        start_block: int,
-        default_fee: float,
-        web3: Web3,
-        blockchain: str
+    token_manager: TokenManager,
+    exchange: str,
+    factory_contract,
+    start_block: int,
+    default_fee: float,
+    web3: Web3,
+    blockchain: str,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
@@ -941,7 +968,11 @@ def get_solidly_v2_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = get_solidly_pool_creation_events_v2(
-        exchange=exchange, factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
+        exchange=exchange,
+        factory_contract=factory_contract,
+        block_number=start_block,
+        web3=web3,
+        block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain],
     )
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -993,10 +1024,7 @@ def get_items_from_exchange(
     fork: str,
     df: pd.DataFrame,
 ) -> List[str or float]:
-    df_ex = df[
-        (df["exchange_name"] == exchange_name)
-        & (df["fork"] == fork)
-    ]
+    df_ex = df[(df["exchange_name"] == exchange_name) & (df["fork"] == fork)]
     if len(df_ex.index) == 0:
         return None
     items_to_return = []
@@ -1147,7 +1175,12 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
-def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(
+    network_name: str,
+    web3: Web3 = None,
+    start_block: int = None,
+    save_tokens: bool = False,
+):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
@@ -1156,7 +1189,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
 
-    assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
+    assert (
+        network_name in BLOCK_CHUNK_SIZE_MAP.keys()
+    ), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
 
     if web3 is None:
         web3 = get_web3_for_network(network_name=network_name)
@@ -1171,7 +1206,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     data_path = os.path.normpath(write_path + "/static_pool_data.csv")
     data_exists = os.path.exists(data_path)
     fresh_data = False
-    token_manager = get_all_token_details(web3, network=network_name, write_path=write_path)
+    token_manager = get_all_token_details(
+        web3, network=network_name, write_path=write_path
+    )
 
     if not path_exists:
         os.makedirs(write_path)
@@ -1212,9 +1249,17 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         fee = row[1]["fee"]
 
         if fresh_data and not start_block:
-            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
+            from_block = (
+                int(row[1]["start_block"])
+                if not math.isnan(row[1]["start_block"])
+                else 0
+            )
         if start_block is None:
-            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
+            from_block = (
+                int(row[1]["start_block"])
+                if not math.isnan(row[1]["start_block"])
+                else 0
+            )
         if factory_address is None or type(factory_address) != str:
             print(
                 f"Terraformer: No factory contract address for exchange: {exchange_name}"
@@ -1222,7 +1267,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             continue
         elif factory_address == "TBD":
             continue
-        print(f"********************** Terraforming **********************\nStarting exchange: {exchange_name} from block {from_block}")
+        print(
+            f"********************** Terraforming **********************\nStarting exchange: {exchange_name} from block {from_block}"
+        )
 
         if fork in "uniswap_v2":
             if fee == "TBD":
@@ -1248,7 +1295,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 default_fee=fee,
                 start_block=from_block,
                 web3=web3,
-                blockchain=network_name
+                blockchain=network_name,
             )
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
@@ -1256,7 +1303,11 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             if fee == "TBD":
                 continue
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
-            factory_abi = UNISWAP_V3_FACTORY_ABI if exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_FACTORY_ABI
+            factory_abi = (
+                UNISWAP_V3_FACTORY_ABI
+                if exchange_name not in ["pancakeswap_v3"]
+                else PANCAKESWAP_V3_FACTORY_ABI
+            )
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
@@ -1266,13 +1317,15 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 factory_contract=factory_contract,
                 start_block=from_block,
                 web3=web3,
-                blockchain=network_name
+                blockchain=network_name,
             )
             m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
-            if exchange_name in ["velocimeter_v2", ]:
+            if exchange_name in [
+                "velocimeter_v2",
+            ]:
                 factory_abi = VELOCIMETER_V2_FACTORY_ABI
             elif exchange_name in ["scale_v2"]:
                 factory_abi = SCALE_V2_FACTORY_ABI
@@ -1290,7 +1343,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 default_fee=fee,
                 start_block=from_block,
                 web3=web3,
-                blockchain=network_name
+                blockchain=network_name,
             )
             m_df = m_df.reset_index(drop=True)
             solidly_v2_mapdf = pd.concat([solidly_v2_mapdf, m_df], ignore_index=True)
@@ -1312,8 +1365,10 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
-    solidly_v2_mapdf.to_csv((write_path + "/solidly_v2_event_mappings.csv"), index=False)
+    solidly_v2_mapdf.to_csv(
+        (write_path + "/solidly_v2_event_mappings.csv"), index=False
+    )
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
+# terraform_blockchain(network_name="coinbase_base", save_tokens=True)

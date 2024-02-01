@@ -98,7 +98,6 @@ def scan_logs_for_opportunity(
 @click.option("--search_pattern", default="multi_pairwise_all", type=str)
 @click.option("--max_minutes", default=10, type=int)
 def main(logs_directory, interval, search_pattern, max_minutes):
-
     all_patterns = [
         "single",
         "multi",
