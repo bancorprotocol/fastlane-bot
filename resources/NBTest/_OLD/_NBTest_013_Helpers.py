@@ -630,7 +630,7 @@ assert (
 Beyond this point it is not possible to test without real data. build_transaction_with_gas fails without a transaction that is expected to succeed.
 """
 
-# transaction_built = h.validate_and_submit_transaction(route_struct=arb_data_struct, src_amt=flash_amt, src_address=flash_tkn, expected_profit=profit, result=h.XS_TRANSACTION)
+# transaction_built = h.build_transaction_with_gas(routes=arb_data_struct, src_address=flash_tkn, src_amt=flash_amt, gas_price=current_gas_price, max_priority=current_max_priority_gas, nonce=nonce, test_fake_gas=True, flashloan_struct=flashloan_struct)
 #
 # print(f"transaction built = {transaction_built}")
 #

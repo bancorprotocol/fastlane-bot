@@ -209,8 +209,6 @@ class TxHelper:
                 "nonce": self.nonce,
             }
         )
-        if result == self.XS_TRANSACTION:
-            return transaction
 
         # Sign the transaction
         signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
