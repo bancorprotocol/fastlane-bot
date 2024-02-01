@@ -19,13 +19,13 @@ class SolidlyV2Pool(Pool):
     """
     Class representing a Solidly v2 pool.
     """
+
     base_exchange_name: str = "solidly_v2"
     exchange_name: str = "solidly_v2"
     fee: str = None
     router_address: str = None
     # If this is false, it's a Uni V2 style pool
     is_stable: bool = None
-
 
     @property
     def fee_float(self):
@@ -44,7 +44,10 @@ class SolidlyV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls,
+        event: Dict[str, Any],
+        static_pools: Dict[str, Any],
+        exchange_name: str = None,
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
@@ -95,7 +98,6 @@ class SolidlyV2Pool(Pool):
 
         self.is_stable = await contract.caller.stable()
         params = {
-
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
             "exchange_name": self.exchange_name,
@@ -106,6 +108,7 @@ class SolidlyV2Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
     async def async_update_from_contract(
         self,
         contract: Contract,
@@ -127,7 +130,6 @@ class SolidlyV2Pool(Pool):
 
         self.is_stable = await contract.caller.stable()
         params = {
-
             "tkn0_balance": reserve_balance[0],
             "tkn1_balance": reserve_balance[1],
             "exchange_name": self.exchange_name,

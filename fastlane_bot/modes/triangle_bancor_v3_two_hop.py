@@ -20,7 +20,13 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
 
     arb_mode = "b3_two_hop"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -168,13 +174,29 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         float
         """
         pools = self.get_exact_pools(cids=cids)
-        tkn1 = self.get_tkn(pool=pools[0], tkn_num=1) if self.get_tkn(pool=pools[0], tkn_num=1) != flt else self.get_tkn(pool=pools[0], tkn_num=0)
-        p0t0 = pools[0].x if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].y
-        p0t1 = pools[0].y if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].x
-        p1t0 = pools[1].x if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].y
-        p1t1 = pools[1].y if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].x
-        p2t0 = pools[2].x if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].y
-        p2t1 = pools[2].y if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].x
+        tkn1 = (
+            self.get_tkn(pool=pools[0], tkn_num=1)
+            if self.get_tkn(pool=pools[0], tkn_num=1) != flt
+            else self.get_tkn(pool=pools[0], tkn_num=0)
+        )
+        p0t0 = (
+            pools[0].x if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].y
+        )
+        p0t1 = (
+            pools[0].y if self.get_tkn(pool=pools[0], tkn_num=0) == flt else pools[0].x
+        )
+        p1t0 = (
+            pools[1].x if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].y
+        )
+        p1t1 = (
+            pools[1].y if tkn1 == self.get_tkn(pool=pools[1], tkn_num=0) else pools[1].x
+        )
+        p2t0 = (
+            pools[2].x if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].y
+        )
+        p2t1 = (
+            pools[2].y if self.get_tkn(pool=pools[2], tkn_num=0) != flt else pools[2].x
+        )
         fee0 = self.get_fee_safe(pools[0].fee)
         fee1 = self.get_fee_safe(pools[1].fee)
         fee2 = self.get_fee_safe(pools[2].fee)
@@ -182,9 +204,18 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         if pools[1].params.exchange == "carbon_v1":
             return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
 
-        return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
+        return self.max_arb_trade_in_constant_product(
+            p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2
+        )
 
-    def get_exact_input_with_carbon(self, p0t0: float, p0t1: float, p2t0: float, p2t1: float, carbon_pool: ConstantProductCurve) -> float:
+    def get_exact_input_with_carbon(
+        self,
+        p0t0: float,
+        p0t1: float,
+        p2t0: float,
+        p2t1: float,
+        carbon_pool: ConstantProductCurve,
+    ) -> float:
         """
         Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
 
@@ -205,11 +236,13 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         A = carbon_pool.A
         B = carbon_pool.B
         C = (B * z + A * y) ** 2
-        D = B * A * z + A ** 2 * y
+        D = B * A * z + A**2 * y
         return self.max_arb_trade_in_cp_carbon_cp(p0t0, p0t1, p2t0, p2t1, C, D, z)
 
     @staticmethod
-    def max_arb_trade_in_cp_carbon_cp(p0t0: float, p0t1: float, p2t0: float, p2t1: float, C: float, D: float, z: float) -> float:
+    def max_arb_trade_in_cp_carbon_cp(
+        p0t0: float, p0t1: float, p2t0: float, p2t1: float, C: float, D: float, z: float
+    ) -> float:
         """
         Equation to solve optimal trade input for a constant product -> Carbon order -> constant product route.
         Parameters
@@ -226,11 +259,15 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         float
 
         """
-        trade_input = (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
+        trade_input = (
+            z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))
+        ) / (p0t1 * C + p0t1 * D * p2t0 + z**2 * p2t0)
         return trade_input
 
     @staticmethod
-    def max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
+    def max_arb_trade_in_constant_product(
+        p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2
+    ):
         """
         Equation to solve optimal trade input for a constant product -> constant product -> constant product route.
         Parameters
@@ -249,11 +286,40 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         float
 
         """
-        val = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
+        val = (
+            -p1t0 * p2t0 * p0t0
+            + (
+                p1t0
+                * p2t0
+                * p0t0
+                * p1t1
+                * p2t1
+                * p0t1
+                * (
+                    -fee1 * fee2 * fee0
+                    + fee1 * fee2
+                    + fee1 * fee0
+                    - fee1
+                    + fee2 * fee0
+                    - fee2
+                    - fee0
+                    + 1
+                )
+            )
+            ** 0.5
+        ) / (
+            p1t0 * p2t0
+            - p2t0 * p0t1 * fee0
+            + p2t0 * p0t1
+            + p1t1 * p0t1 * fee1 * fee0
+            - p1t1 * p0t1 * fee1
+            - p1t1 * p0t1 * fee0
+            + p1t1 * p0t1
+        )
         return val
 
-    def run_main_flow(self,
-        miniverse: List, src_token: str
+    def run_main_flow(
+        self, miniverse: List, src_token: str
     ) -> Tuple[float, Any, Any, Any]:
         """
         Run the main flow of the arbitrage finder.
@@ -347,17 +413,28 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
                 for curve in external_curves:
                     miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve]]
             if len(carbon_curves) > 0:
-
                 if len(carbon_curves) > 0:
                     base_direction_pair = carbon_curves[0].pair
-                    base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-                    base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+                    base_direction_one = [
+                        curve
+                        for curve in carbon_curves
+                        if curve.pair == base_direction_pair
+                    ]
+                    base_direction_two = [
+                        curve
+                        for curve in carbon_curves
+                        if curve.pair != base_direction_pair
+                    ]
 
                     if len(base_direction_one) > 0:
-                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one]
+                        miniverses += [
+                            bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one
+                        ]
 
                     if len(base_direction_two) > 0:
-                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two]
+                        miniverses += [
+                            bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two
+                        ]
 
                 miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
 

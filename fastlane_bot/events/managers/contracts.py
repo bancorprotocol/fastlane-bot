@@ -31,7 +31,6 @@ class ContractsManager(BaseManager):
         """
 
         for exchange_name in self.tenderly_event_exchanges:
-
             if exchange_name == "bancor_pol":
                 self.tenderly_event_contracts[
                     exchange_name
@@ -78,7 +77,6 @@ class ContractsManager(BaseManager):
         """
         tracker = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
-
             if exchange_name in tracker:
                 continue
             self.event_contracts[exchange_name] = self.web3.eth.contract(
@@ -294,7 +292,6 @@ class ContractsManager(BaseManager):
             ),
         )
 
-
     def get_token_info_from_contract(
         self, web3: Web3, erc20_contracts: Dict[str, Contract], addr: str
     ) -> Tuple[str, int]:
@@ -338,7 +335,7 @@ class ContractsManager(BaseManager):
                 contract=contract,
                 addr=addr,
                 token_data=token_data,
-                tokens_filepath=tokens_filepath
+                tokens_filepath=tokens_filepath,
             )
         except self.FailedToGetTokenDetailsException as e:
             self.cfg.logger.debug(
@@ -408,7 +405,6 @@ class ContractsManager(BaseManager):
             "decimals": decimals,
         }
         try:
-
             self.cfg.logger.debug(
                 f"[events.managers.contracts._get_and_save_token_info_from_contract] Adding new token {symbol} to {tokens_filepath}"
             )

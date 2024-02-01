@@ -5,7 +5,7 @@ Helpers for the Fastlane project.
 Licensed under MIT
 """
 __VERSION__ = "1.2"
-__DATE__="02/May/2023"
+__DATE__ = "02/May/2023"
 
 from dataclasses import dataclass
 from typing import Union, Any
@@ -38,8 +38,8 @@ class TradeInstruction:
 
     Attributes
     ----------
-    
-    TODO -- DOCSTRING OUT OF DATE 
+
+    TODO -- DOCSTRING OUT OF DATE
     _tknin_address: str
         The input token address.
     _tknin_decimals: int
@@ -60,9 +60,10 @@ class TradeInstruction:
         Whether the curve is a Carbon curve.
 
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
-    
+
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
+
     ConfigObj: Any
     cid: str
     tknin: str
@@ -71,13 +72,13 @@ class TradeInstruction:
     amtout: Union[int, Decimal, float]
     pair_sorting: str = None
     raw_txs: str = None
-    custom_data: str = ''
+    custom_data: str = ""
     db: any = None
-    tknin_dec_override: int = None   # for testing to not go to the database
+    tknin_dec_override: int = None  # for testing to not go to the database
     tknout_dec_override: int = None  # ditto
     tknin_addr_override: str = None  # ditto
-    tknout_addr_override: str = None # ditto
-    exchange_override: str = None    # ditto
+    tknout_addr_override: str = None  # ditto
+    exchange_override: str = None  # ditto
     _amtin_wei: int = None
     _amtout_wei: int = None
 
@@ -106,7 +107,7 @@ class TradeInstruction:
         """
         self._cid_tkn: str = None
         self._is_carbon = self._check_if_carbon()
-        
+
         if self.tknin_dec_override is None:
             TokenIn = self.db.get_token(tkn_address=self.tknin)
             self._tknin_address = TokenIn.address
@@ -125,7 +126,7 @@ class TradeInstruction:
         self._amtin_quantized = self._quantize(
             self._amtin_decimals, self._tknin_decimals
         )
-        
+
         if self.tknout_dec_override is None:
             TokenOut = self.db.get_token(tkn_address=self.tknout)
             self._tknout_address = TokenOut.address
@@ -134,16 +135,52 @@ class TradeInstruction:
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
-        pool = self.db.get_pool(cid=self.cid.split('-')[0])
+        pool = self.db.get_pool(cid=self.cid.split("-")[0])
         if self.tknout_dec_override is None:
             tokens = pool.get_token_addresses
-            self.tknin_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
-            self.tknin_is_native = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
-            self.tknout_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknout_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
-            self.tknout_is_native = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens and self._tknout_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
-            assert not [self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native].count(True) > 1, f"[TradeInstruction __post_init__] only 1 token can be native or wrapped, [self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native] = {self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native}"
+            self.tknin_is_wrapped = (
+                self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens
+                and self._tknin_address
+                in [
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                ]
+            )
+            self.tknin_is_native = (
+                self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens
+                and self._tknin_address
+                in [
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                ]
+            )
+            self.tknout_is_wrapped = (
+                self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens
+                and self._tknout_address
+                in [
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                ]
+            )
+            self.tknout_is_native = (
+                self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in tokens
+                and self._tknout_address
+                in [
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                ]
+            )
+            assert (
+                not [
+                    self.tknin_is_wrapped,
+                    self.tknin_is_native,
+                    self.tknout_is_wrapped,
+                    self.tknout_is_native,
+                ].count(True)
+                > 1
+            ), f"[TradeInstruction __post_init__] only 1 token can be native or wrapped, [self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native] = {self.tknin_is_wrapped, self.tknin_is_native, self.tknout_is_wrapped, self.tknout_is_native}"
 
-        if self._amtout_wei is None:            
+        if self._amtout_wei is None:
             self._amtout_wei = self._convert_to_wei(self.amtout, self._tknout_decimals)
 
         self._amtout_decimals = self._convert_to_decimals(
@@ -176,11 +213,12 @@ class TradeInstruction:
         if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             custom_int = int(Decimal(pool.fee_float) * Decimal("1000000"))
         elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
-            custom_int = 0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
+            custom_int = (
+                0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
+            )
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             custom_int = int(pool.anchor, 16)
         return custom_int
-
 
     def get_platform_id(self):
         """
@@ -230,19 +268,17 @@ class TradeInstruction:
 
         if "." not in str(amount):
             return Decimal(str(amount))
-        amount = format(amount, 'f')
+        amount = format(amount, "f")
         amount_num = str(amount).split(".")[0]
         amount_dec = str(amount).split(".")[1]
         # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
-        amount_dec = str(amount_dec)[:int(decimals)]
+        amount_dec = str(amount_dec)[: int(decimals)]
         # print(f"[_quantize], amount_dec: {amount_dec}, type = {type(amount_dec)}")
         try:
             return Decimal(f"{str(amount_num)}.{amount_dec}")
         except Exception as e:
-            #print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
+            # print("Error quantizing amount: ", f"{str(amount_num)}.{amount_dec}")
             pass
-
-
 
     # def _get_token_address(self, token_address: str) -> str:
     #     """

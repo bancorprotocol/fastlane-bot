@@ -22,6 +22,7 @@ from fastlane_bot.config import network
 load_dotenv()
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -167,7 +168,9 @@ class EthereumNetwork(NetworkBase):
         if self.is_connected:
             return
 
-        self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
+        self.web3 = Web3(
+            Web3.HTTPProvider(self.provider_url, request_kwargs={"timeout": 60})
+        )
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

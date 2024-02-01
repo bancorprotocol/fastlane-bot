@@ -18,6 +18,7 @@ class UniswapV3Pool(Pool):
     """
     Class representing a Uniswap v3 pool.
     """
+
     base_exchange_name: str = "uniswap_v3"
     exchange_name: str = "uniswap_v3"
     router_address: str = None
@@ -31,7 +32,10 @@ class UniswapV3Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls,
+        event: Dict[str, Any],
+        static_pools: Dict[str, Any],
+        exchange_name: str = None,
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.

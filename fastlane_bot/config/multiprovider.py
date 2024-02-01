@@ -10,7 +10,7 @@ class MultiProviderContractWrapper:
         self.contracts = {}
 
         for name, url in providers.items():
-            w3 = Web3(Web3.HTTPProvider(url, request_kwargs={'timeout': 60}))
+            w3 = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 60}))
             self.contracts[name] = w3.eth.contract(address=address, abi=self.abi)
 
     def __getattr__(self, name: str) -> Contract:

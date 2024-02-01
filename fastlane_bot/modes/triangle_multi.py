@@ -19,7 +19,13 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
     arb_mode = "multi_triangle"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -39,9 +45,11 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
                 r = None
                 CC_cc = CPCContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
-                #try:
+                # try:
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True
+                r = O.optimize(
+                    src_token, params=dict(pstart=pstart)
+                )  # debug=True, debug2=True
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 if len(trade_instructions_dic) < 3:
                     # Failed to converge
@@ -89,7 +97,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
-    
+
     def build_pstart(self, CCm, tkn0list, tkn1):
         tkn0list = [x for x in tkn0list if x not in [tkn1]]
         pstart = {}
@@ -98,12 +106,12 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
                 price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
             except:
                 try:
-                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
+                    price = 1 / CCm.bytknx(tkn1).bytkny(tkn0)[0].p
                 except Exception as e:
                     print(str(e))
-                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
-            pstart[tkn0]=price
+                    self.ConfigObj.logger.debug(
+                        f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}"
+                    )
+            pstart[tkn0] = price
         pstart[tkn1] = 1
         return pstart
-
-

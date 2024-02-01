@@ -22,7 +22,13 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
 
     arb_mode = "multi_pairwise_pol"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -42,24 +48,35 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                 continue
             pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
             not_bancor_pol_curves = [
-                x for x in CC.curves if x.params.exchange not in ["bancor_pol", "carbon_v1"]
+                x
+                for x in CC.curves
+                if x.params.exchange not in ["bancor_pol", "carbon_v1"]
             ]
             carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
             curve_combos = [[curve] + pol_curves for curve in not_bancor_pol_curves]
 
-
             if len(carbon_curves) > 0:
                 base_direction_pair = carbon_curves[0].pair
-                base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-                base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
-
+                base_direction_one = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair == base_direction_pair
+                ]
+                base_direction_two = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair != base_direction_pair
+                ]
 
                 if len(base_direction_one) > 0:
-                    curve_combos += [[curve] + base_direction_one for curve in pol_curves]
+                    curve_combos += [
+                        [curve] + base_direction_one for curve in pol_curves
+                    ]
 
                 if len(base_direction_two) > 0:
-                    curve_combos += [[curve] + base_direction_two for curve in pol_curves]
-
+                    curve_combos += [
+                        [curve] + base_direction_two for curve in pol_curves
+                    ]
 
             for curve_combo in curve_combos:
                 src_token = tkn1
@@ -72,7 +89,9 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                         profit_src,
                         r,
                         trade_instructions_df,
-                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                    ) = self.run_main_flow(
+                        curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1
+                    )
 
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions = r.trade_instructions()
@@ -172,8 +191,8 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         ]
         return new_curves
 
-    def get_combos_pol(self,
-        CCm: CPCContainer, flashloan_tokens: List[str]
+    def get_combos_pol(
+        self, CCm: CPCContainer, flashloan_tokens: List[str]
     ) -> Tuple[List[Any], List[Any]]:
         """
         Get combos for pairwise arbitrage specific to Bancor POL
@@ -193,7 +212,9 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
 
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
-        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]])
+        bancor_pol_tkns = set(
+            [tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]]
+        )
 
         combos = [
             (tkn0, tkn1)

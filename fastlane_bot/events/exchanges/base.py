@@ -171,12 +171,12 @@ class Exchange(ABC):
     @abstractmethod
     def get_factory_abi(self):
         """
-                Get the ABI of the exchange's Factory contract
+        Get the ABI of the exchange's Factory contract
 
-                Returns
-                -------
-                ABI
-                    The ABI of the exchange Factory
+        Returns
+        -------
+        ABI
+            The ABI of the exchange Factory
 
-                """
+        """
         pass

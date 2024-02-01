@@ -14,14 +14,16 @@ import logging
 # NOTE: THIS WHOLE LOGGING BUSINESS IS A BIT CONVOLUTED, SO AT ONE POINT
 # WE MAY CONSIDER CLEANING IT UP
 
+
 class ConfigLogger(ConfigBase):
     """
     Fastlane bot config -- logger
-    
+
     :loglevel:    LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
+
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
     LOGGER_DEFAULT = S.LOGGER_DEFAULT
     LOGLEVEL_DEBUG = S.LOGLEVEL_DEBUG
     LOGLEVEL_INFO = S.LOGLEVEL_INFO
@@ -115,19 +117,21 @@ class ConfigLogger(ConfigBase):
             logger = S.LOGGER_DEFAULT
 
         if logger == S.LOGGER_DEFAULT:
-            return _ConfigLoggerDefault(_direct=False, loglevel=loglevel, logging_path=logging_path, **kwargs)
+            return _ConfigLoggerDefault(
+                _direct=False, loglevel=loglevel, logging_path=logging_path, **kwargs
+            )
         else:
             raise ValueError(f"Unknown logger: {logger}")
 
     def __init__(self, loglevel=None, logging_path=None, **kwargs):
         super().__init__(**kwargs)
-        #print("[ConfigLogger]", loglevel, self.LOGLEVEL)
+        # print("[ConfigLogger]", loglevel, self.LOGLEVEL)
         if not loglevel is None:
             assert loglevel in {
                 self.LOGLEVEL_DEBUG,
                 self.LOGLEVEL_INFO,
                 self.LOGLEVEL_WARNING,
-                self.LOGLEVEL_ERROR
+                self.LOGLEVEL_ERROR,
             }, f"unknown loglevel {loglevel}"
             self.LOGLEVEL = loglevel
         self._logger = self.get_logger(self.LOGLEVEL, logging_path=logging_path)
@@ -137,7 +141,5 @@ class _ConfigLoggerDefault(ConfigLogger):
     """
     Fastlane bot config -- logger
     """
+
     pass
-
-
-    

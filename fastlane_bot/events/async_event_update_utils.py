@@ -15,7 +15,9 @@ from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.utils import update_pools_from_events
 import nest_asyncio
+
 nest_asyncio.apply()
+
 
 async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     try:
@@ -165,7 +167,7 @@ def get_pool_info(
         "tkn0_decimals": tkn0["decimals"],
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
-        "pair_name": tkn0["address"] + "/" + tkn1["address"]
+        "pair_name": tkn0["address"] + "/" + tkn1["address"],
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
@@ -185,7 +187,10 @@ def get_pool_info(
 
     return pool_info
 
-def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool) -> str:
+
+def sanitize_token_symbol(
+    token_symbol: str, token_address: str, read_only: bool
+) -> str:
     """
     This function ensures token symbols are compatible with the bot's data structures.
     If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
@@ -196,7 +201,9 @@ def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool
 
     returns: str
     """
-    sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
+    sanitization_path = os.path.normpath(
+        "fastlane_bot/data/data_sanitization_center/sanitary_data.csv"
+    )
     try:
         if not read_only:
             token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
@@ -207,13 +214,20 @@ def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool
 
 
 def add_token_info(
-    pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
+    pool_info: Dict[str, Any],
+    tkn0: Dict[str, Any],
+    tkn1: Dict[str, Any],
+    read_only: bool,
 ) -> Dict[str, Any]:
     print(f"called add_token_info")
     tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
     tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"], read_only=read_only)
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"], read_only=read_only)
+    tkn0_symbol = sanitize_token_symbol(
+        token_symbol=tkn0_symbol, token_address=tkn0["address"], read_only=read_only
+    )
+    tkn1_symbol = sanitize_token_symbol(
+        token_symbol=tkn1_symbol, token_address=tkn1["address"], read_only=read_only
+    )
     tkn0["symbol"] = tkn0_symbol
     tkn1["symbol"] = tkn1_symbol
 
@@ -335,7 +349,9 @@ def process_contract_chunks(
             df_orig = df_combined.copy() if df_combined is not None else None
             df_combined = pd.concat([pd.read_csv(filepath) for filepath in filepaths])
             df_combined = (
-                pd.concat([df_orig, df_combined]) if df_orig is not None else df_combined
+                pd.concat([df_orig, df_combined])
+                if df_orig is not None
+                else df_combined
             )
             df_combined = df_combined.drop_duplicates(subset=subset)
             df_combined.to_csv(filename, index=False)
@@ -344,7 +360,9 @@ def process_contract_chunks(
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
+                    cfg.logger.error(
+                        f"Failed to remove {filepath} {e}??? This is spooky..."
+                    )
     else:
         if lst:
             dfs = pd.concat(lst)
@@ -361,13 +379,17 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
-        ex = exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False)
+        ex = exchange_factory.get_exchange(
+            key=exchange_name, cfg=mgr.cfg, exchange_initialized=False
+        )
         abi = ex.get_abi()
         address = event["address"]
         contracts.append(
             {
                 "exchange_name": exchange_name,
-                "ex": exchange_factory.get_exchange(key=exchange_name, cfg=mgr.cfg, exchange_initialized=False),
+                "ex": exchange_factory.get_exchange(
+                    key=exchange_name, cfg=mgr.cfg, exchange_initialized=False
+                ),
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
                 "event": event,
@@ -436,7 +458,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
     if not mgr.read_only:
         tokens_df.to_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
+            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv",
+            index=False,
         )
     tokens_df["address"] = tokens_df["address"].apply(
         lambda x: Web3.to_checksum_address(x)
@@ -517,13 +540,21 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     new_num_pools_in_data = len(mgr.pool_data)
     new_pools_added = new_num_pools_in_data - orig_num_pools_in_data
 
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] new_pools_added: {new_pools_added}")
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] orig_num_pools_in_data: {orig_num_pools_in_data}")
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] duplicate_new_pool_ct: {duplicate_new_pool_ct}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] new_pools_added: {new_pools_added}"
+    )
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] orig_num_pools_in_data: {orig_num_pools_in_data}"
+    )
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] duplicate_new_pool_ct: {duplicate_new_pool_ct}"
+    )
     mgr.cfg.logger.debug(
         f"[async_event_update_utils.async_update_pools_from_contracts] pools_to_add_from_contracts: {len(mgr.pools_to_add_from_contracts)}"
     )
-    mgr.cfg.logger.debug(f"[async_event_update_utils.async_update_pools_from_contracts] final pool_data ct: {len(mgr.pool_data)}")
+    mgr.cfg.logger.debug(
+        f"[async_event_update_utils.async_update_pools_from_contracts] final pool_data ct: {len(mgr.pool_data)}"
+    )
     mgr.cfg.logger.debug(
         f"[async_event_update_utils.async_update_pools_from_contracts] compare {new_pools_added + duplicate_new_pool_ct},{len(mgr.pools_to_add_from_contracts)}"
     )

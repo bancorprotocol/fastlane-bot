@@ -38,7 +38,10 @@ class UniswapV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls,
+        event: Dict[str, Any],
+        static_pools: Dict[str, Any],
+        exchange_name: str = None,
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
@@ -91,13 +94,14 @@ class UniswapV2Pool(Pool):
             self.state[key] = value
         return params
 
-    async def async_update_from_contract(self,
+    async def async_update_from_contract(
+        self,
         contract: Contract,
         tenderly_fork_id: str = None,
         w3_tenderly: Web3 = None,
         w3: Web3 = None,
-        tenderly_exchanges: List[str] = None
-         ) -> Dict[str, Any]:
+        tenderly_exchanges: List[str] = None,
+    ) -> Dict[str, Any]:
         """
         See base class.
         """

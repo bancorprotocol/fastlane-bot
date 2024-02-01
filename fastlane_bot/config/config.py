@@ -7,6 +7,7 @@ __DATE__ = "03/May 2023"
 
 import os
 from dataclasses import dataclass, field, InitVar, asdict
+
 # from .base import ConfigBase
 from . import network as network_, db as db_, logger as logger_, provider as provider_
 from .cloaker import CloakerL
@@ -18,13 +19,15 @@ from .connect import EthereumNetwork
 load_dotenv()
 TENDERLY_FORK_ID = os.environ.get("TENDERLY_FORK_ID")
 if TENDERLY_FORK_ID is None:
-    TENDERLY_FORK_ID = ''
+    TENDERLY_FORK_ID = ""
+
 
 @dataclass
-class Config():
+class Config:
     """
     Fastlane bot configuration object
     """
+
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
@@ -47,15 +50,34 @@ class Config():
     LL_WARN = S.LOGLEVEL_WARNING
     LL_ERR = S.LOGLEVEL_ERROR
 
-    SUPPORTED_EXCHANGES = ['carbon_v1', 'bancor_v2', 'bancor_v3', 'uniswap_v2', 'uniswap_v3', 'sushiswap_v2', 'bancor_pol', 'pancakeswap_v2', 'pancakeswap_v3']
+    SUPPORTED_EXCHANGES = [
+        "carbon_v1",
+        "bancor_v2",
+        "bancor_v3",
+        "uniswap_v2",
+        "uniswap_v3",
+        "sushiswap_v2",
+        "bancor_pol",
+        "pancakeswap_v2",
+        "pancakeswap_v3",
+    ]
 
     logging_header: str = None
 
     @classmethod
-    def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, self_fund=True, **kwargs):
+    def new(
+        cls,
+        *,
+        config=None,
+        loglevel=None,
+        logging_path=None,
+        blockchain=None,
+        self_fund=True,
+        **kwargs,
+    ):
         """
         Alternative constructor: create and return new Config object
-        
+
         :config:    CONFIG_MAINNET(default), CONFIG_TENDERLY, CONFIG_UNITTEST
         :loglevel:  LOGLEVEL_DEBUG, LOGLEVEL_INFO (default), LOGLEVEL_WARNING, LOGLEVEL_ERROR
         :use_flashloans:
@@ -81,7 +103,9 @@ class Config():
             C_db = db_.ConfigDB.new(db=S.DATABASE_UNITTEST, POSTGRES_DB="unittest")
             C_nw = network_.ConfigNetwork.new(network=S.NETWORK_MAINNET)
             C_nw.SELF_FUND = self_fund
-            C_pr = provider_.ConfigProvider.new(network=C_nw, provider=S.PROVIDER_DEFAULT)
+            C_pr = provider_.ConfigProvider.new(
+                network=C_nw, provider=S.PROVIDER_DEFAULT
+            )
             return cls(db=C_db, logger=C_log, network=C_nw, provider=C_pr, **kwargs)
         raise ValueError(f"Invalid config: {config}")
 
@@ -106,7 +130,9 @@ class Config():
         for obj in [self.network, self.db, self.provider, self.logger]:
             if hasattr(obj, name):
                 return getattr(obj, name)
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
     def __getattr__(self, name: str):
         """
@@ -114,14 +140,18 @@ class Config():
         """
         if self.is_config_item(name):
             return self.get_attribute_from_config(name)
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
     def __post_init__(self):
         """
         Post-initialization initialization.
         """
         if self.network is None:
-            self.network = network_.ConfigNetwork.new(network_.ConfigNetwork.NETWORK_ETHEREUM)
+            self.network = network_.ConfigNetwork.new(
+                network_.ConfigNetwork.NETWORK_ETHEREUM
+            )
         assert issubclass(type(self.network), network_.ConfigNetwork)
 
         if self.db is None:
@@ -140,7 +170,9 @@ class Config():
             self.provider = provider_.ConfigProvider.new(self.network)
         assert issubclass(type(self.provider), provider_.ConfigProvider)
 
-        assert self.network is self.provider.network, f"Network mismatch: {self.network} != {self.provider.network}"
+        assert (
+            self.network is self.provider.network
+        ), f"Network mismatch: {self.network} != {self.provider.network}"
         self.SUPPORTED_EXCHANGES = self.network.ALL_KNOWN_EXCHANGES
 
     VISIBLE_FIELDS = "network, db, logger, provider, w3, ZERO_ADDRESS"
@@ -148,7 +180,7 @@ class Config():
     def cloaked(self, incl=None, excl=None):
         """
         returns a cloaked version of the object
-        
+
         :incl:  fields to _include_ in the cloaked version (plus those in VISIBLE_FIELDS)
         :excl:  fields to _exclude_ from the cloaked version
         """

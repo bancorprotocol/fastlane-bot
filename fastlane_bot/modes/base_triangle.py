@@ -21,7 +21,13 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
     """
 
     @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -126,9 +132,19 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         continue
 
                     base_direction_pair = base_exchange_curves[0].pair
-                    base_direction_one = [curve for curve in base_exchange_curves if curve.pair == base_direction_pair]
-                    base_direction_two = [curve for curve in base_exchange_curves if curve.pair != base_direction_pair]
-                    assert len(base_exchange_curves) == len(base_direction_one) + len(base_direction_two)
+                    base_direction_one = [
+                        curve
+                        for curve in base_exchange_curves
+                        if curve.pair == base_direction_pair
+                    ]
+                    base_direction_two = [
+                        curve
+                        for curve in base_exchange_curves
+                        if curve.pair != base_direction_pair
+                    ]
+                    assert len(base_exchange_curves) == len(base_direction_one) + len(
+                        base_direction_two
+                    )
                     y_match_curves = CCm.bypairs(
                         set(CCm.filter_pairs(onein=target_tknx))
                         & set(CCm.filter_pairs(onein=flt))
@@ -174,7 +190,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
     @staticmethod
     def get_mono_direction_carbon_curves(
-        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
+        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str = None
     ) -> List[Any]:
         """
         Get mono direction carbon curves for triangular arbitrage
@@ -217,6 +233,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 wrong_direction_cids.append(idx)
 
         return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
+
     def build_pstart(self, CCm, tkn0list, tkn1):
         tkn0list = [x for x in tkn0list if x not in [tkn1]]
         pstart = {}
@@ -225,10 +242,12 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
             except:
                 try:
-                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
+                    price = 1 / CCm.bytknx(tkn1).bytkny(tkn0)[0].p
                 except Exception as e:
                     print(str(e))
-                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
-            pstart[tkn0]=price
+                    self.ConfigObj.logger.debug(
+                        f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}"
+                    )
+            pstart[tkn0] = price
         pstart[tkn1] = 1
         return pstart

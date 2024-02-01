@@ -75,7 +75,8 @@ class QueryInterface:
         self.state = [
             pool
             for pool in self.state
-            if pool["tkn0_address"] in target_tokens and pool["tkn1_address"] in target_tokens
+            if pool["tkn0_address"] in target_tokens
+            and pool["tkn1_address"] in target_tokens
         ]
 
         self.cfg.logger.info(
@@ -209,7 +210,10 @@ class QueryInterface:
         keys = []
 
         for ex in self.cfg.ALL_KNOWN_EXCHANGES:
-            if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + ["bancor_v2", "bancor_v3"]:
+            if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + [
+                "bancor_v2",
+                "bancor_v3",
+            ]:
                 exchanges.append(ex)
                 keys.append(["tkn0_balance"])
             elif ex in self.cfg.UNI_V3_FORKS:
@@ -323,7 +327,6 @@ class QueryInterface:
                 self.get_token(pool["tkn1_address"])
                 safe_pools.append(pool)
             except Exception as e:
-
                 self.cfg.logger.warning(f"[events.interface] Exception: {e}")
                 self.cfg.logger.warning(
                     f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token"
@@ -489,8 +492,20 @@ class QueryInterface:
                 except AttributeError:
                     pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
-            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL,
+                    address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
+            token_set.add(
+                Token(
+                    symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL,
+                    address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                    decimals=18,
+                )
+            )
         return list(token_set)
 
     def populate_tokens(self):
@@ -506,8 +521,16 @@ class QueryInterface:
                 except AttributeError:
                     pass
         if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
-            wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
+            native_gas_tkn = Token(
+                symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL,
+                address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                decimals=18,
+            )
+            wrapped_gas_tkn = Token(
+                symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL,
+                address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                decimals=18,
+            )
             self.token_list[native_gas_tkn.address] = native_gas_tkn
             self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
 
@@ -577,10 +600,14 @@ class QueryInterface:
                 self.populate_tokens()
                 return self.token_list.get(tkn_address)
             except KeyError as e:
-                self.ConfigObj.logger.info(f"[interface.py get_token] Could not find token: {tkn_address} in token_list")
+                self.ConfigObj.logger.info(
+                    f"[interface.py get_token] Could not find token: {tkn_address} in token_list"
+                )
                 tokens = self.get_tokens()
                 if tkn_address.startswith("0x"):
-                    return next((tkn for tkn in tokens if tkn.address == tkn_address), None)
+                    return next(
+                        (tkn for tkn in tokens if tkn.address == tkn_address), None
+                    )
                 else:
                     raise ValueError(f"[get_token] Invalid token: {tkn_address}")
 
@@ -601,12 +628,14 @@ class QueryInterface:
         """
         pool_data_with_tokens = self.get_pool_data_lookup()
         if "cid" in kwargs:
-            cid = str(kwargs['cid'])
+            cid = str(kwargs["cid"])
             try:
                 return pool_data_with_tokens[cid]
             except KeyError:
                 # pool not in data
-                self.cfg.logger.error(f"[interface.py get_pool] pool with cid: {cid} not in data")
+                self.cfg.logger.error(
+                    f"[interface.py get_pool] pool with cid: {cid} not in data"
+                )
                 return None
         else:
             try:

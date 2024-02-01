@@ -416,7 +416,6 @@ def handle_tenderly_event_exchanges(
 
 
 def add_fork_exchanges(cfg: Config, exchanges: List) -> List[str]:
-
     """
     Handles the exchanges parameter.
 
@@ -1350,10 +1349,13 @@ def get_start_block(
         # Log all non-integer block numbers
         non_int_values = [
             (index, block["last_updated_block"], type(block["last_updated_block"]))
-            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
+            for index, block in enumerate(mgr.pool_data)
+            if type(block["last_updated_block"]) is not int
         ]
         if non_int_values:
-            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
+            mgr.cfg.logger.info(
+                f"[events.utils.get_start_block] non_int_values: {non_int_values}"
+            )
         return (
             max(block["last_updated_block"] for block in mgr.pool_data) - reorg_delay
             if last_block != 0
@@ -1364,10 +1366,13 @@ def get_start_block(
         # Log all non-integer block numbers
         non_int_values = [
             (index, block["last_updated_block"], type(block["last_updated_block"]))
-            for index, block in enumerate(mgr.pool_data) if type(block["last_updated_block"]) is not int
+            for index, block in enumerate(mgr.pool_data)
+            if type(block["last_updated_block"]) is not int
         ]
         if non_int_values:
-            mgr.cfg.logger.info(f"[events.utils.get_start_block] non_int_values: {non_int_values}")
+            mgr.cfg.logger.info(
+                f"[events.utils.get_start_block] non_int_values: {non_int_values}"
+            )
         return (
             (
                 max(block["last_updated_block"] for block in mgr.pool_data)
@@ -1377,7 +1382,6 @@ def get_start_block(
             ),
             None,
         )
-
 
 
 def get_tenderly_block_number(tenderly_fork_id: str) -> int:
@@ -1940,7 +1944,13 @@ def handle_static_pools_update(mgr: Any):
         ]
     )
     all_event_mappings = (
-        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings, solidly_v2_event_mappings])
+        pd.concat(
+            [
+                uniswap_v2_event_mappings,
+                uniswap_v3_event_mappings,
+                solidly_v2_event_mappings,
+            ]
+        )
         .drop_duplicates("address")
         .to_dict(orient="records")
     )

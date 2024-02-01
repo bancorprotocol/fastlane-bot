@@ -10,8 +10,12 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_FACTORY_ABI, SOLIDLY_V2_FACTORY_ABI, \
-    VELOCIMETER_V2_POOL_ABI
+from fastlane_bot.data.abi import (
+    SOLIDLY_V2_POOL_ABI,
+    VELOCIMETER_V2_FACTORY_ABI,
+    SOLIDLY_V2_FACTORY_ABI,
+    VELOCIMETER_V2_POOL_ABI,
+)
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -38,7 +42,6 @@ class SolidlyV2(Exchange):
         return float(self.fee)
 
     def add_pool(self, pool: Pool):
-
         # pool_fee = self._get_pool_fee(pool=pool)
         # pool.fee = pool_fee
         # pool.state["fee"] = pool_fee
@@ -49,11 +52,19 @@ class SolidlyV2(Exchange):
         return await self.get_pool_fee(pool=pool)
 
     def get_abi(self):
-        return VELOCIMETER_V2_POOL_ABI if "velocimeter" in self.exchange_name else SOLIDLY_V2_POOL_ABI
+        return (
+            VELOCIMETER_V2_POOL_ABI
+            if "velocimeter" in self.exchange_name
+            else SOLIDLY_V2_POOL_ABI
+        )
 
     @property
     def get_factory_abi(self):
-        return VELOCIMETER_V2_FACTORY_ABI if "velocimeter" in self.exchange_name else SOLIDLY_V2_FACTORY_ABI
+        return (
+            VELOCIMETER_V2_FACTORY_ABI
+            if "velocimeter" in self.exchange_name
+            else SOLIDLY_V2_FACTORY_ABI
+        )
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
@@ -65,11 +76,11 @@ class SolidlyV2(Exchange):
             if default_fee <= 1000:
                 default_fee = default_fee / 10000
             else:
-                default_fee = default_fee / 10 ** 18
+                default_fee = default_fee / 10**18
         elif "scale" in self.exchange_name:
             default_fee = await self.factory_contract.caller.getRealFee(address)
             default_fee = float(default_fee)
-            default_fee = default_fee / 10 ** 18
+            default_fee = default_fee / 10**18
         else:
             is_stable = await contract.caller.stable()
             default_fee = await self.factory_contract.caller.getFee(address, is_stable)
@@ -97,7 +108,11 @@ class SolidlyV2(Exchange):
         if "velocimeter" in self.exchange_name:
             fee = await self.factory_contract.caller.getRealFee()
             fee = int(fee)
-            fee = float(fee / 10 ** 18)
+            fee = float(fee / 10**18)
         else:
-            fee = self.stable_fee if pool.state["pool_type"] in "stable" else self.volatile_fee
+            fee = (
+                self.stable_fee
+                if pool.state["pool_type"] in "stable"
+                else self.volatile_fee
+            )
         return fee

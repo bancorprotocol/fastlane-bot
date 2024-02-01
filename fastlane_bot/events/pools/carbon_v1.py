@@ -32,7 +32,10 @@ class CarbonV1Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls,
+        event: Dict[str, Any],
+        static_pools: Dict[str, Any],
+        exchange_name: str = None,
     ) -> bool:
         """
         see base class.
@@ -51,7 +54,7 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
-        data["router"] = self.router_address,
+        data["router"] = (self.router_address,)
         for key, value in data.items():
             self.state[key] = value
         return data
@@ -152,7 +155,7 @@ class CarbonV1Pool(Pool):
         }
         params = self.parse_event(self.state, fake_event, "None")
         params["exchange_name"] = self.exchange_name
-        params["router"] = self.router_address,
+        params["router"] = (self.router_address,)
         for key, value in params.items():
             self.state[key] = value
 

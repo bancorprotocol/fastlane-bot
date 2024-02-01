@@ -55,7 +55,9 @@ class Balancer(Exchange):
         tokens = pool_balances[0]
         return tokens
 
-    async def get_token_balances(self, address: str, contract: Contract, event: Any) -> []:
+    async def get_token_balances(
+        self, address: str, contract: Contract, event: Any
+    ) -> []:
         pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
@@ -73,7 +75,9 @@ class Balancer(Exchange):
         token_balances = pool_balances[1]
         return token_balances[1]
 
-    async def get_tkn_n(self, address: str, contract: Contract, event: Any, index: int) -> str:
+    async def get_tkn_n(
+        self, address: str, contract: Contract, event: Any, index: int
+    ) -> str:
         pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         token_balances = pool_balances[1]

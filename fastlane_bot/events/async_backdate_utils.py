@@ -10,10 +10,15 @@ from fastlane_bot.events.async_utils import (
 from fastlane_bot.events.utils import parse_non_multicall_rows_to_update
 
 
-async def async_main_backdate_from_contracts(c: List[Dict[str, Any]], w3_async: AsyncWeb3) -> Tuple[Any]:
+async def async_main_backdate_from_contracts(
+    c: List[Dict[str, Any]], w3_async: AsyncWeb3
+) -> Tuple[Any]:
     return await asyncio.wait_for(
         asyncio.gather(
-            *[async_handle_main_backdate_from_contracts(**args, w3_async=w3_async) for args in c]
+            *[
+                async_handle_main_backdate_from_contracts(**args, w3_async=w3_async)
+                for args in c
+            ]
         ),
         timeout=20 * 60,
     )
@@ -25,7 +30,9 @@ def async_backdate_from_contracts(mgr: Any, rows: List[int]):
     chunks = get_contract_chunks(contracts)
     for chunk in chunks:
         loop = asyncio.get_event_loop()
-        vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk, w3_async=mgr.w3_async))
+        vals = loop.run_until_complete(
+            async_main_backdate_from_contracts(chunk, w3_async=mgr.w3_async)
+        )
         idxes = [val[0] for val in vals]
         updated_pool_info = [val[1] for val in vals]
         for i, idx in enumerate(idxes):

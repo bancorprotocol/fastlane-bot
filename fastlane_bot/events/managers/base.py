@@ -72,7 +72,9 @@ class BaseManager:
     token_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
-    factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
+    factory_contracts: Dict[str, Contract or Type[Contract]] = field(
+        default_factory=dict
+    )
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
@@ -111,7 +113,9 @@ class BaseManager:
         self.SUPPORTED_BASE_EXCHANGES = []
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
-            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
+            base_exchange_name = self.cfg.network.exchange_name_base_from_fork(
+                exchange_name=exchange_name
+            )
             if exchange_name in ["pancakeswap_v2", "pancakeswap_v3", "velocimeter_v2"]:
                 initialize_events = True
             elif base_exchange_name not in initialized_exchanges:
@@ -120,14 +124,17 @@ class BaseManager:
 
             if base_exchange_name not in self.SUPPORTED_BASE_EXCHANGES:
                 self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(
+                key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events
+            )
             if base_exchange_name in "solidly_v2":
-                self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
+                self.exchanges[exchange_name] = self.handle_solidly_exchanges(
+                    exchange=self.exchanges[exchange_name]
+                )
 
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
-
 
     def handle_solidly_exchanges(self, exchange):
         """
@@ -139,7 +146,7 @@ class BaseManager:
             abi=exchange.get_factory_abi,
         )
         exchange.factory_contract = self.factory_contracts[exchange.exchange_name]
-        #exchange.set_stable_volatile_fee()
+        # exchange.set_stable_volatile_fee()
 
         return exchange
 
@@ -242,9 +249,13 @@ class BaseManager:
 
         for exchange_name, pool_class in pool_factory._creators.items():
             for _ex_name in self.SUPPORTED_EXCHANGES:
-                if exchange_name not in self.cfg.network.exchange_name_base_from_fork(_ex_name):
+                if exchange_name not in self.cfg.network.exchange_name_base_from_fork(
+                    _ex_name
+                ):
                     continue
-                if pool_class.event_matches_format(event, self.static_pools, exchange_name=_ex_name):
+                if pool_class.event_matches_format(
+                    event, self.static_pools, exchange_name=_ex_name
+                ):
                     return _ex_name
         return None
 
@@ -519,7 +530,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:
@@ -653,7 +664,7 @@ class BaseManager:
             contract=carbon_controller,
             block_identifier=self.replay_from_block or "latest",
             multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            web3=self.web3,
         )
 
         with multicaller as mc:

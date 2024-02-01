@@ -42,7 +42,6 @@ class PoolManager(BaseManager):
         elif pool_info["exchange_name"] == "bancor_pol":
             return pool_info["tkn0_address"]
 
-
     def pool_type_from_exchange_name(self, exchange_name: str) -> Callable:
         """
         Get the pool type from the exchange name.
@@ -306,9 +305,11 @@ class PoolManager(BaseManager):
             The pool info.
 
         """
-        #try:
+        # try:
         pool_type = self.pool_type_from_exchange_name(pool_info["exchange_name"])
-        pool_extras = self.pool_extras_from_exchange_name(exchange_name=pool_info["exchange_name"], )
+        pool_extras = self.pool_extras_from_exchange_name(
+            exchange_name=pool_info["exchange_name"],
+        )
         pool = pool_type(state=pool_info, **pool_extras)
         self.exchanges[pool_info["exchange_name"]].add_pool(pool)
         # except Exception as e:

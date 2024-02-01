@@ -19,7 +19,13 @@ class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):
 
     arb_mode = "single_triangle"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """

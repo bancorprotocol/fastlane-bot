@@ -58,18 +58,20 @@ class CarbonV1(Exchange):
         return CARBON_CONTROLLER_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [
-            contract.events.StrategyCreated,
-            contract.events.StrategyUpdated,
-            contract.events.StrategyDeleted,
-            contract.events.PairTradingFeePPMUpdated,
-            contract.events.TradingFeePPMUpdated,
-            contract.events.PairCreated,
-        ] if self.exchange_initialized else []
+        return (
+            [
+                contract.events.StrategyCreated,
+                contract.events.StrategyUpdated,
+                contract.events.StrategyDeleted,
+                contract.events.PairTradingFeePPMUpdated,
+                contract.events.TradingFeePPMUpdated,
+                contract.events.PairCreated,
+            ]
+            if self.exchange_initialized
+            else []
+        )
 
-    async def get_fee(
-        self, address: str, contract: Contract
-    ) -> Tuple[str, float]:
+    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         """
         Get the fee from the contract.
 

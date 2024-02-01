@@ -268,7 +268,6 @@ class TxHelpers:
     network = Network.ETH_MAINNET
 
     def __post_init__(self):
-
         if self.ConfigObj.network.DEFAULT_PROVIDER != "tenderly":
             self.alchemy = Alchemy(
                 api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID,
@@ -547,7 +546,12 @@ class TxHelpers:
                 routes, src_address, src_amt
             ).build_transaction(
                 self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce, value=src_amt if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else None
+                    base_gas_price=gas_price,
+                    max_priority_fee=max_priority,
+                    nonce=nonce,
+                    value=src_amt
+                    if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+                    else None,
                 )
             )
 
@@ -625,7 +629,9 @@ class TxHelpers:
                     )
                     return None
             else:
-                self.ConfigObj.logger.info(f"gas_price = {gas_price}, max_priority = {max_priority}")
+                self.ConfigObj.logger.info(
+                    f"gas_price = {gas_price}, max_priority = {max_priority}"
+                )
                 self.ConfigObj.logger.warning(
                     f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
                     f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
@@ -637,8 +643,8 @@ class TxHelpers:
 
         try:
             estimated_gas = int(
-                    self.web3.eth.estimate_gas(transaction=transaction)
-                    + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                self.web3.eth.estimate_gas(transaction=transaction)
+                + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
             self.ConfigObj.logger.warning(
@@ -688,11 +694,11 @@ class TxHelpers:
         return self.web3.eth.get_transaction_count(self.wallet_address)
 
     def build_tx(
-            self,
-            nonce: int,
-            base_gas_price: int = 0,
-            max_priority_fee: int = 0,
-            value: int = None
+        self,
+        nonce: int,
+        base_gas_price: int = 0,
+        max_priority_fee: int = 0,
+        value: int = None,
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -711,9 +717,11 @@ class TxHelpers:
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
-            
+
         if "tenderly" in self.web3.provider.endpoint_uri:
-            print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
+            print(
+                "Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas"
+            )
             max_gas_price = 3
             max_priority_fee = 3
 
@@ -726,7 +734,7 @@ class TxHelpers:
                 "nonce": nonce,
             }
         else:
-            tx_details =  {
+            tx_details = {
                 "gasPrice": max_gas_price,
                 "from": self.wallet_address,
                 "nonce": nonce,
@@ -734,6 +742,7 @@ class TxHelpers:
         if value is not None:
             tx_details["value"] = value
         return tx_details
+
     def submit_transaction(self, arb_tx: Dict) -> Any:
         """
         Submits the transaction to the blockchain.
@@ -910,7 +919,9 @@ class TxHelpers:
         """
         return self._query_alchemy_api_gas_methods(method="eth_gasPrice")
 
-    def check_if_token_approved(self, token_address: str, owner_address = None, spender_address = None) -> bool:
+    def check_if_token_approved(
+        self, token_address: str, owner_address=None, spender_address=None
+    ) -> bool:
         """
         This function checks if a token has already been approved.
         :param token_address: the token to approve
@@ -924,7 +935,9 @@ class TxHelpers:
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             owner_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
 
-        spender_address = self.arb_contract.address if spender_address is None else spender_address
+        spender_address = (
+            self.arb_contract.address if spender_address is None else spender_address
+        )
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
 
@@ -936,9 +949,11 @@ class TxHelpers:
         else:
             return False
 
-
-
-    def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
+    def approve_token_for_arb_contract(
+        self,
+        token_address: str,
+        approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935,
+    ):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
         :param token_address: the token to approve
@@ -948,34 +963,45 @@ class TxHelpers:
             transaction hash
         """
         current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
+        max_priority = (
+            int(self.get_max_priority_fee_per_gas_alchemy())
+            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+            else 0
+        )
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
         try:
-            approve_tx = token_contract.functions.approve(self.arb_contract.address, approval_amount).build_transaction(
-                    self.build_tx(
-                        base_gas_price=current_gas_price, max_priority_fee=max_priority, nonce=self.get_nonce()
-                    )
+            approve_tx = token_contract.functions.approve(
+                self.arb_contract.address, approval_amount
+            ).build_transaction(
+                self.build_tx(
+                    base_gas_price=current_gas_price,
+                    max_priority_fee=max_priority,
+                    nonce=self.get_nonce(),
                 )
+            )
         except Exception as e:
-            self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
+            self.ConfigObj.logger.info(
+                f"Error when building transaction: {e.__class__.__name__} {e}"
+            )
             if "max fee per gas less than block base fee" in str(e):
                 try:
                     message = str(e)
                     baseFee = int_prefix(message.split("baseFee: ")[1])
-                    approve_tx = token_contract.functions.approve(self.arb_contract.address,
-                                                                  approval_amount).build_transaction(
+                    approve_tx = token_contract.functions.approve(
+                        self.arb_contract.address, approval_amount
+                    ).build_transaction(
                         self.build_tx(
-                            base_gas_price=baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
+                            base_gas_price=baseFee,
+                            max_priority_fee=max_priority,
+                            nonce=self.get_nonce(),
                         )
                     )
                 except Exception as e:
                     self.ConfigObj.logger.info(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
+                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}"
+                    )
             else:
                 return None
         self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
         return self.submit_transaction(approve_tx)
-
-
-

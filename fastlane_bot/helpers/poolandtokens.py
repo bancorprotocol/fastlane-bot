@@ -166,9 +166,7 @@ class PoolAndTokens:
 
     pool_type: str = None
 
-
     def __post_init__(self):
-
         self.A_1 = self.A_1 or 0
         self.B_1 = self.B_1 or 0
         self.A_0 = self.A_0 or 0
@@ -178,9 +176,7 @@ class PoolAndTokens:
         self.z_1 = self.z_1 or 0
         self.y_1 = self.y_1 or 0
 
-        self.tokens = (
-            self.get_tokens
-        )
+        self.tokens = self.get_tokens
         self.token_weights = self.remove_nan(
             [
                 self.tkn0_weight,
@@ -241,8 +237,16 @@ class PoolAndTokens:
         """
         returns all tokens in a curve
         """
-        tokens = [self.tkn0_address, self.tkn1_address, self.tkn2_address, self.tkn3_address, self.tkn4_address, self.tkn5_address,
-                  self.tkn6_address, self.tkn7_address]
+        tokens = [
+            self.tkn0_address,
+            self.tkn1_address,
+            self.tkn2_address,
+            self.tkn3_address,
+            self.tkn4_address,
+            self.tkn5_address,
+            self.tkn6_address,
+            self.tkn7_address,
+        ]
         tokens = [tkn for tkn in tokens if type(tkn) == str]
         return [tkn for tkn in tokens if tkn is not None]
 
@@ -254,9 +258,13 @@ class PoolAndTokens:
         self.fee = float(Decimal(str(self.fee)))
         if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             out = self._univ3_to_cpc()
-        elif self.exchange_name in [
-            self.ConfigObj.BANCOR_POL_NAME,
-        ] + self.ConfigObj.CARBON_V1_FORKS:
+        elif (
+            self.exchange_name
+            in [
+                self.ConfigObj.BANCOR_POL_NAME,
+            ]
+            + self.ConfigObj.CARBON_V1_FORKS
+        ):
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()
@@ -264,7 +272,9 @@ class PoolAndTokens:
             if self.pool_type in "volatile":
                 out = self._other_to_cpc()
             else:
-                raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
+                raise NotImplementedError(
+                    f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented."
+                )
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
@@ -323,7 +333,10 @@ class PoolAndTokens:
                         "y": tkn1_balance,
                         # "alpha": weight0,
                         "eta": eta,
-                        "pair": _pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+                        "pair": _pair_name.replace(
+                            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                        ),
                         "fee": self.fee,
                         "cid": self.cid,
                         "descr": self.descr,
@@ -358,7 +371,10 @@ class PoolAndTokens:
         typed_args = {
             "x_tknb": tkn0_balance,
             "y_tknq": tkn1_balance,
-            "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+            "pair": self.pair_name.replace(
+                self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+            ),
             "fee": self.fee,
             "cid": self.cid,
             "descr": self.descr,
@@ -396,7 +412,6 @@ class PoolAndTokens:
         lst = []
         errors = []
         for i in [0, 1]:
-
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
             B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
             try:
@@ -417,7 +432,8 @@ class PoolAndTokens:
             encoded_order = EncodedOrder(
                 **{
                     "token": self.pair_name.split("/")[i].replace(
-                        self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                        self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                        self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
                     ),
                     "A": S,
                     "B": B,
@@ -456,9 +472,13 @@ class PoolAndTokens:
                 "pb": p_end,
                 "pa": p_start,
                 "tkny": self.pair_name.split("/")[tkny].replace(
-                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
                 ),
-                "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+                "pair": self.pair_name.replace(
+                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
+                    self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
+                ),
                 "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,

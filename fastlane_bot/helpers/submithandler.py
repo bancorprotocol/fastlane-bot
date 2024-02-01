@@ -314,7 +314,9 @@ class TxSubmitHandler(TxSubmitHandlerBase):
                     "from": address,
                     "nonce": self._get_nonce(address),
                     "gasPrice": 0,
-                    "value": src_amount if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
+                    "value": src_amount
+                    if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+                    else 0,
                 }
             )
 

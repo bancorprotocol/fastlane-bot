@@ -10,8 +10,13 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract, AsyncContract
 
-from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, PANCAKESWAP_V2_POOL_ABI, UNISWAP_V2_FACTORY_ABI, \
-    PANCAKESWAP_V2_FACTORY_ABI, ALIENBASE_V2_FACTORY_ABI
+from fastlane_bot.data.abi import (
+    UNISWAP_V2_POOL_ABI,
+    PANCAKESWAP_V2_POOL_ABI,
+    UNISWAP_V2_FACTORY_ABI,
+    PANCAKESWAP_V2_FACTORY_ABI,
+    ALIENBASE_V2_FACTORY_ABI,
+)
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -21,6 +26,7 @@ class UniswapV2(Exchange):
     """
     UniswapV2 exchange class
     """
+
     base_exchange_name: str = "uniswap_v2"
     exchange_name: str = "uniswap_v2"
     fee: str = None

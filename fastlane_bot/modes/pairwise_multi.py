@@ -58,15 +58,26 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
 
             if len(carbon_curves) > 0:
                 base_direction_pair = carbon_curves[0].pair
-                base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-                base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+                base_direction_one = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair == base_direction_pair
+                ]
+                base_direction_two = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair != base_direction_pair
+                ]
 
                 if len(base_direction_one) > 0:
-                    curve_combos += [[curve] + base_direction_one for curve in not_carbon_curves]
+                    curve_combos += [
+                        [curve] + base_direction_one for curve in not_carbon_curves
+                    ]
 
                 if len(base_direction_two) > 0:
-                    curve_combos += [[curve] + base_direction_two for curve in not_carbon_curves]
-
+                    curve_combos += [
+                        [curve] + base_direction_two for curve in not_carbon_curves
+                    ]
 
             for curve_combo in curve_combos:
                 src_token = tkn1
@@ -75,7 +86,12 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
                     continue
 
                 try:
-                    (O, profit_src, r, trade_instructions_df,) = self.run_main_flow(
+                    (
+                        O,
+                        profit_src,
+                        r,
+                        trade_instructions_df,
+                    ) = self.run_main_flow(
                         curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1
                     )
 

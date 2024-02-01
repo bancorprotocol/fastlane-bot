@@ -42,7 +42,9 @@ class PoolFactory:
         cfg : Any
             The config object
         """
-        exchange_base = cfg.network.exchange_name_base_from_fork(exchange_name=format_name)
+        exchange_base = cfg.network.exchange_name_base_from_fork(
+            exchange_name=format_name
+        )
         creator = self._creators.get(exchange_base)
 
         if not creator:
@@ -59,17 +61,18 @@ class PoolFactory:
 
         """
         # Logic to handle assigning the correct router address and fee
-        extras = {'exchange_name': exchange_name}
+        extras = {"exchange_name": exchange_name}
         if exchange_name in cfg.UNI_V2_FORKS:
-            extras['router_address'] = cfg.UNI_V2_ROUTER_MAPPING[exchange_name]
-            extras['fee'] = cfg.UNI_V2_FEE_MAPPING[exchange_name]
+            extras["router_address"] = cfg.UNI_V2_ROUTER_MAPPING[exchange_name]
+            extras["fee"] = cfg.UNI_V2_FEE_MAPPING[exchange_name]
         elif exchange_name in cfg.UNI_V3_FORKS:
-            extras['router_address'] = cfg.UNI_V3_ROUTER_MAPPING[exchange_name]
+            extras["router_address"] = cfg.UNI_V3_ROUTER_MAPPING[exchange_name]
         elif exchange_name in cfg.SOLIDLY_V2_FORKS:
-            extras['router_address'] = cfg.SOLIDLY_V2_ROUTER_MAPPING[exchange_name]
+            extras["router_address"] = cfg.SOLIDLY_V2_ROUTER_MAPPING[exchange_name]
         elif exchange_name in cfg.CARBON_V1_FORKS:
-            extras['router_address'] = cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
+            extras["router_address"] = cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
         return extras
+
 
 # create an instance of the factory
 pool_factory = PoolFactory()

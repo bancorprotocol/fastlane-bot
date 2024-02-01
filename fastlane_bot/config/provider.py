@@ -77,10 +77,15 @@ class ConfigProvider(ConfigBase):
     def check_version_of_arb_contract(self):
         if self.BANCOR_ARBITRAGE_CONTRACT is not None:
             try:
-                self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+                self.ARB_CONTRACT_VERSION = (
+                    self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+                )
             except Exception as e:
                 # Failed to get latest version of arbitrage contract
-                print(f"Failed to get latest version of arbitrage contract due to exception: {e}")
+                print(
+                    f"Failed to get latest version of arbitrage contract due to exception: {e}"
+                )
+
 
 class _ConfigProviderAlchemy(ConfigProvider):
     """
@@ -107,7 +112,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.w3_async = self.connection.w3_async
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-
         if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM]:
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
                 address=network.CARBON_CONTROLLER_ADDRESS,
@@ -117,7 +121,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
             )
-
 
         if network.NETWORK in N.NETWORK_ETHEREUM:
             self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(

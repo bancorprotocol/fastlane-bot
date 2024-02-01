@@ -3,5 +3,7 @@ class ReadOnlyException(Exception):
         self.filepath = filepath
 
     def __str__(self):
-        return (f"tokens.csv does not exist at {self.filepath}. Please run the bot without the `read_only` flag to "
-                f"create this file.")
+        return (
+            f"tokens.csv does not exist at {self.filepath}. Please run the bot without the `read_only` flag to "
+            f"create this file."
+        )

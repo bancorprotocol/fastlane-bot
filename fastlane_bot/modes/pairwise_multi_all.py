@@ -22,7 +22,13 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
 
     arb_mode = "multi_pairwise_all"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def find_arbitrage(
+        self,
+        candidates: List[Any] = None,
+        ops: Tuple = None,
+        best_profit: float = 0,
+        profit_src: float = 0,
+    ) -> Union[List, Tuple]:
         """
         see base.py
         """
@@ -33,7 +39,7 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
         all_tokens, combos = self.get_combos(self.CCm, self.flashloan_tokens)
         if self.result == self.AO_TOKENS:
             return all_tokens, combos
-        #print(f"combos = {combos}")
+        # print(f"combos = {combos}")
 
         candidates = []
         self.ConfigObj.logger.debug(
@@ -45,24 +51,47 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+            carbon_curves = [
+                x
+                for x in CC.curves
+                if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS
+            ]
             not_carbon_curves = [
-                x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS
+                x
+                for x in CC.curves
+                if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS
             ]
 
-            curve_combos = [[_curve0] + [_curve1] for _curve0 in not_carbon_curves for _curve1 in not_carbon_curves if (_curve0 != _curve1)]
+            curve_combos = [
+                [_curve0] + [_curve1]
+                for _curve0 in not_carbon_curves
+                for _curve1 in not_carbon_curves
+                if (_curve0 != _curve1)
+            ]
 
             if len(carbon_curves) > 0:
                 base_direction_pair = carbon_curves[0].pair
-                base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-                base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+                base_direction_one = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair == base_direction_pair
+                ]
+                base_direction_two = [
+                    curve
+                    for curve in carbon_curves
+                    if curve.pair != base_direction_pair
+                ]
                 curve_combos = []
 
                 if len(base_direction_one) > 0:
-                    curve_combos += [[curve] + base_direction_one for curve in not_carbon_curves]
+                    curve_combos += [
+                        [curve] + base_direction_one for curve in not_carbon_curves
+                    ]
 
                 if len(base_direction_two) > 0:
-                    curve_combos += [[curve] + base_direction_two for curve in not_carbon_curves]
+                    curve_combos += [
+                        [curve] + base_direction_two for curve in not_carbon_curves
+                    ]
 
             for curve_combo in curve_combos:
                 src_token = tkn1
@@ -74,11 +103,12 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
                         profit_src,
                         r,
                         trade_instructions_df,
-                    ) = self.run_main_flow(curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1)
+                    ) = self.run_main_flow(
+                        curves=curve_combo, src_token=src_token, tkn0=tkn0, tkn1=tkn1
+                    )
                 except ValueError:
-                    #Optimizer did not converge
+                    # Optimizer did not converge
                     continue
-
 
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions = r.trade_instructions()
@@ -177,4 +207,3 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             curve for curve in curve_combo if curve.cid not in wrong_direction_cids
         ]
         return new_curves
-
