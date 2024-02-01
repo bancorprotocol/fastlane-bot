@@ -562,7 +562,11 @@ assert h.estimate_gas_in_bnt(
 
 # Cf = Config()
 # h = TxHelpers(ConfigObj=Cf)
-# print(h.get_bnt_tkn_liquidity())
+# pool = h.ConfigObj.db.get_pool(
+#     exchange_name=h.ConfigObj.BANCOR_V3_NAME,
+#     tkn1_address=h.ConfigObj.ETH_ADDRESS,
+# )
+# print(pool.tkn0_balance, pool.tkn1_balance)
 
 
 bnt, eth = int(bnt_eth[0]), int(bnt_eth[1])

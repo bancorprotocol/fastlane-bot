@@ -454,47 +454,6 @@ class TxHelpers:
             )
             return None
 
-    def get_gas_price(self) -> int:
-        """
-        Returns the current gas price
-        """
-        return self.ConfigObj.w3.eth.gas_price
-
-    def get_bnt_tkn_liquidity(self) -> Tuple[int, int]:
-        """
-        Return the current liquidity of the Bancor V3 BNT + ETH pool
-        """
-        pool = self.ConfigObj.db.get_pool(
-            exchange_name=self.ConfigObj.BANCOR_V3_NAME,
-            tkn1_address=self.ConfigObj.ETH_ADDRESS,
-        )
-        return pool.tkn0_balance, pool.tkn1_balance
-
-    @staticmethod
-    def get_break_even_gas_price(bnt_profit: int, gas_estimate: int, bnt: int, eth):
-        """
-        get the maximum gas price which can be used without causing a fiscal loss
-
-        bnt_profit: the minimum profit required for the transaction to be profitable
-        gas_estimate: the estimated gas cost of the transaction
-        bnt: the current BNT liquidity in the Bancor V3 BNT + ETH pool
-        eth: the current ETH liquidity in the Bancor V3 BNT + ETH pool
-
-        returns: the maximum gas price which can be used without causing a fiscal loss
-        """
-        profit_wei = int(bnt_profit * 10**18)
-        return profit_wei * eth // (gas_estimate * bnt)
-
-    def get_gas_estimate(self, transaction: TxReceipt) -> int:
-        """
-        Returns the estimated gas cost of the transaction
-
-        transaction: the transaction to be submitted to the blockchain
-
-        returns: the estimated gas cost of the transaction
-        """
-        return self.web3.eth.estimate_gas(transaction=transaction)
-
     def get_access_list(self, transaction_data, expected_gas, eth_input=None):
         expected_gas = hex(expected_gas)
         json_data = (
