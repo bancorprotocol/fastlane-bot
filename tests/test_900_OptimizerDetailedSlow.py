@@ -24,9 +24,9 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ConvexOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
-from fastlane_bot.testing import *
+from tests.testing import *
 import itertools as it
-import collections as cl
+
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__

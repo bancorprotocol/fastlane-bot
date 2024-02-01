@@ -10,10 +10,10 @@
 
 try:
     import tools.invariants.vector as dv
-    from testing import *
+    from tests.testing import *
 except:
     import fastlane_bot.tools.invariants.vector as dv
-    from fastlane_bot.testing import *
+    from tests.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(dv.DictVector))
 

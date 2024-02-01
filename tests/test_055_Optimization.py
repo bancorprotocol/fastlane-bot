@@ -8,12 +8,10 @@
 
 
 
-from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
+from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve as CPC
 from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
-from fastlane_bot.testing import *
+from tests.testing import *
 
-from math import sqrt
-from copy import deepcopy
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))

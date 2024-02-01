@@ -10,8 +10,6 @@
 
 import json
 
-import pytest
-
 from fastlane_bot import Bot
 from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
     BancorV2Pool, BancorPolPool, SolidlyV2Pool
@@ -28,7 +26,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorPolPool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SolidlyV2Pool))
 
 
-from fastlane_bot.testing import *
+from tests.testing import *
 
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]

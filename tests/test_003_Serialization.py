@@ -9,11 +9,12 @@
 
 
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-from fastlane_bot.tools.optimizer import CPCArbOptimizer, cp, time
+from fastlane_bot.tools.optimizer import CPCArbOptimizer
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
-from fastlane_bot.testing import *
+from tests.testing import *
 import json
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]

@@ -9,15 +9,15 @@
 
 
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-from fastlane_bot.tools.analyzer import CPCAnalyzer
+from fastlane_bot.tools.optimizer import CPCArbOptimizer, MargPOptimizer, PairOptimizer
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 
-from fastlane_bot.testing import *
+from tests.testing import *
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__

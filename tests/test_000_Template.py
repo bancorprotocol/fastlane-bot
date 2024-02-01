@@ -9,7 +9,7 @@
 
 
 
-from fastlane_bot.testing import *
+from tests.testing import *
 from fastlane_bot import __VERSION__
 require("2.0", __VERSION__)
 

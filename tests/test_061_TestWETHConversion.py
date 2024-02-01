@@ -11,52 +11,17 @@
 """
 This module contains the tests for the exchanges classes
 """
-from fastlane_bot import Bot, Config
+from fastlane_bot import Bot
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
-from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.events.interface import QueryInterface
-import decimal
-import random
-import time
-from _decimal import Decimal
-from dataclasses import dataclass, asdict, field
-from datetime import datetime
-from typing import List, Dict, Tuple, Any, Callable
-from typing import Optional
+from dataclasses import asdict
 
 from fastlane_bot.config import Config
-from fastlane_bot.helpers import (
-    TxSubmitHandler,
-    TxSubmitHandlerBase,
-    TxReceiptHandler,
-    TxReceiptHandlerBase,
-    TxRouteHandler,
-    TxRouteHandlerBase,
-    TxHelpers,
-    TxHelpersBase,
-    TradeInstruction,
-    Univ3Calculator,
-    RouteStruct,
-)
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn #,BalancerInputTooLargeError
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.modes.pairwise_multi import FindArbitrageMultiPairwise
-from fastlane_bot.modes.pairwise_single import FindArbitrageSinglePairwise
-from fastlane_bot.modes.triangle_multi import ArbitrageFinderTriangleMulti
-from fastlane_bot.modes.triangle_single import ArbitrageFinderTriangleSingle
-from fastlane_bot.modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from fastlane_bot.utils import num_format, log_format, num_format_float
 from joblib import Parallel, delayed
-from typing import List, Dict
-import pytest
 import math
 import json
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -65,7 +30,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
-from fastlane_bot.testing import *
+from tests.testing import *
 
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]

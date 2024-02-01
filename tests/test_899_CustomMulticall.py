@@ -7,9 +7,6 @@
 # ------------------------------------------------------------
 
 
-
-import json
-import os
 from unittest.mock import Mock, patch
 
 from dotenv import load_dotenv
@@ -19,16 +16,12 @@ from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 
 load_dotenv()
-import time
-
-
-import pytest
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MultiCaller))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ContractMethodWrapper))
 
 
-from fastlane_bot.testing import *
+from tests.testing import *
 
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]

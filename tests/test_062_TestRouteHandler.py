@@ -17,20 +17,17 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
-from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers import TradeInstruction, TxRouteHandler
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.testing import *
-from fastlane_bot.config.network import *
 import json
-from typing import Dict
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
-from fastlane_bot.testing import *
+from tests.testing import *
 
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__

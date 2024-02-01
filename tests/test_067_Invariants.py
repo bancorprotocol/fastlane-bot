@@ -13,16 +13,15 @@ try:
     from tools.invariants.invariant import Invariant
     from tools.invariants.bancor import BancorInvariant, BancorSwapFunction
     from tools.invariants.solidly import SolidlyInvariant, SolidlySwapFunction
-    from testing import *
+    from tests.testing import *
 except:
     import fastlane_bot.tools.invariants.functions as f
     from fastlane_bot.tools.invariants.invariant import Invariant
     from fastlane_bot.tools.invariants.bancor import BancorInvariant, BancorSwapFunction
     from fastlane_bot.tools.invariants.solidly import SolidlyInvariant, SolidlySwapFunction
-    from fastlane_bot.testing import *
+    from tests.testing import *
     
 import numpy as np
-import math as m
 import matplotlib.pyplot as plt
 
 

@@ -11,9 +11,7 @@
 #from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
 from fastlane_bot.tools.noneresult import NoneResult, isNone
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(NoneResult))
-from fastlane_bot.testing import *
-import itertools as it
-import collections as cl
+from tests.testing import *
 import math as m
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]

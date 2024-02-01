@@ -13,7 +13,7 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ag.ArbGraph))
 
-from fastlane_bot.testing import *
+from tests.testing import *
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__

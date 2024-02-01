@@ -22,7 +22,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
-from fastlane_bot.testing import *
+from tests.testing import *
 
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
