@@ -349,7 +349,7 @@ class TxHelpers:
                 f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_eth)} \n\n"
             )
 
-        # Get current base fee for pending block
+        # Get transaction information
         current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
 
         if result == self.XS_API_CALLS:
