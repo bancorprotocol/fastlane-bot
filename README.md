@@ -36,12 +36,26 @@ Install Fastlane Arbitrage Bot from PyPi using the following command:
 
 Clone the repo from Bancor's GitHub and install:
 
-```bash
-git clone https://github.com/bancorprotocol/fastlane-bot
-cd fastlane-bot
-pip install -r requirements.txt
-python setup.py install
-```
+#### (Recommended) Installation with Conda
+  Use the `condaenv.yaml` with Conda to create a new environment:
+  ```bash
+  git clone https://github.com/bancorprotocol/fastlane-bot
+  cd fastlane-bot
+  conda env create -f condaenv.yaml
+  ```
+  
+  Add the environment to Jupyter (optional):
+  ```bash
+  python -m ipykernel install --user --name fastlane-bot-py311 --display-name "iblavm-py311"
+  ```
+
+#### Installation with Pip
+  ```bash
+  git clone https://github.com/bancorprotocol/fastlane-bot
+  cd fastlane-bot
+  pip install -r requirements.txt
+  python setup.py install
+  ```
 
 Here are the added instructions for Mac users with an Apple Silicon chip:
 
