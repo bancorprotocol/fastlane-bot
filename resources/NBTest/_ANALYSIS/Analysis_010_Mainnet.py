@@ -242,7 +242,7 @@ CCm = bot.get_curves()
 
 # ### Arbitrage opportunities
 
-ops = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ARBOPPS)
+ops = bot._find_arbitrage(flashloan_tokens=flt, CCm=CCm)["r"]
 ops
 
 # ### Route struct

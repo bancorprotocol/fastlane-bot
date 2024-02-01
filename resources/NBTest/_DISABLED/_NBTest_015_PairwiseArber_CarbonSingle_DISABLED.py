@@ -131,7 +131,7 @@ r
 
 # #### XS_ARBOPPS
 
-ops = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ARBOPPS, arb_mode=bot.AM_SINGLE)
+ops = bot._find_arbitrage(flashloan_tokens=flt, CCm=CCm, arb_mode=bot.AM_SINGLE)["r"]
 ops
 
 assert len(ops) == 5, "The best opportunity should populate correctly"

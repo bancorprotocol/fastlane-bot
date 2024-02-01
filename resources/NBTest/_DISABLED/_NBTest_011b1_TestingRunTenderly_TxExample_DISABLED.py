@@ -67,7 +67,7 @@ bot._run(flashloan_tokens=flt, CCm=CCm)
 
 # ## Analytics
 
-ops = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ARBOPPS)
+ops = bot._find_arbitrage(flashloan_tokens=flt, CCm=CCm)["r"]
 ops
 
 ops

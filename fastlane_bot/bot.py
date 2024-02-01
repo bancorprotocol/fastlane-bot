@@ -236,7 +236,6 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    XS_ARBOPPS = "arbopps"
     XS_TI = "ti"
     XS_EXACT = "exact"
     XS_ORDSCAL = "ordscal"
@@ -438,12 +437,31 @@ class CarbonBot(CarbonBotBase):
         elif arb_mode in {"multi_pairwise_all"}:
             return FindArbitrageMultiPairwiseAll
 
+    def _find_arbitrage(
+        self,
+        flashloan_tokens: List[str],
+        CCm: CPCContainer,
+        *,
+        arb_mode: str = None,
+        randomizer=int
+    ) -> dict:
+        random_mode = self.AO_CANDIDATES if randomizer else None
+        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
+        arb_finder = self._get_arb_finder(arb_mode)
+        finder = arb_finder(
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            mode="bothin",
+            result=random_mode,
+            ConfigObj=self.ConfigObj,
+        )
+        return {"finder": finder, "r": finder.find_arbitrage()}
+
     def _run(
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer,
         *,
-        result=None,
         arb_mode: str = None,
         randomizer=int,
         data_validator=True,
@@ -458,8 +476,6 @@ class CarbonBot(CarbonBotBase):
             The tokens to flashloan.
         CCm: CPCContainer
             The container.
-        result: str
-            The result type.
         arb_mode: str
             The arbitrage mode.
         randomizer: int
@@ -473,20 +489,8 @@ class CarbonBot(CarbonBotBase):
             The result.
 
         """
-        random_mode = self.AO_CANDIDATES if randomizer else None
-        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
-        arb_finder = self._get_arb_finder(arb_mode)
-        finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=random_mode,
-            ConfigObj=self.ConfigObj,
-        )
-        r = finder.find_arbitrage()
-
-        if result == self.XS_ARBOPPS:
-            return r
+        arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm)
+        finder, r = [arbitrage[key] for key in ["finder", "r"]]
 
         if r is None or len(r) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
