@@ -288,7 +288,6 @@ class TxHelpers:
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
-    XS_API_CALLS = "various_api_calls"
     XS_TRANSACTION = "transaction_built"
     XS_GAS_IN_BNT = "gas_in_bnt"
     XS_MIN_PROFIT_CHECK = "min_profit_check"
@@ -351,9 +350,6 @@ class TxHelpers:
 
         # Get transaction information
         current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
-
-        if result == self.XS_API_CALLS:
-            return current_gas_price, current_max_priority_gas, block_number, nonce
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,

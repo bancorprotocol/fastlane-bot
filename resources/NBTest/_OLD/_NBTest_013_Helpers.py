@@ -614,13 +614,7 @@ flashloan_amount = 5000000000
     current_max_priority_gas,
     current_block,
     nonce,
-) = h.validate_and_submit_transaction(
-    route_struct=route_struct,
-    src_amt=flashloan_amount,
-    src_address=flashloan_token_address,
-    expected_profit=profit,
-    result=h.XS_API_CALLS,
-)
+) = h._get_transaction_info()
 
 print(
     f"Result of API calls: current_gas_price={gas_price}, current_max_priority_gas={current_max_priority_gas}, block_number={current_block}, nonce={nonce}"
