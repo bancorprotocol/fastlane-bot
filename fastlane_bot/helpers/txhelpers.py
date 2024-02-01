@@ -289,7 +289,6 @@ class TxHelpers:
         self.nonce = self.get_nonce()
 
     XS_TRANSACTION = "transaction_built"
-    XS_GAS_IN_BNT = "gas_in_bnt"
 
     def _get_transaction_info(self) -> (int, int, int, int):
         # Get current base fee for pending block
