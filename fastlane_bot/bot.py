@@ -236,13 +236,6 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    XS_TI = "ti"
-    XS_EXACT = "exact"
-    XS_ORDSCAL = "ordscal"
-    XS_AGGTI = "aggti"
-    XS_ORDINFO = "ordinfo"
-    XS_ENCTI = "encti"
-    XS_ROUTE = "route"
     AM_REGULAR = "regular"
     AM_SINGLE = "single"
     AM_TRIANGLE = "triangle"
