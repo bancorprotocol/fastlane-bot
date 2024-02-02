@@ -2,9 +2,18 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.25...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.26...HEAD)
 
 - Excessive main loop runtime [\#341](https://github.com/bancorprotocol/fastlane-bot/issues/341)
+- Transactions on Base \(and other Optimism forks\) should account for L1 gas fee [\#336](https://github.com/bancorprotocol/fastlane-bot/issues/336)
+- Add L1 gas fee calculation on Optimism & forks [\#338](https://github.com/bancorprotocol/fastlane-bot/pull/338) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add padding to profit vs gas when deciding to execute a transaction [\#329](https://github.com/bancorprotocol/fastlane-bot/issues/329)
+
+## [v3.0.26](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.26) (2024-01-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.25...v3.0.26)
+
 - Failed to get tokens and fee for aerodrome\_v2 [\#337](https://github.com/bancorprotocol/fastlane-bot/issues/337)
 - bugfix for excessive main loop runtime [\#342](https://github.com/bancorprotocol/fastlane-bot/pull/342) ([mikewcasale](https://github.com/mikewcasale))
 

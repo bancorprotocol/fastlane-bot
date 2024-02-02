@@ -7,6 +7,7 @@ Licensed under MIT
 __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
 
+import asyncio
 from _decimal import Decimal
 
 # import itertools
@@ -30,7 +31,7 @@ from web3.types import TxReceipt
 # from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
+from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix, count_bytes
 
 
 @dataclass
@@ -239,7 +240,8 @@ class TxHelpers:
             current_gas_price: int,
             gas_estimate: int,
             expected_profit_usd: Decimal,
-            expected_profit_eth: Decimal
+            expected_profit_eth: Decimal,
+            signed_arb_tx
         ) -> (int, int, int, int):
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = (
@@ -248,6 +250,10 @@ class TxHelpers:
             * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
             / Decimal("10") ** Decimal("18")
         )
+
+        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
+            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_arb_tx)
+            gas_cost_eth += layer_one_gas_fee
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
@@ -318,11 +324,14 @@ class TxHelpers:
         else:
             current_gas_price = arb_tx["gasPrice"]
 
+        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+
         gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = self._get_prices_info(
             current_gas_price,
             gas_estimate,
             expected_profit_usd,
-            expected_profit_eth
+            expected_profit_eth,
+            signed_arb_tx
         )
 
         transaction_log = {
@@ -354,13 +363,13 @@ class TxHelpers:
 
             # Submit the transaction
             if "tenderly" in self.web3.provider.endpoint_uri:
-                tx_hash = self.submit_transaction(arb_tx=arb_tx)
+                tx_hash = self.submit_transaction(signed_arb_tx=signed_arb_tx)
             elif self.ConfigObj.NETWORK in "ethereum":
                 tx_hash = self.submit_private_transaction(
-                    arb_tx=arb_tx, block_number=block_number
+                    signed_arb_tx=signed_arb_tx, block_number=block_number
                 )
             else:
-                tx_hash = self.submit_transaction(arb_tx=arb_tx)
+                tx_hash = self.submit_transaction(signed_arb_tx=signed_arb_tx)
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Arbitrage executed, tx hash: {tx_hash}"
             )
@@ -624,7 +633,7 @@ class TxHelpers:
         if value is not None:
             tx_details["value"] = value
         return tx_details
-    def submit_transaction(self, arb_tx: Dict) -> Any:
+    def submit_transaction(self, signed_arb_tx: Dict) -> Any:
         """
         Submits the transaction to the blockchain.
 
@@ -632,11 +641,7 @@ class TxHelpers:
 
         returns: the transaction hash of the submitted transaction
         """
-        self.ConfigObj.logger.info(
-            f"[helpers.txhelpers.submit_transaction] Attempting to submit tx {arb_tx}"
-        )
 
-        signed_arb_tx = self.sign_transaction(arb_tx)
         self.ConfigObj.logger.info(
             f"[helpers.txhelpers.submit_transaction] Attempting to submit tx {signed_arb_tx}"
         )
@@ -652,11 +657,11 @@ class TxHelpers:
             )
             return None
 
-    def submit_private_transaction(self, arb_tx, block_number: int) -> Any:
+    def submit_private_transaction(self, signed_arb_tx, block_number: int) -> Any:
         """
         Submits the transaction privately through Alchemy -> Flashbots RPC to mitigate frontrunning.
 
-        :param arb_tx: the transaction to be submitted to the blockchain
+        :param signed_arb_tx: the signed arb transaction to be submitted to the blockchain
         :param block_number: the current block number
 
         returns: The transaction receipt, or None if the transaction failed
@@ -664,7 +669,6 @@ class TxHelpers:
         self.ConfigObj.logger.info(
             f"[helpers.txhelpers.submit_private_transaction] Attempting to submit tx to Flashbots, please hold."
         )
-        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
         signed_tx_string = signed_arb_tx.hex()
 
         max_block_number = hex(block_number + 10)
@@ -695,7 +699,7 @@ class TxHelpers:
                 self.ConfigObj.logger.info(
                     f"[helpers.txhelpers.submit_private_transaction] Transaction stuck in mempool for 120 seconds, cancelling."
                 )
-                self.cancel_private_transaction(arb_tx, block_number)
+                self.cancel_private_transaction(signed_arb_tx, block_number)
                 return None
         else:
             self.ConfigObj.logger.info(
@@ -859,13 +863,42 @@ class TxHelpers:
                             base_gas_price=baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
                         )
                     )
+                    approve_tx = self.sign_transaction(approve_tx)
+                    self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
+                    return self.submit_transaction(approve_tx)
                 except Exception as e:
                     self.ConfigObj.logger.info(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
-        self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
-        return self.submit_transaction(approve_tx)
+
+    def _get_layer_one_gas_fee_loop(self, signed_transaction) -> Decimal:
+        """
+        Returns the expected layer one gas fee for a layer 2 Optimism transaction
+        :param signed_transaction: the signed ethereum TX
+
+        returns: Decimal
+            The total fee (in gas token) for the l1 gas fee
+        """
+        return asyncio.get_event_loop().run_until_complete(self._get_layer_one_gas_fee(signed_transaction))
+
+    async def _get_layer_one_gas_fee(self, signed_transaction) -> Decimal:
+        """
+        Returns the expected layer one gas fee for a layer 2 Optimism transaction
+        :param signed_transaction: the signed ethereum TX
+
+        returns: Decimal
+            The total fee (in gas token) for the l1 gas fee
+        """
+        ethereum_base_fee = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee()
+        fixed_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead()
+        dynamic_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
+        zero_bytes, non_zero_bytes = count_bytes(signed_transaction)
+        tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
+        tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
+        l1_data_fee = tx_total_gas * ethereum_base_fee
+        ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
+        return Decimal(f"{l1_data_fee}e-24")
 
 
 
