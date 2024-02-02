@@ -72,12 +72,12 @@ ops
 
 ops
 
-route_struct = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ROUTE)
+route_struct = bot._run(flashloan_tokens=flt, CCm=CCm)
 route_struct
 
 route_struct
 
-ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDINFO)
+ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm)
 flashloan_amount = ordinfo[1]
 flashloan_token_address = ordinfo[2]
 

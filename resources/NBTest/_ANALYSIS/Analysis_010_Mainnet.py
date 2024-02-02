@@ -248,7 +248,7 @@ ops
 # ### Route struct
 
 try:
-    route_struct = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ROUTE)
+    route_struct = bot._run(flashloan_tokens=flt, CCm=CCm)
 except bot.NoArbAvailable as e:
     print(f"[NoArbAvailable] {e}")
     route_struct = None
@@ -257,7 +257,7 @@ route_struct
 # ### Orderering info
 
 try:
-    ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDINFO)
+    ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm)
     flashloan_amount = ordinfo[1]
     flashloan_token_address = ordinfo[2]
     print(f"Flashloan: {flashloan_amount} [{flashloan_token_address}]")
