@@ -236,7 +236,12 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
+    AM_REGULAR = "regular"
     AM_SINGLE = "single"
+    AM_TRIANGLE = "triangle"
+    AM_MULTI = "multi"
+    AM_MULTI_TRIANGLE = "multi_triangle"
+    AM_BANCOR_V3 = "bancor_v3"
     RUN_SINGLE = "single"
     RUN_CONTINUOUS = "continuous"
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
