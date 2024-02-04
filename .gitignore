@@ -5,7 +5,6 @@ __pycache__/*
 */out/*
 *.pdf
 topaze
-*.ipynb
 *.gif
 *.json
 
