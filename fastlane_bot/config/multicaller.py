@@ -117,6 +117,10 @@ class MultiCaller(ContextManager):
         self.block_identifier = block_identifier
         self.web3 = web3
         self.MULTICALL_CONTRACT_ADDRESS = self.web3.to_checksum_address(multicall_address)
+        self.MULTICALL_CONTRACT = self.web3.eth.contract(
+                abi=MULTICALL_ABI,
+                address=self.MULTICALL_CONTRACT_ADDRESS
+            )
 
     def __enter__(self) -> 'MultiCaller':
         return self
@@ -156,18 +160,12 @@ class MultiCaller(ContextManager):
 
         function_keys = _calls_for_aggregate.keys()
         for fn_list in function_keys:
-            _encoded_data.append(self.web3.eth.contract(
-                abi=MULTICALL_ABI,
-                address=self.MULTICALL_CONTRACT_ADDRESS
-            ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
+            _encoded_data.append(self.MULTICALL_CONTRACT.functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
 
         if not isinstance(_encoded_data[0], list):
             raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
 
-        encoded_data = self.web3.eth.contract(
-            abi=MULTICALL_ABI,
-            address=self.MULTICALL_CONTRACT_ADDRESS
-        ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
+        encoded_data = self.MULTICALL_CONTRACT.functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
 
         if not isinstance(encoded_data, list):
             raise TypeError(f"Expected encoded_data to be a list, got {type(encoded_data)} instead.")
