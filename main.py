@@ -6,7 +6,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 
-from fastlane_bot.events.exceptions import ReadOnlyException, AsyncUpdateRetryException
+from fastlane_bot.events.exceptions import AsyncUpdateRetryException, ReadOnlyException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
 
@@ -14,7 +14,6 @@ check_version_requirements(required_version="6.11.0", package_name="web3")
 
 import os, sys
 import time
-from typing import List
 from traceback import format_exc
 
 import pandas as pd
@@ -57,7 +56,6 @@ from fastlane_bot.events.utils import (
     handle_static_pools_update,
     read_csv_file,
     handle_tokens_csv,
-    get_tkn_symbols,
     check_and_approve_tokens,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -76,13 +74,13 @@ def process_arguments(args):
     """
     # Define the transformations for each argument
     transformations = {
-        "backdate_pools": lambda x: x == "True",
+        "backdate_pools": bool,
         "n_jobs": int,
         "polling_interval": int,
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
-        "use_cached_events": lambda x: x == "True",
-        "run_data_validator": lambda x: x == "True",
+        "use_cached_events": bool,
+        "run_data_validator": bool,
         "randomizer": int,
         "limit_bancor3_flashloan_tokens": bool,
         "timeout": lambda x: int(x) if x else None,
@@ -91,9 +89,9 @@ def process_arguments(args):
         "increment_blocks": int,
         "pool_data_update_frequency": int,
         "version_check_frequency": int,
-        "self_fund": lambda x: x == "True",
-        "read_only": lambda x: x == "True",
-        "is_args_test": lambda x: x == "True",
+        "self_fund": bool,
+        "read_only": bool,
+        "is_args_test": bool,
     }
 
     # Apply the transformations
@@ -108,14 +106,16 @@ def main():
     parser = argparse.ArgumentParser(description="Command-line tool options")
     parser.add_argument(
         "--cache_latest_only",
-        default="True",
-        choices=["True", "False"],
+        default=True,
+        choices=[True, False],
+        type=bool,
         help="Set to True for production. Set to False for testing / debugging",
     )
     parser.add_argument(
         "--backdate_pools",
-        default="False",
-        choices=("True", "False"),
+        default=False,
+        choices=[True, False],
+        type=bool,
         help="Set to False for faster testing / debugging",
     )
     parser.add_argument(
@@ -141,7 +141,7 @@ def main():
         "--flashloan_tokens",
         default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
         help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-        "a flash loan in.",
+             "a flash loan in.",
     )
     parser.add_argument(
         "--n_jobs", default=-1, help="Number of parallel jobs to run"
@@ -177,14 +177,16 @@ def main():
     )
     parser.add_argument(
         "--use_cached_events",
-        default="False",
-        choices=["True", "False"],
+        default=False,
+        choices=[True, False],
+        type=bool,
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
         "--run_data_validator",
-        default="False",
-        choices=["True", "False"],
+        default=False,
+        choices=[True, False],
+        type=bool,
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
@@ -194,8 +196,9 @@ def main():
     )
     parser.add_argument(
         "--limit_bancor3_flashloan_tokens",
-        default="True",
-        choices=["True", "False"],
+        default=True,
+        choices=[True, False],
+        type=bool,
         help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
     )
     parser.add_argument(
@@ -237,7 +240,7 @@ def main():
         "--increment_blocks",
         default=1,
         help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
-        "by for each iteration.",
+             "by for each iteration.",
     )
     parser.add_argument(
         "--blockchain",
@@ -267,30 +270,31 @@ def main():
     )
     parser.add_argument(
         "--self_fund",
-        default="False",
-        choices=["True", "False"],
+        default=False,
+        choices=[True, False],
+        type=bool,
         help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
-        "wallet when possible.",
+             "wallet when possible.",
     )
     parser.add_argument(
         "--read_only",
-        default="True",
-        choices=["True", "False"],
+        default=True,
+        choices=[True, False],
+        type=bool,
         help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
-        "running the bot in an environment with restricted write permissions.",
+             "running the bot in an environment with restricted write permissions.",
     )
     parser.add_argument(
         "--is_args_test",
-        default="False",
-        choices=["True", "False"],
+        default=False,
+        choices=[True, False],
+        type=bool,
         help="The logging path.",
     )
 
     # Process the arguments
     args = parser.parse_args()
     args = process_arguments(args)
-
-
 
     if args.replay_from_block or args.tenderly_fork_id:
         (
@@ -469,6 +473,8 @@ def main():
 
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, args.n_jobs)
+
+    args.bot_version = bot_version
 
     # Run the main loop
     run(mgr, args)
@@ -674,9 +680,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 params = [w3.to_hex(args.increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
-                loop_idx % args.version_check_frequency == 0
-                and args.version_check_frequency != -1
-                and args.blockchain in "ethereum"
+                    loop_idx % args.version_check_frequency == 0
+                    and args.version_check_frequency != -1
+                    and args.blockchain in "ethereum"
             ):
                 # Check the version of the deployed arbitrage contract
                 mgr.cfg.provider.check_version_of_arb_contract()
@@ -684,8 +690,8 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
                 )
             if (
-                loop_idx % args.pool_data_update_frequency == 0
-                and args.pool_data_update_frequency != -1
+                    loop_idx % args.pool_data_update_frequency == 0
+                    and args.pool_data_update_frequency != -1
             ):
                 mgr.cfg.logger.info(
                     f"[main] Terraforming {args.blockchain}. Standby for oxygen levels."
@@ -720,7 +726,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
                 f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}\n"
-                f"{mgr.cfg.logging_header}\n"
+                f"bot_version: {args.bot_version}\n"
                 f"\n********************************************\n\n"
             )
 
