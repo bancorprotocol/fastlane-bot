@@ -19,6 +19,7 @@ from ..data.abi import (
     BANCOR_V3_NETWORK_INFO_ABI,
     CARBON_CONTROLLER_ABI,
     FAST_LANE_CONTRACT_ABI,
+    GAS_ORACLE_ABI,
 )
 
 ETH_PRIVATE_KEY_BE_CAREFUL = os.environ.get("ETH_PRIVATE_KEY_BE_CAREFUL")
@@ -116,6 +117,12 @@ class _ConfigProviderAlchemy(ConfigProvider):
             self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
                 address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
                 abi=FAST_LANE_CONTRACT_ABI,
+            )
+
+        if network.GAS_ORACLE_ADDRESS:
+            self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
+                address=network.GAS_ORACLE_ADDRESS,
+                abi=GAS_ORACLE_ABI
             )
 
 

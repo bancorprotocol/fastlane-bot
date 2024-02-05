@@ -683,20 +683,13 @@ def organize_pool_details_solidly_v2(
 
     if "velocimeter" in exchange:
         default_fee = factory_contract.caller.getFee(pool_address)
-        default_fee = float(default_fee)
-        if default_fee <= 1000:
-            default_fee = default_fee / 10000
-        else:
-            default_fee = default_fee / 10 ** 18
-        default_fee = default_fee / 10 ** 18
+        default_fee = float(default_fee) / 10000
     elif "scale" in exchange:
         default_fee = factory_contract.caller.getRealFee(pool_address)
-        default_fee = float(default_fee)
-        default_fee = default_fee / 10 ** 18
+        default_fee = float(default_fee) / 10 ** 18
     else:
         default_fee = factory_contract.caller.getFee(pool_address, is_stable)
-        default_fee = float(default_fee)
-        default_fee = default_fee / 10000
+        default_fee = float(default_fee) / 10000
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 

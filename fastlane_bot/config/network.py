@@ -236,6 +236,7 @@ class ConfigNetwork(ConfigBase):
     PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
     PLATFORM_ID_WRAP_UNWRAP = 10
 
+    GAS_ORACLE_ADDRESS = None
 
     CARBON_V1_FORKS = [CARBON_V1_NAME]
 
@@ -570,6 +571,7 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     RPC_ENDPOINT = "https://opt-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
 
+    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
 
@@ -606,6 +608,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
+    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
