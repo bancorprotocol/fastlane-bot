@@ -33,9 +33,9 @@ arb_mode_happy_path_options = [
 arb_mode_invalid_options = ["s", "m", "t", None, 3]
 alchemy_max_block_fetch_happy_path_options = [100, 2000, 3, 4, 5]
 alchemy_max_block_fetch_invalid_options = [None, 3.5, "a"]
-cache_latest_only_happy_path_options = [True, False, 'True', 'False']
+cache_latest_only_happy_path_options = [True, False]
 cache_latest_only_invalid_options = [None, 3.5, "a"]
-backdate_pools_happy_path_options = [True, False, 'True', 'False']
+backdate_pools_happy_path_options = [True, False]
 backdate_pools_invalid_options = [None, 3.5, "a"]
 flashloan_tokens_happy_path_options = [
     f"{T.LINK},{T.NATIVE_ETH}",
@@ -309,6 +309,7 @@ def test_exchanges(exchanges):
     exchanges = exchanges.split(',')
     for exchange in exchanges:
         assert f"{exchange}" in result.stderr
+
 
 @pytest.mark.parametrize("randomizer", randomizer_happy_path_options)
 def test_randomizer(randomizer):

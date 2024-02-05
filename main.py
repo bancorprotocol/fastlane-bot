@@ -6,7 +6,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 
-from fastlane_bot.events.exceptions import ReadOnlyException, AsyncUpdateRetryException
+from fastlane_bot.events.exceptions import AsyncUpdateRetryException, ReadOnlyException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
 
@@ -14,7 +14,6 @@ check_version_requirements(required_version="6.11.0", package_name="web3")
 
 import os, sys
 import time
-from typing import List
 from traceback import format_exc
 
 import pandas as pd
@@ -57,7 +56,6 @@ from fastlane_bot.events.utils import (
     handle_static_pools_update,
     read_csv_file,
     handle_tokens_csv,
-    get_tkn_symbols,
     check_and_approve_tokens,
 )
 from fastlane_bot.utils import find_latest_timestamped_folder
@@ -76,13 +74,13 @@ def process_arguments(args):
     """
     # Define the transformations for each argument
     transformations = {
-        "backdate_pools": lambda x: x == "True",
+        "backdate_pools": bool,
         "n_jobs": int,
         "polling_interval": int,
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
-        "use_cached_events": lambda x: x == "True",
-        "run_data_validator": lambda x: x == "True",
+        "use_cached_events": bool,
+        "run_data_validator": bool,
         "randomizer": int,
         "limit_bancor3_flashloan_tokens": bool,
         "timeout": lambda x: int(x) if x else None,
@@ -91,9 +89,9 @@ def process_arguments(args):
         "increment_blocks": int,
         "pool_data_update_frequency": int,
         "version_check_frequency": int,
-        "self_fund": lambda x: x == "True",
-        "read_only": lambda x: x == "True",
-        "is_args_test": lambda x: x == "True",
+        "self_fund": bool,
+        "read_only": bool,
+        "is_args_test": bool,
     }
 
     # Apply the transformations
@@ -104,193 +102,14 @@ def process_arguments(args):
     return args
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Command-line tool options")
-    parser.add_argument(
-        "--cache_latest_only",
-        default="True",
-        choices=["True", "False"],
-        help="Set to True for production. Set to False for testing / debugging",
-    )
-    parser.add_argument(
-        "--backdate_pools",
-        default="False",
-        choices=("True", "False"),
-        help="Set to False for faster testing / debugging",
-    )
-    parser.add_argument(
-        "--static_pool_data_filename",
-        default="static_pool_data",
-        help="Filename of the static pool data.",
-    )
-    parser.add_argument(
-        "--arb_mode",
-        default="multi_pairwise_all",
-        help="See arb_mode in bot.py",
-        choices=[
-            "single",
-            "multi",
-            "triangle",
-            "multi_triangle",
-            "b3_two_hop",
-            "multi_pairwise_pol",
-            "multi_pairwise_all",
-        ],
-    )
-    parser.add_argument(
-        "--flashloan_tokens",
-        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
-        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-        "a flash loan in.",
-    )
-    parser.add_argument(
-        "--n_jobs", default=-1, help="Number of parallel jobs to run"
-    )
-    parser.add_argument(
-        "--exchanges",
-        default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
-        help="Comma separated external exchanges.",
-    )
-    parser.add_argument(
-        "--polling_interval",
-        default=1,
-        help="Polling interval in seconds",
-    )
-    parser.add_argument(
-        "--alchemy_max_block_fetch",
-        default=2000,
-        help="Max number of blocks to fetch from alchemy",
-    )
-    parser.add_argument(
-        "--reorg_delay",
-        default=0,
-        help="Number of blocks delayed to avoid reorgs",
-    )
-    parser.add_argument(
-        "--logging_path", default="", help="The logging path."
-    )
-    parser.add_argument(
-        "--loglevel",
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        help="The logging level.",
-    )
-    parser.add_argument(
-        "--use_cached_events",
-        default="False",
-        choices=["True", "False"],
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--run_data_validator",
-        default="False",
-        choices=["True", "False"],
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--randomizer",
-        default="3",
-        help="Set to the number of arb opportunities to pick from.",
-    )
-    parser.add_argument(
-        "--limit_bancor3_flashloan_tokens",
-        default="True",
-        choices=["True", "False"],
-        help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
-    )
-    parser.add_argument(
-        "--default_min_profit_gas_token",
-        default="0.01",
-        help="Set to the default minimum profit in gas token.",
-    )
-    parser.add_argument(
-        "--timeout",
-        default=None,
-        help="Set to the timeout in seconds. Set to None for no timeout.",
-    )
-    parser.add_argument(
-        "--target_tokens",
-        default=None,
-        help="A comma-separated string of tokens to target.",
-    )
-    parser.add_argument(
-        "--replay_from_block",
-        default=None,
-        help="Set to a block number to replay from that block.",
-    )
-    parser.add_argument(
-        "--tenderly_fork_id",
-        default=None,
-        help="Set to a Tenderly fork id.",
-    )
-    parser.add_argument(
-        "--tenderly_event_exchanges",
-        default="pancakeswap_v2,pancakeswap_v3",
-        help="A comma-separated string of exchanges to include for the Tenderly event fetcher.",
-    )
-    parser.add_argument(
-        "--increment_time",
-        default=1,
-        help="If tenderly_fork_id is set, this is the number of seconds to increment the fork time by for each iteration.",
-    )
-    parser.add_argument(
-        "--increment_blocks",
-        default=1,
-        help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
-        "by for each iteration.",
-    )
-    parser.add_argument(
-        "--blockchain",
-        default="ethereum",
-        help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base"],
-    )
-    parser.add_argument(
-        "--pool_data_update_frequency",
-        default=-1,
-        help="How frequently pool data should be updated, in main loop iterations.",
-    )
-    parser.add_argument(
-        "--use_specific_exchange_for_target_tokens",
-        default=None,
-        help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
-    )
-    parser.add_argument(
-        "--prefix_path",
-        default="",
-        help="Prefixes the path to the write folders (used for deployment)",
-    )
-    parser.add_argument(
-        "--version_check_frequency",
-        default=1,
-        help="How frequently pool data should be updated, in main loop iterations.",
-    )
-    parser.add_argument(
-        "--self_fund",
-        default="False",
-        choices=["True", "False"],
-        help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
-        "wallet when possible.",
-    )
-    parser.add_argument(
-        "--read_only",
-        default="True",
-        choices=["True", "False"],
-        help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
-        "running the bot in an environment with restricted write permissions.",
-    )
-    parser.add_argument(
-        "--is_args_test",
-        default="False",
-        choices=["True", "False"],
-        help="The logging path.",
-    )
+def main(args: argparse.Namespace) -> None:
+    """
+    Main function for running the fastlane bot.
 
-    # Process the arguments
-    args = parser.parse_args()
+    Args:
+        args: Command line arguments. See the argparse.ArgumentParser in the __main__ block for details.
+    """
     args = process_arguments(args)
-
-
 
     if args.replay_from_block or args.tenderly_fork_id:
         (
@@ -674,9 +493,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 params = [w3.to_hex(args.increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
             if (
-                loop_idx % args.version_check_frequency == 0
-                and args.version_check_frequency != -1
-                and args.blockchain in "ethereum"
+                    loop_idx % args.version_check_frequency == 0
+                    and args.version_check_frequency != -1
+                    and args.blockchain in "ethereum"
             ):
                 # Check the version of the deployed arbitrage contract
                 mgr.cfg.provider.check_version_of_arb_contract()
@@ -684,8 +503,8 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
                 )
             if (
-                loop_idx % args.pool_data_update_frequency == 0
-                and args.pool_data_update_frequency != -1
+                    loop_idx % args.pool_data_update_frequency == 0
+                    and args.pool_data_update_frequency != -1
             ):
                 mgr.cfg.logger.info(
                     f"[main] Terraforming {args.blockchain}. Standby for oxygen levels."
@@ -760,6 +579,187 @@ def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--cache_latest_only",
+        default=True,
+        type=bool,
+        help="Set to True for production. Set to False for testing / debugging",
+    )
+    parser.add_argument(
+        "--backdate_pools",
+        default=False,
+        type=bool,
+        help="Set to False for faster testing / debugging",
+    )
+    parser.add_argument(
+        "--static_pool_data_filename",
+        default="static_pool_data",
+        help="Filename of the static pool data.",
+    )
+    parser.add_argument(
+        "--arb_mode",
+        default="multi_pairwise_all",
+        help="See arb_mode in bot.py",
+        choices=[
+            "single",
+            "multi",
+            "triangle",
+            "multi_triangle",
+            "b3_two_hop",
+            "multi_pairwise_pol",
+            "multi_pairwise_all",
+        ],
+    )
+    parser.add_argument(
+        "--flashloan_tokens",
+        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
+        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
+             "a flash loan in.",
+    )
+    parser.add_argument(
+        "--n_jobs", default=-1, help="Number of parallel jobs to run"
+    )
+    parser.add_argument(
+        "--exchanges",
+        default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
+        help="Comma separated external exchanges.",
+    )
+    parser.add_argument(
+        "--polling_interval",
+        default=1,
+        help="Polling interval in seconds",
+    )
+    parser.add_argument(
+        "--alchemy_max_block_fetch",
+        default=2000,
+        help="Max number of blocks to fetch from alchemy",
+    )
+    parser.add_argument(
+        "--reorg_delay",
+        default=0,
+        help="Number of blocks delayed to avoid reorgs",
+    )
+    parser.add_argument(
+        "--logging_path", default="", help="The logging path."
+    )
+    parser.add_argument(
+        "--loglevel",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="The logging level.",
+    )
+    parser.add_argument(
+        "--use_cached_events",
+        default=False,
+        type=bool,
+        help="Set to True for debugging / testing. Set to False for production.",
+    )
+    parser.add_argument(
+        "--run_data_validator",
+        default=False,
+        type=bool,
+        help="Set to True for debugging / testing. Set to False for production.",
+    )
+    parser.add_argument(
+        "--randomizer",
+        default="3",
+        help="Set to the number of arb opportunities to pick from.",
+    )
+    parser.add_argument(
+        "--limit_bancor3_flashloan_tokens",
+        default=True,
+        type=bool,
+        help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
+    )
+    parser.add_argument(
+        "--default_min_profit_gas_token",
+        default="0.01",
+        help="Set to the default minimum profit in gas token.",
+    )
+    parser.add_argument(
+        "--timeout",
+        default=None,
+        help="Set to the timeout in seconds. Set to None for no timeout.",
+    )
+    parser.add_argument(
+        "--target_tokens",
+        default=None,
+        help="A comma-separated string of tokens to target.",
+    )
+    parser.add_argument(
+        "--replay_from_block",
+        default=None,
+        help="Set to a block number to replay from that block.",
+    )
+    parser.add_argument(
+        "--tenderly_fork_id",
+        default=None,
+        help="Set to a Tenderly fork id.",
+    )
+    parser.add_argument(
+        "--tenderly_event_exchanges",
+        default="pancakeswap_v2,pancakeswap_v3",
+        help="A comma-separated string of exchanges to include for the Tenderly event fetcher.",
+    )
+    parser.add_argument(
+        "--increment_time",
+        default=1,
+        help="If tenderly_fork_id is set, this is the number of seconds to increment the fork time by for each iteration.",
+    )
+    parser.add_argument(
+        "--increment_blocks",
+        default=1,
+        help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
+             "by for each iteration.",
+    )
+    parser.add_argument(
+        "--blockchain",
+        default="ethereum",
+        help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
+        choices=["ethereum", "coinbase_base"],
+    )
+    parser.add_argument(
+        "--pool_data_update_frequency",
+        default=-1,
+        help="How frequently pool data should be updated, in main loop iterations.",
+    )
+    parser.add_argument(
+        "--use_specific_exchange_for_target_tokens",
+        default=None,
+        help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
+    )
+    parser.add_argument(
+        "--prefix_path",
+        default="",
+        help="Prefixes the path to the write folders (used for deployment)",
+    )
+    parser.add_argument(
+        "--version_check_frequency",
+        default=1,
+        help="How frequently pool data should be updated, in main loop iterations.",
+    )
+    parser.add_argument(
+        "--self_fund",
+        default=False,
+        type=bool,
+        help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
+             "wallet when possible.",
+    )
+    parser.add_argument(
+        "--read_only",
+        default=True,
+        type=bool,
+        help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
+             "running the bot in an environment with restricted write permissions.",
+    )
+    parser.add_argument(
+        "--is_args_test",
+        default=False,
+        type=bool,
+        help="The logging path.",
+    )
 
-# %%
+    # Process the arguments
+    args = parser.parse_args()
+    main(args)
