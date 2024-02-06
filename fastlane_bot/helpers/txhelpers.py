@@ -800,7 +800,7 @@ class TxHelpers:
             return tx_hash
         except TimeExhausted as e:
             self.ConfigObj.logger.info(
-                f"[helpers.txhelpers._submit_transaction] Transaction stuck in mempool for 120 seconds, cancelling."
+                f"[helpers.txhelpers._submit_transaction] Transaction timeout (stuck in mempool); moving on"
             )
             return None
 
