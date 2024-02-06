@@ -12,6 +12,7 @@ import os.path
 import time
 from _decimal import Decimal
 from dataclasses import dataclass
+from hexbytes import HexBytes
 from typing import Tuple, List, Dict, Any
 
 import pandas as pd
@@ -504,3 +505,13 @@ def find_latest_timestamped_folder(logging_path=None):
 
 
 #%%
+def count_bytes(data: HexBytes) -> (int, int):
+    """
+    This function counts the number of zero and non-zero bytes in a given input data.
+    :param data: HexBytes
+    returns Tuple(int, int):
+        The zero & non zero count of bytes in the input
+    """
+    zero_bytes = len([byte for byte in data if byte == 0])
+    non_zero_bytes = len(data) - zero_bytes
+    return zero_bytes, non_zero_bytes

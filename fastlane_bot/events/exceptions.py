@@ -7,7 +7,7 @@ class ReadOnlyException(Exception):
                 f"create this file.")
 
 
-class AyncUpdateRetryException(Exception):
+class AsyncUpdateRetryException(Exception):
     """
     Exception raised when async_update_pools_from_contracts fails and needs to be retried.
     """

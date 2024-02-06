@@ -2,10 +2,68 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.23...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...HEAD)
+
+Merged pull requests
+
+- Update static data for Base, fix Sushi V3 Factory address [\#359](https://github.com/bancorprotocol/fastlane-bot/pull/359) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.30](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.30) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.29...v3.0.30)
+
+- bug in \_get\_layer\_one\_gas\_fee [\#353](https://github.com/bancorprotocol/fastlane-bot/issues/353)
+
+Merged pull requests
+
+- Revise all submit-transaction methods in the TxHelpers module [\#355](https://github.com/bancorprotocol/fastlane-bot/pull/355) ([barakman](https://github.com/barakman))
+
+## [v3.0.29](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.29) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.28...v3.0.29)
+
+- Problems in txhelpers with TX Submission & L1 gas fee calculation [\#351](https://github.com/bancorprotocol/fastlane-bot/issues/351)
+- Velocimeter fee calculation not implemented correctly [\#323](https://github.com/bancorprotocol/fastlane-bot/issues/323)
+- Update txhelpers.py [\#354](https://github.com/bancorprotocol/fastlane-bot/pull/354) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.28](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.28) (2024-02-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.27...v3.0.28)
+
+- Transactions on Base \(and other Optimism forks\) should account for L1 gas fee [\#336](https://github.com/bancorprotocol/fastlane-bot/issues/336)
+- Investigate potential Uni V3 data desync [\#296](https://github.com/bancorprotocol/fastlane-bot/issues/296)
+- Clean up Solidly fee calculations [\#345](https://github.com/bancorprotocol/fastlane-bot/pull/345) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add Switch to Utilize Uni V3 Router 02 when necessary [\#285](https://github.com/bancorprotocol/fastlane-bot/issues/285)
+
+## [v3.0.27](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.27) (2024-02-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.26...v3.0.27)
+
+- Excessive main loop runtime [\#341](https://github.com/bancorprotocol/fastlane-bot/issues/341)
+- Add L1 gas fee calculation on Optimism & forks [\#338](https://github.com/bancorprotocol/fastlane-bot/pull/338) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Add padding to profit vs gas when deciding to execute a transaction [\#329](https://github.com/bancorprotocol/fastlane-bot/issues/329)
+
+## [v3.0.26](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.26) (2024-01-31)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.25...v3.0.26)
+
+- Failed to get tokens and fee for aerodrome\_v2 [\#337](https://github.com/bancorprotocol/fastlane-bot/issues/337)
+- bugfix for excessive main loop runtime [\#342](https://github.com/bancorprotocol/fastlane-bot/pull/342) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.25](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.25) (2024-01-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.24...v3.0.25)
+
+- AssertionError for Graphene on Base for strategies that include native ETH [\#330](https://github.com/bancorprotocol/fastlane-bot/issues/330)
+- 337 failed to get tokens and fee for aerodrome v2 [\#339](https://github.com/bancorprotocol/fastlane-bot/pull/339) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.24](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.24) (2024-01-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.23...v3.0.24)
 
 - Trading on aerodrome\_v2 is not properly supported [\#331](https://github.com/bancorprotocol/fastlane-bot/issues/331)
-- AssertionError for Graphene on Base for strategies that include native ETH [\#330](https://github.com/bancorprotocol/fastlane-bot/issues/330)
 - Add function native\_gas\_token\_to\_wrapped and remove Ethereum only forconversion in routehandler.py \_calc\_carbon\_output [\#332](https://github.com/bancorprotocol/fastlane-bot/pull/332) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.0.23](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.23) (2024-01-29)
