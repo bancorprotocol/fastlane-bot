@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Precision Analysis (Testing Only) &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PA Modified (Testing Only)" href="precision_analysis2_delme.html" />
+    <link rel="prev" title="Optimizer" href="optimizer.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="precision-analysis-testing-only">
+<h1>Precision Analysis (Testing Only)<a class="headerlink" href="#precision-analysis-testing-only" title="Permalink to this heading">¶</a></h1>
+<p><em>note: this file is only here for Sphinx demo purposes; it is not part of the actual codebase</em></p>
+<section id="precision-analysis-module">
+<h2>Precision Analysis Module<a class="headerlink" href="#precision-analysis-module" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="customformatter-class">
+<h2>CustomFormatter Class<a class="headerlink" href="#customformatter-class" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.precision_analysis.CustomFormatter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.precision_analysis.</span></span><span class="sig-name descname"><span class="pre">CustomFormatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Decimal</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Decimal('0.001')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Decimal</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Decimal('1E+7')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_digits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Decimal</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Decimal('7')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.precision_analysis.CustomFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FuncFormatter</span></code></p>
+<p>### Custom Formatter Class</p>
+<p>This class extends <cite>FuncFormatter</cite> to provide a custom format for numerical labels, particularly for plotting. It adjusts the display of numbers based on specified thresholds, displaying very small or very large numbers in scientific notation.</p>
+<p>## Attributes:
+| Attribute Name   | Type      | Description                                                                                            |
+<a href="#id3"><span class="problematic" id="id4">|------------------|</span></a>———–<a href="#id5"><span class="problematic" id="id6">|--------------------------------------------------------------------------------------------------------|</span></a>
+| <cite>low_threshold</cite>  | <cite>Decimal</cite> | Numbers below this threshold (and non-zero) are displayed in scientific notation. Default is 0.001.    |
+| <cite>high_threshold</cite> | <cite>Decimal</cite> | Numbers equal to or above this threshold are displayed in scientific notation. Default is 1e7 (10^7).  |
+| <cite>total_digits</cite>   | <cite>Decimal</cite> | The total number of significant digits to display for numbers within the thresholds. Default is 7.     |</p>
+<p>## Methods:
+| Method Name   | Description                                                                                              |
+<a href="#id7"><span class="problematic" id="id8">|---------------|</span></a>———————————————————————————————————-|
+| <a href="#id1"><span class="problematic" id="id2">`</span></a>format_label`| Formats a numerical label based on the thresholds and total digits specified, adjusting its display.     |</p>
+<p>## Usage:
+Used for custom formatting of numerical labels in plots, making them more readable especially when dealing with a wide range of values.</p>
+<p>## Example:
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">formatter</span> <span class="pre">=</span> <span class="pre">CustomFormatter(low_threshold=Decimal('0.001'),</span> <span class="pre">high_threshold=Decimal('1e7'),</span> <span class="pre">total_digits=Decimal('7'))</span>
+<span class="pre">ax.xaxis.set_major_formatter(formatter)</span>
+<span class="pre">`</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.precision_analysis.CustomFormatter.format_label">
+<span class="sig-name descname"><span class="pre">format_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#tools.precision_analysis.CustomFormatter.format_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>### Formats a numerical label based on defined thresholds and total digits.</p>
+<p>## Parameters:
+| Parameter Name | Type                | Description                                                                         |
+<a href="#id9"><span class="problematic" id="id10">|----------------|</span></a>———————<a href="#id11"><span class="problematic" id="id12">|-------------------------------------------------------------------------------------|</span></a>
+| <cite>x</cite>            | <cite>float</cite>             | The numerical value to be formatted.                                                |
+| <cite>pos</cite>          | <cite>Union[int, None]</cite>  | An optional position argument, which can be used if needed for custom formatting.   |</p>
+<p>## Returns:
+| Return Name | Type  | Description                                                             |
+<a href="#id13"><span class="problematic" id="id14">|-------------|</span></a>——-<a href="#id15"><span class="problematic" id="id16">|-------------------------------------------------------------------------|</span></a>
+| <cite>label</cite>     | <cite>str</cite> | The formatted label as a string, adjusted for readability based on <cite>x</cite>. |</p>
+<p>## Notes:
+- For values between <cite>low_threshold</cite> and <cite>high_threshold</cite>, formats numbers using fixed-point notation with a dynamic number of decimal places.
+- For values outside these thresholds, formats numbers in scientific notation.
+- The method aims to improve the readability of labels in plots by adjusting the format based on the magnitude of the value.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Precision Analysis (Testing Only)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#precision-analysis-module">Precision Analysis Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customformatter-class">CustomFormatter Class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="precision_analysis2_delme.html">PA Modified (Testing Only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_delme.html">Numpy (Testing Only)</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="optimizer.html" title="previous chapter">Optimizer</a></li>
+      <li>Next: <a href="precision_analysis2_delme.html" title="next chapter">PA Modified (Testing Only)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/precision_analysis_delme.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

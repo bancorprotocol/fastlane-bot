@@ -1,0 +1,1309 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Optimizer &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Precision Analysis (Testing Only)" href="precision_analysis_delme.html" />
+    <link rel="prev" title="Invariants" href="invariants.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tools.optimizer">
+<span id="optimizer"></span><h1>Optimizer<a class="headerlink" href="#module-tools.optimizer" title="Permalink to this heading">¶</a></h1>
+<p>Optimization methods for AMM routing and arbitrage</p>
+<p>This module implements a number of methods that allow for
+routing (1) and arbitrage amongst a set of AMMs. Most
+methods allow, subject to convergence, for the optimization
+and routing within an arbitrary multi-token context. The
+<em>subject to convergence</em> part is important, as in particular
+the convex optimization methods with the solvers available
+to us to do not seem to be able to handle leveraged
+liquidity well. Specifically, the following algorithms are
+implemented:</p>
+<ul class="simple">
+<li><p><strong>Marginal Price Optimization</strong>: a highly efficient
+robust and efficient optimization method developed by us
+specifically for the Fastlane Bot; it is based on the
+insight that in any optimal state, the marginal prices
+of all curves must be consistent, and therefore to
+optimize the state of the entire market we only have to
+look at all possibly marginal prices, which is a much
+smaller set than all possible AMM states</p></li>
+<li><p><strong>Pair Optimization</strong>: the predecessor of the Marginal
+Price Optimization method in the context of <em>pairs</em>,
+meaning that we only look at AMMs trading one specific
+pair; in this case the optimization algorithm is a
+one-dimensional goal seek, and using a multi-dimensional
+Newtown-Raphson method is overkill in this case</p></li>
+<li><p><strong>Convex Optimization</strong>: this method is based on a paper
+by Angeris et al (2), showing that routing and arbitrage
+of AMMs are convex optimization problems; this is a very
+interesting approach and works very well for unlevered
+curves. However, for levered curves (Carbon, Uniswap v3)
+we ran into convergence issues which is why we moved on
+to the marginal price method</p></li>
+</ul>
+<p>Marginal price optimization is implemented in the class
+<code class="docutils literal notranslate"><span class="pre">MargPOptimizer</span></code>, pair optimization in the class
+<code class="docutils literal notranslate"><span class="pre">PairOptimizer</span></code>, and convex optimization in the class
+<code class="docutils literal notranslate"><span class="pre">ConvexOptimizer</span></code>. All those classes are subclasses of
+<code class="docutils literal notranslate"><span class="pre">CPCArbOptimizer</span></code>, and ultimately of <code class="docutils literal notranslate"><span class="pre">OptimizerBase</span></code>.</p>
+<p>NOTE 1: routing is not implemented yet, but it is a trivial
+extension of the arbitrage methods that only needs to be
+connected and properly parameterized</p>
+<p>NOTE 2: <a class="reference external" href="https://angeris.github.io/papers/cfmm-chapter.pdf">https://angeris.github.io/papers/cfmm-chapter.pdf</a></p>
+<p>This module is still subject to active research, and
+comments and suggestions are welcome. The corresponding
+author is Stefan Loesch &lt;<a class="reference external" href="mailto:stefan&#37;&#52;&#48;bancor&#46;network">stefan<span>&#64;</span>bancor<span>&#46;</span>network</a>&gt;</p>
+<section id="main-optimizer-modules">
+<h2>Main Optimizer Modules<a class="headerlink" href="#main-optimizer-modules" title="Permalink to this heading">¶</a></h2>
+<p>All classes in this section derive from the
+<code class="docutils literal notranslate"><span class="pre">CPCArbOptimizer</span></code> base class which is discussed in
+the Base Classes section below.</p>
+<section id="margpoptimizer">
+<h3>MargPOptimizer<a class="headerlink" href="#margpoptimizer" title="Permalink to this heading">¶</a></h3>
+<p>version v5.2 (15/Sep/2023)</p>
+<span class="target" id="module-tools.optimizer.margpoptimizer"></span><p>Implements the “Marginal Price Optimization” method for arbitrage and routing</p>
+<p>The marginal price optimizer implicitly solves the
+optimization problem by always operating on the optimal
+hyper surface, which is the surface where all marginal
+prices of the same pair are equal, and all marginal prices
+across pairs follow the usual no arbitrage condition.
+Therefore the problem reduces to a goal seek – we need to
+find the point on that hyper surface that satisfies the
+desired boundary conditions.</p>
+<p>This method employs a Newton-Raphson algorithm to solve the
+aforementioned goal seek problem.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.margpoptimizer.</span></span><span class="sig-name descname"><span class="pre">MargPOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve_container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>implements the marginal price optimization method</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.ConvergenceError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConvergenceError</span></span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.ConvergenceError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.J">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">J</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.J" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the Jacobian of func at point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – a callable x=(x1..xn) -&gt; (y1..ym), taking and returning np.arrays
+must also take a quiet parameter, which if True suppresses output</p></li>
+<li><p><strong>x</strong> – a vector x=(x1..xn) as np.array</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.OptimizationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizationError</span></span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.OptimizationError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.ParameterError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ParameterError</span></span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.ParameterError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.jacobian">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the Jacobian of func at point x</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – a callable x=(x1..xn) -&gt; (y1..ym), taking and returning np.arrays
+must also take a quiet parameter, which if True suppresses output</p></li>
+<li><p><strong>x</strong> – a vector x=(x1..xn) as np.array</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.kind">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the kind of optimizer (as str)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.margpoptimizer.MargPOptimizer.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sfc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.margpoptimizer.MargPOptimizer.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>optimal transactions across all curves in the optimizer, extracting targettkn (1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sfc</strong> – the self financing constraint to use (2)</p></li>
+<li><p><strong>result</strong> – the result type (see MO_XXX constants below)</p></li>
+<li><p><strong>params</strong> – dict of parameters (see table below)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MargpOptimizerResult on the default path, others depending on the
+chosen result</p>
+</dd>
+</dl>
+<p>Meaning of the <cite>result</cite> parameter:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><cite>result</cite></p></th>
+<th class="head"><p>returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MO_DEBUG</p></td>
+<td><p>a number of items useful for debugging</p></td>
+</tr>
+<tr class="row-odd"><td><p>MO_PSTART</p></td>
+<td><p>price estimates (as dataframe)</p></td>
+</tr>
+<tr class="row-even"><td><p>MO_PE</p></td>
+<td><p>alias for MO_ESTPRICE</p></td>
+</tr>
+<tr class="row-odd"><td><p>MO_DTKNFROMPF</p></td>
+<td><p>the function calculating dtokens from p</p></td>
+</tr>
+<tr class="row-even"><td><p>MO_MINIMAL</p></td>
+<td><p>minimal result (omitting some big fields)</p></td>
+</tr>
+<tr class="row-odd"><td><p>MO_FULL</p></td>
+<td><p>full result</p></td>
+</tr>
+<tr class="row-even"><td><p>None</p></td>
+<td><p>alias for MO_FULL</p></td>
+</tr>
+</tbody>
+</table>
+<p>Meaning of the <cite>params</cite> parameter:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>parameter</p></th>
+<th class="head"><p>meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>eps</p></td>
+<td><p>precision parameter for accepting the result (default: 1e-6)</p></td>
+</tr>
+<tr class="row-odd"><td><p>maxiter</p></td>
+<td><p>maximum number of iterations (default: 100)</p></td>
+</tr>
+<tr class="row-even"><td><p>verbose</p></td>
+<td><p>if True, print some high level output</p></td>
+</tr>
+<tr class="row-odd"><td><p>progress</p></td>
+<td><p>if True, print some basic progress output</p></td>
+</tr>
+<tr class="row-even"><td><p>debug</p></td>
+<td><p>if True, print some debug output</p></td>
+</tr>
+<tr class="row-odd"><td><p>debug2</p></td>
+<td><p>more debug output</p></td>
+</tr>
+<tr class="row-even"><td><p>raiseonerror</p></td>
+<td><p>if True, raise an OptimizationError exception on error</p></td>
+</tr>
+<tr class="row-odd"><td><p>pstart</p></td>
+<td><p>starting price for optimization (3)</p></td>
+</tr>
+</tbody>
+</table>
+<p>NOTE 1: this optimizer uses the marginal price method, ie it solves the equation</p>
+<blockquote>
+<div><p>dx_i (p) = 0 for all i != targettkn, and the whole price vector</p>
+</div></blockquote>
+<p>NOTE 2: at the moment only the trivial self-financing constraint is allowed, ie the one that
+only specifies the target token, and where all other constraints are zero; if sfc is
+a string then this is interpreted as the target token</p>
+<p>NOTE 3: can be provided either as dict {tkn:p, …}, or as df as price estimate as
+returned by MO_PSTART; excess tokens can be provided but all required tokens
+must be present</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="pairoptimizer">
+<h3>PairOptimizer<a class="headerlink" href="#pairoptimizer" title="Permalink to this heading">¶</a></h3>
+<p>version v6.0.1 (21/Sep/2023)</p>
+<span class="target" id="module-tools.optimizer.pairoptimizer"></span><p>optimization library – Pair Optimizer module [final optimizer class]</p>
+<p>The pair optimizer uses a marginal price method in one dimension to find the optimal
+solution. It uses a bisection method to find the root of the transfer equation, therefore
+it only work for a single pair. To use it on multiple pairs, use MargPOptimizer instead.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.pairoptimizer.PairOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.pairoptimizer.</span></span><span class="sig-name descname"><span class="pre">PairOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve_container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.pairoptimizer.PairOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>implements the marginal price optimization method for pairs</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.pairoptimizer.PairOptimizer.kind">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#tools.optimizer.pairoptimizer.PairOptimizer.kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the kind of optimizer (as str)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.pairoptimizer.PairOptimizer.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targettkn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.pairoptimizer.PairOptimizer.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>a marginal price optimizer that works only on curves on one pair</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – determines what to return (see table below)</p></li>
+<li><p><strong>targettkn</strong> – token to optimize for (if result==SO_TARGETTKN); must be None if
+result==SO_GLOBALMAX; result defaults to the corresponding value
+depending on whether or not targettkn is None</p></li>
+<li><p><strong>params</strong> – dict of parameters</p></li>
+<li><p><strong>eps</strong> – accuracy parameter passed to bisection method (default: 1e-6)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>depending on the <cite>result</cite> parameter</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><cite>result</cite></p></th>
+<th class="head"><p>returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SO_DXDYVECFUNC</p></td>
+<td><p>function of p returning vector of dx,dy values</p></td>
+</tr>
+<tr class="row-odd"><td><p>SO_DXDYSUMFUNC</p></td>
+<td><p>function of p returning sum of dx,dy values</p></td>
+</tr>
+<tr class="row-even"><td><p>SO_DXDYVALXFUNC</p></td>
+<td><p>function of p returning value of dx,dy sum in units of tknx</p></td>
+</tr>
+<tr class="row-odd"><td><p>SO_DXDYVALYFUNC</p></td>
+<td><p>ditto tkny</p></td>
+</tr>
+<tr class="row-even"><td><p>SO_PMAX</p></td>
+<td><p>optimal p value for global max (1)</p></td>
+</tr>
+<tr class="row-odd"><td><p>SO_GLOBALMAX</p></td>
+<td><p>global max of sum dx*p + dy (1)</p></td>
+</tr>
+<tr class="row-even"><td><p>SO_TARGETTKN</p></td>
+<td><p>optimizes for one token, the other is zero</p></td>
+</tr>
+<tr class="row-odd"><td><p>None</p></td>
+<td><p>SO_GLOBALMAX if targettkn is None, SO_TARGETTKN otherwise</p></td>
+</tr>
+</tbody>
+</table>
+<p>NOTE 1: the modes SO_PMAX and SO_GLOBALMAX are deprecated and the code may or
+may not be working properly; if every those functions are needed they need to
+be reviewed and tests need to be added (most tests in NBTests 002 have been disabled)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="convexoptimizer">
+<h3>ConvexOptimizer<a class="headerlink" href="#convexoptimizer" title="Permalink to this heading">¶</a></h3>
+<p>version v6.0.1 (21/Sep/2023)</p>
+<span class="target" id="module-tools.optimizer.convexoptimizer"></span><p>optimization library – Convex Optimizer module [final optimizer class]</p>
+<p>The convex optimizer explicitly solves the optimization problem by exploiting the fact
+that the problem is convex. Whilst theoretically interesting, this method is complex,
+slow and, importantly, converges badly on levered curves (eg Uniswap v3, Carbon). Whilst
+we may continue research into this method, at this stage it is recommended to use the
+marginal price optimizer instead.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.convexoptimizer.</span></span><span class="sig-name descname"><span class="pre">ConvexOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve_container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>implements the marginal price optimization method</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConvexOptimizerResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer:</span> <span class="pre">dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x1338f4e50&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem:</span> <span class="pre">dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x133a3c090&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.detailed_error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detailed_error</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.detailed_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>detailed error message</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>problem error</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.is_error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_error</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.is_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if problem status is not OPTIMAL</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.status">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.ConvexOptimizerResult.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>problem status</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NofeesOptimizerResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_table:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfc:</span> <span class="pre">any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curves:</span> <span class="pre">~tools.cpc.CPCContainer</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>results of the nofees optimizer</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.curves_new">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">curves_new</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.curves_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of Curve objects the trade instructions implemented</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dxdydf">
+<span class="sig-name descname"><span class="pre">dxdydf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dxdydf" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns dataframe with dx, dy per curve</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dxvalues">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dxvalues</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dxvalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns dx values</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dyvalues">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dyvalues</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.dyvalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns dy values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.trade_instructions">
+<span class="sig-name descname"><span class="pre">trade_instructions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ti_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.NofeesOptimizerResult.trade_instructions" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns list of TradeInstruction objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ti_format</strong> – format of the TradeInstruction objects, see TradeInstruction.to_format</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>see table</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ti_format</p></th>
+<th class="head"><p>returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>TIF_OBJECTS</p></td>
+<td><p>a list of TradeInstruction objects (default)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DICTS</p></td>
+<td><p>a list of TradeInstruction dictionaries</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DFRAW</p></td>
+<td><p>raw dataframe (holes are filled with NaN)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DF</p></td>
+<td><p>alias for TIF_DFRAW</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DFP</p></td>
+<td><p>returns a “pretty” dataframe (holes are spaces)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DFAGRR</p></td>
+<td><p>aggregated dataframe</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DF</p></td>
+<td><p>alias for TIF_DFRAW</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.convex_optimizer">
+<span class="sig-name descname"><span class="pre">convex_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sfc</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.convex_optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>convex optimization for determining the arbitrage opportunities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sfc</strong> – a SelfFinancingConstraints object (or str passed to SFC.arb)</p></li>
+<li><p><strong>params</strong> – additional parameters to be passed to the solver</p></li>
+<li><p><strong>verbose</strong> – if True, generate verbose output</p></li>
+<li><p><strong>solver</strong> – the solver to be used (default: “CVXOPT”; see SOLVERS)</p></li>
+<li><p><strong>nosolve</strong> – if True, do not solve the problem, but return the problem object</p></li>
+<li><p><strong>nominconstr</strong> – if True, do NOT add the minimum constraints</p></li>
+<li><p><strong>maxconstr</strong> – if True, DO add the (reundant) maximum constraints</p></li>
+<li><p><strong>retcurves</strong> – if True, also return the curves object (default: False)</p></li>
+<li><p><strong>s_xxx</strong> – pass the parameter <cite>xxx</cite> to the solver (eg s_verbose)</p></li>
+<li><p><strong>s_verbose</strong> – if True, generate verbose output from the solver</p></li>
+</ul>
+</dd>
+</dl>
+<p>note: CVXOPT is a pip install (pip install cvxopt); OSQP is not suitable for this problem,
+ECOS and SCS do work sometimes but can go dramatically wrong</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.kind">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the kind of optimizer (as str)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.convexoptimizer.ConvexOptimizer.nofees_optimizer">
+<span class="sig-name descname"><span class="pre">nofees_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sfc</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.convexoptimizer.ConvexOptimizer.nofees_optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>convex optimization for determining the arbitrage opportunities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sfc</strong> – a SelfFinancingConstraints object (or str passed to SFC.arb)</p></li>
+<li><p><strong>params</strong> – additional parameters to be passed to the solver</p></li>
+<li><p><strong>verbose</strong> – if True, generate verbose output</p></li>
+<li><p><strong>solver</strong> – the solver to be used (default: “CVXOPT”; see SOLVERS)</p></li>
+<li><p><strong>nosolve</strong> – if True, do not solve the problem, but return the problem object</p></li>
+<li><p><strong>nominconstr</strong> – if True, do NOT add the minimum constraints</p></li>
+<li><p><strong>maxconstr</strong> – if True, DO add the (reundant) maximum constraints</p></li>
+<li><p><strong>retcurves</strong> – if True, also return the curves object (default: False)</p></li>
+<li><p><strong>s_xxx</strong> – pass the parameter <cite>xxx</cite> to the solver (eg s_verbose)</p></li>
+<li><p><strong>s_verbose</strong> – if True, generate verbose output from the solver</p></li>
+</ul>
+</dd>
+</dl>
+<p>note: CVXOPT is a pip install (pip install cvxopt); OSQP is not suitable for this problem,
+ECOS and SCS do work sometimes but can go dramatically wrong</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="base-classes">
+<h2>Base Classes<a class="headerlink" href="#base-classes" title="Permalink to this heading">¶</a></h2>
+<section id="cpcarboptimizer">
+<h3>CPCArbOptimizer<a class="headerlink" href="#cpcarboptimizer" title="Permalink to this heading">¶</a></h3>
+<p>version v6.0.1 (21/Sep/2023)</p>
+<span class="target" id="module-tools.optimizer.cpcarboptimizer"></span><p>Implements optimization methods for AMM arbitrage and routing</p>
+<p>All classes derived from the <cite>CPCArbOptimizer</cite> class answer
+two fundamental questions in relation to a market consisting
+of multiple AMMs in one or multiple token pairs:</p>
+<ul class="simple">
+<li><p><strong>Arbitrage</strong>: Are there arbitrage opportunities in the
+market and how can we exploit them?</p></li>
+<li><p><strong>Routing</strong>: Given a set of desired in and out tokens
+(typically one in, one out), what is the optimal route,
+taking into account arbitrage opportunities that may be
+present int the market</p></li>
+</ul>
+<p>This class mostly defines common interface code that the derived classes
+are meant to implement, and contains a number of utilities that are useful
+across those classes.</p>
+<p>The most importance objects contained in this class are</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The <code class="docutils literal notranslate"><span class="pre">SelfFinancingConstraints</span></code> class, which is used to define the context</dt><dd><p>of the optimization, notably the token amounts in and out of the overall
+market, and which token receives the arbitrage profit, if any; for arbitrage
+purposes this class is overkill, but it allows for defining arbitrary optimal
+routing problems</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The <code class="docutils literal notranslate"><span class="pre">TradeInstruction</span></code> class, which encapsulates the trade instructions that</dt><dd><p>are generated by the optimization methods; it serves as an abstraction layer
+between the results of the optimization and the format in which subsequent code
+wants to consume the results</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The <code class="docutils literal notranslate"><span class="pre">MargpOptimizerResult</span></code> class, which encapsulates the result of the marginal</dt><dd><p>price optimization method (1)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>NOTE 1. The marginal price optimization method is now the only method in use, all other
+optimization methods have been deprecated and are available only for historical and research
+purposes, which explains its predominant role in this module</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.cpcarboptimizer.</span></span><span class="sig-name descname"><span class="pre">CPCArbOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve_container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>intermediate class for CPC arbitrage optimization</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>curves</strong> – the CPCContainer object (or the curves therein) the optimizer is using</p>
+</dd>
+</dl>
+<p>NOTE
+the old argument name <cite>curve_container</cite> is still supported but deprecated</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.CC">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CC</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.CC" title="Permalink to this definition">¶</a></dt>
+<dd><p>the curve container (CPCContainer)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MargpOptimizerResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curves:</span> <span class="pre">any</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targettkn:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_optimal_t:</span> <span class="pre">tuple</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtokens:</span> <span class="pre">dict</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtokens_t:</span> <span class="pre">tuple</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokens_t:</span> <span class="pre">tuple</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errormsg:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>results of the marginal price optimizer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>curves</strong> – curve objects underlying the optimization (as CPCContainer)</p></li>
+<li><p><strong>targetkn</strong> – target token (=profit token) of the optimization</p></li>
+<li><p><strong>p_optimal_t</strong> – optimal price vector (as tuple)</p></li>
+<li><p><strong>dtokens</strong> – change in token amounts (as dict)</p></li>
+<li><p><strong>dtokens_t</strong> – change in token amounts (as tuple)</p></li>
+<li><p><strong>tokens_t</strong> – list of tokens</p></li>
+<li><p><strong>errormsg</strong> – error message if an error occured (None=no error)</p></li>
+</ul>
+</dd>
+</dl>
+<p>PROPERTIES
+:param p_optimal: optimal price vector (as dict)</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.curves_new">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">curves_new</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.curves_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a list of Curve objects the trade instructions implemented</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.detailed_error">
+<span class="sig-name descname"><span class="pre">detailed_error</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.detailed_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>detailed error analysis</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.dxdyvalues">
+<span class="sig-name descname"><span class="pre">dxdyvalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.dxdyvalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a vector of (dx, dy) values for each curve (see also dxvecvalues)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.dxvecvalues">
+<span class="sig-name descname"><span class="pre">dxvecvalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.dxvecvalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a dict {tkn: dtknk} of changes for each curve (see also dxdyvalues)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.is_error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_error</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.is_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if problem status is not OPTIMAL</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.p_optimal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">p_optimal</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.p_optimal" title="Permalink to this definition">¶</a></dt>
+<dd><p>the optimal price vector as dict (last entry is target token)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.price">
+<span class="sig-name descname"><span class="pre">price</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tknb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tknq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.price" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the optimal price of tknb/tknq based on p_optimal [in tknq per tknb]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>problem status</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.trade_instructions">
+<span class="sig-name descname"><span class="pre">trade_instructions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ti_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.MargpOptimizerResult.trade_instructions" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns list of TradeInstruction objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ti_format</strong> – TIF_OBJECTS, TIF_DICTS, TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFC">
+<span class="sig-name descname"><span class="pre">SFC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFC" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for SelfFinancingConstraints.new</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFCa">
+<span class="sig-name descname"><span class="pre">SFCa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targettkn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFCa" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for SelfFinancingConstraints.arb</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFCd">
+<span class="sig-name descname"><span class="pre">SFCd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dct</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SFCd" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for SelfFinancingConstraints.new, with data as a dict</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SelfFinancingConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>describes self financing constraints and determines optimization variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – a dict TKN -&gt; amount, or AMMPays, AMMReceives, OptimizationVar (see table)</p></li>
+<li><p><strong>tokens</strong> – set of all tokens in the problem (if None, use data.keys())</p></li>
+</ul>
+</dd>
+</dl>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>value</p></th>
+<th class="head"><p>meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>amount</p></td>
+<td><p>from the AMM perspective, total inflows (&gt;0) or outflows (&lt;0)
+for all items not present in data the value is assumed zero</p></td>
+</tr>
+<tr class="row-odd"><td><p>AMMPays</p></td>
+<td><p>the AMM payout should be maximized [from the trader (!) perspective]</p></td>
+</tr>
+<tr class="row-even"><td><p>AMMReceives</p></td>
+<td><p>the money paid into the AMM should be minimized [ditto]</p></td>
+</tr>
+<tr class="row-odd"><td><p>OptimizationVar</p></td>
+<td><p>like AMMPays and AMMReceives, but if the direction of the payout is
+not known at the beginning [not all methods allow this]</p></td>
+</tr>
+<tr class="row-even"><td><p>OV</p></td>
+<td><p>alias for OptimizationVar</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.arb">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">arb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targettkn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor: arbitrage constraint, ie all other constraints are zero</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.asdict">
+<span class="sig-name descname"><span class="pre">asdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.asdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict representation including zero-valued tokens (unless short)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the constraint, or 0 if not present</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_arbsfc">
+<span class="sig-name descname"><span class="pre">is_arbsfc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_arbsfc" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True iff the constraint is an arbitrage constraint</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_constraint">
+<span class="sig-name descname"><span class="pre">is_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_constraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True iff item is a constraint (ie not an optimisation variable)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_optimizationvar">
+<span class="sig-name descname"><span class="pre">is_optimizationvar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.is_optimizationvar" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True iff item is the optimization variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.new">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor: data as kwargs</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.optimizationvar">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optimizationvar</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.optimizationvar" title="Permalink to this definition">¶</a></dt>
+<dd><p>optimization variable, ie the in that is set to AMMPays, AMMReceives or OptimizationVar</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.tokens_l">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokens_l</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.tokens_l" title="Permalink to this definition">¶</a></dt>
+<dd><p>tokens as a list</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.tokens_s">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokens_s</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.SelfFinancingConstraints.tokens_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>tokens as a comma-separated string</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TradeInstruction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tknin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amtin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tknout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amtout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseonerror</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction" title="Permalink to this definition">¶</a></dt>
+<dd><p>encodes a specific trade one a specific curve</p>
+<p>seen from the AMM; in numbers must be positive, out numbers negative</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cid</strong> – the curve id</p></li>
+<li><p><strong>tknin</strong> – token in</p></li>
+<li><p><strong>amtin</strong> – amount in (&gt;0)</p></li>
+<li><p><strong>tknout</strong> – token out</p></li>
+<li><p><strong>amtout</strong> – amount out (&lt;0)</p></li>
+<li><p><strong>error</strong> – error message (if any; None means no error)</p></li>
+<li><p><strong>curve</strong> – the curve object (optional); note: users of this object need
+to decide whether they trust the preparing code to set curve
+or whether they fetch it via the cid themselves</p></li>
+<li><p><strong>raiseonerror</strong> – if True, raise an error if the trade instruction is invalid
+otherwise just set the error message</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.is_empty">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_empty</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True if this is an empty trade instruction (too close to zero)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.new">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curve_or_cid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amt1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amt2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseonerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>automatically determines which is in and which is out</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_df">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trade_instructions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ti_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts iterable ot TradeInstruction objects to a pandas dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trade_instructions</strong> – iterable of TradeInstruction objects</p></li>
+<li><p><strong>robj</strong> – OptimizationResult object generating the trade instructions</p></li>
+<li><p><strong>ti_format</strong> – format (TIF_DFP, TIF_DFRAW, TIF_DFAGGR, TIF_DF, TIF_DFPG)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_dicts">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trade_instructions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts iterable ot TradeInstruction objects to a tuple of dicts</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_format">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trade_instructions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ti_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.TradeInstruction.to_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts iterable ot TradeInstruction objects to the given format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trade_instructions</strong> – iterable of TradeInstruction objects</p></li>
+<li><p><strong>robj</strong> – OptimizationResult object generating the trade instructions</p></li>
+<li><p><strong>ti_format</strong> – format to convert to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the trade instructions in the given format (see table)</p>
+</dd>
+</dl>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>ti_format</p></th>
+<th class="head"><p>returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>TIF_OBJECTS</p></td>
+<td><p>a list of TradeInstruction objects (default)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DICTS</p></td>
+<td><p>a list of TradeInstruction dictionaries</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DFRAW</p></td>
+<td><p>raw dataframe (holes are filled with NaN)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DF</p></td>
+<td><p>alias for TIF_DFRAW</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DFP</p></td>
+<td><p>returns a “pretty” dataframe (holes are spaces)</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIF_DFAGRR</p></td>
+<td><p>aggregated dataframe</p></td>
+</tr>
+<tr class="row-even"><td><p>TIF_DF</p></td>
+<td><p>alias for TIF_DFRAW</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.adjust_curves">
+<span class="sig-name descname"><span class="pre">adjust_curves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dxvals</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseonerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.adjust_curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a new curve container with the curves shifted by the given dx values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.arb">
+<span class="sig-name descname"><span class="pre">arb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targettkn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.arb" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for SelfFinancingConstraints.arb</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.curve_container">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">curve_container</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.curve_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>the curve container (CPCContainer)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.curves">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">curves</span></span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>the curve container (CPCContainer)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.format">
+<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience for self.curve_container.format()</p>
+<p>see help(CPCContainer.format) for details</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience for self.curve_container.plot()</p>
+<p>see help(CPCContainer.plot) for details</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.cpcarboptimizer.CPCArbOptimizer.price_estimates">
+<span class="sig-name descname"><span class="pre">price_estimates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tknq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tknbs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.cpcarboptimizer.CPCArbOptimizer.price_estimates" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience function to access CPCContainer.price_estimates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tknq</strong> – can only be a single token</p></li>
+<li><p><strong>tknbs</strong> – list of tokens</p></li>
+</ul>
+</dd>
+</dl>
+<p>see help(CPCContainer.price_estimate) for details</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="optimizer-base">
+<h3>Optimizer Base<a class="headerlink" href="#optimizer-base" title="Permalink to this heading">¶</a></h3>
+<p>version v5.1 (20/Sep/2023)</p>
+<span class="target" id="module-tools.optimizer.base"></span><p>optimization library – optimizer base module</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.base.</span></span><span class="sig-name descname"><span class="pre">OptimizerBase</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>base class for all optimizers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – the problem object (eg allowing to read <cite>problem.status</cite>)</p></li>
+<li><p><strong>result</strong> – the return value of problem.solve</p></li>
+<li><p><strong>time</strong> – the time it took to solve this problem (optional)</p></li>
+<li><p><strong>optimizer</strong> – the optimizer object that created this result</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.F">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">F</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.F" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper: returns list of [func(x) for x in rg]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.OptimizerResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizerResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer:</span> <span class="pre">~dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.OptimizerResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>base class for all optimizer results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – actual optimization result</p></li>
+<li><p><strong>time</strong> – time taken to solve the optimization</p></li>
+<li><p><strong>method</strong> – method used to solve the optimization</p></li>
+<li><p><strong>optimizer</strong> – the optimizer object that created this result</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.OptimizerResult.detailed_error">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detailed_error</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.OptimizerResult.detailed_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>detailed error analysis</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.OptimizerResult.error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.OptimizerResult.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>problem error</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.OptimizerResult.is_error">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_error</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.OptimizerResult.is_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if problem status is not OPTIMAL</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.OptimizerResult.status">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.OptimizerResult.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>problem status</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.SimpleResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errormsg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dct</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.SimpleResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.a">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">a</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.a" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper: returns vector as np.array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.deriv">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deriv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.deriv" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the derivative of <cite>func</cite> at point <cite>x</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.deriv2">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deriv2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.deriv2" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the second derivative of <cite>func</cite> at point <cite>x</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.findmax">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">findmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.findmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the minimum or maximum of func using Newton Raphson, starting at x0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – the function to optimize (must take one parameter)</p></li>
+<li><p><strong>x0</strong> – the starting point</p></li>
+<li><p><strong>N</strong> – the number of iterations; note that the algo will always go to
+the full length here; there is no convergence check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the result of the optimization as SimpleResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.findmax_gd">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">findmax_gd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.findmax_gd" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the maximum of <cite>func</cite> using gradient descent, starting at <cite>x0</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – function to optimize (must take one parameter)</p></li>
+<li><p><strong>x0</strong> – starting point</p></li>
+<li><p><strong>learning_rate</strong> – learning rate parameter</p></li>
+<li><p><strong>N</strong> – number of iterations; always goes full length here
+there is no convergence check</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.findmin">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">findmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.findmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the minimum or maximum of func using Newton Raphson, starting at x0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – the function to optimize (must take one parameter)</p></li>
+<li><p><strong>x0</strong> – the starting point</p></li>
+<li><p><strong>N</strong> – the number of iterations; note that the algo will always go to
+the full length here; there is no convergence check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the result of the optimization as SimpleResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.findmin_gd">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">findmin_gd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.findmin_gd" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the minimum of <cite>func</cite> using gradient descent starting at <cite>x0</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – function to optimize (must take one parameter)</p></li>
+<li><p><strong>x0</strong> – starting point</p></li>
+<li><p><strong>learning_rate</strong> – learning rate parameter</p></li>
+<li><p><strong>N</strong> – number of iterations; always goes full length here
+there is no convergence check</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.findminmax_nr">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">findminmax_nr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.findminmax_nr" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the minimum or maximum of func using Newton Raphson, starting at x0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – the function to optimize (must take one parameter)</p></li>
+<li><p><strong>x0</strong> – the starting point</p></li>
+<li><p><strong>N</strong> – the number of iterations; note that the algo will always go to
+the full length here; there is no convergence check</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the result of the optimization as SimpleResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.goalseek">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">goalseek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.goalseek" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds the value of <cite>x</cite> where <cite>func(x)</cite> x is zero, using a bisection between a,b</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – function for which to find the zero (must take one parameter)</p></li>
+<li><p><strong>a</strong> – lower bound a (1)</p></li>
+<li><p><strong>b</strong> – upper bound b (1)</p></li>
+<li><p><strong>eps</strong> – desired accuracy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the result as SimpleResult</p>
+</dd>
+</dl>
+<p>NOTE 1: we must have func(a) * func(b) &lt; 0</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.kind">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kind</span></span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.kind" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the kind of optimizer (as str)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.negx">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">negx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.negx" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the negative elements of the vector, zeroes elsewhere</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.pickle">
+<span class="sig-name descname"><span class="pre">pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basefilename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>pickles the object to a file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.posx">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">posx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.posx" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the positive elements of the vector, zeroes elsewhere</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.t">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">t</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.t" title="Permalink to this definition">¶</a></dt>
+<dd><p>helper: returns vector as tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.base.OptimizerBase.unpickle">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unpickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basefilename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.base.OptimizerBase.unpickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>unpickles the object from a file</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="helper-classes">
+<h2>Helper Classes<a class="headerlink" href="#helper-classes" title="Permalink to this heading">¶</a></h2>
+<section id="module-tools.optimizer.dcbase">
+<span id="dcbase"></span><h3>DCBase<a class="headerlink" href="#module-tools.optimizer.dcbase" title="Permalink to this heading">¶</a></h3>
+<p>This module defines the <cite>DCBase</cite> class, from which
+dataclasses can derive, and which adds useful methods to
+those dataclasses, notably <code class="docutils literal notranslate"><span class="pre">asdict</span></code>, <code class="docutils literal notranslate"><span class="pre">astuple</span></code> and <code class="docutils literal notranslate"><span class="pre">fields</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.optimizer.dcbase.DCBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.optimizer.dcbase.</span></span><span class="sig-name descname"><span class="pre">DCBase</span></span><a class="headerlink" href="#tools.optimizer.dcbase.DCBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds useful methods to dataclasses</p>
+<p>USAGE</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MyDataClass</span><span class="p">(</span><span class="n">DCBase</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">MyDataClass</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">asdict</span><span class="p">()</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">astuple</span><span class="p">()</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">fields</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.dcbase.DCBase.asdict">
+<span class="sig-name descname"><span class="pre">asdict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.dcbase.DCBase.asdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the object as a dict</p>
+<p>alias for <cite>dataclasses.asdict(self)</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.dcbase.DCBase.astuple">
+<span class="sig-name descname"><span class="pre">astuple</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.dcbase.DCBase.astuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the object as a tuple</p>
+<p>alias for <cite>dataclasses.astuple(self)</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.optimizer.dcbase.DCBase.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.optimizer.dcbase.DCBase.fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the object fields</p>
+<p>alias for <cite>dataclasses.fields(self)</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Optimizer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-optimizer-modules">Main Optimizer Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#margpoptimizer">MargPOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pairoptimizer">PairOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convexoptimizer">ConvexOptimizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#base-classes">Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cpcarboptimizer">CPCArbOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optimizer-base">Optimizer Base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#helper-classes">Helper Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tools.optimizer.dcbase">DCBase</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="precision_analysis_delme.html">Precision Analysis (Testing Only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision_analysis2_delme.html">PA Modified (Testing Only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_delme.html">Numpy (Testing Only)</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="invariants.html" title="previous chapter">Invariants</a></li>
+      <li>Next: <a href="precision_analysis_delme.html" title="next chapter">Precision Analysis (Testing Only)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/optimizer.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

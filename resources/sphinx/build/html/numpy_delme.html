@@ -1,0 +1,506 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Numpy (Testing Only) &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="PA Modified (Testing Only)" href="precision_analysis2_delme.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="numpy-testing-only">
+<h1>Numpy (Testing Only)<a class="headerlink" href="#numpy-testing-only" title="Permalink to this heading">¶</a></h1>
+<p><em>note: this file is only here for Sphinx testing purposes; it is not part of the actual codebase</em></p>
+<section id="numpy-module-testing-only">
+<h2>Numpy Module (Testing Only)<a class="headerlink" href="#numpy-module-testing-only" title="Permalink to this heading">¶</a></h2>
+<section id="numpy">
+<h3>NumPy<a class="headerlink" href="#numpy" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Provides</dt><dd><ol class="arabic simple">
+<li><p>An array object of arbitrary homogeneous items</p></li>
+<li><p>Fast mathematical operations over arrays</p></li>
+<li><p>Linear Algebra, Fourier Transforms, Random Number Generation</p></li>
+</ol>
+</dd>
+</dl>
+<section id="how-to-use-the-documentation">
+<h4>How to use the documentation<a class="headerlink" href="#how-to-use-the-documentation" title="Permalink to this heading">¶</a></h4>
+<p>Documentation is available in two forms: docstrings provided
+with the code, and a loose standing reference guide, available from
+<a class="reference external" href="https://numpy.org">the NumPy homepage</a>.</p>
+<p>We recommend exploring the docstrings using
+<a class="reference external" href="https://ipython.org">IPython</a>, an advanced Python shell with
+TAB-completion and introspection capabilities.  See below for further
+instructions.</p>
+<p>The docstring examples assume that <cite>numpy</cite> has been imported as <code class="docutils literal notranslate"><span class="pre">np</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+<p>Code snippets are indicated by three greater-than signs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Use the built-in <code class="docutils literal notranslate"><span class="pre">help</span></code> function to view a function’s docstring:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">)</span>
+<span class="gp">... </span>
+</pre></div>
+</div>
+<p>For some objects, <code class="docutils literal notranslate"><span class="pre">np.info(obj)</span></code> may provide additional help.  This is
+particularly true if you see the line “Help on ufunc object:” at the top
+of the help() page.  Ufuncs are implemented in C, not Python, for speed.
+The native Python help() does not know how to view their help, but our
+np.info() function does.</p>
+<p>To search for documents containing a keyword, do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">lookfor</span><span class="p">(</span><span class="s1">&#39;keyword&#39;</span><span class="p">)</span>
+<span class="gp">... </span>
+</pre></div>
+</div>
+<p>General-purpose documents like a glossary and help on the basic concepts
+of numpy are available under the <code class="docutils literal notranslate"><span class="pre">doc</span></code> sub-module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">doc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+<span class="gp">... </span>
+</pre></div>
+</div>
+</section>
+<section id="available-subpackages">
+<h4>Available subpackages<a class="headerlink" href="#available-subpackages" title="Permalink to this heading">¶</a></h4>
+<dl class="simple">
+<dt>lib</dt><dd><p>Basic functions used by several sub-packages.</p>
+</dd>
+<dt>random</dt><dd><p>Core Random Tools</p>
+</dd>
+<dt>linalg</dt><dd><p>Core Linear Algebra Tools</p>
+</dd>
+<dt>fft</dt><dd><p>Core FFT routines</p>
+</dd>
+<dt>polynomial</dt><dd><p>Polynomial tools</p>
+</dd>
+<dt>testing</dt><dd><p>NumPy testing tools</p>
+</dd>
+<dt>distutils</dt><dd><p>Enhancements to distutils with support for
+Fortran compilers support and more.</p>
+</dd>
+</dl>
+</section>
+<section id="utilities">
+<h4>Utilities<a class="headerlink" href="#utilities" title="Permalink to this heading">¶</a></h4>
+<dl class="simple">
+<dt>test</dt><dd><p>Run numpy unittests</p>
+</dd>
+<dt>show_config</dt><dd><p>Show numpy build configuration</p>
+</dd>
+<dt>dual</dt><dd><p>Overwrite certain functions with high-performance SciPy tools.
+Note: <cite>numpy.dual</cite> is deprecated.  Use the functions from NumPy or Scipy
+directly instead of importing them from <cite>numpy.dual</cite>.</p>
+</dd>
+<dt>matlib</dt><dd><p>Make everything matrices.</p>
+</dd>
+<dt>__version__</dt><dd><p>NumPy version string</p>
+</dd>
+</dl>
+</section>
+<section id="viewing-documentation-using-ipython">
+<h4>Viewing documentation using IPython<a class="headerlink" href="#viewing-documentation-using-ipython" title="Permalink to this heading">¶</a></h4>
+<p>Start IPython and import <cite>numpy</cite> usually under the alias <code class="docutils literal notranslate"><span class="pre">np</span></code>: <cite>import
+numpy as np</cite>.  Then, directly past or use the <code class="docutils literal notranslate"><span class="pre">%cpaste</span></code> magic to paste
+examples into the shell.  To see which functions are available in <cite>numpy</cite>,
+type <code class="docutils literal notranslate"><span class="pre">np.&lt;TAB&gt;</span></code> (where <code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code> refers to the TAB key), or use
+<code class="docutils literal notranslate"><span class="pre">np.*cos*?&lt;ENTER&gt;</span></code> (where <code class="docutils literal notranslate"><span class="pre">&lt;ENTER&gt;</span></code> refers to the ENTER key) to narrow
+down the list.  To view the docstring for a function, use
+<code class="docutils literal notranslate"><span class="pre">np.cos?&lt;ENTER&gt;</span></code> (to view the docstring) and <code class="docutils literal notranslate"><span class="pre">np.cos??&lt;ENTER&gt;</span></code> (to view
+the source code).</p>
+</section>
+<section id="copies-vs-in-place-operation">
+<h4>Copies vs. in-place operation<a class="headerlink" href="#copies-vs-in-place-operation" title="Permalink to this heading">¶</a></h4>
+<p>Most of the functions in <cite>numpy</cite> return a copy of the array argument
+(e.g., <cite>np.sort</cite>).  In-place versions of these functions are often
+available as array methods, i.e. <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">np.array([1,2,3]);</span> <span class="pre">x.sort()</span></code>.
+Exceptions to this rule are documented.</p>
+</section>
+</section>
+</section>
+<section id="array-class">
+<h2>Array Class<a class="headerlink" href="#array-class" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="numpy.array">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">numpy.</span></span><span class="sig-name descname"><span class="pre">array</span></span><a class="headerlink" href="#numpy.array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases:</p>
+<dl class="simple">
+<dt>array(object, dtype=None, <a href="#id1"><span class="problematic" id="id2">*</span></a>, copy=True, order=’K’, subok=False, ndmin=0,</dt><dd><p>like=None)</p>
+</dd>
+</dl>
+<p>Create an array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>object</strong> (<em>array_like</em>) – An array, any object exposing the array interface, an object whose
+__array__ method returns an array, or any (nested) sequence.
+If object is a scalar, a 0-dimensional array containing object is
+returned.</p></li>
+<li><p><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type for the array.  If not given, then the type will
+be determined as the minimum type required to hold the objects in the
+sequence.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true (default), then the object is copied.  Otherwise, a copy will
+only be made if __array__ returns a copy, if obj is a nested sequence,
+or if a copy is needed to satisfy any of the other requirements
+(<cite>dtype</cite>, <cite>order</cite>, etc.).</p></li>
+<li><p><strong>order</strong> (<em>{'K'</em><em>, </em><em>'A'</em><em>, </em><em>'C'</em><em>, </em><em>'F'}</em><em>, </em><em>optional</em>) – <p>Specify the memory layout of the array. If object is not an array, the
+newly created array will be in C order (row major) unless ‘F’ is
+specified, in which case it will be in Fortran order (column major).
+If object is an array the following holds.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>order</p></th>
+<th class="head"><p>no copy</p></th>
+<th class="head"><p>copy=True</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>’K’</p></td>
+<td><p>unchanged</p></td>
+<td><p>F &amp; C order preserved, otherwise most similar order</p></td>
+</tr>
+<tr class="row-odd"><td><p>’A’</p></td>
+<td><p>unchanged</p></td>
+<td><p>F order if input is F and not C, otherwise C order</p></td>
+</tr>
+<tr class="row-even"><td><p>’C’</p></td>
+<td><p>C order</p></td>
+<td><p>C order</p></td>
+</tr>
+<tr class="row-odd"><td><p>’F’</p></td>
+<td><p>F order</p></td>
+<td><p>F order</p></td>
+</tr>
+</tbody>
+</table>
+<p>When <code class="docutils literal notranslate"><span class="pre">copy=False</span></code> and a copy is made for other reasons, the result is
+the same as if <code class="docutils literal notranslate"><span class="pre">copy=True</span></code>, with some exceptions for ‘A’, see the
+Notes section. The default order is ‘K’.</p>
+</p></li>
+<li><p><strong>subok</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then sub-classes will be passed-through, otherwise
+the returned array will be forced to be a base-class array (default).</p></li>
+<li><p><strong>ndmin</strong> (<em>int</em><em>, </em><em>optional</em>) – Specifies the minimum number of dimensions that the resulting
+array should have.  Ones will be prepended to the shape as
+needed to meet this requirement.</p></li>
+<li><p><strong>like</strong> (<em>array_like</em><em>, </em><em>optional</em>) – <p>Reference object to allow the creation of arrays which are not
+NumPy arrays. If an array-like passed in as <code class="docutils literal notranslate"><span class="pre">like</span></code> supports
+the <code class="docutils literal notranslate"><span class="pre">__array_function__</span></code> protocol, the result will be defined
+by it. In this case, it ensures the creation of an array object
+compatible with that passed in via this argument.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.20.0.</span></p>
+</div>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – An array object satisfying the specified requirements.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_like</span></code></dt><dd><p>Return an empty array with shape and type of input.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ones_like</span></code></dt><dd><p>Return an array of ones with shape and type of input.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros_like</span></code></dt><dd><p>Return an array of zeros with shape and type of input.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_like</span></code></dt><dd><p>Return a new array with shape of input filled with value.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty</span></code></dt><dd><p>Return a new uninitialized array.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ones</span></code></dt><dd><p>Return a new array setting values to one.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">zeros</span></code></dt><dd><p>Return a new array setting values to zero.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">full</span></code></dt><dd><p>Return a new array of given shape filled with value.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>When order is ‘A’ and <cite>object</cite> is an array in neither ‘C’ nor ‘F’ order,
+and a copy is forced by a change in dtype, then the order of the result is
+not necessarily ‘C’ as expected. This is likely a bug.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">array([1, 2, 3])</span>
+</pre></div>
+</div>
+<p>Upcasting:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+<span class="go">array([ 1.,  2.,  3.])</span>
+</pre></div>
+</div>
+<p>More than one dimension:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [3, 4]])</span>
+</pre></div>
+</div>
+<p>Minimum dimensions 2:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">array([[1, 2, 3]])</span>
+</pre></div>
+</div>
+<p>Type provided:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+<span class="go">array([ 1.+0.j,  2.+0.j,  3.+0.j])</span>
+</pre></div>
+</div>
+<p>Data-type consisting of more than one element:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)],</span><span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;&lt;i4&#39;</span><span class="p">),(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;&lt;i4&#39;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
+<span class="go">array([1, 3])</span>
+</pre></div>
+</div>
+<p>Creating an array from sub-classes:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="s1">&#39;1 2; 3 4&#39;</span><span class="p">))</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [3, 4]])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="s1">&#39;1 2; 3 4&#39;</span><span class="p">),</span> <span class="n">subok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">matrix([[1, 2],</span>
+<span class="go">        [3, 4]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="source-code-for-array-class">
+<h2>Source code for Array Class<a class="headerlink" href="#source-code-for-array-class" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>array(object, dtype=None, *, copy=True, order=&#39;K&#39;, subok=False, ndmin=0, like=None)
+
+Create an array.
+
+Parameters
+----------
+object : array_like
+    An array, any object exposing the array interface, an object whose
+    __array__ method returns an array, or any (nested) sequence.
+    If object is a scalar, a 0-dimensional array containing object is
+    returned.
+dtype : data-type, optional
+    The desired data-type for the array.  If not given, then the type will
+    be determined as the minimum type required to hold the objects in the
+    sequence.
+copy : bool, optional
+    If true (default), then the object is copied.  Otherwise, a copy will
+    only be made if __array__ returns a copy, if obj is a nested sequence,
+    or if a copy is needed to satisfy any of the other requirements
+    (`dtype`, `order`, etc.).
+order : {&#39;K&#39;, &#39;A&#39;, &#39;C&#39;, &#39;F&#39;}, optional
+    Specify the memory layout of the array. If object is not an array, the
+    newly created array will be in C order (row major) unless &#39;F&#39; is
+    specified, in which case it will be in Fortran order (column major).
+    If object is an array the following holds.
+
+    ===== ========= ===================================================
+    order  no copy                     copy=True
+    ===== ========= ===================================================
+    &#39;K&#39;   unchanged F &amp; C order preserved, otherwise most similar order
+    &#39;A&#39;   unchanged F order if input is F and not C, otherwise C order
+    &#39;C&#39;   C order   C order
+    &#39;F&#39;   F order   F order
+    ===== ========= ===================================================
+
+    When ``copy=False`` and a copy is made for other reasons, the result is
+    the same as if ``copy=True``, with some exceptions for &#39;A&#39;, see the
+    Notes section. The default order is &#39;K&#39;.
+subok : bool, optional
+    If True, then sub-classes will be passed-through, otherwise
+    the returned array will be forced to be a base-class array (default).
+ndmin : int, optional
+    Specifies the minimum number of dimensions that the resulting
+    array should have.  Ones will be prepended to the shape as
+    needed to meet this requirement.
+${ARRAY_FUNCTION_LIKE}
+
+    .. versionadded:: 1.20.0
+
+Returns
+-------
+out : ndarray
+    An array object satisfying the specified requirements.
+
+See Also
+--------
+empty_like : Return an empty array with shape and type of input.
+ones_like : Return an array of ones with shape and type of input.
+zeros_like : Return an array of zeros with shape and type of input.
+full_like : Return a new array with shape of input filled with value.
+empty : Return a new uninitialized array.
+ones : Return a new array setting values to one.
+zeros : Return a new array setting values to zero.
+full : Return a new array of given shape filled with value.
+
+
+Notes
+-----
+When order is &#39;A&#39; and `object` is an array in neither &#39;C&#39; nor &#39;F&#39; order,
+and a copy is forced by a change in dtype, then the order of the result is
+not necessarily &#39;C&#39; as expected. This is likely a bug.
+
+Examples
+--------
+&gt;&gt;&gt; np.array([1, 2, 3])
+array([1, 2, 3])
+
+Upcasting:
+
+&gt;&gt;&gt; np.array([1, 2, 3.0])
+array([ 1.,  2.,  3.])
+
+More than one dimension:
+
+&gt;&gt;&gt; np.array([[1, 2], [3, 4]])
+array([[1, 2],
+       [3, 4]])
+
+Minimum dimensions 2:
+
+&gt;&gt;&gt; np.array([1, 2, 3], ndmin=2)
+array([[1, 2, 3]])
+
+Type provided:
+
+&gt;&gt;&gt; np.array([1, 2, 3], dtype=complex)
+array([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+Data-type consisting of more than one element:
+
+&gt;&gt;&gt; x = np.array([(1,2),(3,4)],dtype=[(&#39;a&#39;,&#39;&lt;i4&#39;),(&#39;b&#39;,&#39;&lt;i4&#39;)])
+&gt;&gt;&gt; x[&#39;a&#39;]
+array([1, 3])
+
+Creating an array from sub-classes:
+
+&gt;&gt;&gt; np.array(np.mat(&#39;1 2; 3 4&#39;))
+array([[1, 2],
+       [3, 4]])
+
+&gt;&gt;&gt; np.array(np.mat(&#39;1 2; 3 4&#39;), subok=True)
+matrix([[1, 2],
+        [3, 4]])
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision_analysis_delme.html">Precision Analysis (Testing Only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="precision_analysis2_delme.html">PA Modified (Testing Only)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Numpy (Testing Only)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#numpy-module-testing-only">Numpy Module (Testing Only)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#numpy">NumPy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#array-class">Array Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-code-for-array-class">Source code for Array Class</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="precision_analysis2_delme.html" title="previous chapter">PA Modified (Testing Only)</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/numpy_delme.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
