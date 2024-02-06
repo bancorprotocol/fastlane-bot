@@ -787,8 +787,6 @@ class TxHelpers:
         else:
             return False
 
-
-
     def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
@@ -836,25 +834,28 @@ class TxHelpers:
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
-        return asyncio.get_event_loop().run_until_complete(self._get_layer_one_gas_fee(rawTransaction))
 
-    async def _get_layer_one_gas_fee(self, rawTransaction) -> Decimal:
+        ethereum_base_fee, fixed_overhead, dynamic_overhead = asyncio.get_event_loop().run_until_complete(asyncio.gather(
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee(),
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead(),
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
+        ))
+
+        return self._get_layer_one_gas_fee(rawTransaction, ethereum_base_fee, fixed_overhead, dynamic_overhead)
+
+    def _get_layer_one_gas_fee(self, rawTransaction, ethereum_base_fee: int, fixed_overhead: int, dynamic_overhead: int) -> Decimal:
         """
         Returns the expected layer one gas fee for a layer 2 Optimism transaction
         :param rawTransaction: the raw transaction
-
+        :param ethereum_base_fee: the L1 base fee received from the contract
+        :param fixed_overhead: the fixed overhead received from the contract
+        :param dynamic_overhead: the dynamic fee received from the contract
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
-        ethereum_base_fee = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee()
-        fixed_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead()
-        dynamic_overhead = await self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
         zero_bytes, non_zero_bytes = count_bytes(rawTransaction)
         tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
         tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
         l1_data_fee = tx_total_gas * ethereum_base_fee
         ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
         return Decimal(f"{l1_data_fee}e-24")
-
-
-
