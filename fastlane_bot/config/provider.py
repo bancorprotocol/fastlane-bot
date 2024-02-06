@@ -120,7 +120,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
             )
 
         if network.GAS_ORACLE_ADDRESS:
-            self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
+            self.GAS_ORACLE_CONTRACT = self.w3_async.eth.contract(
                 address=network.GAS_ORACLE_ADDRESS,
                 abi=GAS_ORACLE_ABI
             )
