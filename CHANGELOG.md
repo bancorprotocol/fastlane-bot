@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.29...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...HEAD)
+
+Merged pull requests
+
+- Update static data for Base, fix Sushi V3 Factory address [\#359](https://github.com/bancorprotocol/fastlane-bot/pull/359) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.30](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.30) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.29...v3.0.30)
 
 - bug in \_get\_layer\_one\_gas\_fee [\#353](https://github.com/bancorprotocol/fastlane-bot/issues/353)
 
