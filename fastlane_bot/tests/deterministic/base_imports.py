@@ -7,12 +7,18 @@ import shutil
 import glob
 import pandas as pd
 import subprocess
-import wexpect
 import time
 import re
 import eth_abi
 import psutil
 import ast
+
+import platform
+if platform.system() == 'Windows':
+    import wexpect as uniexpect
+else:
+    import pexpect as uniexpect
+
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI, UNISWAP_V3_POOL_ABI, UNISWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, PANCAKESWAP_V2_POOL_ABI
 
@@ -401,7 +407,7 @@ def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, rpc):
     command_string = ' '.join(cmd)
 
     # Execute the command in the background
-    child = wexpect.spawn(command_string)
+    child = uniexpect.spawn(command_string)
 
     # ALTERNATIVELY to Execute the command in a new command prompt window
     # subprocess.Popen(f"start cmd /k \"{command_string}\"", shell=True)
