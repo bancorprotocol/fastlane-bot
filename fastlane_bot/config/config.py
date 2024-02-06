@@ -51,6 +51,15 @@ class Config():
 
     logging_header: str = None
 
+    FLASHLOAN_FEE_MAP = {
+        "ethereum": 0.0,
+        "coinbase_base": 0.0,
+    }
+
+    @property
+    def flashloan_fee(self):
+        return self.FLASHLOAN_FEE_MAP[self.NETWORK]
+
     @classmethod
     def new(cls, *, config=None, loglevel=None, logging_path=None, blockchain=None, self_fund=True, **kwargs):
         """

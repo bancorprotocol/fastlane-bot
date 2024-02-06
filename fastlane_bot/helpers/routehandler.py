@@ -1590,6 +1590,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         sum_in = 0
         sum_out = 0
         flt = trade_instructions[0].tknin_address
+
+        # TODO: Is this supposed to be a decimal?
         flashloan_fee_amt = Decimal(str(flashloan_fee)) * Decimal(str(trade_instructions[0].amtin))
 
         for trade in trade_instructions:
