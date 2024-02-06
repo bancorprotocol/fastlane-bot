@@ -992,8 +992,11 @@ class TxHelpers:
             The total fee (in gas token) for the l1 gas fee
         """
 
-        tasks = self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee(), self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead(), self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
-        ethereum_base_fee, fixed_overhead, dynamic_overhead = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+        ethereum_base_fee, fixed_overhead, dynamic_overhead = asyncio.get_event_loop().run_until_complete(asyncio.gather(
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee(),
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead(),
+            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
+        ))
 
         return self._get_layer_one_gas_fee(signed_transaction=signed_transaction, ethereum_base_fee=ethereum_base_fee, fixed_overhead=fixed_overhead, dynamic_overhead=dynamic_overhead)
 
