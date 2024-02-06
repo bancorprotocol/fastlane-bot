@@ -895,8 +895,6 @@ class TxHelpers:
         else:
             return False
 
-
-
     def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
@@ -969,6 +967,3 @@ class TxHelpers:
         l1_data_fee = tx_total_gas * ethereum_base_fee
         ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
         return Decimal(f"{l1_data_fee}e-24")
-
-
-
