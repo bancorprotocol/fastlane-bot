@@ -1582,7 +1582,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
     def calculate_trade_profit(
-        self, trade_instructions: List[TradeInstruction]
+            self, trade_instructions: List[TradeInstruction], flashloan_fee
     ) -> int or float or Decimal:
         """
         Calculates the profit of the trade in the Flashloan token by calculating the sum in vs sum out
@@ -1590,13 +1590,14 @@ class TxRouteHandler(TxRouteHandlerBase):
         sum_in = 0
         sum_out = 0
         flt = trade_instructions[0].tknin_address
+        flashloan_fee_amt = Decimal(str(flashloan_fee)) * Decimal(str(trade_instructions[0].amtin))
 
         for trade in trade_instructions:
             if trade.tknin_address == flt:
                 sum_in += abs(trade.amtin)
             elif trade.tknout_address == flt:
                 sum_out += abs(trade.amtout)
-        sum_profit = sum_out - sum_in
+        sum_profit = sum_out - sum_in - flashloan_fee_amt
         return sum_profit
 
     def calculate_trade_outputs(

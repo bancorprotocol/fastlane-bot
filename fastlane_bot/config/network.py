@@ -298,6 +298,14 @@ class ConfigNetwork(ConfigBase):
     # FLAGS
     #######################################################################################
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
+    FLASHLOAN_FEE_MAP = {
+        "ethereum": 0.0,
+        "coinbase_base": 0.0,
+    }
+
+    @property
+    def flashloan_fee(self):
+        return self.FLASHLOAN_FEE_MAP[self.NETWORK]
 
     @classmethod
     def new(cls, network=None):

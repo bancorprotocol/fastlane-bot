@@ -976,7 +976,7 @@ class CarbonBot(CarbonBotBase):
         fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
-            calculated_trade_instructions
+            calculated_trade_instructions, flashloan_fee=self.ConfigObj.flashloan_fee
         )
 
         # Use helper function to calculate profit
