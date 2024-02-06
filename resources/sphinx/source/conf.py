@@ -61,3 +61,46 @@ html_static_path = ['_static']
 html_css_files = [
     'custom.css',
 ]
+
+# -- Custom variables --------------------------------------------------------
+
+import tools
+version = tools.__VERSION__
+release = version
+date = tools.__VERSION_DATE__
+author = tools.__AUTHOR__
+copyright = tools.__COPYRIGHT__
+
+import tools.cpc
+import tools.invariants
+from tools.optimizer import *
+margp_optimizer_vd = f"v{MargPOptimizer.__VERSION__} ({MargPOptimizer.__DATE__})"
+optimizer_base_vd = f"v{OptimizerBase.__VERSION__} ({OptimizerBase.__DATE__})"
+cpcarb_optimizer_vd = f"v{PairOptimizer.__VERSION__} ({PairOptimizer.__DATE__})"
+convex_optimizer_vd = f"v{ConvexOptimizer.__VERSION__} ({ConvexOptimizer.__DATE__})"
+pair_optimizer_vd = f"v{PairOptimizer.__VERSION__} ({PairOptimizer.__DATE__})"
+
+from tools.cpc import ConstantProductCurve, CPCContainer
+#from tools.cpcbase import CurveBase
+cpc_vd = f"v{ConstantProductCurve.__VERSION__} ({ConstantProductCurve.__DATE__})"
+cpc_container_vd = f"v{CPCContainer.__VERSION__} ({CPCContainer.__DATE__})"
+#curve_base_vd = f"v{CurveBase.__VERSION__} ({CurveBase.__DATE__})"
+
+
+
+# conf.py
+rst_epilog = f"""
+.. |date| replace:: {date}
+.. |author| replace:: {author}
+.. |copyright| replace:: {copyright}
+.. |margp_optimizer_vd| replace:: {margp_optimizer_vd}
+.. |pair_optimizer_vd| replace:: {pair_optimizer_vd}
+.. |convex_optimizer_vd| replace:: {convex_optimizer_vd}
+.. |cpcarb_optimizer_vd| replace:: {cpcarb_optimizer_vd}
+.. |optimizer_base_vd| replace:: {optimizer_base_vd}
+.. |cpc_vd| replace:: {cpc_vd}
+.. |cpc_container_vd| replace:: {cpc_container_vd}
+"""
+#.. |xxx_optimizer_vd| replace:: {xxx_optimizer_vd}
+
+

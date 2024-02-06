@@ -3,8 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to FLBTools's documentation!
-====================================
+FastLaneBot Tools
+=================
+
+.. automodule:: tools
+   :noindex:
+
+- |version|
+- |release|
+- |date|
+- |author|
+- |copyright|
+
+
+
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 3
