@@ -991,41 +991,28 @@ class TxHelpers:
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
-        return asyncio.get_event_loop().run_until_complete(self._get_layer_one_gas_fee(signed_transaction=signed_transaction))
 
-    async def _get_layer_one_gas_fee(self, signed_transaction) -> Decimal:
+        tasks = self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee(), self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead(), self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
+        ethereum_base_fee, fixed_overhead, dynamic_overhead = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+
+        return self._get_layer_one_gas_fee(signed_transaction=signed_transaction, ethereum_base_fee=ethereum_base_fee, fixed_overhead=fixed_overhead, dynamic_overhead=dynamic_overhead)
+
+    def _get_layer_one_gas_fee(self, signed_transaction, ethereum_base_fee: int, fixed_overhead: int, dynamic_overhead: int) -> Decimal:
         """
         Returns the expected layer one gas fee for a layer 2 Optimism transaction
         :param signed_transaction: the signed ethereum TX
-
+        :param ethereum_base_fee: the L1 base fee received from the contract
+        :param fixed_overhead: the fixed overhead received from the contract
+        :param dynamic_overhead: the dynamic fee received from the contract
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
-        ethereum_base_fee = await self._get_layer_one_gas_price()
-        fixed_overhead = await self._get_layer_one_fee_overhead()
-        dynamic_overhead = await self._get_layer_one_fee_scalar()
         zero_bytes, non_zero_bytes = count_bytes(signed_transaction["rawTransaction"])
         tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
         tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
         l1_data_fee = tx_total_gas * ethereum_base_fee
         ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
         return Decimal(f"{l1_data_fee}e-24")
-
-    async def _get_layer_one_gas_price(self):
-        """
-        Returns the layer one base fee from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee()
-    async def _get_layer_one_fee_overhead(self):
-        """
-        Returns the layer one fee overhead from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead()
-    async def _get_layer_one_fee_scalar(self):
-        """
-        Returns the layer one fee overhead from the Layer 2 gas oracle for Optimism blockchains
-        """
-        return self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
 
 
 
