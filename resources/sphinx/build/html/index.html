@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>FastLaneBot Tools &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Analyzer" href="analyzer.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="fastlanebot-tools">
+<h1>FastLaneBot Tools<a class="headerlink" href="#fastlanebot-tools" title="Permalink to this heading">¶</a></h1>
+<p>FLB Tools – Tools related to Bancor’s Fastlane Bot.</p>
+<ul class="simple">
+<li><p>1.0+</p></li>
+<li><p>1.0+</p></li>
+<li><p>07/Feb/2024</p></li>
+<li><p>Stefan K Loesch</p></li>
+<li><p>Bprotocol foundation 2023-24</p></li>
+</ul>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analyzer.html#cpcanalyzer-class">CPCAnalyzer class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analyzer.html#helper-classes">Helper classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arbgraphs.html#arbgraph">ArbGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbgraphs.html#component-classes">Component classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#edge">Edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#path">Path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#cycle">Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#amount">Amount</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="arbgraphs.html#helper-classes">Helper classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arbgraphs.html#trackedstatefloat">TrackedStateFloat</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cpc.html#id1">CPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpc.html#cpccontainer">CPCContainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpc.html#module-tools.cpcbase">CurveBase</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="invariants.html#module-tools.invariants.functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="invariants.html#function">Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="invariants.html#functionvector">FunctionVector</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="invariants.html#module-tools.invariants.invariant">Invariant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="invariants.html#helpers">Helpers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="invariants.html#module-tools.invariants.vector">Vector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="invariants.html#module-tools.invariants.kernel">Kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimizer.html#main-optimizer-modules">Main Optimizer Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#margpoptimizer">MargPOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#pairoptimizer">PairOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#convexoptimizer">ConvexOptimizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optimizer.html#base-classes">Base Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#cpcarboptimizer">CPCArbOptimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#optimizer-base">Optimizer Base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optimizer.html#helper-classes">Helper Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="optimizer.html#module-tools.optimizer.dcbase">DCBase</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="analyzer.html" title="next chapter">Analyzer</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
