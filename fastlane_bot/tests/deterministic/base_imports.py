@@ -12,6 +12,7 @@ import re
 import eth_abi
 import psutil
 import ast
+import sys
 
 import platform
 if platform.system() == 'Windows':
@@ -366,7 +367,7 @@ def setStorageAt(w3, pool_address, update_params_dict_single):
     w3.provider.make_request(method='tenderly_setStorageAt', params=params)
     print(f"setStorageAt {pool_address}, {update_params_dict_single['slot']}")
 
-def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, rpc, terminate_other_bots=False):
+def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, python_instance='python', rpc=None, terminate_other_bots=False):
 
     # Check to see if unexpected instances of the bot are running
     bot_counts = count_process_instances('main.py')
@@ -389,7 +390,7 @@ def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, rpc, termi
 
     # build command
     cmd = [
-    "python",
+    f"{python_instance}",
     "main.py",
     "--loglevel=DEBUG",
     f"--arb_mode={arb_mode}",
