@@ -17,6 +17,7 @@ import eth_abi
 import pandas as pd
 
 from .tradeinstruction import TradeInstruction
+from ..config.constants import FLASHLOAN_FEE_MAP
 from ..events.interface import Pool
 from ..tools.cpc import T
 
@@ -501,13 +502,13 @@ class TxRouteHandler(TxRouteHandlerBase):
             return pool.tkn0_address
 
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> Tuple[List, int]:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
         :param trade_instructions_objects: a list of TradeInstruction objects
 
         :return:
-            int
+            Tuple[List, int], the flashloan struct and the flashloan fee amount
         """
         return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
 
@@ -529,7 +530,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             return 7
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> Tuple[List, int]:
         """
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
         :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
@@ -538,10 +539,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         flashloans = []
         balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
         has_balancer = False
+        flashloan_fee_amt = 0
+        flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
         for tkn in flash_tokens.keys():
             platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
             source_amounts = abs(flash_tokens[tkn]["flash_amt"])
+            flashloan_fee_amt += int(flashloan_fee * source_amounts // 1e6) if flashloan_fee > 0 else 0
             if platform_id == 7:
                 has_balancer = True
                 balancer["sourceTokens"].append(source_token)
@@ -553,7 +557,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         if has_balancer:
             flashloans.append(balancer)
 
-        return flashloans
+        return flashloans, flashloan_fee_amt
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
