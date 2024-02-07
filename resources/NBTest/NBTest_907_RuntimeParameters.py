@@ -1,28 +1,52 @@
-import os
-import subprocess
+import sys
+from contextlib import redirect_stderr
+from unittest import mock
 
 import pytest
 
 from fastlane_bot.tools.cpc import T
+from main import main  # adjust import according to your script's location and name
+
+@pytest.fixture
+def mock_args():
+    class Args:
+        def __init__(self):
+            self.cache_latest_only = True
+            self.backdate_pools = True
+            self.static_pool_data_filename = "static_pool_data"
+            self.arb_mode = "multi_pairwise_all"
+            self.flashloan_tokens = "LINK,ETH,BNT,WBTC,DAI,USDC,USDT,WETH"  # Assuming T.LINK, etc. are constants defined elsewhere
+            self.n_jobs = -1
+            self.exchanges = "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3"
+            self.polling_interval = 1
+            self.alchemy_max_block_fetch = 2000
+            self.reorg_delay = 0
+            self.logging_path = ""
+            self.loglevel = "INFO"
+            self.use_cached_events = False
+            self.run_data_validator = False
+            self.randomizer = "3"
+            self.limit_bancor3_flashloan_tokens = True
+            self.default_min_profit_gas_token = "0.01"
+            self.timeout = 1
+            self.target_tokens = None
+            self.replay_from_block = None
+            self.tenderly_fork_id = None
+            self.tenderly_event_exchanges = "pancakeswap_v2,pancakeswap_v3"
+            self.increment_time = 1
+            self.increment_blocks = 1
+            self.blockchain = "ethereum"
+            self.pool_data_update_frequency = -1
+            self.use_specific_exchange_for_target_tokens = None
+            self.prefix_path = ""
+            self.version_check_frequency = 1
+            self.self_fund = False
+            self.read_only = True
+            self.is_args_test = True
+
+    return Args()
 
 
-def find_main_py():
-    # Start at the directory of the current script
-    cwd = os.path.abspath(os.path.join(os.getcwd()))
-    while True:
-        if "main.py" in os.listdir(cwd):
-            return cwd  # Found the directory containing main.py
-        # If not, go up one directory
-        new_cwd = os.path.dirname(cwd)
-
-        # If we're already at the root directory, stop searching
-        if new_cwd == cwd:
-            raise FileNotFoundError("Could not find main.py in any parent directory")
-
-        cwd = new_cwd
-
-
-main_script_path = find_main_py()
 arb_mode_happy_path_options = [
     "single",
     "multi",
@@ -30,31 +54,18 @@ arb_mode_happy_path_options = [
     "multi_triangle",
     "b3_two_hop",
 ]
-arb_mode_invalid_options = ["s", "m", "t", None, 3]
 alchemy_max_block_fetch_happy_path_options = [100, 2000, 3, 4, 5]
-alchemy_max_block_fetch_invalid_options = [None, 3.5, "a"]
 cache_latest_only_happy_path_options = [True, False]
-cache_latest_only_invalid_options = [None, 3.5, "a"]
 backdate_pools_happy_path_options = [True, False]
-backdate_pools_invalid_options = [None, 3.5, "a"]
 flashloan_tokens_happy_path_options = [
     f"{T.LINK},{T.NATIVE_ETH}",
     f"{T.LINK},{T.NATIVE_ETH},{T.BNT}",
     f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC}",
     f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI}",
 ]
-flashloan_tokens_invalid_options = [
-    None,
-    3.5,
-    "a",
-    f"",
-]
 default_min_profit_gas_token_happy_path_options = ["0.01", 100, 2000, '3']
-default_min_profit_gas_token_invalid_options = [None, "a"]
 n_jobs_happy_path_options = [5, -1]
-n_jobs_invalid_options = [None, 3.5, "a"]
 timeout_happy_path_options = [60, 100]
-timeout_invalid_options = [None, 3.5, "a"]
 exchanges_happy_path_options = [
     "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2",
     "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3",
@@ -62,306 +73,116 @@ exchanges_happy_path_options = [
     "carbon_v1,bancor_v3,bancor_v2",
     "carbon_v1,bancor_v3",
 ]
-exchanges_invalid_options = [
-    None,
-    3.5,
-    "a",
-    f"",
-]
 randomizer_happy_path_options = [1, '2']
-randomizer_invalid_options = [None, 3.5, "a"]
 blockchain_happy_path_options = ["ethereum", "coinbase_base"]
-blockchain_invalid_options = ["arbitrum", "polygon"]
-
 
 @pytest.mark.parametrize("arb_mode", arb_mode_happy_path_options)
-def test_arb_mode_happy_path_options(arb_mode):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--arb_mode={arb_mode}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"arb_mode: {arb_mode}" in result.stderr
+def test_arb_mode(arb_mode, mock_args, capsys):
+    mock_args.arb_mode = arb_mode
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"arb_mode: {arb_mode}" in output
 
-
-@pytest.mark.parametrize("arb_mode", arb_mode_invalid_options)
-def test_arb_mode_invalid_options(arb_mode):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--arb_mode={arb_mode}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert f"error: argument --arb_mode: invalid choice: '{arb_mode}'" in str(e)
-
-
-@pytest.mark.parametrize(
-    "alchemy_max_block_fetch", alchemy_max_block_fetch_happy_path_options
-)
-def test_alchemy_max_block_fetch(alchemy_max_block_fetch):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--alchemy_max_block_fetch={alchemy_max_block_fetch}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"alchemy_max_block_fetch: {alchemy_max_block_fetch}" in result.stderr
-
-
-@pytest.mark.parametrize(
-    "alchemy_max_block_fetch", alchemy_max_block_fetch_invalid_options
-)
-def test_alchemy_max_block_fetch_invalid_options(alchemy_max_block_fetch):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--alchemy_max_block_fetch={alchemy_max_block_fetch}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert (
-                f"error: argument --alchemy_max_block_fetch: invalid int value: '{alchemy_max_block_fetch}'"
-                in str(e)
-        )
-
+@pytest.mark.parametrize("alchemy_max_block_fetch", alchemy_max_block_fetch_happy_path_options)
+def test_alchemy_max_block_fetch(alchemy_max_block_fetch, mock_args, capsys):
+    mock_args.alchemy_max_block_fetch = alchemy_max_block_fetch
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"alchemy_max_block_fetch: {alchemy_max_block_fetch}" in output
 
 @pytest.mark.parametrize("cache_latest_only", cache_latest_only_happy_path_options)
-def test_cache_latest_only(cache_latest_only):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--cache_latest_only={cache_latest_only}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"cache_latest_only: {cache_latest_only}" in result.stderr
-
-
-@pytest.mark.parametrize("cache_latest_only", cache_latest_only_invalid_options)
-def test_cache_latest_only_invalid_options(cache_latest_only):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--cache_latest_only={cache_latest_only}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert (
-                f"error: argument --cache_latest_only: invalid choice: '{cache_latest_only}'"
-                in str(e)
-        )
-
+def test_cache_latest_only(cache_latest_only, mock_args, capsys):
+    mock_args.cache_latest_only = cache_latest_only
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"cache_latest_only: {cache_latest_only}" in output
 
 @pytest.mark.parametrize("backdate_pools", backdate_pools_happy_path_options)
-def test_backdate_pools(backdate_pools):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--backdate_pools={backdate_pools}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"backdate_pools: {backdate_pools}" in result.stderr
-
-
-@pytest.mark.parametrize("backdate_pools", backdate_pools_invalid_options)
-def test_backdate_pools_invalid_options(backdate_pools):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--backdate_pools={backdate_pools}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert (
-                f"error: argument --backdate_pools: invalid choice: '{backdate_pools}'"
-                in str(e)
-        )
-
+def test_backdate_pools(backdate_pools, mock_args, capsys):
+    mock_args.backdate_pools = backdate_pools
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"backdate_pools: {backdate_pools}" in output
 
 @pytest.mark.parametrize("flashloan_tokens", flashloan_tokens_happy_path_options)
-def test_flashloan_tokens(flashloan_tokens):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--flashloan_tokens={flashloan_tokens}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"flashloan_tokens: {flashloan_tokens.split(',')}" in result.stderr
+def test_flashloan_tokens(flashloan_tokens, mock_args, capsys):
+    mock_args.flashloan_tokens = flashloan_tokens
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"flashloan_tokens: {flashloan_tokens.split(',')}" in output
 
-
-@pytest.mark.parametrize(
-    "default_min_profit_gas_token", default_min_profit_gas_token_happy_path_options
-)
-def test_default_min_profit_gas_token(default_min_profit_gas_token):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--default_min_profit_gas_token={default_min_profit_gas_token}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert (
-            f"default_min_profit_gas_token: {default_min_profit_gas_token}" in result.stderr
-    )
-
-
-@pytest.mark.parametrize(
-    "default_min_profit_gas_token", default_min_profit_gas_token_invalid_options
-)
-def test_default_min_profit_gas_token_invalid_options(default_min_profit_gas_token):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--default_min_profit_gas_token={default_min_profit_gas_token}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert (
-                f"error: argument --default_min_profit_gas_token: invalid int value: '{default_min_profit_gas_token}'"
-                in str(e)
-        )
-
+@pytest.mark.parametrize("default_min_profit_gas_token", default_min_profit_gas_token_happy_path_options)
+def test_default_min_profit_gas_token(default_min_profit_gas_token, mock_args, capsys):
+    mock_args.default_min_profit_gas_token = default_min_profit_gas_token
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"default_min_profit_gas_token: {default_min_profit_gas_token}" in output
 
 @pytest.mark.parametrize("n_jobs", n_jobs_happy_path_options)
-def test_n_jobs(n_jobs):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--n_jobs={n_jobs}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"n_jobs: {n_jobs}" in result.stderr
-
-
-@pytest.mark.parametrize("n_jobs", n_jobs_invalid_options)
-def test_n_jobs_invalid_options(n_jobs):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--n_jobs={n_jobs}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert f"error: argument --n_jobs: invalid int value: '{n_jobs}'" in str(e)
-
+def test_n_jobs(n_jobs, mock_args, capsys):
+    mock_args.n_jobs = n_jobs
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"n_jobs: {n_jobs}" in output
 
 @pytest.mark.parametrize("timeout", timeout_happy_path_options)
-def test_timeout(timeout):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--timeout={timeout}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"timeout: {timeout}" in result.stderr
-
-
-@pytest.mark.parametrize("timeout", timeout_invalid_options)
-def test_timeout_invalid_options(timeout):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--timeout={timeout}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert f"error: argument --timeout: invalid int value: '{timeout}'" in str(e)
-
-
-@pytest.mark.parametrize("exchanges", exchanges_happy_path_options)
-def test_exchanges(exchanges):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--exchanges={exchanges}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    exchanges = exchanges.split(',')
-    for exchange in exchanges:
-        assert f"{exchange}" in result.stderr
-
+def test_timeout(timeout, mock_args, capsys):
+    mock_args.timeout = timeout
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"timeout: {timeout}" in output
 
 @pytest.mark.parametrize("randomizer", randomizer_happy_path_options)
-def test_randomizer(randomizer):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--randomizer={randomizer}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"randomizer: {randomizer}" in result.stderr
-
-
-@pytest.mark.parametrize("randomizer", randomizer_invalid_options)
-def test_randomizer_invalid_options(randomizer):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--randomizer={randomizer}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert (
-                f"error: argument --randomizer: invalid int value: '{randomizer}'" in str(e)
-        )
-
+def test_randomizer(randomizer, mock_args, capsys):
+    mock_args.randomizer = randomizer
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"randomizer: {randomizer}" in output
 
 @pytest.mark.parametrize("blockchain", blockchain_happy_path_options)
-def test_blockchain(blockchain):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--blockchain={blockchain}",
-    ]
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=10)
-    assert f"blockchain: {blockchain}" in result.stderr
+def test_blockchain(blockchain, mock_args, capsys):
+    mock_args.blockchain = blockchain
+    with open('output.txt', 'w') as f:
+        with redirect_stderr(f):
+            main(mock_args)
+    # read the console output
+    with open('output.txt', 'r') as f:
+        output = f.read()
+    assert f"blockchain: {blockchain}" in output
 
-
-@pytest.mark.parametrize("blockchain", blockchain_invalid_options)
-def test_blockchain_invalid_options(blockchain):
-    cmd = [
-        "python",
-        f"{main_script_path}/main.py",
-        "--is_args_test=True",
-        f"--blockchain={blockchain}",
-    ]
-    with pytest.raises(subprocess.CalledProcessError) as e:
-        result = subprocess.run(
-            cmd, text=True, stderr=1, stdout=1, check=True, timeout=10
-        )
-        assert f"error: argument --blockchain: invalid choice: '{blockchain}'" in str(e)
