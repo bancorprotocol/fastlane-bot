@@ -548,7 +548,7 @@ def modify_tokens_for_deletion(w3, CarbonController):
 
 
 def get_balance_raw(w3, tokenAddress, address, blockNumber = None):
-    if tokenAddress in ['ETH', 'eth', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee']:
+    if tokenAddress in ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee']:
         if blockNumber == None:
             return w3.eth.get_balance(address)
         else:
