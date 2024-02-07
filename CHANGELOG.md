@@ -2,10 +2,35 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.27...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...HEAD)
+
+Merged pull requests
+
+- Update static data for Base, fix Sushi V3 Factory address [\#359](https://github.com/bancorprotocol/fastlane-bot/pull/359) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.30](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.30) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.29...v3.0.30)
+
+- bug in \_get\_layer\_one\_gas\_fee [\#353](https://github.com/bancorprotocol/fastlane-bot/issues/353)
+
+Merged pull requests
+
+- Revise all submit-transaction methods in the TxHelpers module [\#355](https://github.com/bancorprotocol/fastlane-bot/pull/355) ([barakman](https://github.com/barakman))
+
+## [v3.0.29](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.29) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.28...v3.0.29)
+
+- Problems in txhelpers with TX Submission & L1 gas fee calculation [\#351](https://github.com/bancorprotocol/fastlane-bot/issues/351)
+- Velocimeter fee calculation not implemented correctly [\#323](https://github.com/bancorprotocol/fastlane-bot/issues/323)
+- Update txhelpers.py [\#354](https://github.com/bancorprotocol/fastlane-bot/pull/354) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.0.28](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.28) (2024-02-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.27...v3.0.28)
 
 - Transactions on Base \(and other Optimism forks\) should account for L1 gas fee [\#336](https://github.com/bancorprotocol/fastlane-bot/issues/336)
-- Velocimeter fee calculation not implemented correctly [\#323](https://github.com/bancorprotocol/fastlane-bot/issues/323)
 - Investigate potential Uni V3 data desync [\#296](https://github.com/bancorprotocol/fastlane-bot/issues/296)
 - Clean up Solidly fee calculations [\#345](https://github.com/bancorprotocol/fastlane-bot/pull/345) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
