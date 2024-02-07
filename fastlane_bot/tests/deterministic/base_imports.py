@@ -366,16 +366,18 @@ def setStorageAt(w3, pool_address, update_params_dict_single):
     w3.provider.make_request(method='tenderly_setStorageAt', params=params)
     print(f"setStorageAt {pool_address}, {update_params_dict_single['slot']}")
 
-def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, rpc):
+def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, rpc, terminate_other_bots=False):
 
     # Check to see if unexpected instances of the bot are running
     bot_counts = count_process_instances('main.py')
 
     # If unexpected bots are running terminate them
     if bot_counts != 0:
-        print('Bots Found')
-        terminate_process_instances('main.py')
-        print('Bots terminated')
+        print('Other Bot Instances Found - ensure they are not on the same testnet')
+        if terminate_other_bots:
+            print("Terminating other bot instances")
+            terminate_process_instances('main.py')
+            print('Bots terminated')
 
     # set defaults
     if blockchain is None:
