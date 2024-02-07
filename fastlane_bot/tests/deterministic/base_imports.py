@@ -453,7 +453,7 @@ def await_first_iteration():
     most_recent_log_folder = log_directories[-1]
     print(f"Accessing log folder {most_recent_log_folder}")
     print("Looking for pool data file...")
-    most_recent_pooldata = most_recent_log_folder + "\latest_pool_data.json"
+    most_recent_pooldata = os.path.join(most_recent_log_folder, "latest_pool_data.json")
 
     while True:
         if os.path.exists(most_recent_pooldata):
