@@ -261,6 +261,14 @@ load_dotenv()
     help="If True, the bot will skip all operations which write to disk. Use this flag if you're running the bot in "
          "an environment with restricted write permissions.",
 )
+@click.option(
+    "--rpc_url",
+    default="",
+    type=str,
+    help="The RPC endpoint to use for the blockchain. If not provided, a default endpoint will be used based on the "
+         "blockchain specified together with the alchemy provider environment variables in the .env file (if "
+         "available).",
+)
 def main(
         cache_latest_only: bool,
         backdate_pools: bool,
@@ -293,6 +301,7 @@ def main(
         version_check_frequency: int,
         self_fund: bool,
         read_only: bool,
+        rpc_url: str,
 ):
     """
     The main entry point of the program. It sets up the configuration, initializes the web3 and Base objects,
@@ -330,7 +339,7 @@ def main(
         version_check_frequency (int): how frequently the bot should check the version of the arb contract. 1 = every loop
         self_fund (bool): If False, the bot will use Flashloans to fund arbitrage trades. If True, the bot will use funds in the wallet to perform arbitrage trades.
         read_only (bool): If True, the bot will skip all operations which write to disk. Use this flag if you're running the bot in an environment with restricted write permissions.
-
+        rpc_url (str): The RPC endpoint to use for the blockchain. If not provided, a default endpoint will be used based on the blockchain specified together with the alchemy provider environment variables in the .env file (if available).
     """
 
     if replay_from_block or tenderly_fork_id:
@@ -351,6 +360,7 @@ def main(
         flashloan_tokens,
         tenderly_fork_id,
         self_fund,
+        rpc_url,
     )
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
     tokens_filepath = os.path.join(base_path, "tokens.csv")
