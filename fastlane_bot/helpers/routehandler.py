@@ -501,7 +501,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             return pool.tkn0_address
 
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction], flashloan_fee: int) -> Tuple[List, int]:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
         :param trade_instructions_objects: a list of TradeInstruction objects
@@ -509,7 +509,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         :return:
             int
         """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
+        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects, flashloan_fee=flashloan_fee)
 
     def _get_flashloan_platform_id(self, tkn: str) -> int:
         """
@@ -529,7 +529,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             return 7
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction], flashloan_fee: int) -> Tuple[List, int]:
         """
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
         :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
@@ -538,10 +538,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         flashloans = []
         balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
         has_balancer = False
+        flashloan_fee_amt = 0
         for tkn in flash_tokens.keys():
             platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
             source_amounts = abs(flash_tokens[tkn]["flash_amt"])
+            flashloan_fee_amt += int(source_amounts * flashloan_fee // 1e6) # is this correct?
             if platform_id == 7:
                 has_balancer = True
                 balancer["sourceTokens"].append(source_token)
@@ -549,11 +551,12 @@ class TxRouteHandler(TxRouteHandlerBase):
             else:
                 source_token = self.wrapped_gas_token_to_native(source_token)
                 flashloans.append(
-                    {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]})
+                    {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]}
+                )
         if has_balancer:
             flashloans.append(balancer)
 
-        return flashloans
+        return flashloans, flashloan_fee_amt
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
@@ -1582,7 +1585,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
     def calculate_trade_profit(
-            self, trade_instructions: List[TradeInstruction], flashloan_fee
+            self, trade_instructions: List[TradeInstruction]
     ) -> int or float or Decimal:
         """
         Calculates the profit of the trade in the Flashloan token by calculating the sum in vs sum out
@@ -1591,15 +1594,12 @@ class TxRouteHandler(TxRouteHandlerBase):
         sum_out = 0
         flt = trade_instructions[0].tknin_address
 
-        # TODO: Is this supposed to be a decimal?
-        flashloan_fee_amt = Decimal(str(flashloan_fee)) * Decimal(str(trade_instructions[0].amtin))
-
         for trade in trade_instructions:
             if trade.tknin_address == flt:
                 sum_in += abs(trade.amtin)
             elif trade.tknout_address == flt:
                 sum_out += abs(trade.amtout)
-        sum_profit = sum_out - sum_in - flashloan_fee_amt
+        sum_profit = sum_out - sum_in
         return sum_profit
 
     def calculate_trade_outputs(
