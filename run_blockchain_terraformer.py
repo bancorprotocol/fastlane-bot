@@ -748,8 +748,8 @@ def organize_pool_details_solidly_v2(
 def _get_events(contract, blockchain: str, exchange: str, start_block: int) -> list:
     end_block = contract.w3.eth.block_number + 1
     chunk_size = BLOCK_CHUNK_SIZE_MAP[blockchain]
-    event_method = EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange].get_logs
     block_numbers = list(range(start_block, end_block, chunk_size)) + [end_block]
+    event_method = contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs
     events_list = [event_method(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
     return [event for events in events_list for event in events]
 
