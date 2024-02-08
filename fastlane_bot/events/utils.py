@@ -625,6 +625,8 @@ def get_config(
     if rpc_url:
         cfg.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
         cfg.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc_url))
+        if 'tenderly' in rpc_url:
+            cfg.NETWORK = cfg.NETWORK_TENDERLY
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
