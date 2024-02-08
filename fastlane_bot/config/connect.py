@@ -17,16 +17,6 @@ from web3.types import TxReceipt
 import os
 from dotenv import load_dotenv
 
-from fastlane_bot.config import network
-from fastlane_bot.config.constants import ARBITRUM_ONE_NETWORK, COINBASE_BASE_NETWORK, ETHEREUM_NETWORK, \
-    OPTIMISM_NETWORK, POLYGON_NETWORK, \
-    POLYGON_ZKEVM_NETWORK, \
-    WEB3_ALCHEMY_ARBITRUM, WEB3_ALCHEMY_BASE, \
-    WEB3_ALCHEMY_OPTIMISM, \
-    WEB3_ALCHEMY_POLYGON, \
-    WEB3_ALCHEMY_POLYGON_ZKEVM, \
-    WEB3_ALCHEMY_PROJECT_ID
-
 load_dotenv()
 
 import logging
