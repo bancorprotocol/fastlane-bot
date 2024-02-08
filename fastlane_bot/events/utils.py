@@ -602,8 +602,7 @@ def get_config(
 
     """
     default_min_profit_gas_token = Decimal(default_min_profit_gas_token)
-    if rpc_url:
-        rpc_url = NetworkBase.get_rpc_url(blockchain, tenderly_fork_id, rpc_url)
+
     if tenderly_fork_id:
         cfg = Config.new(
             config=Config.CONFIG_TENDERLY,
@@ -622,9 +621,11 @@ def get_config(
             self_fund=self_fund,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
+
     if rpc_url:
         cfg.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
         cfg.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc_url))
+
         if 'tenderly' in rpc_url:
             cfg.NETWORK = cfg.NETWORK_TENDERLY
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
