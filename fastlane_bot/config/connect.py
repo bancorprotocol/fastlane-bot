@@ -87,35 +87,6 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.provider_name = provider_name
         self.nonce = nonce
 
-    @staticmethod
-    def get_rpc_url(network_name: str, tenderly_fork_id: str = None, rpc_url: str = None) -> str:
-        """
-        Get the RPC URL for the given blockchain, using the tenderly fork id if provided, or the rpc_url if provided.
-
-        Args:
-            network_name (str): the name of the blockchain
-            tenderly_fork_id (str): the tenderly fork id
-            rpc_url (str): the rpc url to use
-        """
-
-        if tenderly_fork_id and not rpc_url:
-            rpc_url = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
-        elif rpc_url == "" and network_name == ETHEREUM_NETWORK:
-            rpc_url = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
-        elif rpc_url == "" and network_name == POLYGON_NETWORK:
-            rpc_url = f"https://polygon-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_POLYGON}"
-        elif rpc_url == "" and network_name == POLYGON_ZKEVM_NETWORK:
-            rpc_url = f"https://polygonzkevm-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_POLYGON_ZKEVM}"
-        elif rpc_url == "" and network_name == OPTIMISM_NETWORK:
-            rpc_url = f"https://opt-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_OPTIMISM}"
-        elif rpc_url == "" and network_name == COINBASE_BASE_NETWORK:
-            rpc_url = f"https://base-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_BASE}"
-        elif rpc_url == "" and network_name == ARBITRUM_ONE_NETWORK:
-            rpc_url = f"https://arb-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_ARBITRUM}"
-        elif rpc_url == "":
-            raise ValueError("Invalid network name or missing rpc_url")
-        return rpc_url
-
 
 class EthereumNetwork(NetworkBase):
     """
