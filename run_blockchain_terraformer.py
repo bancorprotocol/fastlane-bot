@@ -71,13 +71,14 @@ BALANCER_NAME = "balancer"
 PANCAKESWAP_V2_NAME = "pancakeswap_v2"
 PANCAKESWAP_V3_NAME = "pancakeswap_v3"
 AERODROME_V2_NAME = "aerodrome_v2"
-VELOCIMETER_V1_NAME = "velocimeter_v1"
+VELOCIMETER_V2_NAME = "velocimeter_v2"
 CARBON_POL_NAME = "bancor_pol"
 SHIBA_V2_NAME = "shiba_v2"
-SCALE_V2 = "scale_v2"
+SCALE_V2_NAME = "scale_v2"
 SOLIDLY_V2_NAME = "solidly_v2"
+VELODROME_V2_NAME = "velodrome_v2"
 
-SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V1_NAME, SCALE_V2]
+SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME]
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
@@ -92,6 +93,10 @@ EXCHANGE_IDS = {
     PANCAKESWAP_V2_NAME: 3,
     PANCAKESWAP_V3_NAME: 4,
     SOLIDLY_V2_NAME: 11,
+    VELOCIMETER_V2_NAME: 11,
+    SCALE_V2_NAME: 11,
+    VELODROME_V2_NAME: 12,
+    AERODROME_V2_NAME: 12,
 }
 
 dataframe_key = [
@@ -703,7 +708,6 @@ def organize_pool_details_solidly_v2(
     description = exchange + " " + pair
 
 
-
     pool_info = {
         "cid": pool_address,
         "last_updated": "",
@@ -719,7 +723,7 @@ def organize_pool_details_solidly_v2(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get("solidly_v2"),
+        "exchange_id": EXCHANGE_IDS.get(exchange),
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,

@@ -188,13 +188,10 @@ class AutomaticPoolShutdown:
             max_priority_gas=max_priority_gas,
             nonce=self.tx_helpers.get_nonce(),
         )
-        return (
-            self.tx_helpers.submit_private_transaction(
-                arb_tx=transaction, block_number=self.mgr.web3.eth.block_number
-            )
-            if transaction is not None
-            else None
-        )
+        if transaction is not None:
+            signed_transaction = self.tx_helpers.sign_transaction(transaction)
+            return self.tx_helpers.submit_private_transaction(signed_transaction, self.mgr.web3.eth.block_number)
+        return None
 
     def build_transaction(
         self, tkn: str, gas_price: int, max_priority_gas: int, nonce: int
