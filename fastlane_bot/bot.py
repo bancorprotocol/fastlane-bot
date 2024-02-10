@@ -73,6 +73,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
@@ -980,6 +981,9 @@ class CarbonBot(CarbonBotBase):
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
         fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
+        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
+        flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
+        flashloan_fee_amt = int(flashloan_fee * flashloan_amount)
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -1016,7 +1020,6 @@ class CarbonBot(CarbonBotBase):
             return None, None
 
         # Get the flashloan amount and token address
-        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
         flashloan_token_address = fl_token
 
         # Log the flashloan amount and token address

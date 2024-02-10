@@ -539,13 +539,11 @@ class TxRouteHandler(TxRouteHandlerBase):
         flashloans = []
         balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
         has_balancer = False
-        flashloan_fee_amt = 0
-        flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
+
         for tkn in flash_tokens.keys():
             platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
             source_amounts = abs(flash_tokens[tkn]["flash_amt"])
-            flashloan_fee_amt += int(flashloan_fee * source_amounts // 1e6) if flashloan_fee > 0 else 0
             if platform_id == 7:
                 has_balancer = True
                 balancer["sourceTokens"].append(source_token)
@@ -557,7 +555,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         if has_balancer:
             flashloans.append(balancer)
 
-        return flashloans, flashloan_fee_amt
+        return flashloans
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
