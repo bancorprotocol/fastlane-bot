@@ -1,8 +1,8 @@
 # Changelog
 
-## [v3.0.31](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.31) (2024-02-06)
+## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...v3.0.31)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...HEAD)
 
 Merged pull requests
 
