@@ -150,34 +150,6 @@ class TxHelper:
         gas_limit = ether_cost / self.gas_price_gwei * 1e9
         return int(gas_limit)
 
-    def _print_verbose(
-        self, flashloan_amount: int or float, flashloan_token_address: str
-    ):
-        """
-        Print the transaction details.
-
-        Parameters
-        ----------
-        flashloan_amount : int or float
-            The flashloan amount.
-        flashloan_token_address : str
-            The flashloan token address.
-
-        """
-        print(f"flashloan amount: {flashloan_amount}")
-        print(f"flashloan token address: {flashloan_token_address}")
-        print(f"Gas price: {self.gas_price_gwei} gwei")
-        print(
-            f"Gas limit in USD ${self.usd_gas_limit} " f"Gas limit: {self.gas_limit} "
-        )
-
-        balance = self.ConfigObj.w3.eth.getBalance(self.ConfigObj.LOCAL_ACCOUNT.address)
-        print(
-            f"Balance of the sender's account: \n"
-            f"{balance} Wei \n"
-            f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether"
-        )
-
 
 @dataclass
 class TxHelpers:

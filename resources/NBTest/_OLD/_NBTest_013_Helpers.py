@@ -562,10 +562,7 @@ assert h.estimate_gas_in_bnt(
 
 # Cf = Config()
 # h = TxHelpers(ConfigObj=Cf)
-# pool = h.ConfigObj.db.get_pool(
-#     exchange_name=h.ConfigObj.BANCOR_V3_NAME,
-#     tkn1_address=h.ConfigObj.ETH_ADDRESS,
-# )
+# pool = h.db.get_pool(exchange_name=h.BANCOR_V3_NAME, tkn1_address=h.ETH_ADDRESS)
 # print(pool.tkn0_balance, pool.tkn1_balance)
 
 
@@ -681,21 +678,69 @@ XS_WETH = "weth"
 XS_TRANSACTION = "transaction_built"
 XS_SIGNED = "transaction_signed"
 
+def _print_verbose(
+    self, flashloan_amount: int or float, flashloan_token_address: str
+):
+    """
+    Print the transaction details.
+
+    Parameters
+    ----------
+    flashloan_amount : int or float
+        The flashloan amount.
+    flashloan_token_address : str
+        The flashloan token address.
+
+    """
+    print(f"flashloan amount: {flashloan_amount}")
+    print(f"flashloan token address: {flashloan_token_address}")
+    print(f"Gas price: {self.gas_price_gwei} gwei")
+    print(
+        f"Gas limit in USD ${self.usd_gas_limit} " f"Gas limit: {self.gas_limit} "
+    )
+
+    balance = self.ConfigObj.w3.eth.getBalance(self.ConfigObj.LOCAL_ACCOUNT.address)
+    print(
+        f"Balance of the sender's account: \n"
+        f"{balance} Wei \n"
+        f"{self.ConfigObj.w3.fromWei(balance, 'ether')} Ether"
+    )
+
 def submit_flashloan_arb_tx(
-    h,
-    arb_data: list[dict[str, any]],
+    self,
+    arb_data: List[Dict[str, Any]],
     flashloan_token_address: str,
     flashloan_amount: int or float,
     verbose: bool = True,
     result=None,
 ) -> str:
+    """Submit a flashloan arbitrage transaction.
+
+    Parameters
+    ----------
+    arb_data : List[Dict[str, Any]]
+        The arbitrage data.
+    flashloan_token_address : str
+        The flashloan token address.
+    flashloan_amount : int or float
+        The flashloan amount.
+    verbose : bool, optional
+        Whether to print the transaction details, by default True
+    result: XS_XXX or None
+        What intermediate result to return (default: None)
+    Returns
+    -------
+    str
+        The transaction hash.
+    """
+
     if not isinstance(flashloan_amount, int):
         flashloan_amount = int(flashloan_amount)
 
-    if flashloan_token_address == h.ConfigObj.WETH_ADDRESS:
-        flashloan_token_address = h.ConfigObj.ETH_ADDRESS
+    if flashloan_token_address == self.ConfigObj.WETH_ADDRESS:
+        flashloan_token_address = self.ConfigObj.ETH_ADDRESS
 
-    if result == XS_WETH:
+    if result == self.XS_WETH:
         return flashloan_token_address
 
     assert (
@@ -703,31 +748,34 @@ def submit_flashloan_arb_tx(
     ), "The flashloan token address must be different from the first targetToken address in the arb data."
 
     if verbose:
-        h._print_verbose(flashloan_amount, flashloan_token_address)
+        self._print_verbose(flashloan_amount, flashloan_token_address)
     # Set the gas price (gwei)
-    gas_price = int(h.base_gas_price * h.gas_price_multiplier)
+    gas_price = int(self.base_gas_price * self.gas_price_multiplier)
 
     # Prepare the transaction
-    transaction = h.arb_contract.functions.flashloanAndArb(
+    transaction = self.arb_contract.functions.flashloanAndArb(
         arb_data, flashloan_token_address, flashloan_amount
     ).buildTransaction(
         {
-            "gas": h.gas_limit,
+            "gas": self.gas_limit,
             "gasPrice": gas_price,
-            "nonce": h.nonce,
+            "nonce": self.nonce,
         }
     )
-    if result == XS_TRANSACTION:
+    if result == self.XS_TRANSACTION:
         return transaction
 
     # Sign the transaction
-    signed_txn = h.ConfigObj.w3.eth.account.signTransaction(
-        transaction, h.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
+    signed_txn = self.ConfigObj.w3.eth.account.signTransaction(
+        transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
     )
-    if result == XS_SIGNED:
+    if result == self.XS_SIGNED:
         return signed_txn
     # Send the transaction
-    tx_hash = h.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    tx_hash = self.ConfigObj.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    self.ConfigObj.logger.info(
+        f"[submit_flashloan_arb_tx] Transaction sent with hash: {tx_hash}"
+    )
     return tx_hash.hex()
 
 flash_tkn_normal = submit_flashloan_arb_tx(h,
