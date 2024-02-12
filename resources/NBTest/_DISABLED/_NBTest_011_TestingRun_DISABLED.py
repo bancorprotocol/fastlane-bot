@@ -118,7 +118,7 @@ r
 
 # #### XS_ARBOPPS
 
-ops = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ARBOPPS)
+ops = bot._find_arbitrage(flashloan_tokens=flt, CCm=CCm)["r"]
 ops
 
 assert len(ops) == 5, "The best opportunity should populate correctly"
@@ -132,7 +132,7 @@ assert str(type(ops[4][0])) == "<class 'fastlane_bot.tools.optimizer.CPCArbOptim
 
 # #### XS_ORDSCAL
 
-ordscal = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDSCAL)
+ordscal = bot._run(flashloan_tokens=flt, CCm=CCm)
 ordscal
 
 assert ops[2] != ordscal, 'After reordering AND scaling the two dicts should not be alike'
@@ -141,7 +141,7 @@ assert sum([x['amtin'] for x in ordscal]) < sum([x['amtin'] for x in ops[2]]), "
 
 # #### XS_TI
 
-xsti = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_TI)
+xsti = bot._run(flashloan_tokens=flt, CCm=CCm)
 xsti
 
 assert str(type(xsti[0])) == "<class 'fastlane_bot.helpers.tradeinstruction.TradeInstruction'>", "After processing to TI the item should have trade instructions"
@@ -151,7 +151,7 @@ assert xsti[0].ConfigObj is not None, "A configobj should be present"
 
 # #### XS_AGGTI
 
-agg = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_AGGTI)
+agg = bot._run(flashloan_tokens=flt, CCm=CCm)
 agg
 
 assert agg[0].raw_txs != "[]", "In this case, the carbon order is first, when agg correctly the raw_txs should not be empty"
@@ -159,7 +159,7 @@ assert agg[1].raw_txs == "[]", "In this case, the univ3 order is second, when ag
 
 # #### XS_ORDINFO
 
-ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDINFO)
+ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm)
 ordinfo
 
 assert ordinfo[0] == agg, "The trade instructions should not have changed"
@@ -168,7 +168,7 @@ assert ordinfo[2][:2] == '0x', "The flashloan address should start with 0x"
 
 # #### XS_ENCTI
 
-enc = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ENCTI)
+enc = bot._run(flashloan_tokens=flt, CCm=CCm)
 enc
 
 assert len(enc[0].custom_data) >= 258, "In this example, the carbon order is first so the custom data should have been populated with at least one set of instructions"
@@ -176,7 +176,7 @@ assert enc[1].custom_data == '0x', "In this case, the univ3 order is second so t
 
 # #### XS_ROUTE
 
-route = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ROUTE)
+route = bot._run(flashloan_tokens=flt, CCm=CCm)
 route
 
 

@@ -139,7 +139,7 @@ pools = db.get_pool_data_with_tokens()
 
 arb_mode = "bancor_v3"
 
-#single = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result="calc_trade_instr")
+#single = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)
 
 arb_finder = bot._get_arb_finder("bancor_v3")
 finder = arb_finder(

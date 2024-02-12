@@ -109,7 +109,7 @@ r
 
 # #### XS_ARBOPPS
 
-ops = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ARBOPPS)
+ops = bot._find_arbitrage(flashloan_tokens=flt, CCm=CCm)["r"]
 ops
 
 # +
@@ -125,7 +125,7 @@ ops
 
 # #### XS_ORDSCAL
 
-ordscal = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDSCAL)
+ordscal = bot._run(flashloan_tokens=flt, CCm=CCm)
 ordscal
 
 # +
@@ -136,7 +136,7 @@ ordscal
 
 # #### XS_TI
 
-xsti = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_TI)
+xsti = bot._run(flashloan_tokens=flt, CCm=CCm)
 xsti
 
 # +
@@ -148,7 +148,7 @@ xsti
 
 # #### XS_AGGTI
 
-agg = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_AGGTI)
+agg = bot._run(flashloan_tokens=flt, CCm=CCm)
 agg
 
 # +
@@ -158,7 +158,7 @@ agg
 
 # #### XS_ORDINFO
 
-ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ORDINFO)
+ordinfo = bot._run(flashloan_tokens=flt, CCm=CCm)
 ordinfo
 
 # +
@@ -169,7 +169,7 @@ ordinfo
 
 # #### XS_ENCTI
 
-enc = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ENCTI)
+enc = bot._run(flashloan_tokens=flt, CCm=CCm)
 enc
 
 # +
@@ -179,7 +179,7 @@ enc
 
 # #### XS_ROUTE
 
-route = bot._run(flashloan_tokens=flt, CCm=CCm, result=bot.XS_ROUTE)
+route = bot._run(flashloan_tokens=flt, CCm=CCm)
 route
 
 
