@@ -182,7 +182,7 @@ assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at l
 # ### Test_Single_Arb_Finder_vs_run
 
 # +
-run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
+run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
 arb_finder = bot._get_arb_finder("single")
 finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
