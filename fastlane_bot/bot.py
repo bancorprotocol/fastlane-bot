@@ -773,7 +773,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         best_profit: Decimal,
         fl_token: str,
-        flashloan_fee_amt: int,
+        flashloan_fee_amt: int = 0,
     ) -> Tuple[Decimal, Decimal, Decimal]:
         """
         Calculate the actual profit in USD.
