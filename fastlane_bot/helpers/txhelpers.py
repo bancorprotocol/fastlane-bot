@@ -150,10 +150,6 @@ class TxHelper:
         gas_limit = ether_cost / self.gas_price_gwei * 1e9
         return int(gas_limit)
 
-    XS_WETH = "weth"
-    XS_TRANSACTION = "transaction_built"
-    XS_SIGNED = "transaction_signed"
-
 
 @dataclass
 class TxHelpers:
@@ -189,10 +185,56 @@ class TxHelpers:
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
-    XS_API_CALLS = "various_api_calls"
-    XS_TRANSACTION = "transaction_built"
-    XS_GAS_IN_BNT = "gas_in_bnt"
-    XS_MIN_PROFIT_CHECK = "min_profit_check"
+    def _get_transaction_info(self) -> (int, int, int, int):
+        # Get current base fee for pending block
+        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+
+        # Get the current recommended priority fee from Alchemy, and increase it by our offset
+        current_max_priority_gas = (
+            int(
+                self.get_max_priority_fee_per_gas_alchemy()
+                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+            )
+            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+            else 0
+        )
+
+        # Get current block number
+        block_number = int(self.web3.eth.get_block("latest")["number"])
+
+        # Get current nonce for our account
+        nonce = self.get_nonce()
+
+        return current_gas_price, current_max_priority_gas, block_number, nonce
+
+    def _get_prices_info(
+            self,
+            current_gas_price: int,
+            gas_estimate: int,
+            expected_profit_usd: Decimal,
+            expected_profit_eth: Decimal,
+            signed_arb_tx
+        ) -> (int, int, int, int):
+        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
+        gas_cost_eth = (
+            Decimal(str(current_gas_price))
+            * Decimal(str(gas_estimate))
+            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
+            / Decimal("10") ** Decimal("18")
+        )
+
+        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
+            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_arb_tx)
+            gas_cost_eth += layer_one_gas_fee
+
+        # Gas cost in usd can be estimated using the profit usd/eth rate
+        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
+
+        # Multiply by reward percentage, taken from the arb contract
+        adjusted_reward_eth = Decimal(Decimal(expected_profit_eth) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        adjusted_reward_usd = adjusted_reward_eth * expected_profit_usd / expected_profit_eth
+
+        return gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd
 
     def validate_and_submit_transaction(
         self,
@@ -201,7 +243,6 @@ class TxHelpers:
         src_address: str,
         expected_profit_eth: Decimal,
         expected_profit_usd: Decimal,
-        result: str = None,
         verbose: bool = False,
         safety_override: bool = False,
         log_object: Dict[str, Any] = None,
@@ -221,9 +262,6 @@ class TxHelpers:
             )
             return None
 
-        # Get current base fee for pending block
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-
         if verbose:
             self.ConfigObj.logger.info(
                 "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
@@ -232,23 +270,7 @@ class TxHelpers:
                 f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_eth)} \n\n"
             )
 
-        # Get the current recommended priority fee from Alchemy, and increase it by our offset
-        current_max_priority_gas = (
-            int(
-                self.get_max_priority_fee_per_gas_alchemy()
-                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-            )
-            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
-            else 0
-        )
-
-        # Get current block number
-        block_number = int(self.web3.eth.get_block("latest")["number"])
-        # Get current nonce for our account
-        nonce = self.get_nonce()
-
-        if result == self.XS_API_CALLS:
-            return current_gas_price, current_max_priority_gas, block_number, nonce
+        current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
@@ -257,11 +279,9 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority=current_max_priority_gas,
             nonce=nonce,
-            test_fake_gas=True if result is not None else False,
+            test_fake_gas=False,
             flashloan_struct=flashloan_struct,
         )
-        if result == self.XS_TRANSACTION:
-            return arb_tx
 
         if arb_tx is None:
             self.ConfigObj.logger.info(
@@ -278,25 +298,12 @@ class TxHelpers:
 
         signed_arb_tx = self.sign_transaction(arb_tx)
 
-        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
-        gas_cost_eth = (
-            Decimal(str(current_gas_price))
-            * Decimal(str(gas_estimate))
-            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
-            / Decimal("10") ** Decimal("18")
-        )
-        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_arb_tx.rawTransaction)
-            gas_cost_eth += layer_one_gas_fee
-
-        # Gas cost in usd can be estimated using the profit usd/eth rate
-        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
-        # Multiply by reward percentage, taken from the arb contract
-        adjusted_reward = Decimal(
-            Decimal(expected_profit_eth) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE)
-        )
-        adjusted_reward_usd = (
-            adjusted_reward * expected_profit_usd / expected_profit_eth
+        gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = self._get_prices_info(
+            current_gas_price,
+            gas_estimate,
+            expected_profit_usd,
+            expected_profit_eth,
+            signed_arb_tx.rawTransaction
         )
 
         transaction_log = {
@@ -317,12 +324,10 @@ class TxHelpers:
         self.ConfigObj.logger.info(
             log_format(log_data=log_json, log_name="arb_with_gas")
         )
-        if result == self.XS_MIN_PROFIT_CHECK:
-            return adjusted_reward, gas_cost_eth
 
-        if adjusted_reward > gas_cost_eth or safety_override:
+        if adjusted_reward_eth > gas_cost_eth or safety_override:
             self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward)} GAS TOKEN vs cost of {num_format(gas_cost_eth)} GAS TOKEN in gas, executing arb."
+                f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward_eth)} GAS TOKEN vs cost of {num_format(gas_cost_eth)} GAS TOKEN in gas, executing arb."
             )
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward_usd)} USD vs cost of {num_format(gas_cost_usd)} USD in gas, executing arb."
@@ -339,7 +344,7 @@ class TxHelpers:
             return tx_hash
         else:
             self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward)} GAS TOKEN vs gas cost of {num_format(gas_cost_eth)} GAS TOKEN. Abort, abort!\n\n"
+                f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward_eth)} GAS TOKEN vs gas cost of {num_format(gas_cost_eth)} GAS TOKEN. Abort, abort!\n\n"
             )
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward_usd)} USD vs gas cost of {num_format(gas_cost_usd)} USD. Abort, abort!\n\n"

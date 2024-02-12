@@ -615,13 +615,7 @@ flashloan_amount = 5000000000
     current_max_priority_gas,
     current_block,
     nonce,
-) = h.validate_and_submit_transaction(
-    route_struct=route_struct,
-    src_amt=flashloan_amount,
-    src_address=flashloan_token_address,
-    expected_profit=profit,
-    result=h.XS_API_CALLS,
-)
+) = h._get_transaction_info()
 
 print(
     f"Result of API calls: current_gas_price={gas_price}, current_max_priority_gas={current_max_priority_gas}, block_number={current_block}, nonce={nonce}"
@@ -637,13 +631,9 @@ assert (
 Beyond this point it is not possible to test without real data. build_transaction_with_gas fails without a transaction that is expected to succeed.
 """
 
-# transaction_built = h.validate_and_submit_transaction(route_struct=arb_data_struct, src_amt=flash_amt, src_address=flash_tkn, expected_profit=profit, result=h.XS_TRANSACTION)
+# transaction_built = h.build_transaction_with_gas(routes=arb_data_struct, src_address=flash_tkn, src_amt=flash_amt, gas_price=current_gas_price, max_priority=current_max_priority_gas, nonce=nonce, test_fake_gas=True, flashloan_struct=flashloan_struct)
 #
 # print(f"transaction built = {transaction_built}")
-#
-# adj_profit, gas_cost_bnt = h.validate_and_submit_transaction(route_struct=arb_data_struct, src_amt=flash_amt, src_address=flash_tkn, expected_profit=profit, result=h.XS_MIN_PROFIT_CHECK)
-#
-# print(f"adjusted profit = {adj_profit}, gas cost in bnt = {gas_cost_bnt}, transaction will submit? {adj_profit > gas_cost_bnt}")
 
 # -
 
@@ -683,6 +673,10 @@ assert (
     h.deadline
     > h.w3.eth.getBlock("latest")["timestamp"] + C.DEFAULT_BLOCKTIME_DEVIATION - 1
 )
+
+XS_WETH = "weth"
+XS_TRANSACTION = "transaction_built"
+XS_SIGNED = "transaction_signed"
 
 def _print_verbose(
     self, flashloan_amount: int or float, flashloan_token_address: str
@@ -784,30 +778,30 @@ def submit_flashloan_arb_tx(
     )
     return tx_hash.hex()
 
-flash_tkn_normal = submit_flashloan_arb_tx(h, 
+flash_tkn_normal = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_WETH,
+    result=XS_WETH,
 )
-flash_tkn_weth = submit_flashloan_arb_tx(h, 
+flash_tkn_weth = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct_weth_test,
     flashloan_token_address=flash_tkn_weth_test,
     flashloan_amount=flash_amt_weth_test,
     verbose=False,
-    result=h.XS_WETH,
+    result=XS_WETH,
 )
 
 assert flash_tkn_normal == flash_tkn
 assert flash_tkn_weth == C.ETH_ADDRESS
 
-transaction = submit_flashloan_arb_tx(h, 
+transaction = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_TRANSACTION,
+    result=XS_TRANSACTION,
 )
 
 # TODO these values should change for EIP 1559 style transactions
@@ -818,12 +812,12 @@ assert transaction["nonce"] >= 0
 assert transaction["to"] == C.FASTLANE_CONTRACT_ADDRESS
 assert transaction["data"] is not None
 
-signed_transaction = submit_flashloan_arb_tx(h, 
+signed_transaction = submit_flashloan_arb_tx(h,
     arb_data=arb_data_struct,
     flashloan_token_address=flash_tkn,
     flashloan_amount=flash_amt,
     verbose=False,
-    result=h.XS_SIGNED,
+    result=XS_SIGNED,
 )
 assert signed_transaction
 
