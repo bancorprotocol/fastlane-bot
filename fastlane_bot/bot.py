@@ -786,8 +786,6 @@ class CarbonBot(CarbonBotBase):
             The best profit.
         fl_token: str
             The flashloan token.
-        fl_token_with_weth: str
-            The flashloan token with weth.
         flashloan_fee_amt: int
             The flashloan fee amount.
 
@@ -974,7 +972,7 @@ class CarbonBot(CarbonBotBase):
             calculated_trade_instructions
         )
 
-        flashloan_struct, flashloan_fee_amt = tx_route_handler.generate_flashloan_struct(
+        flashloan_struct = tx_route_handler.generate_flashloan_struct(
             trade_instructions_objects=calculated_trade_instructions
         )
 

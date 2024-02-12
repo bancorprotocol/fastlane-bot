@@ -9,5 +9,5 @@ FLASHLOAN_FEE_MAP = {
     # should be in the form of {network: fee * 1e6}
     "ethereum": 0,
     "coinbase_base": 0,
-    "fantom": 300,  # Flashloans come with a 0.03% Fee from Beethoven X (Balancer fork)
+    "fantom": 0.03  # %
 }
