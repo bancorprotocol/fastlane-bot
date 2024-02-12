@@ -296,7 +296,7 @@ class TxHelpers:
         else:
             current_gas_price = arb_tx["gasPrice"]
 
-        signed_arb_tx = self.sign_transaction(arb_tx).rawTransaction
+        signed_arb_tx = self.sign_transaction(arb_tx)
 
         gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = self._get_prices_info(
             current_gas_price,
