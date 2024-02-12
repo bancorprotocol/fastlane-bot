@@ -294,6 +294,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON = S.NETWORK_POLYGON
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
+    NETWORK_FANTOM = S.NETWORK_FANTOM
 
     # FLAGS
     #######################################################################################
@@ -318,6 +319,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkPolygonZkevm(_direct=False)
         elif network == cls.NETWORK_OPTIMISM:
             return _ConfigNetworkOptimism(_direct=False)
+        elif network == cls.NETWORK_FANTOM:
+            return _ConfigNetworkFantom(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:

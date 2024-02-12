@@ -222,7 +222,7 @@ load_dotenv()
     default="ethereum",
     help="""A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and 
     are not supported.""",
-    type=click.Choice(["ethereum", "coinbase_base"]),
+    type=click.Choice(["ethereum", "coinbase_base", "fantom"]),
 )
 @click.option(
     "--pool_data_update_frequency",
