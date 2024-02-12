@@ -33,21 +33,6 @@ def int_prefix(string: str) -> int:
     return int(string[:-len(string.lstrip("0123456789"))])
 
 
-def convert_decimals_to_wei_format(tkn_amt: Decimal, decimals: int) -> int:
-    """
-    param: tkn_amt: the number of tokens to convert
-    param: token: the name of the token
-
-    Returns:
-    The number of tokens in WEI format according to the decimals used by the token
-    """
-    decimals = Decimal(str(decimals))
-    tkn_amt = Decimal(str(tkn_amt))
-    if decimals == 0:
-        decimals = Decimal("1")
-    return int(Decimal(tkn_amt * 10**decimals))
-
-
 def num_format(number):
     try:
         return "{0:.4f}".format(number)
@@ -72,29 +57,6 @@ def log_format(log_data: {}, log_name: str = "new"):
     log_string = f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
     return log_string
     # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
-
-
-def get_coingecko_token_table() -> List[Dict[str, Any]]:
-    """
-    Get the token table from coingecko
-    :return:  list of tokens
-    """
-    token_list = requests.get(url=cfg.COINGECKO_URL).json()["tokens"]
-
-    tokens = [
-        {
-            "address": cfg.w3.to_checksum_address(token["address"]),
-            "symbol": token["symbol"],
-            "decimals": token["decimals"],
-            "name": token["name"],
-        }
-        for token in token_list
-    ]
-    tokens.append(
-        {"address": cfg.ETH_ADDRESS, "symbol": "ETH", "decimals": 18, "name": "ETH"}
-    )
-
-    return tokens
 
 
 # Initialize Contracts
@@ -136,57 +98,6 @@ def convert_decimals(amt: Decimal, n: int) -> Decimal:
     if amt is None:
         return Decimal("0")
     return Decimal(str(amt / (Decimal("10") ** Decimal(str(n)))))
-
-
-def get_abi_and_router(exchange: str) -> Tuple[list, str]:
-    """
-    Returns the ABI and router address for the pool
-
-    :param exchange: The exchange to get the ABI and POOL_INFO_FOR_EXCHANGE for
-
-    :return: The ABI and POOL_INFO_FOR_EXCHANGE
-    """
-    base_path = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
-    POOL_INFO_FOR_EXCHANGE = pd.read_csv(f"{base_path}/pairs.csv")
-    if exchange == cfg.BANCOR_V2_NAME:
-        POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.BANCOR_V2_NAME
-        ]
-        ABI = BANCOR_V2_CONVERTER_ABI
-    elif exchange == cfg.BANCOR_V3_NAME:
-        POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.BANCOR_V3_NAME
-        ]
-        ABI = BANCOR_V3_NETWORK_INFO_ABI
-    elif exchange == cfg.SUSHISWAP_V2_NAME:
-        POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.SUSHISWAP_V2_NAME
-        ]
-        ABI = SUSHISWAP_POOLS_ABI
-    elif exchange == cfg.UNISWAP_V2_NAME:
-        POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.UNISWAP_V2_NAME
-        ]
-        ABI = UNISWAP_V2_POOL_ABI
-    elif exchange == cfg.UNISWAP_V3_NAME:
-        ABI = UNISWAP_V3_POOL_ABI
-        POOL_INFO_FOR_EXCHANGE = POOL_INFO_FOR_EXCHANGE[
-            POOL_INFO_FOR_EXCHANGE["exchange"] == cfg.UNISWAP_V3_NAME
-        ]
-    return ABI, POOL_INFO_FOR_EXCHANGE
-
-
-class HexbytesEncoder(json.JSONEncoder):
-    def default(self, obj):
-        return obj.hex() if isinstance(obj, Hexbytes) else super().default(obj)
-
-
-class Hexbytes:
-    def __init__(self, value):
-        self.value = value
-
-    def hex(self):
-        return self.value.hex()
 
 
 @dataclass
@@ -352,137 +263,6 @@ class EncodedOrder:
         # 'marginalRate' : decodeRate(B + A if y == z else B + A * y / z),
 
 
-@dataclass
-class UniV3Helper:
-    """
-    Handles math for Uni V3 pools.
-    """
-
-    contract_initialized: bool
-    fee: str
-    tick: int
-    sqrt_price_q96: Decimal
-    liquidity: Decimal
-
-    _sqrt_price_q96_upper_bound: Decimal = None
-    _sqrt_price_q96_lower_bound: Decimal = None
-    TICK_BASE = Decimal("1.0001")
-    Q96 = Decimal("2") ** Decimal("96")
-    tkn0_decimal: int = None
-    tkn1_decimal: int = None
-    tick_spacing: int = None
-
-    @staticmethod
-    def dec_factor(dtkn0: int, dtkn1: int) -> Decimal:
-        """
-        Returns the decimal factor.
-        """
-        return Decimal(str(10 ** (dtkn0 - dtkn1)))
-
-    def sqrt_price_x96_to_uint(
-        self, sqrt_price_x96: Decimal, decimals_token0: int, decimals_token1: int
-    ) -> Decimal:
-        """
-        Returns the sqrt price.
-        """
-
-        numerator1 = Decimal(str(sqrt_price_x96)) ** Decimal("2")
-        numerator2 = self.dec_factor(decimals_token0, decimals_token1)
-        return Decimal(str(numerator1 * numerator2 // Decimal(str(2**192))))
-
-    @property
-    def Pmarg(self) -> Decimal:
-        """
-        Returns the margin price.
-        """
-        return self.sqrt_price_x96_to_uint(
-            self.sqrt_price_q96, self.tkn0_decimal, self.tkn1_decimal
-        )
-
-    @property
-    def Pa(self) -> Decimal:
-        """
-        Returns the price of token 0.
-        """
-        return self.sqrt_price_x96_to_uint(
-            self.sqrt_price_q96_lower_bound, self.tkn0_decimal, self.tkn1_decimal
-        )
-
-    @property
-    def Pb(self) -> Decimal:
-        """
-        Returns the price of token 1.
-        """
-        return self.sqrt_price_x96_to_uint(
-            self.sqrt_price_q96_upper_bound, self.tkn0_decimal, self.tkn1_decimal
-        )
-
-    @property
-    def L(self) -> Decimal:
-        """
-        Returns the liquidity of the pool.
-        """
-        return self.liquidity / Decimal("10") ** (
-            Decimal("0.5") * (self.tkn0_decimal + self.tkn1_decimal)
-        )
-
-    @property
-    def sqrt_price_q96_upper_bound(self) -> Decimal:
-        """
-        Returns the upper bound of the price range.
-        """
-        return (
-            self._sqrt_price_q96_upper_bound
-            if self._sqrt_price_q96_upper_bound is not None
-            else self.tick_to_sqrt_price_q96(self.upper_tick)
-        )
-
-    @property
-    def sqrt_price_q96_lower_bound(self) -> Decimal:
-        """
-        Returns the lower bound of the price range.
-        """
-        return (
-            self._sqrt_price_q96_lower_bound
-            if self._sqrt_price_q96_lower_bound is not None
-            else self.tick_to_sqrt_price_q96(self.lower_tick)
-        )
-
-    def tick_to_sqrt_price_q96(self, tick: Decimal) -> Decimal:
-        """returns the price given a tick"""
-        return (
-            Decimal((self.TICK_BASE ** Decimal((tick / Decimal("2")))) * self.Q96)
-            if self.contract_initialized
-            else None
-        )
-
-    @property
-    def lower_tick(self) -> Decimal:
-        """
-        Returns the lower tick of the pool.
-        """
-        if self.contract_initialized:
-            return Decimal(
-                math.floor(self.tick / self.tick_spacing) * self.tick_spacing
-            )
-        else:
-            return Decimal(0)
-
-    @property
-    def upper_tick(self) -> Decimal:
-        """
-        Returns the upper tick of the pool.
-        """
-        if self.contract_initialized:
-            return Decimal(self.lower_tick + self.tick_spacing)
-        else:
-            return Decimal(0)
-
-    def __post_init__(self):
-        self._sqrt_price_q96_upper_bound = self.tick_to_sqrt_price_q96(self.upper_tick)
-        self._sqrt_price_q96_lower_bound = self.tick_to_sqrt_price_q96(self.lower_tick)
-
-
 def find_latest_timestamped_folder(logging_path=None):
     """
     Find the latest timestamped folder in the given directory or the default directory.
@@ -504,7 +284,6 @@ def find_latest_timestamped_folder(logging_path=None):
     return list_of_folders[0]  # The first one is the latest
 
 
-#%%
 def count_bytes(data: HexBytes) -> (int, int):
     """
     This function counts the number of zero and non-zero bytes in a given input data.
