@@ -752,7 +752,7 @@ def get_uni_pool_creation_events_v3(
     current_block = web3.eth.block_number
     events = []
 
-    for idx in range(int((current_block - block_number) / block_chunk_size)):
+    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
         from_block = block_number + idx * block_chunk_size
         to_block = (
             from_block + block_chunk_size
@@ -779,7 +779,7 @@ def get_uni_pool_creation_events_v2(
     """
     current_block = web3.eth.block_number
     events = []
-    for idx in range(int((current_block - block_number) / block_chunk_size)):
+    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
         from_block = block_number + idx * block_chunk_size
         to_block = (
             from_block + block_chunk_size
@@ -806,7 +806,7 @@ def get_solidly_pool_creation_events_v2(
     """
     current_block = web3.eth.block_number
     events = []
-    for idx in range(int((current_block - block_number) / block_chunk_size)):
+    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
         from_block = block_number + idx * block_chunk_size
         to_block = (
             from_block + block_chunk_size
