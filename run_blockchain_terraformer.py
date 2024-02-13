@@ -21,6 +21,25 @@ POLYGON_ZKEVM = "polygon_zkevm"
 ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
+FANTOM = "fantom"
+
+coingecko_network_map = {
+    "ethereum": "ethereum",
+    "coinbase_base": "base",
+    "polygon": "polygon-pos",
+    "polygon_zkevm": "polygon-zkevm",
+    "optimism": "optimistic-ethereum",
+    "arbitrum_one": "arbitrum-one",
+    "fantom": "fantom",
+    "arbitrum_nova": "arbitrum-nova",
+    "avalanche": "avalanche",
+    "tron": "tron",
+    "neon": "neon-evm",
+    "moonbeam": "moonbeam",
+    "linea": "linea",
+    "cosmos": "cosmos",
+    "kava": "kava",
+}
 
 BLOCK_CHUNK_SIZE_MAP = {
     "ethereum": 50000,
@@ -29,6 +48,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "arbitrum_one": 500000,
     "optimism": 500000,
     "coinbase_base": 250000,
+    "fantom": 10000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -38,6 +58,7 @@ ALCHEMY_KEY_DICT = {
     "arbitrum_one": "WEB3_ALCHEMY_ARBITRUM",
     "optimism": "WEB3_ALCHEMY_OPTIMISM",
     "coinbase_base": "WEB3_ALCHEMY_BASE",
+    "fantom": "WEB3_FANTOM",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -47,6 +68,7 @@ ALCHEMY_RPC_LIST = {
     "arbitrum_one": "https://arb-mainnet.g.alchemy.com/v2/",
     "optimism": "https://opt-mainnet.g.alchemy.com/v2/",
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
+    "fantom": "https://fantom-mainnet.blastapi.io/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -75,6 +97,7 @@ VELOCIMETER_V2_NAME = "velocimeter_v2"
 CARBON_POL_NAME = "bancor_pol"
 SHIBA_V2_NAME = "shiba_v2"
 SCALE_V2_NAME = "scale_v2"
+EQUALIZER_V2_NAME = "equalizer_v2"
 SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 
@@ -95,6 +118,7 @@ EXCHANGE_IDS = {
     SOLIDLY_V2_NAME: 11,
     VELOCIMETER_V2_NAME: 11,
     SCALE_V2_NAME: 11,
+    EQUALIZER_V2_NAME: 11,
     VELODROME_V2_NAME: 12,
     AERODROME_V2_NAME: 12,
 }
@@ -175,15 +199,7 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
 
     :returns: Dict
     """
-    network_map = {
-        "coinbase_base": "base",
-        "ethereum": "ethereum",
-        "polygon": "",
-        "polygon_zkevm": "polygon-zkevm",
-        "arbitrum_one": "arbitrum-one",
-        "optimism": "optimistic-ethereum",
-        "avalanche": "avalanche",
-    }
+
     token_path = os.path.join(write_path, "tokens.csv")
     token_file_exists = os.path.exists(token_path)
     if token_file_exists:
@@ -196,7 +212,7 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
 
         return TokenManager(token_dict)
 
-    url = f"https://tokens.coingecko.com/{network_map[network]}/all.json"
+    url = f"https://tokens.coingecko.com/{coingecko_network_map[network]}/all.json"
     response = requests.get(url).json()["tokens"]
     token_dict = {
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -686,10 +702,10 @@ def organize_pool_details_solidly_v2(
 
     is_stable = True if "stable" in stable_pool else False
 
-    if "velocimeter" in exchange:
+    if exchange in [VELOCIMETER_V2_NAME]:
         default_fee = factory_contract.caller.getFee(pool_address)
         default_fee = float(default_fee) / 10000
-    elif "scale" in exchange:
+    elif exchange in [SCALE_V2_NAME, EQUALIZER_V2_NAME]:
         default_fee = factory_contract.caller.getRealFee(pool_address)
         default_fee = float(default_fee) / 10 ** 18
     else:
@@ -813,11 +829,11 @@ def get_solidly_pool_creation_events_v2(
             if from_block + block_chunk_size < current_block
             else current_block
         )
-        if exchange in ["aerodrome_v2",]:
+        if exchange in [AERODROME_V2_NAME,]:
             events += factory_contract.events.PoolCreated.get_logs(
                 fromBlock=from_block, toBlock=to_block
             )
-        elif exchange in ["velocimeter_v2", "scale_v2"]:
+        elif exchange in [VELOCIMETER_V2_NAME, SCALE_V2_NAME, EQUALIZER_V2_NAME]:
             events += factory_contract.events.PairCreated.get_logs(
                 fromBlock=from_block, toBlock=to_block
             )
@@ -1212,6 +1228,10 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         factory_address = row[1]["factory_address"]
         router_address = row[1]["router_address"]
         fee = row[1]["fee"]
+        is_active = row[1]["active"]
+
+        if is_active == "FALSE":
+            continue
 
         if fresh_data and not start_block:
             from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
@@ -1276,7 +1296,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
             if exchange_name in ["velocimeter_v2", ]:
                 factory_abi = VELOCIMETER_V2_FACTORY_ABI
-            elif exchange_name in ["scale_v2"]:
+            elif exchange_name in [EQUALIZER_V2_NAME, SCALE_V2_NAME]:
                 factory_abi = SCALE_V2_FACTORY_ABI
             else:
                 # Aerodrome ABI

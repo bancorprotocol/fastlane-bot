@@ -55,7 +55,7 @@ class SolidlyV2(Exchange):
             default_fee = await self.factory_contract.caller.getFee(address)
             default_fee = float(default_fee) / 10000
 
-        elif "scale" in self.exchange_name:
+        elif self.exchange_name in ["scale_v2", "equalizer_v2"]:
             default_fee = await self.factory_contract.caller.getRealFee(address)
             default_fee = float(default_fee) / 10 ** 18
         else:
