@@ -802,17 +802,17 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
-                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
-                flashloan_fee_amt_eth = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
-                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate)) - flashloan_fee_amt_eth
-                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth, 'ETH'}")
+                fltkn_gastkn_conversion_rate = sorted_price_curves[0][-1]
+                flashloan_fee_amt_gastkn = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate))
+                best_profit_gastkn = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate)) - flashloan_fee_amt_gastkn
+                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_gastkn_conversion_rate, best_profit_gastkn, 'GASTOKEN'}")
             else:
                 self.ConfigObj.logger.error(
                     f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
                 )
                 raise
         else:
-            best_profit_eth = best_profit_fl_token - flashloan_fee_amt_fl_token
+            best_profit_gastkn = best_profit_fl_token - flashloan_fee_amt_fl_token
 
         try:
             price_curves_usd = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
@@ -820,18 +820,18 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
             if len(sorted_price_curves_usd)>0:
-                usd_eth_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
+                usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
         except Exception:
-            usd_eth_conversion_rate = Decimal("NaN")
+            usd_gastkn_conversion_rate = Decimal("NaN")
 
-        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'ETH', best_profit_eth, usd_eth_conversion_rate, best_profit_usd, 'USD'}")
-        return best_profit_fl_token, best_profit_eth, best_profit_usd
+        best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
+        return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
     def update_log_dict(
         arb_mode: str,
-        best_profit_eth: Decimal,
+        best_profit_gastkn: Decimal,
         best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
@@ -869,7 +869,7 @@ class CarbonBot(CarbonBotBase):
         ]
         log_dict = {
             "type": arb_mode,
-            "profit_gas_token": num_format_float(best_profit_eth),
+            "profit_gas_token": num_format_float(best_profit_gastkn),
             "profit_usd": num_format_float(best_profit_usd),
             "flashloan": flashloans,
             "trades": [],
@@ -980,19 +980,19 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Use helper function to calculate profit
-        best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
+        best_profit_fl_token, best_profit_gastkn, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
         # Log the best trade instructions
         self.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit_eth  # The log id
+            1, best_profit=best_profit_gastkn  # The log id
         )
 
         # Use helper function to update the log dict
         log_dict = self.update_log_dict(
             arb_mode,
-            best_profit_eth,
+            best_profit_gastkn,
             best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
@@ -1003,9 +1003,9 @@ class CarbonBot(CarbonBotBase):
         self.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
 
         # Check if the best profit is greater than the minimum profit
-        if best_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+        if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
-                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_eth)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
+                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
             return None, None
 
@@ -1078,7 +1078,7 @@ class CarbonBot(CarbonBotBase):
                 route_struct=route_struct,
                 src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
-                expected_profit_eth=best_profit_eth,
+                expected_profit_gastkn=best_profit_gastkn,
                 expected_profit_usd=best_profit_usd,
                 safety_override=False,
                 verbose=True,
