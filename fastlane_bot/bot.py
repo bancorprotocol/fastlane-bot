@@ -790,6 +790,7 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
         sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
         best_profit_fl_token = best_profit
@@ -969,9 +970,10 @@ class CarbonBot(CarbonBotBase):
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
         fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
-        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
+        fl_token_decimals = calculated_trade_instructions[0].tknin_decimals
+        flashloan_amount_wei = int(calculated_trade_instructions[0].amtin_wei)
         flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
-        flashloan_fee_amt = int(flashloan_fee * flashloan_amount)
+        flashloan_fee_amt = flashloan_fee * (flashloan_amount_wei / 10**int(fl_token_decimals))
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
@@ -1013,7 +1015,7 @@ class CarbonBot(CarbonBotBase):
         # Log the flashloan amount and token address
         self.handle_logging_for_trade_instructions(
             3,  # The log id
-            flashloan_amount=flashloan_amount,
+            flashloan_amount=flashloan_amount_wei,
         )
 
         # Encode the trade instructions
@@ -1049,7 +1051,7 @@ class CarbonBot(CarbonBotBase):
                     ConfigObj=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
                     route_struct=route_struct,
-                    src_amount=flashloan_amount,
+                    src_amount=flashloan_amount_wei,
                     src_address=flashloan_token_address,
                 ),
                 cids,
@@ -1060,7 +1062,7 @@ class CarbonBot(CarbonBotBase):
         # Log the route_struct
         self.handle_logging_for_trade_instructions(
             4,  # The log id
-            flashloan_amount=flashloan_amount,
+            flashloan_amount=flashloan_amount_wei,
             flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
             route_struct=route_struct,
@@ -1074,7 +1076,7 @@ class CarbonBot(CarbonBotBase):
         return (
             tx_helpers.validate_and_submit_transaction(
                 route_struct=route_struct,
-                src_amt=flashloan_amount,
+                src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
                 expected_profit_eth=best_profit_eth,
                 expected_profit_usd=best_profit_usd,
