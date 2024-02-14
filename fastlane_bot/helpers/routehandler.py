@@ -605,10 +605,18 @@ class TxRouteHandler(TxRouteHandlerBase):
         :param trade_instructions: A list of trade instruction objects
         """
 
+        is_FL_NATIVE_permitted=False
+        if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_ETHEREUM]:
+            is_FL_NATIVE_permitted=True
+
         if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
             tknin_address = None
             tknin_address = None
-            if trade_instructions[0].tknin_is_native:
+            if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
+                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                self.ConfigObj.logger.info(f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
+            elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
                 tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
                 tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
             elif trade_instructions[0].tknin_is_wrapped:
