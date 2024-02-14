@@ -48,7 +48,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "arbitrum_one": 500000,
     "optimism": 500000,
     "coinbase_base": 250000,
-    "fantom": 10000,
+    "fantom": 2000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -79,6 +79,8 @@ BALANCER_SUBGRAPH_CHAIN_URL = {
     "optimism": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-optimism-v2",
     "coinbase_base": "https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest",
     "avalanche": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2",
+    "fantom": "https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx",
+
 }
 
 BANCOR_V2_NAME = "bancor_v2"
@@ -707,7 +709,7 @@ def organize_pool_details_solidly_v2(
         default_fee = float(default_fee) / 10000
     elif exchange in [SCALE_V2_NAME, EQUALIZER_V2_NAME]:
         default_fee = factory_contract.caller.getRealFee(pool_address)
-        default_fee = float(default_fee) / 10 ** 18
+        default_fee = float(default_fee) / 10 ** 18 if exchange == SCALE_V2_NAME else float(default_fee) / 10000
     else:
         default_fee = factory_contract.caller.getFee(pool_address, is_stable)
         default_fee = float(default_fee) / 10000
