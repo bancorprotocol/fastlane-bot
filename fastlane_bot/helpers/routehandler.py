@@ -609,35 +609,25 @@ class TxRouteHandler(TxRouteHandlerBase):
         if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_ETHEREUM]:
             is_FL_NATIVE_permitted=True
 
-        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            tknin_address = None
-            tknin_address = None
-            if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                self.ConfigObj.logger.info(f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
-            elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
-                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-            elif trade_instructions[0].tknin_is_wrapped:
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-            else:
-                tknin_address = trade_instructions[0].tknin_address
-                tknin_address = trade_instructions[0].tknin_address
-            assert tknin_address is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_address is {tknin_address} and tknin_address is {tknin_address}, must not be None"
-            flash_tokens = {
-                tknin_address:
-                    {
-                        "tkn": tknin_address,
-                        "flash_amt": trade_instructions[0].amtin_wei,
-                        "decimals": trade_instructions[0].tknin_decimals}
-            }
+        tknin_address = None
+        if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
+            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            self.ConfigObj.logger.info(f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
+        elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
+            tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif trade_instructions[0].tknin_is_wrapped:
+            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
         else:
-            flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_address): {
-                "tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
-                "flash_amt": trade_instructions[0].amtin_wei,
-                "decimals": trade_instructions[0].tknin_decimals}}
+            tknin_address = trade_instructions[0].tknin_address
+        assert tknin_address is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_address is {tknin_address} and tknin_address is {tknin_address}, must not be None"
+        flash_tokens = {
+            tknin_address:
+                {
+                    "tkn": tknin_address,
+                    "flash_amt": trade_instructions[0].amtin_wei,
+                    "decimals": trade_instructions[0].tknin_decimals}
+        }
+
         return flash_tokens
 
     def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
