@@ -819,8 +819,7 @@ class CarbonBot(CarbonBotBase):
             sorted_price_curves_usd = self.custom_sort(price_curves_usd, sort_sequence)
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
-            if len(sorted_price_curves_usd)>0:
-                usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
+            usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
         except Exception:
             usd_gastkn_conversion_rate = Decimal("NaN")
 
