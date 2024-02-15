@@ -618,7 +618,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
         else:
             tknin_address = trade_instructions[0].tknin_address
-        assert tknin_address is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_address is {tknin_address} and tknin_address is {tknin_address}, must not be None"
         flash_tokens = {
             tknin_address:
                 {
