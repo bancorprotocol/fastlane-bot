@@ -1154,9 +1154,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         factory_address = row[1]["factory_address"]
         router_address = row[1]["router_address"]
         fee = row[1]["fee"]
-        is_active = row[1]["active"]
 
-        if is_active == "FALSE":
+        if row[1]["active"] == "FALSE":
             continue
 
         if fresh_data and not start_block:
