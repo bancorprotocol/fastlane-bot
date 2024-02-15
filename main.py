@@ -540,7 +540,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
                 f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}\n"
-                f"{mgr.cfg.logging_header}\n"
+                f"bot_version: {bot_version}\n"
                 f"\n********************************************\n\n"
             )
 
