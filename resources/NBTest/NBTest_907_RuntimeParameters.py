@@ -43,6 +43,7 @@ def mock_args():
             self.self_fund = 'False'
             self.read_only = 'True'
             self.is_args_test = 'True'
+            self.rpc_url = None
 
     return Args()
 
