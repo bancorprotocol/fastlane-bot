@@ -760,6 +760,11 @@ if __name__ == "__main__":
         type=bool,
         help="The logging path.",
     )
+    parser.add_argument(
+        "--rpc_url",
+        default=None,
+        help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
+    )
 
     # Process the arguments
     args = parser.parse_args()
