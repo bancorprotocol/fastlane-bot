@@ -651,7 +651,7 @@ class _ConfigNetworkFantom(ConfigNetwork):
     NETWORK_ID = "250"
     NETWORK_NAME = "fantom"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    RPC_ENDPOINT = "https://fantom-mainnet.blastapi.io/"
+    RPC_ENDPOINT = "https://fantom.blockpi.network/v1/rpc/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_FANTOM")
 
     network_df = get_multichain_addresses(network=NETWORK_NAME)
