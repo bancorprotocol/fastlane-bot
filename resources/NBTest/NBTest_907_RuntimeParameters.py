@@ -11,8 +11,8 @@ from main import main  # adjust import according to your script's location and n
 def mock_args():
     class Args:
         def __init__(self):
-            self.cache_latest_only = True
-            self.backdate_pools = True
+            self.cache_latest_only = 'True'
+            self.backdate_pools = 'True'
             self.static_pool_data_filename = "static_pool_data"
             self.arb_mode = "multi_pairwise_all"
             self.flashloan_tokens = "LINK,ETH,BNT,WBTC,DAI,USDC,USDT,WETH"  # Assuming T.LINK, etc. are constants defined elsewhere
@@ -23,10 +23,10 @@ def mock_args():
             self.reorg_delay = 0
             self.logging_path = ""
             self.loglevel = "INFO"
-            self.use_cached_events = False
-            self.run_data_validator = False
+            self.use_cached_events = 'False'
+            self.run_data_validator = 'False'
             self.randomizer = "3"
-            self.limit_bancor3_flashloan_tokens = True
+            self.limit_bancor3_flashloan_tokens = 'True'
             self.default_min_profit_gas_token = "0.01"
             self.timeout = 1
             self.target_tokens = None
@@ -40,9 +40,10 @@ def mock_args():
             self.use_specific_exchange_for_target_tokens = None
             self.prefix_path = ""
             self.version_check_frequency = 1
-            self.self_fund = False
-            self.read_only = True
-            self.is_args_test = True
+            self.self_fund = 'False'
+            self.read_only = 'True'
+            self.is_args_test = 'True'
+            self.rpc_url = None
 
     return Args()
 
@@ -55,8 +56,8 @@ arb_mode_happy_path_options = [
     "b3_two_hop",
 ]
 alchemy_max_block_fetch_happy_path_options = [100, 2000, 3, 4, 5]
-cache_latest_only_happy_path_options = [True, False]
-backdate_pools_happy_path_options = [True, False]
+cache_latest_only_happy_path_options = ['True', 'False']
+backdate_pools_happy_path_options = ['True', 'False']
 flashloan_tokens_happy_path_options = [
     f"{T.LINK},{T.NATIVE_ETH}",
     f"{T.LINK},{T.NATIVE_ETH},{T.BNT}",

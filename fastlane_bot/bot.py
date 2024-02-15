@@ -56,6 +56,7 @@ from typing import Optional
 from web3 import Web3
 from web3.datastructures import AttributeDict
 
+import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxSubmitHandler,
@@ -209,9 +210,10 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
-                self.ConfigObj.logger.error(
-                    f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
-                )
+                if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
+                    self.ConfigObj.logger.error(
+                        f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+                    )
             except p.DoubleInvalidCurveError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
