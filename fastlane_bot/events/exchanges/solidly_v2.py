@@ -60,18 +60,19 @@ class SolidlyV2(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return EXCHANGE_INFO.get(self.exchange_name).get("pool_abi")
+        return EXCHANGE_INFO[self.exchange_name]["pool_abi"]
 
     @property
     def get_factory_abi(self):
-        return EXCHANGE_INFO.get(self.exchange_name).get("factory_abi")
+        return EXCHANGE_INFO[self.exchange_name]["factory_abi"]
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        fee = await EXCHANGE_INFO.get(self.exchange_name).get("fee_function")(address, contract, self.factory_contract)
-        fee_float = float(fee) / 10 ** EXCHANGE_INFO.get(self.exchange_name).get("decimals")
+        exchange_info = EXCHANGE_INFO[self.exchange_name]
+        fee = await exchange_info["fee_function"](address, contract, self.factory_contract)
+        fee_float = float(fee) / 10 ** exchange_info["decimals"]
         return str(fee_float), fee_float
 
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
