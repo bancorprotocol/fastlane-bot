@@ -72,26 +72,32 @@ def process_arguments(args):
     :param args: Namespace object containing command line arguments.
     :return: Processed arguments.
     """
+    def is_true(x):
+        return x.lower() == "true"
+
+    def int_or_none(x):
+        return int(x) if x else None
+
     # Define the transformations for each argument
     transformations = {
-        "backdate_pools": lambda x: x.lower() == "true",
+        "backdate_pools": is_true,
         "n_jobs": int,
         "polling_interval": int,
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
-        "use_cached_events": lambda x: x.lower() == "true",
-        "run_data_validator": lambda x: x.lower() == "true",
+        "use_cached_events": is_true,
+        "run_data_validator": is_true,
         "randomizer": int,
-        "limit_bancor3_flashloan_tokens": lambda x: x.lower() == "true",
-        "timeout": lambda x: int(x) if x else None,
-        "replay_from_block": lambda x: int(x) if x else None,
+        "limit_bancor3_flashloan_tokens": is_true,
+        "timeout": int_or_none,
+        "replay_from_block": int_or_none,
         "increment_time": int,
         "increment_blocks": int,
         "pool_data_update_frequency": int,
         "version_check_frequency": int,
-        "self_fund": lambda x: x.lower() == "true",
-        "read_only": lambda x: x.lower() == "true",
-        "is_args_test": lambda x: x.lower() == "true",
+        "self_fund": is_true,
+        "read_only": is_true,
+        "is_args_test": is_true,
     }
 
     # Apply the transformations
