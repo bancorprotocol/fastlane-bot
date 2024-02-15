@@ -125,6 +125,14 @@ EXCHANGE_IDS = {
     AERODROME_V2_NAME: 12,
 }
 
+EXCHANGE_POOL_CREATION_EVENT_NAMES = {
+    UNISWAP_V2_NAME: "PairCreated",
+    UNISWAP_V3_NAME: "PoolCreated",
+    AERODROME_V2_NAME: "PoolCreated",
+    VELOCIMETER_V2_NAME: "PairCreated",
+    SCALE_V2_NAME: "PairCreated",
+}
+
 dataframe_key = [
     "cid",
     "last_updated",
@@ -755,91 +763,13 @@ def organize_pool_details_solidly_v2(
     return pool
 
 
-def get_uni_pool_creation_events_v3(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> List:
-    """
-    This function retrieves Uniswap V3 pool generation events
-
-    :param factory_contract: the initialized Factory contract
-    :param block_number: the block number from which to start
-    :param web3: the Web3 object
-    :param block_chunk_size: the number of blocks to fetch at a time
-    returns: a list of raw pool creation events
-    """
-    current_block = web3.eth.block_number
-    events = []
-
-    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
-        from_block = block_number + idx * block_chunk_size
-        to_block = (
-            from_block + block_chunk_size
-            if from_block + block_chunk_size < current_block
-            else current_block
-        )
-        events += factory_contract.events.PoolCreated.get_logs(
-            fromBlock=from_block, toBlock=to_block
-        )
-    return events
-
-
-def get_uni_pool_creation_events_v2(
-    factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> List:
-    """
-    This function retrieves Uniswap V2 pool generation events
-
-    :param factory_contract: the initialized Factory contract
-    :param block_number: the block number from which to start
-    :param web3: the Web3 object
-    :param block_chunk_size: the number of blocks to fetch at a time
-    returns: a list of raw pool creation events
-    """
-    current_block = web3.eth.block_number
-    events = []
-    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
-        from_block = block_number + idx * block_chunk_size
-        to_block = (
-            from_block + block_chunk_size
-            if from_block + block_chunk_size < current_block
-            else current_block
-        )
-        events += factory_contract.events.PairCreated.get_logs(
-            fromBlock=from_block, toBlock=to_block
-        )
-    return events
-
-
-def get_solidly_pool_creation_events_v2(
-    exchange, factory_contract, block_number: int, web3: Web3, block_chunk_size=50000
-) -> List:
-    """
-    This function retrieves Solidly pool generation events
-
-    :param factory_contract: the initialized Factory contract
-    :param block_number: the block number from which to start
-    :param web3: the Web3 object
-    :param block_chunk_size: the number of blocks to fetch at a time
-    returns: a list of raw pool creation events
-    """
-    current_block = web3.eth.block_number
-    events = []
-    for idx in range(int(math.ceil((current_block - block_number) / block_chunk_size))):
-        from_block = block_number + idx * block_chunk_size
-        to_block = (
-            from_block + block_chunk_size
-            if from_block + block_chunk_size < current_block
-            else current_block
-        )
-        if exchange in [AERODROME_V2_NAME,]:
-            events += factory_contract.events.PoolCreated.get_logs(
-                fromBlock=from_block, toBlock=to_block
-            )
-        elif exchange in [VELOCIMETER_V2_NAME, SCALE_V2_NAME, EQUALIZER_V2_NAME]:
-            events += factory_contract.events.PairCreated.get_logs(
-                fromBlock=from_block, toBlock=to_block
-            )
-    return events
+def _get_events(contract, blockchain: str, exchange: str, start_block: int) -> list:
+    end_block = contract.w3.eth.block_number + 1
+    chunk_size = BLOCK_CHUNK_SIZE_MAP[blockchain]
+    block_numbers = list(range(start_block, end_block, chunk_size)) + [end_block]
+    event_method = contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs
+    events_list = [event_method(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
+    return [event for events in events_list for event in events]
 
 
 def get_uni_v3_pools(
@@ -862,9 +792,7 @@ def get_uni_v3_pools(
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = get_uni_pool_creation_events_v3(
-        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
-    )
+    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -909,9 +837,7 @@ def get_uni_v2_pools(
     :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = get_uni_pool_creation_events_v2(
-        factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
-    )
+    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -956,9 +882,7 @@ def get_solidly_v2_pools(
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = get_solidly_pool_creation_events_v2(
-        exchange=exchange, factory_contract=factory_contract, block_number=start_block, web3=web3, block_chunk_size=BLOCK_CHUNK_SIZE_MAP[blockchain]
-    )
+    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
