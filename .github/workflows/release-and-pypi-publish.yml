@@ -109,6 +109,7 @@ jobs:
           prLabel: 'Merged pull requests'
           compareLink: true
           addSections: '{"Security fixes": {"labels": ["security"]}, "Breaking changes": {"labels": ["breaking"]}}'
+          unreleased: false
 
       - name: Commit changelog update
         if: steps.check.outputs.skip != 'true'
