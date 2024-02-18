@@ -6,6 +6,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from joblib import parallel_backend, Parallel, delayed
 from pandas import DataFrame
+from web3.contract import Contract
 
 load_dotenv()
 import os
@@ -104,6 +105,26 @@ SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME]
+
+
+def get_fee_1(address: str, is_stable: str, factory_contract: Contract):
+    return factory_contract.caller.getFee(address)
+
+
+def get_fee_2(address: str, is_stable: str, factory_contract: Contract):
+    return factory_contract.caller.getRealFee(address)
+
+
+def get_fee_3(address: str, is_stable: str, factory_contract: Contract):
+    return factory_contract.caller.getFee(address, is_stable)
+
+SOLIDLY_EXCHANGE_INFO = {
+    "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    "equalizer_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
+    "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
+    "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
+    "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
+}
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
@@ -680,7 +701,7 @@ def organize_pool_details_uni_v2(
 
 
 def organize_pool_details_solidly_v2(
-        pool_data, token_manager, exchange, default_fee, factory_contract, web3
+        pool_data, token_manager, exchange, factory_contract, web3
 ):
     """
     This function organizes pool details for Solidly pools.
@@ -688,7 +709,6 @@ def organize_pool_details_solidly_v2(
     :param pool_data: the pool data from the pool creation event
     :param token_manager: the token lookup dict
     :param exchange: the exchange name
-    :param default_fee: the fee for the exchange
     :param factory_contract: the exchange's Factory contract - initialized
     :param web3: the Web3 object
 
@@ -707,20 +727,11 @@ def organize_pool_details_solidly_v2(
 
     stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
 
-    token_info = {}
-    pair = ""
 
-    is_stable = True if "stable" in stable_pool else False
-
-    if exchange in [VELOCIMETER_V2_NAME]:
-        default_fee = factory_contract.caller.getFee(pool_address)
-        default_fee = float(default_fee) / 10000
-    elif exchange in [SCALE_V2_NAME, EQUALIZER_V2_NAME]:
-        default_fee = factory_contract.caller.getRealFee(pool_address)
-        default_fee = float(default_fee) / 10 ** 18 if exchange == SCALE_V2_NAME else float(default_fee) / 10000
-    else:
-        default_fee = factory_contract.caller.getFee(pool_address, is_stable)
-        default_fee = float(default_fee) / 10000
+    is_stable = True if stable_pool == "stable" else False
+    exchange_info = SOLIDLY_EXCHANGE_INFO[exchange]
+    fee = exchange_info["fee_function"](pool_address, is_stable, factory_contract)
+    fee_float = float(fee) / 10 ** exchange_info["decimals"]
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
@@ -733,7 +744,6 @@ def organize_pool_details_solidly_v2(
         return None
     description = exchange + " " + pair
 
-
     pool_info = {
         "cid": pool_address,
         "last_updated": "",
@@ -741,8 +751,8 @@ def organize_pool_details_solidly_v2(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": str(default_fee),
-        "fee_float": default_fee,
+        "fee": str(fee_float),
+        "fee_float": fee_float,
         "address": pool_address,
         "anchor": "",
         "tkn0_address": token_info["tkn0_address"],
@@ -866,7 +876,6 @@ def get_solidly_v2_pools(
         exchange: str,
         factory_contract,
         start_block: int,
-        default_fee: float,
         web3: Web3,
         blockchain: str
 ) -> Tuple[DataFrame, DataFrame]:
@@ -889,7 +898,6 @@ def get_solidly_v2_pools(
             delayed(organize_pool_details_solidly_v2)(
                 pool_data=pool,
                 token_manager=token_manager,
-                default_fee=0,
                 exchange=exchange,
                 factory_contract=factory_contract,
                 web3=web3,
@@ -1219,13 +1227,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
-            if exchange_name in ["velocimeter_v2", ]:
-                factory_abi = VELOCIMETER_V2_FACTORY_ABI
-            elif exchange_name in [EQUALIZER_V2_NAME, SCALE_V2_NAME]:
-                factory_abi = SCALE_V2_FACTORY_ABI
-            else:
-                # Aerodrome ABI
-                factory_abi = SOLIDLY_V2_FACTORY_ABI
+
+            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
@@ -1234,7 +1237,6 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 token_manager=token_manager,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
-                default_fee=fee,
                 start_block=from_block,
                 web3=web3,
                 blockchain=network_name
