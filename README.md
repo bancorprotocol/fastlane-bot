@@ -109,6 +109,9 @@ The bot uses [python-dotenv][dotenvev] to load environment variables from a `.en
 ```bash
 export WEB3_ALCHEMY_PROJECT_ID="0-R5..."
 export ETH_PRIVATE_KEY_BE_CAREFUL="0x9c..."
+export WEB3_ALCHEMY_BASE="api_key_here"
+export WEB3_FANTOM="public"
+
 ```
 
 [dotenvev]:https://pypi.org/project/python-dotenv/
