@@ -802,7 +802,7 @@ def get_uni_v3_pools(
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V3_NAME, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -847,7 +847,7 @@ def get_uni_v2_pools(
     :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V2_NAME, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
