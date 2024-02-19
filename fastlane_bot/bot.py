@@ -1009,9 +1009,12 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount,
         )
 
+        # Split Carbon Orders
+        split_calculated_trade_instructions = tx_route_handler.split_carbon_trades(trade_instructions=calculated_trade_instructions)
+
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-            calculated_trade_instructions
+            split_calculated_trade_instructions
         )
 
         # Get the deadline

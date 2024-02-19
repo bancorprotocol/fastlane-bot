@@ -9,6 +9,7 @@ __DATE__="02/May/2023"
 
 import decimal
 import math
+import ast
 from _decimal import Decimal
 from dataclasses import dataclass, asdict
 from typing import List, Any, Dict, Tuple
@@ -647,6 +648,73 @@ class TxRouteHandler(TxRouteHandlerBase):
                                            "decimals": trade.tknin_decimals}
 
         return flash_tokens
+
+    def split_carbon_trades(self, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+        """
+        Split Carbon trades in which some trades are native gas token & others are wrapped gas token, or trades are on different Carbon exchanges.
+        For example:
+            If a trade includes Carbon trades which include a mix of wrapped/native gas token, or different Carbon deployments, this function will split them all into distinct trades.
+
+        returns: List[TradeInstruction]
+
+        """
+        new_trade_list = []
+        for idx, trade in enumerate(trade_instructions):
+            if trade.exchange_name not in trade.ConfigObj.CARBON_V1_FORKS:
+                new_trade_list.append(trade)
+                continue
+
+            if trade.tknin_address not in [trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] and trade.tknout_address not in [trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
+                new_trade_list.append(trade)
+                continue
+
+            carbon_exchanges = {}
+
+            for _tx in ast.literal_eval(trade.raw_txs):
+                cid = _tx["cid"]
+                curve = trade.db.get_pool(cid=str(cid).split('-')[0])
+
+                if curve.exchange_name not in carbon_exchanges:
+                    carbon_exchanges[curve.exchange_name] = {"native_raw_txs": [], "wrapped_raw_txs": [], "native_amt_in": 0, "native_amt_out": 0, "native_wei_in": 0, "native_wei_out": 0, "wrapped_amt_in": 0, "wrapped_amt_out": 0, "wrapped_wei_in": 0, "wrapped_wei_out": 0}
+                native_or_wrapped = "native" if trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens else "wrapped"
+                real_tkn = trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if native_or_wrapped == "native" else trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                tknin = real_tkn if trade.tknin in [trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] else trade.tknin
+                tknout = trade.tknout if trade.tknin in [trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] else real_tkn
+                amtin, amtout, amtin_wei, amtout_wei = _tx["amtin"], _tx["amtout"], _tx["_amtin_wei"], _tx["_amtout_wei"]
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_amt_in"] += amtin
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_amt_out"] += amtout
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_amtin_wei"] += amtin_wei
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_amtout_wei"] += amtout_wei
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_tknin"] = tknin
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_tknout"] = tknout
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_cid"] = cid
+                carbon_exchanges[curve.exchange_name][f"{native_or_wrapped}_raw_txs"].append({
+                    "cid": cid,
+                    "tknin": tknin,
+                    "amtin": amtin,
+                    "_amtin_wei": amtin_wei,
+                    "tknout": tknout,
+                    "amtout": amtout,
+                    "_amtout_wei": amtout_wei,
+                    })
+
+            for exchange in carbon_exchanges.keys():
+                for _native_or_wrapped in ["native", "wrapped"]:
+                    if len(carbon_exchanges[exchange][f"{_native_or_wrapped}_raw_txs"]) > 0:
+                        new_trade_list.append(TradeInstruction(
+                            cid=carbon_exchanges[exchange][f"{_native_or_wrapped}_cid"],
+                            tknin=carbon_exchanges[exchange][f"{_native_or_wrapped}_tknin"],
+                            amtin=carbon_exchanges[exchange][f"{_native_or_wrapped}_amt_in"],
+                            tknout=carbon_exchanges[exchange][f"{_native_or_wrapped}_tknout"],
+                            amtout=carbon_exchanges[exchange][f"{_native_or_wrapped}_amt_out"],
+                            _amtin_wei=carbon_exchanges[exchange][f"{_native_or_wrapped}_amtin_wei"],
+                            _amtout_wei=carbon_exchanges[exchange][f"{_native_or_wrapped}_amtout_wei"],
+                            db=trade.db,
+                            ConfigObj=trade.ConfigObj,
+                            raw_txs=str(carbon_exchanges[exchange][f"{_native_or_wrapped}_raw_txs"])
+                        ))
+
+        return new_trade_list
 
     def get_arb_contract_args(
         self, trade_instructions: List[TradeInstruction], deadline: int
