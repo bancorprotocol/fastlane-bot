@@ -1,3 +1,7 @@
+"""
+The main class of this module is the `CustomFormatter` class, which bla bla bla...
+"""
+
 # %%
 from decimal import *
 getcontext().prec = 100
@@ -18,30 +22,56 @@ GT_America_Extended_Medium = font_manager.FontProperties(fname='fonts/GT-America
 # %%
 class CustomFormatter(FuncFormatter):
     """
-    ### Custom Formatter Class
+    This class extends `FuncFormatter` to provide a custom format for numerical labels, particularly for plotting. 
+    
+    It adjusts the display of numbers based on specified thresholds, displaying
+    very small or very large numbers in scientific notation. Used for custom
+    formatting of numerical labels in plots, making them more readable
+    especially when dealing with a wide range of values.
 
-    This class extends `FuncFormatter` to provide a custom format for numerical labels, particularly for plotting. It adjusts the display of numbers based on specified thresholds, displaying very small or very large numbers in scientific notation.
 
-    ## Attributes:
-    | Attribute Name   | Type      | Description                                                                                            |
-    |------------------|-----------|--------------------------------------------------------------------------------------------------------|
-    | `low_threshold`  | `Decimal` | Numbers below this threshold (and non-zero) are displayed in scientific notation. Default is 0.001.    |
-    | `high_threshold` | `Decimal` | Numbers equal to or above this threshold are displayed in scientific notation. Default is 1e7 (10^7).  |
-    | `total_digits`   | `Decimal` | The total number of significant digits to display for numbers within the thresholds. Default is 7.     |
 
-    ## Methods:
-    | Method Name   | Description                                                                                              |
-    |---------------|----------------------------------------------------------------------------------------------------------|
-    | `format_label`| Formats a numerical label based on the thresholds and total digits specified, adjusting its display.     |
+    :param low_threshold: Numbers below this threshold (and non-zero) are displayed in scientific notation. Default is 0.001.
+    :type low_threshold: Decimal
+    :param high_threshold: Numbers equal to or above this threshold are displayed in scientific notation. Default is 1e7 (10^7).
+    :type high_threshold: Decimal
+    :param total_digits: The total number of significant digits to display for numbers within the thresholds. Default is 7.
+    :type total_digits: Decimal
+    
+    
+    
+    *Below are the old tables*
+    
+    
+    Attributes
 
-    ## Usage:
-    Used for custom formatting of numerical labels in plots, making them more readable especially when dealing with a wide range of values.
+    
+    ==================  ==========  =======================================================================================================
+    Attribute Name      Type        Description
+    ==================  ==========  =======================================================================================================
+    low_threshold       Decimal     Numbers below this threshold (and non-zero) are displayed in scientific notation. Default is 0.001.
+    high_threshold      Decimal     Numbers equal to or above this threshold are displayed in scientific notation. Default is 1e7 (10^7).
+    total_digits        Decimal     The total number of significant digits to display for numbers within the thresholds. Default is 7.
+    ==================  ==========  =======================================================================================================
 
-    ## Example:
-    ```
-    formatter = CustomFormatter(low_threshold=Decimal('0.001'), high_threshold=Decimal('1e7'), total_digits=Decimal('7'))
-    ax.xaxis.set_major_formatter(formatter)
-    ```
+    Methods
+
+    
+    ==============  ======================================================================================================
+    Method Name     Description
+    ==============  ======================================================================================================
+    format_label    Formats a numerical label based on the thresholds and total digits specified, adjusting its display.
+    ==============  ======================================================================================================
+
+    Usage
+    
+    
+    Example
+    
+    .. code-block:: python
+    
+        formatter = CustomFormatter(low_threshold=Decimal('0.001'), high_threshold=Decimal('1e7'), total_digits=Decimal('7'))
+        ax.xaxis.set_major_formatter(formatter)
     """
 
     def __init__(
@@ -71,23 +101,24 @@ class CustomFormatter(FuncFormatter):
         pos: Union[int, None] = None
         ) -> str:
         """
-        ### Formats a numerical label based on defined thresholds and total digits.
-
-        ## Parameters:
-        | Parameter Name | Type                | Description                                                                         |
-        |----------------|---------------------|-------------------------------------------------------------------------------------|
-        | `x`            | `float`             | The numerical value to be formatted.                                                |
-        | `pos`          | `Union[int, None]`  | An optional position argument, which can be used if needed for custom formatting.   |
-
-        ## Returns:
-        | Return Name | Type  | Description                                                             |
-        |-------------|-------|-------------------------------------------------------------------------|
-        | `label`     | `str` | The formatted label as a string, adjusted for readability based on `x`. |
-
-        ## Notes:
+        Formats a numerical label based on defined thresholds and total digits
+        
+        :param x: The numerical value to be formatted.
+        :param pos: An optional position argument, which can be used if needed for custom formatting.
+        :type x: float
+        :type pos: Union[int, None]
+        :raises: MooError if the caller is a cow
+        :returns: The formatted label as a string, adjusted for readability based on `x`.
+        :rtype: str 
+        
+        
+        Notes
+        =====
+        
         - For values between `low_threshold` and `high_threshold`, formats numbers using fixed-point notation with a dynamic number of decimal places.
         - For values outside these thresholds, formats numbers in scientific notation.
         - The method aims to improve the readability of labels in plots by adjusting the format based on the magnitude of the value.
+        
         """
         if 0 < abs(x) < self.low_threshold or abs(x) >= self.high_threshold:
             exponent = Decimal(np.floor(np.log10(abs(x))))
