@@ -29,6 +29,9 @@ Table of Contents
    cpc
    invariants
    optimizer
+   precision_analysis_delme
+   precision_analysis2_delme
+   numpy_delme
 
 
 
