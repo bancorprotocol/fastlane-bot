@@ -1011,7 +1011,8 @@ class CarbonBot(CarbonBotBase):
 
         # Split Carbon Orders
         split_calculated_trade_instructions = tx_route_handler.split_carbon_trades(trade_instructions=calculated_trade_instructions)
-
+        for trade in split_calculated_trade_instructions:
+            print(f"tknin = {trade.tknin}, tknout={trade.tknout}, exchange={trade.exchange_name}")
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
             split_calculated_trade_instructions
@@ -1030,7 +1031,7 @@ class CarbonBot(CarbonBotBase):
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
             route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(
-                trade_instructions=calculated_trade_instructions,
+                trade_instructions=split_calculated_trade_instructions,
                 route_struct=route_struct,
                 flashloan_struct=flashloan_struct,
             )

@@ -670,12 +670,12 @@ class TxRouteHandler(TxRouteHandlerBase):
 
             carbon_exchanges = {}
 
-            for _tx in ast.literal_eval(trade.raw_txs):
+            for _tx in eval(trade.raw_txs):
                 cid = _tx["cid"]
                 curve = trade.db.get_pool(cid=str(cid).split('-')[0])
 
                 if curve.exchange_name not in carbon_exchanges:
-                    carbon_exchanges[curve.exchange_name] = {"native_raw_txs": [], "wrapped_raw_txs": [], "native_amt_in": 0, "native_amt_out": 0, "native_wei_in": 0, "native_wei_out": 0, "wrapped_amt_in": 0, "wrapped_amt_out": 0, "wrapped_wei_in": 0, "wrapped_wei_out": 0}
+                    carbon_exchanges[curve.exchange_name] = {"native_raw_txs": [], "wrapped_raw_txs": [], "native_amt_in": 0, "native_amt_out": 0, "native_amtin_wei": 0, "native_amtout_wei": 0, "wrapped_amt_in": 0, "wrapped_amt_out": 0, "wrapped_amtin_wei": 0, "wrapped_amtout_wei": 0}
                 native_or_wrapped = "native" if trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens else "wrapped"
                 real_tkn = trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if native_or_wrapped == "native" else trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
                 tknin = real_tkn if trade.tknin in [trade.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, trade.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] else trade.tknin
