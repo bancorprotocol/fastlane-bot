@@ -23,6 +23,7 @@ ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
 FANTOM = "fantom"
+MANTLE = "mantle"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -40,6 +41,7 @@ coingecko_network_map = {
     "linea": "linea",
     "cosmos": "cosmos",
     "kava": "kava",
+    "mantle": "mantle",
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -50,6 +52,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "optimism": 500000,
     "coinbase_base": 250000,
     "fantom": 2000,
+    "mantle": 500000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -60,6 +63,7 @@ ALCHEMY_KEY_DICT = {
     "optimism": "WEB3_ALCHEMY_OPTIMISM",
     "coinbase_base": "WEB3_ALCHEMY_BASE",
     "fantom": "WEB3_FANTOM",
+    "mantle": "WEB3_MANTLE",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -70,6 +74,7 @@ ALCHEMY_RPC_LIST = {
     "optimism": "https://opt-mainnet.g.alchemy.com/v2/",
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
+    "mantle": "https://rpc.mantle.xyz/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -103,8 +108,10 @@ SCALE_V2_NAME = "scale_v2"
 EQUALIZER_V2_NAME = "equalizer_v2"
 SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
+CLEOPATRA_V2_NAME = "cleopatra_v2"
+STRATUM_V2_NAME = "stratum_v2"
 
-SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME]
+SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
 
 
 def get_fee_1(address: str, is_stable: str, factory_contract: Contract):
@@ -124,6 +131,9 @@ SOLIDLY_EXCHANGE_INFO = {
     "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
+    "cleopatra_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    "stratum_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    ### NEED TO CHECK Cleopatra and Stratum here
 }
 
 EXCHANGE_IDS = {
@@ -144,6 +154,8 @@ EXCHANGE_IDS = {
     EQUALIZER_V2_NAME: 11,
     VELODROME_V2_NAME: 12,
     AERODROME_V2_NAME: 12,
+    CLEOPATRA_V2_NAME: 12,
+    STRATUM_V2_NAME: 12,
 }
 
 EXCHANGE_POOL_CREATION_EVENT_NAMES = {
@@ -152,6 +164,8 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     AERODROME_V2_NAME: "PoolCreated",
     VELOCIMETER_V2_NAME: "PairCreated",
     SCALE_V2_NAME: "PairCreated",
+    CLEOPATRA_V2_NAME: "PairCreated",
+    STRATUM_V2_NAME: "PairCreated",
 }
 
 dataframe_key = [
@@ -1265,4 +1279,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
+terraform_blockchain(network_name="mantle", save_tokens=True)

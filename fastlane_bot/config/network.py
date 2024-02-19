@@ -321,6 +321,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkOptimism(_direct=False)
         elif network == cls.NETWORK_FANTOM:
             return _ConfigNetworkFantom(_direct=False)
+        elif network == cls.NETWORK_MANTLE:
+            return _ConfigNetworkMantle(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -680,6 +682,48 @@ class _ConfigNetworkFantom(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83": "WFTM",
         "0x28a92dde19D9989F39A49905d7C9C2FAc7799bDf": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkMantle(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_MANTLE
+    NETWORK_ID = "5000"
+    NETWORK_NAME = "mantle"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://rpc.mantle.xyz/"
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xFe19CbA3aB1A189B7FC17cAa798Df64Ad2b54d4D" ## NOT UPDATED
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0x7900f766F06e361FDDB4FdeBac5b138c4EEd8d4A"
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0x953A6D3f9DB06027b2feb8b76a76AA2FC8334865"
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    # STABLECOIN_KEY = "USDC-2913"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8"
+    NATIVE_GAS_TOKEN_SYMBOL = "MNT"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WMNT"
+    STABLECOIN_ADDRESS = "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = ""
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8": "WMNT",
+        "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
