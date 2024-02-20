@@ -260,7 +260,7 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 450, 500, 2500, 3000, 10000]
+    UNIV3_FEE_LIST = [80, 100, 250, 450, 500, 2500, 3000, 10000]
     MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
     DEFAULT_GAS = 950_000
     DEFAULT_GAS_PRICE = 0
@@ -295,6 +295,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
+    NETWORK_MANTLE = S.NETWORK_MANTLE
 
     # FLAGS
     #######################################################################################
@@ -699,7 +700,7 @@ class _ConfigNetworkMantle(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
 
     network_df = get_multichain_addresses(network=NETWORK_NAME)
-    FASTLANE_CONTRACT_ADDRESS = "0xFe19CbA3aB1A189B7FC17cAa798Df64Ad2b54d4D" ## NOT UPDATED
+    FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
 
     CARBON_CONTROLLER_ADDRESS = (

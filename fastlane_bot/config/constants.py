@@ -8,5 +8,6 @@ Licensed under MIT License.
 FLASHLOAN_FEE_MAP = {
     "ethereum": 0,
     "coinbase_base": 0,
-    "fantom": 0.0003
+    "fantom": 0.0003,
+    "mantle": 0,
 }
