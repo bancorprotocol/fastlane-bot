@@ -18,7 +18,8 @@ from web3 import Web3, AsyncWeb3
 
 from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
-from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO, SolidlyV2
+from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
+from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
 
 nest_asyncio.apply()
 
@@ -1218,7 +1219,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
 
-            factory_abi = EXCHANGE_INFO[exchange_name]["factory_abi"]
+            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
