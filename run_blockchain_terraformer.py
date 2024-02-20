@@ -15,6 +15,7 @@ from web3 import Web3
 
 from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
+from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO
 
 ETHEREUM = "ethereum"
 POLYGON = "polygon"
@@ -118,13 +119,8 @@ def get_fee_2(address: str, is_stable: str, factory_contract: Contract):
 def get_fee_3(address: str, is_stable: str, factory_contract: Contract):
     return factory_contract.caller.getFee(address, is_stable)
 
-SOLIDLY_EXCHANGE_INFO = {
-    "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
-    "equalizer_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
-    "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
-    "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
-    "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
-}
+
+SOLIDLY_EXCHANGE_INFO = EXCHANGE_INFO
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
