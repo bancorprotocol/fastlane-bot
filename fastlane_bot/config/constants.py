@@ -11,3 +11,4 @@ FLASHLOAN_FEE_MAP = {
     "fantom": 0.0003,
     "mantle": 0,
 }
+MANTLE_NAME = "mantle"
