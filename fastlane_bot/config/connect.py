@@ -171,7 +171,7 @@ class EthereumNetwork(NetworkBase):
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
 
-        if self.network_name == MANTLE_NAME:
+        if MANTLE_NAME in self.network_name:
             self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
             self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
 
