@@ -113,20 +113,6 @@ VELODROME_V2_NAME = "velodrome_v2"
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME]
 
 
-def get_fee_1(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getFee(address)
-
-
-def get_fee_2(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getRealFee(address)
-
-
-def get_fee_3(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getFee(address, is_stable)
-
-
-SOLIDLY_EXCHANGE_INFO = EXCHANGE_INFO
-
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
     BANCOR_V3_NAME: 2,
@@ -1232,7 +1218,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
 
-            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
+            factory_abi = EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
