@@ -19,13 +19,14 @@ from fastlane_bot.events.pools.base import Pool
 async def get_fee_1(address: str, contract: Contract, factory_contract: Contract):
     return await factory_contract.caller.getFee(address)
 
-
 async def get_fee_2(address: str, contract: Contract, factory_contract: Contract):
     return await factory_contract.caller.getRealFee(address)
 
-
 async def get_fee_3(address: str, contract: Contract, factory_contract: Contract):
     return await factory_contract.caller.getFee(address, await contract.caller.stable())
+
+async def get_fee_4(address: str, contract: Contract, factory_contract: Contract):
+    return await factory_contract.caller.getFee(await contract.caller.stable())
 
 EXCHANGE_INFO = {
     "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
@@ -33,6 +34,8 @@ EXCHANGE_INFO = {
     "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
+    "cleopatra_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_4},
+    "stratum_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
 }
 
 @dataclass
