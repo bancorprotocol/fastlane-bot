@@ -117,13 +117,14 @@ SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROM
 def get_fee_1(address: str, is_stable: str, factory_contract: Contract):
     return factory_contract.caller.getFee(address)
 
-
 def get_fee_2(address: str, is_stable: str, factory_contract: Contract):
     return factory_contract.caller.getRealFee(address)
 
-
 def get_fee_3(address: str, is_stable: str, factory_contract: Contract):
     return factory_contract.caller.getFee(address, is_stable)
+
+def get_fee_4(address: str, is_stable: str, factory_contract: Contract):
+    return factory_contract.caller.getFee(is_stable)
 
 SOLIDLY_EXCHANGE_INFO = {
     "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
@@ -131,9 +132,8 @@ SOLIDLY_EXCHANGE_INFO = {
     "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
-    "cleopatra_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    "cleopatra_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_4},
     "stratum_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
-    ### NEED TO CHECK Cleopatra and Stratum here
 }
 
 EXCHANGE_IDS = {
@@ -1279,4 +1279,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-terraform_blockchain(network_name="mantle", save_tokens=True)
+# terraform_blockchain(network_name="mantle", save_tokens=True)
