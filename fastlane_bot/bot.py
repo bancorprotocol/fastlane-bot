@@ -1011,8 +1011,6 @@ class CarbonBot(CarbonBotBase):
 
         # Split Carbon Orders
         split_calculated_trade_instructions = tx_route_handler.split_carbon_trades(trade_instructions=calculated_trade_instructions)
-        for trade in split_calculated_trade_instructions:
-            print(f"tknin = {trade.tknin}, tknout={trade.tknout}, exchange={trade.exchange_name}")
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
             split_calculated_trade_instructions
