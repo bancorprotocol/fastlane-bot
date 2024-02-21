@@ -440,8 +440,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         returns: List of RouteStruct
         """
 
-        # balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
-
         flashloan_native_gas_token = False
         flashloan_wrapped_gas_token = False
 
@@ -505,7 +503,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                     balance_tracker[tkn] = balance_tracker[tkn] + segmented_routes[segmented_routes_in_order[_idx]]["amts_out"][tkn]
                 for tkn in segmented_routes[segmented_routes_in_order[_idx]]["amts_in"].keys():
                     balance_tracker[tkn] = balance_tracker[tkn] - segmented_routes[segmented_routes_in_order[_idx]]["amts_in"][tkn]
-            #print(balance_tracker)
             if idx == 0:
                 if flashloan_native_gas_token:
                     if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in segmented_routes[segment]["tokens_in"]:
@@ -563,7 +560,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                     balance_tracker[tkn] = balance_tracker[tkn] + segmented_routes[segmented_routes_in_order[idx]]["amts_out"][tkn]
                 for tkn in segmented_routes[segmented_routes_in_order[idx]]["amts_in"].keys():
                     balance_tracker[tkn] = balance_tracker[tkn] - segmented_routes[segmented_routes_in_order[idx]]["amts_in"][tkn]
-                #print(f"last trade balance_tracker: {balance_tracker}")
                 if flashloan_native_gas_token:
                     if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in balance_tracker:
                         if balance_tracker[self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] > 0:
