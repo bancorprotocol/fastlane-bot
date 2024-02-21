@@ -27,6 +27,7 @@ from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.connect import NetworkBase
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
+from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.events.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
@@ -627,6 +628,13 @@ def get_config(
         cfg.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc_url))
         if 'tenderly' in rpc_url:
             cfg.NETWORK = cfg.NETWORK_TENDERLY
+        cfg.WEB3_ALCHEMY_PROJECT_ID = rpc_url.split("/")[-1]
+        cfg.RPC_ENDPOINT = rpc_url.replace(cfg.WEB3_ALCHEMY_PROJECT_ID, "")
+        cfg.RPC_URL = rpc_url
+        cfg.BANCOR_ARBITRAGE_CONTRACT = cfg.w3.eth.contract(
+            address=cfg.w3.to_checksum_address(cfg.network.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
