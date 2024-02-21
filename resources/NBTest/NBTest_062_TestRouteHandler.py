@@ -31,6 +31,7 @@ from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.testing import *
 from fastlane_bot.config.network import *
 import json
+from dataclasses import asdict
 from typing import Dict
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
@@ -422,5 +423,386 @@ assert test_input_2 == wrapped_gas_token, f"Expected input token not to change, 
 
 
 # -
+
+
+
+# ## Test Split Carbon Trades
+
+# +
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+cfg.network.NETWORK = "ethereum"
+
+raw_tx_1 = {
+                    "cid": "67035626283424877302284797664058337657416-0",
+                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtin": 10,
+                    "_amtin_wei": 10000000000000000000,
+                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtout": 1,
+                    "_amtout_wei": 100000000,
+                    }
+raw_tx_2 = {
+                    "cid": "9187623906865338513511114400657741709505-0",
+                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtin": 5,
+                    "_amtin_wei": 5000000000000000000,
+                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtout": 0.5,
+                    "_amtout_wei": 50000000,
+                    }
+raw_tx_list_0 = [raw_tx_1, raw_tx_2]
+raw_tx_list_1 = [raw_tx_1, raw_tx_2]
+raw_tx_str_0 = str(raw_tx_list_0)
+raw_tx_str_1 = str(raw_tx_list_1)
+
+trade_instruction_8 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=15,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=1.5,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_0,
+)
+
+trade_instruction_9 = TradeInstruction(
+    cid='0x6be8339b6f982a8d4a3c9485b7e8b97c088c6f1049dd4365fe4492fa88713c23',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=5000,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=1,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'uniswap_v3',
+)
+
+trade_instruction_10 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=15,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=1.5,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_1,
+)
+
+trade_instructions_0 = [trade_instruction_8, trade_instruction_9]
+trade_instructions_1 = [trade_instruction_10, trade_instruction_9]
+
+txroutehandler_ethereum_0 = TxRouteHandler(trade_instructions=trade_instructions_0)
+txroutehandler_ethereum_1 = TxRouteHandler(trade_instructions=trade_instructions_1)
+
+
+print(len(trade_instructions_0))
+
+split_trade_instructions_0 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_0)
+split_trade_instructions_1 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_1)
+
+
+
+assert len(trade_instructions_0) == 2
+assert len(split_trade_instructions_0) == 3
+assert len(split_trade_instructions_1) == 3
+
+assert split_trade_instructions_0[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
+print(len(split_trade_instructions_0))
+print(len(split_trade_instructions_1))
+
+assert split_trade_instructions_0 == split_trade_instructions_1
+
+for trade in split_trade_instructions_1:
+    print(trade.tknin, trade.tknout, trade.exchange_name)
+
+# -
+
+# ## Test Add Wrap Unwrap V4
+
+# +
+cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+cfg.network.NETWORK = "ethereum"
+flashloan_struct_0=[{'platformId': 7, 'sourceTokens': ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], 'sourceAmounts': [15000000000000000000]}]
+flashloan_struct_1=[{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [15000000000000000000]}]
+
+raw_tx_0 = {
+                    "cid": "67035626283424877302284797664058337657416-0",
+                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtin": 10,
+                    "_amtin_wei": 10000000000000000000,
+                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtout": 1,
+                    "_amtout_wei": 100000000,
+                    }
+raw_tx_1 = {
+                    "cid": "9187623906865338513511114400657741709505-0",
+                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtin": 5,
+                    "_amtin_wei": 5000000000000000000,
+                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtout": 0.5,
+                    "_amtout_wei": 50000000,
+                    }
+raw_tx_2 = {
+                    "cid": "67035626283424877302284797664058337657416-0",
+                    "tknin": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtin": 1,
+                    "_amtin_wei": 100000000,
+                    "tknout": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtout": 10,
+                    "_amtout_wei": 10000000000000000000,
+                    }
+raw_tx_3 = {
+                    "cid": "9187623906865338513511114400657741709505-0",
+                    "tknin": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                    "amtin": 0.5,
+                    "_amtin_wei": 50000000,
+                    "tknout": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "amtout": 5,
+                    "_amtout_wei": 5000000000000000000,
+                    }
+raw_tx_list_0 = [raw_tx_0, raw_tx_1]
+raw_tx_list_1 = [raw_tx_1, raw_tx_0]
+raw_tx_list_2 = [raw_tx_2, raw_tx_3]
+raw_tx_list_3 = [raw_tx_3, raw_tx_2]
+raw_tx_str_0 = str(raw_tx_list_0)
+raw_tx_str_1 = str(raw_tx_list_1)
+raw_tx_str_2 = str(raw_tx_list_2)
+raw_tx_str_3 = str(raw_tx_list_3)
+
+trade_instruction_8 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=15,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=1.5,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_0,
+)
+
+trade_instruction_9 = TradeInstruction(
+    cid='0x6be8339b6f982a8d4a3c9485b7e8b97c088c6f1049dd4365fe4492fa88713c23',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=1.5,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=15,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'uniswap_v3',
+)
+
+trade_instruction_10 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=15,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=1.5,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_1,
+)
+
+
+trade_instruction_11 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=1.5,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=15,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_2,
+)
+
+trade_instruction_12 = TradeInstruction(
+    cid='0x6be8339b6f982a8d4a3c9485b7e8b97c088c6f1049dd4365fe4492fa88713c23',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=15,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=1.5,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'uniswap_v3',
+)
+
+trade_instruction_13 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=1.5,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=15,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override = 8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_3,
+)
+
+
+trade_instructions_0 = [trade_instruction_8, trade_instruction_9]
+trade_instructions_1 = [trade_instruction_10, trade_instruction_9]
+trade_instructions_2 = [trade_instruction_12, trade_instruction_11]
+trade_instructions_3 = [trade_instruction_12, trade_instruction_13]
+
+txroutehandler_ethereum_0 = TxRouteHandler(trade_instructions=trade_instructions_0)
+txroutehandler_ethereum_1 = TxRouteHandler(trade_instructions=trade_instructions_1)
+txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions_2)
+txroutehandler_ethereum_3 = TxRouteHandler(trade_instructions=trade_instructions_3)
+
+
+split_trade_instructions_0 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_0)
+split_trade_instructions_1 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_1)
+split_trade_instructions_2 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_2)
+split_trade_instructions_3 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_3)
+
+encoded_0 = txroutehandler_ethereum_0.custom_data_encoder(
+            split_trade_instructions_0
+        )
+encoded_1 = txroutehandler_ethereum_1.custom_data_encoder(
+            split_trade_instructions_1
+        )
+encoded_2 = txroutehandler_ethereum_2.custom_data_encoder(
+            split_trade_instructions_2
+        )
+encoded_3 = txroutehandler_ethereum_3.custom_data_encoder(
+            split_trade_instructions_3
+        )
+
+
+route_struct_0 = [
+            asdict(rs)
+            for rs in txroutehandler_ethereum_1.get_route_structs(
+                trade_instructions=encoded_0, deadline=5000
+            )
+        ]
+
+route_struct_1 = [
+            asdict(rs)
+            for rs in txroutehandler_ethereum_1.get_route_structs(
+                trade_instructions=encoded_1, deadline=5000
+            )
+        ]
+
+route_struct_2 = [
+            asdict(rs)
+            for rs in txroutehandler_ethereum_1.get_route_structs(
+                trade_instructions=encoded_2, deadline=5000
+            )
+        ]
+
+route_struct_3 = [
+            asdict(rs)
+            for rs in txroutehandler_ethereum_1.get_route_structs(
+                trade_instructions=encoded_3, deadline=5000
+            )
+        ]
+print(route_struct_0)
+print(route_struct_1)
+print(route_struct_2)
+print(route_struct_3)
+
+wrap_unwrap_0 = txroutehandler_ethereum_0.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_0, route_struct_0, flashloan_struct_0)
+wrap_unwrap_1 = txroutehandler_ethereum_1.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_1, route_struct_1, flashloan_struct_1)
+wrap_unwrap_2 = txroutehandler_ethereum_2.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_2, route_struct_2, flashloan_struct_0)
+wrap_unwrap_3 = txroutehandler_ethereum_3.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_3, route_struct_3, flashloan_struct_1)
+
+
+flashloan_struct_0=[{'platformId': 7, 'sourceTokens': ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], 'sourceAmounts': [15000000000000000000]}]
+flashloan_struct_1=[{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [15000000000000000000]}]
+
+balances_0 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 15000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_1 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_2 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 15000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_3 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+
+
+def check_no_negative(balance_dict):
+    for tkn in balance_dict.keys():
+        assert balance_dict[tkn] >= 0, f""
+
+def loop_balances(_route_struct, _balance):
+    for trade in _route_struct:
+        _balance[trade['sourceToken']] -= trade['sourceAmount']
+        _balance[trade['targetToken']] += trade['minTargetAmount']
+        check_no_negative(_balance)
+
+for _route, _balance in [(wrap_unwrap_0, balances_0), (wrap_unwrap_1, balances_1), (wrap_unwrap_2, balances_2), (wrap_unwrap_3, balances_3)]:
+    loop_balances(_route, _balance)
+
+## For Debugging
+# flashloan_struct_0 = flashloan WETH
+# flashloan_struct_1 = flashloan ETH
+# print("wrap_unwrap_0")
+# print(wrap_unwrap_0)
+# print("")
+# for trade in wrap_unwrap_0:
+#     print(trade)
+# print("\nwrap_unwrap_1")
+# print("")
+# print(wrap_unwrap_1)
+# print("")
+# for trade in wrap_unwrap_1:
+#     print(trade)
+# print("\nwrap_unwrap_2")
+
+
+# print(wrap_unwrap_2)
+# print("")
+# print(flashloan_struct_0)
+# for trade in wrap_unwrap_2:
+#     print(trade)
+# print("\nwrap_unwrap_3")
+# print(wrap_unwrap_3)
+# print("")
+# print(flashloan_struct_1)
+# for trade in wrap_unwrap_3:
+#     print(trade)
+# print("")
+
+# -
+
+
 
 

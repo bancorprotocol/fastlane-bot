@@ -443,11 +443,11 @@ class TxRouteHandler(TxRouteHandlerBase):
         flashloan_native_gas_token = False
         flashloan_wrapped_gas_token = False
 
-        start_balances = {}
+        balance_tracker = {}
         # Check if we are flashloaning wrapped or native gas tokens
         for flash in flashloan_struct:
             for idx, tkn in enumerate(flash["sourceTokens"]):
-                start_balances[tkn] = flash["sourceAmounts"][idx]
+                balance_tracker[tkn] = flash["sourceAmounts"][idx]
                 if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS:
                     flashloan_native_gas_token = True
                 elif tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS:
@@ -462,7 +462,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         deadline = route_struct[0]["deadline"]
 
         def init_tkn_to_zero(_tkn):
-            start_balances[_tkn] = 0 if _tkn not in start_balances else start_balances[_tkn]
+            balance_tracker[_tkn] = balance_tracker.get(_tkn, 0)
 
         for idx, route in enumerate(route_struct):
             real_tknin = trade_instructions[idx].get_real_tkn_in
@@ -470,82 +470,34 @@ class TxRouteHandler(TxRouteHandlerBase):
             exchange_name = trade_instructions[idx].exchange_name
             init_tkn_to_zero(real_tknin)
             init_tkn_to_zero(real_tknout)
-            pair = real_tknin + "/" + real_tknout
+            pair = f"{real_tknin}/{real_tknout}"
             if pair not in segmented_routes:
-                segmented_routes[pair] = {real_tknin: route["sourceAmount"],
-                                          "amts_out": {real_tknout: trade_instructions[idx].amtout_wei},
-                                          "amts_in": {real_tknin: trade_instructions[idx].amtin_wei},
-                                          "tokens_in": [real_tknin], "tokens_out": [real_tknout],
-                                          "trades": {idx: exchange_name}}
                 segmented_routes_in_order.append(pair)
-            else:
-                segmented_routes[pair]["trades"][idx] = exchange_name
-                if real_tknin in segmented_routes[pair]:
-                    segmented_routes[pair][real_tknin] = segmented_routes[pair][real_tknin] + route["sourceAmount"]
-                else:
-                    segmented_routes[pair][real_tknin] = route["sourceAmount"]
-                    segmented_routes[pair]["tokens_in"].append(real_tknin)
+                segmented_routes[pair] = {}
 
-                if real_tknout in segmented_routes[pair]["tokens_out"]:
-                    segmented_routes[pair]["amts_out"][real_tknout] = segmented_routes[pair]["amts_out"][real_tknout] + \
-                                                                      trade_instructions[idx].amtout_wei
-                else:
-                    segmented_routes[pair]["tokens_out"].append(real_tknout)
-                    segmented_routes[pair]["amts_out"][real_tknout] = trade_instructions[idx].amtout_wei
+            segmented_routes[pair] = {
+                "amt_out": segmented_routes[pair].get("amt_out", 0) + trade_instructions[idx].amtout_wei,
+                "amt_in": segmented_routes[pair].get("amt_in", 0) + trade_instructions[idx].amtin_wei,
+                "token_in": real_tknin,
+                "token_out": real_tknout,
+                "trades": {**segmented_routes.get(pair, {}).get("trades", {}), idx: exchange_name}  # Merge with existing trades
+            }
+
+        def add_subtract_wrapped_native(wrap: bool, amt):
+            __tkn_in = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if wrap else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            __tkn_out = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if not wrap else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            balance_tracker[__tkn_in] -= amt
+            balance_tracker[__tkn_out] += amt
 
         for idx, segment in enumerate(segmented_routes_in_order):
-            balance_tracker = start_balances.copy()
-            # Check previous section - expected amounts out of wrapped / native gas token
-            for _idx, trade, in enumerate(segmented_routes_in_order):
-                if _idx == idx:
-                    break
-                for tkn in segmented_routes[segmented_routes_in_order[_idx]]["amts_out"].keys():
-                    balance_tracker[tkn] = balance_tracker[tkn] + segmented_routes[segmented_routes_in_order[_idx]]["amts_out"][tkn]
-                for tkn in segmented_routes[segmented_routes_in_order[_idx]]["amts_in"].keys():
-                    balance_tracker[tkn] = balance_tracker[tkn] - segmented_routes[segmented_routes_in_order[_idx]]["amts_in"][tkn]
-            if idx == 0:
-                if flashloan_native_gas_token:
-                    if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in segmented_routes[segment]["tokens_in"]:
-                        new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
-                                                                                                     wrap=True,
-                                                                                                     source_amount=int(
-                                                                                                         segmented_routes[
-                                                                                                             segment][
-                                                                                                             self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]))))
-                elif flashloan_wrapped_gas_token:
-                    if self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in segmented_routes[segment]["tokens_in"]:
-                        new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
-                                                                                                     wrap=False,
-                                                                                                     source_amount=int(
-                                                                                                         segmented_routes[
-                                                                                                             segment][
-                                                                                                             self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]))))
-            elif self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in segmented_routes[segment][
-                "tokens_in"] or self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in segmented_routes[segment]["tokens_in"]:
-
-                wrapped_going_in = 0
-                native_going_in = 0
-                if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in segmented_routes[segmented_routes_in_order[idx]][
-                    "tokens_in"]:
-                    wrapped_going_in = segmented_routes[segment][self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]
-                if self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in segmented_routes[segmented_routes_in_order[idx]][
-                    "tokens_in"]:
-                    native_going_in = segmented_routes[segment][self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
-
-                added_wrap = False
-
-                if native_going_in > 0:
-                    if balance_tracker[self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS] < native_going_in:
-                        added_wrap = True
-                        new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
-                                                                                                     wrap=False,
-                                                                                                     source_amount=native_going_in)))
-                if wrapped_going_in > 0:
-                    if balance_tracker[self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] < wrapped_going_in:
-                        assert not added_wrap, f"Already added unwrap - missing token balances from trades. wrapped going in = {wrapped_going_in}, balance tracker: {balance_tracker}"
-                        new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
-                                                                                                     wrap=True,
-                                                                                                     source_amount=wrapped_going_in)))
+            _amt_in = segmented_routes[segment]["amt_in"]
+            _tkn_in = segmented_routes[segment]["token_in"]
+            _tkn_out = segmented_routes[segment]["token_out"]
+            if _amt_in > balance_tracker[_tkn_in] and _tkn_in in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
+                _wrap = _tkn_in == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+                new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline, wrap=_wrap, source_amount=_amt_in)))
+                add_subtract_wrapped_native(wrap=_wrap, amt=_amt_in)
+                wrap_unwrap = "wrap" if _wrap else "unwrap"
             for trade_idx in segmented_routes[segment]["trades"].keys():
                 exchange_name = trade_instructions[int(trade_idx)].exchange_name
                 if exchange_name in self.ConfigObj.CARBON_V1_FORKS:
@@ -555,26 +507,22 @@ class TxRouteHandler(TxRouteHandlerBase):
                 if exchange_name not in self.ConfigObj.CARBON_V1_FORKS:
                     new_route_struct.append(route_struct[int(trade_idx)])
 
+            balance_tracker[_tkn_in] -= segmented_routes[segmented_routes_in_order[idx]]["amt_in"]
+            balance_tracker[_tkn_out] += segmented_routes[segmented_routes_in_order[idx]]["amt_out"]
             if idx == len(segmented_routes_in_order) - 1:
-                for tkn in segmented_routes[segmented_routes_in_order[idx]]["amts_out"].keys():
-                    balance_tracker[tkn] = balance_tracker[tkn] + segmented_routes[segmented_routes_in_order[idx]]["amts_out"][tkn]
-                for tkn in segmented_routes[segmented_routes_in_order[idx]]["amts_in"].keys():
-                    balance_tracker[tkn] = balance_tracker[tkn] - segmented_routes[segmented_routes_in_order[idx]]["amts_in"][tkn]
+
                 if flashloan_native_gas_token:
-                    if self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in balance_tracker:
-                        if balance_tracker[self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS] > 0:
-                            new_route_struct.append(
+                    if balance_tracker.get(self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, 0) > 0:
+                        new_route_struct.append(
                                 asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
-                                                                                     wrap=True,
+                                                                                     wrap=False,
                                                                                      source_amount=0)))
                 elif flashloan_wrapped_gas_token:
-                    if self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in balance_tracker:
-                        if balance_tracker[self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS] > 0:
-                            new_route_struct.append(
+                    if balance_tracker.get(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, 0) > 0:
+                        new_route_struct.append(
                                 asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=deadline,
                                                                                      wrap=True,
                                                                                      source_amount=0)))
-
         return new_route_struct
 
     def get_route_structs(
