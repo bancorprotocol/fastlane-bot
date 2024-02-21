@@ -83,17 +83,17 @@ assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
 # +
 
 
-solidly_v2_exchange = SolidlyV2(exchange_name="solidly_v2", fee="0.003", router_address="jeffs_router")
+solidly_v2_exchange = SolidlyV2(exchange_name="velocimeter_v2", fee="0.003", router_address="jeffs_router")
 
 @pytest.mark.asyncio
-async def test_uniswap_v2_exchange():
-    assert (solidly_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
+async def test_solidly_v2_exchange():
+    assert (solidly_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
     #assert (await solidly_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await solidly_v2_exchange.get_fee('', mocked_contract)}"
     assert (await solidly_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
     assert (solidly_v2_exchange.router_address == "jeffs_router")
 
 # Run the test in an event loop
-asyncio.run(test_uniswap_v2_exchange())
+asyncio.run(test_solidly_v2_exchange())
 # -
 
 # ## test_solidly_v2_exchange_fork

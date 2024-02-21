@@ -241,7 +241,7 @@ class TxHelpers:
         route_struct: List[Dict[str, Any]],
         src_amt: int,
         src_address: str,
-        expected_profit_eth: Decimal,
+        expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
         verbose: bool = False,
         safety_override: bool = False,
@@ -256,7 +256,7 @@ class TxHelpers:
 
         """
 
-        if expected_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+        if expected_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
                 f"Transaction below minimum profit, reverting... /*_*\\"
             )
@@ -267,7 +267,7 @@ class TxHelpers:
                 "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
             )
             self.ConfigObj.logger.debug(
-                f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_eth)} \n\n"
+                f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_gastkn)} \n\n"
             )
 
         current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
@@ -302,7 +302,7 @@ class TxHelpers:
             current_gas_price,
             gas_estimate,
             expected_profit_usd,
-            expected_profit_eth,
+            expected_profit_gastkn,
             signed_arb_tx.rawTransaction
         )
 
