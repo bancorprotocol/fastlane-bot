@@ -18,8 +18,6 @@ import os
 from dotenv import load_dotenv
 from web3.middleware import geth_poa_middleware
 
-from fastlane_bot.config.constants import MANTLE_NAME
-
 load_dotenv()
 
 import logging
@@ -159,7 +157,7 @@ class EthereumNetwork(NetworkBase):
         """
         self.nonce += 1
 
-    def connect_network(self):
+    def connect_network(self, inject_middleware: bool):
         """
         Connect to the network
         """
@@ -171,7 +169,7 @@ class EthereumNetwork(NetworkBase):
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
 
-        if MANTLE_NAME in self.network_name:
+        if inject_middleware:
             self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
             self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
 
