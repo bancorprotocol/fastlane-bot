@@ -294,6 +294,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON = S.NETWORK_POLYGON
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
+    NETWORK_FANTOM = S.NETWORK_FANTOM
 
     # FLAGS
     #######################################################################################
@@ -318,6 +319,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkPolygonZkevm(_direct=False)
         elif network == cls.NETWORK_OPTIMISM:
             return _ConfigNetworkOptimism(_direct=False)
+        elif network == cls.NETWORK_FANTOM:
+            return _ConfigNetworkFantom(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -639,6 +642,47 @@ class _ConfigNetworkBase(ConfigNetwork):
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
 
+class _ConfigNetworkFantom(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_FANTOM
+    NETWORK_ID = "250"
+    NETWORK_NAME = "fantom"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://fantom.blockpi.network/v1/rpc/"
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_FANTOM")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xFe19CbA3aB1A189B7FC17cAa798Df64Ad2b54d4D"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0xf37102e11E06276ac9D393277BD7b63b3393b361"
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0x907F03ae649581EBFF369a21C587cb8F154A0B84"
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    # STABLECOIN_KEY = "USDC-2913"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83"
+    NATIVE_GAS_TOKEN_SYMBOL = "FTM"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WFTM"
+    STABLECOIN_ADDRESS = "0x28a92dde19D9989F39A49905d7C9C2FAc7799bDf"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce"
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83": "WFTM",
+        "0x28a92dde19D9989F39A49905d7C9C2FAc7799bDf": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """

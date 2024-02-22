@@ -6,14 +6,22 @@ import pandas as pd
 from dotenv import load_dotenv
 from joblib import parallel_backend, Parallel, delayed
 from pandas import DataFrame
+from web3.contract import Contract
 
 load_dotenv()
 import os
 import requests
-from web3 import Web3
+import asyncio
+import nest_asyncio
+
+from web3 import Web3, AsyncWeb3
 
 from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
+from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
+from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
+
+nest_asyncio.apply()
 
 ETHEREUM = "ethereum"
 POLYGON = "polygon"
@@ -21,6 +29,25 @@ POLYGON_ZKEVM = "polygon_zkevm"
 ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
+FANTOM = "fantom"
+
+coingecko_network_map = {
+    "ethereum": "ethereum",
+    "coinbase_base": "base",
+    "polygon": "polygon-pos",
+    "polygon_zkevm": "polygon-zkevm",
+    "optimism": "optimistic-ethereum",
+    "arbitrum_one": "arbitrum-one",
+    "fantom": "fantom",
+    "arbitrum_nova": "arbitrum-nova",
+    "avalanche": "avalanche",
+    "tron": "tron",
+    "neon": "neon-evm",
+    "moonbeam": "moonbeam",
+    "linea": "linea",
+    "cosmos": "cosmos",
+    "kava": "kava",
+}
 
 BLOCK_CHUNK_SIZE_MAP = {
     "ethereum": 50000,
@@ -29,6 +56,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "arbitrum_one": 500000,
     "optimism": 500000,
     "coinbase_base": 250000,
+    "fantom": 2000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -38,6 +66,7 @@ ALCHEMY_KEY_DICT = {
     "arbitrum_one": "WEB3_ALCHEMY_ARBITRUM",
     "optimism": "WEB3_ALCHEMY_OPTIMISM",
     "coinbase_base": "WEB3_ALCHEMY_BASE",
+    "fantom": "WEB3_FANTOM",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -47,6 +76,7 @@ ALCHEMY_RPC_LIST = {
     "arbitrum_one": "https://arb-mainnet.g.alchemy.com/v2/",
     "optimism": "https://opt-mainnet.g.alchemy.com/v2/",
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
+    "fantom": "https://fantom-mainnet.blastapi.io/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -57,6 +87,8 @@ BALANCER_SUBGRAPH_CHAIN_URL = {
     "optimism": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-optimism-v2",
     "coinbase_base": "https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest",
     "avalanche": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2",
+    "fantom": "https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx",
+
 }
 
 BANCOR_V2_NAME = "bancor_v2"
@@ -75,10 +107,12 @@ VELOCIMETER_V2_NAME = "velocimeter_v2"
 CARBON_POL_NAME = "bancor_pol"
 SHIBA_V2_NAME = "shiba_v2"
 SCALE_V2_NAME = "scale_v2"
+EQUALIZER_V2_NAME = "equalizer_v2"
 SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME]
+
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
@@ -95,6 +129,7 @@ EXCHANGE_IDS = {
     SOLIDLY_V2_NAME: 11,
     VELOCIMETER_V2_NAME: 11,
     SCALE_V2_NAME: 11,
+    EQUALIZER_V2_NAME: 11,
     VELODROME_V2_NAME: 12,
     AERODROME_V2_NAME: 12,
 }
@@ -183,15 +218,7 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
 
     :returns: Dict
     """
-    network_map = {
-        "coinbase_base": "base",
-        "ethereum": "ethereum",
-        "polygon": "",
-        "polygon_zkevm": "polygon-zkevm",
-        "arbitrum_one": "arbitrum-one",
-        "optimism": "optimistic-ethereum",
-        "avalanche": "avalanche",
-    }
+
     token_path = os.path.join(write_path, "tokens.csv")
     token_file_exists = os.path.exists(token_path)
     if token_file_exists:
@@ -204,7 +231,7 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> TokenMan
 
         return TokenManager(token_dict)
 
-    url = f"https://tokens.coingecko.com/{network_map[network]}/all.json"
+    url = f"https://tokens.coingecko.com/{coingecko_network_map[network]}/all.json"
     response = requests.get(url).json()["tokens"]
     token_dict = {
         "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -662,7 +689,7 @@ def organize_pool_details_uni_v2(
 
 
 def organize_pool_details_solidly_v2(
-        pool_data, token_manager, exchange, default_fee, factory_contract, web3
+        pool_data, token_manager, exchange, exchange_object, web3, async_web3,
 ):
     """
     This function organizes pool details for Solidly pools.
@@ -670,10 +697,9 @@ def organize_pool_details_solidly_v2(
     :param pool_data: the pool data from the pool creation event
     :param token_manager: the token lookup dict
     :param exchange: the exchange name
-    :param default_fee: the fee for the exchange
     :param factory_contract: the exchange's Factory contract - initialized
     :param web3: the Web3 object
-
+    :param web3: the async Web3 object
     returns: dict of pool information
     """
     skip_pool = False
@@ -688,21 +714,9 @@ def organize_pool_details_solidly_v2(
     last_updated_block = pool_data["blockNumber"]
 
     stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+    pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
+    fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))
 
-    token_info = {}
-    pair = ""
-
-    is_stable = True if "stable" in stable_pool else False
-
-    if "velocimeter" in exchange:
-        default_fee = factory_contract.caller.getFee(pool_address)
-        default_fee = float(default_fee) / 10000
-    elif "scale" in exchange:
-        default_fee = factory_contract.caller.getRealFee(pool_address)
-        default_fee = float(default_fee) / 10 ** 18
-    else:
-        default_fee = factory_contract.caller.getFee(pool_address, is_stable)
-        default_fee = float(default_fee) / 10000
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
@@ -715,7 +729,6 @@ def organize_pool_details_solidly_v2(
         return None
     description = exchange + " " + pair
 
-
     pool_info = {
         "cid": pool_address,
         "last_updated": "",
@@ -723,8 +736,8 @@ def organize_pool_details_solidly_v2(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": str(default_fee),
-        "fee_float": default_fee,
+        "fee": str(fee_float),
+        "fee_float": fee_float,
         "address": pool_address,
         "anchor": "",
         "tkn0_address": token_info["tkn0_address"],
@@ -774,7 +787,7 @@ def get_uni_v3_pools(
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V3_NAME, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -819,7 +832,7 @@ def get_uni_v2_pools(
     :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V2_NAME, start_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -846,10 +859,11 @@ def get_uni_v2_pools(
 def get_solidly_v2_pools(
         token_manager: TokenManager,
         exchange: str,
+        async_factory_contract,
         factory_contract,
         start_block: int,
-        default_fee: float,
         web3: Web3,
+        async_web3: AsyncWeb3,
         blockchain: str
 ) -> Tuple[DataFrame, DataFrame]:
     """
@@ -858,6 +872,7 @@ def get_solidly_v2_pools(
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
     :param web3: the Web3 object
+    :param async_web3: the Async Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
     :param blockchain: the blockchain name
@@ -865,16 +880,17 @@ def get_solidly_v2_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    solidly_exchange = SolidlyV2(exchange_name=exchange, factory_contract=async_factory_contract)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
             delayed(organize_pool_details_solidly_v2)(
                 pool_data=pool,
                 token_manager=token_manager,
-                default_fee=0,
                 exchange=exchange,
-                factory_contract=factory_contract,
+                exchange_object=solidly_exchange,
                 web3=web3,
+                async_web3=async_web3,
             )
             for pool in pool_data
         )
@@ -1021,7 +1037,7 @@ def add_to_exchange_ids(exchange: str, fork: str):
         EXCHANGE_IDS[exchange] = platform_id
 
 
-def get_web3_for_network(network_name: str) -> Web3:
+def get_web3_for_network(network_name: str) -> Tuple[Web3, AsyncWeb3]:
     """
     This function gets a web3 object for a specific network. This is meant for use when the terraformer is a standalone script.
     :param network_name: the name of the blockchain from which to get data
@@ -1036,7 +1052,7 @@ def get_web3_for_network(network_name: str) -> Web3:
             f"Terraformer: network {network_name} does not have Alchemy RPC set. Add an RPC to continue"
         )
         return None
-    return Web3(Web3.HTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}"))
+    return Web3(Web3.HTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}")), AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}"))
 
 
 def get_last_block_updated(df: pd.DataFrame, exchange: str) -> int:
@@ -1073,19 +1089,20 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
-def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
     :param web3: the Web3 object
+    :param async_web3: the async Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
 
     assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
 
     if web3 is None:
-        web3 = get_web3_for_network(network_name=network_name)
+        web3, async_web3 = get_web3_for_network(network_name=network_name)
 
     assert web3.is_connected(), f"Web3 is not connected for network: {network_name}"
 
@@ -1136,6 +1153,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
         factory_address = row[1]["factory_address"]
         router_address = row[1]["router_address"]
         fee = row[1]["fee"]
+
+        if row[1]["active"] == "FALSE":
+            continue
 
         if fresh_data and not start_block:
             from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
@@ -1198,24 +1218,23 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
-            if exchange_name in ["velocimeter_v2", ]:
-                factory_abi = VELOCIMETER_V2_FACTORY_ABI
-            elif exchange_name in ["scale_v2"]:
-                factory_abi = SCALE_V2_FACTORY_ABI
-            else:
-                # Aerodrome ABI
-                factory_abi = SOLIDLY_V2_FACTORY_ABI
+
+            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
 
+            async_factory_contract = async_web3.eth.contract(
+                address=factory_address, abi=factory_abi
+            )
             u_df, m_df = get_solidly_v2_pools(
                 token_manager=token_manager,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
-                default_fee=fee,
+                async_factory_contract=async_factory_contract,
                 start_block=from_block,
                 web3=web3,
+                async_web3=async_web3,
                 blockchain=network_name
             )
             m_df = m_df.reset_index(drop=True)

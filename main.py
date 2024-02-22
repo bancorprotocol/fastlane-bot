@@ -72,26 +72,32 @@ def process_arguments(args):
     :param args: Namespace object containing command line arguments.
     :return: Processed arguments.
     """
+    def is_true(x):
+        return x.lower() == "true"
+
+    def int_or_none(x):
+        return int(x) if x else None
+
     # Define the transformations for each argument
     transformations = {
-        "backdate_pools": bool,
+        "backdate_pools": is_true,
         "n_jobs": int,
         "polling_interval": int,
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
-        "use_cached_events": bool,
-        "run_data_validator": bool,
+        "use_cached_events": is_true,
+        "run_data_validator": is_true,
         "randomizer": int,
-        "limit_bancor3_flashloan_tokens": bool,
-        "timeout": lambda x: int(x) if x else None,
-        "replay_from_block": lambda x: int(x) if x else None,
+        "limit_bancor3_flashloan_tokens": is_true,
+        "timeout": int_or_none,
+        "replay_from_block": int_or_none,
         "increment_time": int,
         "increment_blocks": int,
         "pool_data_update_frequency": int,
         "version_check_frequency": int,
-        "self_fund": bool,
-        "read_only": bool,
-        "is_args_test": bool,
+        "self_fund": is_true,
+        "read_only": is_true,
+        "is_args_test": is_true,
     }
 
     # Apply the transformations
@@ -131,6 +137,7 @@ def main(args: argparse.Namespace) -> None:
         args.flashloan_tokens,
         args.tenderly_fork_id,
         args.self_fund,
+        args.rpc_url,
     )
     base_path = os.path.normpath(
         f"fastlane_bot/data/blockchain_data/{args.blockchain}/"
@@ -539,7 +546,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             mgr.cfg.logger.info(
                 f"\n\n********************************************\n"
                 f"Average Total iteration time for loop {loop_idx}: {total_iteration_time / loop_idx}\n"
-                f"{mgr.cfg.logging_header}\n"
+                f"bot_version: {bot_version}\n"
                 f"\n********************************************\n\n"
             )
 
@@ -582,14 +589,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--cache_latest_only",
-        default=True,
-        type=bool,
+        default='True',
         help="Set to True for production. Set to False for testing / debugging",
     )
     parser.add_argument(
         "--backdate_pools",
-        default=False,
-        type=bool,
+        default='False',
         help="Set to False for faster testing / debugging",
     )
     parser.add_argument(
@@ -651,14 +656,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--use_cached_events",
-        default=False,
-        type=bool,
+        default='False',
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
         "--run_data_validator",
-        default=False,
-        type=bool,
+        default='False',
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
@@ -668,8 +671,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--limit_bancor3_flashloan_tokens",
-        default=True,
-        type=bool,
+        default='True',
         help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
     )
     parser.add_argument(
@@ -717,7 +719,7 @@ if __name__ == "__main__":
         "--blockchain",
         default="ethereum",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base"],
+        choices=["ethereum", "coinbase_base", "fantom"],
     )
     parser.add_argument(
         "--pool_data_update_frequency",
@@ -741,23 +743,25 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--self_fund",
-        default=False,
-        type=bool,
+        default='False',
         help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
              "wallet when possible.",
     )
     parser.add_argument(
         "--read_only",
-        default=True,
-        type=bool,
+        default='True',
         help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
              "running the bot in an environment with restricted write permissions.",
     )
     parser.add_argument(
         "--is_args_test",
-        default=False,
-        type=bool,
+        default='False',
         help="The logging path.",
+    )
+    parser.add_argument(
+        "--rpc_url",
+        default=None,
+        help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
     )
 
     # Process the arguments
