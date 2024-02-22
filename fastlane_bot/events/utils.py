@@ -636,6 +636,8 @@ def get_config(
             abi=FAST_LANE_CONTRACT_ABI,
         )
 
+        if 'tenderly' in rpc_url:
+            cfg.NETWORK = cfg.NETWORK_TENDERLY
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
