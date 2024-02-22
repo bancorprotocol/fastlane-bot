@@ -452,8 +452,41 @@ raw_tx_2 = {
                     }
 raw_tx_list_0 = [raw_tx_1, raw_tx_2]
 raw_tx_list_1 = [raw_tx_1, raw_tx_2]
+raw_tx_list_2 = [raw_tx_1, raw_tx_1]
 raw_tx_str_0 = str(raw_tx_list_0)
 raw_tx_str_1 = str(raw_tx_list_1)
+raw_tx_str_2 = str(raw_tx_list_2)
+
+trade_instruction_6 = TradeInstruction(
+    cid='0x6be8339b6f982a8d4a3c9485b7e8b97c088c6f1049dd4365fe4492fa88713c23',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=200000000,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=20000000000000000000,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'uniswap_v3',
+)
+
+trade_instruction_7 = TradeInstruction(
+    cid='67035626283424877302284797664058337657416-0',
+    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtin=20,
+    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtout=2,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  18,
+    tknout_dec_override = 8,
+    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    exchange_override = 'carbon_v1',
+    raw_txs=raw_tx_str_2,
+)
 
 trade_instruction_8 = TradeInstruction(
     cid='67035626283424877302284797664058337657416-0',
@@ -504,31 +537,44 @@ trade_instruction_10 = TradeInstruction(
 
 trade_instructions_0 = [trade_instruction_8, trade_instruction_9]
 trade_instructions_1 = [trade_instruction_10, trade_instruction_9]
+trade_instructions_2 = [trade_instruction_7, trade_instruction_6]
 
 txroutehandler_ethereum_0 = TxRouteHandler(trade_instructions=trade_instructions_0)
 txroutehandler_ethereum_1 = TxRouteHandler(trade_instructions=trade_instructions_1)
+txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions_2)
 
 
 print(len(trade_instructions_0))
 
-split_trade_instructions_0 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_0)
+split_trade_instructions_0 = txroutehandler_ethereum_0.split_carbon_trades(trade_instructions_0)
 split_trade_instructions_1 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_1)
+split_trade_instructions_2 = txroutehandler_ethereum_2.split_carbon_trades(trade_instructions_2)
 
 
 
 assert len(trade_instructions_0) == 2
 assert len(split_trade_instructions_0) == 3
 assert len(split_trade_instructions_1) == 3
+assert len(split_trade_instructions_2) == 2
+
 
 assert split_trade_instructions_0[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 
-print(len(split_trade_instructions_0))
-print(len(split_trade_instructions_1))
+# print(len(split_trade_instructions_0))
+# print(len(split_trade_instructions_1))
 
 assert split_trade_instructions_0 == split_trade_instructions_1
 
-for trade in split_trade_instructions_1:
-    print(trade.tknin, trade.tknout, trade.exchange_name)
+# for trade in split_trade_instructions_2:
+#     print(trade.tknin, trade.tknout, trade.exchange_name)
+
+for idx, trade in enumerate(split_trade_instructions_2):
+    assert trade_instructions_2[idx].tknin == split_trade_instructions_2[idx].tknin
+    assert trade_instructions_2[idx].tknout == split_trade_instructions_2[idx].tknout
+    assert trade_instructions_2[idx].amtin_wei == split_trade_instructions_2[idx].amtin_wei
+    assert trade_instructions_2[idx].amtout_wei == split_trade_instructions_2[idx].amtout_wei
+    assert trade_instructions_2[idx].raw_txs == split_trade_instructions_2[idx].raw_txs
+
 
 # -
 
