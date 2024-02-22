@@ -403,6 +403,7 @@ def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, python_ins
     "--reorg_delay=0",
     "--polling_interval=0",
     f"--rpc_url={rpc}",
+    "--read_only=False",
     ]
     
 
