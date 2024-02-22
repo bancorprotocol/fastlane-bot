@@ -11,10 +11,17 @@ from web3.contract import Contract
 load_dotenv()
 import os
 import requests
-from web3 import Web3
+import asyncio
+import nest_asyncio
+
+from web3 import Web3, AsyncWeb3
 
 from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
+from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
+from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
+
+nest_asyncio.apply()
 
 ETHEREUM = "ethereum"
 POLYGON = "polygon"
@@ -113,28 +120,6 @@ STRATUM_V2_NAME = "stratum_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
 
-
-def get_fee_1(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getFee(address)
-
-def get_fee_2(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getRealFee(address)
-
-def get_fee_3(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getFee(address, is_stable)
-
-def get_fee_4(address: str, is_stable: str, factory_contract: Contract):
-    return factory_contract.caller.getFee(is_stable)
-
-SOLIDLY_EXCHANGE_INFO = {
-    "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
-    "equalizer_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
-    "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
-    "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
-    "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
-    "cleopatra_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_4},
-    "stratum_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
-}
 
 EXCHANGE_IDS = {
     BANCOR_V2_NAME: 1,
@@ -715,7 +700,7 @@ def organize_pool_details_uni_v2(
 
 
 def organize_pool_details_solidly_v2(
-        pool_data, token_manager, exchange, factory_contract, web3
+        pool_data, token_manager, exchange, exchange_object, web3, async_web3,
 ):
     """
     This function organizes pool details for Solidly pools.
@@ -725,7 +710,7 @@ def organize_pool_details_solidly_v2(
     :param exchange: the exchange name
     :param factory_contract: the exchange's Factory contract - initialized
     :param web3: the Web3 object
-
+    :param web3: the async Web3 object
     returns: dict of pool information
     """
     skip_pool = False
@@ -740,12 +725,9 @@ def organize_pool_details_solidly_v2(
     last_updated_block = pool_data["blockNumber"]
 
     stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+    pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
+    fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))
 
-
-    is_stable = True if stable_pool == "stable" else False
-    exchange_info = SOLIDLY_EXCHANGE_INFO[exchange]
-    fee = exchange_info["fee_function"](pool_address, is_stable, factory_contract)
-    fee_float = float(fee) / 10 ** exchange_info["decimals"]
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
@@ -888,9 +870,11 @@ def get_uni_v2_pools(
 def get_solidly_v2_pools(
         token_manager: TokenManager,
         exchange: str,
+        async_factory_contract,
         factory_contract,
         start_block: int,
         web3: Web3,
+        async_web3: AsyncWeb3,
         blockchain: str
 ) -> Tuple[DataFrame, DataFrame]:
     """
@@ -899,6 +883,7 @@ def get_solidly_v2_pools(
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
     :param web3: the Web3 object
+    :param async_web3: the Async Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
     :param blockchain: the blockchain name
@@ -906,6 +891,7 @@ def get_solidly_v2_pools(
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
     pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    solidly_exchange = SolidlyV2(exchange_name=exchange, factory_contract=async_factory_contract)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -913,8 +899,9 @@ def get_solidly_v2_pools(
                 pool_data=pool,
                 token_manager=token_manager,
                 exchange=exchange,
-                factory_contract=factory_contract,
+                exchange_object=solidly_exchange,
                 web3=web3,
+                async_web3=async_web3,
             )
             for pool in pool_data
         )
@@ -1061,7 +1048,7 @@ def add_to_exchange_ids(exchange: str, fork: str):
         EXCHANGE_IDS[exchange] = platform_id
 
 
-def get_web3_for_network(network_name: str) -> Web3:
+def get_web3_for_network(network_name: str) -> Tuple[Web3, AsyncWeb3]:
     """
     This function gets a web3 object for a specific network. This is meant for use when the terraformer is a standalone script.
     :param network_name: the name of the blockchain from which to get data
@@ -1076,7 +1063,7 @@ def get_web3_for_network(network_name: str) -> Web3:
             f"Terraformer: network {network_name} does not have Alchemy RPC set. Add an RPC to continue"
         )
         return None
-    return Web3(Web3.HTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}"))
+    return Web3(Web3.HTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}")), AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}"))
 
 
 def get_last_block_updated(df: pd.DataFrame, exchange: str) -> int:
@@ -1113,19 +1100,20 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
-def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
     :param web3: the Web3 object
+    :param async_web3: the async Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
 
     assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
 
     if web3 is None:
-        web3 = get_web3_for_network(network_name=network_name)
+        web3, async_web3 = get_web3_for_network(network_name=network_name)
 
     assert web3.is_connected(), f"Web3 is not connected for network: {network_name}"
 
@@ -1247,12 +1235,17 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, start_block: int 
                 address=factory_address, abi=factory_abi
             )
 
+            async_factory_contract = async_web3.eth.contract(
+                address=factory_address, abi=factory_abi
+            )
             u_df, m_df = get_solidly_v2_pools(
                 token_manager=token_manager,
                 exchange=exchange_name,
                 factory_contract=factory_contract,
+                async_factory_contract=async_factory_contract,
                 start_block=from_block,
                 web3=web3,
+                async_web3=async_web3,
                 blockchain=network_name
             )
             m_df = m_df.reset_index(drop=True)

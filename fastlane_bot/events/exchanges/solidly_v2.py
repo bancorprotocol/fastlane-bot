@@ -8,7 +8,7 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_FACTORY_ABI, SOLIDLY_V2_FACTORY_ABI, \
     VELOCIMETER_V2_POOL_ABI, SCALE_V2_FACTORY_ABI, EQUALIZER_V2_POOL_ABI
@@ -53,7 +53,7 @@ class SolidlyV2(Exchange):
     stable_fee: float = None
     volatile_fee: float = None
     factory_address: str = None
-    factory_contract: Contract = None
+    factory_contract: AsyncContract = None
 
     @property
     def fee_float(self):
@@ -72,7 +72,7 @@ class SolidlyV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
 
-    async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
+    async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         exchange_info = EXCHANGE_INFO[self.exchange_name]
         fee = await exchange_info["fee_function"](address, contract, self.factory_contract)
         fee_float = float(fee) / 10 ** exchange_info["decimals"]
