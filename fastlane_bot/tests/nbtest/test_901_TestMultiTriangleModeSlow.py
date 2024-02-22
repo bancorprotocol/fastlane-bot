@@ -179,7 +179,7 @@ def test_test_combos():
     
     # ### Test_find_arbitrage
     
-    run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
+    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
     arb_finder = bot._get_arb_finder("multi_triangle")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,

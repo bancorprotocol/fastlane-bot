@@ -56,6 +56,7 @@ from typing import Optional
 from web3 import Web3
 from web3.datastructures import AttributeDict
 
+import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxSubmitHandler,
@@ -73,6 +74,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
+from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
@@ -208,9 +210,10 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
-                self.ConfigObj.logger.error(
-                    f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
-                )
+                if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
+                    self.ConfigObj.logger.error(
+                        f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+                    )
             except p.DoubleInvalidCurveError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
@@ -236,14 +239,6 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    XS_ARBOPPS = "arbopps"
-    XS_TI = "ti"
-    XS_EXACT = "exact"
-    XS_ORDSCAL = "ordscal"
-    XS_AGGTI = "aggti"
-    XS_ORDINFO = "ordinfo"
-    XS_ENCTI = "encti"
-    XS_ROUTE = "route"
     AM_REGULAR = "regular"
     AM_SINGLE = "single"
     AM_TRIANGLE = "triangle"
@@ -438,12 +433,30 @@ class CarbonBot(CarbonBotBase):
         elif arb_mode in {"multi_pairwise_all"}:
             return FindArbitrageMultiPairwiseAll
 
+    def _find_arbitrage(
+        self,
+        flashloan_tokens: List[str],
+        CCm: CPCContainer,
+        arb_mode: str = None,
+        randomizer=int
+    ) -> dict:
+        random_mode = self.AO_CANDIDATES if randomizer else None
+        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
+        arb_finder = self._get_arb_finder(arb_mode)
+        finder = arb_finder(
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            mode="bothin",
+            result=random_mode,
+            ConfigObj=self.ConfigObj,
+        )
+        return {"finder": finder, "r": finder.find_arbitrage()}
+
     def _run(
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer,
         *,
-        result=None,
         arb_mode: str = None,
         randomizer=int,
         data_validator=True,
@@ -458,8 +471,6 @@ class CarbonBot(CarbonBotBase):
             The tokens to flashloan.
         CCm: CPCContainer
             The container.
-        result: str
-            The result type.
         arb_mode: str
             The arbitrage mode.
         randomizer: int
@@ -473,20 +484,8 @@ class CarbonBot(CarbonBotBase):
             The result.
 
         """
-        random_mode = self.AO_CANDIDATES if randomizer else None
-        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
-        arb_finder = self._get_arb_finder(arb_mode)
-        finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=random_mode,
-            ConfigObj=self.ConfigObj,
-        )
-        r = finder.find_arbitrage()
-
-        if result == self.XS_ARBOPPS:
-            return r
+        arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
+        finder, r = [arbitrage[key] for key in ["finder", "r"]]
 
         if r is None or len(r) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
@@ -519,7 +518,7 @@ class CarbonBot(CarbonBotBase):
                 )
                 return None
 
-        return self._handle_trade_instructions(CCm, arb_mode, r, result)
+        return self._handle_trade_instructions(CCm, arb_mode, r)
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
         """
@@ -772,6 +771,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         best_profit: Decimal,
         fl_token: str,
+        flashloan_fee_amt: int = 0,
     ) -> Tuple[Decimal, Decimal, Decimal]:
         """
         Calculate the actual profit in USD.
@@ -784,17 +784,19 @@ class CarbonBot(CarbonBotBase):
             The best profit.
         fl_token: str
             The flashloan token.
-        fl_token_with_weth: str
-            The flashloan token with weth.
+        flashloan_fee_amt: int
+            The flashloan fee amount.
 
         Returns
         -------
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
         sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
         best_profit_fl_token = best_profit
+        flashloan_fee_amt_fl_token = Decimal(str(flashloan_fee_amt))
         if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
             price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
             sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
@@ -802,34 +804,35 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
-                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
-                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
-                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth, 'ETH'}")
+                fltkn_gastkn_conversion_rate = sorted_price_curves[0][-1]
+                flashloan_fee_amt_gastkn = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate))
+                best_profit_gastkn = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate)) - flashloan_fee_amt_gastkn
+                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_gastkn_conversion_rate, best_profit_gastkn, 'GASTOKEN'}")
             else:
                 self.ConfigObj.logger.error(
                     f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
                 )
                 raise
         else:
-            best_profit_eth = best_profit_fl_token
+            best_profit_gastkn = best_profit_fl_token - flashloan_fee_amt_fl_token
 
         try:
             price_curves_usd = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
             sorted_price_curves_usd = self.custom_sort(price_curves_usd, sort_sequence)
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
-            if len(sorted_price_curves_usd)>0:
-                usd_eth_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
+            usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
         except Exception:
-            usd_eth_conversion_rate = Decimal("NaN")
-        best_profit_usd = best_profit_eth * usd_eth_conversion_rate
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'ETH', best_profit_eth, usd_eth_conversion_rate, best_profit_usd, 'USD'}")
-        return best_profit_fl_token, best_profit_eth, best_profit_usd
+            usd_gastkn_conversion_rate = Decimal("NaN")
+
+        best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
+        return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
     def update_log_dict(
         arb_mode: str,
-        best_profit_eth: Decimal,
+        best_profit_gastkn: Decimal,
         best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
@@ -867,7 +870,7 @@ class CarbonBot(CarbonBotBase):
         ]
         log_dict = {
             "type": arb_mode,
-            "profit_gas_token": num_format_float(best_profit_eth),
+            "profit_gas_token": num_format_float(best_profit_gastkn),
             "profit_usd": num_format_float(best_profit_usd),
             "flashloan": flashloans,
             "trades": [],
@@ -894,9 +897,7 @@ class CarbonBot(CarbonBotBase):
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any,
-        result: str,
-        block_number: int = None,
+        r: Any
     ) -> Any:
         """
         Handles the trade instructions.
@@ -909,10 +910,6 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         r: Any
             The result.
-        result: str
-            The result type.
-        block_number: int
-            The block number.
 
         Returns
         -------
@@ -974,25 +971,29 @@ class CarbonBot(CarbonBotBase):
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
         fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
+        fl_token_decimals = calculated_trade_instructions[0].tknin_decimals
+        flashloan_amount_wei = int(calculated_trade_instructions[0].amtin_wei)
+        flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
+        flashloan_fee_amt = flashloan_fee * (flashloan_amount_wei / 10**int(fl_token_decimals))
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
 
         # Use helper function to calculate profit
-        best_profit_fl_token, best_profit_eth, best_profit_usd = self.calculate_profit(
-            CCm, best_profit, fl_token
+        best_profit_fl_token, best_profit_gastkn, best_profit_usd = self.calculate_profit(
+            CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
         # Log the best trade instructions
         self.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit_eth  # The log id
+            1, best_profit=best_profit_gastkn  # The log id
         )
 
         # Use helper function to update the log dict
         log_dict = self.update_log_dict(
             arb_mode,
-            best_profit_eth,
+            best_profit_gastkn,
             best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
@@ -1003,20 +1004,19 @@ class CarbonBot(CarbonBotBase):
         self.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
 
         # Check if the best profit is greater than the minimum profit
-        if best_profit_eth < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+        if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
-                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_eth)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
+                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
             return None, None
 
         # Get the flashloan amount and token address
-        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
         flashloan_token_address = fl_token
 
         # Log the flashloan amount and token address
         self.handle_logging_for_trade_instructions(
             3,  # The log id
-            flashloan_amount=flashloan_amount,
+            flashloan_amount=flashloan_amount_wei,
         )
 
         # Encode the trade instructions
@@ -1041,8 +1041,6 @@ class CarbonBot(CarbonBotBase):
                 route_struct=route_struct,
                 flashloan_struct=flashloan_struct,
             )
-        # Check if the result is None
-        assert result is None, f"Unknown result requested {result}"
 
         # Get the cids
         cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})
@@ -1054,7 +1052,7 @@ class CarbonBot(CarbonBotBase):
                     ConfigObj=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
                     route_struct=route_struct,
-                    src_amount=flashloan_amount,
+                    src_amount=flashloan_amount_wei,
                     src_address=flashloan_token_address,
                 ),
                 cids,
@@ -1065,7 +1063,7 @@ class CarbonBot(CarbonBotBase):
         # Log the route_struct
         self.handle_logging_for_trade_instructions(
             4,  # The log id
-            flashloan_amount=flashloan_amount,
+            flashloan_amount=flashloan_amount_wei,
             flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
             route_struct=route_struct,
@@ -1079,9 +1077,9 @@ class CarbonBot(CarbonBotBase):
         return (
             tx_helpers.validate_and_submit_transaction(
                 route_struct=route_struct,
-                src_amt=flashloan_amount,
+                src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
-                expected_profit_eth=best_profit_eth,
+                expected_profit_gastkn=best_profit_gastkn,
                 expected_profit_usd=best_profit_usd,
                 safety_override=False,
                 verbose=True,

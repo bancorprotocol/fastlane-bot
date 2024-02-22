@@ -193,7 +193,7 @@ def test_test_combos_and_tokens():
 def test_test_expected_output():
 # ------------------------------------------------------------
     
-    run_full = bot._run(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False, result=bot.XS_ARBOPPS)
+    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
     arb_finder = bot._get_arb_finder("multi")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
