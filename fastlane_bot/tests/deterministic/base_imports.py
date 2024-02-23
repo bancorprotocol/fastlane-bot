@@ -28,7 +28,7 @@ load_dotenv()
 
 binance14 = "0x28C6c06298d514Db089934071355E5743bf21d60"
 
-def create_new_testnet():
+def create_new_testnet(blockchain):
 
     # Replace these variables with your actual data
     ACCOUNT_SLUG = os.environ['TENDERLY_USER'] 
@@ -42,6 +42,15 @@ def create_new_testnet():
         'X-Access-Key': ACCESS_KEY
     }
 
+    if blockchain=='ethereum':
+        networkId = 1
+        chainId = 1
+    elif blockchain == 'coinbase_base':
+        networkId = 8453
+        chainId = 8453
+    else:
+        raise ValueError("Blockchain not supported")
+
     data = {
         "slug": f"testing-api-endpoint-{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
         "displayName": "Automated Test Env",
@@ -51,11 +60,11 @@ def create_new_testnet():
             "purpose": "development"
         },
         "networkConfig": {
-            "networkId": "1",
+            "networkId": f"{networkId}",
             "blockNumber": "latest",
             "baseFeePerGas": "1",
             "chainConfig": {
-                "chainId": "1"
+                "chainId": f"{chainId}"
             }
         },
         "private": True,
@@ -68,7 +77,7 @@ def create_new_testnet():
     uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
     fromBlock = int(response.json()['container']['networkConfig']['blockNumber'])
 
-    return uri, fromBlock
+    return uri
 
 def get_GenericEvents(w3, ContractObject, EventName, fromBlock):
     logList = getattr(ContractObject.events, EventName).get_logs(fromBlock=fromBlock)
@@ -100,7 +109,6 @@ def get_GenericEvents(w3, ContractObject, EventName, fromBlock):
     return(mdf)
     
 def createStrategy_fromTestDict(w3, CarbonController, test_strategy):
-    print("Creating Strategy...")
     (token0, token1, y0, z0, A0, B0, y1, z1, A1, B1, wallet) = (
         test_strategy['token0'],
         test_strategy['token1'],
@@ -114,6 +122,11 @@ def createStrategy_fromTestDict(w3, CarbonController, test_strategy):
         test_strategy['B1'],
         test_strategy['wallet']
         )
+    print("Funding Wallet....")
+    setBalance_via_faucet(w3, token0, int(y0*2), wallet)
+    setBalance_via_faucet(w3, token1, int(y1*2), wallet)
+
+    print("Creating Strategy...")
     nonce = w3.eth.get_transaction_count(wallet)
     if token0 == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE':
         value = y0
@@ -192,9 +205,10 @@ def get_state_of_carbon_strategies(w3, CarbonController, fromBlock):
 
     return strategy_created_df, strategy_deleted_df, remaining_carbon_strategies
 
-def delete_all_carbon_strategies(w3, CarbonController, carbon_strategy_id_owner_list):
+def delete_all_carbon_strategies(w3, CarbonController, blockchain, carbon_strategy_id_owner_list):
     print("Deleting strategies...")
-    modify_tokens_for_deletion(w3, CarbonController)
+    if blockchain == 'ethereum':
+        modify_tokens_for_deletion(w3, CarbonController)
     undeleted_strategies = []
     for id,owner in carbon_strategy_id_owner_list:
         print("Attempt 1")
@@ -420,6 +434,25 @@ def initialize_bot(blockchain, arb_mode, static_pool_data_FORTESTING, python_ins
     print("Arb Bot Initialized")
     return child
 
+def initialize_bot_new(click_options, terminate_other_bots=False):
+
+    # Check to see if unexpected instances of the bot are running
+    bot_counts = count_process_instances('main.py')
+
+    # If unexpected bots are running terminate them
+    if bot_counts != 0:
+        print('Other Bot Instances Found - ensure they are not on the same testnet')
+        if terminate_other_bots:
+            print("Terminating other bot instances")
+            terminate_process_instances('main.py')
+            print('Bots terminated')
+
+    # Execute the command in the background
+    child = uniexpect.spawn(click_options)
+
+    print("Arb Bot Initialized")
+    return child
+
 def count_process_instances(process_name):
     count = 0
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -564,7 +597,7 @@ def get_balance_raw(w3, tokenAddress, address, blockNumber = None):
         balance = tokenContract.functions.balanceOf(address).call(block_identifier = blockNumber)
     return(balance)
 
-def run__slot_update_tests(w3, test_pools):
+def run_slot_update_tests(w3, test_pools):
     global PANCAKESWAP_V2_POOL_ABI
     global PANCAKESWAP_V3_POOL_ABI
     global UNISWAP_V2_POOL_ABI
@@ -577,7 +610,7 @@ def run__slot_update_tests(w3, test_pools):
             assert reserve0 == test_pools["param_reserve0"][i], f"Line {i} reserve0 not updated. Should be {test_pools['param_reserve0'][i]} got {reserve0}"
             assert reserve1 == test_pools["param_reserve1"][i], f"Line {i} reserve1 not updated. Should be {test_pools['param_reserve1'][i]} got {reserve1}"
             print('Test Passed')
-        elif test_pools["exchange"][i] == 'uniswap_v2':
+        elif test_pools["exchange"][i] in ['uniswap_v2', 'baseswap_v2']:
             print(f"Testing {i}")
             pool_contract = w3.eth.contract(address=test_pools["pool_address"][i], abi=UNISWAP_V2_POOL_ABI)
             reserve0, reserve1, ts = [str(x) for x in pool_contract.functions.getReserves().call()]
