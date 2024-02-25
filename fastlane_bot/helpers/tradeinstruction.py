@@ -163,6 +163,10 @@ class TradeInstruction:
         self._exchange_id = self.get_platform_id()
         self.custom_int = self.get_custom_int()
 
+
+    def get_real_tokens(self):
+        return self.get_real_tkn_in, self.get_real_tkn_out
+
     @property
     def get_real_tkn_in(self):
         """

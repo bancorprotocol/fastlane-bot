@@ -26,10 +26,11 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers import TradeInstruction, TxRouteHandler
+from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, WrapUnwrapProcessor, CarbonTradeSplitter
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.testing import *
 from fastlane_bot.config.network import *
+
 import json
 from dataclasses import asdict
 from typing import Dict
@@ -450,9 +451,11 @@ raw_tx_2 = {
                     "amtout": 0.5,
                     "_amtout_wei": 50000000,
                     }
+
 raw_tx_list_0 = [raw_tx_1, raw_tx_2]
 raw_tx_list_1 = [raw_tx_1, raw_tx_2]
 raw_tx_list_2 = [raw_tx_1, raw_tx_1]
+
 raw_tx_str_0 = str(raw_tx_list_0)
 raw_tx_str_1 = str(raw_tx_list_1)
 raw_tx_str_2 = str(raw_tx_list_2)
@@ -544,37 +547,36 @@ txroutehandler_ethereum_1 = TxRouteHandler(trade_instructions=trade_instructions
 txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions_2)
 
 
-print(len(trade_instructions_0))
+#print(len(trade_instructions_0))
 
-split_trade_instructions_0 = txroutehandler_ethereum_0.split_carbon_trades(trade_instructions_0)
-split_trade_instructions_1 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_1)
-split_trade_instructions_2 = txroutehandler_ethereum_2.split_carbon_trades(trade_instructions_2)
-
+split_trade_instructions_0_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_0)
+split_trade_instructions_1_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_1)
+split_trade_instructions_2_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_2)
 
 
 assert len(trade_instructions_0) == 2
-assert len(split_trade_instructions_0) == 3
-assert len(split_trade_instructions_1) == 3
-assert len(split_trade_instructions_2) == 2
+
+assert len(split_trade_instructions_0_splitter) == 3
+assert len(split_trade_instructions_1_splitter) == 3
+assert len(split_trade_instructions_2_splitter) == 2
 
 
-assert split_trade_instructions_0[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+assert split_trade_instructions_0_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
 
 # print(len(split_trade_instructions_0))
 # print(len(split_trade_instructions_1))
 
-assert split_trade_instructions_0 == split_trade_instructions_1
 
-# for trade in split_trade_instructions_2:
-#     print(trade.tknin, trade.tknout, trade.exchange_name)
+assert split_trade_instructions_0_splitter == split_trade_instructions_1_splitter
 
-for idx, trade in enumerate(split_trade_instructions_2):
-    assert trade_instructions_2[idx].tknin == split_trade_instructions_2[idx].tknin
-    assert trade_instructions_2[idx].tknout == split_trade_instructions_2[idx].tknout
-    assert trade_instructions_2[idx].amtin_wei == split_trade_instructions_2[idx].amtin_wei
-    assert trade_instructions_2[idx].amtout_wei == split_trade_instructions_2[idx].amtout_wei
-    assert trade_instructions_2[idx].raw_txs == split_trade_instructions_2[idx].raw_txs
 
+for idx, trade in enumerate(split_trade_instructions_2_splitter):
+    assert trade_instructions_2[idx].tknin == split_trade_instructions_2_splitter[idx].tknin
+    assert trade_instructions_2[idx].tknout == split_trade_instructions_2_splitter[idx].tknout
+    assert trade_instructions_2[idx].amtin_wei == split_trade_instructions_2_splitter[idx].amtin_wei
+    assert trade_instructions_2[idx].amtout_wei == split_trade_instructions_2_splitter[idx].amtout_wei
+    assert trade_instructions_2[idx].raw_txs == split_trade_instructions_2_splitter[idx].raw_txs
 
 # -
 
@@ -585,6 +587,9 @@ cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
 cfg.network.NETWORK = "ethereum"
 flashloan_struct_0=[{'platformId': 7, 'sourceTokens': ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], 'sourceAmounts': [15000000000000000000]}]
 flashloan_struct_1=[{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [15000000000000000000]}]
+
+wrap_unwrap_processor_0, wrap_unwrap_processor_1, wrap_unwrap_processor_2, wrap_unwrap_processor_3 = WrapUnwrapProcessor(cfg=cfg), WrapUnwrapProcessor(cfg=cfg), WrapUnwrapProcessor(cfg=cfg), WrapUnwrapProcessor(cfg=cfg)
+
 
 raw_tx_0 = {
                     "cid": "67035626283424877302284797664058337657416-0",
@@ -738,22 +743,23 @@ txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions
 txroutehandler_ethereum_3 = TxRouteHandler(trade_instructions=trade_instructions_3)
 
 
-split_trade_instructions_0 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_0)
-split_trade_instructions_1 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_1)
-split_trade_instructions_2 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_2)
-split_trade_instructions_3 = txroutehandler_ethereum_1.split_carbon_trades(trade_instructions_3)
+split_trade_instructions_0_split = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_0)
+split_trade_instructions_1_split = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_1)
+split_trade_instructions_2_split = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_2)
+split_trade_instructions_3_split = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_3)
+
 
 encoded_0 = txroutehandler_ethereum_0.custom_data_encoder(
-            split_trade_instructions_0
+            split_trade_instructions_0_split
         )
 encoded_1 = txroutehandler_ethereum_1.custom_data_encoder(
-            split_trade_instructions_1
+            split_trade_instructions_1_split
         )
 encoded_2 = txroutehandler_ethereum_2.custom_data_encoder(
-            split_trade_instructions_2
+            split_trade_instructions_2_split
         )
 encoded_3 = txroutehandler_ethereum_3.custom_data_encoder(
-            split_trade_instructions_3
+            split_trade_instructions_3_split
         )
 
 
@@ -784,15 +790,11 @@ route_struct_3 = [
                 trade_instructions=encoded_3, deadline=5000
             )
         ]
-print(route_struct_0)
-print(route_struct_1)
-print(route_struct_2)
-print(route_struct_3)
 
-wrap_unwrap_0 = txroutehandler_ethereum_0.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_0, route_struct_0, flashloan_struct_0)
-wrap_unwrap_1 = txroutehandler_ethereum_1.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_1, route_struct_1, flashloan_struct_1)
-wrap_unwrap_2 = txroutehandler_ethereum_2.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_2, route_struct_2, flashloan_struct_0)
-wrap_unwrap_3 = txroutehandler_ethereum_3.add_wrap_or_unwrap_trades_to_route_v4(split_trade_instructions_3, route_struct_3, flashloan_struct_1)
+wrap_unwrap_0_processor = wrap_unwrap_processor_0.add_wrap_or_unwrap_trades_to_route(split_trade_instructions_0_split, route_struct_0, flashloan_struct_0)
+wrap_unwrap_1_processor = wrap_unwrap_processor_1.add_wrap_or_unwrap_trades_to_route(split_trade_instructions_1_split, route_struct_1, flashloan_struct_1)
+wrap_unwrap_2_processor = wrap_unwrap_processor_2.add_wrap_or_unwrap_trades_to_route(split_trade_instructions_2_split, route_struct_2, flashloan_struct_0)
+wrap_unwrap_3_processor = wrap_unwrap_processor_3.add_wrap_or_unwrap_trades_to_route(split_trade_instructions_3_split, route_struct_3, flashloan_struct_1)
 
 
 flashloan_struct_0=[{'platformId': 7, 'sourceTokens': ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], 'sourceAmounts': [15000000000000000000]}]
@@ -803,25 +805,33 @@ balances_1 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEee
 balances_2 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 15000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
 balances_3 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
 
+balances_0_processor = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 15000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_1_processor = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_2_processor = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 15000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+balances_3_processor = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+
 
 def check_no_negative(balance_dict):
     for tkn in balance_dict.keys():
-        assert balance_dict[tkn] >= 0, f""
+        assert balance_dict[tkn] >= 0, f"negative balance found: {balance_dict}"
 
 def loop_balances(_route_struct, _balance):
     for trade in _route_struct:
+        #print(f"balance before trade {_balance}")
         _balance[trade['sourceToken']] -= trade['sourceAmount']
         _balance[trade['targetToken']] += trade['minTargetAmount']
         check_no_negative(_balance)
 
-for _route, _balance in [(wrap_unwrap_0, balances_0), (wrap_unwrap_1, balances_1), (wrap_unwrap_2, balances_2), (wrap_unwrap_3, balances_3)]:
+
+for idx, (_route, _balance) in enumerate([(wrap_unwrap_0_processor, balances_0_processor), (wrap_unwrap_1_processor, balances_1_processor), (wrap_unwrap_2_processor, balances_2_processor), (wrap_unwrap_3_processor, balances_3_processor)]):
+    #print(f"starting loop {idx}")
     loop_balances(_route, _balance)
 
 ## For Debugging
 # flashloan_struct_0 = flashloan WETH
 # flashloan_struct_1 = flashloan ETH
 # print("wrap_unwrap_0")
-# print(wrap_unwrap_0)
+
 # print("")
 # for trade in wrap_unwrap_0:
 #     print(trade)
