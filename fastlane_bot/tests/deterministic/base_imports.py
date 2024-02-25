@@ -44,10 +44,8 @@ def create_new_testnet(blockchain):
 
     if blockchain=='ethereum':
         networkId = 1
-        chainId = 1
     elif blockchain == 'coinbase_base':
         networkId = 8453
-        chainId = 8453
     else:
         raise ValueError("Blockchain not supported")
 
@@ -64,7 +62,7 @@ def create_new_testnet(blockchain):
             "blockNumber": "latest",
             "baseFeePerGas": "1",
             "chainConfig": {
-                "chainId": f"{chainId}"
+                "chainId": "1"
             }
         },
         "private": True,
@@ -123,8 +121,10 @@ def createStrategy_fromTestDict(w3, CarbonController, test_strategy):
         test_strategy['wallet']
         )
     print("Funding Wallet....")
-    setBalance_via_faucet(w3, token0, int(y0*2), wallet)
-    setBalance_via_faucet(w3, token1, int(y1*2), wallet)
+    if y0>0:
+        setBalance_via_faucet(w3, token0, int(y0*2), wallet)
+    if y1>0:
+        setBalance_via_faucet(w3, token1, int(y1*2), wallet)
 
     print("Creating Strategy...")
     nonce = w3.eth.get_transaction_count(wallet)
@@ -304,6 +304,47 @@ def clean_tx_data(tx_data):
         if trade['exchange'] == 'carbon_v1' and 'cid0' in trade:
             del trade['cid0']
     return tx_data
+
+def compare_jsons(json1, json2, ignore_keys=[]):
+    # Function to compare two values and check if they are within 1%
+    def is_within_1_percent(val1, val2):
+        return abs(val1 - val2) / max(abs(val1), abs(val2)) <= 0.01
+
+    # Recursive function to iterate through the JSON
+    def compare(obj1, obj2):
+        # Ensure both objects are of the same type
+        if type(obj1) != type(obj2):
+            return False
+
+        if isinstance(obj1, dict):
+            # Ensure both dicts have the same keys
+            if set(obj1.keys()) != set(obj2.keys()):
+                return False
+            # Recursively compare values of each key
+            for key in obj1:
+                if key in ignore_keys:
+                    continue  # Skip comparison for this key
+                if not compare(obj1[key], obj2[key]):
+                    return False
+        elif isinstance(obj1, list):
+            # Ensure both lists are of the same length
+            if len(obj1) != len(obj2):
+                return False
+            # Recursively compare each item
+            for item1, item2 in zip(obj1, obj2):
+                if not compare(item1, item2):
+                    return False
+        elif isinstance(obj1, float) or isinstance(obj1, int):
+            # Compare numerical values
+            if not is_within_1_percent(obj1, obj2):
+                return False
+        else:
+            # For non-numeric types, ensure equality
+            if obj1 != obj2:
+                return False
+        return True
+
+    return compare(json1, json2)
 
 def appendZeros(value, type_a):
     if (type_a == 'bool') and (value == 'True'):

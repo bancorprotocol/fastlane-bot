@@ -2,52 +2,52 @@
     "test_data": {
         "1": {
             "type": "multi",
-            "profit_gas_token": 0.113,
-            "profit_usd": 255.8626,
+            "profit_gas_token": 0.0009,
+            "profit_usd": 2.6611,
             "flashloan": [
                 {
                     "token": "WETH",
-                    "amount": 1.1466,
-                    "profit": 0.113
+                    "amount": 0.0803,
+                    "profit": 0.0009
                 }
             ],
             "trades": [
                 {
                     "trade_index": 0,
-                    "exchange": "uniswap_v2",
+                    "exchange": "baseswap_v2",
                     "tkn_in": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                        "WETH": "0x4200000000000000000000000000000000000006"
                     },
-                    "amount_in": 1.1466,
+                    "amount_in": 0.0803,
                     "tkn_out": {
-                        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                        "AXLUSDC": "0xEB466342C4d449BC9f53A865D5Cb90586f405215"
                     },
-                    "amt_out": 2587.6497,
-                    "cid0": "fe98c78ce1"
+                    "amt_out": 231.7215,
+                    "cid0": "cb8ad6c910"
                 },
                 {
                     "trade_index": 1,
                     "exchange": "carbon_v1",
                     "tkn_in": {
-                        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                        "AXLUSDC": "0xEB466342C4d449BC9f53A865D5Cb90586f405215"
                     },
-                    "amount_in": 2587.6497,
+                    "amount_in": 231.7215,
                     "tkn_out": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                        "WETH": "0x4200000000000000000000000000000000000006"
                     },
-                    "amt_out": 1.2596
+                    "amt_out": 0.0812
                 }
             ]
         },
         "2": {
             "type": "multi",
-            "profit_gas_token": 0.1817,
-            "profit_usd": 411.3437,
+            "profit_gas_token": 0.0003,
+            "profit_usd": 0.877,
             "flashloan": [
                 {
-                    "token": "LINK",
-                    "amount": 51.3308,
-                    "profit": 28.1742
+                    "token": "WETH",
+                    "amount": 0.0363,
+                    "profit": 0.0003
                 }
             ],
             "trades": [
@@ -55,104 +55,26 @@
                     "trade_index": 0,
                     "exchange": "uniswap_v3",
                     "tkn_in": {
-                        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+                        "WETH": "0x4200000000000000000000000000000000000006"
                     },
-                    "amount_in": 51.3308,
+                    "amount_in": 0.0363,
                     "tkn_out": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                     },
-                    "amt_out": 0.33,
-                    "cid0": "b800399517"
+                    "amt_out": 106.4704,
+                    "cid0": "79e3b11f04"
                 },
                 {
                     "trade_index": 1,
                     "exchange": "carbon_v1",
                     "tkn_in": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                     },
-                    "amount_in": 0.33,
+                    "amount_in": 106.4704,
                     "tkn_out": {
-                        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+                        "WETH": "0x4200000000000000000000000000000000000006"
                     },
-                    "amt_out": 79.505
-                }
-            ]
-        },
-        "3": {
-            "type": "multi",
-            "profit_gas_token": 0.1293,
-            "profit_usd": 292.8006,
-            "flashloan": [
-                {
-                    "token": "USDC",
-                    "amount": 2697.3,
-                    "profit": 292.8006
-                }
-            ],
-            "trades": [
-                {
-                    "trade_index": 0,
-                    "exchange": "carbon_v1",
-                    "tkn_in": {
-                        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-                    },
-                    "amount_in": 2697.3,
-                    "tkn_out": {
-                        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-                    },
-                    "amt_out": 2990.7069
-                },
-                {
-                    "trade_index": 1,
-                    "exchange": "pancakeswap_v3",
-                    "tkn_in": {
-                        "DAI": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-                    },
-                    "amount_in": 2990.7069,
-                    "tkn_out": {
-                        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-                    },
-                    "amt_out": 2990.1006,
-                    "cid0": "d198cf907e"
-                }
-            ]
-        },
-        "4": {
-            "type": "multi",
-            "profit_gas_token": 0.0198,
-            "profit_usd": 44.7633,
-            "flashloan": [
-                {
-                    "token": "WETH",
-                    "amount": 1.3329,
-                    "profit": 0.0198
-                }
-            ],
-            "trades": [
-                {
-                    "trade_index": 0,
-                    "exchange": "carbon_v1",
-                    "tkn_in": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-                    },
-                    "amount_in": 1.3329,
-                    "tkn_out": {
-                        "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-                    },
-                    "amt_out": 0.0737
-                },
-                {
-                    "trade_index": 1,
-                    "exchange": "pancakeswap_v2",
-                    "tkn_in": {
-                        "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-                    },
-                    "amount_in": 0.0737,
-                    "tkn_out": {
-                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-                    },
-                    "amt_out": 1.3526,
-                    "cid0": "66c0a836b8"
+                    "amt_out": 0.0366
                 }
             ]
         }
