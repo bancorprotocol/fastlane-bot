@@ -565,6 +565,30 @@ def handle_exchange_parameters(w3, test_pools_row):
     else:
         Exception, "exchange_type not recognized"
 
+# advance the block number
+def advance_block_number(w3, blocks):
+    # w3 = Web3(Web3.HTTPProvider(url))
+    params = [w3.to_hex(blocks)]
+    w3.provider.make_request(method='evm_increaseBlocks', params=params)
+    print(f"Advanced by {blocks} blocks")
+
+# advance the time
+def advance_time(w3, seconds):
+    # w3 = Web3(Web3.HTTPProvider(url))
+    params = [w3.to_hex(seconds)]
+    w3.provider.make_request(method='evm_increaseTime', params=params)
+    print(f"Advanced by {seconds} seconds")
+
+def sleeping(w3, seconds):
+    print(f"Sleeping for {seconds} seconds")
+    time.sleep(seconds)
+
+function_map = {
+    'advance_time': advance_time,
+    'advance_block_number': advance_block_number,
+    "sleep": sleeping,
+}
+
 def modify_tokens_for_deletion(w3, CarbonController):
     '''Custom modifications to tokens to allow their deletion from Carbon'''
     #### 0x0 ####
@@ -695,5 +719,66 @@ def run_slot_update_tests(w3, test_pools):
 #     this_txhash = "0x"+ast.literal_eval(tx.split("\n\n")[1]).hex()
 #     if w3.eth.get_transaction(this_txhash)['r'].hex() != "0x00":
 #         actually_txt_all_successful_txs += [tx]
+
+
+# ### --- ALTERNATIVE METHOD for approximate comparisons
+# def compare_jsons(json1, json2, ignore_keys=[]):
+#     # Function to compare two values and check if they are within 1%
+#     def is_within_1_percent(val1, val2):
+#         return abs(val1 - val2) / max(abs(val1), abs(val2)) <= 0.01
+
+#     # Recursive function to iterate through the JSON
+#     def compare(obj1, obj2):
+#         # Ensure both objects are of the same type
+#         if type(obj1) != type(obj2):
+#             return False
+
+#         if isinstance(obj1, dict):
+#             # Ensure both dicts have the same keys
+#             if set(obj1.keys()) != set(obj2.keys()):
+#                 return False
+#             # Recursively compare values of each key
+#             for key in obj1:
+#                 if key in ignore_keys:
+#                     continue  # Skip comparison for this key
+#                 if not compare(obj1[key], obj2[key]):
+#                     return False
+#         elif isinstance(obj1, list):
+#             # Ensure both lists are of the same length
+#             if len(obj1) != len(obj2):
+#                 return False
+#             # Recursively compare each item
+#             for item1, item2 in zip(obj1, obj2):
+#                 if not compare(item1, item2):
+#                     return False
+#         elif isinstance(obj1, float) or isinstance(obj1, int):
+#             # Compare numerical values
+#             if not is_within_1_percent(obj1, obj2):
+#                 return False
+#         else:
+#             # For non-numeric types, ensure equality
+#             if obj1 != obj2:
+#                 return False
+#         return True
+
+#     return compare(json1, json2)
+
+
+# # Loop over the created test strategies and verify test data
+# tests_passed=True
+# for i in test_strategy_txhashs.keys():
+#     search_id = test_strategy_txhashs[i]['strategyid']
+#     print(f"Evaluating test {i}, {search_id}")
+#     tx_data = get_tx_data(search_id, actually_txt_all_successful_txs)
+#     clean_tx_data(tx_data)
+#     test_data = test_datas[i]
+#     if compare_jsons(tx_data, test_data, ['trade_index']):
+#         print(f"Test {i} PASSED")
+#     else:
+#         print(f"Test {i} FAILED")
+#         tests_passed = False
+# if tests_passed:
+#     print("ALL TESTS PASSED")
+
 
 erc20_abi = '[{"inputs":[{"internalType":"uint256","name":"chainId_","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"guy","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":true,"inputs":[{"indexed":true,"internalType":"bytes4","name":"sig","type":"bytes4"},{"indexed":true,"internalType":"address","name":"usr","type":"address"},{"indexed":true,"internalType":"bytes32","name":"arg1","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"arg2","type":"bytes32"},{"indexed":false,"internalType":"bytes","name":"data","type":"bytes"}],"name":"LogNote","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"uint256","name":"wad","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":true,"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"PERMIT_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"usr","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"usr","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"guy","type":"address"}],"name":"deny","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"usr","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"mint","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"move","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"expiry","type":"uint256"},{"internalType":"bool","name":"allowed","type":"bool"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"usr","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"pull","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"usr","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"push","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"guy","type":"address"}],"name":"rely","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"wards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}]'
