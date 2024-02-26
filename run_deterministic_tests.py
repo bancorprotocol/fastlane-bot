@@ -92,15 +92,15 @@ def run_tests_on_mode_task(args: argparse.Namespace, w3: Web3, carbon_controller
     print(f"strats_created_from_block: {strats_created_from_block}")
 
     # populate a dictionary with all the relevant test strategies
-    test_strategy_txhashs = {}
-    for i in range(1,len(test_strategies.keys())+1):
-        i = str(i)
-        test_strategy = test_strategies[i]
-        get_token_approval(w3, test_strategy['token0'], carbon_controller.address, test_strategy['wallet'])
-        get_token_approval(w3, test_strategy['token1'], carbon_controller.address, test_strategy['wallet'])
-        txhash = createStrategy_fromTestDict(w3, carbon_controller, test_strategy)
-        test_strategy_txhashs[i] = {}
-        test_strategy_txhashs[i]['txhash'] = txhash
+    # test_strategy_txhashs = {}
+    # for i in range(1,len(test_strategies.keys())+1):
+    #     i = str(i)
+    #     test_strategy = test_strategies[i]
+    #     get_token_approval(w3, test_strategy['token0'], carbon_controller.address, test_strategy['wallet'])
+    #     get_token_approval(w3, test_strategy['token1'], carbon_controller.address, test_strategy['wallet'])
+    #     txhash = createStrategy_fromTestDict(w3, carbon_controller, test_strategy)
+    #     test_strategy_txhashs[i] = {}
+    #     test_strategy_txhashs[i]['txhash'] = txhash
 
 
 def main(args: argparse.Namespace):
