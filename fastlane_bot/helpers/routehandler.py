@@ -16,6 +16,7 @@ from typing import List, Any, Dict, Tuple
 import eth_abi
 import pandas as pd
 
+import fastlane_bot.tests.deterministic.constants
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
@@ -534,8 +535,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
-                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
+        if tkn in [self.ConfigObj.BNT_ADDRESS, fastlane_bot.tests.deterministic.constants.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
+                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS,
+                   fastlane_bot.tests.deterministic.constants.ETH_ADDRESS,
                    self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
             return 2
         else:

@@ -1,0 +1,638 @@
+import argparse
+import ast
+import re
+from dataclasses import dataclass
+
+import eth_abi
+import pandas as pd
+from eth_typing import Address
+from web3 import Web3
+from web3.contract import Contract
+from web3.types import RPCEndpoint
+
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
+from fastlane_bot.tests.deterministic.constants import ETH_ADDRESS, SUPPORTED_EXCHANGES
+from fastlane_bot.tools.cpc import T
+
+
+class Web3Manager:
+    def __init__(self, rpc_url: str):
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        assert self.w3.is_connected(), "Web3 not connected"
+
+    def get_carbon_controller(self, address: Address):
+        return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
+
+    @staticmethod
+    def get_carbon_controller_address(multichain_addresses_path: str, network: str):
+        # Initialize the Carbon Controller contract
+        lookup_table = pd.read_csv(multichain_addresses_path)
+        return (
+            lookup_table.query("exchange_name=='carbon_v1'")
+            .query(f"chain=='{network}'")
+            .factory_address.values[0]
+        )
+
+
+@dataclass
+class Token:
+    address: str or Address  # Address after __post_init__, str before
+
+    def __post_init__(self):
+        self.address = Web3.to_checksum_address(self.address)
+        self._contract = None
+
+    @property
+    def contract(self):
+        return self._contract
+
+    @contract.setter
+    def contract(self, contract: Contract):
+        self._contract = contract
+
+    @property
+    def is_eth(self):
+        return self.address == ETH_ADDRESS
+
+
+@dataclass
+class TokenBalance:
+    token: Token or str  # Token after __post_init__, str before
+    balance: int
+
+    def __post_init__(self):
+        self.token = Token(self.token)
+        self.balance = int(self.balance)
+
+    @property
+    def hex_balance(self):
+        return Web3.to_hex(self.balance)
+
+    def faucet_params(self, wallet_address: str = None) -> list:
+        return (
+            [[self.token.address], self.hex_balance]
+            if self.token.is_eth
+            else [self.token.address, wallet_address, self.hex_balance]
+        )
+
+
+@dataclass
+class Wallet:
+    address: str or Address  # Address after __post_init__, str before
+    balances: list[
+        TokenBalance or dict
+        ]  # List of TokenBalances after __post_init__, list of dicts before
+
+    def __post_init__(self):
+        self.address = Web3.to_checksum_address(self.address)
+        self.balances = [TokenBalance(**args) for args in self.balances]
+
+
+@dataclass
+class Strategy:
+    token0: Token
+    token1: Token
+    y0: int
+    z0: int
+    A0: int
+    B0: int
+    y1: int
+    z1: int
+    A1: int
+    B1: int
+    wallet: Wallet
+
+
+@dataclass
+class TestPool:
+    exchange_type: str
+    pool_address: str
+    tkn0_address: str
+    tkn1_address: str
+    slots: str or list  # List after __post_init__, str before
+    param_lists: str or list  # List after __post_init__, str before
+    tkn0_setBalance: TokenBalance or int  # TokenBalance after __post_init__, int before
+    tkn1_setBalance: TokenBalance or int  # TokenBalance after __post_init__, int before
+    param_blockTimestampLast: int = None
+    param_blockTimestampLast_type: str = None
+    param_reserve0: int = None
+    param_reserve0_type: str = None
+    param_reserve1: int = None
+    param_reserve1_type: str = None
+    param_liquidity: int = None
+    param_liquidity_type: str = None
+    param_sqrtPriceX96: int = None
+    param_sqrtPriceX96_type: str = None
+    param_tick: int = None
+    param_tick_type: str = None
+    param_observationIndex: int = None
+    param_observationIndex_type: str = None
+    param_observationCardinality: int = None
+    param_observationCardinality_type: str = None
+    param_observationCardinalityNext: int = None
+    param_observationCardinalityNext_type: str = None
+    param_feeProtocol: int = None
+    param_feeProtocol_type: str = None
+    param_unlocked: int = None
+    param_unlocked_type: str = None
+
+    def __post_init__(self):
+        self.slots = ast.literal_eval(self.slots)
+        self.param_lists = ast.literal_eval(self.param_lists)
+
+    @staticmethod
+    def attributes():
+        return list(TestPool.__dataclass_fields__.keys())
+
+    @property
+    def param_dict(self):
+        return dict(zip(self.slots, self.param_lists))
+
+    @property
+    def is_supported(self):
+        return self.exchange_type in SUPPORTED_EXCHANGES
+
+    def set_balance_via_faucet(self, w3: Web3, token_id: int):
+        token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
+        amount_wei = (
+            self.tkn0_setBalance
+            if token_id == 0
+            else self.tkn1_setBalance
+        )
+        token_balance = TokenBalance(token=token_address, balance=amount_wei)
+        params = token_balance.faucet_params(wallet_address=self.pool_address)
+        method_name = RPCEndpoint(
+            "tenderly_setBalance"
+            if token_balance.token.is_eth
+            else "tenderly_setErc20Balance"
+        )
+        w3.provider.make_request(method=method_name, params=params)
+        token_balance.balance = amount_wei
+        if token_id == 0:
+            self.tkn0_setBalance = token_balance
+        else:
+            self.tkn1_setBalance = token_balance
+        print(f"Reset Balance to {amount_wei}")
+
+
+@dataclass
+class Param:
+    type: str
+    value: any
+
+
+class PoolParamsBuilder:
+    def __init__(self, w3: Web3):
+        self.w3 = w3
+
+    @staticmethod
+    def convert_to_bool(value: str or int) -> bool:
+        if isinstance(value, str):
+            return value.lower() in ["true", "1"]
+        return bool(value)
+
+    @staticmethod
+    def safe_int_conversion(value: any) -> int or None:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            print(f"Error converting {value} to int")
+            return None
+
+    @staticmethod
+    def append_zeros(value: any, type_str: str) -> str:
+        result = None
+        if type_str == "bool":
+            result = "0001" if value.lower() in ["true", "1"] else "0000"
+        elif type_str == "int24":
+            long_hex = eth_abi.encode(["int24"], [value]).hex()
+            result = long_hex[-6:]
+        elif "int" in type_str:
+            try:
+                hex_value = hex(value)[2:]
+                length = int(re.search(r"\d+", type_str).group()) // 4
+                result = "0" * (length - len(hex_value)) + hex_value
+            except Exception as e:
+                print(f"Error building append_zeros {str(e)}")
+        return result
+
+    def build_type_val_dict(self, pool: TestPool, param_list_single: list[str]):
+        type_val_dict = {}
+        for param in param_list_single:
+            param_value = self.get_param_value(pool, param)
+            if param_value is not None:
+                type_val_dict[param] = Param(
+                    type=pool.__getattribute__(f"param_{param}_type") or "uint256",
+                    value=param_value,
+                )
+
+        encoded_params = self.encode_params(type_val_dict, param_list_single)
+        return type_val_dict, encoded_params
+
+    def get_param_value(self, pool: TestPool, param: str) -> int or bool:
+        if param == "blockTimestampLast":
+            return self.get_latest_block_timestamp()
+        elif param == "unlocked":
+            return self.convert_to_bool(pool.param_unlocked)
+        else:
+            return self.safe_int_conversion(pool.__getattribute__(f"param_{param}") or 0)
+
+    def get_latest_block_timestamp(self):
+        try:
+            return int(self.w3.eth.get_block("latest")["timestamp"])
+        except Exception as e:
+            print(f"Error fetching latest block timestamp: {e}")
+            return None
+
+    def encode_params(self, type_val_dict: dict, param_list_single: list[str]) -> str:
+        try:
+            result = "".join(
+                self.append_zeros(type_val_dict[param].value, type_val_dict[param].type)
+                for param in param_list_single
+            )
+            return "0x" + "0" * (64 - len(result)) + result
+        except Exception as e:
+            print(f"Error encoding params: {e}, {type_val_dict}")
+            return None
+
+    def get_update_params_dict(self, pool: TestPool):
+        params_dict = {}
+        for i in range(len(pool.slots)):
+            params_dict[pool.slots[i]] = {
+                "slot": "0x" + self.append_zeros(int(pool.slots[i]), "uint256")
+            }
+            type_val_dict, encoded_params = self.build_type_val_dict(
+                pool, param_list_single=pool.param_lists[i]
+            )
+
+            params_dict[pool.slots[i]]["type_val_dict"] = type_val_dict
+            params_dict[pool.slots[i]]["encoded_params"] = encoded_params
+        return params_dict
+
+    def set_storage_at(self, pool_address: str, update_params_dict_single: dict):
+        method = RPCEndpoint("tenderly_setStorageAt")
+        self.w3.provider.make_request(
+            method=method, params=[
+                pool_address,
+                update_params_dict_single["slot"],
+                update_params_dict_single["encoded_params"],
+            ]
+        )
+        print(
+            f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}"
+        )
+        print(f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}")
+
+
+class StrategyManager:
+    """
+    A class to manage Carbon strategies.
+
+    Attributes:
+        w3 (Web3): The Web3 instance.
+        carbon_controller (Contract): The CarbonController contract instance.
+    """
+
+    def __init__(self, w3: Web3, carbon_controller: Contract):
+        self.w3 = w3
+        self.carbon_controller = carbon_controller
+
+    @staticmethod
+    def process_order_data(log_args: dict, order_key: str) -> dict:
+        """Transforms nested order data by appending a suffix to each key.
+
+        Args:
+            log_args (dict): The log arguments.
+            order_key (str): The key to process.
+
+        Returns:
+            dict: The processed order data.
+        """
+        if order_data := log_args.get(order_key):
+            suffix = order_key[-1]  # Assumes order_key is either 'order0' or 'order1'
+            return {f"{key}{suffix}": value for key, value in order_data.items()}
+        return {}
+
+    @staticmethod
+    def print_state_changes(all_carbon_strategies: list, deleted_strategies: list, remaining_carbon_strategies: list) -> None:
+        """
+        Prints the state changes of Carbon strategies.
+
+        Args:
+            all_carbon_strategies (list): The list of all Carbon strategies.
+            deleted_strategies (list): The list of deleted Carbon strategies.
+            remaining_carbon_strategies (list): The list of remaining Carbon strategies.
+        """
+        print(f"{len(all_carbon_strategies)} Carbon strategies have been created")
+        print(f"{len(deleted_strategies)} Carbon strategies have been deleted")
+        print(f"{len(remaining_carbon_strategies)} Carbon strategies remain")
+
+    def get_generic_events(self, event_name: str, from_block: int) -> pd.DataFrame:
+        """
+        Fetches logs for a specified event from a smart contract.
+
+        Args:
+            event_name (str): The name of the event.
+            from_block (int): The block number to start fetching logs from.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the logs of the specified event.
+        """
+        log_list = getattr(self.carbon_controller.events, event_name).get_logs(fromBlock=from_block)
+        data = []
+        for log in log_list:
+            log_data = {
+                'block_number': log['blockNumber'],
+                'transaction_hash': self.w3.to_hex(log['transactionHash']),
+                **log['args']
+            }
+
+            # Process and update log_data for 'order0' and 'order1', if present
+            for order_key in ['order0', 'order1']:
+                if order_data := self.process_order_data(log['args'], order_key):
+                    log_data.update(order_data)
+                    del log_data[order_key]
+
+            data.append(log_data)
+
+        df = pd.DataFrame(data)
+        return (
+            df.sort_values(by='block_number')
+            if 'block_number' in df.columns
+            else df
+        ).reset_index(drop=True)
+
+    def get_state_of_carbon_strategies(self, from_block: int) -> tuple:
+        """
+        Fetches the state of Carbon strategies.
+
+        Args:
+            from_block (int): The block number to start fetching logs from.
+
+        Returns: tuple: A tuple containing the DataFrames of the 'StrategyCreated' and 'StrategyDeleted' events,
+        and the list of remaining Carbon strategies.
+        """
+        strategy_created_df = self.get_generic_events(event_name="StrategyCreated", from_block=from_block)
+        all_carbon_strategies = [] if strategy_created_df.empty else [(strategy_created_df["id"][i], strategy_created_df["owner"][i]) for i in strategy_created_df.index]
+        strategy_deleted_df = self.get_generic_events(event_name="StrategyDeleted", from_block=from_block)
+        deleted_strategies = [] if strategy_deleted_df.empty else strategy_deleted_df["id"].to_list()
+        remaining_carbon_strategies = [x for x in all_carbon_strategies if x[0] not in deleted_strategies]
+
+        # Print state changes
+        self.print_state_changes(all_carbon_strategies, deleted_strategies, remaining_carbon_strategies)
+
+        # Return state changes
+        return strategy_created_df, strategy_deleted_df, remaining_carbon_strategies
+
+    def modify_tokens_for_deletion(self) -> None:
+        """
+        Modifies tokens for deletion.
+        """
+        pass
+
+    def create_strategy(self, wallet: Address, nonce: int) -> str:
+        print("Creating Strategy...")
+        tx_params = {
+            "from": wallet,
+            "nonce": nonce,
+            "gasPrice": 0,
+            "gas": 2000000,
+            "value": self.value
+        }
+        tx_hash = self.carbon_controller.functions.createStrategy(
+            self.token0, self.token1, ([self.y0, self.z0, self.A0, self.B0], [self.y1, self.z1, self.A1, self.B1])
+        ).transact(tx_params)
+
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        if tx_receipt.status != 1:
+            print('Creation Failed')
+            return None
+        else:
+            print('Successfully Created Strategy')
+            return self.w3.to_hex(tx_receipt.transactionHash)
+
+    def delete_strategy(self, strategy: TestStrategy, wallet: Address) -> int:
+        print("Deleting Strategy...")
+        nonce = self.w3.eth.get_transaction_count(wallet)
+        tx_params = {
+            "from": wallet,
+            "nonce": nonce,
+            "gasPrice": 0,
+            "gas": 2000000,
+        }
+        tx_hash = self.carbon_controller.functions.deleteStrategy(strategy_id).transact(tx_params)
+
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        return tx_receipt.status
+
+    def delete_all_carbon_strategies(self, carbon_strategy_id_owner_list: list) -> list:
+        print("Deleting strategies...")
+        self.modify_tokens_for_deletion()
+        undeleted_strategies = []
+        for id,owner in carbon_strategy_id_owner_list:
+            print("Attempt 1")
+            status = self.delete_strategy(id, owner)
+            if status == 0:
+                try:
+                    strat_info = self.carbon_controller.functions.strategy(id).call()
+                    current_owner = strat_info[1]
+                    try:
+                        print("Attempt 2")
+                        status = self.delete_strategy(id, current_owner)
+                        if status == 0:
+                            print(f"Unable to delete strategy {id}")
+                            undeleted_strategies += [id]
+                    except:
+                        print(f"Strategy {id} not found - already deleted")
+                except:
+                    print(f"Strategy {id} not found - already deleted")
+                    pass
+            elif status==1:
+                print(f"Strategy {id} successfully deleted")
+            else:
+                print("Possible error")
+        return undeleted_strategies
+
+
+def get_default_main_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--cache_latest_only",
+        default='True',
+        help="Set to True for production. Set to False for testing / debugging",
+    )
+    parser.add_argument(
+        "--backdate_pools",
+        default='False',
+        help="Set to False for faster testing / debugging",
+    )
+    parser.add_argument(
+        "--static_pool_data_filename",
+        default="static_pool_data",
+        help="Filename of the static pool data.",
+    )
+    parser.add_argument(
+        "--arb_mode",
+        default="multi_pairwise_all",
+        help="See arb_mode in bot.py",
+        choices=[
+            "single",
+            "multi",
+            "triangle",
+            "multi_triangle",
+            "b3_two_hop",
+            "multi_pairwise_pol",
+            "multi_pairwise_all",
+        ],
+    )
+    parser.add_argument(
+        "--flashloan_tokens",
+        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
+        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
+             "a flash loan in.",
+    )
+    parser.add_argument(
+        "--n_jobs", default=-1, help="Number of parallel jobs to run"
+    )
+    parser.add_argument(
+        "--exchanges",
+        default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
+        help="Comma separated external exchanges.",
+    )
+    parser.add_argument(
+        "--polling_interval",
+        default=1,
+        help="Polling interval in seconds",
+    )
+    parser.add_argument(
+        "--alchemy_max_block_fetch",
+        default=2000,
+        help="Max number of blocks to fetch from alchemy",
+    )
+    parser.add_argument(
+        "--reorg_delay",
+        default=0,
+        help="Number of blocks delayed to avoid reorgs",
+    )
+    parser.add_argument(
+        "--logging_path", default="", help="The logging path."
+    )
+    parser.add_argument(
+        "--loglevel",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="The logging level.",
+    )
+    parser.add_argument(
+        "--use_cached_events",
+        default='False',
+        help="Set to True for debugging / testing. Set to False for production.",
+    )
+    parser.add_argument(
+        "--run_data_validator",
+        default='False',
+        help="Set to True for debugging / testing. Set to False for production.",
+    )
+    parser.add_argument(
+        "--randomizer",
+        default="3",
+        help="Set to the number of arb opportunities to pick from.",
+    )
+    parser.add_argument(
+        "--limit_bancor3_flashloan_tokens",
+        default='True',
+        help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
+    )
+    parser.add_argument(
+        "--default_min_profit_gas_token",
+        default="0.01",
+        help="Set to the default minimum profit in gas token.",
+    )
+    parser.add_argument(
+        "--timeout",
+        default=None,
+        help="Set to the timeout in seconds. Set to None for no timeout.",
+    )
+    parser.add_argument(
+        "--target_tokens",
+        default=None,
+        help="A comma-separated string of tokens to target.",
+    )
+    parser.add_argument(
+        "--replay_from_block",
+        default=None,
+        help="Set to a block number to replay from that block.",
+    )
+    parser.add_argument(
+        "--tenderly_fork_id",
+        default=None,
+        help="Set to a Tenderly fork id.",
+    )
+    parser.add_argument(
+        "--tenderly_event_exchanges",
+        default="pancakeswap_v2,pancakeswap_v3",
+        help="A comma-separated string of exchanges to include for the Tenderly event fetcher.",
+    )
+    parser.add_argument(
+        "--increment_time",
+        default=1,
+        help="If tenderly_fork_id is set, this is the number of seconds to increment the fork time by for each iteration.",
+    )
+    parser.add_argument(
+        "--increment_blocks",
+        default=1,
+        help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
+             "by for each iteration.",
+    )
+    parser.add_argument(
+        "--blockchain",
+        default="ethereum",
+        help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
+        choices=["ethereum", "coinbase_base", "fantom"],
+    )
+    parser.add_argument(
+        "--pool_data_update_frequency",
+        default=-1,
+        help="How frequently pool data should be updated, in main loop iterations.",
+    )
+    parser.add_argument(
+        "--use_specific_exchange_for_target_tokens",
+        default=None,
+        help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
+    )
+    parser.add_argument(
+        "--prefix_path",
+        default="",
+        help="Prefixes the path to the write folders (used for deployment)",
+    )
+    parser.add_argument(
+        "--version_check_frequency",
+        default=1,
+        help="How frequently pool data should be updated, in main loop iterations.",
+    )
+    parser.add_argument(
+        "--self_fund",
+        default='False',
+        help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
+             "wallet when possible.",
+    )
+    parser.add_argument(
+        "--read_only",
+        default='True',
+        help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
+             "running the bot in an environment with restricted write permissions.",
+    )
+    parser.add_argument(
+        "--is_args_test",
+        default='False',
+        help="The logging path.",
+    )
+    parser.add_argument(
+        "--rpc_url",
+        default=None,
+        help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
+    )
+
+    # Process the arguments
+    args = parser.parse_args()
+    return args
