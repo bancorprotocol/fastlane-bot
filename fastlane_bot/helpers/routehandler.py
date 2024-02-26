@@ -5,7 +5,7 @@ Route handler for the Fastlane project.
 Licensed under MIT
 """
 __VERSION__ = "1.1.1"
-__DATE__="02/May/2023"
+__DATE__ = "02/May/2023"
 
 import decimal
 import math
@@ -68,10 +68,12 @@ class RouteStruct:
     customInt: int
     customData: bytes
     # ConfigObj: Config
+
+
 @dataclass
 class TxRouteHandlerBase:
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
 
 def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -116,8 +118,8 @@ class TxRouteHandler(TxRouteHandlerBase):
     trade_instructions_df: pd.DataFrame
         The trade instructions as a dataframe. Formatted output from the `CPCOptimizer` class.
     """
-    __VERSION__=__VERSION__
-    __DATE__=__DATE__
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
 
     trade_instructions: List[TradeInstruction]
 
@@ -162,7 +164,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def custom_data_encoder(
-        agg_trade_instructions: List[TradeInstruction],
+            agg_trade_instructions: List[TradeInstruction],
     ) -> List[TradeInstruction]:
         for i in range(len(agg_trade_instructions)):
             instr = agg_trade_instructions[i]
@@ -197,14 +199,14 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 # Encode the extracted values using the ABI types
                 encoded_data = eth_abi.encode(all_types, values)
-                instr.custom_data = '0x'+str(encoded_data.hex())
+                instr.custom_data = '0x' + str(encoded_data.hex())
                 agg_trade_instructions[i] = instr
         return agg_trade_instructions
 
     @staticmethod
     def _abi_encode_data(
-        idx_of_carbon_trades: List[int],
-        trade_instructions: List[TradeInstruction],
+            idx_of_carbon_trades: List[int],
+            trade_instructions: List[TradeInstruction],
     ) -> bytes:
         """
         Gets the custom data abi-encoded. Required for trades on Carbon. (abi-encoded)
@@ -235,18 +237,18 @@ class TxRouteHandler(TxRouteHandlerBase):
         return eth_abi.encode(all_types, values)
 
     def to_route_struct(
-        self,
-        min_target_amount: Decimal,
-        deadline: int,
-        target_address: str,
-        platform_id: int,
-        custom_address: str = None,
-        customData: Any = None,
-        override_min_target_amount: bool = True,
-        customInt: int = None,
-        source_token: str = None,
-        source_amount: Decimal = None,
-        exchange_name: str = None,
+            self,
+            min_target_amount: Decimal,
+            deadline: int,
+            target_address: str,
+            platform_id: int,
+            custom_address: str = None,
+            customData: Any = None,
+            override_min_target_amount: bool = True,
+            customInt: int = None,
+            source_token: str = None,
+            source_amount: Decimal = None,
+            exchange_name: str = None,
 
     ) -> RouteStruct:
         """
@@ -284,7 +286,8 @@ class TxRouteHandler(TxRouteHandlerBase):
         target_address = self.ConfigObj.w3.to_checksum_address(target_address)
         source_token = self.wrapped_gas_token_to_native(source_token)
         source_token = self.ConfigObj.w3.to_checksum_address(source_token)
-        customData = self.handle_custom_data_extras(platform_id=platform_id, custom_data=customData, exchange_name=exchange_name)
+        customData = self.handle_custom_data_extras(platform_id=platform_id, custom_data=customData,
+                                                    exchange_name=exchange_name)
 
         return RouteStruct(
             platformId=platform_id,
@@ -310,7 +313,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             custom_data: bytes
         """
 
-        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
+        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
+                self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
+                self.ConfigObj.network.AERODROME_V2_NAME):
             return custom_data
 
         assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
@@ -320,11 +325,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             else:
                 custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
         elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
-            custom_data = '0x'+ eth_abi.encode(['address'], [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
-
+            custom_data = '0x' + eth_abi.encode(['address'],
+                                                [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
 
         return custom_data
-
 
     def get_wrap_or_unwrap_native_gas_tkn_struct(self, deadline: int, wrap: bool, source_amount: int = 0):
         """
@@ -349,8 +353,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             customData="0x",
         )
 
-    def add_wrap_or_unwrap_trades_to_route(self, trade_instructions: List[TradeInstruction], route_struct: List[Dict], flashloan_struct: List
-    ) -> List[Dict]:
+    def add_wrap_or_unwrap_trades_to_route(self, trade_instructions: List[TradeInstruction], route_struct: List[Dict],
+                                           flashloan_struct: List
+                                           ) -> List[Dict]:
         """
         Adds native token wrap and unwrap trades as necessary to the route struct.
         :param trade_instructions: the processed trade instructions
@@ -391,47 +396,52 @@ class TxRouteHandler(TxRouteHandlerBase):
             if idx == 0:
                 if flashloan_wrapped_gas_token and trade_instructions[idx].tknin_is_native:
                     # First trade, we took flashloan of wrapped tokens but need Native tokens, add unwrap
-                    new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                           wrap=False,
-                                                                                           source_amount=route["sourceAmount"])))
+                    new_route_struct.append(
+                        asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
+                                                                             wrap=False,
+                                                                             source_amount=route["sourceAmount"])))
 
                 elif flashloan_native_gas_token and trade_instructions[idx].tknin_is_wrapped:
                     # First trade, we took flashloan of wrapped tokens but need Native tokens, add unwrap
-                    new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                           wrap=True,
-                                                                                           source_amount=route["sourceAmount"])))
+                    new_route_struct.append(
+                        asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
+                                                                             wrap=True,
+                                                                             source_amount=route["sourceAmount"])))
                 new_route_struct.append(route)
             # Received wrapped tokens from last trade, native tokens going into next trade
             elif trade_instructions[idx - 1].tknout_is_wrapped and trade_instructions[idx].tknin_is_native:
                 new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                       wrap=False,
-                                                                                       source_amount=route["sourceAmount"])))
+                                                                                             wrap=False,
+                                                                                             source_amount=route[
+                                                                                                 "sourceAmount"])))
                 new_route_struct.append(route)
             # Received native tokens from last trade, wrapped going into next trade
             elif trade_instructions[idx - 1].tknout_is_native and trade_instructions[idx].tknin_is_wrapped:
                 new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                       wrap=True,
-                                                                                       source_amount=route["sourceAmount"])))
+                                                                                             wrap=True,
+                                                                                             source_amount=route[
+                                                                                                 "sourceAmount"])))
                 new_route_struct.append(route)
             else:
                 new_route_struct.append(route)
             if idx == len(route_struct) - 1:
                 # Flashloaned native, get wrapped out of last trade, convert to native
                 if flashloan_native_gas_token and trade_instructions[idx].tknout_is_wrapped:
-                    new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                           wrap=False,
-                                                                                           source_amount=0)))
+                    new_route_struct.append(
+                        asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
+                                                                             wrap=False,
+                                                                             source_amount=0)))
 
                 # Flashloaned wrapped, get native out of last trade, convert to wrapped
                 elif flashloan_wrapped_gas_token and trade_instructions[idx].tknout_is_native:
-                    new_route_struct.append(asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
-                                                                                           wrap=True,
-                                                                                           source_amount=0)))
+                    new_route_struct.append(
+                        asdict(self.get_wrap_or_unwrap_native_gas_tkn_struct(deadline=route["deadline"],
+                                                                             wrap=True,
+                                                                             source_amount=0)))
         return new_route_struct
 
-
     def get_route_structs(
-        self, trade_instructions: List[TradeInstruction]=None, deadline: int=None
+            self, trade_instructions: List[TradeInstruction] = None, deadline: int = None
     ) -> List[RouteStruct]:
         """
         Gets the RouteStruct objects into a list.
@@ -475,10 +485,11 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
             for idx, instructions in enumerate(trade_instructions)
         ]
+
     def get_custom_address(
-        self,
-        pool: Pool
-        ):
+            self,
+            pool: Pool
+    ):
         """
         This function gets the custom address field. For Bancor V2 this is the anchor. For Uniswap V2/V3 forks, this is the router address.
         :param pool: Pool
@@ -500,14 +511,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             return pool.tkn0_address
 
-
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
         :param trade_instructions_objects: a list of TradeInstruction objects
 
         :return:
-            int
+            list
         """
         return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
 
@@ -524,12 +534,14 @@ class TxRouteHandler(TxRouteHandlerBase):
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
+                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
+                   self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
             return 2
         else:
             return 7
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List:
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
         """
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
         :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
@@ -538,6 +550,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         flashloans = []
         balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
         has_balancer = False
+
         for tkn in flash_tokens.keys():
             platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
@@ -592,31 +605,27 @@ class TxRouteHandler(TxRouteHandlerBase):
         :param trade_instructions: A list of trade instruction objects
         """
 
-        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            tknin_address = None
-            tknin_address = None
-            if trade_instructions[0].tknin_is_native:
-                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-                tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-            elif trade_instructions[0].tknin_is_wrapped:
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-            else:
-                tknin_address = trade_instructions[0].tknin_address
-                tknin_address = trade_instructions[0].tknin_address
-            assert  tknin_address is not None and tknin_address is not None, f"routehandler _extract_single_flashloan_token, tknin_address is {tknin_address} and tknin_address is {tknin_address}, must not be None"
-            flash_tokens = {
-                tknin_address :
-                {
-                "tkn": tknin_address,
-                "flash_amt": trade_instructions[0].amtin_wei,
-                "decimals": trade_instructions[0].tknin_decimals}
-            }
+        is_FL_NATIVE_permitted=False
+        if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_ETHEREUM]:
+            is_FL_NATIVE_permitted=True
+
+        if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
+            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            self.ConfigObj.logger.info(f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
+        elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
+            tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif trade_instructions[0].tknin_is_wrapped:
+            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
         else:
-            flash_tokens = {self.wrapped_gas_token_to_native(trade_instructions[0].tknin_address): {
-                "tkn": self.wrapped_gas_token_to_native(trade_instructions[0]._tknin_address),
-                "flash_amt": trade_instructions[0].amtin_wei,
-                "decimals": trade_instructions[0].tknin_decimals}}
+            tknin_address = trade_instructions[0].tknin_address
+        flash_tokens = {
+            tknin_address:
+                {
+                    "tkn": tknin_address,
+                    "flash_amt": trade_instructions[0].amtin_wei,
+                    "decimals": trade_instructions[0].tknin_decimals}
+        }
+
         return flash_tokens
 
     def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
@@ -643,13 +652,14 @@ class TxRouteHandler(TxRouteHandlerBase):
             token_change[tknout_address]["balance"] = token_change[tknout_address]["balance"] + trade.amtout_wei
 
             if token_change[tknin_address]["balance"] < 0:
-                flash_tokens[tknin_address] = {"tkn": trade._tknin_address, "flash_amt": token_change[tknin_address]["amtin"],
-                                           "decimals": trade.tknin_decimals}
+                flash_tokens[tknin_address] = {"tkn": trade._tknin_address,
+                                               "flash_amt": token_change[tknin_address]["amtin"],
+                                               "decimals": trade.tknin_decimals}
 
         return flash_tokens
 
     def get_arb_contract_args(
-        self, trade_instructions: List[TradeInstruction], deadline: int
+            self, trade_instructions: List[TradeInstruction], deadline: int
     ) -> Tuple[List[RouteStruct], int]:
         """
         Gets the arguments needed to instantiate the `ArbContract` class.
@@ -736,13 +746,15 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         for idx, trade in enumerate(calculated_trade_instructions):
             if idx > 0:
-                if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
+                if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[
+                    idx - 1].exchange_name == "bancor_v3":
                     trade_before = calculated_trade_instructions[idx - 1]
                     # This checks for a two-hop trade through BNT and combines them
                     if trade_before.tknout_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" and trade.tknin_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
-                                                                 tknin=trade_before.tknin_address, tknout=trade.tknout_address,
+                                                                 tknin=trade_before.tknin_address,
+                                                                 tknout=trade.tknout_address,
                                                                  pair_sorting="", raw_txs="[]", db=trade.db)
                         new_trade_instruction.tknout_is_native = trade.tknout_is_native
                         new_trade_instruction.tknout_is_wrapped = trade.tknout_is_wrapped
@@ -750,11 +762,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                         calculated_trade_instructions.pop(idx)
 
         return calculated_trade_instructions
-
-
-
-
-
 
     def aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
@@ -806,8 +813,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                 "amtout": newdf.amtout.sum(),
                 "_amtout_wei": newdf._amtout_wei.sum(),
                 "raw_txs": str(newdf.to_dict(orient="records")),
-                "ConfigObj" : config_object,
-                "db" : db,
+                "ConfigObj": config_object,
+                "db": db,
             }
             for min_index, newdf in result}
 
@@ -841,13 +848,13 @@ class TxRouteHandler(TxRouteHandlerBase):
             for j in df.index:
                 if i != j:
                     if df.tknin[i] == df.tknout[j] and (
-                        (df.amtin[i] <= -df.amtout[j] * factor_high)
-                        & (df.amtin[i] >= -df.amtout[j] * factor_low)
+                            (df.amtin[i] <= -df.amtout[j] * factor_high)
+                            & (df.amtin[i] >= -df.amtout[j] * factor_low)
                     ):
                         df.loc[i, "matchedin"] = j
                     if df.tknout[i] == df.tknin[j] and (
-                        (df.amtout[i] >= -df.amtin[j] * factor_high)
-                        & (df.amtout[i] <= -df.amtin[j] * factor_low)
+                            (df.amtout[i] >= -df.amtin[j] * factor_high)
+                            & (df.amtout[i] <= -df.amtin[j] * factor_low)
                     ):
                         df.loc[i, "matchedout"] = j
 
@@ -867,7 +874,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return trade_instructions
 
     def _determine_trade_route(
-        self, trade_instructions: List[TradeInstruction]
+            self, trade_instructions: List[TradeInstruction]
     ) -> List[int]:
         """
         Refactored determine trade route.
@@ -912,7 +919,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def _find_match_for_tkn(
-        trades: List[TradeInstruction], tkn: str, input="tknin"
+            trades: List[TradeInstruction], tkn: str, input="tknin"
     ) -> List[Any]:
         """
         Refactored find match for trade.
@@ -938,7 +945,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def _find_match_for_amount(
-        trades: List[TradeInstruction], amount: Decimal, input="amtin"
+            trades: List[TradeInstruction], amount: Decimal, input="amtin"
     ) -> List[Any]:
         """
         Refactored find match for amount.
@@ -964,14 +971,14 @@ class TxRouteHandler(TxRouteHandlerBase):
                 (i, x)
                 for i, x in enumerate(trades)
                 if (x.amtout >= -amount * factor_high)
-                & (x.amtout <= -amount * factor_low)
+                   & (x.amtout <= -amount * factor_low)
             ]
         else:
             return [
                 (i, x)
                 for i, x in enumerate(trades)
                 if (x.amtin <= -amount * factor_high)
-                & (x.amtin >= -amount * factor_low)
+                   & (x.amtin >= -amount * factor_low)
             ]
 
     def _match_trade(self, trade_instructions: List[TradeInstruction]) -> List[Any]:
@@ -1002,7 +1009,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return potential_route
 
     def _reorder_trade_instructions(
-        self, trade_instructions: List[TradeInstruction], new_route: List[int]
+            self, trade_instructions: List[TradeInstruction], new_route: List[int]
     ) -> List[TradeInstruction]:
         """
         Refactored reorder trade instructions.
@@ -1022,10 +1029,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         return [trade_instructions[i] for i in new_route]
 
     def _calc_amount0(
-        self,
-        liquidity: Decimal,
-        sqrt_price_times_q96_lower_bound: Decimal,
-        sqrt_price_times_q96_upper_bound: Decimal,
+            self,
+            liquidity: Decimal,
+            sqrt_price_times_q96_lower_bound: Decimal,
+            sqrt_price_times_q96_upper_bound: Decimal,
     ) -> Decimal:
         """
         Refactored calc amount0.
@@ -1048,7 +1055,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             sqrt_price_times_q96_lower_bound, sqrt_price_times_q96_upper_bound = (
                 sqrt_price_times_q96_upper_bound,
                 sqrt_price_times_q96_lower_bound,
-             )
+            )
         return Decimal(
             liquidity
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
@@ -1057,10 +1064,10 @@ class TxRouteHandler(TxRouteHandlerBase):
         )
 
     def _calc_amount1(
-        self,
-        liquidity: Decimal,
-        sqrt_price_times_q96_lower_bound: Decimal,
-        sqrt_price_times_q96_upper_bound: Decimal,
+            self,
+            liquidity: Decimal,
+            sqrt_price_times_q96_lower_bound: Decimal,
+            sqrt_price_times_q96_upper_bound: Decimal,
     ) -> Decimal:
         """
         Refactored calc amount1.
@@ -1089,15 +1096,14 @@ class TxRouteHandler(TxRouteHandlerBase):
             * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
         )
 
-
     def _swap_token0_in(
-        self,
-        amount_in: Decimal,
-        fee: Decimal,
-        liquidity: Decimal,
-        sqrt_price: Decimal,
-        decimal_tkn0_modifier: Decimal,
-        decimal_tkn1_modifier: Decimal,
+            self,
+            amount_in: Decimal,
+            fee: Decimal,
+            liquidity: Decimal,
+            sqrt_price: Decimal,
+            decimal_tkn0_modifier: Decimal,
+            decimal_tkn1_modifier: Decimal,
     ) -> Decimal:
         """
         Refactored swap token0 in.
@@ -1125,21 +1131,21 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_in = amount_in * (Decimal(str(1)) - fee)
 
         price_next = Decimal(str(math.floor((
-            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
-            / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
+                int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+                / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
         ))
         amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
 
         return Decimal(amount_out / decimal_tkn1_modifier)
 
     def _swap_token1_in(
-        self,
-        amount_in: Decimal,
-        fee: Decimal,
-        liquidity: Decimal,
-        sqrt_price: Decimal,
-        decimal_tkn0_modifier: Decimal,
-        decimal_tkn1_modifier: Decimal,
+            self,
+            amount_in: Decimal,
+            fee: Decimal,
+            liquidity: Decimal,
+            sqrt_price: Decimal,
+            decimal_tkn0_modifier: Decimal,
+            decimal_tkn1_modifier: Decimal,
     ) -> Decimal:
         """
         Refactored swap token1 in.
@@ -1166,12 +1172,13 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
 
         amount_in = amount_in * (Decimal(str(1)) - fee)
-        result = (((liquidity * self.ConfigObj.Q96 * ((((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
-           (((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price)) / (
-               sqrt_price)) / decimal_tkn0_modifier))
+        result = (((liquidity * self.ConfigObj.Q96 * ((((
+                                                                    amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
+                        (((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price)) / (
+                        sqrt_price)) / decimal_tkn0_modifier))
 
         return result
-        #amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
+        # amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
         #
         # price_diff = Decimal((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity)
         # price_next = Decimal(sqrt_price + price_diff)
@@ -1184,17 +1191,17 @@ class TxRouteHandler(TxRouteHandlerBase):
         # return Decimal(amount_out / decimal_tkn0_modifier)
 
     def _calc_uniswap_v3_output(
-        self,
-        amount_in: Decimal,
-        fee: Decimal,
-        liquidity: Decimal,
-        sqrt_price: Decimal,
-        decimal_tkn0_modifier: Decimal,
-        decimal_tkn1_modifier: Decimal,
-        tkn_in: str,
-        tkn_out: str,
-        tkn_0_address: str,
-        tkn_1_address: str
+            self,
+            amount_in: Decimal,
+            fee: Decimal,
+            liquidity: Decimal,
+            sqrt_price: Decimal,
+            decimal_tkn0_modifier: Decimal,
+            decimal_tkn1_modifier: Decimal,
+            tkn_in: str,
+            tkn_out: str,
+            tkn_0_address: str,
+            tkn_1_address: str
     ) -> Decimal:
         """
         Refactored calc uniswap v3 output.
@@ -1232,7 +1239,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         decimal_tkn0_modifier = Decimal(str(decimal_tkn0_modifier))
         decimal_tkn1_modifier = Decimal(str(decimal_tkn1_modifier))
 
-        #print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_address={tkn_0_address}, tkn_1_address={tkn_1_address}, tkn0_in={tkn_in == tkn_0_address}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
+        # print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_address={tkn_0_address}, tkn_1_address={tkn_1_address}, tkn0_in={tkn_in == tkn_0_address}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
 
         return (
             self._swap_token0_in(
@@ -1254,7 +1261,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             )
         )
 
-    ONE = 2**48
+    ONE = 2 ** 48
 
     def decodeFloat(self, value):
         return (value % self.ONE) << (value // self.ONE)
@@ -1271,7 +1278,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def _get_input_trade_by_target_carbon(
-        y, z, A, B, fee, tkns_out: Decimal, trade_by_source: bool = True
+            y, z, A, B, fee, tkns_out: Decimal, trade_by_source: bool = True
     ) -> Tuple[Decimal, Decimal]:
         """
         Refactored get input trade by target fastlane_bot.
@@ -1300,7 +1307,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee = Decimal(str(fee))
         tkns_out = min(tkns_out, y)
         tkns_in = (
-            (tkns_out * z**2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
+                (tkns_out * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
         )
 
         if not trade_by_source:
@@ -1310,7 +1317,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return tkns_in, tkns_out
 
     def _get_output_trade_by_source_carbon(
-        self, y, z, A, B, fee, tkns_in: Decimal
+            self, y, z, A, B, fee, tkns_in: Decimal
     ) -> Tuple[Decimal, Decimal]:
         """
         Refactored get output trade by source fastlane_bot.
@@ -1339,7 +1346,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         fee = Decimal(str(fee))
         tkns_out = Decimal(
             (tkns_in * (B * z + A * y) ** 2)
-            / (tkns_in * (B * A * z + A**2 * y) + z**2)
+            / (tkns_in * (B * A * z + A ** 2 * y) + z ** 2)
         )
         if tkns_out > y:
             tkns_in, tkns_out = self._get_input_trade_by_target_carbon(
@@ -1350,7 +1357,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return tkns_in, tkns_out
 
     def _calc_carbon_output(
-        self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
+            self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
     ):
         """
         calc fastlane_bot output.
@@ -1369,7 +1376,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         Decimal
             The amount out.
         """
-        assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,"[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
+        assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, "[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
         amount_in = Decimal(str(amount_in))
 
         tkn0_address = curve.pair_name.split("/")[0]
@@ -1377,11 +1384,11 @@ class TxRouteHandler(TxRouteHandlerBase):
         tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address)
         tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address)
 
-        #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
+        # print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
 
         assert tkn_in == tkn0_address or tkn_in == tkn1_address, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_address} & {tkn1_address}"
 
-        #print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_address}")
+        # print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_address}")
         y, z, A, B = (
             (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
             if tkn_in == tkn1_address
@@ -1391,15 +1398,17 @@ class TxRouteHandler(TxRouteHandlerBase):
         if A is None:
             A = 0
 
-        #print('[_calc_carbon_output] before decode: ', y, z, A, B)
-        A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
-        B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals)
+        # print('[_calc_carbon_output] before decode: ', y, z, A, B)
+        A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals,
+                                           tkn_out_decimals=tkn_out_decimals)
+        B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals,
+                                           tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
-        #print('[_calc_carbon_output] after decode: ', y, z, A, B)
+        # print('[_calc_carbon_output] after decode: ', y, z, A, B)
         assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
-        #print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
+        # print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
 
         amt_in, result = self._get_output_trade_by_source_carbon(
             y=y, z=z, A=A, B=B, fee=Decimal(curve.fee_float), tkns_in=amount_in
@@ -1408,7 +1417,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     @staticmethod
     def _single_trade_result_constant_product(
-        tokens_in, token0_amt, token1_amt, fee
+            tokens_in, token0_amt, token1_amt, fee
     ) -> Decimal:
         return Decimal(
             (tokens_in * token1_amt * (1 - Decimal(fee))) / (tokens_in + token0_amt)
@@ -1430,24 +1439,30 @@ class TxRouteHandler(TxRouteHandlerBase):
             The number of tokens expected to be received by the trade.
         """
         tkn_in_weight = Decimal(str(curve.get_token_weight(tkn=tkn_in)))
-        tkn_in_balance = Decimal(str(curve.get_token_balance(tkn=tkn_in))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_in)))
+        tkn_in_balance = Decimal(str(curve.get_token_balance(tkn=tkn_in))) / 10 ** Decimal(
+            str(curve.get_token_decimals(tkn=tkn_in)))
         tkn_out_weight = Decimal(str(curve.get_token_weight(tkn=tkn_out)))
-        tkn_out_balance = Decimal(str(curve.get_token_balance(tkn=tkn_out))) / 10 ** Decimal(str(curve.get_token_decimals(tkn=tkn_out)))
-        self.ConfigObj.logger.debug(f"[routehandler.py _calc_balancer_output] tknin {tkn_in} weight: {tkn_in_weight}, tknout {tkn_out} tknout weight: {tkn_out_weight}")
-
+        tkn_out_balance = Decimal(str(curve.get_token_balance(tkn=tkn_out))) / 10 ** Decimal(
+            str(curve.get_token_decimals(tkn=tkn_out)))
+        self.ConfigObj.logger.debug(
+            f"[routehandler.py _calc_balancer_output] tknin {tkn_in} weight: {tkn_in_weight}, tknout {tkn_out} tknout weight: {tkn_out_weight}")
 
         # Extract trade fee from amount in
         fee = Decimal(str(amount_in)) * Decimal(str(curve.fee_float))
         amount_in = amount_in - fee
 
         if amount_in > (tkn_in_balance * Decimal("0.3")):
-            raise BalancerInputTooLargeError("Balancer has a hard constraint that amount in must be less than 30% of the pool balance of tkn in, making this trade invalid.")
+            raise BalancerInputTooLargeError(
+                "Balancer has a hard constraint that amount in must be less than 30% of the pool balance of tkn in, making this trade invalid.")
 
-        amount_out = self._calc_balancer_out_given_in(balance_in=tkn_in_balance, weight_in=tkn_in_weight, balance_out=tkn_out_balance, weight_out=tkn_out_weight, amount_in=amount_in)
+        amount_out = self._calc_balancer_out_given_in(balance_in=tkn_in_balance, weight_in=tkn_in_weight,
+                                                      balance_out=tkn_out_balance, weight_out=tkn_out_weight,
+                                                      amount_in=amount_in)
         if amount_out > (tkn_out_balance * Decimal("0.3")):
-            raise BalancerOutputTooLargeError("Balancer has a hard constraint that the amount out must be less than 30% of the pool balance of tkn out, making this trade invalid.")
+            raise BalancerOutputTooLargeError(
+                "Balancer has a hard constraint that the amount out must be less than 30% of the pool balance of tkn out, making this trade invalid.")
 
-        #amount_in = (1 - Decimal(str(curve.fee_float))) * Decimal(str(amount_in))
+        # amount_in = (1 - Decimal(str(curve.fee_float))) * Decimal(str(amount_in))
         return amount_out
 
     @staticmethod
@@ -1505,7 +1520,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return result
 
     def _solve_trade_output(
-        self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
+            self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> Tuple[Decimal, Decimal, int, int]:
 
         if not isinstance(trade, TradeInstruction):
@@ -1517,8 +1532,10 @@ class TxRouteHandler(TxRouteHandlerBase):
             tkn0_decimals = int(trade.db.get_token(tkn_address=tkn0_address).decimals)
             tkn1_decimals = int(trade.db.get_token(tkn_address=tkn1_address).decimals)
 
-            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
-            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
+            tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (
+                        trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
+            tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (
+                        trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
 
             assert tkn0_address == trade.tknin_address or tkn0_address == trade.tknout_address, f"[_solve_trade_output] tkn0_address {tkn0_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
             assert tkn1_address == trade.tknin_address or tkn1_address == trade.tknout_address, f"[_solve_trade_output] tkn1_address {tkn1_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
@@ -1542,20 +1559,23 @@ class TxRouteHandler(TxRouteHandlerBase):
                 fee=Decimal(curve.fee_float),
                 liquidity=curve.liquidity,
                 sqrt_price=curve.sqrt_price_q96,
-                decimal_tkn0_modifier=Decimal(10**tkn0_decimals),
-                decimal_tkn1_modifier=Decimal(10**tkn1_decimals),
+                decimal_tkn0_modifier=Decimal(10 ** tkn0_decimals),
+                decimal_tkn1_modifier=Decimal(10 ** tkn1_decimals),
                 tkn_0_address=tkn0_address,
                 tkn_1_address=tkn1_address
             )
         elif curve.exchange_name == self.ConfigObj.CARBON_V1_NAME or curve.exchange_name == self.ConfigObj.BANCOR_POL_NAME:
             amount_in, amount_out = self._calc_carbon_output(
-                            curve=curve, tkn_in=trade.tknin_address, tkn_in_decimals=tkn_in_decimals, tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
-                        )
+                curve=curve, tkn_in=trade.tknin_address, tkn_in_decimals=tkn_in_decimals,
+                tkn_out_decimals=tkn_out_decimals, amount_in=amount_in
+            )
         elif curve.exchange_name == self.ConfigObj.BALANCER_NAME:
-            amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_address, tkn_out=trade.tknout_address, amount_in=amount_in)
+            amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_address,
+                                                    tkn_out=trade.tknout_address, amount_in=amount_in)
 
         elif curve.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS and curve.pool_type in "stable":
-            raise ExchangeNotSupportedError(f"[routerhandler.py _solve_trade_output] Solidly V2 stable pools are not yet supported")
+            raise ExchangeNotSupportedError(
+                f"[routerhandler.py _solve_trade_output] Solidly V2 stable pools are not yet supported")
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
@@ -1567,7 +1587,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
             tkn0_amt = self._from_wei_to_decimals(tkn0_amt, tkn0_dec)
             tkn1_amt = self._from_wei_to_decimals(tkn1_amt, tkn1_dec)
-            #print(f"[_solve_trade_output] constant product solve: tkn0_amt={tkn0_amt}, tkn1_amt={tkn1_amt}, tkn0_dec={tkn0_dec}, tkn1_dec={tkn1_dec}, tkn_in={trade.tknin_address}, tkn_out={trade.tknout_address} ,tkn0_address={tkn0_address}, tkn1_address={tkn1_address}")
+            # print(f"[_solve_trade_output] constant product solve: tkn0_amt={tkn0_amt}, tkn1_amt={tkn1_amt}, tkn0_dec={tkn0_dec}, tkn1_dec={tkn1_dec}, tkn_in={trade.tknin_address}, tkn_out={trade.tknout_address} ,tkn0_address={tkn0_address}, tkn1_address={tkn1_address}")
 
             amount_out = self._single_trade_result_constant_product(
                 tokens_in=amount_in,
@@ -1581,8 +1601,9 @@ class TxRouteHandler(TxRouteHandlerBase):
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)
         return amount_in, amount_out, amount_in_wei, amount_out_wei
+
     def calculate_trade_profit(
-        self, trade_instructions: List[TradeInstruction]
+            self, trade_instructions: List[TradeInstruction]
     ) -> int or float or Decimal:
         """
         Calculates the profit of the trade in the Flashloan token by calculating the sum in vs sum out
@@ -1600,7 +1621,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         return sum_profit
 
     def calculate_trade_outputs(
-        self, trade_instructions: List[TradeInstruction]
+            self, trade_instructions: List[TradeInstruction]
     ) -> List[TradeInstruction]:
         """
         Refactored calculate trade outputs.
@@ -1620,7 +1641,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         for idx, trade in enumerate(trade_instructions):
             raw_txs_lst = []
             # total_percent = 0
-            if trade.amtin <=0:
+            if trade.amtin <= 0:
                 trade_instructions.pop(idx)
                 continue
             if trade.raw_txs != "[]":
@@ -1635,11 +1656,12 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 for tx in data:
                     try:
-                        tx["percent_in"] = Decimal(str(tx["amtin"]))/Decimal(str(expected_in))
+                        tx["percent_in"] = Decimal(str(tx["amtin"])) / Decimal(str(expected_in))
                     except decimal.InvalidOperation:
                         tx["percent_in"] = 0
                         # total_percent += tx["amtin"]/expected_in
-                        self.ConfigObj.logger.warning(f"[calculate_trade_outputs] Invalid operation: {tx['amtin']}/{expected_in}")
+                        self.ConfigObj.logger.warning(
+                            f"[calculate_trade_outputs] Invalid operation: {tx['amtin']}/{expected_in}")
 
                 last_tx = len(data) - 1
 
@@ -1651,7 +1673,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                     _next_amt_in = Decimal(str(next_amount_in)) * tx["percent_in"]
                     if _next_amt_in > remaining_tkn_in:
                         _next_amt_in = remaining_tkn_in
-
 
                     if _idx == last_tx:
                         if _next_amt_in < remaining_tkn_in:
@@ -1682,7 +1703,8 @@ class TxRouteHandler(TxRouteHandlerBase):
                     }
                     raw_txs_lst.append(raw_txs)
 
-                    remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in, decimals=trade.tknin_decimals)
+                    remaining_tkn_in = TradeInstruction._quantize(amount=remaining_tkn_in,
+                                                                  decimals=trade.tknin_decimals)
                     if _idx == last_tx and remaining_tkn_in > 0:
 
                         for __idx, _tx in enumerate(raw_txs_lst):
@@ -1757,7 +1779,6 @@ class TxRouteHandler(TxRouteHandlerBase):
 
             next_amount_in = amount_out
 
-
         return trade_instructions
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
@@ -1798,10 +1819,14 @@ def powUp(a: Decimal, b: Decimal) -> Decimal:
 def powDown(a: Decimal, b: Decimal) -> Decimal:
     return a ** b
 
+
 class BalancerInputTooLargeError(AssertionError):
     pass
+
+
 class BalancerOutputTooLargeError(AssertionError):
     pass
+
 
 class ExchangeNotSupportedError(AssertionError):
     pass

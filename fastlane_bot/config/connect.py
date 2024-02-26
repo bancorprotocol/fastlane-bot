@@ -17,8 +17,6 @@ from web3.types import TxReceipt
 import os
 from dotenv import load_dotenv
 
-from fastlane_bot.config import network
-
 load_dotenv()
 
 import logging

@@ -20,12 +20,14 @@ import pandas as pd
 import requests
 from hexbytes import HexBytes
 from joblib import Parallel, delayed
-from web3 import Web3
+from web3 import AsyncWeb3, Web3
 from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.config.connect import NetworkBase
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
+from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.events.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
@@ -569,6 +571,7 @@ def get_config(
     flashloan_tokens: str,
     tenderly_fork_id: str = None,
     self_fund: bool = False,
+    rpc_url: str = None,
 ) -> Config:
     """
     Gets the config object.
@@ -591,6 +594,8 @@ def get_config(
         The Tenderly fork ID, by default None
     self_fund : bool
         The bot will default to using flashloans if False, otherwise it will attempt to use funds from the wallet.
+    rpc_url : str, optional
+        The RPC URL to use, by default None
     Returns
     -------
     Config
@@ -617,6 +622,20 @@ def get_config(
             self_fund=self_fund,
         )
         cfg.logger.info("[events.utils.get_config] Using mainnet config")
+
+    if rpc_url:
+        cfg.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 60}))
+        cfg.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc_url))
+        if 'tenderly' in rpc_url:
+            cfg.NETWORK = cfg.NETWORK_TENDERLY
+        cfg.WEB3_ALCHEMY_PROJECT_ID = rpc_url.split("/")[-1]
+        cfg.RPC_ENDPOINT = rpc_url.replace(cfg.WEB3_ALCHEMY_PROJECT_ID, "")
+        cfg.RPC_URL = rpc_url
+        cfg.BANCOR_ARBITRAGE_CONTRACT = cfg.w3.eth.contract(
+            address=cfg.w3.to_checksum_address(cfg.network.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
+
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
