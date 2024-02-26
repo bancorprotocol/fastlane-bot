@@ -404,8 +404,7 @@ def get_update_params_dict(w3, test_pools_row, slots, param_lists):
     params_dict = {}
     for i in range(len(slots)):
         params_dict[slots[i]] = {}
-        params_dict[slots[i]]['slot'] = '0x'+appendZeros(int(slots[i]), 'uint256')
-
+        params_dict[slots[i]]['slot'] = '0x'+appendZeros(slots[i], 'uint256')
         type_val_dict, encoded_params = build_type_val_dict(w3, test_pools_row, param_list_single=param_lists[i])
         
         params_dict[slots[i]]['type_val_dict'] = type_val_dict
@@ -556,6 +555,19 @@ def handle_exchange_parameters(w3, test_pools_row):
         # Set balances on pool
         setBalance_via_faucet(w3, tokenAddress=test_pools_row['tkn0_address'], amountWei=int(test_pools_row['tkn0_setBalance']), wallet=test_pools_row['pool_address'])
         setBalance_via_faucet(w3, tokenAddress=test_pools_row['tkn1_address'], amountWei=int(test_pools_row['tkn1_setBalance']), wallet=test_pools_row['pool_address'])
+
+        # Set storage parameters
+        update_params_dict = get_update_params_dict(w3, test_pools_row, slots, param_lists)
+        for k,update_params_dict_single in update_params_dict.items():
+            setStorageAt(w3, pool_address, update_params_dict_single)
+    elif test_pools_row['exchange_type'] in ["bancor_v3"]:
+        pool_address = test_pools_row['pool_address']
+        slots = ast.literal_eval(test_pools_row['slots'])
+        param_lists = ast.literal_eval(test_pools_row['param_lists'])
+
+        # # Set balances on pool
+        # setBalance_via_faucet(w3, tokenAddress=test_pools_row['tkn0_address'], amountWei=int(test_pools_row['tkn0_setBalance']), wallet=test_pools_row['pool_address'])
+        # setBalance_via_faucet(w3, tokenAddress=test_pools_row['tkn1_address'], amountWei=int(test_pools_row['tkn1_setBalance']), wallet=test_pools_row['pool_address'])
 
         # Set storage parameters
         update_params_dict = get_update_params_dict(w3, test_pools_row, slots, param_lists)

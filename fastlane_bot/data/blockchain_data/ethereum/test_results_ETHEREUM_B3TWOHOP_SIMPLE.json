@@ -1,0 +1,44 @@
+{
+    "test_data": {
+        "1":{
+            "type": "b3_two_hop",
+            "profit_gas_token": 1.88,
+            "profit_usd": "NaN",
+            "flashloan": [
+                {
+                    "token": "LINK",
+                    "amount": 9210.3142,
+                    "profit": 291.5227
+                }
+            ],
+            "trades": [
+                {
+                    "trade_index": 0,
+                    "exchange": "uniswap_v3",
+                    "tkn_in": {
+                        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+                    },
+                    "amount_in": 9210.3142,
+                    "tkn_out": {
+                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                    },
+                    "amt_out": 59.1828,
+                    "cid0": "b800399517"
+                },
+                {
+                    "trade_index": 1,
+                    "exchange": "bancor_v3",
+                    "tkn_in": {
+                        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                    },
+                    "amount_in": 59.1828,
+                    "tkn_out": {
+                        "LINK": "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+                    },
+                    "amt_out": 9501.8369,
+                    "cid0": "bac2e3de66"
+                }
+            ]
+        }
+           }
+}
