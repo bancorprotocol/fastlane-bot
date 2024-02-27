@@ -1,3 +1,36 @@
+"""
+This script is used to run deterministic tests on the Fastlane Bot.
+
+The script is run from the command line with the following command:
+`python run_deterministic_tests.py --task <task> --rpc_url <rpc_url> --network <network> --arb_mode <arb_mode>`
+
+The `--task` argument specifies the task to run. The options are:
+- `set_test_state`: Set the test state based on the static_pool_data_testing.csv file.
+- `get_carbon_strategies_and_delete`: Get the carbon strategies and delete them.
+- `run_tests_on_mode`: Run tests on the specified arbitrage mode.
+- `run_results_crosscheck`: Run the results crosscheck task.
+- `end_to_end`: Run all of the above tasks.
+
+The `--rpc_url` argument specifies the URL for the RPC endpoint.
+
+The `--network` argument specifies the network to test. The options are:
+- `ethereum`: Ethereum network.
+
+The `--arb_mode` argument specifies the arbitrage mode to test. The options are:
+- `single`: Single arbitrage mode.
+- `multi`: Multi arbitrage mode.
+- `triangle`: Triangle arbitrage mode.
+- `multi_triangle`: Multi triangle arbitrage mode.
+
+The script uses the `fastlane_bot/tests/deterministic/constants.py` file to get the constants used in the tests.
+
+The script uses the `fastlane_bot/tests/deterministic/utils.py` file to get the utility functions used in the tests.
+
+All data used in the tests is stored in the `fastlane_bot/tests/deterministic/_data` directory.
+
+(c) Copyright Bprotocol foundation 2024.
+Licensed under MIT License.
+"""
 import argparse
 import importlib
 import json
@@ -225,6 +258,8 @@ def main(args: argparse.Namespace):
         test_strategies = get_test_strategies()
         run_tests_on_mode_task(w3, carbon_controller, args.arb_mode, test_strategies)
         run_results_crosscheck_task()
+    else:
+        raise ValueError(f"Task {args.task} not recognized")
 
 
 if __name__ == "__main__":
@@ -254,7 +289,7 @@ if __name__ == "__main__":
         default="ethereum",
         type=str,
         help="Network to test",
-        choices=["ethereum"],
+        choices=["ethereum"],  # TODO: add support for other networks
     )
     parser.add_argument(
         "--arb_mode",
