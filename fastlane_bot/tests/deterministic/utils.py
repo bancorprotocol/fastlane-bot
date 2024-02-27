@@ -1,17 +1,31 @@
 import argparse
 import ast
+import glob
+import json
+import os
 import re
+import time
 from dataclasses import dataclass
+from datetime import datetime
 
 import eth_abi
 import pandas as pd
-from eth_typing import Address
+from eth_typing import Address, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 from web3.types import RPCEndpoint
 
-from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
-from fastlane_bot.tests.deterministic.constants import ETH_ADDRESS, SUPPORTED_EXCHANGES
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI, ERC20_ABI
+from fastlane_bot.tests.deterministic.constants import (
+    DEFAULT_GAS,
+    DEFAULT_GAS_PRICE,
+    ETH_ADDRESS,
+    BNT_ADDRESS,
+    TEST_MODE_AMT,
+    USDC_ADDRESS,
+    USDT_ADDRESS,
+    SUPPORTED_EXCHANGES,
+)
 from fastlane_bot.tools.cpc import T
 
 
@@ -78,18 +92,24 @@ class TokenBalance:
 
 @dataclass
 class Wallet:
+    w3: Web3
     address: str or Address  # Address after __post_init__, str before
     balances: list[
         TokenBalance or dict
-        ]  # List of TokenBalances after __post_init__, list of dicts before
+    ] = None  # List of TokenBalances after __post_init__, list of dicts before
 
     def __post_init__(self):
         self.address = Web3.to_checksum_address(self.address)
-        self.balances = [TokenBalance(**args) for args in self.balances]
+        self.balances = [TokenBalance(**args) for args in self.balances or []]
+
+    @property
+    def nonce(self):
+        return self.w3.eth.get_transaction_count(self.address)
 
 
 @dataclass
 class Strategy:
+    w3: Web3
     token0: Token
     token1: Token
     y0: int
@@ -101,6 +121,81 @@ class Strategy:
     A1: int
     B1: int
     wallet: Wallet
+
+    @property
+    def id(self):
+        return self._id or None
+
+    @id.setter
+    def id(self, id: int):
+        self._id = id
+
+    def __post_init__(self):
+        self.token0 = Token(self.token0)
+        self.token0.contract = self.w3.eth.contract(
+            address=self.token0.address, abi=ERC20_ABI
+        )
+        self.token1 = Token(self.token1)
+        self.token1.contract = self.w3.eth.contract(
+            address=self.token1.address, abi=ERC20_ABI
+        )
+        self.wallet = Wallet(self.w3, self.wallet)
+
+    def get_token_approval(
+        self, token_id: int, approval_address: ChecksumAddress
+    ) -> str:
+        token = self.token0 if token_id == 0 else self.token1
+        if token.address in [
+            BNT_ADDRESS,
+            USDC_ADDRESS,
+            USDT_ADDRESS,
+        ]:  # TODO: Ask Nick about this?
+            function_call = token.contract.functions.approve(
+                approval_address, 0
+            ).transact(
+                {
+                    "gasPrice": DEFAULT_GAS_PRICE,
+                    "gas": DEFAULT_GAS,
+                    "from": self.wallet.address,
+                    "nonce": self.wallet.nonce,
+                }
+            )
+            tx_reciept = self.w3.eth.wait_for_transaction_receipt(function_call)
+            tx_hash = self.w3.to_hex(dict(tx_reciept)["transactionHash"])
+
+            if dict(tx_reciept)["status"] != 1:
+                print("Approval Failed")
+            else:
+                print("Successfully Approved for 0")
+
+            print(f"tx_hash = {tx_hash}")
+
+        function_call = token.contract.functions.approve(
+            approval_address, TEST_MODE_AMT
+        ).transact(
+            {
+                "gasPrice": DEFAULT_GAS_PRICE,
+                "gas": DEFAULT_GAS,
+                "from": self.wallet.address,
+                "nonce": self.wallet.nonce,
+            }
+        )
+        tx_reciept = self.w3.eth.wait_for_transaction_receipt(function_call)
+        tx_hash = self.w3.to_hex(dict(tx_reciept)["transactionHash"])
+
+        if dict(tx_reciept)["status"] != 1:
+            print("Approval Failed")
+        else:
+            print("Successfully Approved Token for Unlimited")
+
+        print(f"tx_hash = {tx_hash}")
+        return tx_hash
+
+    @property
+    def value(self):
+        return (
+            self.y0 if self.token0.is_eth else self.y1 if self.token1.is_eth else None
+        )
 
 
 @dataclass
@@ -154,11 +249,7 @@ class TestPool:
 
     def set_balance_via_faucet(self, w3: Web3, token_id: int):
         token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
-        amount_wei = (
-            self.tkn0_setBalance
-            if token_id == 0
-            else self.tkn1_setBalance
-        )
+        amount_wei = self.tkn0_setBalance if token_id == 0 else self.tkn1_setBalance
         token_balance = TokenBalance(token=token_address, balance=amount_wei)
         params = token_balance.faucet_params(wallet_address=self.pool_address)
         method_name = RPCEndpoint(
@@ -235,7 +326,9 @@ class PoolParamsBuilder:
         elif param == "unlocked":
             return self.convert_to_bool(pool.param_unlocked)
         else:
-            return self.safe_int_conversion(pool.__getattribute__(f"param_{param}") or 0)
+            return self.safe_int_conversion(
+                pool.__getattribute__(f"param_{param}") or 0
+            )
 
     def get_latest_block_timestamp(self):
         try:
@@ -272,16 +365,17 @@ class PoolParamsBuilder:
     def set_storage_at(self, pool_address: str, update_params_dict_single: dict):
         method = RPCEndpoint("tenderly_setStorageAt")
         self.w3.provider.make_request(
-            method=method, params=[
+            method=method,
+            params=[
                 pool_address,
                 update_params_dict_single["slot"],
                 update_params_dict_single["encoded_params"],
-            ]
+            ],
         )
+        print(f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}")
         print(
-            f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}"
+            f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}"
         )
-        print(f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}")
 
 
 class StrategyManager:
@@ -314,7 +408,11 @@ class StrategyManager:
         return {}
 
     @staticmethod
-    def print_state_changes(all_carbon_strategies: list, deleted_strategies: list, remaining_carbon_strategies: list) -> None:
+    def print_state_changes(
+        all_carbon_strategies: list,
+        deleted_strategies: list,
+        remaining_carbon_strategies: list,
+    ) -> None:
         """
         Prints the state changes of Carbon strategies.
 
@@ -338,18 +436,20 @@ class StrategyManager:
         Returns:
             pandas.DataFrame: A DataFrame containing the logs of the specified event.
         """
-        log_list = getattr(self.carbon_controller.events, event_name).get_logs(fromBlock=from_block)
+        log_list = getattr(self.carbon_controller.events, event_name).get_logs(
+            fromBlock=from_block
+        )
         data = []
         for log in log_list:
             log_data = {
-                'block_number': log['blockNumber'],
-                'transaction_hash': self.w3.to_hex(log['transactionHash']),
-                **log['args']
+                "block_number": log["blockNumber"],
+                "transaction_hash": self.w3.to_hex(log["transactionHash"]),
+                **log["args"],
             }
 
             # Process and update log_data for 'order0' and 'order1', if present
-            for order_key in ['order0', 'order1']:
-                if order_data := self.process_order_data(log['args'], order_key):
+            for order_key in ["order0", "order1"]:
+                if order_data := self.process_order_data(log["args"], order_key):
                     log_data.update(order_data)
                     del log_data[order_key]
 
@@ -357,9 +457,7 @@ class StrategyManager:
 
         df = pd.DataFrame(data)
         return (
-            df.sort_values(by='block_number')
-            if 'block_number' in df.columns
-            else df
+            df.sort_values(by="block_number") if "block_number" in df.columns else df
         ).reset_index(drop=True)
 
     def get_state_of_carbon_strategies(self, from_block: int) -> tuple:
@@ -372,14 +470,31 @@ class StrategyManager:
         Returns: tuple: A tuple containing the DataFrames of the 'StrategyCreated' and 'StrategyDeleted' events,
         and the list of remaining Carbon strategies.
         """
-        strategy_created_df = self.get_generic_events(event_name="StrategyCreated", from_block=from_block)
-        all_carbon_strategies = [] if strategy_created_df.empty else [(strategy_created_df["id"][i], strategy_created_df["owner"][i]) for i in strategy_created_df.index]
-        strategy_deleted_df = self.get_generic_events(event_name="StrategyDeleted", from_block=from_block)
-        deleted_strategies = [] if strategy_deleted_df.empty else strategy_deleted_df["id"].to_list()
-        remaining_carbon_strategies = [x for x in all_carbon_strategies if x[0] not in deleted_strategies]
+        strategy_created_df = self.get_generic_events(
+            event_name="StrategyCreated", from_block=from_block
+        )
+        all_carbon_strategies = (
+            []
+            if strategy_created_df.empty
+            else [
+                (strategy_created_df["id"][i], strategy_created_df["owner"][i])
+                for i in strategy_created_df.index
+            ]
+        )
+        strategy_deleted_df = self.get_generic_events(
+            event_name="StrategyDeleted", from_block=from_block
+        )
+        deleted_strategies = (
+            [] if strategy_deleted_df.empty else strategy_deleted_df["id"].to_list()
+        )
+        remaining_carbon_strategies = [
+            x for x in all_carbon_strategies if x[0] not in deleted_strategies
+        ]
 
         # Print state changes
-        self.print_state_changes(all_carbon_strategies, deleted_strategies, remaining_carbon_strategies)
+        self.print_state_changes(
+            all_carbon_strategies, deleted_strategies, remaining_carbon_strategies
+        )
 
         # Return state changes
         return strategy_created_df, strategy_deleted_df, remaining_carbon_strategies
@@ -390,37 +505,46 @@ class StrategyManager:
         """
         pass
 
-    def create_strategy(self, wallet: Address, nonce: int) -> str:
+    def create_strategy(self, strategy: Strategy) -> str:
         print("Creating Strategy...")
         tx_params = {
-            "from": wallet,
-            "nonce": nonce,
-            "gasPrice": 0,
-            "gas": 2000000,
-            "value": self.value
+            "from": strategy.wallet.address,
+            "nonce": strategy.wallet.nonce,
+            "gasPrice": DEFAULT_GAS_PRICE,
+            "gas": DEFAULT_GAS,
         }
+        if strategy.value:
+            tx_params["value"] = strategy.value
+
         tx_hash = self.carbon_controller.functions.createStrategy(
-            self.token0, self.token1, ([self.y0, self.z0, self.A0, self.B0], [self.y1, self.z1, self.A1, self.B1])
+            strategy.token0,
+            strategy.token1,
+            (
+                [strategy.y0, strategy.z0, strategy.A0, strategy.B0],
+                [strategy.y1, strategy.z1, strategy.A1, strategy.B1],
+            ),
         ).transact(tx_params)
 
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         if tx_receipt.status != 1:
-            print('Creation Failed')
+            print("Creation Failed")
             return None
         else:
-            print('Successfully Created Strategy')
+            print("Successfully Created Strategy")
             return self.w3.to_hex(tx_receipt.transactionHash)
 
-    def delete_strategy(self, strategy: TestStrategy, wallet: Address) -> int:
+    def delete_strategy(self, strategy: Strategy, wallet: Address) -> int:
         print("Deleting Strategy...")
         nonce = self.w3.eth.get_transaction_count(wallet)
         tx_params = {
             "from": wallet,
             "nonce": nonce,
-            "gasPrice": 0,
-            "gas": 2000000,
+            "gasPrice": DEFAULT_GAS_PRICE,
+            "gas": DEFAULT_GAS,
         }
-        tx_hash = self.carbon_controller.functions.deleteStrategy(strategy_id).transact(tx_params)
+        tx_hash = self.carbon_controller.functions.deleteStrategy(strategy.id).transact(
+            tx_params
+        )
 
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return tx_receipt.status
@@ -429,7 +553,7 @@ class StrategyManager:
         print("Deleting strategies...")
         self.modify_tokens_for_deletion()
         undeleted_strategies = []
-        for id,owner in carbon_strategy_id_owner_list:
+        for id, owner in carbon_strategy_id_owner_list:
             print("Attempt 1")
             status = self.delete_strategy(id, owner)
             if status == 0:
@@ -447,23 +571,79 @@ class StrategyManager:
                 except:
                     print(f"Strategy {id} not found - already deleted")
                     pass
-            elif status==1:
+            elif status == 1:
                 print(f"Strategy {id} successfully deleted")
             else:
                 print("Possible error")
         return undeleted_strategies
 
 
+def scan_logs_for_success():
+    time.sleep(5)
+
+    # Set the path to the logs directory relative to your notebook's location
+    path_to_logs = "./logs/*"
+
+    # Use glob to list all directories
+    log_directories = [f for f in glob.glob(path_to_logs) if os.path.isdir(f)]
+
+    most_recent_log_folder = log_directories[-1]
+    print(f"Accessing log folder {most_recent_log_folder}")
+    print("Looking for pool data file...")
+    most_recent_pool_data = os.path.join(
+        most_recent_log_folder, "latest_pool_data.json"
+    )
+
+    while True:
+        if os.path.exists(most_recent_pool_data):
+            print("File found.")
+            break
+        else:
+            print("File not found, waiting 10 seconds.")
+            time.sleep(10)
+
+    with open(most_recent_pool_data) as f:
+        pool_data = json.load(f)
+        print("len(pool_data)", len(pool_data))
+
+    all_successful_txs = glob.glob(os.path.join(most_recent_log_folder, "*.txt"))
+
+    # Read the successful_txs in as strings
+    txt_all_successful_txs = []
+    for successful_tx in all_successful_txs:
+        with open(successful_tx, "r") as file:
+            j = file.read()
+            txt_all_successful_txs += [(j)]
+            file.close()
+
+    # Successful transactions on Tenderly are marked by status=1
+    return [tx for tx in txt_all_successful_txs if "'status': 1" in tx]
+
+
+def clean_tx_data(tx_data: dict) -> dict:
+    for trade in tx_data["trades"]:
+        if trade["exchange"] == "carbon_v1" and "cid0" in trade:
+            del trade["cid0"]
+    return tx_data
+
+
+def get_tx_data(strategy_id: int, txt_all_successful_txs: list) -> dict:
+    """this only handles one tx found"""
+    for tx in txt_all_successful_txs:
+        if str(strategy_id) in tx:
+            return json.loads(tx.split("\n\n")[-1])
+
+
 def get_default_main_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--cache_latest_only",
-        default='True',
+        default="True",
         help="Set to True for production. Set to False for testing / debugging",
     )
     parser.add_argument(
         "--backdate_pools",
-        default='False',
+        default="False",
         help="Set to False for faster testing / debugging",
     )
     parser.add_argument(
@@ -489,11 +669,9 @@ def get_default_main_args():
         "--flashloan_tokens",
         default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
         help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-             "a flash loan in.",
+        "a flash loan in.",
     )
-    parser.add_argument(
-        "--n_jobs", default=-1, help="Number of parallel jobs to run"
-    )
+    parser.add_argument("--n_jobs", default=-1, help="Number of parallel jobs to run")
     parser.add_argument(
         "--exchanges",
         default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
@@ -514,9 +692,7 @@ def get_default_main_args():
         default=0,
         help="Number of blocks delayed to avoid reorgs",
     )
-    parser.add_argument(
-        "--logging_path", default="", help="The logging path."
-    )
+    parser.add_argument("--logging_path", default="", help="The logging path.")
     parser.add_argument(
         "--loglevel",
         default="INFO",
@@ -525,12 +701,12 @@ def get_default_main_args():
     )
     parser.add_argument(
         "--use_cached_events",
-        default='False',
+        default="False",
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
         "--run_data_validator",
-        default='False',
+        default="False",
         help="Set to True for debugging / testing. Set to False for production.",
     )
     parser.add_argument(
@@ -540,7 +716,7 @@ def get_default_main_args():
     )
     parser.add_argument(
         "--limit_bancor3_flashloan_tokens",
-        default='True',
+        default="True",
         help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
     )
     parser.add_argument(
@@ -582,7 +758,7 @@ def get_default_main_args():
         "--increment_blocks",
         default=1,
         help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
-             "by for each iteration.",
+        "by for each iteration.",
     )
     parser.add_argument(
         "--blockchain",
@@ -612,19 +788,19 @@ def get_default_main_args():
     )
     parser.add_argument(
         "--self_fund",
-        default='False',
+        default="False",
         help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
-             "wallet when possible.",
+        "wallet when possible.",
     )
     parser.add_argument(
         "--read_only",
-        default='True',
+        default="True",
         help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
-             "running the bot in an environment with restricted write permissions.",
+        "running the bot in an environment with restricted write permissions.",
     )
     parser.add_argument(
         "--is_args_test",
-        default='False',
+        default="False",
         help="The logging path.",
     )
     parser.add_argument(
@@ -636,3 +812,13 @@ def get_default_main_args():
     # Process the arguments
     args = parser.parse_args()
     return args
+
+
+def get_test_strategies():
+    test_strategies_path = os.path.normpath(
+        "fastlane_bot/tests/deterministic/test_strategies.json"
+    )
+    with open(test_strategies_path) as file:
+        test_strategies = json.load(file)["test_strategies"]
+        print(f"{len(test_strategies.keys())} test strategies imported")
+    return test_strategies
