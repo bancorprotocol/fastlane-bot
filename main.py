@@ -2,7 +2,11 @@
 """
 This is the main file for configuring the bot and running the fastlane bot.
 
-(c) Copyright Bprotocol foundation 2023.
+Note: The script `run_deterministic_tests.py` requires up-to-date command-line arguments for this file (main.py) to
+run. Therefore, if the command-line arguments are changed in this file, then the script `get_default_main_args`
+function in `fastlane_bot.tests.deterministic.utils` must be updated accordingly.
+
+(c) Copyright Bprotocol foundation 2024.
 Licensed under MIT
 """
 

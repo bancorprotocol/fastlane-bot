@@ -28,6 +28,10 @@ The script uses the `fastlane_bot/tests/deterministic/utils.py` file to get the 
 
 All data used in the tests is stored in the `fastlane_bot/tests/deterministic/_data` directory.
 
+Note: This script uses the function `get_default_main_args` which returns the default command line arguments for the
+`main` function in the `main.py` file. If these arguments change in main.py then they should be updated in the
+`get_default_main_args` function as well.
+
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
