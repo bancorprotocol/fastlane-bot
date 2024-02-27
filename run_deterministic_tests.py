@@ -70,11 +70,12 @@ def set_test_state_task(w3: Web3):
     Args:
         w3: Web3 instance
     """
+    print("\nRunning set_test_state_task...")
 
     # Import pool data
     # Set the default paths
     static_pool_data_testing_path = os.path.normpath(
-        "fastlane_bot/tests/deterministic/data" "/static_pool_data_testing.csv"
+        "fastlane_bot/tests/deterministic/_data/static_pool_data_testing.csv"
     )
 
     test_pools = pd.read_csv(static_pool_data_testing_path, dtype=str)
@@ -111,6 +112,9 @@ def get_carbon_strategies_and_delete_task(
         carbon_controller: Contract, the carbon controller contract
         from_block: int, the block number to start from
     """
+    print("\nRunning get_carbon_strategies_and_delete_task...")
+
+    # Initialize the Strategy Manager
     strategy_mgr = StrategyManager(w3, carbon_controller)
 
     # Get the state of the carbon strategies
@@ -146,15 +150,30 @@ def run_tests_on_mode_task(
         carbon_controller: Contract, the carbon controller contract
         test_strategies: Dict, the test strategies
     """
-    # Initialize the Strategy Manager
-    strategy_mgr = StrategyManager(w3, carbon_controller)
+    print("\nRunning run_tests_on_mode_task...")
 
-    # Dynamically import the chosen script module
-    script_module = importlib.import_module("main")
+    # Initialize the Strategy Manager
+    try:
+        strategy_mgr = StrategyManager(w3, carbon_controller)
+    except Exception as e:
+        print(f"Failed to initialize StrategyManager: {e}")
+        return
+
+    # Get the default main args
     default_main_args = get_default_main_args()
     default_main_args.blockchain = args.network
     default_main_args.arb_mode = args.arb_mode
     default_main_args.timeout = 60 * 4  # 4 minutes
+
+    # Print the default main args
+    print(f"\n\n ********\n"
+          f"default_main_args: {default_main_args}"
+          f"\n ********\n\n")
+
+    # Dynamically import the chosen script module
+    script_module = importlib.import_module("main")
+
+    # Run the main function in the script module
     script_module.main(default_main_args)
 
     # Mark the block that new strats were created
@@ -188,6 +207,7 @@ def run_results_crosscheck_task():
     """
     Run the results crosscheck task.
     """
+    print("\nRunning run_results_crosscheck_task...")
 
     # Successful transactions on Tenderly are marked by status=1
     actually_txt_all_successful_txs = scan_logs_for_success()
@@ -229,6 +249,8 @@ def main(args: argparse.Namespace):
     Args:
         args: argparse.Namespace, the command line arguments
     """
+    print(f"Running task: {args.task}")
+
     # Initialize the Web3 Manager
     w3_manager = Web3Manager(args.rpc_url)
     w3 = w3_manager.w3
@@ -260,7 +282,7 @@ def main(args: argparse.Namespace):
         set_test_state_task(w3)
         get_carbon_strategies_and_delete_task(w3, carbon_controller)
         test_strategies = get_test_strategies()
-        run_tests_on_mode_task(w3, carbon_controller, args.arb_mode, test_strategies)
+        run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
         run_results_crosscheck_task()
     else:
         raise ValueError(f"Task {args.task} not recognized")

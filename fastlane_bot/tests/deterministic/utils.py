@@ -533,7 +533,7 @@ class StrategyManager:
             print("Successfully Created Strategy")
             return self.w3.to_hex(tx_receipt.transactionHash)
 
-    def delete_strategy(self, strategy: Strategy, wallet: Address) -> int:
+    def delete_strategy(self, strategy_id: int, wallet: Address) -> int:
         print("Deleting Strategy...")
         nonce = self.w3.eth.get_transaction_count(wallet)
         tx_params = {
@@ -542,7 +542,7 @@ class StrategyManager:
             "gasPrice": DEFAULT_GAS_PRICE,
             "gas": DEFAULT_GAS,
         }
-        tx_hash = self.carbon_controller.functions.deleteStrategy(strategy.id).transact(
+        tx_hash = self.carbon_controller.functions.deleteStrategy(strategy_id).transact(
             tx_params
         )
 
@@ -553,26 +553,25 @@ class StrategyManager:
         print("Deleting strategies...")
         self.modify_tokens_for_deletion()
         undeleted_strategies = []
-        for id, owner in carbon_strategy_id_owner_list:
+        for strategy_id, owner in carbon_strategy_id_owner_list:
             print("Attempt 1")
-            status = self.delete_strategy(id, owner)
+            status = self.delete_strategy(strategy_id, owner)
             if status == 0:
                 try:
-                    strat_info = self.carbon_controller.functions.strategy(id).call()
-                    current_owner = strat_info[1]
+                    strategy_info = self.carbon_controller.functions.strategy(strategy_id).call()
+                    current_owner = strategy_info[1]
                     try:
                         print("Attempt 2")
-                        status = self.delete_strategy(id, current_owner)
+                        status = self.delete_strategy(strategy_id, current_owner)
                         if status == 0:
-                            print(f"Unable to delete strategy {id}")
-                            undeleted_strategies += [id]
-                    except:
-                        print(f"Strategy {id} not found - already deleted")
-                except:
-                    print(f"Strategy {id} not found - already deleted")
-                    pass
+                            print(f"Unable to delete strategy {strategy_id}")
+                            undeleted_strategies += [strategy_id]
+                    except Exception as e:
+                        print(f"Strategy {strategy_id} not found - already deleted {e}")
+                except Exception as e:
+                    print(f"Strategy {strategy_id} not found - already deleted {e}")
             elif status == 1:
-                print(f"Strategy {id} successfully deleted")
+                print(f"Strategy {strategy_id} successfully deleted")
             else:
                 print("Possible error")
         return undeleted_strategies
@@ -634,189 +633,50 @@ def get_tx_data(strategy_id: int, txt_all_successful_txs: list) -> dict:
             return json.loads(tx.split("\n\n")[-1])
 
 
-def get_default_main_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--cache_latest_only",
-        default="True",
-        help="Set to True for production. Set to False for testing / debugging",
-    )
-    parser.add_argument(
-        "--backdate_pools",
-        default="False",
-        help="Set to False for faster testing / debugging",
-    )
-    parser.add_argument(
-        "--static_pool_data_filename",
-        default="static_pool_data",
-        help="Filename of the static pool data.",
-    )
-    parser.add_argument(
-        "--arb_mode",
-        default="multi_pairwise_all",
-        help="See arb_mode in bot.py",
-        choices=[
-            "single",
-            "multi",
-            "triangle",
-            "multi_triangle",
-            "b3_two_hop",
-            "multi_pairwise_pol",
-            "multi_pairwise_all",
-        ],
-    )
-    parser.add_argument(
-        "--flashloan_tokens",
-        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
-        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-        "a flash loan in.",
-    )
-    parser.add_argument("--n_jobs", default=-1, help="Number of parallel jobs to run")
-    parser.add_argument(
-        "--exchanges",
-        default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
-        help="Comma separated external exchanges.",
-    )
-    parser.add_argument(
-        "--polling_interval",
-        default=1,
-        help="Polling interval in seconds",
-    )
-    parser.add_argument(
-        "--alchemy_max_block_fetch",
-        default=2000,
-        help="Max number of blocks to fetch from alchemy",
-    )
-    parser.add_argument(
-        "--reorg_delay",
-        default=0,
-        help="Number of blocks delayed to avoid reorgs",
-    )
-    parser.add_argument("--logging_path", default="", help="The logging path.")
-    parser.add_argument(
-        "--loglevel",
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        help="The logging level.",
-    )
-    parser.add_argument(
-        "--use_cached_events",
-        default="False",
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--run_data_validator",
-        default="False",
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--randomizer",
-        default="3",
-        help="Set to the number of arb opportunities to pick from.",
-    )
-    parser.add_argument(
-        "--limit_bancor3_flashloan_tokens",
-        default="True",
-        help="Only applies if arb_mode is `bancor_v3` or `b3_two_hop`.",
-    )
-    parser.add_argument(
-        "--default_min_profit_gas_token",
-        default="0.01",
-        help="Set to the default minimum profit in gas token.",
-    )
-    parser.add_argument(
-        "--timeout",
-        default=None,
-        help="Set to the timeout in seconds. Set to None for no timeout.",
-    )
-    parser.add_argument(
-        "--target_tokens",
-        default=None,
-        help="A comma-separated string of tokens to target.",
-    )
-    parser.add_argument(
-        "--replay_from_block",
-        default=None,
-        help="Set to a block number to replay from that block.",
-    )
-    parser.add_argument(
-        "--tenderly_fork_id",
-        default=None,
-        help="Set to a Tenderly fork id.",
-    )
-    parser.add_argument(
-        "--tenderly_event_exchanges",
-        default="pancakeswap_v2,pancakeswap_v3",
-        help="A comma-separated string of exchanges to include for the Tenderly event fetcher.",
-    )
-    parser.add_argument(
-        "--increment_time",
-        default=1,
-        help="If tenderly_fork_id is set, this is the number of seconds to increment the fork time by for each iteration.",
-    )
-    parser.add_argument(
-        "--increment_blocks",
-        default=1,
-        help="If tenderly_fork_id is set, this is the number of blocks to increment the block number "
-        "by for each iteration.",
-    )
-    parser.add_argument(
-        "--blockchain",
-        default="ethereum",
-        help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base", "fantom"],
-    )
-    parser.add_argument(
-        "--pool_data_update_frequency",
-        default=-1,
-        help="How frequently pool data should be updated, in main loop iterations.",
-    )
-    parser.add_argument(
-        "--use_specific_exchange_for_target_tokens",
-        default=None,
-        help="If an exchange is specified, this will limit the scope of tokens to the tokens found on the exchange",
-    )
-    parser.add_argument(
-        "--prefix_path",
-        default="",
-        help="Prefixes the path to the write folders (used for deployment)",
-    )
-    parser.add_argument(
-        "--version_check_frequency",
-        default=1,
-        help="How frequently pool data should be updated, in main loop iterations.",
-    )
-    parser.add_argument(
-        "--self_fund",
-        default="False",
-        help="If True, the bot will attempt to submit arbitrage transactions using funds in your "
-        "wallet when possible.",
-    )
-    parser.add_argument(
-        "--read_only",
-        default="True",
-        help="If True, the bot will skip all operations which write to disk. Use this flag if you're "
-        "running the bot in an environment with restricted write permissions.",
-    )
-    parser.add_argument(
-        "--is_args_test",
-        default="False",
-        help="The logging path.",
-    )
-    parser.add_argument(
-        "--rpc_url",
-        default=None,
-        help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
-    )
+@dataclass
+class ArgumentParserMock:
+    cache_latest_only: str = "True"
+    backdate_pools: str = "False"
+    static_pool_data_filename: str = "static_pool_data"
+    arb_mode: str = "multi_pairwise_all"
+    flashloan_tokens: str = f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}"
+    n_jobs: int = -1
+    exchanges: str = "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3"
+    polling_interval: int = 1
+    alchemy_max_block_fetch: int = 2000
+    reorg_delay: int = 0
+    logging_path: str = ""
+    loglevel: str = "INFO"
+    use_cached_events: str = "False"
+    run_data_validator: str = "False"
+    randomizer: int = 3
+    limit_bancor3_flashloan_tokens: str = "True"
+    default_min_profit_gas_token: str = "0.01"
+    timeout: int = None
+    target_tokens: str = None
+    replay_from_block: int = None
+    tenderly_fork_id: int = None
+    tenderly_event_exchanges: str = "pancakeswap_v2,pancakeswap_v3"
+    increment_time: int = 1
+    increment_blocks: int = 1
+    blockchain: str = "ethereum"
+    pool_data_update_frequency: int = -1
+    use_specific_exchange_for_target_tokens: str = None
+    prefix_path: str = ""
+    version_check_frequency: int = 1
+    self_fund: str = "False"
+    read_only: str = "True"
+    is_args_test: str = "False"
+    rpc_url: str = None
 
-    # Process the arguments
-    args = parser.parse_args()
-    return args
+
+def get_default_main_args():
+    return ArgumentParserMock()
 
 
 def get_test_strategies():
     test_strategies_path = os.path.normpath(
-        "fastlane_bot/tests/deterministic/test_strategies.json"
+        "fastlane_bot/tests/deterministic/_data/test_strategies.json"
     )
     with open(test_strategies_path) as file:
         test_strategies = json.load(file)["test_strategies"]
