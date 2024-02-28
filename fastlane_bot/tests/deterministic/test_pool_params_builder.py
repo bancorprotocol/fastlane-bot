@@ -60,7 +60,7 @@ class TestPoolParamsBuilder:
         """
         result = None
         if type_str == "bool":
-            result = "0001" if value.lower() in ["true", "1"] else "0000"
+            result = "0001" if str(value).lower() in {"true", "1"} else "0000"
         elif type_str == "int24":
             long_hex = eth_abi.encode(["int24"], [value]).hex()
             result = long_hex[-6:]
