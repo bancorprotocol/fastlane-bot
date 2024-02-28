@@ -24,16 +24,16 @@ class TestParams:
     )
     n_jobs: int = -1
     exchanges: str = "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3"
-    polling_interval: int = 1
+    polling_interval: int = 0
     alchemy_max_block_fetch: int = 1
     reorg_delay: int = 0
     logging_path: str = ""
-    loglevel: str = "INFO"
+    loglevel: str = "DEBUG"
     use_cached_events: str = "False"
     run_data_validator: str = "False"
-    randomizer: int = 3
+    randomizer: int = 1
     limit_bancor3_flashloan_tokens: str = "True"
-    default_min_profit_gas_token: str = "-100"  # "0.01"
+    default_min_profit_gas_token: str = "0.002"  # "0.01"
     timeout: int = None
     target_tokens: str = None
     replay_from_block: int = None
