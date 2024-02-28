@@ -1,8 +1,9 @@
 """
 This script is used to run deterministic tests on the Fastlane Bot.
 
-The script is run from the command line with the following command:
-`python run_deterministic_tests.py --task <task> --rpc_url <rpc_url> --network <network> --arb_mode <arb_mode>` --timeout_minutes <timeout_minutes>
+The script is run from the command line with the following command: `python run_deterministic_tests.py --task <task>
+--rpc_url <rpc_url> --network <network> --arb_mode <arb_mode>` --timeout_minutes <timeout_minutes> --from_block
+<from_block> --create_new_testnet <create_new_testnet>
 
 The `--task` argument specifies the task to run. The options are:
 - `set_test_state`: Set the test state based on the static_pool_data_testing.csv file.
@@ -23,6 +24,12 @@ The `--arb_mode` argument specifies the arbitrage mode to test. The options are:
 - `multi_triangle`: Multi triangle arbitrage mode.
 
 The `--timeout_minutes` argument specifies the timeout for the tests (in minutes).
+
+The `--from_block` argument specifies the block number to start from.
+
+The `--create_new_testnet` argument specifies whether to create a new testnet. The options are:
+- `True`: Create a new testnet.
+- `False`: Do not create a new testnet.
 
 The script uses the `fastlane_bot/tests/deterministic/constants.py` file to get the constants used in the tests.
 
