@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 from eth_typing import Address
 from web3 import Web3
+from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 
@@ -25,7 +26,7 @@ class Web3Manager:
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         assert self.w3.is_connected(), "Web3 not connected"
 
-    def get_carbon_controller(self, address: Address) -> Web3.eth.contract:
+    def get_carbon_controller(self, address: Address) -> Contract:
         """
         Gets the Carbon Controller contract on the given network.
         """

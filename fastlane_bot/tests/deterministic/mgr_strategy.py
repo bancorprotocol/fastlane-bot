@@ -8,7 +8,7 @@ import json
 import os
 
 import pandas as pd
-from eth_typing import Address
+from eth_typing import Address, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 
@@ -17,6 +17,7 @@ from fastlane_bot.tests.deterministic.constants import (
     DEFAULT_GAS_PRICE,
     TEST_FILE_DATA_DIR,
 )
+from fastlane_bot.tests.deterministic.test_pool import TestPool
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
 
 
@@ -113,14 +114,103 @@ class StrategyManager:
         # Return state changes
         return strategy_created_df, strategy_deleted_df, remaining_carbon_strategies
 
+    def modify_storage(self, w3: Web3, address: str, slot: str, value: str) -> None:
+        """Modify storage directly via Tenderly."""
+        params = [address, slot, value]
+        w3.provider.make_request(method="tenderly_setStorageAt", params=params)
+
+    @staticmethod
+    def set_balance_via_faucet(
+        w3: Web3,
+        token_address: str,
+        amount_wei: int,
+        wallet: Address or ChecksumAddress,
+    ) -> None:
+        wallet = w3.to_checksum_address(wallet)
+        if token_address in {"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"}:
+            params = [[wallet], w3.to_hex(amount_wei)]
+            w3.provider.make_request(method="tenderly_setBalance", params=params)
+        else:
+            params = [token_address, wallet, w3.to_hex(amount_wei)]
+            w3.provider.make_request(method="tenderly_setErc20Balance", params=params)
+        print(f"Reset Balance to {amount_wei}")
+
+    def modify_token(
+        self,
+        token_address: str,
+        modifications: dict,
+        strategy_id: int,
+        strategy_beneficiary: Address,
+    ) -> None:
+        """General function to modify token parameters and handle deletion."""
+        # Modify the tax parameters
+        for slot, value in modifications["before"].items():
+            self.modify_storage(self.w3, token_address, slot, value)
+
+        # Ensure there is sufficient funds for withdrawal
+        self.set_balance_via_faucet(
+            self.w3, token_address, modifications["balance"], self.carbon_controller.address
+        )
+        self.delete_strategy(strategy_id, strategy_beneficiary)
+
+        # Reset the tax parameters to their original state
+        for slot, value in modifications["after"].items():
+            self.modify_storage(self.w3, token_address, slot, value)
+
+        # Empty out this token from CarbonController
+        self.set_balance_via_faucet(self.w3, token_address, 0, self.carbon_controller.address)
+
     def modify_tokens_for_deletion(self) -> None:
-        """
-        Modifies tokens for deletion.
-        """
-        pass
+        """Custom modifications to tokens to allow their deletion from Carbon."""
+        tokens_modifications = {
+            "0x0": {
+                "address": "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5",
+                "modifications": {
+                    "before": {
+                        "0x0000000000000000000000000000000000000000000000000000000000000006": "0x01",
+                        "0x0000000000000000000000000000000000000000000000000000000000000007": "0x01",
+                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x01",
+                    },
+                    "after": {
+                        "0x0000000000000000000000000000000000000000000000000000000000000006": "0x0000000000000000000000000000000000000000000000000000000000000019",
+                        "0x0000000000000000000000000000000000000000000000000000000000000007": "0x0000000000000000000000000000000000000000000000000000000000000005",
+                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x2386f26fc10000",
+                    },
+                    "balance": 288551667147,
+                },
+                "strategy_id": 9868188640707215440437863615521278132277,
+                "strategy_beneficiary": "0xe3d51681Dc2ceF9d7373c71D9b02c5308D852dDe",
+            },
+            "PAXG": {
+                "address": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
+                "modifications": {
+                    "before": {
+                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x00",
+                    },
+                    "after": {
+                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x00000000000000000000000000000000000000000000000000000000000000c8",
+                    },
+                    "balance": 395803389286127,
+                },
+                "strategy_id": 15312706511442230855851857334429569515620,
+                "strategy_beneficiary": "0xFf365375777069eBd8Fa575635EB31a0787Afa6c",
+            },
+        }
+
+        for token_name, details in tokens_modifications.items():
+            print(f"Modifying {token_name} token...")
+            self.modify_token(
+                details["address"],
+                details["modifications"],
+                details["strategy_id"],
+                details["strategy_beneficiary"],
+            )
+            print(f"Modification for {token_name} token completed.")
 
     def create_strategy(self, strategy: TestStrategy) -> str:
-        print("Creating Strategy...")
+        """
+        Creates a Carbon strategy.
+        """
         tx_params = {
             "from": strategy.wallet.address,
             "nonce": strategy.wallet.nonce,
@@ -148,7 +238,9 @@ class StrategyManager:
             return self.w3.to_hex(tx_receipt.transactionHash)
 
     def delete_strategy(self, strategy_id: int, wallet: Address) -> int:
-        print("Deleting Strategy...")
+        """
+        Deletes a Carbon strategy.
+        """
         nonce = self.w3.eth.get_transaction_count(wallet)
         tx_params = {
             "from": wallet,
@@ -167,7 +259,6 @@ class StrategyManager:
         """
         Deletes all Carbon strategies.
         """
-        print("Deleting strategies...")
         self.modify_tokens_for_deletion()
         undeleted_strategies = []
         for strategy_id, owner in carbon_strategy_id_owner_list:
