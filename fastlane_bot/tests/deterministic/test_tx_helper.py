@@ -16,6 +16,7 @@ class TestTxHelper:
     This is a utility class to scan the logs directory for successful transactions and clean and extract the
     transaction data.
     """
+
     @staticmethod
     def tx_scanner() -> list:
         """
@@ -26,7 +27,9 @@ class TestTxHelper:
         path_to_logs = "./logs/*"
 
         # Use glob to list all directories
-        most_recent_log_folder = [f for f in glob.glob(path_to_logs) if os.path.isdir(f)][-1]
+        most_recent_log_folder = [
+            f for f in glob.glob(path_to_logs) if os.path.isdir(f)
+        ][-1]
         print(f"Accessing log folder {most_recent_log_folder}")
 
         most_recent_pool_data = os.path.join(

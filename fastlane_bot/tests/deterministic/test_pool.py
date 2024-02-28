@@ -16,6 +16,10 @@ from fastlane_bot.tests.deterministic.token_balance import TokenBalance
 
 @dataclass
 class TestPool:
+    """
+    This class is used to represent a pool on the given network.
+    """
+
     exchange_type: str
     pool_address: str
     tkn0_address: str
@@ -53,17 +57,29 @@ class TestPool:
 
     @staticmethod
     def attributes():
+        """
+        Returns the attributes of the TestPool class.
+        """
         return list(TestPool.__dataclass_fields__.keys())
 
     @property
     def param_dict(self):
+        """
+        Returns a dictionary mapping the slots to the param_lists.
+        """
         return dict(zip(self.slots, self.param_lists))
 
     @property
     def is_supported(self):
+        """
+        Returns True if the pool is supported, otherwise False.
+        """
         return self.exchange_type in SUPPORTED_EXCHANGES
 
     def set_balance_via_faucet(self, w3: Web3, token_id: int):
+        """
+        This method sets the balance of the given token to the given amount using the faucet.
+        """
         token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
         amount_wei = self.tkn0_setBalance if token_id == 0 else self.tkn1_setBalance
         token_balance = TokenBalance(token=token_address, balance=amount_wei)

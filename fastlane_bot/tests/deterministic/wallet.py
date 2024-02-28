@@ -14,11 +14,15 @@ from fastlane_bot.tests.deterministic.token_balance import TokenBalance
 
 @dataclass
 class Wallet:
+    """
+    A class to represent a wallet on the Ethereum network.
+    """
+
     w3: Web3
     address: str or Address  # Address after __post_init__, str before
     balances: list[
         TokenBalance or dict
-        ] = None  # List of TokenBalances after __post_init__, list of dicts before
+    ] = None  # List of TokenBalances after __post_init__, list of dicts before
 
     def __post_init__(self):
         self.address = Web3.to_checksum_address(self.address)

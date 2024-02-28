@@ -17,15 +17,42 @@ from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 
 
 class Web3Manager:
+    """
+    This class is used to interact with the Carbon Controller contract on the given network.
+    """
+
     def __init__(self, rpc_url: str):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         assert self.w3.is_connected(), "Web3 not connected"
 
-    def get_carbon_controller(self, address: Address):
+    def get_carbon_controller(self, address: Address) -> Web3.eth.contract:
+        """
+        This method is used to get the Carbon Controller contract on the given network.
+
+        Args:
+        - address: Address
+            The address of the Carbon Controller contract.
+        """
         return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
 
     @staticmethod
-    def get_carbon_controller_address(multichain_addresses_path: str, network: str):
+    def get_carbon_controller_address(
+        multichain_addresses_path: str, network: str
+    ) -> str:
+        """
+        This method is used to get the Carbon Controller contract address on the given network.
+
+        Args:
+        - multichain_addresses_path: str
+            The path to the multichain_addresses.csv file.
+        - network: str
+            The network to get the Carbon Controller contract address for.
+
+        Returns:
+        - str
+            The Carbon Controller contract address on the given network.
+
+        """
         # Initialize the Carbon Controller contract
         lookup_table = pd.read_csv(multichain_addresses_path)
         return (
@@ -35,35 +62,37 @@ class Web3Manager:
         )
 
     @staticmethod
-    def create_new_testnet():
+    def create_new_testnet() -> tuple:
+        """
+        This method is used to create a new testnet on Tenderly.
+
+        Returns:
+        - uri: str
+            The URI of the new testnet.
+        - from_block: int
+            The block number from which to start the testnet.
+        """
 
         # Replace these variables with your actual data
-        ACCOUNT_SLUG = os.environ['TENDERLY_USER']
-        PROJECT_SLUG = os.environ['TENDERLY_PROJECT']
-        ACCESS_KEY = os.environ['TENDERLY_ACCESS_KEY']
+        ACCOUNT_SLUG = os.environ["TENDERLY_USER"]
+        PROJECT_SLUG = os.environ["TENDERLY_PROJECT"]
+        ACCESS_KEY = os.environ["TENDERLY_ACCESS_KEY"]
 
-        url = f'https://api.tenderly.co/api/v1/account/{ACCOUNT_SLUG}/project/{PROJECT_SLUG}/testnet/container'
+        url = f"https://api.tenderly.co/api/v1/account/{ACCOUNT_SLUG}/project/{PROJECT_SLUG}/testnet/container"
 
-        headers = {
-            'Content-Type': 'application/json',
-            'X-Access-Key': ACCESS_KEY
-        }
+        headers = {"Content-Type": "application/json", "X-Access-Key": ACCESS_KEY}
 
         data = {
             "slug": f"testing-api-endpoint-{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
             "displayName": "Automated Test Env",
             "description": "",
             "visibility": "TEAM",
-            "tags": {
-                "purpose": "development"
-            },
+            "tags": {"purpose": "development"},
             "networkConfig": {
                 "networkId": "1",
                 "blockNumber": "latest",
                 "baseFeePerGas": "1",
-                "chainConfig": {
-                    "chainId": "1"
-                }
+                "chainConfig": {"chainId": "1"},
             },
             "private": True,
             "syncState": False,
@@ -72,6 +101,6 @@ class Web3Manager:
         response = requests.post(url, headers=headers, data=json.dumps(data))
 
         uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
-        from_block = int(response.json()['container']['networkConfig']['blockNumber'])
+        from_block = int(response.json()["container"]["networkConfig"]["blockNumber"])
 
         return uri, from_block

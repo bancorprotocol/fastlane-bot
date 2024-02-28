@@ -11,11 +11,17 @@ from fastlane_bot.tools.cpc import T
 
 @dataclass
 class ArgumentParserMock:
+    """
+    This class is used to mock the command line arguments for the main.py
+    """
+
     cache_latest_only: str = "True"
     backdate_pools: str = "True"
     static_pool_data_filename: str = "static_pool_data"
     arb_mode: str = "multi_pairwise_all"
-    flashloan_tokens: str = f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}"
+    flashloan_tokens: str = (
+        f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}"
+    )
     n_jobs: int = -1
     exchanges: str = "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3"
     polling_interval: int = 1

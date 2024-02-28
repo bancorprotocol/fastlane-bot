@@ -12,7 +12,11 @@ from eth_typing import Address
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.tests.deterministic.constants import DEFAULT_GAS, DEFAULT_GAS_PRICE, TEST_FILE_DATA_DIR
+from fastlane_bot.tests.deterministic.constants import (
+    DEFAULT_GAS,
+    DEFAULT_GAS_PRICE,
+    TEST_FILE_DATA_DIR,
+)
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
 
 
@@ -196,7 +200,9 @@ class StrategyManager:
             status = self.delete_strategy(strategy_id, owner)
             if status == 0:
                 try:
-                    strategy_info = self.carbon_controller.functions.strategy(strategy_id).call()
+                    strategy_info = self.carbon_controller.functions.strategy(
+                        strategy_id
+                    ).call()
                     current_owner = strategy_info[1]
                     try:
                         print("Attempt 2")
@@ -223,4 +229,3 @@ class StrategyManager:
             test_strategies = json.load(file)["test_strategies"]
             print(f"{len(test_strategies.keys())} test strategies imported")
         return test_strategies
-

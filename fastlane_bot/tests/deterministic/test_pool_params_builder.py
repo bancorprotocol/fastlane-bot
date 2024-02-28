@@ -17,22 +17,36 @@ from fastlane_bot.tests.deterministic.test_pool import TestPool
 
 @dataclass
 class TestPoolParam:
+    """
+    This class is used to represent a parameter of the test pool.
+    """
+
     type: str
     value: any
 
 
 class TestPoolParamsBuilder:
+    """
+    This class is used to build the parameters for the test pool.
+    """
+
     def __init__(self, w3: Web3):
         self.w3 = w3
 
     @staticmethod
     def convert_to_bool(value: str or int) -> bool:
+        """
+        This method is used to convert a string value to a boolean.
+        """
         if isinstance(value, str):
             return value.lower() in ["true", "1"]
         return bool(value)
 
     @staticmethod
     def safe_int_conversion(value: any) -> int or None:
+        """
+        This method is used to convert a value to an integer.
+        """
         try:
             return int(value)
         except (ValueError, TypeError):
@@ -41,6 +55,9 @@ class TestPoolParamsBuilder:
 
     @staticmethod
     def append_zeros(value: any, type_str: str) -> str:
+        """
+        This method is used to append zeros to a value based on the type.
+        """
         result = None
         if type_str == "bool":
             result = "0001" if value.lower() in ["true", "1"] else "0000"
@@ -56,7 +73,12 @@ class TestPoolParamsBuilder:
                 print(f"Error building append_zeros {str(e)}")
         return result
 
-    def build_type_val_dict(self, pool: TestPool, param_list_single: list[str]):
+    def build_type_val_dict(
+        self, pool: TestPool, param_list_single: list[str]
+    ) -> tuple:
+        """
+        This method is used to build the type_val_dict and the encoded_params for the given pool.
+        """
         type_val_dict = {}
         for param in param_list_single:
             param_value = self.get_param_value(pool, param)
@@ -70,6 +92,9 @@ class TestPoolParamsBuilder:
         return type_val_dict, encoded_params
 
     def get_param_value(self, pool: TestPool, param: str) -> int or bool:
+        """
+        This method is used to get the value of the given parameter.
+        """
         if param == "blockTimestampLast":
             return self.get_latest_block_timestamp()
         elif param == "unlocked":
@@ -80,6 +105,9 @@ class TestPoolParamsBuilder:
             )
 
     def get_latest_block_timestamp(self):
+        """
+        This method is used to get the latest block timestamp.
+        """
         try:
             return int(self.w3.eth.get_block("latest")["timestamp"])
         except Exception as e:
@@ -87,6 +115,17 @@ class TestPoolParamsBuilder:
             return None
 
     def encode_params(self, type_val_dict: dict, param_list_single: list[str]) -> str:
+        """
+        This method is used to encode the parameters into a string that can be used to update the storage of the pool
+        contract.
+
+        Args:
+            type_val_dict (dict): The type value dictionary.
+            param_list_single (list): The list of parameters.
+
+        Returns:
+            str: The encoded parameters.
+        """
         try:
             result = "".join(
                 self.append_zeros(type_val_dict[param].value, type_val_dict[param].type)
@@ -97,7 +136,16 @@ class TestPoolParamsBuilder:
             print(f"Error encoding params: {e}, {type_val_dict}")
             return None
 
-    def get_update_params_dict(self, pool: TestPool):
+    def get_update_params_dict(self, pool: TestPool) -> dict:
+        """
+        This method is used to get the update parameters dictionary for the given pool.
+
+        Args:
+            pool (TestPool): The test pool.
+
+        Returns:
+            dict: The update parameters dictionary.
+        """
         params_dict = {}
         for i in range(len(pool.slots)):
             params_dict[pool.slots[i]] = {

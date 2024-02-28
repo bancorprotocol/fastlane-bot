@@ -10,15 +10,24 @@ from eth_typing import ChecksumAddress
 from web3 import Web3
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.tests.deterministic.constants import BNT_ADDRESS, DEFAULT_GAS, DEFAULT_GAS_PRICE, TEST_MODE_AMT, \
-    USDC_ADDRESS, \
-    USDT_ADDRESS
+from fastlane_bot.tests.deterministic.constants import (
+    BNT_ADDRESS,
+    DEFAULT_GAS,
+    DEFAULT_GAS_PRICE,
+    TEST_MODE_AMT,
+    USDC_ADDRESS,
+    USDT_ADDRESS,
+)
 from fastlane_bot.tests.deterministic.token import Token
 from fastlane_bot.tests.deterministic.wallet import Wallet
 
 
 @dataclass
 class TestStrategy:
+    """
+    A class to represent a strategy in the deterministic tests.
+    """
+
     w3: Web3
     token0: Token
     token1: Token
@@ -54,6 +63,16 @@ class TestStrategy:
     def get_token_approval(
         self, token_id: int, approval_address: ChecksumAddress
     ) -> str:
+        """
+        This method is used to get the token approval for the given token and approval address.
+
+        Args:
+            token_id (int): The token ID. Should be 0 or 1.
+            approval_address (ChecksumAddress): The approval address.
+
+        Returns:
+            str: The transaction hash.
+        """
         token = self.token0 if token_id == 0 else self.token1
         if token.address in [
             BNT_ADDRESS,

@@ -15,6 +15,10 @@ from fastlane_bot.tests.deterministic.constants import ETH_ADDRESS
 
 @dataclass
 class Token:
+    """
+    A class to represent a token on the blockchain.
+    """
+
     address: str or Address  # Address after __post_init__, str before
 
     def __post_init__(self):
