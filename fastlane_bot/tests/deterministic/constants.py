@@ -1,3 +1,9 @@
+"""
+This file contains constants used in the deterministic tests.
+
+(c) Copyright Bprotocol foundation 2024.
+Licensed under MIT License.
+"""
 KNOWN_UNABLE_TO_DELETE = {
     68737038118029569619601670701217178714718: ("pDFS", "ETH"),
 }
@@ -9,4 +15,6 @@ USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
 USDT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
 DEFAULT_GAS = 2000000
 DEFAULT_GAS_PRICE = 0
+DEFAULT_FROM_BLOCK = 1000000
 TENDERLY_RPC_KEY = "fb866397-29bd-4886-8406-a2cc7b7c5b1f"
+TEST_FILE_DATA_DIR = 'fastlane_bot/tests/deterministic/_data'

@@ -1,0 +1,127 @@
+"""
+This module is used to build the parameters for the test pool. It is used to build the parameters for the test pool and
+encode them into a string that can be used to update the storage of the pool contract.
+
+(c) Copyright Bprotocol foundation 2024.
+Licensed under MIT License.
+"""
+import re
+from dataclasses import dataclass
+
+import eth_abi
+from web3 import Web3
+from web3.types import RPCEndpoint
+
+from fastlane_bot.tests.deterministic.test_pool import TestPool
+
+
+@dataclass
+class TestPoolParam:
+    type: str
+    value: any
+
+
+class TestPoolParamsBuilder:
+    def __init__(self, w3: Web3):
+        self.w3 = w3
+
+    @staticmethod
+    def convert_to_bool(value: str or int) -> bool:
+        if isinstance(value, str):
+            return value.lower() in ["true", "1"]
+        return bool(value)
+
+    @staticmethod
+    def safe_int_conversion(value: any) -> int or None:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            print(f"Error converting {value} to int")
+            return None
+
+    @staticmethod
+    def append_zeros(value: any, type_str: str) -> str:
+        result = None
+        if type_str == "bool":
+            result = "0001" if value.lower() in ["true", "1"] else "0000"
+        elif type_str == "int24":
+            long_hex = eth_abi.encode(["int24"], [value]).hex()
+            result = long_hex[-6:]
+        elif "int" in type_str:
+            try:
+                hex_value = hex(value)[2:]
+                length = int(re.search(r"\d+", type_str).group()) // 4
+                result = "0" * (length - len(hex_value)) + hex_value
+            except Exception as e:
+                print(f"Error building append_zeros {str(e)}")
+        return result
+
+    def build_type_val_dict(self, pool: TestPool, param_list_single: list[str]):
+        type_val_dict = {}
+        for param in param_list_single:
+            param_value = self.get_param_value(pool, param)
+            if param_value is not None:
+                type_val_dict[param] = TestPoolParam(
+                    type=pool.__getattribute__(f"param_{param}_type") or "uint256",
+                    value=param_value,
+                )
+
+        encoded_params = self.encode_params(type_val_dict, param_list_single)
+        return type_val_dict, encoded_params
+
+    def get_param_value(self, pool: TestPool, param: str) -> int or bool:
+        if param == "blockTimestampLast":
+            return self.get_latest_block_timestamp()
+        elif param == "unlocked":
+            return self.convert_to_bool(pool.param_unlocked)
+        else:
+            return self.safe_int_conversion(
+                pool.__getattribute__(f"param_{param}") or 0
+            )
+
+    def get_latest_block_timestamp(self):
+        try:
+            return int(self.w3.eth.get_block("latest")["timestamp"])
+        except Exception as e:
+            print(f"Error fetching latest block timestamp: {e}")
+            return None
+
+    def encode_params(self, type_val_dict: dict, param_list_single: list[str]) -> str:
+        try:
+            result = "".join(
+                self.append_zeros(type_val_dict[param].value, type_val_dict[param].type)
+                for param in param_list_single
+            )
+            return "0x" + "0" * (64 - len(result)) + result
+        except Exception as e:
+            print(f"Error encoding params: {e}, {type_val_dict}")
+            return None
+
+    def get_update_params_dict(self, pool: TestPool):
+        params_dict = {}
+        for i in range(len(pool.slots)):
+            params_dict[pool.slots[i]] = {
+                "slot": "0x" + self.append_zeros(int(pool.slots[i]), "uint256")
+            }
+            type_val_dict, encoded_params = self.build_type_val_dict(
+                pool, param_list_single=pool.param_lists[i]
+            )
+
+            params_dict[pool.slots[i]]["type_val_dict"] = type_val_dict
+            params_dict[pool.slots[i]]["encoded_params"] = encoded_params
+        return params_dict
+
+    def set_storage_at(self, pool_address: str, update_params_dict_single: dict):
+        method = RPCEndpoint("tenderly_setStorageAt")
+        self.w3.provider.make_request(
+            method=method,
+            params=[
+                pool_address,
+                update_params_dict_single["slot"],
+                update_params_dict_single["encoded_params"],
+            ],
+        )
+        print(f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}")
+        print(
+            f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}"
+        )
