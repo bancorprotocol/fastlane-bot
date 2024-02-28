@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from web3 import Web3
 from web3.types import RPCEndpoint
 
-from fastlane_bot.tests.deterministic.constants import SUPPORTED_EXCHANGES
-from fastlane_bot.tests.deterministic.token_balance import TokenBalance
+from fastlane_bot.tests.deterministic.test_constants import SUPPORTED_EXCHANGES
+from fastlane_bot.tests.deterministic.test_token import TestTokenBalance
 
 
 @dataclass
@@ -26,8 +26,8 @@ class TestPool:
     tkn1_address: str
     slots: str or list  # List after __post_init__, str before
     param_lists: str or list  # List after __post_init__, str before
-    tkn0_setBalance: TokenBalance or int  # TokenBalance after __post_init__, int before
-    tkn1_setBalance: TokenBalance or int  # TokenBalance after __post_init__, int before
+    tkn0_setBalance: TestTokenBalance or int  # TokenBalance after __post_init__, int before
+    tkn1_setBalance: TestTokenBalance or int  # TokenBalance after __post_init__, int before
     param_blockTimestampLast: int = None
     param_blockTimestampLast_type: str = None
     param_reserve0: int = None
@@ -82,7 +82,7 @@ class TestPool:
         """
         token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
         amount_wei = self.tkn0_setBalance if token_id == 0 else self.tkn1_setBalance
-        token_balance = TokenBalance(token=token_address, balance=amount_wei)
+        token_balance = TestTokenBalance(token=token_address, balance=amount_wei)
         params = token_balance.faucet_params(wallet_address=self.pool_address)
         method_name = RPCEndpoint(
             "tenderly_setBalance"

@@ -23,7 +23,7 @@ from joblib import Parallel, delayed
 from web3 import AsyncWeb3, Web3
 from web3.datastructures import AttributeDict
 
-import fastlane_bot.tests.deterministic.constants
+import fastlane_bot.tests.deterministic.test_constants
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.connect import NetworkBase
@@ -792,7 +792,7 @@ def save_events_to_json(
         if not os.path.isdir("event_data"):
             os.mkdir("event_data")
         path = (
-            f"event_data/{fastlane_bot.tests.deterministic.constants.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
+            f"event_data/{fastlane_bot.tests.deterministic.test_constants.SUPPORTED_EXCHANGES}_{start_block}_{current_block}.json"
         )
     try:
         with open(path, "w") as f:
@@ -851,7 +851,7 @@ def write_pool_data_to_disk(
     else:
         if not os.path.isdir("pool_data"):
             os.mkdir("pool_data")
-        path = f"pool_data/{fastlane_bot.tests.deterministic.constants.SUPPORTED_EXCHANGES}_{current_block}.json"
+        path = f"pool_data/{fastlane_bot.tests.deterministic.test_constants.SUPPORTED_EXCHANGES}_{current_block}.json"
     try:
         df = pd.DataFrame(mgr.pool_data)
 

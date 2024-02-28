@@ -9,11 +9,11 @@ from dataclasses import dataclass
 from eth_typing import Address
 from web3 import Web3
 
-from fastlane_bot.tests.deterministic.token_balance import TokenBalance
+from fastlane_bot.tests.deterministic.test_token import TestTokenBalance
 
 
 @dataclass
-class Wallet:
+class TestWallet:
     """
     A class to represent a wallet on the Ethereum network.
     """
@@ -21,12 +21,12 @@ class Wallet:
     w3: Web3
     address: str or Address  # Address after __post_init__, str before
     balances: list[
-        TokenBalance or dict
-    ] = None  # List of TokenBalances after __post_init__, list of dicts before
+        TestTokenBalance or dict
+        ] = None  # List of TokenBalances after __post_init__, list of dicts before
 
     def __post_init__(self):
         self.address = Web3.to_checksum_address(self.address)
-        self.balances = [TokenBalance(**args) for args in self.balances or []]
+        self.balances = [TestTokenBalance(**args) for args in self.balances or []]
 
     @property
     def nonce(self):

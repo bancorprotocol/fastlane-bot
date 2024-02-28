@@ -10,7 +10,7 @@ from eth_typing import ChecksumAddress
 from web3 import Web3
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.tests.deterministic.constants import (
+from fastlane_bot.tests.deterministic.test_constants import (
     BNT_ADDRESS,
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
@@ -18,8 +18,8 @@ from fastlane_bot.tests.deterministic.constants import (
     USDC_ADDRESS,
     USDT_ADDRESS,
 )
-from fastlane_bot.tests.deterministic.token import Token
-from fastlane_bot.tests.deterministic.wallet import Wallet
+from fastlane_bot.tests.deterministic.test_token import TestToken
+from fastlane_bot.tests.deterministic.test_wallet import TestWallet
 
 
 @dataclass
@@ -29,8 +29,8 @@ class TestStrategy:
     """
 
     w3: Web3
-    token0: Token
-    token1: Token
+    token0: TestToken
+    token1: TestToken
     y0: int
     z0: int
     A0: int
@@ -39,7 +39,7 @@ class TestStrategy:
     z1: int
     A1: int
     B1: int
-    wallet: Wallet
+    wallet: TestWallet
 
     @property
     def id(self):
@@ -50,15 +50,15 @@ class TestStrategy:
         self._id = id
 
     def __post_init__(self):
-        self.token0 = Token(self.token0)
+        self.token0 = TestToken(self.token0)
         self.token0.contract = self.w3.eth.contract(
             address=self.token0.address, abi=ERC20_ABI
         )
-        self.token1 = Token(self.token1)
+        self.token1 = TestToken(self.token1)
         self.token1.contract = self.w3.eth.contract(
             address=self.token1.address, abi=ERC20_ABI
         )
-        self.wallet = Wallet(self.w3, self.wallet)
+        self.wallet = TestWallet(self.w3, self.wallet)
 
     def get_token_approval(
         self, token_id: int, approval_address: ChecksumAddress

@@ -10,7 +10,7 @@ from fastlane_bot.tools.cpc import T
 
 
 @dataclass
-class ArgumentParserMock:
+class TestParams:
     """
     This class is used to mock the command line arguments for the main.py
     """

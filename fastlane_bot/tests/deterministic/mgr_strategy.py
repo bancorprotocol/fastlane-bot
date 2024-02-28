@@ -12,7 +12,7 @@ from eth_typing import Address, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.tests.deterministic.constants import (
+from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
     TEST_FILE_DATA_DIR, TOKENS_MODIFICATIONS,
@@ -161,7 +161,7 @@ class StrategyManager:
         self.set_balance_via_faucet(self.w3, token_address, 0, self.carbon_controller.address)
 
     def modify_tokens_for_deletion(self) -> None:
-        """Custom modifications to tokens to allow their deletion from Carbon."""        
+        """Custom modifications to tokens to allow their deletion from Carbon."""
         for token_name, details in TOKENS_MODIFICATIONS.items():
             print(f"Modifying {token_name} token...")
             self.modify_token(

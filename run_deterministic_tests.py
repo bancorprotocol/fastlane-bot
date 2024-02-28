@@ -31,7 +31,7 @@ The `--create_new_testnet` argument specifies whether to create a new testnet. T
 - `True`: Create a new testnet.
 - `False`: Do not create a new testnet.
 
-The script uses the `fastlane_bot/tests/deterministic/constants.py` file to get the constants used in the tests.
+The script uses the `fastlane_bot/tests/deterministic/test_constants.py` file to get the constants used in the tests.
 
 The script uses the `fastlane_bot/tests/deterministic/utils.py` file to get the utility functions used in the tests.
 
@@ -54,11 +54,11 @@ import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.tests.deterministic.constants import (
+from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_FROM_BLOCK, KNOWN_UNABLE_TO_DELETE,
     TENDERLY_RPC_KEY, TEST_FILE_DATA_DIR,
 )
-from fastlane_bot.tests.deterministic.main_args_mock import ArgumentParserMock
+from fastlane_bot.tests.deterministic.test_params import TestParams
 from fastlane_bot.tests.deterministic.test_tx_helper import TestTxHelper
 from fastlane_bot.tests.deterministic.mgr_strategy import StrategyManager
 from fastlane_bot.tests.deterministic.test_pool_params_builder import TestPoolParamsBuilder
@@ -160,7 +160,7 @@ def run_tests_on_mode_task(
     strategy_mgr = StrategyManager(w3, carbon_controller)
 
     # Get the default main args
-    default_main_args = ArgumentParserMock()
+    default_main_args = TestParams()
     default_main_args.blockchain = args.network
     default_main_args.arb_mode = args.arb_mode
     default_main_args.timeout = args.timeout
