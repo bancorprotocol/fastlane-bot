@@ -383,5 +383,6 @@ if __name__ == "__main__":
         print(f"uri: {uri}, from_block: {from_block}")
 
         args.rpc_url = uri
+        args.from_block = from_block  # TODO: Nick check if this is the correct block number when creating a new testnet
 
     main(args)
