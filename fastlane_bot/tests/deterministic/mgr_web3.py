@@ -27,11 +27,7 @@ class Web3Manager:
 
     def get_carbon_controller(self, address: Address) -> Web3.eth.contract:
         """
-        This method is used to get the Carbon Controller contract on the given network.
-
-        Args:
-        - address: Address
-            The address of the Carbon Controller contract.
+        Gets the Carbon Controller contract on the given network.
         """
         return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
 
@@ -40,20 +36,8 @@ class Web3Manager:
         multichain_addresses_path: str, network: str
     ) -> str:
         """
-        This method is used to get the Carbon Controller contract address on the given network.
-
-        Args:
-        - multichain_addresses_path: str
-            The path to the multichain_addresses.csv file.
-        - network: str
-            The network to get the Carbon Controller contract address for.
-
-        Returns:
-        - str
-            The Carbon Controller contract address on the given network.
-
+        Gets the Carbon Controller contract address on the given network.
         """
-        # Initialize the Carbon Controller contract
         lookup_table = pd.read_csv(multichain_addresses_path)
         return (
             lookup_table.query("exchange_name=='carbon_v1'")
@@ -64,13 +48,7 @@ class Web3Manager:
     @staticmethod
     def create_new_testnet() -> tuple:
         """
-        This method is used to create a new testnet on Tenderly.
-
-        Returns:
-        - uri: str
-            The URI of the new testnet.
-        - from_block: int
-            The block number from which to start the testnet.
+        Creates a new testnet on Tenderly.
         """
 
         # Replace these variables with your actual data

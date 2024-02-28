@@ -23,10 +23,6 @@ from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
 class StrategyManager:
     """
     A class to manage Carbon strategies.
-
-    Attributes:
-        w3 (Web3): The Web3 instance.
-        carbon_controller (Contract): The CarbonController contract instance.
     """
 
     def __init__(self, w3: Web3, carbon_controller: Contract):
@@ -35,14 +31,8 @@ class StrategyManager:
 
     @staticmethod
     def process_order_data(log_args: dict, order_key: str) -> dict:
-        """Transforms nested order data by appending a suffix to each key.
-
-        Args:
-            log_args (dict): The log arguments.
-            order_key (str): The key to process.
-
-        Returns:
-            dict: The processed order data.
+        """
+        Transforms nested order data by appending a suffix to each key.
         """
         if order_data := log_args.get(order_key):
             suffix = order_key[-1]  # Assumes order_key is either 'order0' or 'order1'
@@ -57,11 +47,6 @@ class StrategyManager:
     ) -> None:
         """
         Prints the state changes of Carbon strategies.
-
-        Args:
-            all_carbon_strategies (list): The list of all Carbon strategies.
-            deleted_strategies (list): The list of deleted Carbon strategies.
-            remaining_carbon_strategies (list): The list of remaining Carbon strategies.
         """
         print(f"{len(all_carbon_strategies)} Carbon strategies have been created")
         print(f"{len(deleted_strategies)} Carbon strategies have been deleted")
@@ -70,13 +55,6 @@ class StrategyManager:
     def get_generic_events(self, event_name: str, from_block: int) -> pd.DataFrame:
         """
         Fetches logs for a specified event from a smart contract.
-
-        Args:
-            event_name (str): The name of the event.
-            from_block (int): The block number to start fetching logs from.
-
-        Returns:
-            pandas.DataFrame: A DataFrame containing the logs of the specified event.
         """
         log_list = getattr(self.carbon_controller.events, event_name).get_logs(
             fromBlock=from_block
@@ -105,12 +83,6 @@ class StrategyManager:
     def get_state_of_carbon_strategies(self, from_block: int) -> tuple:
         """
         Fetches the state of Carbon strategies.
-
-        Args:
-            from_block (int): The block number to start fetching logs from.
-
-        Returns: tuple: A tuple containing the DataFrames of the 'StrategyCreated' and 'StrategyDeleted' events,
-        and the list of remaining Carbon strategies.
         """
         strategy_created_df = self.get_generic_events(
             event_name="StrategyCreated", from_block=from_block
@@ -192,6 +164,9 @@ class StrategyManager:
         return tx_receipt.status
 
     def delete_all_carbon_strategies(self, carbon_strategy_id_owner_list: list) -> list:
+        """
+        Deletes all Carbon strategies.
+        """
         print("Deleting strategies...")
         self.modify_tokens_for_deletion()
         undeleted_strategies = []
@@ -221,7 +196,10 @@ class StrategyManager:
         return undeleted_strategies
 
     @staticmethod
-    def get_test_strategies():
+    def get_test_strategies() -> dict:
+        """
+        Gets test strategies from a JSON file.
+        """
         test_strategies_path = os.path.normpath(
             f"{TEST_FILE_DATA_DIR}/test_strategies.json"
         )
