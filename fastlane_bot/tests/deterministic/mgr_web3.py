@@ -30,8 +30,6 @@ class Web3Manager:
         """
         Gets the Carbon Controller contract on the given network.
         """
-        if not isinstance(address, Address):
-            address = Web3.to_checksum_address(address)
         return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
 
     @staticmethod
