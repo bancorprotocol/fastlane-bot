@@ -16,7 +16,6 @@ from typing import List, Any, Dict, Tuple
 import eth_abi
 import pandas as pd
 
-import fastlane_bot.tests.deterministic.test_constants
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
@@ -316,7 +315,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
                 self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
-                self.ConfigObj.network.AERODROME_V2_NAME):
+            self.ConfigObj.network.AERODROME_V2_NAME):
             return custom_data
 
         assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
@@ -535,9 +534,8 @@ class TxRouteHandler(TxRouteHandlerBase):
             return 7
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, fastlane_bot.tests.deterministic.test_constants.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
-                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS,
-                   fastlane_bot.tests.deterministic.constants.ETH_ADDRESS,
+        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
+                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
                    self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
             return 2
         else:
@@ -1175,7 +1173,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         amount_in = amount_in * (Decimal(str(1)) - fee)
         result = (((liquidity * self.ConfigObj.Q96 * ((((
-                                                                    amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
+                                                                amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price) - sqrt_price) / (
                         (((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity) + sqrt_price)) / (
                         sqrt_price)) / decimal_tkn0_modifier))
 
@@ -1535,9 +1533,9 @@ class TxRouteHandler(TxRouteHandlerBase):
             tkn1_decimals = int(trade.db.get_token(tkn_address=tkn1_address).decimals)
 
             tkn0_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn0_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (
-                        trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
+                    trade.tknin_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address in self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn0_address
             tkn1_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn1_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and (
-                        trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
+                    trade.tknin_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS or trade.tknout_address == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) else tkn1_address
 
             assert tkn0_address == trade.tknin_address or tkn0_address == trade.tknout_address, f"[_solve_trade_output] tkn0_address {tkn0_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
             assert tkn1_address == trade.tknin_address or tkn1_address == trade.tknout_address, f"[_solve_trade_output] tkn1_address {tkn1_address} !=  trade.tknin_address {trade.tknin_address} or trade.tknout_address {trade.tknout_address}"
