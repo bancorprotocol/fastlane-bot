@@ -15,7 +15,7 @@ from web3.contract import Contract
 from fastlane_bot.tests.deterministic.constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
-    TEST_FILE_DATA_DIR,
+    TEST_FILE_DATA_DIR, TOKENS_MODIFICATIONS,
 )
 from fastlane_bot.tests.deterministic.test_pool import TestPool
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
@@ -161,43 +161,8 @@ class StrategyManager:
         self.set_balance_via_faucet(self.w3, token_address, 0, self.carbon_controller.address)
 
     def modify_tokens_for_deletion(self) -> None:
-        """Custom modifications to tokens to allow their deletion from Carbon."""
-        tokens_modifications = {
-            "0x0": {
-                "address": "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5",
-                "modifications": {
-                    "before": {
-                        "0x0000000000000000000000000000000000000000000000000000000000000006": "0x01",
-                        "0x0000000000000000000000000000000000000000000000000000000000000007": "0x01",
-                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x01",
-                    },
-                    "after": {
-                        "0x0000000000000000000000000000000000000000000000000000000000000006": "0x0000000000000000000000000000000000000000000000000000000000000019",
-                        "0x0000000000000000000000000000000000000000000000000000000000000007": "0x0000000000000000000000000000000000000000000000000000000000000005",
-                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x2386f26fc10000",
-                    },
-                    "balance": 288551667147,
-                },
-                "strategy_id": 9868188640707215440437863615521278132277,
-                "strategy_beneficiary": "0xe3d51681Dc2ceF9d7373c71D9b02c5308D852dDe",
-            },
-            "PAXG": {
-                "address": "0x45804880De22913dAFE09f4980848ECE6EcbAf78",
-                "modifications": {
-                    "before": {
-                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x00",
-                    },
-                    "after": {
-                        "0x000000000000000000000000000000000000000000000000000000000000000d": "0x00000000000000000000000000000000000000000000000000000000000000c8",
-                    },
-                    "balance": 395803389286127,
-                },
-                "strategy_id": 15312706511442230855851857334429569515620,
-                "strategy_beneficiary": "0xFf365375777069eBd8Fa575635EB31a0787Afa6c",
-            },
-        }
-
-        for token_name, details in tokens_modifications.items():
+        """Custom modifications to tokens to allow their deletion from Carbon."""        
+        for token_name, details in TOKENS_MODIFICATIONS.items():
             print(f"Modifying {token_name} token...")
             self.modify_token(
                 details["address"],

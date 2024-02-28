@@ -26,10 +26,12 @@ class Web3Manager:
         self.w3 = Web3(Web3.HTTPProvider(rpc_url))
         assert self.w3.is_connected(), "Web3 not connected"
 
-    def get_carbon_controller(self, address: Address) -> Contract:
+    def get_carbon_controller(self, address: Address or str) -> Contract:
         """
         Gets the Carbon Controller contract on the given network.
         """
+        if not isinstance(address, Address):
+            address = Web3.to_checksum_address(address)
         return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
 
     @staticmethod
