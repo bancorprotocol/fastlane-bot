@@ -315,8 +315,8 @@ def main(args: argparse.Namespace):
     elif args.task == "run_results_crosscheck":
         run_results_crosscheck_task()
     elif args.task == "end_to_end":
+        get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
         set_test_state_task(w3)
-        # get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
         test_strategies = strategy_mgr.get_test_strategies()
         run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
         run_results_crosscheck_task()
