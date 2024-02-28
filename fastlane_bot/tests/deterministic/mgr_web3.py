@@ -4,7 +4,12 @@ This module contains the Wallet class, which is a dataclass that represents a wa
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
+import json
+import os
+from datetime import datetime
+
 import pandas as pd
+import requests
 from eth_typing import Address
 from web3 import Web3
 
@@ -28,3 +33,45 @@ class Web3Manager:
             .query(f"chain=='{network}'")
             .factory_address.values[0]
         )
+
+    @staticmethod
+    def create_new_testnet():
+
+        # Replace these variables with your actual data
+        ACCOUNT_SLUG = os.environ['TENDERLY_USER']
+        PROJECT_SLUG = os.environ['TENDERLY_PROJECT']
+        ACCESS_KEY = os.environ['TENDERLY_ACCESS_KEY']
+
+        url = f'https://api.tenderly.co/api/v1/account/{ACCOUNT_SLUG}/project/{PROJECT_SLUG}/testnet/container'
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Access-Key': ACCESS_KEY
+        }
+
+        data = {
+            "slug": f"testing-api-endpoint-{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+            "displayName": "Automated Test Env",
+            "description": "",
+            "visibility": "TEAM",
+            "tags": {
+                "purpose": "development"
+            },
+            "networkConfig": {
+                "networkId": "1",
+                "blockNumber": "latest",
+                "baseFeePerGas": "1",
+                "chainConfig": {
+                    "chainId": "1"
+                }
+            },
+            "private": True,
+            "syncState": False,
+        }
+
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+
+        uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
+        from_block = int(response.json()['container']['networkConfig']['blockNumber'])
+
+        return uri, from_block

@@ -368,7 +368,20 @@ if __name__ == "__main__":
         type=int,
         help="Replay from block",
     )
+    parser.add_argument(
+        "--create_new_testnet",
+        default='False',
+        type=str,
+        help="Create a new testnet",
+    )
 
     args = parser.parse_args()
     args.timeout = args.timeout_minutes * 60
+
+    if args.create_new_testnet.lower() == 'true':
+        uri, from_block = Web3Manager.create_new_testnet()
+        print(f"uri: {uri}, from_block: {from_block}")
+
+        args.rpc_url = uri
+
     main(args)
