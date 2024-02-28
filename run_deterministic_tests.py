@@ -200,9 +200,6 @@ def run_tests_on_mode_task(
         f"{TEST_FILE_DATA_DIR}/test_strategy_txhashs.json"
     )
 
-    # Initialize the Strategy Manager
-    strategy_mgr = StrategyManager(w3, carbon_controller)
-
     # Get the new state of the carbon strategies
     (
         strategy_created_df,
@@ -314,12 +311,12 @@ def main(args: argparse.Namespace):
         get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
     elif args.task == "run_tests_on_mode":
         test_strategies = strategy_mgr.get_test_strategies()
-        run_tests_on_mode_task(w3, carbon_controller, args.arb_mode, test_strategies)
+        run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
     elif args.task == "run_results_crosscheck":
         run_results_crosscheck_task()
     elif args.task == "end_to_end":
         set_test_state_task(w3)
-        get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
+        # get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
         test_strategies = strategy_mgr.get_test_strategies()
         run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
         run_results_crosscheck_task()
@@ -390,6 +387,6 @@ if __name__ == "__main__":
         print(f"uri: {uri}, from_block: {from_block}")
 
         args.rpc_url = uri
-        args.from_block = from_block  # TODO: Nick check if this is the correct block number when creating a new testnet
+        # args.from_block = from_block  # TODO: Nick check if this is the correct block number when creating a new testnet
 
     main(args)

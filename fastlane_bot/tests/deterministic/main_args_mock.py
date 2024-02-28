@@ -25,7 +25,7 @@ class ArgumentParserMock:
     n_jobs: int = -1
     exchanges: str = "carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3"
     polling_interval: int = 1
-    alchemy_max_block_fetch: int = 2000
+    alchemy_max_block_fetch: int = 1200
     reorg_delay: int = 0
     logging_path: str = ""
     loglevel: str = "INFO"
