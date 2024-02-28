@@ -382,7 +382,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.timeout = args.timeout_minutes * 60
 
-    if args.create_new_testnet.lower() == 'true':
+    if str(args.create_new_testnet).lower() == 'true':
         uri, from_block = Web3Manager.create_new_testnet()
         print(f"uri: {uri}, from_block: {from_block}")
 

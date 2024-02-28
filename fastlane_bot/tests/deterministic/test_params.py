@@ -17,7 +17,7 @@ class TestParams:
 
     cache_latest_only: str = "True"
     backdate_pools: str = "True"
-    static_pool_data_filename: str = "static_pool_data"
+    static_pool_data_filename: str = "static_pool_data_testing"
     arb_mode: str = "multi_pairwise_all"
     flashloan_tokens: str = (
         f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}"
