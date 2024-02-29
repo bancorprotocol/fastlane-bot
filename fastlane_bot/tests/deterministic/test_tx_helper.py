@@ -73,8 +73,15 @@ class TestTxHelper:
             return json.load(file)
 
     @staticmethod
-    def read_transaction_files(log_folder):
-        """Read all transaction files in a folder and return their content."""
+    def read_transaction_files(log_folder: str) -> list:
+        """Read all transaction files in a folder and return their content.
+        
+        Args:
+            log_folder (str): The path to the log folder.
+            
+        Returns:
+            list: A list of transaction data.
+        """
         tx_files = glob.glob(os.path.join(log_folder, "*.txt"))
         transactions = []
         for tx_file in tx_files:
@@ -82,9 +89,15 @@ class TestTxHelper:
                 transactions.append(file.read())
         return transactions
 
-    def tx_scanner(self, args) -> list:
+    def tx_scanner(self, args: argparse.Namespace) -> list:
         """
         Scan for successful transactions in the most recent log folder.
+        
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            
+        Returns:
+            list: A list of successful transactions.
         """
         most_recent_log_folder = self.find_most_recent_log_folder()
         args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
@@ -100,58 +113,16 @@ class TestTxHelper:
 
         return successful_txs
 
-    # @staticmethod
-    # def tx_scanner(args) -> list:
-    #     """
-    #     This method scans the logs directory for successful transactions and returns a list of the successful
-    #     transactions.
-    #     """
-    #     # Set the path to the logs directory relative to your notebook's location
-    #     path_to_logs = "./logs/*"
-    #
-    #     # Use glob to list all directories
-    #     most_recent_log_folder = [
-    #         f for f in glob.glob(path_to_logs) if os.path.isdir(f)
-    #     ][-1]
-    #     args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
-    #
-    #     most_recent_pool_data = os.path.join(
-    #         most_recent_log_folder, "latest_pool_data.json"
-    #     )
-    #
-    #     args.logger.debug("Looking for pool data file...")
-    #     while True:
-    #         if os.path.exists(most_recent_pool_data):
-    #             args.logger.debug("File found.")
-    #             break
-    #         else:
-    #             args.logger.debug("File not found, waiting 10 seconds.")
-    #             time.sleep(10)
-    #
-    #     with open(most_recent_pool_data) as f:
-    #         pool_data = json.load(f)
-    #         args.logger.debug(f"len(pool_data): {len(pool_data)}")
-    #
-    #     all_successful_txs = glob.glob(os.path.join(most_recent_log_folder, "*.txt"))
-    #
-    #     # Read the successful_txs in as strings
-    #     txt_all_successful_txs = []
-    #     for successful_tx in all_successful_txs:
-    #         with open(successful_tx, "r") as file:
-    #             j = file.read()
-    #             txt_all_successful_txs += [(j)]
-    #
-    #     # Successful transactions on Tenderly are marked by status=1
-    #     successful_txs = [tx for tx in txt_all_successful_txs if "'status': 1" in tx]
-    #     args.logger.debug(
-    #         f"len(actually_txt_all_successful_txs): {len(successful_txs)}"
-    #     )
-    #     return successful_txs
-
     @staticmethod
     def clean_tx_data(tx_data: dict) -> dict:
         """
         This method takes a transaction data dictionary and removes the cid0 key from the trades.
+        
+        Args:
+            tx_data (dict): The transaction data.
+            
+        Returns:
+            dict: The cleaned transaction data.
         """
         if not tx_data:
             return tx_data
@@ -166,6 +137,13 @@ class TestTxHelper:
         """
         This method takes a list of successful transactions and a strategy_id and returns the transaction data for the
         given strategy_id.
+        
+        Args:
+            strategy_id (int): The strategy id.
+            txt_all_successful_txs (list): A list of successful transactions.
+            
+        Returns:
+            dict: The transaction data for the given strategy_id.
         """
         for tx in txt_all_successful_txs:
             if str(strategy_id) in tx:
@@ -179,6 +157,16 @@ class TestTxHelper:
 
     @staticmethod
     def load_json_file(file_name: str, args: argparse.Namespace) -> dict:
+        """
+        This method loads a json file and returns the data as a dictionary.
+        
+        Args:
+            file_name (str): The name of the file.
+            args (argparse.Namespace): The command-line arguments.
+            
+        Returns:
+            dict: The data from the json file.
+        """
         file_path = (
             os.path.normpath(f"{TEST_FILE_DATA_DIR}/{file_name}")
             if "/" not in file_name
@@ -194,16 +182,36 @@ class TestTxHelper:
         return data
 
     @staticmethod
-    def log_txs(tx_list, args):
+    def log_txs(tx_list: list, args: argparse.Namespace):
+        """
+        This method logs the transactions in a list.
+        
+        Args:
+            tx_list (list): A list of transactions.
+            args (argparse.Namespace): The command-line arguments.
+        """
         for i, tx in enumerate(tx_list):
             args.logger.debug(f"\nsuccessful_txs[{i}]: {tx}")
 
-    def log_results(self, args, actual_txs, expected_txs, test_strategy_txhashs):
+    def log_results(self, args: argparse.Namespace, actual_txs: list, expected_txs: dict,
+                    test_strategy_txhashs: dict) -> dict:
+        """
+        This method logs the results of the tests and returns a dictionary with the results.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            actual_txs (list): A list of actual transactions.
+            expected_txs (dict): A dictionary of expected transactions.
+            test_strategy_txhashs (dict): A dictionary of test strategy txhashs.
+
+        Returns:
+            dict: A dictionary with the results of the tests.
+        """
         results_description = {}
         all_tests_passed = True
 
         # Loop over the created test strategies and verify test data
-        for i in test_strategy_txhashs.keys():
+        for i in test_strategy_txhashs:
             if "strategyid" not in test_strategy_txhashs[str(i)]:
                 results_description[i] = {
                     "msg": f"Test {i} FAILED",
@@ -214,7 +222,7 @@ class TestTxHelper:
             search_id = test_strategy_txhashs[str(i)]["strategyid"]
             tx_data = self.clean_tx_data(self.get_tx_data(search_id, actual_txs))
 
-            print(f"fetched expected_txs: {expected_txs['test_data'].keys()}")
+            args.logger.debug(f"fetched expected_txs: {expected_txs['test_data'].keys()}")
 
             if str(i) not in expected_txs["test_data"]:
                 results_description[i] = {
@@ -226,11 +234,6 @@ class TestTxHelper:
                 continue
 
             test_data = expected_txs["test_data"][str(i)]
-            # for td in expected_txs:
-            #     test_data = expected_txs[td.keys()[0]]
-            #     if tx_data == test_data:
-            #         break
-
             if tx_data == test_data:
                 results_description[str(i)] = {"msg": f"Test {i} PASSED"}
             else:
@@ -248,60 +251,16 @@ class TestTxHelper:
 
         return results_description
 
-    #
-    # def check_test_result(self, i, strategy_id, tx_data, test_datas) -> (dict, bool):
-    #     """
-    #     This method checks if the test data matches the transaction data and returns a dictionary with the result and a
-    #     boolean indicating if the test passed.
-    #
-    #     Args:
-    #         i: The test number.
-    #         strategy_id: The strategy id.
-    #         tx_data: The transaction data.
-    #
-    #     Returns:
-    #         A dictionary with the result and a boolean indicating if the test passed.
-    #     """
-    #     result, passed = {}, False
-    #     for test_data in test_datas:
-    #         if not strategy_id:
-    #             result, passed = {"msg": f"Test {i} FAILED", "tx_data": "strategyid not in test_strategy_txhashs"}, False
-    #         elif test_data is None:
-    #             result, passed = {"msg": f"Test {i} FAILED", "tx_data": tx_data, "test_data": "Test data missing"}, False
-    #         elif tx_data == test_data:
-    #             result, passed = {"msg": f"Test {i} PASSED"}, True
-    #         else:
-    #             result, passed = {"msg": f"Test {i} FAILED", "tx_data": tx_data, "test_data": test_data}, False
-    #
-    #         if passed:
-    #             break
-    #
-    #     return result, passed
-    #
-    # def log_summary(self, all_tests_passed, args):
-    #     if all_tests_passed:
-    #         args.logger.info("ALL TESTS PASSED")
-    #     else:
-    #         args.logger.warning("SOME TESTS FAILED")
-    #
-    # def log_results(self, args, successful_txs, test_datas, test_strategy_txhashs):
-    #     results_description = {}
-    #     all_tests_passed = True
-    #
-    #     for i, txhash in test_strategy_txhashs.items():
-    #         strategy_id = txhash.get("strategyid")
-    #         print(f"search_id: {strategy_id}")  # Assuming necessary for debugging
-    #         tx_data = self.clean_tx_data(self.get_tx_data(strategy_id, successful_txs))
-    #
-    #         result, test_passed = self.check_test_result(i, strategy_id, tx_data, test_datas)
-    #         results_description[i] = result
-    #         if not test_passed:
-    #             all_tests_passed = False
-    #
-    #     self.log_summary(all_tests_passed, args)
-    #     return results_description
+    def wait_for_txs(self, args: argparse.Namespace) -> dict:
+        """
+        This method waits for the transactions to be executed and returns the test strategy txhashs.
 
-    def wait_for_txs(self, args):
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+
+        Returns:
+            dict: The test strategy txhashs.
+        """
         test_strategy_txhashs = self.load_json_file("test_strategy_txhashs.json", args)
         sleep_seconds = int(35 * len(test_strategy_txhashs.keys()) + 15)
         args.logger.debug(f"sleep_seconds: {sleep_seconds}")
