@@ -175,7 +175,9 @@ def run_tests_on_mode_task(
         time.sleep(3)
         args.logger.debug("Waiting for pool data...")
 
-    strats_created_from_block = test_manager.get_strats_created_from_block(args, test_manager.w3)
+    strats_created_from_block = test_manager.get_strats_created_from_block(
+        args, test_manager.w3
+    )
 
     # Approve and create the strategies
     test_strategy_txhashs = test_manager.approve_and_create_strategies(
@@ -212,9 +214,6 @@ def run_results_crosscheck_task(args, proc: subprocess.Popen):
     proc.terminate()
     for k, v in results_description.items():
         args.logger.info(f"{k}: {v}")
-
-
-
 
 
 def main(args: argparse.Namespace):

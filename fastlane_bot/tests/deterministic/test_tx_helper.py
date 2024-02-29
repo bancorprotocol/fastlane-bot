@@ -89,6 +89,7 @@ class TestTxHelper:
         for tx in txt_all_successful_txs:
             if str(strategy_id) in tx:
                 return json.loads(tx.split("\n\n")[-1])
+        print(f"\n\nstrategy_id={strategy_id} not found in txt_all_successful_txs: \n{txt_all_successful_txs}\n\n")
 
     @staticmethod
     def load_json_file(file_name: str, args) -> dict:
@@ -117,6 +118,8 @@ class TestTxHelper:
         # Loop over the created test strategies and verify test data
         for i in test_strategy_txhashs.keys():
             if 'strategyid' not in test_strategy_txhashs[str(i)]:
+                results_description[i] = {"msg": f"Test {i} FAILED",
+                                          "tx_data": "strategyid not in test_strategy_txhashs"}
                 continue
             search_id = test_strategy_txhashs[str(i)]["strategyid"]
             print(f"search_id: {search_id}")
@@ -124,7 +127,7 @@ class TestTxHelper:
             if str(i) not in test_datas:
                 results_description[i] = {"msg": f"Test {i} FAILED",
                                           "tx_data": tx_data,
-                                          "test_data": f"{i} not in test_datas: {test_datas.keys()}"}
+                                          "test_data": f"{i} not in test_datas: {test_datas}"}
                 all_tests_passed = False
                 continue
 
@@ -133,8 +136,8 @@ class TestTxHelper:
                 results_description[str(i)] = {"msg": f"Test {i} PASSED"}
             else:
                 results_description[str(i)] = {"msg": f"Test {i} FAILED",
-                                          "tx_data": tx_data,
-                                          "test_data": test_data}
+                                               "tx_data": tx_data,
+                                               "test_data": test_data}
                 all_tests_passed = False
 
         if not all_tests_passed:
