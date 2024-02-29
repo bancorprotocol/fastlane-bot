@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from eth_typing import Address
 from web3 import Web3
 
-from fastlane_bot.tests.deterministic.test_token import TestTokenBalance
+from fastlane_bot.tests.deterministic.dtest_token import TestTokenBalance
 
 
 @dataclass

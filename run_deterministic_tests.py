@@ -30,7 +30,7 @@ The `--create_new_testnet` argument specifies whether to create a new testnet. T
 - `True`: Create a new testnet.
 - `False`: Do not create a new testnet.
 
-The script uses the `fastlane_bot/tests/deterministic/test_constants.py` file to get the constants used in the tests.
+The script uses the `fastlane_bot/tests/deterministic/dtest_constants.py` file to get the constants used in the tests.
 
 The script uses the `fastlane_bot/tests/deterministic/utils.py` file to get the utility functions used in the tests.
 
@@ -52,18 +52,18 @@ from typing import Dict
 
 from web3 import Web3
 
-from fastlane_bot.tests.deterministic.test_constants import (
+from fastlane_bot.tests.deterministic.dtest_constants import (
     DEFAULT_FROM_BLOCK,
     KNOWN_UNABLE_TO_DELETE,
     TENDERLY_RPC_KEY,
     TestCommandLineArgs,
 )
-from fastlane_bot.tests.deterministic.test_manager import TestManager
-from fastlane_bot.tests.deterministic.test_pool import TestPool
-from fastlane_bot.tests.deterministic.test_pool_params_builder import (
+from fastlane_bot.tests.deterministic.dtest_manager import TestManager
+from fastlane_bot.tests.deterministic.dtest_pool import TestPool
+from fastlane_bot.tests.deterministic.dtest_pool_params_builder import (
     TestPoolParamsBuilder,
 )
-from fastlane_bot.tests.deterministic.test_tx_helper import TestTxHelper
+from fastlane_bot.tests.deterministic.dtest_tx_helper import TestTxHelper
 
 
 def get_logger(args: argparse.Namespace) -> logging.Logger:

@@ -19,7 +19,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
-from fastlane_bot.tests.deterministic.test_constants import (
+from fastlane_bot.tests.deterministic.dtest_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
     ETH_ADDRESS,
@@ -27,19 +27,21 @@ from fastlane_bot.tests.deterministic.test_constants import (
     TOKENS_MODIFICATIONS,
     TestCommandLineArgs,
 )
-from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
+from fastlane_bot.tests.deterministic.dtest_strategy import TestStrategy
 
 
 class TestManager:
     """
     A class to manage Web3 contracts and Carbon strategies.
-
-    Attributes:
-        args (argparse.Namespace): The command-line arguments per run_deterministic_tests.py.
-
     """
 
     def __init__(self, args: argparse.Namespace):
+        """
+        Initializes the TestManager.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+        """
         self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
         assert self.w3.is_connected(), "Web3 connection failed"
 

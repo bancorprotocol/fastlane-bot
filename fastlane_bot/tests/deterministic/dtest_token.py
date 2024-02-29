@@ -10,13 +10,16 @@ from eth_typing import Address
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.tests.deterministic.test_constants import ETH_ADDRESS
+from fastlane_bot.tests.deterministic.dtest_constants import ETH_ADDRESS
 
 
 @dataclass
 class TestToken:
     """
     A class to represent a token on the blockchain.
+
+    Attributes:
+        address: str or Address
     """
 
     address: str or Address  # Address after __post_init__, str before
@@ -42,6 +45,10 @@ class TestToken:
 class TestTokenBalance:
     """
     A class to represent the balance of a token in a wallet in the deterministic tests.
+
+    Attributes:
+        token: TestToken or str
+        balance: int
     """
 
     token: TestToken or str  # Token after __post_init__, str before
@@ -58,6 +65,12 @@ class TestTokenBalance:
     def faucet_params(self, wallet_address: str = None) -> list:
         """
         This method is used to return the faucet parameters for the token balance.
+
+        Args:
+            wallet_address: str
+
+        Returns:
+            list: The faucet parameters.
         """
         return (
             [[self.token.address], self.hex_balance]

@@ -11,7 +11,7 @@ from eth_typing import ChecksumAddress
 from web3 import Web3
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.tests.deterministic.test_constants import (
+from fastlane_bot.tests.deterministic.dtest_constants import (
     BNT_ADDRESS,
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
@@ -19,8 +19,8 @@ from fastlane_bot.tests.deterministic.test_constants import (
     USDC_ADDRESS,
     USDT_ADDRESS,
 )
-from fastlane_bot.tests.deterministic.test_token import TestToken
-from fastlane_bot.tests.deterministic.test_wallet import TestWallet
+from fastlane_bot.tests.deterministic.dtest_token import TestToken
+from fastlane_bot.tests.deterministic.dtest_wallet import TestWallet
 
 
 @dataclass

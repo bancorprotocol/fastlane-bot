@@ -12,7 +12,7 @@ import logging
 import os
 import time
 
-from fastlane_bot.tests.deterministic.test_constants import (
+from fastlane_bot.tests.deterministic.dtest_constants import (
     TEST_FILE_DATA_DIR,
 )
 

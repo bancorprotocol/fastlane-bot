@@ -12,7 +12,7 @@ import eth_abi
 from web3 import Web3
 from web3.types import RPCEndpoint
 
-from fastlane_bot.tests.deterministic.test_pool import TestPool
+from fastlane_bot.tests.deterministic.dtest_pool import TestPool
 
 
 @dataclass
