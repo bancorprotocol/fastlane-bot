@@ -5,12 +5,14 @@ This module contains the Wallet class, which is a dataclass that represents a wa
 Licensed under MIT License.
 """
 import ast
+import os
 from dataclasses import dataclass
 
+import pandas as pd
 from web3 import Web3
 from web3.types import RPCEndpoint
 
-from fastlane_bot.tests.deterministic.test_constants import SUPPORTED_EXCHANGES
+from fastlane_bot.tests.deterministic.test_constants import SUPPORTED_EXCHANGES, TEST_FILE_DATA_DIR
 from fastlane_bot.tests.deterministic.test_token import TestTokenBalance
 
 
@@ -96,3 +98,11 @@ class TestPool:
         else:
             self.tkn1_setBalance = token_balance
         print(f"Reset Balance to {amount_wei}")
+
+    @staticmethod
+    def load_test_pools():
+        # Import pool data
+        static_pool_data_testing_path = os.path.normpath(
+            f"{TEST_FILE_DATA_DIR}/static_pool_data_testing.csv"
+        )
+        return pd.read_csv(static_pool_data_testing_path, dtype=str)

@@ -173,3 +173,21 @@ class TestPoolParamsBuilder:
         print(
             f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}"
         )
+
+    @staticmethod
+    def update_pools_by_exchange(args, builder, pools, w3):
+        # Handle each exchange_type differently for the required updates
+        for pool in pools:
+            # Set balances on pool
+            pool.set_balance_via_faucet(w3, 0)
+            pool.set_balance_via_faucet(w3, 1)
+
+            # Set storage parameters
+            update_params_dict = builder.get_update_params_dict(pool)
+
+            # Update storage parameters
+            for slot, params in update_params_dict.items():
+                builder.set_storage_at(pool.pool_address, params)
+                args.logger.debug(
+                    f"Updated storage parameters for {pool.pool_address} at slot {slot}"
+                )

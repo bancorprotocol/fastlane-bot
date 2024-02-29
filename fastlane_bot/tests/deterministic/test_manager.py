@@ -4,33 +4,114 @@ A module to manage Carbon strategies.
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
+import glob
 import json
 import os
 import time
+from typing import Dict
 
 import pandas as pd
+import requests
+from black import datetime
 from eth_typing import Address, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
-    TEST_FILE_DATA_DIR,
+    ETH_ADDRESS, TEST_FILE_DATA_DIR,
     TOKENS_MODIFICATIONS,
+    TestCommandLineArgs,
 )
 from fastlane_bot.tests.deterministic.test_pool import TestPool
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
 
 
-class StrategyManager:
+class TestManager:
     """
-    A class to manage Carbon strategies.
+    A class to manage Web3 contracts and Carbon strategies.
     """
 
-    def __init__(self, w3: Web3, carbon_controller: Contract):
-        self.w3 = w3
+    def __init__(self, args):
+
+        self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
+        assert self.w3.is_connected(), "Web3 connection failed"
+
+        multichain_addresses_path = os.path.normpath(
+            "fastlane_bot/data/multichain_addresses.csv"
+        )
+
+        # Get the Carbon Controller Address for the network
+        carbon_controller_address = self.get_carbon_controller_address(
+            multichain_addresses_path=multichain_addresses_path, network=args.network
+        )
+
+        # Initialize the Carbon Controller contract
+        carbon_controller = self.get_carbon_controller(
+            address=carbon_controller_address
+        )
+
         self.carbon_controller = carbon_controller
+
+    def get_carbon_controller(self, address: Address or str) -> Contract:
+        """
+        Gets the Carbon Controller contract on the given network.
+        """
+        return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
+
+    @staticmethod
+    def get_carbon_controller_address(
+            multichain_addresses_path: str, network: str
+    ) -> str:
+        """
+        Gets the Carbon Controller contract address on the given network.
+        """
+        lookup_table = pd.read_csv(multichain_addresses_path)
+        return (
+            lookup_table.query("exchange_name=='carbon_v1'")
+            .query(f"chain=='{network}'")
+            .factory_address.values[0]
+        )
+
+    @staticmethod
+    def create_new_testnet() -> tuple:
+        """
+        Creates a new testnet on Tenderly.
+        """
+
+        # Replace these variables with your actual data
+        ACCOUNT_SLUG = os.environ["TENDERLY_USER"]
+        PROJECT_SLUG = os.environ["TENDERLY_PROJECT"]
+        ACCESS_KEY = os.environ["TENDERLY_ACCESS_KEY"]
+
+        url = f"https://api.tenderly.co/api/v1/account/{ACCOUNT_SLUG}/project/{PROJECT_SLUG}/testnet/container"
+
+        headers = {"Content-Type": "application/json", "X-Access-Key": ACCESS_KEY}
+
+        data = {
+            "slug": f"testing-api-endpoint-{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+            "displayName": "Automated Test Env",
+            "description": "",
+            "visibility": "TEAM",
+            "tags": {"purpose": "development"},
+            "networkConfig": {
+                "networkId": "1",
+                "blockNumber": "latest",
+                "baseFeePerGas": "1",
+                "chainConfig": {"chainId": "1"},
+            },
+            "private": True,
+            "syncState": False,
+        }
+
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+
+        uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
+        from_block = int(response.json()["container"]["networkConfig"]["blockNumber"])
+
+        return uri, from_block
 
     @staticmethod
     def process_order_data(log_args: dict, order_key: str) -> dict:
@@ -136,14 +217,25 @@ class StrategyManager:
         token_address: str,
         amount_wei: int,
         wallet: Address or ChecksumAddress,
+        retry_num=0,
     ) -> None:
+        token_address = w3.to_checksum_address(token_address)
         wallet = w3.to_checksum_address(wallet)
-        if token_address in {"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"}:
+        if token_address in {ETH_ADDRESS}:
+            method = "tenderly_setBalance"
             params = [[wallet], w3.to_hex(amount_wei)]
-            w3.provider.make_request(method="tenderly_setBalance", params=params)
         else:
+            method = "tenderly_setErc20Balance"
             params = [token_address, wallet, w3.to_hex(amount_wei)]
-            w3.provider.make_request(method="tenderly_setErc20Balance", params=params)
+
+        try:
+            w3.provider.make_request(method=method, params=params)
+        except requests.exceptions.HTTPError:
+            time.sleep(1)
+            if retry_num < 3:
+                print(f"Retrying faucet request for {token_address}")
+                TestManager.set_balance_via_faucet(w3, token_address, amount_wei, wallet, retry_num + 1)
+
         print(f"Reset Balance to {amount_wei}")
 
     def modify_token(
@@ -154,10 +246,13 @@ class StrategyManager:
         strategy_beneficiary: Address,
     ) -> None:
         """General function to modify token parameters and handle deletion."""
+
+        print(f"Start 1")
         # Modify the tax parameters
         for slot, value in modifications["before"].items():
             self.modify_storage(self.w3, token_address, slot, value)
 
+        print(f"Start 2")
         # Ensure there is sufficient funds for withdrawal
         self.set_balance_via_faucet(
             self.w3,
@@ -165,12 +260,16 @@ class StrategyManager:
             modifications["balance"],
             self.carbon_controller.address,
         )
+
+        print(f"Start 3")
         self.delete_strategy(strategy_id, strategy_beneficiary)
 
+        print(f"Start 4")
         # Reset the tax parameters to their original state
         for slot, value in modifications["after"].items():
             self.modify_storage(self.w3, token_address, slot, value)
 
+        print(f"Start 5")
         # Empty out this token from CarbonController
         self.set_balance_via_faucet(
             self.w3, token_address, 0, self.carbon_controller.address
@@ -179,7 +278,7 @@ class StrategyManager:
     def modify_tokens_for_deletion(self) -> None:
         """Custom modifications to tokens to allow their deletion from Carbon."""
         for token_name, details in TOKENS_MODIFICATIONS.items():
-            print(f"Modifying {token_name} token...")
+            print(f"Modifying {token_name} token..., details: {details}")
             self.modify_token(
                 details["address"],
                 details["modifications"],
@@ -279,3 +378,84 @@ class StrategyManager:
             test_strategies = json.load(file)["test_strategies"]
             print(f"{len(test_strategies.keys())} test strategies imported")
         return test_strategies
+
+    def append_strategy_ids(self, args, test_strategy_txhashs, from_block) -> dict:
+        args.logger.debug("\nAdd the strategy ids...")
+
+        # Get the new state of the carbon strategies
+        (
+            strategy_created_df,
+            strategy_deleted_df,
+            remaining_carbon_strategies,
+        ) = self.get_state_of_carbon_strategies(from_block)
+
+        for i in test_strategy_txhashs.keys():
+            try:
+                test_strategy_txhashs[i]["strategyid"] = strategy_created_df[
+                    strategy_created_df["transaction_hash"]
+                    == test_strategy_txhashs[i]["txhash"]
+                ].id.values[0]
+                args.logger.debug(f"Added the strategy ids: {i}")
+            except Exception as e:
+                args.logger.debug(f"Add the strategy ids Error: {i}, {e}")
+        return test_strategy_txhashs
+
+    @staticmethod
+    def write_strategy_txhashs_to_json(test_strategy_txhashs):
+        # Write the test strategy txhashs to a file
+        test_strategy_txhashs_path = os.path.normpath(
+            f"{TEST_FILE_DATA_DIR}/test_strategy_txhashs.json"
+        )
+        with open(test_strategy_txhashs_path, "w") as f:
+            json.dump(test_strategy_txhashs, f)
+            f.close()
+
+    @staticmethod
+    def get_strats_created_from_block(args, w3):
+        # Mark the block that new strats were created
+        strats_created_from_block = w3.eth.get_block_number()
+        args.logger.debug(f"strats_created_from_block: {strats_created_from_block}")
+        return strats_created_from_block
+
+    def approve_and_create_strategies(self, args, test_strategies, from_block):
+
+        # populate a dictionary with all the relevant test strategies
+        test_strategy_txhashs: Dict[TestStrategy] or Dict = {}
+        for i, (key, arg) in enumerate(test_strategies.items()):
+            arg["w3"] = self.w3
+            test_strategy = TestStrategy(**arg)
+            test_strategy.get_token_approval(
+                token_id=0, approval_address=self.carbon_controller.address
+            )
+            test_strategy.get_token_approval(
+                token_id=1, approval_address=self.carbon_controller.address
+            )
+            tx_hash = self.create_strategy(test_strategy)
+            test_strategy_txhashs[str(i + 1)] = {"txhash": tx_hash}
+
+        test_strategy_txhashs = self.append_strategy_ids(args, test_strategy_txhashs, from_block)
+        return test_strategy_txhashs
+
+    @staticmethod
+    def overwrite_command_line_args(args):
+        # Get the default main args
+        default_main_args = TestCommandLineArgs()
+        default_main_args.blockchain = args.network
+        default_main_args.arb_mode = args.arb_mode
+        default_main_args.timeout = args.timeout
+        default_main_args.rpc_url = args.rpc_url
+        return default_main_args
+    
+    @staticmethod
+    def get_most_recent_pool_data_path(args):
+
+        # Set the path to the logs directory relative to your notebook's location
+        path_to_logs = "./logs/*"
+        # Use glob to list all directories
+        most_recent_log_folder = [
+            f for f in glob.glob(path_to_logs) if os.path.isdir(f)
+        ][-1]
+        args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
+        return os.path.join(most_recent_log_folder, "latest_pool_data.json")
+
+
