@@ -4,6 +4,7 @@ This module contains the Wallet class, which is a dataclass that represents a wa
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
+import argparse
 import ast
 import os
 from dataclasses import dataclass
@@ -81,9 +82,15 @@ class TestPool:
         """
         return self.exchange_type in SUPPORTED_EXCHANGES
 
-    def set_balance_via_faucet(self, w3: Web3, token_id: int):
+    def set_balance_via_faucet(self, args: argparse.Namespace,
+                               w3: Web3, token_id: int):
         """
         This method sets the balance of the given token to the given amount using the faucet.
+
+        Args:
+            args: The command-line arguments.
+            w3: The Web3 instance.
+            token_id: The token id.
         """
         token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
         amount_wei = self.tkn0_setBalance if token_id == 0 else self.tkn1_setBalance
@@ -100,7 +107,7 @@ class TestPool:
             self.tkn0_setBalance = token_balance
         else:
             self.tkn1_setBalance = token_balance
-        print(f"Reset Balance to {amount_wei}")
+        args.logger.debug(f"Reset Balance to {amount_wei}")
 
     @staticmethod
     def load_test_pools():

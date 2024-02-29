@@ -13,7 +13,6 @@ import os
 import time
 
 from fastlane_bot.tests.deterministic.test_constants import (
-    FILE_DATA_DIR,
     TEST_FILE_DATA_DIR,
 )
 
@@ -193,10 +192,9 @@ class TestTxHelper:
         for i, tx in enumerate(tx_list):
             args.logger.debug(f"\nsuccessful_txs[{i}]: {tx}")
 
-    def log_results(self, args: argparse.Namespace, actual_txs: list, expected_txs: dict,
-                    test_strategy_txhashs: dict) -> dict:
+    def log_results(self, args: argparse.Namespace, actual_txs: list, expected_txs: dict, test_strategy_txhashs: dict) -> dict:
         """
-        This method logs the results of the tests and returns a dictionary with the results.
+        Logs the results of the tests and returns a dictionary with the results.
 
         Args:
             args (argparse.Namespace): The command-line arguments.
@@ -210,46 +208,70 @@ class TestTxHelper:
         results_description = {}
         all_tests_passed = True
 
-        # Loop over the created test strategies and verify test data
-        for i in test_strategy_txhashs:
-            if "strategyid" not in test_strategy_txhashs[str(i)]:
-                results_description[i] = {
-                    "msg": f"Test {i} FAILED",
-                    "tx_data": "strategyid not in test_strategy_txhashs",
-                }
+        for test_id, strategy in test_strategy_txhashs.items():
+            strategy_id = strategy.get("strategyid")
+
+            # Failure case 1: strategyid missing in test_strategy_txhashs
+            if not strategy_id:
+                self.log_test_failure(test_id, "strategyid missing in test_strategy_txhashs", results_description)
                 continue
 
-            search_id = test_strategy_txhashs[str(i)]["strategyid"]
-            tx_data = self.clean_tx_data(self.get_tx_data(search_id, actual_txs))
+            tx_data = self.clean_tx_data(self.get_tx_data(strategy_id, actual_txs))
 
-            args.logger.debug(f"fetched expected_txs: {expected_txs['test_data'].keys()}")
-
-            if str(i) not in expected_txs["test_data"]:
-                results_description[i] = {
-                    "msg": f"Test {i} FAILED",
-                    "tx_data": tx_data,
-                    "test_data": f"{i} not in expected_txs: {expected_txs}",
-                }
+            # Failure case 2: The test_id is not found in expected_txs
+            if test_id not in expected_txs["test_data"]:
+                self.log_test_failure(test_id, f"Test ID {test_id} not found in expected_txs", results_description, tx_data)
                 all_tests_passed = False
                 continue
 
-            test_data = expected_txs["test_data"][str(i)]
-            if tx_data == test_data:
-                results_description[str(i)] = {"msg": f"Test {i} PASSED"}
-            else:
-                results_description[str(i)] = {
-                    "msg": f"Test {i} FAILED",
-                    "tx_data": tx_data,
-                    "test_data": test_data,
-                }
+            expected_test_data = expected_txs["test_data"][test_id]
+
+            # Failure case 3: The tx_data does not match the expected_test_data
+            if tx_data != expected_test_data:
+                self.log_test_failure(test_id, "Data mismatch", results_description, tx_data, expected_test_data)
                 all_tests_passed = False
+                continue
 
-        if not all_tests_passed:
-            args.logger.warning("SOME TESTS FAILED")
-        else:
-            args.logger.info("ALL TESTS PASSED")
+            # Success case
+            results_description[test_id] = {"msg": f"Test {test_id} PASSED"}
 
+        self.log_final_result(args, all_tests_passed)
         return results_description
+
+    @staticmethod
+    def log_test_failure(test_id: int,
+                         reason: str, results_description: dict,
+                         tx_data: dict = None, expected_data: dict = None):
+        """
+        Logs a test failure.
+
+        Args:
+            test_id (int): The test id.
+            reason (str): The reason for the failure.
+            results_description (dict): The dictionary with the results.
+            tx_data (dict): The transaction data.
+            expected_data (dict): The expected data.
+        """
+        result = {"msg": f"Test {test_id} FAILED", "reason": reason}
+        if tx_data:
+            result["tx_data"] = tx_data
+        if expected_data:
+            result["expected_data"] = expected_data
+        results_description[test_id] = result
+
+    @staticmethod
+    def log_final_result(args: argparse.Namespace, all_tests_passed: bool):
+        """
+        Logs the final result of all tests.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            all_tests_passed (bool): Whether all tests passed.
+        """
+        if all_tests_passed:
+            args.logger.info("ALL TESTS PASSED")
+        else:
+            args.logger.warning("SOME TESTS FAILED")
 
     def wait_for_txs(self, args: argparse.Namespace) -> dict:
         """

@@ -4,6 +4,7 @@ This file contains the Strategy class, which is used to represent a strategy in 
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
+import argparse
 from dataclasses import dataclass
 
 from eth_typing import ChecksumAddress
@@ -61,12 +62,13 @@ class TestStrategy:
         self.wallet = TestWallet(self.w3, self.wallet)
 
     def get_token_approval(
-        self, token_id: int, approval_address: ChecksumAddress
+        self, args: argparse.Namespace, token_id: int, approval_address: ChecksumAddress
     ) -> str:
         """
         This method is used to get the token approval for the given token and approval address.
 
         Args:
+            args (argparse.Namespace): The command line arguments.
             token_id (int): The token ID. Should be 0 or 1.
             approval_address (ChecksumAddress): The approval address.
 
@@ -78,7 +80,7 @@ class TestStrategy:
             BNT_ADDRESS,
             USDC_ADDRESS,
             USDT_ADDRESS,
-        ]:  # TODO: Ask Nick about this?
+        ]:
             function_call = token.contract.functions.approve(
                 approval_address, 0
             ).transact(
@@ -93,11 +95,11 @@ class TestStrategy:
             tx_hash = self.w3.to_hex(dict(tx_reciept)["transactionHash"])
 
             if dict(tx_reciept)["status"] != 1:
-                print("Approval Failed")
+                args.logger.debug("Approval Failed")
             else:
-                print("Successfully Approved for 0")
+                args.logger.debug("Successfully Approved for 0")
 
-            print(f"tx_hash = {tx_hash}")
+            args.logger.debug(f"tx_hash = {tx_hash}")
 
         function_call = token.contract.functions.approve(
             approval_address, TEST_MODE_AMT
@@ -113,11 +115,11 @@ class TestStrategy:
         tx_hash = self.w3.to_hex(dict(tx_reciept)["transactionHash"])
 
         if dict(tx_reciept)["status"] != 1:
-            print("Approval Failed")
+            args.logger.debug("Approval Failed")
         else:
-            print("Successfully Approved Token for Unlimited")
+            args.logger.debug("Successfully Approved Token for Unlimited")
 
-        print(f"tx_hash = {tx_hash}")
+        args.logger.debug(f"tx_hash = {tx_hash}")
         return tx_hash
 
     @property

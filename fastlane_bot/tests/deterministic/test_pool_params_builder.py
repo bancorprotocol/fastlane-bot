@@ -179,8 +179,8 @@ class TestPoolParamsBuilder:
         # Handle each exchange_type differently for the required updates
         for pool in pools:
             # Set balances on pool
-            pool.set_balance_via_faucet(w3, 0)
-            pool.set_balance_via_faucet(w3, 1)
+            pool.set_balance_via_faucet(args, w3, 0)
+            pool.set_balance_via_faucet(args, w3, 1)
 
             # Set storage parameters
             update_params_dict = builder.get_update_params_dict(pool)
