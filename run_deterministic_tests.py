@@ -207,9 +207,9 @@ def run_tests_on_mode_task(
 
     # populate a dictionary with all the relevant test strategies
     test_strategy_txhashs: Dict[TestStrategy] or Dict = {}
-    for i, (key, args) in enumerate(test_strategies.items()):
-        args["w3"] = w3
-        test_strategy = TestStrategy(**args)
+    for i, (key, arg) in enumerate(test_strategies.items()):
+        arg["w3"] = w3
+        test_strategy = TestStrategy(**arg)
         test_strategy.get_token_approval(
             token_id=0, approval_address=carbon_controller.address
         )
