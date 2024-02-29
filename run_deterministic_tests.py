@@ -48,6 +48,8 @@ import argparse
 import importlib
 import json
 import os
+import threading
+import time
 from typing import Dict
 
 import pandas as pd
@@ -56,9 +58,8 @@ from web3.contract import Contract
 
 from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_FROM_BLOCK, KNOWN_UNABLE_TO_DELETE,
-    TENDERLY_RPC_KEY, TEST_FILE_DATA_DIR,
+    TENDERLY_RPC_KEY, TEST_FILE_DATA_DIR, TestCommandLineArgs,
 )
-from fastlane_bot.tests.deterministic.test_params import TestParams
 from fastlane_bot.tests.deterministic.test_tx_helper import TestTxHelper
 from fastlane_bot.tests.deterministic.mgr_strategy import StrategyManager
 from fastlane_bot.tests.deterministic.test_pool_params_builder import TestPoolParamsBuilder
@@ -160,7 +161,7 @@ def run_tests_on_mode_task(
     strategy_mgr = StrategyManager(w3, carbon_controller)
 
     # Get the default main args
-    default_main_args = TestParams()
+    default_main_args = TestCommandLineArgs()
     default_main_args.blockchain = args.network
     default_main_args.arb_mode = args.arb_mode
     default_main_args.timeout = args.timeout
@@ -174,8 +175,16 @@ def run_tests_on_mode_task(
     # Dynamically import the chosen script module
     script_module = importlib.import_module("main")
 
-    # Run the main function in the script module
-    script_module.main(default_main_args)
+    # Define a function to run the main function in a separate thread
+    def run_main_in_thread():
+        script_module.main(default_main_args)
+
+    # Start the main function in a separate thread
+    main_thread = threading.Thread(target=run_main_in_thread)
+    main_thread.start()
+
+    # Wait for 5 minutes
+    time.sleep(12*5)
 
     # Mark the block that new strats were created
     strats_created_from_block = w3.eth.get_block_number()
@@ -193,7 +202,8 @@ def run_tests_on_mode_task(
             token_id=1, approval_address=carbon_controller.address
         )
         tx_hash = strategy_mgr.create_strategy(test_strategy)
-        test_strategy_txhashs[str(i + 1)] = {"txhash": tx_hash} if tx_hash else {}
+        test_strategy_txhashs[str(i + 1)] = {}
+        test_strategy_txhashs[str(i + 1)]["txhash"] = tx_hash
 
     # Write the test strategy txhashs to a file
     test_strategy_txhashs_path = os.path.normpath(
@@ -218,6 +228,7 @@ def run_tests_on_mode_task(
         try:
             test_strategy_txhashs[i]['strategyid'] = strategy_created_df[
                 strategy_created_df['transaction_hash'] == test_strategy_txhashs[i]['txhash']].id.values[0]
+            print(f"Added the strategy ids: {i}")
         except Exception as e:
             print(f"Add the strategy ids Error: {i}, {e}")
 
@@ -225,8 +236,10 @@ def run_tests_on_mode_task(
         json.dump(test_strategy_txhashs, f)
         f.close()
 
+    return main_thread
 
-def run_results_crosscheck_task():
+
+def run_results_crosscheck_task(main_thread):
     """
     Run the results crosscheck task.
     """
@@ -261,6 +274,8 @@ def run_results_crosscheck_task():
         f.close()
         print(f"{len(test_strategy_txhashs.keys())} test strategy txhashs imported")
 
+    time.sleep(int(35*len(test_strategy_txhashs.keys()) + 15))
+
     # Loop over the created test strategies and verify test data
     for i in test_strategy_txhashs.keys():
         search_id = test_strategy_txhashs[i]["strategyid"]
@@ -275,6 +290,7 @@ def run_results_crosscheck_task():
             print(f"Test {i} FAILED")
 
     print("ALL TESTS PASSED")
+    main_thread.join()
 
 
 def main(args: argparse.Namespace):
@@ -318,8 +334,8 @@ def main(args: argparse.Namespace):
         get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
         set_test_state_task(w3)
         test_strategies = strategy_mgr.get_test_strategies()
-        run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
-        run_results_crosscheck_task()
+        main_thread = run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
+        run_results_crosscheck_task(main_thread)
     else:
         raise ValueError(f"Task {args.task} not recognized")
 
@@ -362,7 +378,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--timeout_minutes",
-        default=4,
+        default=7,
         type=int,
         help="Timeout for the tests (in minutes)",
     )
