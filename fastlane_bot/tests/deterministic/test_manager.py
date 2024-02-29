@@ -4,6 +4,7 @@ A module to manage Carbon strategies.
 (c) Copyright Bprotocol foundation 2024.
 Licensed under MIT License.
 """
+import argparse
 import glob
 import json
 import os
@@ -21,21 +22,24 @@ from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
-    ETH_ADDRESS, TEST_FILE_DATA_DIR,
+    ETH_ADDRESS,
+    TEST_FILE_DATA_DIR,
     TOKENS_MODIFICATIONS,
     TestCommandLineArgs,
 )
-from fastlane_bot.tests.deterministic.test_pool import TestPool
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
 
 
 class TestManager:
     """
     A class to manage Web3 contracts and Carbon strategies.
+
+    Attributes:
+        args (argparse.Namespace): The command-line arguments per run_deterministic_tests.py.
+
     """
 
-    def __init__(self, args):
-
+    def __init__(self, args: argparse.Namespace):
         self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
         assert self.w3.is_connected(), "Web3 connection failed"
 
@@ -55,18 +59,35 @@ class TestManager:
 
         self.carbon_controller = carbon_controller
 
+    @property
+    def logs_path(self) -> str:
+        return os.path.normpath("./logs/*")
+
     def get_carbon_controller(self, address: Address or str) -> Contract:
         """
         Gets the Carbon Controller contract on the given network.
+
+        Args:
+            address (Address or str): The address.
+
+        Returns:
+            Contract: The Carbon Controller contract.
         """
         return self.w3.eth.contract(address=address, abi=CARBON_CONTROLLER_ABI)
 
     @staticmethod
     def get_carbon_controller_address(
-            multichain_addresses_path: str, network: str
+        multichain_addresses_path: str, network: str
     ) -> str:
         """
         Gets the Carbon Controller contract address on the given network.
+
+        Args:
+            multichain_addresses_path (str): The path to the multichain addresses file.
+            network (str): The network.
+
+        Returns:
+            str: The Carbon Controller contract address.
         """
         lookup_table = pd.read_csv(multichain_addresses_path)
         return (
@@ -79,6 +100,9 @@ class TestManager:
     def create_new_testnet() -> tuple:
         """
         Creates a new testnet on Tenderly.
+
+        Returns:
+            tuple: The URI and the block number.
         """
 
         # Replace these variables with your actual data
@@ -117,6 +141,13 @@ class TestManager:
     def process_order_data(log_args: dict, order_key: str) -> dict:
         """
         Transforms nested order data by appending a suffix to each key.
+
+        Args:
+            log_args (dict): The log arguments.
+            order_key (str): The order key.
+
+        Returns:
+            dict: The processed order data.
         """
         if order_data := log_args.get(order_key):
             suffix = order_key[-1]  # Assumes order_key is either 'order0' or 'order1'
@@ -125,22 +156,47 @@ class TestManager:
 
     @staticmethod
     def print_state_changes(
+        args: argparse.Namespace,
         all_carbon_strategies: list,
         deleted_strategies: list,
         remaining_carbon_strategies: list,
     ) -> None:
         """
         Prints the state changes of Carbon strategies.
-        """
-        print(f"{len(all_carbon_strategies)} Carbon strategies have been created")
-        print(f"{len(deleted_strategies)} Carbon strategies have been deleted")
-        print(f"{len(remaining_carbon_strategies)} Carbon strategies remain")
 
-    def get_generic_events(self, event_name: str, from_block: int) -> pd.DataFrame:
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            all_carbon_strategies (list): The all carbon strategies.
+            deleted_strategies (list): The deleted strategies.
+            remaining_carbon_strategies (list): The remaining carbon strategies.
+        """
+        args.logger.debug(
+            f"{len(all_carbon_strategies)} Carbon strategies have been created"
+        )
+        args.logger.debug(
+            f"{len(deleted_strategies)} Carbon strategies have been deleted"
+        )
+        args.logger.debug(
+            f"{len(remaining_carbon_strategies)} Carbon strategies remain"
+        )
+
+    def get_generic_events(
+        self, args: argparse.Namespace, event_name: str, from_block: int
+    ) -> pd.DataFrame:
         """
         Fetches logs for a specified event from a smart contract.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            event_name (str): The event name.
+            from_block (int): The block number.
+
+        Returns:
+            pd.DataFrame: The logs for the specified event.
         """
-        print(f"Fetching logs for {event_name} event, from_block: {from_block}")
+        args.logger.debug(
+            f"Fetching logs for {event_name} event, from_block: {from_block}"
+        )
         try:
             log_list = getattr(self.carbon_controller.events, event_name).get_logs(
                 fromBlock=from_block
@@ -168,17 +224,26 @@ class TestManager:
                 else df
             ).reset_index(drop=True)
         except Exception as e:
-            print(
+            args.logger.debug(
                 f"Error fetching logs for {event_name} event: {e}, returning empty df"
             )
             return pd.DataFrame({})
 
-    def get_state_of_carbon_strategies(self, from_block: int) -> tuple:
+    def get_state_of_carbon_strategies(
+        self, args: argparse.Namespace, from_block: int
+    ) -> tuple:
         """
         Fetches the state of Carbon strategies.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            from_block (int): The block number.
+
+        Returns:
+            tuple: The strategy created dataframe, the strategy deleted dataframe, and the remaining carbon strategies.
         """
         strategy_created_df = self.get_generic_events(
-            event_name="StrategyCreated", from_block=from_block
+            args=args, event_name="StrategyCreated", from_block=from_block
         )
         all_carbon_strategies = (
             []
@@ -189,7 +254,7 @@ class TestManager:
             ]
         )
         strategy_deleted_df = self.get_generic_events(
-            event_name="StrategyDeleted", from_block=from_block
+            args=args, event_name="StrategyDeleted", from_block=from_block
         )
         deleted_strategies = (
             [] if strategy_deleted_df.empty else strategy_deleted_df["id"].to_list()
@@ -197,28 +262,43 @@ class TestManager:
         remaining_carbon_strategies = [
             x for x in all_carbon_strategies if x[0] not in deleted_strategies
         ]
-
-        # Print state changes
         self.print_state_changes(
-            all_carbon_strategies, deleted_strategies, remaining_carbon_strategies
+            args, all_carbon_strategies, deleted_strategies, remaining_carbon_strategies
         )
-
-        # Return state changes
         return strategy_created_df, strategy_deleted_df, remaining_carbon_strategies
 
-    def modify_storage(self, w3: Web3, address: str, slot: str, value: str) -> None:
-        """Modify storage directly via Tenderly."""
+    def modify_storage(self, w3: Web3, address: str, slot: str, value: str):
+        """Modify storage directly via Tenderly.
+
+        Args:
+            w3 (Web3): The Web3 instance.
+            address (str): The address.
+            slot (str): The slot.
+            value (str): The value.
+        """
         params = [address, slot, value]
         w3.provider.make_request(method="tenderly_setStorageAt", params=params)
 
     @staticmethod
     def set_balance_via_faucet(
+        args: argparse.Namespace,
         w3: Web3,
         token_address: str,
         amount_wei: int,
         wallet: Address or ChecksumAddress,
         retry_num=0,
-    ) -> None:
+    ):
+        """
+        Set the balance of a wallet via a faucet.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            w3 (Web3): The Web3 instance.
+            token_address (str): The token address.
+            amount_wei (int): The amount in wei.
+            wallet (Address or ChecksumAddress): The wallet address.
+            retry_num (int): The number of retries.
+        """
         token_address = w3.to_checksum_address(token_address)
         wallet = w3.to_checksum_address(wallet)
         if token_address in {ETH_ADDRESS}:
@@ -233,63 +313,82 @@ class TestManager:
         except requests.exceptions.HTTPError:
             time.sleep(1)
             if retry_num < 3:
-                print(f"Retrying faucet request for {token_address}")
-                TestManager.set_balance_via_faucet(w3, token_address, amount_wei, wallet, retry_num + 1)
+                args.logger.debug(f"Retrying faucet request for {token_address}")
+                TestManager.set_balance_via_faucet(
+                    args, w3, token_address, amount_wei, wallet, retry_num + 1
+                )
 
-        print(f"Reset Balance to {amount_wei}")
+        args.logger.debug(f"Reset Balance to {amount_wei}")
 
     def modify_token(
         self,
+        args: argparse.Namespace,
         token_address: str,
         modifications: dict,
         strategy_id: int,
         strategy_beneficiary: Address,
-    ) -> None:
-        """General function to modify token parameters and handle deletion."""
+    ):
+        """General function to modify token parameters and handle deletion.
 
-        print(f"Start 1")
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            token_address (str): The token address.
+            modifications (dict): The modifications to be made.
+            strategy_id (int): The strategy id.
+            strategy_beneficiary (Address): The strategy beneficiary.
+        """
+
         # Modify the tax parameters
         for slot, value in modifications["before"].items():
             self.modify_storage(self.w3, token_address, slot, value)
 
-        print(f"Start 2")
         # Ensure there is sufficient funds for withdrawal
         self.set_balance_via_faucet(
+            args,
             self.w3,
             token_address,
             modifications["balance"],
             self.carbon_controller.address,
         )
 
-        print(f"Start 3")
         self.delete_strategy(strategy_id, strategy_beneficiary)
 
-        print(f"Start 4")
         # Reset the tax parameters to their original state
         for slot, value in modifications["after"].items():
             self.modify_storage(self.w3, token_address, slot, value)
 
-        print(f"Start 5")
         # Empty out this token from CarbonController
         self.set_balance_via_faucet(
-            self.w3, token_address, 0, self.carbon_controller.address
+            args, self.w3, token_address, 0, self.carbon_controller.address
         )
 
-    def modify_tokens_for_deletion(self) -> None:
-        """Custom modifications to tokens to allow their deletion from Carbon."""
+    def modify_tokens_for_deletion(self, args: argparse.Namespace) -> None:
+        """Custom modifications to tokens to allow their deletion from Carbon.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+        """
         for token_name, details in TOKENS_MODIFICATIONS.items():
-            print(f"Modifying {token_name} token..., details: {details}")
+            args.logger.debug(f"Modifying {token_name} token..., details: {details}")
             self.modify_token(
+                args,
                 details["address"],
                 details["modifications"],
                 details["strategy_id"],
                 details["strategy_beneficiary"],
             )
-            print(f"Modification for {token_name} token completed.")
+            args.logger.debug(f"Modification for {token_name} token completed.")
 
-    def create_strategy(self, strategy: TestStrategy) -> str:
+    def create_strategy(self, args: argparse.Namespace, strategy: TestStrategy) -> str:
         """
         Creates a Carbon strategy.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            strategy (TestStrategy): The test strategy.
+
+        Returns:
+            str: The transaction hash.
         """
         tx_params = {
             "from": strategy.wallet.address,
@@ -311,15 +410,22 @@ class TestManager:
 
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         if tx_receipt.status != 1:
-            print("Creation Failed")
+            args.logger.debug("Creation Failed")
             return None
         else:
-            print("Successfully Created Strategy")
+            args.logger.debug("Successfully Created Strategy")
             return self.w3.to_hex(tx_receipt.transactionHash)
 
     def delete_strategy(self, strategy_id: int, wallet: Address) -> int:
         """
         Deletes a Carbon strategy.
+
+        Args:
+            strategy_id (int): The strategy id.
+            wallet (Address): The wallet address.
+
+        Returns:
+            int: The transaction receipt status.
         """
         nonce = self.w3.eth.get_transaction_count(wallet)
         tx_params = {
@@ -335,14 +441,23 @@ class TestManager:
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return tx_receipt.status
 
-    def delete_all_carbon_strategies(self, carbon_strategy_id_owner_list: list) -> list:
+    def delete_all_carbon_strategies(
+        self, args: argparse.Namespace, carbon_strategy_id_owner_list: list
+    ) -> list:
         """
         Deletes all Carbon strategies.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            carbon_strategy_id_owner_list (list): The carbon strategy id owner list.
+
+        Returns:
+            list: The undeleted strategies.
         """
-        self.modify_tokens_for_deletion()
+        self.modify_tokens_for_deletion(args)
         undeleted_strategies = []
         for strategy_id, owner in carbon_strategy_id_owner_list:
-            print("Attempt 1")
+            args.logger.debug("Attempt 1")
             status = self.delete_strategy(strategy_id, owner)
             if status == 0:
                 try:
@@ -351,23 +466,29 @@ class TestManager:
                     ).call()
                     current_owner = strategy_info[1]
                     try:
-                        print("Attempt 2")
+                        args.logger.debug("Attempt 2")
                         status = self.delete_strategy(strategy_id, current_owner)
                         if status == 0:
-                            print(f"Unable to delete strategy {strategy_id}")
+                            args.logger.debug(
+                                f"Unable to delete strategy {strategy_id}"
+                            )
                             undeleted_strategies += [strategy_id]
                     except Exception as e:
-                        print(f"Strategy {strategy_id} not found - already deleted {e}")
+                        args.logger.debug(
+                            f"Strategy {strategy_id} not found - already deleted {e}"
+                        )
                 except Exception as e:
-                    print(f"Strategy {strategy_id} not found - already deleted {e}")
+                    args.logger.debug(
+                        f"Strategy {strategy_id} not found - already deleted {e}"
+                    )
             elif status == 1:
-                print(f"Strategy {strategy_id} successfully deleted")
+                args.logger.debug(f"Strategy {strategy_id} successfully deleted")
             else:
-                print("Possible error")
+                args.logger.debug("Possible error")
         return undeleted_strategies
 
     @staticmethod
-    def get_test_strategies() -> dict:
+    def get_test_strategies(args: argparse.Namespace) -> dict:
         """
         Gets test strategies from a JSON file.
         """
@@ -376,10 +497,23 @@ class TestManager:
         )
         with open(test_strategies_path) as file:
             test_strategies = json.load(file)["test_strategies"]
-            print(f"{len(test_strategies.keys())} test strategies imported")
+            args.logger.debug(f"{len(test_strategies.keys())} test strategies imported")
         return test_strategies
 
-    def append_strategy_ids(self, args, test_strategy_txhashs, from_block) -> dict:
+    def append_strategy_ids(
+        self, args: argparse.Namespace, test_strategy_txhashs: dict, from_block: int
+    ) -> dict:
+        """
+        Appends the strategy ids to the test strategies.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            test_strategy_txhashs (dict): The test strategy txhashs.
+            from_block (int): The block number.
+
+        Returns:
+            dict: The test strategy txhashs with the strategy ids.
+        """
         args.logger.debug("\nAdd the strategy ids...")
 
         # Get the new state of the carbon strategies
@@ -387,9 +521,9 @@ class TestManager:
             strategy_created_df,
             strategy_deleted_df,
             remaining_carbon_strategies,
-        ) = self.get_state_of_carbon_strategies(from_block)
+        ) = self.get_state_of_carbon_strategies(args, from_block)
 
-        for i in test_strategy_txhashs.keys():
+        for i in test_strategy_txhashs:
             try:
                 test_strategy_txhashs[i]["strategyid"] = strategy_created_df[
                     strategy_created_df["transaction_hash"]
@@ -401,8 +535,13 @@ class TestManager:
         return test_strategy_txhashs
 
     @staticmethod
-    def write_strategy_txhashs_to_json(test_strategy_txhashs):
-        # Write the test strategy txhashs to a file
+    def write_strategy_txhashs_to_json(test_strategy_txhashs: dict):
+        """
+        Writes the test strategy txhashs to a file.
+
+        Args:
+            test_strategy_txhashs (dict): The test strategy txhashs.
+        """
         test_strategy_txhashs_path = os.path.normpath(
             f"{TEST_FILE_DATA_DIR}/test_strategy_txhashs.json"
         )
@@ -411,15 +550,34 @@ class TestManager:
             f.close()
 
     @staticmethod
-    def get_strats_created_from_block(args, w3):
-        # Mark the block that new strats were created
+    def get_strats_created_from_block(args: argparse.Namespace, w3: Web3) -> int:
+        """
+        Gets the block number from which new strategies were created.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+
+        Returns:
+            int: The block number.
+        """
         strats_created_from_block = w3.eth.get_block_number()
         args.logger.debug(f"strats_created_from_block: {strats_created_from_block}")
         return strats_created_from_block
 
-    def approve_and_create_strategies(self, args, test_strategies, from_block):
+    def approve_and_create_strategies(
+        self, args: argparse.Namespace, test_strategies: dict, from_block: int
+    ) -> dict:
+        """
+        Approves and creates test strategies.
 
-        # populate a dictionary with all the relevant test strategies
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+            test_strategies (dict): The test strategies.
+            from_block (int): The block number.
+
+        Returns:
+            dict: All the relevant test strategies
+        """
         test_strategy_txhashs: Dict[TestStrategy] or Dict = {}
         for i, (key, arg) in enumerate(test_strategies.items()):
             arg["w3"] = self.w3
@@ -430,14 +588,25 @@ class TestManager:
             test_strategy.get_token_approval(
                 token_id=1, approval_address=self.carbon_controller.address
             )
-            tx_hash = self.create_strategy(test_strategy)
+            tx_hash = self.create_strategy(args, test_strategy)
             test_strategy_txhashs[str(i + 1)] = {"txhash": tx_hash}
 
-        test_strategy_txhashs = self.append_strategy_ids(args, test_strategy_txhashs, from_block)
+        test_strategy_txhashs = self.append_strategy_ids(
+            args, test_strategy_txhashs, from_block
+        )
         return test_strategy_txhashs
 
     @staticmethod
-    def overwrite_command_line_args(args):
+    def overwrite_command_line_args(args: argparse.Namespace) -> TestCommandLineArgs:
+        """
+        Overwrites the command-line arguments with the default main args.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+
+        Returns:
+            TestCommandLineArgs: The default main args.
+        """
         # Get the default main args
         default_main_args = TestCommandLineArgs()
         default_main_args.blockchain = args.network
@@ -445,17 +614,38 @@ class TestManager:
         default_main_args.timeout = args.timeout
         default_main_args.rpc_url = args.rpc_url
         return default_main_args
-    
-    @staticmethod
-    def get_most_recent_pool_data_path(args):
 
-        # Set the path to the logs directory relative to your notebook's location
-        path_to_logs = "./logs/*"
+    def get_most_recent_pool_data_path(self, args: argparse.Namespace) -> str:
+        """
+        Gets the path to the most recent pool data file.
+
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+
+        Returns:
+            str: The path to the most recent pool data file.
+        """
+
         # Use glob to list all directories
         most_recent_log_folder = [
-            f for f in glob.glob(path_to_logs) if os.path.isdir(f)
+            f for f in glob.glob(self.logs_path) if os.path.isdir(f)
         ][-1]
         args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
         return os.path.join(most_recent_log_folder, "latest_pool_data.json")
 
+    def delete_old_logs(self, args: argparse.Namespace):
+        """
+        Deletes all files and directories in the logs directory.
 
+        Args:
+            args (argparse.Namespace): The command-line arguments.
+        """
+        logs = [f for f in glob.glob(self.logs_path) if os.path.isdir(f)]
+        for log in logs:
+            for root, dirs, files in os.walk(log, topdown=False):
+                for name in files:
+                    os.remove(os.path.join(root, name))
+                for name in dirs:
+                    os.rmdir(os.path.join(root, name))
+            os.rmdir(log)
+        args.logger.debug("Deleted old logs")

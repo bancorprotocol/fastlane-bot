@@ -127,11 +127,11 @@ def get_carbon_strategies_and_delete_task(
         strategy_created_df,
         strategy_deleted_df,
         remaining_carbon_strategies,
-    ) = test_manager.get_state_of_carbon_strategies(args.from_block)
+    ) = test_manager.get_state_of_carbon_strategies(args, args.from_block)
 
     # takes about 4 minutes per 100 strategies, so 450 ~ 18 minutes
     undeleted_strategies = test_manager.delete_all_carbon_strategies(
-        remaining_carbon_strategies
+        args, remaining_carbon_strategies
     )
 
     # These strategies cannot be deleted on Ethereum
@@ -150,8 +150,7 @@ def run_tests_on_mode_task(
 
     Args:
         args: argparse.Namespace, the command line arguments
-        w3: Web3 instance
-        carbon_controller: Contract, the carbon controller contract
+        test_manager: TestManager, the test manager
         test_strategies: Dict, the test strategies
     """
     args.logger.info("\nRunning run_tests_on_mode_task...")
@@ -194,6 +193,10 @@ def run_tests_on_mode_task(
 def run_results_crosscheck_task(args, proc: subprocess.Popen):
     """
     Run the results crosscheck task.
+
+    Args:
+        args: argparse.Namespace, the command line arguments
+        proc: subprocess.Popen, the process
     """
     args.logger.info("\nRunning run_results_crosscheck_task...")
 
@@ -204,12 +207,12 @@ def run_results_crosscheck_task(args, proc: subprocess.Popen):
     test_strategy_txhashs = tx_helper.wait_for_txs(args)
 
     # Scan for successful transactions on Tenderly which are marked by status=1
-    successful_txs = tx_helper.tx_scanner(args)
-    tx_helper.log_txs(successful_txs, args)
-    test_datas = tx_helper.load_json_file("test_results.json", args)
+    actual_txs = tx_helper.tx_scanner(args)
+    # tx_helper.log_txs(actual_txs, args)
+    expected_txs = tx_helper.load_json_file("test_results.json", args)
 
     results_description = tx_helper.log_results(
-        args, successful_txs, test_datas, test_strategy_txhashs
+        args, actual_txs, expected_txs, test_strategy_txhashs
     )
     proc.terminate()
     for k, v in results_description.items():
@@ -237,24 +240,27 @@ def main(args: argparse.Namespace):
 
     # Initialize the Web3 Manager
     test_manager = TestManager(args=args)
-    w3 = test_manager.w3
+    test_manager.delete_old_logs(args)
 
     if args.task == "set_test_state":
-        set_test_state_task(w3)
+        set_test_state_task(test_manager.w3)
     elif args.task == "get_carbon_strategies_and_delete":
         get_carbon_strategies_and_delete_task(test_manager, args)
     elif args.task == "run_tests_on_mode":
         _extracted_task_handling(test_manager, args)
     elif args.task == "end_to_end":
         get_carbon_strategies_and_delete_task(test_manager, args)
-        set_test_state_task(w3)
+        set_test_state_task(test_manager.w3)
         _extracted_task_handling(test_manager, args)
     else:
         raise ValueError(f"Task {args.task} not recognized")
 
 
-def _extracted_task_handling(test_manager, args):
-    test_strategies = test_manager.get_test_strategies()
+def _extracted_task_handling(test_manager: TestManager, args: argparse.Namespace):
+    """
+    Extracted task handling.
+    """
+    test_strategies = test_manager.get_test_strategies(args)
     run_tests_on_mode_task(args, test_manager, test_strategies)
 
 

@@ -12,7 +12,10 @@ import pandas as pd
 from web3 import Web3
 from web3.types import RPCEndpoint
 
-from fastlane_bot.tests.deterministic.test_constants import SUPPORTED_EXCHANGES, TEST_FILE_DATA_DIR
+from fastlane_bot.tests.deterministic.test_constants import (
+    SUPPORTED_EXCHANGES,
+    TEST_FILE_DATA_DIR,
+)
 from fastlane_bot.tests.deterministic.test_token import TestTokenBalance
 
 
