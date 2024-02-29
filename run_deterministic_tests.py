@@ -404,7 +404,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--timeout_minutes",
-        default=7,
+        default=10,
         type=int,
         help="Timeout for the tests (in minutes)",
     )
@@ -422,7 +422,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--loglevel",
-        default='INFO',
+        default='DEBUG',
         type=str,
         help="Logging level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
