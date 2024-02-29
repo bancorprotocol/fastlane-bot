@@ -32,11 +32,7 @@ class CarbonTradeSplitter:
             if not self._is_carbon_trade(trade):
                 new_trade_list.append(trade)
                 continue
-
-            carbon_exchanges = self._process_carbon_trades(trade)
-            self._create_new_trades_from_carbon_exchanges(
-                carbon_exchanges, trade, new_trade_list
-            )
+            new_trade_list.extend(self._extract_carbon_trades(trade))
 
         return new_trade_list
 
@@ -66,21 +62,33 @@ class CarbonTradeSplitter:
             The correct token address for the pool.
 
         """
-        if token_address not in [
+        if token_address in [
             self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
             self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
         ]:
-            return token_address
-        return (
-            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-            if token_type == self.NATIVE
-            else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if token_type == self.NATIVE else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        return token_address
+
+    def _extract_carbon_trades(self, trade) -> List[TradeInstruction]:
+        """
+        This function calls the functions containing the logic to extract Carbon trades.
+
+        Args:
+            trade: A single TradeInstruction object.
+
+        Returns:
+            A list of TradeInstruction objects.
+
+        """
+        carbon_exchanges = self._process_carbon_trades(trade)
+        return self._create_new_trades_from_carbon_exchanges(
+            carbon_exchanges, trade
         )
 
     def _process_carbon_trades(self, trade: TradeInstruction) -> Dict:
-        """Processes
+        """Separates Carbon trades by exchange & wrapped/native token address.
 
-        Process Carbon trades and organize them by exchange and token type.
+        Processes Carbon trades and organizes them by exchange and token type.
 
         Args:
             trade: a single TradeInstruction object
@@ -173,7 +181,6 @@ class CarbonTradeSplitter:
         self,
         carbon_exchanges: Dict,
         original_trade: TradeInstruction,
-        new_trade_list: List[TradeInstruction],
     ):
         """Creates new TradeInstruction instances from processed Carbon exchanges data.
 
@@ -185,11 +192,13 @@ class CarbonTradeSplitter:
              new_trade_list: The updated list of TradeInstruction objects with any trades that were added from the splitting process.
 
         """
-        for exchange, data in carbon_exchanges.items():
-            for token_type, trade_data in data.items():
+        _extracted_trades = []
+        for data in carbon_exchanges.values():
+            for trade_data in data.values():
                 if trade_data["raw_txs"]:
                     trade_data["db"] = original_trade.db
                     trade_data["ConfigObj"] = original_trade.ConfigObj
                     trade_data["cid"] = trade_data["raw_txs"][0]["cid"]
                     trade_data["raw_txs"] = str(trade_data["raw_txs"])
-                    new_trade_list.append(TradeInstruction(**trade_data))
+                    _extracted_trades.append(TradeInstruction(**trade_data))
+        return _extracted_trades
