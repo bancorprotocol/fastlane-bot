@@ -66,6 +66,9 @@ class TestTxHelper:
         """
         This method takes a transaction data dictionary and removes the cid0 key from the trades.
         """
+        if not tx_data:
+            return tx_data
+
         for trade in tx_data["trades"]:
             if trade["exchange"] == "carbon_v1" and "cid0" in trade:
                 del trade["cid0"]

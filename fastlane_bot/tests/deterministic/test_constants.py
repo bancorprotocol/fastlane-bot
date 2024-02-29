@@ -102,3 +102,20 @@ class TestCommandLineArgs:
     read_only: str = "False"
     is_args_test: str = "False"
     rpc_url: str = None
+
+    @staticmethod
+    def args_to_command_line(args):
+        """
+        Convert a TestCommandLineArgs instance to a list of command-line arguments.
+
+        Args:
+            args: An instance of TestCommandLineArgs.
+
+        Returns:
+            A list of command-line arguments.
+        """
+        cmd_args = []
+        for field, value in args.__dict__.items():
+            if value is not None:  # Only include fields that have a value
+                cmd_args.extend((f"--{field}", str(value)))
+        return cmd_args

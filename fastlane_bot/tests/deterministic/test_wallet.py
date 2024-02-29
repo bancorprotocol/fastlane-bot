@@ -22,7 +22,7 @@ class TestWallet:
     address: str or Address  # Address after __post_init__, str before
     balances: list[
         TestTokenBalance or dict
-        ] = None  # List of TokenBalances after __post_init__, list of dicts before
+    ] = None  # List of TokenBalances after __post_init__, list of dicts before
 
     def __post_init__(self):
         self.address = Web3.to_checksum_address(self.address)

@@ -45,10 +45,10 @@ Note: This script uses the function `get_default_main_args` which returns the de
 Licensed under MIT License.
 """
 import argparse
-import importlib
 import json
+import logging
 import os
-import threading
+import subprocess
 import time
 from typing import Dict
 
@@ -56,16 +56,40 @@ import pandas as pd
 from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot.tests.deterministic.mgr_strategy import StrategyManager
+from fastlane_bot.tests.deterministic.mgr_web3 import Web3Manager
 from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_FROM_BLOCK, KNOWN_UNABLE_TO_DELETE,
     TENDERLY_RPC_KEY, TEST_FILE_DATA_DIR, TestCommandLineArgs,
 )
-from fastlane_bot.tests.deterministic.test_tx_helper import TestTxHelper
-from fastlane_bot.tests.deterministic.mgr_strategy import StrategyManager
-from fastlane_bot.tests.deterministic.test_pool_params_builder import TestPoolParamsBuilder
 from fastlane_bot.tests.deterministic.test_pool import TestPool
+from fastlane_bot.tests.deterministic.test_pool_params_builder import TestPoolParamsBuilder
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
-from fastlane_bot.tests.deterministic.mgr_web3 import Web3Manager
+from fastlane_bot.tests.deterministic.test_tx_helper import TestTxHelper
+
+
+def get_logger(args: argparse.Namespace) -> logging.Logger:
+    """
+    Get the logger for the script.
+    """
+    logger = logging.getLogger(__name__)
+    logger.setLevel(args.loglevel)
+    logger.handlers.clear()  # Clear existing handlers to avoid duplicate logging
+
+    # Create console handler
+    ch = logging.StreamHandler()
+    ch.setLevel(args.loglevel)
+
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    ch.setFormatter(formatter)
+
+    # Add the console handler to the logger
+    logger.addHandler(ch)
+
+    return logger
 
 
 def set_test_state_task(w3: Web3):
@@ -75,7 +99,7 @@ def set_test_state_task(w3: Web3):
     Args:
         w3: Web3 instance
     """
-    print("\nRunning set_test_state_task...")
+    args.logger.info("\nRunning set_test_state_task...")
 
     # Import pool data
     # Set the default paths
@@ -103,7 +127,7 @@ def set_test_state_task(w3: Web3):
         # Update storage parameters
         for slot, params in update_params_dict.items():
             builder.set_storage_at(pool.pool_address, params)
-            print(f"Updated storage parameters for {pool.pool_address} at slot {slot}")
+            args.logger.debug(f"Updated storage parameters for {pool.pool_address} at slot {slot}")
 
 
 def get_carbon_strategies_and_delete_task(
@@ -117,7 +141,7 @@ def get_carbon_strategies_and_delete_task(
         carbon_controller: Contract, the carbon controller contract
         from_block: int, the block number to start from
     """
-    print("\nRunning get_carbon_strategies_and_delete_task...")
+    args.logger.info("\nRunning get_carbon_strategies_and_delete_task...")
 
     # Initialize the Strategy Manager
     strategy_mgr = StrategyManager(w3, carbon_controller)
@@ -155,7 +179,7 @@ def run_tests_on_mode_task(
         carbon_controller: Contract, the carbon controller contract
         test_strategies: Dict, the test strategies
     """
-    print("\nRunning run_tests_on_mode_task...")
+    args.logger.info("\nRunning run_tests_on_mode_task...")
 
     # Initialize the Strategy Manager
     strategy_mgr = StrategyManager(w3, carbon_controller)
@@ -168,27 +192,18 @@ def run_tests_on_mode_task(
     default_main_args.rpc_url = args.rpc_url
 
     # Print the default main args
-    print(f"\n\n ********\n"
-          f"default_main_args: {default_main_args}"
-          f"\n ********\n\n")
+    args.logger.debug(f"command-line args: {default_main_args}")
 
-    # Dynamically import the chosen script module
-    script_module = importlib.import_module("main")
+    # Run the main.py script with the default main args
+    cmd_args = ['python', 'main.py'] + TestCommandLineArgs.args_to_command_line(default_main_args)
+    subprocess.Popen(cmd_args)
 
-    # Define a function to run the main function in a separate thread
-    def run_main_in_thread():
-        script_module.main(default_main_args)
-
-    # Start the main function in a separate thread
-    main_thread = threading.Thread(target=run_main_in_thread)
-    main_thread.start()
-
-    # Wait for 5 minutes
-    time.sleep(12*5)
+    # Wait for the main.py script to boot up and backdate the pools
+    time.sleep(3 * 60)
 
     # Mark the block that new strats were created
     strats_created_from_block = w3.eth.get_block_number()
-    print(f"strats_created_from_block: {strats_created_from_block}")
+    args.logger.debug(f"strats_created_from_block: {strats_created_from_block}")
 
     # populate a dictionary with all the relevant test strategies
     test_strategy_txhashs: Dict[TestStrategy] or Dict = {}
@@ -202,8 +217,7 @@ def run_tests_on_mode_task(
             token_id=1, approval_address=carbon_controller.address
         )
         tx_hash = strategy_mgr.create_strategy(test_strategy)
-        test_strategy_txhashs[str(i + 1)] = {}
-        test_strategy_txhashs[str(i + 1)]["txhash"] = tx_hash
+        test_strategy_txhashs[str(i + 1)] = {"txhash": tx_hash}
 
     # Write the test strategy txhashs to a file
     test_strategy_txhashs_path = os.path.normpath(
@@ -218,43 +232,41 @@ def run_tests_on_mode_task(
     ) = strategy_mgr.get_state_of_carbon_strategies(strats_created_from_block)
 
     new_strats_created = strategy_created_df["id"].to_list()
-    print(f"There have been {len(new_strats_created)} new strategies created")
+    args.logger.debug(f"There have been {len(new_strats_created)} new strategies created")
 
-    print(f"strategy_created_df.columns: {list(strategy_created_df.columns)}")
+    args.logger.debug(f"strategy_created_df.columns: {list(strategy_created_df.columns)}")
     strategy_created_df.to_csv("strategy_created_df.csv")
 
-    print("\nAdd the strategy ids...")
+    args.logger.debug("\nAdd the strategy ids...")
     for i in test_strategy_txhashs.keys():
         try:
             test_strategy_txhashs[i]['strategyid'] = strategy_created_df[
                 strategy_created_df['transaction_hash'] == test_strategy_txhashs[i]['txhash']].id.values[0]
-            print(f"Added the strategy ids: {i}")
+            args.logger.debug(f"Added the strategy ids: {i}")
         except Exception as e:
-            print(f"Add the strategy ids Error: {i}, {e}")
+            args.logger.debug(f"Add the strategy ids Error: {i}, {e}")
 
     with open(test_strategy_txhashs_path, "w") as f:
         json.dump(test_strategy_txhashs, f)
         f.close()
 
-    return main_thread
 
-
-def run_results_crosscheck_task(main_thread):
+def run_results_crosscheck_task(args):
     """
     Run the results crosscheck task.
     """
-    print("\nRunning run_results_crosscheck_task...")
+    args.logger.info("\nRunning run_results_crosscheck_task...")
 
     # Initialize the tx helper
     tx_helper = TestTxHelper()
 
     # Successful transactions on Tenderly are marked by status=1
     actually_txt_all_successful_txs = tx_helper.tx_scanner()
-    print(f"len(actually_txt_all_successful_txs): {len(actually_txt_all_successful_txs)}")
+    args.logger.debug(f"len(actually_txt_all_successful_txs): {len(actually_txt_all_successful_txs)}")
 
     # print first 3 examples of actually_txt_all_successful_txs
     for i, tx in enumerate(actually_txt_all_successful_txs):
-        print(f"\nactually_txt_all_successful_txs[{i}]: {tx}")
+        args.logger.debug(f"\nactually_txt_all_successful_txs[{i}]: {tx}")
         if i == 2:
             break
 
@@ -264,7 +276,7 @@ def run_results_crosscheck_task(main_thread):
     with open(test_results_path) as f:
         test_datas = json.load(f)["test_data"]
         f.close()
-        print(f"{len(test_datas.keys())} test results imported")
+        args.logger.debug(f"{len(test_datas.keys())} test results imported")
 
     test_strategy_txhashs_path = os.path.normpath(
         f"{TEST_FILE_DATA_DIR}/test_strategy_txhashs.json"
@@ -272,26 +284,30 @@ def run_results_crosscheck_task(main_thread):
     with open(test_strategy_txhashs_path) as f:
         test_strategy_txhashs = json.load(f)
         f.close()
-        print(f"{len(test_strategy_txhashs.keys())} test strategy txhashs imported")
+        args.logger.debug(f"{len(test_strategy_txhashs.keys())} test strategy txhashs imported")
 
-    time.sleep(int(35*len(test_strategy_txhashs.keys()) + 15))
+    sleep_seconds = int(35 * len(test_strategy_txhashs.keys()) + 15)
+    args.logger.debug(f"sleep_seconds: {sleep_seconds}")
+    time.sleep(sleep_seconds)
+
+    all_tests_passed = True
 
     # Loop over the created test strategies and verify test data
     for i in test_strategy_txhashs.keys():
         search_id = test_strategy_txhashs[i]["strategyid"]
-        print(f"Evaluating test {search_id}")
         tx_data = tx_helper.get_tx_data(search_id, actually_txt_all_successful_txs)
-        print(f"tx_data = {tx_data}")
         tx_helper.clean_tx_data(tx_data)
         test_data = test_datas[i]
         if tx_data == test_data:
-            print(f"Test {i} PASSED")
+            args.logger.info(f"Test {i} PASSED")
         else:
-            print(f"Test {i} FAILED")
+            args.logger.info(f"Test {i} FAILED")
+            all_tests_passed = False
 
-    print("ALL TESTS PASSED")
-    main_thread.join()
-
+    if not all_tests_passed:
+        raise ValueError("Some tests failed")
+    else:
+        args.logger.info("ALL TESTS PASSED")
 
 def main(args: argparse.Namespace):
     """
@@ -300,7 +316,17 @@ def main(args: argparse.Namespace):
     Args:
         args: argparse.Namespace, the command line arguments
     """
-    print(f"Running task: {args.task}")
+
+    # Set up the logger
+    args.logger = get_logger(args)
+    args.logger.info(f"Running task: {args.task}")
+
+    # Set the timeout in seconds
+    args.timeout = args.timeout_minutes * 60
+
+    if str(args.create_new_testnet).lower() == 'true':
+        uri, from_block = Web3Manager.create_new_testnet()
+        args.rpc_url = uri
 
     # Initialize the Web3 Manager
     w3_manager = Web3Manager(args.rpc_url)
@@ -329,13 +355,13 @@ def main(args: argparse.Namespace):
         test_strategies = strategy_mgr.get_test_strategies()
         run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
     elif args.task == "run_results_crosscheck":
-        run_results_crosscheck_task()
+        run_results_crosscheck_task(args)
     elif args.task == "end_to_end":
         get_carbon_strategies_and_delete_task(w3, carbon_controller, args.from_block)
         set_test_state_task(w3)
         test_strategies = strategy_mgr.get_test_strategies()
-        main_thread = run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
-        run_results_crosscheck_task(main_thread)
+        run_tests_on_mode_task(args, w3, carbon_controller, test_strategies)
+        run_results_crosscheck_task(args)
     else:
         raise ValueError(f"Task {args.task} not recognized")
 
@@ -394,15 +420,13 @@ if __name__ == "__main__":
         type=str,
         help="Create a new testnet",
     )
+    parser.add_argument(
+        "--loglevel",
+        default='INFO',
+        type=str,
+        help="Logging level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    )
 
     args = parser.parse_args()
-    args.timeout = args.timeout_minutes * 60
-
-    if str(args.create_new_testnet).lower() == 'true':
-        uri, from_block = Web3Manager.create_new_testnet()
-        print(f"uri: {uri}, from_block: {from_block}")
-
-        args.rpc_url = uri
-        # args.from_block = from_block  # TODO: Nick check if this is the correct block number when creating a new testnet
-
     main(args)

@@ -6,6 +6,7 @@ Licensed under MIT License.
 """
 import json
 import os
+import time
 
 import pandas as pd
 from eth_typing import Address, ChecksumAddress
@@ -15,7 +16,8 @@ from web3.contract import Contract
 from fastlane_bot.tests.deterministic.test_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
-    TEST_FILE_DATA_DIR, TOKENS_MODIFICATIONS,
+    TEST_FILE_DATA_DIR,
+    TOKENS_MODIFICATIONS,
 )
 from fastlane_bot.tests.deterministic.test_pool import TestPool
 from fastlane_bot.tests.deterministic.test_strategy import TestStrategy
@@ -57,29 +59,38 @@ class StrategyManager:
         """
         Fetches logs for a specified event from a smart contract.
         """
-        log_list = getattr(self.carbon_controller.events, event_name).get_logs(
-            fromBlock=from_block
-        )
-        data = []
-        for log in log_list:
-            log_data = {
-                "block_number": log["blockNumber"],
-                "transaction_hash": self.w3.to_hex(log["transactionHash"]),
-                **log["args"],
-            }
+        print(f"Fetching logs for {event_name} event, from_block: {from_block}")
+        try:
+            log_list = getattr(self.carbon_controller.events, event_name).get_logs(
+                fromBlock=from_block
+            )
+            data = []
+            for log in log_list:
+                log_data = {
+                    "block_number": log["blockNumber"],
+                    "transaction_hash": self.w3.to_hex(log["transactionHash"]),
+                    **log["args"],
+                }
 
-            # Process and update log_data for 'order0' and 'order1', if present
-            for order_key in ["order0", "order1"]:
-                if order_data := self.process_order_data(log["args"], order_key):
-                    log_data.update(order_data)
-                    del log_data[order_key]
+                # Process and update log_data for 'order0' and 'order1', if present
+                for order_key in ["order0", "order1"]:
+                    if order_data := self.process_order_data(log["args"], order_key):
+                        log_data.update(order_data)
+                        del log_data[order_key]
 
-            data.append(log_data)
+                data.append(log_data)
 
-        df = pd.DataFrame(data)
-        return (
-            df.sort_values(by="block_number") if "block_number" in df.columns else df
-        ).reset_index(drop=True)
+            df = pd.DataFrame(data)
+            return (
+                df.sort_values(by="block_number")
+                if "block_number" in df.columns
+                else df
+            ).reset_index(drop=True)
+        except Exception as e:
+            print(
+                f"Error fetching logs for {event_name} event: {e}, returning empty df"
+            )
+            return pd.DataFrame({})
 
     def get_state_of_carbon_strategies(self, from_block: int) -> tuple:
         """
@@ -149,7 +160,10 @@ class StrategyManager:
 
         # Ensure there is sufficient funds for withdrawal
         self.set_balance_via_faucet(
-            self.w3, token_address, modifications["balance"], self.carbon_controller.address
+            self.w3,
+            token_address,
+            modifications["balance"],
+            self.carbon_controller.address,
         )
         self.delete_strategy(strategy_id, strategy_beneficiary)
 
@@ -158,7 +172,9 @@ class StrategyManager:
             self.modify_storage(self.w3, token_address, slot, value)
 
         # Empty out this token from CarbonController
-        self.set_balance_via_faucet(self.w3, token_address, 0, self.carbon_controller.address)
+        self.set_balance_via_faucet(
+            self.w3, token_address, 0, self.carbon_controller.address
+        )
 
     def modify_tokens_for_deletion(self) -> None:
         """Custom modifications to tokens to allow their deletion from Carbon."""
