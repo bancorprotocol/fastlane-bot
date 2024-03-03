@@ -208,7 +208,6 @@ def run_results_crosscheck_task(args, proc: subprocess.Popen):
 
     # Scan for successful transactions on Tenderly which are marked by status=1
     actual_txs = tx_helper.tx_scanner(args)
-    # tx_helper.log_txs(actual_txs, args)
     expected_txs = tx_helper.load_json_file("test_results.json", args)
 
     results_description = tx_helper.log_results(
@@ -240,7 +239,8 @@ def main(args: argparse.Namespace):
 
     # Initialize the Web3 Manager
     test_manager = TestManager(args=args)
-    test_manager.delete_old_logs(args)
+    if args.delete_old_logs:
+        test_manager.delete_old_logs(args)
 
     if args.task == "set_test_state":
         set_test_state_task(test_manager.w3)
@@ -325,6 +325,13 @@ if __name__ == "__main__":
         help="Logging level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
     )
+    parser.add_argument(
+        "--delete_old_logs",
+        default="True",
+        type=str,
+        choices=["True", "False"],
+    )
 
     args = parser.parse_args()
+    args.delete_old_logs = args.delete_old_logs.lower() == "true"
     main(args)
