@@ -99,8 +99,7 @@ class CarbonTradeSplitter:
         """
         carbon_exchanges = {}
 
-        raw_tx_str = trade.raw_txs.replace("'", '"')
-
+        raw_tx_str = trade.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')
         raw_txs = json.loads(raw_tx_str)
 
         for _tx in raw_txs:

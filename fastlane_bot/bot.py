@@ -1039,10 +1039,10 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions=encoded_trade_instructions, deadline=deadline
             )
         ]
-        route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
 
         route_struct_processed = WrapUnwrapProcessor(cfg=self.ConfigObj).add_wrap_or_unwrap_trades_to_route(trade_instructions=split_calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
 
+        route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Get the cids
         cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})
@@ -1053,12 +1053,12 @@ class CarbonBot(CarbonBotBase):
                 self._validate_and_submit_transaction_tenderly(
                     ConfigObj=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
-                    route_struct=route_struct_processed,
+                    route_struct=route_struct_maximized,
                     src_amount=flashloan_amount_wei,
                     src_address=flashloan_token_address,
                 ),
                 cids,
-                route_struct_processed,
+                route_struct_maximized,
                 log_dict,
             )
 
@@ -1068,7 +1068,7 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount_wei,
             flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct_processed,
+            route_struct=route_struct_maximized,
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
@@ -1078,7 +1078,7 @@ class CarbonBot(CarbonBotBase):
         # Return the validate and submit transaction
         return (
             tx_helpers.validate_and_submit_transaction(
-                route_struct=route_struct_processed,
+                route_struct=route_struct_maximized,
                 src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
                 expected_profit_gastkn=best_profit_gastkn,
