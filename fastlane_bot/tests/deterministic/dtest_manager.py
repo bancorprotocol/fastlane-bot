@@ -13,7 +13,7 @@ from typing import Dict
 
 import pandas as pd
 import requests
-from black import datetime
+from datetime import datetime
 from eth_typing import Address, ChecksumAddress
 from web3 import Web3
 from web3.contract import Contract
