@@ -585,10 +585,10 @@ class TestManager:
             arg["w3"] = self.w3
             test_strategy = TestStrategy(**arg)
             test_strategy.get_token_approval(
-                args=arg, token_id=0, approval_address=self.carbon_controller.address
+                args=args, token_id=0, approval_address=self.carbon_controller.address
             )
             test_strategy.get_token_approval(
-                args=arg, token_id=1, approval_address=self.carbon_controller.address
+                args=args, token_id=1, approval_address=self.carbon_controller.address
             )
             tx_hash = self.create_strategy(args, test_strategy)
             test_strategy_txhashs[str(i + 1)] = {"txhash": tx_hash}
