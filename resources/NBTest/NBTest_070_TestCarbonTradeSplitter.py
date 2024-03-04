@@ -283,7 +283,6 @@ def test_is_carbon_trade():
     for trade in non_carbon_trades:
         assert not trade_splitter._is_carbon_trade(trade=trade)
 
-test_is_carbon_trade()
 
 
 # +
@@ -302,7 +301,6 @@ def test_get_real_tkn():
     assert trade_splitter._get_real_tkn(token_address=USDC_ADDRESS, token_type=trade_splitter.NATIVE) == USDC_ADDRESS
     assert trade_splitter._get_real_tkn(token_address=USDC_ADDRESS, token_type=trade_splitter.WRAPPED) == USDC_ADDRESS
 
-test_get_real_tkn()
 
 
 # +
@@ -348,14 +346,7 @@ def test_process_carbon_trades():
     _test_amts(carbon_exchanges_2, trade_instruction_2)
     _test_amts(carbon_exchanges_3, trade_instruction_5)
 
-    #print(carbon_exchanges_0)
 
-test_process_carbon_trades()
-# -
-
-{'carbon_v1': {'native': {'raw_txs': [{'cid': '9187623906865338513511114400657741709505-0', 'tknin': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'amtin': 5, '_amtin_wei': 5000000000000000000, 'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'amtout': 0.5, '_amtout_wei': 50000000}], 'amtin': 5, 'amtout': 0.5, '_amtin_wei': 5000000000000000000, '_amtout_wei': 50000000, 'tknin': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'}, 
-               'wrapped': {'raw_txs': [{'cid': '67035626283424877302284797664058337657416-0', 'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'amtin': 10, '_amtin_wei': 10000000000000000000, 'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'amtout': 1, '_amtout_wei': 100000000}], 'amtin': 10, 'amtout': 1, '_amtin_wei': 10000000000000000000, '_amtout_wei': 100000000, 'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'}, 
-               'neither': {'raw_txs': [], 'amtin': 0, 'amtout': 0, '_amtin_wei': 0, '_amtout_wei': 0}}}
 
 
 # +
@@ -369,7 +360,6 @@ def test_get_token_type():
     assert trade_splitter._get_token_type(curve_1) == trade_splitter.NATIVE
     assert trade_splitter._get_token_type(curve_2) == trade_splitter.NEITHER
 
-test_get_token_type()
 
 # -
 
@@ -387,7 +377,7 @@ def test_returns_dictionary_with_correct_keys():
     assert "amtout" in result
     assert "_amtin_wei" in result
     assert "_amtout_wei" in result
-test_returns_dictionary_with_correct_keys()
+
 
 
 # +
@@ -407,7 +397,6 @@ def test_initialize_exchange_data():
         assert init_data[_item]["_amtout_wei"] == 0
 
 
-test_initialize_exchange_data()
 
 
 # +
@@ -444,7 +433,6 @@ def test_valid_exchange_data():
     assert exchange_data_2["neither"]["_amtin_wei"] == _tx_neither["_amtin_wei"]
     assert exchange_data_2["neither"]["_amtout_wei"] == _tx_neither["_amtout_wei"]
 
-test_valid_exchange_data()
 
 
 # +
@@ -499,7 +487,7 @@ def test_create_new_trades_from_carbon_exchanges():
 
 
 
-test_create_new_trades_from_carbon_exchanges()
+
 # -
 
 

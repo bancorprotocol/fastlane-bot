@@ -336,7 +336,6 @@ def test_init_balance_tracker():
     _check_balances(_processor_2.balance_tracker, flashloan_struct_2)
     _check_balances(_processor_3.balance_tracker, flashloan_struct_3)
 
-test_init_balance_tracker()
 
 
 # +
@@ -354,7 +353,6 @@ def test_ensure_unique_flashloan_token():
     assert not raises(_processor_0._ensure_unique_flashloan_token)
     assert raises(_processor_1._ensure_unique_flashloan_token).startswith("[WrapUnwrapProcessor _ensure_unique_flashloan_token]")
 
-test_ensure_unique_flashloan_token()
 
 
 # +
@@ -362,11 +360,9 @@ def test_segment_routes():
     _processor_0 = WrapUnwrapProcessor(cfg=cfg)
 
     _segments_0 = _processor_0._segment_routes(split_trade_instructions_0_splitter, route_struct_0)
-    print(_segments_0)
     assert len(_segments_0.keys()) == 3
 
     for trade in route_struct_0:
-        print(trade)
         pair = trade["sourceToken"] + "/" + trade["targetToken"]
         assert pair in _segments_0
         assert isinstance(_segments_0[pair]["amt_in"], int)
@@ -379,7 +375,6 @@ def test_segment_routes():
 
 
     
-test_segment_routes()
 
 
 # +
@@ -421,15 +416,8 @@ def test_handle_wrap_or_unwrap():
     assert len(_new_route_struct_1) == 0
     assert len(_new_route_struct_2) == 0
 
-    # print(_processor_0.balance_tracker)
-    # print(_new_route_struct_0)
-    # print(_processor_1.balance_tracker)
-    # print(_new_route_struct_1)
-    # print(_processor_2.balance_tracker)
-    # print(_new_route_struct_2)
 
     
-test_handle_wrap_or_unwrap()
 
 
 # +
@@ -448,7 +436,6 @@ def test_adjust_balance_for_wrap_unwrap():
     assert _processor_1.balance_tracker['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'] == 5000000000000000000
     assert _processor_1.balance_tracker['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'] == 5000000000000000000
 
-test_adjust_balance_for_wrap_unwrap()
 
 
 # +
@@ -469,7 +456,6 @@ def test_update_token_balance():
     assert _processor_1.balance_tracker['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'] == 10000000000000000000 - 5000000000000000000
     assert _processor_2.balance_tracker['0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'] == 5000000000000000000
 
-test_update_token_balance()
 
 
 # +
@@ -518,7 +504,6 @@ def test_append_trades_based_on_exchange():
     assert _processor_2.balance_tracker['0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'] == 0
 
 
-test_append_trades_based_on_exchange()
 
 
 # +
@@ -557,7 +542,6 @@ def test_handle_final_balance():
     assert _new_route_struct_0[0]['sourceAmount'] == 0
 
 
-test_handle_final_balance()
 
 
 # +
@@ -567,9 +551,6 @@ def test_get_wrap_or_unwrap_native_gas_tkn_struct():
 
     _result_0 = _processor_0._get_wrap_or_unwrap_native_gas_tkn_struct(deadline=_deadline, wrap=True, source_amount=1000)
     _result_1 = _processor_0._get_wrap_or_unwrap_native_gas_tkn_struct(deadline=_deadline, wrap=False, source_amount=5000)
-
-    # print(_result_0)
-    # print(_result_1)
 
     assert _result_0['deadline'] == _deadline
     assert _result_0['platformId'] == 10
@@ -592,14 +573,11 @@ def test_get_wrap_or_unwrap_native_gas_tkn_struct():
 
 
 
-test_get_wrap_or_unwrap_native_gas_tkn_struct()
+
 # -
 
 
 
-
-
-#route_struct_processed_0 = WrapUnwrapProcessor(cfg=cfg).add_wrap_or_unwrap_trades_to_route(trade_instructions=split_trade_instructions_0_splitter, route_struct=route_struct_0, flashloan_struct=flashloan_struct_0)
 
 
 

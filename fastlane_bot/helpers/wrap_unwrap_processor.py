@@ -2,6 +2,7 @@ from typing import Any, List, Dict
 
 from fastlane_bot.helpers import TradeInstruction, RouteStruct
 from dataclasses import asdict
+from fastlane_bot.events.exceptions import FlashloanTokenException
 
 
 class WrapUnwrapProcessor:
@@ -71,7 +72,7 @@ class WrapUnwrapProcessor:
 
         """
         if self.flashloan_wrapped_gas_token and self.flashloan_native_gas_token:
-            raise self.FlashloanTokenException(
+            raise FlashloanTokenException(
                 "[WrapUnwrapProcessor _ensure_unique_flashloan_token] Cannot flashloan both wrapped & native gas tokens!"
             )
 
@@ -338,7 +339,3 @@ class WrapUnwrapProcessor:
             )
         )
 
-    class FlashloanTokenException(Exception):
-        """Error that represents incompatible an Flashloan token combination."""
-
-        pass
