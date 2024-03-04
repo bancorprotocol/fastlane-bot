@@ -59,7 +59,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "optimism": 500000,
     "coinbase_base": 250000,
     "fantom": 2000,
-    "mantle": 500000,
+    "mantle": 10000000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -726,7 +726,7 @@ def organize_pool_details_solidly_v2(
 
     stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
     pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
-    fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))
+    fee_str, fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))[0]
 
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
@@ -747,7 +747,7 @@ def organize_pool_details_solidly_v2(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": str(fee_float),
+        "fee": fee_str,
         "fee_float": fee_float,
         "address": pool_address,
         "anchor": "",
@@ -1272,4 +1272,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-# terraform_blockchain(network_name="mantle", save_tokens=True)
+#terraform_blockchain(network_name="mantle", save_tokens=True)
