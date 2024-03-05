@@ -43,9 +43,9 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                 continue
             pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
             not_bancor_pol_curves = [
-                x for x in CC.curves if x.params.exchange not in ["bancor_pol", "carbon_v1"]
+                x for x in CC.curves if x.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS
             ]
-            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             curve_combos = [[curve] + pol_curves for curve in not_bancor_pol_curves]
 
             if len(carbon_curves) > 0:

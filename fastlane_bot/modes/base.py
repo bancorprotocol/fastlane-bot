@@ -36,7 +36,6 @@ class ArbitrageFinderBase:
         result=AO_CANDIDATES,
         ConfigObj: Any = None,
         arb_mode: str = None,
-        base_exchange: str = None,
     ):
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
@@ -48,8 +47,7 @@ class ArbitrageFinderBase:
         self.best_trade_instructions_df = None
         self.best_trade_instructions_dic = None
         self.ConfigObj = ConfigObj
-        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else base_exchange
-        # self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
+        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
     def find_arbitrage(
