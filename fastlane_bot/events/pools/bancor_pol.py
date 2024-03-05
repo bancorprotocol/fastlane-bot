@@ -82,6 +82,7 @@ class BancorPolPool(Pool):
             self.state[key] = value
 
         data["cid"] = self.state["cid"]
+        data["strategy_id"] = self.state["strategy_id"]
         data["fee"] = 0
         data["fee_float"] = 0
         data["exchange_name"] = self.state["exchange_name"]
