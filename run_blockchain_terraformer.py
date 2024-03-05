@@ -715,7 +715,7 @@ def organize_pool_details_solidly_v2(
 
     stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
     pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
-    fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))
+    fee_str, fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))[0]
 
 
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
@@ -736,7 +736,7 @@ def organize_pool_details_solidly_v2(
         "descr": description,
         "pair_name": pair,
         "exchange_name": exchange,
-        "fee": str(fee_float),
+        "fee": fee_str,
         "fee_float": fee_float,
         "address": pool_address,
         "anchor": "",
