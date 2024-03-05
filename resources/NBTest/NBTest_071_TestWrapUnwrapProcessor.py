@@ -36,7 +36,7 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 # +
-cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+cfg = Config.new(config=Config.CONFIG_UNITTEST, blockchain="ethereum")
 pools = None
 with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
