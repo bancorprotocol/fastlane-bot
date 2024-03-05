@@ -8,8 +8,9 @@ invariant by isolating y.
 
 Usually working with the swap function is more convenient. However, in some cases
 the invariant can be computed analytically whilst the swap function can not. The
-`Invariant` object for example allows to estimate the swap function numerically
-based on the invariant alone.
+``Invariant`` class -- which is the core class of this module -- allows amongst other
+things to estimate the swap function numerically rather than having to solve for
+it analytically which may not always be possible.
 
 ---
 (c) Copyright Bprotocol foundation 2024. 
@@ -29,7 +30,7 @@ class Invariant(ABC):
     
     This class is an abstract base class that represents an arbitrary AMM invariant. In order
     to obtain a usuable invariant object, one must subclass this class and implement the
-    `k_func` method. For example the following code snippet shows how to implement a simple
+    ``k_func`` method. For example the following code snippet shows how to implement a simple
     constant product invariant:
     
     .. code-block:: python
@@ -43,8 +44,8 @@ class Invariant(ABC):
         
                 
     The constant product invariant is analytically very easy to handle, and therefore a better
-    implementation would be to also implement the `y_Func` method, which returns the swap function
-    as a `Function` object. This is shown in the following code snippet:
+    implementation would be to also implement the ``y_Func`` method, which returns the swap function
+    as a ``Function`` object. This is shown in the following code snippet:
     
     .. code-block:: python
     
@@ -104,8 +105,8 @@ class Invariant(ABC):
         :k:         pool invariant k
         :returns:   token balance y = y(x, k) (1)
         
-        NOTE 1: y is calculated from `y_Func` if possible or numerically via
-        `y_func_from_k_func` otherwise
+        NOTE 1: y is calculated from ``y_Func`` if possible or numerically via
+        ``y_func_from_k_func`` otherwise
         """
         y_Func_k = self.y_Func(k=k)
         if not y_Func_k is None:
@@ -121,7 +122,7 @@ class Invariant(ABC):
         :returns:   price function p = -y'(x, k) (1)
         
         NOTE 1: this currently only works if y_func is analytic, in which case
-        the value returned is `self.y_Func(k=k).p(x)`
+        the value returned is ``self.y_Func(k=k).p(x)``
         """
         if self.y_func_is_analytic:
             return self.y_Func(k=k).p(x)
@@ -172,12 +173,11 @@ class Invariant(ABC):
         """
         very simple gradient descent implementation for a goal seek
         
-        :func:      function for goal seek, eg `lambda x: x**2-1`
+        :func:      function for goal seek, eg ``lambda x: x**2-1``
         :target:    target value (default: 0)
         :x0:        starting estimate
-        :returns:   `x` such that `func(x)` is close to target (1)
-        
-        NOTE 1: raises `ConvergenceError` if it fails to converge
+        :raises:    ``ConvergenceError`` if it fails to converge
+        :returns:   ``x`` such that ``func(x)`` is close to target
         """
         #learning_rate = 0.1  # Learning rate (step size)
         x = x0
@@ -205,13 +205,12 @@ class Invariant(ABC):
         """
         bisect implementation for goal seek
         
-        :func:      function for goal seek, eg `lambda x: x**2-1`
+        :func:      function for goal seek, eg ``lambda x: x**2-1``
         :target:    target value (default: 0)
         :x_lo:      lower bound on x (default: GSBS_XLO=1e-10)
         :x_hi:      upper bound on x (default: GSBS_XHI=1e10)
-        :returns:   `x` such that `func(x)` is close to target (1)
-        
-        NOTE 1: raises `ConvergenceError` if it fails to converge
+        :raises:    ``ConvergenceError`` if it fails to converge
+        :returns:   ``x`` such that ``func(x)`` is close to target
         """
         if x_lo is None:
             x_lo = self.GSBS_XLO
