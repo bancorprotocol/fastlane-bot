@@ -24,12 +24,9 @@ from fastlane_bot import Config
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, WrapUnwrapProcessor, CarbonTradeSplitter
 from fastlane_bot.testing import *
-from fastlane_bot.config.network import *
 
 import json
 from dataclasses import asdict
-from typing import Dict
-from fastlane_bot.testing import *
 
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__

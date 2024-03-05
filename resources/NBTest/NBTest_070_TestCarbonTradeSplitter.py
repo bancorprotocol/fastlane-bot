@@ -24,8 +24,6 @@ from fastlane_bot import Config
 from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, CarbonTradeSplitter
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.testing import *
-from fastlane_bot.config.network import *
-
 import json
 
 plt.rcParams['figure.figsize'] = [12,6]
