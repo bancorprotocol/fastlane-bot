@@ -1,5 +1,5 @@
 """
-Implements the `DictVector` class, a sparse vector based on dicts
+Implements the ``DictVector`` class, a sparse vector based on dicts
 ---
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT

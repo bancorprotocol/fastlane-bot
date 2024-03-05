@@ -1,6 +1,7 @@
 """
 representing a levered constant product curve
 
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 
@@ -331,7 +332,7 @@ class ConstantProductCurve(CurveBase):
     :constr:   which (alternative) constructor was used (optional; user should not set)
     :params:   additional parameters (optional)
 
-    NOTE1: always use the alternative constructors `from_xx` rather then the 
+    NOTE1: always use the alternative constructors ``from_xx`` rather then the 
     canonical one; if you insist on using the canonical one then keep in mind
     that the order of the parameters may change in future versions, so you
     MUST use keyword arguments
@@ -412,12 +413,12 @@ class ConstantProductCurve(CurveBase):
         """
         convenience function to access parameters
 
-        :pstr:          parameter name as colon separated string (eg "exchange")*
+        :pstr:          parameter name as colon separated string (eg "exchange") (1)
         :defaultval:    default value if parameter not found
         :returns:       parameter value or defaultval*
 
-        *CC.pstr("exchange") is equivalent to CC.params["exchange"] if defined
-         CC.pstr("a:b") is equivalent to CC.params["a"]["b"] if defined
+        NOTE1: ``CC.pstr("exchange")`` is equivalent to ``CC.params["exchange"]`` if defined
+        ``CC.pstr("a:b")`` is equivalent to ``CC.params["a"]["b"]`` if defined
         """
         fieldl = pstr.strip().split(":")
         val = self.params
@@ -763,11 +764,11 @@ class ConstantProductCurve(CurveBase):
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
 
-        :x_tknb:    current pool liquidity in token x (base token of the pair)*
-        :y_tknq:    current pool liquidity in token y (quote token of the pair)*
+        :x_tknb:    current pool liquidity in token x (base token of the pair) (1)
+        :y_tknq:    current pool liquidity in token y (quote token of the pair) (1)
         :k:         uniswap liquidity parameter (k = xy)*
 
-        *exactly one of k,x,y must be None; all other parameters must not be None;
+        NOTE 1: exactly one of k,x,y must be None; all other parameters must not be None;
         a reminder that x is TKNB and y is TKNQ
         """
         x = x_tknb
@@ -855,9 +856,9 @@ class ConstantProductCurve(CurveBase):
         isdydx=True,
     ):
         """
-        constructor: from a single Carbon order (see class docstring for other parameters)*
+        constructor: from a single Carbon order (see class docstring for other parameters) (1)
 
-        :yint:      current pool y-intercept**
+        :yint:      current pool y-intercept (2)
         :y:         current pool liquidity in token y
         :pa:        carbon price range left bound (higher price in dy/dx)
         :pb:        carbon price range right bound (lower price in dy/dx)
@@ -866,12 +867,12 @@ class ConstantProductCurve(CurveBase):
         :tkny:      token y
         :isdydx:    if True prices in dy/dx, if False in quote direction of the pair
 
-        *Note that ALL parameters are mandatory, except that EITHER pa, bp OR A, B
+        NOTE 1: that ALL parameters are mandatory, except that EITHER pa, bp OR A, B
         must be given but not both; we do not correct for incorrect assignment of
         pa and pb, so if pa <= pb IN THE DY/DX DIRECTION, MEANING THAT THE NUMBERS
         ENTERED MAY SHOW THE OPPOSITE RELATIONSHIP, then an exception will be raised
 
-        **note that the result does not depend on yint, and for the time being we
+        NOTE 2: that the result does not depend on yint, and for the time being we
         allow to omit yint (in which case it is set to y, but this does not make
         a difference for the result)
         """
@@ -975,12 +976,12 @@ class ConstantProductCurve(CurveBase):
         """
         executes a transaction in the pool, returning a new curve object
 
-        :dx:                amount of token x to be +added to/-removed from the pool*
-        :dy:                amount of token y to be +added to/-removed from the pool*
+        :dx:                amount of token x to be +added to/-removed from the pool (1)
+        :dy:                amount of token y to be +added to/-removed from the pool (1)
         :ignorebounds:      if True, ignore bounds on x_act, y_act
         :returns:   new curve object
 
-        *at least one of dx, dy must be None
+        NOTE1: at least one of ``dx, dy`` must be None
         """
         assert self.is_constant_product(), "only implemented for constant product curves"
         
@@ -1838,21 +1839,31 @@ class CPCContainer:
     def filter_pairs(self, pairs=None, *, anyall=FP_ALL, **conditions):
         """
         filters the pairs according to the target conditions(s)
+        
         :pairs:         list of pairs to filter; if None, all pairs are used
         :anyall:        how conditions are combined (FP_ANY or FP_ALL)
-        :condition*:    determines the filtering condition; all or any must be met
-                        :bothin:    both tokens must be in the list
-                        :onein:     at least one token must be in the list
-                        :notin:     none of the tokens must be in the list
-                        :contains:  alias for onein
-                        :tknbin:    tknb must be in the list
-                        :tknbnotin: tknb must not be in the list
-                        :tknqin:    tknq must be in the list
-                        :tknqnotin: tknq must not be in the list
+        :conditions:    determines the filtering condition; all or any must be met (1, 2)
 
-        *an arbitrary differentiator can be appended to the condition using "_"
+
+        NOTE1: an arbitrary differentiator can be appended to the condition using "_"
         (eg onein_1, onein_2, onein_3, ...) allowing to specify multiple conditions
         of the same type
+        
+        NOTE2: see table below for conditions
+                        
+        =========   ========================================
+        Condition   Description                         
+        =========   ========================================
+        bothin      both tokens must be in the list     
+        onein       at least one token must be in the list
+        notin       none of the tokens must be in the list
+        contains    alias for onein                   
+        tknbin      tknb must be in the list            
+        tknbnotin   tknb must not be in the list     
+        tknqin      tknq must be in the list            
+        tknqnotin   tknq must not be in the list     
+        =========   ========================================
+        
         """
         if pairs is None:
             pairs = self.pairs()
@@ -1982,7 +1993,7 @@ class CPCContainer:
                     :AT_VOLSAGG:    ditto but also aggregated by curve
                     :AT_PIVOTXY:    pivot table number of pairs tknx/tkny
                     :AT_PIVOTBQ:    ditto but with tknb/tknq
-                    :AT_PIVOTXYS:   above anlysis but symmetric matrix*
+                    :AT_PIVOTXYS:   above anlysis but symmetric matrix (1)
                     :AT_PIVOTBQS:   ditto
                     :AT_PRICES:     average prices per (directed) pair
                     :AT_MAX:        ditto max
@@ -1995,7 +2006,7 @@ class CPCContainer:
         :pairs:     list of pairs to analyze; if None, all pairs
         :params:    kwargs that some of the analysis targets may use
 
-        *eg ETH/USDC would appear in ETH/USDC and in USDC/ETH
+        NOTE1: eg ETH/USDC would appear in ETH/USDC and in USDC/ETH
         """
         record = self._record
         cols = self._record()
@@ -2714,7 +2725,7 @@ class CPCInverter:
         """
         wraps an iterable of curves in CPCInverters if needed and returns a tuple (or generator)
 
-        NOTE: only curves with c.pairo.isprimary == False are wrapped, the other ones are included
+        NOTE: only curves with ``c.pairo.isprimary == False`` are wrapped, the other ones are included
         as they are; this ensures that for all returned curves that correspond to the same actual
         pair, the primary pair is the same
         """
