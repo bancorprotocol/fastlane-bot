@@ -112,7 +112,6 @@ class BaseManager:
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
             base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
-            print(f"exchange_name: {exchange_name}, base_exchange_name: {base_exchange_name}")
             if exchange_name in ["pancakeswap_v2", "pancakeswap_v3", "velocimeter_v2"]:
                 initialize_events = True
             elif base_exchange_name not in initialized_exchanges:
@@ -128,9 +127,6 @@ class BaseManager:
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
-
-        print(f"exchanges: {self.exchanges.keys()}")
-
 
     def handle_solidly_exchanges(self, exchange):
         """
@@ -183,6 +179,16 @@ class BaseManager:
 
                 # Get pairs by contract
                 pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, exchange_name=ex)
+                if not pairs:
+                    self.cfg.logger.error(f"\n\n ******************************************* \n\n"
+                                          "Failed to get pairs for {ex}. Check that the contract is deployed for "
+                                          f"carbon_controller.address {carbon_controller.address}, and that the fee "
+                                          f"pairs are set. Removing {ex} from the list of supported exchanges and "
+                                          f"continuing..."
+                                          "\n\n ******************************************* \n\n")
+                    self.SUPPORTED_EXCHANGES.remove(ex)
+                    self.exchanges.pop(ex)
+                    continue
 
                 # Get the fee for each pair
                 fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
@@ -361,7 +367,7 @@ class BaseManager:
         strategies_by_pair = self.get_strategies(pairs, carbon_controller, exchange_name)
 
         # Get the fee for each pair
-        if not self.fee_pairs:
+        if not self.fee_pairs[exchange_name]:
             # Log that the fee pairs are being set
             self.cfg.logger.debug(f"[events.managers.base] Setting {exchange_name} fee pairs...")
             self.fee_pairs[exchange_name] = self.get_fee_pairs(pairs, carbon_controller)
@@ -410,7 +416,6 @@ class BaseManager:
             The carbon pairs.
 
         """
-        print(f"exchange_name: {exchange_name}, self.carbon_inititalized[exchange_name]={self.carbon_inititalized[exchange_name]}, carbon_controller.address: {carbon_controller.address}")
         pairs = (
             self.get_carbon_pairs_by_state(exchange_name)
             if self.carbon_inititalized[exchange_name]

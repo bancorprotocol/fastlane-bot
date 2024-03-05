@@ -196,8 +196,8 @@ class CarbonV1(Exchange):
             self.fee_pairs[(tkn0_address, tkn1_address)] = fee
 
         return func(
-            address=cfg.CARBON_CONTROLLER_ADDRESS,
-            exchange_name="carbon_v1",
+            address=cfg.CARBON_CONTROLLER_MAPPING[self.exchange_name],
+            exchange_name=self.exchange_name,
             fee=f"{fee}",
             fee_float=fee_float,
             tkn0_address=tkn0_address,

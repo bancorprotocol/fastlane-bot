@@ -339,7 +339,6 @@ class ConfigNetwork(ConfigBase):
 
         network = self.NETWORK if "tenderly" not in self.NETWORK else "ethereum"
         self.network_df = get_multichain_addresses(network=network)
-        self.network_df.to_csv("network_df.csv", index=False)
 
         self.UNI_V2_ROUTER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.UNISWAP_V2

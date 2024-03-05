@@ -26,8 +26,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ----------
         event  : Dict[str, Any]
             The event.
-        block_number : int, optional
-            The block number, by default None
 
         """
         ex_name = self.exchange_name_from_event(event)
@@ -252,7 +250,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         while True:
             try:
                 if event:
-                    self.update_from_event(event=event, block_number=block_number)
+                    self.update_from_event(event=event)
                 elif address:
                     self.update_from_contract(
                         address, contract, block_number=block_number
@@ -350,7 +348,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         carbon_controller = self.create_or_get_carbon_controller(exchange_name)
 
         # Get pairs by state
-        pairs = self.get_carbon_pairs(carbon_controller)
+        pairs = self.get_carbon_pairs(carbon_controller, exchange_name)
 
         # Update fee pairs
         self.fee_pairs[exchange_name] = self.get_fee_pairs(pairs, carbon_controller)
@@ -358,9 +356,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
         # Update pool info
         for pool in self.pool_data:
             if pool["exchange_name"] == exchange_name:
-                pool["fee"] = self.fee_pairs[exchange_name[
+                pool["fee"] = self.fee_pairs[exchange_name][
                     (pool["tkn0_address"], pool["tkn1_address"])
-                ]]
+                ]
                 pool["fee_float"] = pool["fee"] / 1e6
                 pool["descr"] = self.pool_descr_from_info(pool)
 
