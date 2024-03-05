@@ -30,8 +30,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The block number, by default None
 
         """
+        ex_name = self.exchange_name_from_event(event)
+        # bookmark
         if event["event"] == "TradingFeePPMUpdated":
-            self.handle_trading_fee_updated()
+            self.handle_trading_fee_updated(ex_name)
             return
 
         if event["event"] == "PairTradingFeePPMUpdated":
@@ -46,7 +48,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         addr = self.web3.to_checksum_address(event["address"])
-        ex_name = self.exchange_name_from_event(event)
         if not ex_name:
             return
 
@@ -80,11 +81,12 @@ class Manager(PoolManager, EventManager, ContractsManager):
             The event.
 
         """
+        exchange_name = self.exchange_name_from_event(event)
         fee_pairs = self.get_fee_pairs(
             [(event["args"]["token0"], event["args"]["token1"], 0, 5000)],
-            self.create_or_get_carbon_controller(),
+            self.create_or_get_carbon_controller(exchange_name),
         )
-        self.fee_pairs.update(fee_pairs)
+        self.fee_pairs[exchange_name].update(fee_pairs)
 
     def update_from_pool_info(
             self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
@@ -297,6 +299,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         event : Dict[str, Any], optional
             The event, by default None.
         """
+        exchange_name = self.exchange_name_from_event(event)
         tkn0_address = event["args"]["token0"]
         tkn1_address = event["args"]["token1"]
         fee = event["args"]["newFeePPM"]
@@ -307,13 +310,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
             if (
                     pool["tkn0_address"] == tkn0_address
                     and pool["tkn1_address"] == tkn1_address
-                    and pool["exchange_name"] == "carbon_v1"
+                    and pool["exchange_name"] == exchange_name
             ):
                 self._handle_pair_trading_fee_updated(fee, pool, idx)
             elif (
                     pool["tkn0_address"] == tkn1_address
                     and pool["tkn1_address"] == tkn0_address
-                    and pool["exchange_name"] == "carbon_v1"
+                    and pool["exchange_name"] == exchange_name
             ):
                 self._handle_pair_trading_fee_updated(fee, pool, idx)
 
@@ -338,26 +341,26 @@ class Manager(PoolManager, EventManager, ContractsManager):
         pool["descr"] = self.pool_descr_from_info(pool)
         self.pool_data[idx] = pool
 
-    def handle_trading_fee_updated(self):
+    def handle_trading_fee_updated(self, exchange_name: str):
         """
         Handle the trading fee updated event by updating the fee pairs and pool info for all pools.
         """
 
         # Create or get CarbonController contract object
-        carbon_controller = self.create_or_get_carbon_controller()
+        carbon_controller = self.create_or_get_carbon_controller(exchange_name)
 
         # Get pairs by state
         pairs = self.get_carbon_pairs(carbon_controller)
 
         # Update fee pairs
-        self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
+        self.fee_pairs[exchange_name] = self.get_fee_pairs(pairs, carbon_controller)
 
         # Update pool info
         for pool in self.pool_data:
-            if pool["exchange_name"] == "carbon_v1":
-                pool["fee"] = self.fee_pairs[
+            if pool["exchange_name"] == exchange_name:
+                pool["fee"] = self.fee_pairs[exchange_name[
                     (pool["tkn0_address"], pool["tkn1_address"])
-                ]
+                ]]
                 pool["fee_float"] = pool["fee"] / 1e6
                 pool["descr"] = self.pool_descr_from_info(pool)
 

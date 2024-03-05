@@ -36,6 +36,7 @@ class ArbitrageFinderBase:
         result=AO_CANDIDATES,
         ConfigObj: Any = None,
         arb_mode: str = None,
+        base_exchange: str = None,
     ):
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
@@ -47,7 +48,8 @@ class ArbitrageFinderBase:
         self.best_trade_instructions_df = None
         self.best_trade_instructions_dic = None
         self.ConfigObj = ConfigObj
-        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
+        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else base_exchange
+        # self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
     def find_arbitrage(
@@ -141,7 +143,7 @@ class ArbitrageFinderBase:
     # Define the sort key function separately
     def sort_key(self, item, sort_order):
         # Check if the item is 'carbon_v1'
-        if item[0] == 'carbon_v1':
+        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
             return self.CARBON_SORTING_ORDER
         # Otherwise, use the sort order from the dictionary, or a default high value
         return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)

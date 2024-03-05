@@ -35,7 +35,7 @@ class PoolManager(BaseManager):
             "bancor_v2",
         ]:
             return pool_info["address"]
-        elif pool_info["exchange_name"] in ["carbon_v1", "balancer"]:
+        elif pool_info["exchange_name"] in self.cfg.CARBON_V1_FORKS+["balancer"]:
             return pool_info["cid"]
         elif pool_info["exchange_name"] == "bancor_v3":
             return pool_info["tkn1_address"]
@@ -275,7 +275,7 @@ class PoolManager(BaseManager):
             pool_info.update(other_args)
 
         # Update cid if necessary
-        if exchange_name != "carbon_v1":
+        if exchange_name not in self.cfg.CARBON_V1_FORKS:
             pool_info["cid"] = self.pool_cid_from_descr(self.web3, pool_info["descr"])
 
         # Add pool to exchange if necessary

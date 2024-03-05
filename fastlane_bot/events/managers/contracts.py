@@ -46,11 +46,11 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
                 )
-            elif exchange_name == "carbon_v1":
+            elif exchange_name in self.cfg.CARBON_V1_FORKS:
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
-                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    address=self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name],
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
             elif exchange_name == "pancakeswap_v2":
@@ -156,6 +156,7 @@ class ContractsManager(BaseManager):
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
 
+
     @staticmethod
     def get_or_create_token_contracts(
         web3: Web3,
@@ -252,7 +253,7 @@ class ContractsManager(BaseManager):
             fee_float=fee_float,
             tkn0_address=t0_addr,
             tkn1_address=t1_addr,
-            cid=event["args"]["id"] if exchange_name == "carbon_v1" else None,
+            cid=event["args"]["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None,
             contract=pool_contract,
             block_number=block_number,
             tenderly_exchanges=tenderly_exchanges,

@@ -650,7 +650,7 @@ class CarbonBot(CarbonBotBase):
             if ex_name == "bancor_v3":
                 self._validate_pool_data_logging(pool_cid, fetched_pool)
 
-            if current_pool.exchange_name == "carbon_v1":
+            if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
                 if (
                     current_pool.y_0 != fetched_pool["y_0"]
                     or current_pool.y_1 != fetched_pool["y_1"]
@@ -1295,7 +1295,7 @@ class CarbonBot(CarbonBotBase):
                 filter_out_weth = [
                     x
                     for x in CCm
-                    if (x.params.exchange == "carbon_v1")
+                    if (x.params.exchange in self.ConfigObj.UNI_V2_FORKS)
                     & (
                         (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
                         or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)

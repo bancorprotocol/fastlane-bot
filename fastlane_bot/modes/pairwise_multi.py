@@ -31,8 +31,8 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         """
         see base.py
         """
-        if self.base_exchange != "carbon_v1":
-            raise ValueError("base_exchange must be carbon_v1 for `multi` mode")
+        if self.base_exchange not in self.ConfigObj.CARBON_V1_FORKS:
+            raise ValueError("base_exchange must be in CARBON_V1_FORKS for `multi` mode")
 
         if candidates is None:
             candidates = []
@@ -50,9 +50,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            carbon_curves = [x for x in CC.curves if x.params.exchange == self.base_exchange]
             not_carbon_curves = [
-                x for x in CC.curves if x.params.exchange != "carbon_v1"
+                x for x in CC.curves if x.params.exchange != self.base_exchange
             ]
             curve_combos = []
 
