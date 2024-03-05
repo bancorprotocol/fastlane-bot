@@ -47,10 +47,8 @@ class ExchangeFactory:
             The exchange class
         """
         creator = self._creators.get(key)
-        print(f"creator: {creator}, key: {key}")
         if not creator:
             fork_name = cfg.network.exchange_name_base_from_fork(exchange_name=key)
-            print(f"fork_name: {fork_name}")
             if fork_name in key:
                 raise ValueError(key)
             else:
