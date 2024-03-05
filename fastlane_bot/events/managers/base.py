@@ -125,12 +125,11 @@ class BaseManager:
             if base_exchange_name in "solidly_v2":
                 self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
 
-        for ex in self.cfg.CARBON_V1_FORKS:
-            self.carbon_inititalized[ex] = False
-
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
+
+        print(f"exchanges: {self.exchanges.keys()}")
 
 
     def handle_solidly_exchanges(self, exchange):
@@ -190,6 +189,7 @@ class BaseManager:
 
                 # Set the fee pairs
                 self.exchanges[ex].fee_pairs = fee_pairs
+                self._fee_pairs[ex] = fee_pairs
 
     def get_fee_pairs(
         self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
@@ -355,16 +355,16 @@ class BaseManager:
         carbon_controller = self.create_or_get_carbon_controller(exchange_name)
 
         # Create a list of pairs from the CarbonController contract object
-        pairs = self.get_carbon_pairs(carbon_controller, self.target_tokens)
+        pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, target_tokens=self.target_tokens, exchange_name=exchange_name)
 
         # Create a list of strategies for each pair
-        strategies_by_pair = self.get_strategies(pairs, carbon_controller)
+        strategies_by_pair = self.get_strategies(pairs, carbon_controller, exchange_name)
 
         # Get the fee for each pair
         if not self.fee_pairs:
             # Log that the fee pairs are being set
             self.cfg.logger.debug(f"[events.managers.base] Setting {exchange_name} fee pairs...")
-            self.fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
+            self.fee_pairs[exchange_name] = self.get_fee_pairs(pairs, carbon_controller)
 
         # Log the time taken for the above operations
         self.cfg.logger.debug(
@@ -410,14 +410,15 @@ class BaseManager:
             The carbon pairs.
 
         """
+        print(f"exchange_name: {exchange_name}, self.carbon_inititalized[exchange_name]={self.carbon_inititalized[exchange_name]}, carbon_controller.address: {carbon_controller.address}")
         pairs = (
             self.get_carbon_pairs_by_state(exchange_name)
             if self.carbon_inititalized[exchange_name]
             else self.get_carbon_pairs_by_contract(carbon_controller)
         )
         # Log whether the carbon pairs were retrieved from the state or the contract
-        self.cfg.logger.debug(
-            f"Retrieved {len(pairs)} {exchange_name} pairs from {'state' if self.carbon_inititalized else 'contract'}"
+        self.cfg.logger.info(
+            f"Retrieved {len(pairs)} {exchange_name} pairs from {'state' if self.carbon_inititalized[exchange_name] else 'contract'}"
         )
         if target_tokens is None or target_tokens == []:
             target_tokens = []

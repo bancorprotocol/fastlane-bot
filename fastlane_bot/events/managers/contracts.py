@@ -111,6 +111,7 @@ class ContractsManager(BaseManager):
                     self.event_contracts[fork] = fork_contract
                     self.pool_contracts[fork] = {}
                     tracker.append(fork)
+                    self.carbon_inititalized[fork] = False
             elif exchange_name in self.cfg.SOLIDLY_V2_FORKS:
                 fork_contract = self.web3.eth.contract(
                     abi=self.exchanges[exchange_name].get_abi(),
@@ -147,13 +148,6 @@ class ContractsManager(BaseManager):
                 ] = self.web3.eth.contract(
                     address=self.cfg.BALANCER_VAULT_ADDRESS,
                     abi=BALANCER_VAULT_ABI,
-                )
-            elif exchange_name in self.cfg.CARBON_V1_FORKS:
-                self.pool_contracts[exchange_name][
-                    self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
-                ] = self.web3.eth.contract(
-                    address=self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name],
-                    abi=self.exchanges[exchange_name].get_abi(),
                 )
 
 
