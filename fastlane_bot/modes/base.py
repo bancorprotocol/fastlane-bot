@@ -141,7 +141,7 @@ class ArbitrageFinderBase:
     # Define the sort key function separately
     def sort_key(self, item, sort_order):
         # Check if the item is 'carbon_v1'
-        if item[0] == 'carbon_v1':
+        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
             return self.CARBON_SORTING_ORDER
         # Otherwise, use the sort order from the dictionary, or a default high value
         return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)

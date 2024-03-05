@@ -179,7 +179,7 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         fee1 = self.get_fee_safe(pools[1].fee)
         fee2 = self.get_fee_safe(pools[2].fee)
 
-        if pools[1].params.exchange == "carbon_v1":
+        if pools[1].params.exchange in self.ConfigObj.CARBON_V1_FORKS:
             return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
 
         return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
@@ -317,12 +317,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             carbon_curves = [
                 curve
                 for curve in external_curves
-                if curve.params.get("exchange") == "carbon_v1"
+                if curve.params.get("exchange") in self.ConfigObj.CARBON_V1_FORKS
             ]
             external_curves = [
                 curve
                 for curve in external_curves
-                if curve.params.get("exchange") != "carbon_v1"
+                if curve.params.get("exchange") not in self.ConfigObj.CARBON_V1_FORKS
             ]
             if not external_curves and not carbon_curves:
                 continue
