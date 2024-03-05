@@ -19,27 +19,19 @@
 """
 This module contains the tests for the exchanges classes
 """
+import json
+
 from unittest.mock import Mock
 
-from fastlane_bot import Bot, Config
-from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
+from fastlane_bot import Config
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, WrapUnwrapProcessor, CarbonTradeSplitter
+from fastlane_bot.helpers import TradeInstruction, TxRouteHandler
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.testing import *
 from fastlane_bot.config.network import *
 
-import json
-from dataclasses import asdict
 from typing import Dict
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
+
 from fastlane_bot.testing import *
 
 plt.rcParams['figure.figsize'] = [12,6]
@@ -47,9 +39,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 # -
 
-cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
+cfg = Config.new(config=Config.CONFIG_UNITTEST, blockchain="ethereum")
 cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
-setup_bot = CarbonBot(ConfigObj=cfg)
 pools = None
 with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
@@ -132,6 +123,9 @@ assert not raises(txroutehandler._solve_trade_output, mock_curve_1, trade_instru
 # Test that Solidly V2 Volatile pool returns the same format as a Uni V2 pool
 solidly_output = txroutehandler._solve_trade_output(curve=mock_curve_0, trade=trade_instruction_0, amount_in=Decimal("0.05"))[0]
 uni_v2_output = txroutehandler._solve_trade_output(curve=mock_curve_0, trade=trade_instruction_1, amount_in=Decimal("0.05"))[0]
+
+
+
 assert type(solidly_output) == Decimal, f"[NBTest 062 TestRouteHandler] Expected type of output for Solidly V2 Volatile pool to be of type Decimal, found {type(solidly_output)}"
 assert solidly_output == uni_v2_output, f"[NBTest 062 TestRouteHandler] Expected output for Solidly V2 Volatile pool to the same as Uni V2 pool, found {solidly_output} vs {uni_v2_output}"
 # -
