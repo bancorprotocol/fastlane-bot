@@ -91,6 +91,7 @@ class PoolAndTokens:
     ConfigObj: Config
     id: int
     cid: str
+    strategy_id: str
     last_updated: str
     last_updated_block: int
     descr: str
@@ -168,6 +169,8 @@ class PoolAndTokens:
 
 
     def __post_init__(self):
+        if not isinstance(self.strategy_id, str):
+            self.strategy_id = str(self.strategy_id)
 
         self.A_1 = self.A_1 or 0
         self.B_1 = self.B_1 or 0
@@ -449,7 +452,7 @@ class PoolAndTokens:
             tkny = 1 if i == 0 else 0
             typed_args = {
                 "cid": f"{self.cid}-{i}"
-                if self.exchange_name == "carbon_v1"
+                if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
                 else self.cid,
                 "yint": yint,
                 "y": y,

@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Callable, Optional
 from web3 import Web3
 from web3.contract import Contract
 
+from fastlane_bot import Config
 from fastlane_bot.events.interface import Pool
 from fastlane_bot.events.managers.base import BaseManager
 from fastlane_bot.events.pools import pool_factory
@@ -35,7 +36,7 @@ class PoolManager(BaseManager):
             "bancor_v2",
         ]:
             return pool_info["address"]
-        elif pool_info["exchange_name"] in ["carbon_v1", "balancer"]:
+        elif pool_info["exchange_name"] in self.cfg.CARBON_V1_FORKS+["balancer"]:
             return pool_info["cid"]
         elif pool_info["exchange_name"] == "bancor_v3":
             return pool_info["tkn1_address"]
@@ -144,6 +145,7 @@ class PoolManager(BaseManager):
         t0_decimals,
         t1_decimals,
         cid,
+        strategy_id,
         fee,
         fee_float,
         block_number: int = None,
@@ -171,6 +173,8 @@ class PoolManager(BaseManager):
             The token 1 decimals.
         cid : str
             The cid.
+        strategy_id : int
+            The strategy id.
         fee : Any
             The fee.
         fee_float : float
@@ -195,6 +199,7 @@ class PoolManager(BaseManager):
             "tkn0_decimals": t0_decimals,
             "tkn1_decimals": t1_decimals,
             "cid": cid,
+            "strategy_id": strategy_id,
             "pair_name": f"{tkn0_address}/{tkn1_address}",
             "fee_float": fee_float,
             "fee": fee,
@@ -211,6 +216,7 @@ class PoolManager(BaseManager):
         tkn0_address: str,
         tkn1_address: str,
         cid: Optional[str] = None,
+        strategy_id: Optional[int] = None,
         other_args: Optional[Dict[str, Any]] = None,
         contract: Optional[Contract] = None,
         block_number: int = None,
@@ -265,6 +271,7 @@ class PoolManager(BaseManager):
             t0_decimals,
             t1_decimals,
             cid,
+            strategy_id,
             fee,
             fee_float,
             block_number,
@@ -275,8 +282,10 @@ class PoolManager(BaseManager):
             pool_info.update(other_args)
 
         # Update cid if necessary
-        if exchange_name != "carbon_v1":
-            pool_info["cid"] = self.pool_cid_from_descr(self.web3, pool_info["descr"])
+        unique_id = pool_info["descr"] if pool_info['exchange_name'] not in self.cfg.CARBON_V1_FORKS else (
+            f"{pool_info['exchange_name']} {pool_info['strategy_id']} {pool_info['fee']}"
+        )
+        pool_info["cid"] = self.pool_cid_from_descr(self.web3, unique_id)
 
         # Add pool to exchange if necessary
         pool = self.get_or_init_pool(pool_info)
@@ -292,6 +301,8 @@ class PoolManager(BaseManager):
                     tenderly_exchanges,
                 )
             )
+        else:
+            self.pool_data = [p for p in self.pool_data if p["cid"] != pool_info["cid"]]
 
         self.pool_data.append(pool_info)
         return pool_info

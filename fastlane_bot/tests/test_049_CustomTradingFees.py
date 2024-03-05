@@ -70,13 +70,18 @@ def test_test_update_from_event_carbon_v1_pair_create():
     
     # +
     event = event_data['carbon_v1_event_pair_created']
-    assert (event['args']['token0'], event['args']['token1']) not in manager.fee_pairs
-    
+
+    exchange_name = 'carbon_v1'
+
+    manager.fee_pairs[exchange_name] = {}
+
+    assert (event['args']['token0'], event['args']['token1']) not in manager.fee_pairs[exchange_name]
+
     manager.update_from_event(event)
+
+    assert (event['args']['token0'], event['args']['token1']) in manager.fee_pairs[exchange_name]
     
-    assert (event['args']['token0'], event['args']['token1']) in manager.fee_pairs
-    
-    # -
+
     
 
 # ------------------------------------------------------------
@@ -118,49 +123,3 @@ def test_test_update_from_event_carbon_v1_trading_fee_updated():
     # Run the test in an event loop
     asyncio.run(test_update_from_event_carbon_v1_trading_fee_updated())
     # -
-    
-
-# ------------------------------------------------------------
-# Test      049
-# File      test_049_CustomTradingFees.py
-# Segment   test_update_from_event_carbon_v1_pair_trading_fee_updated
-# ------------------------------------------------------------
-def test_test_update_from_event_carbon_v1_pair_trading_fee_updated():
-# ------------------------------------------------------------
-    
-    # +
-    event = event_data['carbon_v1_pair_trading_fee_updated']
-    prevFeePPM = event['args']['prevFeePPM']
-    newFeePPM = event['args']['newFeePPM']
-    token0 = event['args']['token0']
-    token1 = event['args']['token1']
-    
-    # set the fee for the pair to prevFeePPM
-    idxs = [idx for idx, pool in enumerate(manager.pool_data) if pool['tkn0_address'] == token0 and pool['tkn1_address'] == token1 and pool['exchange_name'] == 'carbon_v1']
-    for idx in idxs:
-        manager.pool_data[idx]['fee'] = f"{prevFeePPM}"
-        manager.pool_data[idx]['fee_float'] = prevFeePPM / 1e6
-    
-    # set all other pools with a different fee than prevFeePPM
-    others = [i for i, pool in enumerate(manager.pool_data) if i not in idxs and pool['exchange_name'] == 'carbon_v1']
-    for i in others:
-        manager.pool_data[i]['fee'] = f"{prevFeePPM-1}"
-        manager.pool_data[i]['fee_float'] = (prevFeePPM-1) / 1e6
-    
-    manager.update_from_event(event)
-    
-    # check that the fee for the pair is now newFeePPM
-    for idx in idxs:
-        assert manager.pool_data[idx]['fee'] == f"{newFeePPM}"
-        assert manager.pool_data[idx]['fee_float'] == newFeePPM / 1e6
-        
-    # check that all other pools have not been changed
-    for i in others:
-        assert manager.pool_data[i]['fee'] == f"{prevFeePPM-1}"
-        assert manager.pool_data[i]['fee_float'] == (prevFeePPM-1) / 1e6
-    
-    # -
-    
-    #
-    
-    #

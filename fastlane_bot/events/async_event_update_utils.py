@@ -14,6 +14,7 @@ from web3.contract import AsyncContract
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
+from fastlane_bot.events.new_utils import get_pool_cid
 
 nest_asyncio.apply()
 
@@ -59,7 +60,7 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
 
 
 async def get_token_and_fee(
-        exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
+        exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any, carbon_v1_forks: List[str]
 ) -> Tuple[str, str, str, str, str, int or None, str or None] or Tuple[
     str, str, None, None, None, None, None
 ]:
@@ -79,40 +80,30 @@ async def get_token_and_fee(
                 tkn1 = connector_token
             elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                 tkn0 = connector_token
-            # tkn0 = (
-            #     connector_token
-            #     if tkn0 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     else tkn0
-            # )
-            # tkn1 = (
-            #     connector_token
-            #     if tkn1 != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     and connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-            #     else tkn1
-            # )
-            # if address in [
-            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
-            #     "0x8df51A9714aE6357a5B829CC8d677b43D7e8BD53",
-            #     "0x079cA3f710599739a22673c2856202F90D3A8806",
-            # ]:
-            #     print(
-            #         f"\n#2 connector_token: {connector_token}, anchor: {anchor}, tkn0: {tkn0}, tkn1: {tkn1}"
-            #     )
-            #     raise Exception("test")
-        cid = str(event["args"]["id"]) if exchange_name == "carbon_v1" else None
 
-        return exchange_name, address, tkn0, tkn1, fee, cid, anchor
+        # bookmark
+        strategy_id = str(event["args"]["id"]) if exchange_name in carbon_v1_forks else None
+        pool_info = {
+            "exchange_name": exchange_name,
+            "address": address,
+            "tkn0_address": tkn0,
+            "tkn1_address": tkn1,
+            "pair_name": f"{tkn0}/{tkn1}",
+            "fee": fee,
+            "strategy_id": strategy_id
+        }
+        cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
+        return exchange_name, address, tkn0, tkn1, fee, cid, strategy_id, anchor
     except Exception as e:
         cfg.logger.info(
             f"Failed to get tokens and fee for {address} {exchange_name} {e}"
         )
-        return exchange_name, address, None, None, None, None, anchor
+        return exchange_name, address, None, None, None, None, None, anchor
 
 
-async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
+async def main_get_tokens_and_fee(c: List[Dict[str, Any]], carbon_v1_forks) -> pd.DataFrame:
     vals = await asyncio.wait_for(
-        asyncio.gather(*[get_token_and_fee(**args) for args in c]), timeout=20 * 60
+        asyncio.gather(*[get_token_and_fee(carbon_v1_forks=carbon_v1_forks, **args) for args in c]), timeout=20 * 60
     )
     return pd.DataFrame(
         vals,
@@ -123,6 +114,7 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
             "tkn1_address",
             "fee",
             "cid",
+            "strategy_id",
             "anchor",
         ],
     )
@@ -166,16 +158,13 @@ def get_pool_info(
         "tkn0_decimals": tkn0["decimals"],
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
-        "pair_name": tkn0["address"] + "/" + tkn1["address"]
+        "pair_name": tkn0["address"] + "/" + tkn1["address"],
+        "strategy_id": pool["strategy_id"] if "strategy_id" in pool else None,
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
-    pool_info["descr"] = mgr.pool_descr_from_info(pool_info)
-    pool_info["cid"] = (
-        mgr.cfg.w3.keccak(text=f"{pool_info['descr']}").hex()
-        if pool_info["exchange_name"] != "carbon_v1"
-        else str(pool["cid"])
-    )
+
+    pool_info["cid"] = get_pool_cid(pool_info, carbon_v1_forks=mgr.cfg.CARBON_V1_FORKS)
 
     # timestamp
     pool_info["last_updated"] = time.time()
@@ -317,12 +306,16 @@ def process_contract_chunks(
         func: Callable,
         df_combined: pd.DataFrame = None,
         read_only: bool = False,
+        carbon_v1_forks: List[str] = None,
 ) -> pd.DataFrame:
     lst = []
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
-        df = loop.run_until_complete(func(chunk))
+        if filename == "tokens_and_fee_df.csv":
+            df = loop.run_until_complete(func(chunk, carbon_v1_forks))
+        else:
+            df = loop.run_until_complete(func(chunk))
         if not read_only:
             df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
         else:
@@ -381,6 +374,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
 def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path):
     global cfg
     cfg = mgr.cfg
+    carbon_v1_forks = cfg.CARBON_V1_FORKS
     dirname = "temp"
     keys = [
         "liquidity",
@@ -412,9 +406,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         chunks=chunks,
         dirname=dirname,
         filename="tokens_and_fee_df.csv",
-        subset=["exchange_name", "address", "cid", "tkn0_address", "tkn1_address"],
+        subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
         func=main_get_tokens_and_fee,
         read_only=mgr.read_only,
+        carbon_v1_forks=carbon_v1_forks,
     )
 
     contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
@@ -429,6 +424,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
         ),
         read_only=mgr.read_only,
+        carbon_v1_forks=carbon_v1_forks,
     )
     tokens_df["symbol"] = (
         tokens_df["symbol"]
@@ -473,12 +469,12 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
             + new_pool_data_df["fee"].astype(str)
     )
 
+    new_pool_data_dict = new_pool_data_df.to_dict(orient="records")
+
     # Initialize web3
     new_pool_data_df["cid"] = [
-        cfg.w3.keccak(text=f"{row['descr']}").hex()
-        if row["exchange_name"] not in mgr.cfg.CARBON_V1_FORKS
-        else int(row['cid'])
-        for index, row in new_pool_data_df.iterrows()
+        get_pool_cid(row, carbon_v1_forks=mgr.cfg.CARBON_V1_FORKS)
+        for row in new_pool_data_dict
     ]
 
     # print duplicate cid rows
