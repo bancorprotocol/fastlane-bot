@@ -37,7 +37,7 @@ require("3.0", __VERSION__)
 
 import json
 
-with open("fastlane_bot/tests/_tests/_data/event_test_data.json", "r") as f:
+with open("fastlane_bot/tests/_data/event_test_data.json", "r") as f:
     event_data = json.load(f)
 
 with open("fastlane_bot/tests/_data/test_pool_data.json", "r") as f:
