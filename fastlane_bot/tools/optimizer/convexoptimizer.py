@@ -33,8 +33,10 @@ except:
     # if cvxpy is not installed on the system then the convex optimization methods will not work
     # however, the (superior) marginal price based methods will still work and we do not want to
     # force installation of an otherwise unused package onto the user's system
-    cp = None
-
+    from types import SimpleNamespace
+    cp = SimpleNamespace(Variable=float, ECOS=None, SCS=None, OSQP=None, CVXOPT=None,)
+        # so that cp.XXX is notionally defined
+    
 from .dcbase import DCBase
 from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
