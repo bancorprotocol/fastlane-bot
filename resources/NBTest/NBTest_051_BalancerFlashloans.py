@@ -7,13 +7,14 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -45,6 +46,7 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
+# -
 
 # # Balancer Flashloan Support [NBTest051]
 

@@ -8,21 +8,18 @@
 
 
 
-from fastlane_bot import Bot
-from fastlane_bot.events.pools import SushiswapV2Pool, UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from typing import List
 from web3.datastructures import AttributeDict
 from web3.types import HexBytes
-import pytest
 
+from fastlane_bot import Bot
+from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
 from fastlane_bot.events.utils import filter_latest_events, complex_handler
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3Pool))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SushiswapV2Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1Pool))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3Pool))
 from fastlane_bot.testing import *
@@ -35,6 +32,8 @@ require("3.0", __VERSION__)
 
 
 class MockManager():
+
+    pool_data = pd.DataFrame({'anchor': ['0xabc', '0xdef'], 'exchange_name': ['bancor_v2', 'bancor_v2']}).to_dict('records')
 
     def pool_type_from_exchange_name(self, exchange_name):
 

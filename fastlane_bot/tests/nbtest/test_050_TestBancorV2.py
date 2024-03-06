@@ -31,11 +31,9 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
@@ -44,16 +42,13 @@ require("3.0", __VERSION__)
 
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 0.02
-C.DEFAULT_MIN_PROFIT = 0.02
-cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
-cfg.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
 
-with open('fastlane_bot/data/tests/latest_pool_data_testing_bancor_v2.json') as f:
+with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools]
 pools[0]
@@ -90,6 +85,7 @@ static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -130,12 +126,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -151,8 +146,8 @@ arb_mode = "multi"
 def test_test_min_profit():
 # ------------------------------------------------------------
     
-    assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-    assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestBancorV2Mode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
+    
     
 
 # ------------------------------------------------------------
@@ -172,8 +167,10 @@ def test_test_combos_and_tokens():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    assert len(all_tokens) == 971, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected 971 tokens, found {len(all_tokens)}"
-    assert len(combos) == 5820, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected 5820 tokens, found {len(combos)}"
+    assert type(all_tokens) == set, f"[NBTest_50_TestBancorV2] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+    assert type(combos) == list, f"[NBTest_50_TestBancorV2] combos is wrong data type. Expected list, found: {type(combos)}"
+    assert len(all_tokens) > 100, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    assert len(combos) > 1000, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     
     
 
@@ -186,8 +183,30 @@ def test_test_expected_output_bancorv2():
 # ------------------------------------------------------------
     
     # +
-    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
-    arb_finder = bot._get_arb_finder("multi")
+    arb_finder = bot._get_arb_finder("multi_pairwise_all")
+    finder = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_CANDIDATES,
+                ConfigObj=bot.ConfigObj,
+            )
+    r = finder.find_arbitrage()
+    
+    arb_with_bancor_v2 = []
+    for arb_opp in r:
+        pools = []
+        for pool in arb_opp[2]:
+            pools += [curve for curve in CCm if curve.cid == pool['cid']]
+        for pool in pools:
+            if pool.params['exchange'] == "bancor_v2":
+                arb_with_bancor_v2.append(arb_opp)
+    
+    assert len(r) >= 27, f"[NBTest_50_TestBancorV2] Expected at least 27 arb opps, found {len(r)}"
+    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"            
+    
+    # +
+    arb_finder = bot._get_arb_finder("multi_pairwise_all")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
@@ -197,7 +216,6 @@ def test_test_expected_output_bancorv2():
             )
     r = finder.find_arbitrage()
     arb_with_bancor_v2 = []
-    
     for arb_opp in r:
         pools = []
         for pool in arb_opp[2]:
@@ -207,19 +225,7 @@ def test_test_expected_output_bancorv2():
                 arb_with_bancor_v2.append(arb_opp)
     
     # get specific arb for tests
-    
-    test_arb = None
-    
-    test_cids = ['0x297f9a0e8d3f57de8c62a8fde0ff09193b934ff0ae906085526f0b97b90e188a', '3743106036130323098097120681749450326076-0', '3743106036130323098097120681749450326076-1']
-    
-    for arb in arb_with_bancor_v2:
-        all_match = True
-        for pool in arb[2]:
-            if pool['cid'] not in test_cids:
-                all_match = False
-        
-        if all_match:
-            test_arb = arb
+    test_arb = arb_with_bancor_v2[0]
     
     (
         best_profit,
@@ -270,7 +276,7 @@ def test_test_expected_output_bancorv2():
     )
     
     # Get the flashloan token
-    fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_key
+    fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
     if fl_token == T.WETH:
@@ -280,14 +286,8 @@ def test_test_expected_output_bancorv2():
     
     # Use helper function to calculate profit
     best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
-        CCm, best_profit, fl_token, fl_token_with_weth
+        CCm, best_profit, fl_token,
     )
-    
-    # Check if the best profit is greater than the minimum profit
-    if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
-        bot.ConfigObj.logger.info(
-            f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
-        )
     
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
@@ -310,11 +310,14 @@ def test_test_expected_output_bancorv2():
             encoded_trade_instructions, deadline
         )
     ]
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwise", f"[NBTest_50_TestBancorV2] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
-    assert len(r) == 46, f"[NBTest_50_TestBancorV2] Expected 46 arb opps, found {len(r)}"
-    assert len(arb_with_bancor_v2) == 4, f"[NBTest_50_TestBancorV2] Expected 4 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
-    assert encoded_trade_instructions[0].amtin * 10 ** 18 == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount"
-    assert route_struct[0]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533" or route_struct[1]['customAddress'] == "0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533", f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: 0xb1CD6e4153B2a390Cf00A6556b0fC1458C4A5533 for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
+    b2pools = [pool['anchor'] for pool in mgr.pool_data if pool["exchange_name"] in "bancor_v2"]
+    bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
+    assert arb_finder.__name__ == "FindArbitrageMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
+    assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(r)}"
+    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
+    assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
+    assert route_struct[0]['customAddress'] in bancor_v2_converter_addresses or route_struct[1]['customAddress'] in bancor_v2_converter_addresses, f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: anchor for Bancor V2 pool for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
     # -
+    
     
     

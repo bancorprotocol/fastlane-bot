@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -14,15 +14,13 @@
 # ---
 
 # +
-from fastlane_bot import Bot
-from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
-from typing import List
 from web3.datastructures import AttributeDict
 from web3.types import HexBytes
-import pytest
 
+from fastlane_bot import Bot
+from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
 from fastlane_bot.events.utils import filter_latest_events, complex_handler
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))

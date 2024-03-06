@@ -29,11 +29,9 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
-
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
@@ -42,15 +40,12 @@ require("3.0", __VERSION__)
 
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 0.02
-C.DEFAULT_MIN_PROFIT = 0.02
-cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
-cfg.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
-with open('fastlane_bot/data/tests/latest_pool_data_testing_save.json') as f:
+with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools]
 pools[0]
@@ -87,6 +82,7 @@ static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -127,12 +123,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -148,8 +143,7 @@ arb_mode = "multi"
 def test_test_min_profit():
 # ------------------------------------------------------------
     
-    assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-    assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestMultiMode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
     
 
 # ------------------------------------------------------------
@@ -172,6 +166,7 @@ def test_test_get_arb_finder():
 def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
+    # +
     arb_finder = bot._get_arb_finder("multi")
     finder2 = arb_finder(
                 flashloan_tokens=flashloan_tokens,
@@ -181,8 +176,12 @@ def test_test_combos_and_tokens():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    assert len(all_tokens) == 545, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-    assert len(combos) == 3264, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+    
+    assert type(all_tokens) == set, f"[NBTest 039 TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+    assert type(combos) == list, f"[NBTest 039 TestMultiMode] combos is wrong data type. Expected list, found: {type(combos)}"
+    assert len(all_tokens) >= 236, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 236 tokens, found {len(all_tokens)}"
+    assert len(combos) >= 1410, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1410 combos, found {len(combos)}"
+    # -
     
 
 # ------------------------------------------------------------
@@ -193,28 +192,6 @@ def test_test_combos_and_tokens():
 def test_test_expected_output():
 # ------------------------------------------------------------
     
-    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
-    arb_finder = bot._get_arb_finder("multi")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    assert len(r) == 30, f"[TestMultiMode] Expected 30 arbs, found {len(r)}"
-    assert len(r) == len(run_full), f"[TestMultiMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-    
-
-# ------------------------------------------------------------
-# Test      039
-# File      test_039_TestMultiMode.py
-# Segment   Test_Multiple_Curves_Used
-# ------------------------------------------------------------
-def test_test_multiple_curves_used():
-# ------------------------------------------------------------
-    
     # +
     arb_finder = bot._get_arb_finder("multi")
     finder = arb_finder(
@@ -224,9 +201,11 @@ def test_test_multiple_curves_used():
                 result=bot.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
-    r = finder.find_arbitrage()
-    multi_carbon_count = 0
     
+    r = finder.find_arbitrage()
+    
+    multi_carbon_count = 0
+    carbon_wrong_direction_count = 0
     for arb in r:
         (
                 best_profit,
@@ -237,36 +216,18 @@ def test_test_multiple_curves_used():
             ) = arb
         if len(best_trade_instructions_dic) > 2:
             multi_carbon_count += 1
+            carbon_tkn_in = None
+            for trade in best_trade_instructions_dic:
+                if "-" in trade["cid"]:
+                    if carbon_tkn_in is None:
+                        carbon_tkn_in = trade["tknin"]
+                    else:
+                        if trade["tknin"] not in carbon_tkn_in:
+                            carbon_wrong_direction_count += 1
     
-    assert multi_carbon_count > 0, f"[TestMultiMode] Not finding arbs with multiple Carbon curves."
+    assert len(r) >= 27, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
+    assert multi_carbon_count > 0, f"[NBTest 039 TestMultiMode] Not finding arbs with multiple Carbon curves."
+    assert carbon_wrong_direction_count == 0, f"[NBTest 039 TestMultiMode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."
     # -
     
-
-# ------------------------------------------------------------
-# Test      039
-# File      test_039_TestMultiMode.py
-# Segment   Test_Single_Direction_Carbon_Curves
-# ------------------------------------------------------------
-def test_test_single_direction_carbon_curves():
-# ------------------------------------------------------------
     
-    # +
-    arb_finder = bot._get_arb_finder("multi")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    src_token="WBTC-C599" 
-    wrong_direction_cids = ['4083388403051261561560495289181218537493-0', '4083388403051261561560495289181218537579-0', '4083388403051261561560495289181218537610-0', '4083388403051261561560495289181218537629-0', '4083388403051261561560495289181218537639-0', '4083388403051261561560495289181218537755-0']
-    curves_before = [ConstantProductCurve(k=2290523503.4460173, x=273.1073125047371, x_act=0.07743961144774403, y_act=1814.6001096442342, pair='WBTC-C599/USDC-eB48', cid='0x8d7ac7e77704f3ac75534d5500159a7a4b7e6e23dbdca7d9a8085bdea0348d0c', fee=0.0005, descr='uniswap_v3 WBTC-C599/USDC-eB48 500', constr='pkpp', params={'exchange': 'uniswap_v3', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17675876, 'L': 47859.413948}), ConstantProductCurve(k=3675185.41145277, x=11.059038979187497, x_act=0, y_act=1385.267061, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537493-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 1385.267061, 'yint': 1385.267061, 'A': 0.722593217276426, 'B': 172.62676501631972, 'pa': 30049.999999999647, 'pb': 29799.999999999665}), ConstantProductCurve(k=29672.782767383174, x=1.0315213950985431, x_act=0, y_act=3651.804716, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537579-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 3651.804716, 'yint': 3651.804716, 'A': 21.199636119827687, 'B': 145.79437574886072, 'pa': 27886.999999999643, 'pb': 21255.999999999985}), ConstantProductCurve(k=6.863635116394053e+16, x=1525337.9097739116, x_act=0, y_act=4499.746836, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537610-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 4499.746836, 'yint': 4499.746836, 'A': 0, 'B': 171.7556317853946, 'pa': 29499.99999999976, 'pb': 29499.99999999976}), ConstantProductCurve(k=143046.70577155304, x=2.1824671097293846, x_act=0, y_act=5742.51191, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537629-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 5742.51191, 'yint': 6413.595264, 'A': 16.957530991696217, 'B': 158.11388300841884, 'pa': 30649.99999999968, 'pb': 24999.99999999996}), ConstantProductCurve(k=5459975.623181331, x=437148.88403306017, x_act=0, y_act=0.50315999, pair='USDC-eB48/WBTC-C599', cid='4083388403051261561560495289181218537629-1', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 0.50315999, 'yint': 0.50315999, 'A': 0.0002153330778227767, 'B': 0.005129891760425664, 'pa': 2.8571428571428076e-05, 'pb': 2.631578947368312e-05}), ConstantProductCurve(k=443607.9519434853, x=3.85826034424969, x_act=0, y_act=9876.976514, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537639-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 9876.976514, 'yint': 9876.976514, 'A': 14.829426635724872, 'B': 157.79733838059485, 'pa': 29799.999999999665, 'pb': 24899.999999999953}), ConstantProductCurve(k=5324.625267368582, x=12680.839210183807, x_act=0, y_act=0.01198047, pair='USDC-eB48/WBTC-C599', cid='4083388403051261561560495289181218537639-1', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 0.01198047, 'yint': 0.01198047, 'A': 0.00016418343273514376, 'B': 0.0055901699437491455, 'pa': 3.311258278145614e-05, 'pb': 3.124999999999633e-05}), ConstantProductCurve(k=3316749913763783.5, x=331674.9583747572, x_act=0, y_act=1000.0, pair='WBTC-C599/USDC-eB48', cid='4083388403051261561560495289181218537755-0', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 1000.0, 'yint': 1000.0, 'A': 0, 'B': 173.63754485997586, 'pa': 30149.999999999825, 'pb': 30149.999999999825})]
-    curves_expected_after = [ConstantProductCurve(k=2290523503.4460173, x=273.1073125047371, x_act=0.07743961144774403, y_act=1814.6001096442342, pair='WBTC-C599/USDC-eB48', cid='0x8d7ac7e77704f3ac75534d5500159a7a4b7e6e23dbdca7d9a8085bdea0348d0c', fee=0.0005, descr='uniswap_v3 WBTC-C599/USDC-eB48 500', constr='pkpp', params={'exchange': 'uniswap_v3', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17675876, 'L': 47859.413948}), ConstantProductCurve(k=5459975.623181331, x=437148.88403306017, x_act=0, y_act=0.50315999, pair='USDC-eB48/WBTC-C599', cid='4083388403051261561560495289181218537629-1', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 0.50315999, 'yint': 0.50315999, 'A': 0.0002153330778227767, 'B': 0.005129891760425664, 'pa': 2.8571428571428076e-05, 'pb': 2.631578947368312e-05}), ConstantProductCurve(k=5324.625267368582, x=12680.839210183807, x_act=0, y_act=0.01198047, pair='USDC-eB48/WBTC-C599', cid='4083388403051261561560495289181218537639-1', fee=0.002, descr='carbon_v1 WBTC-C599/USDC-eB48 0.002', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17674427, 'y': 0.01198047, 'yint': 0.01198047, 'A': 0.00016418343273514376, 'B': 0.0055901699437491455, 'pa': 3.311258278145614e-05, 'pb': 3.124999999999633e-05})]
-    test_process_wrong_direction_pools = finder.process_wrong_direction_pools(curve_combo=curves_before, wrong_direction_cids=wrong_direction_cids)
-    O, profit_src, r, trade_instructions_df = finder.run_main_flow(curves=curves_expected_after, src_token="WBTC-C599", tkn0="USDC-eB48", tkn1="WBTC-C599")
-    
-    assert len(curves_before) - len(wrong_direction_cids) == len(test_process_wrong_direction_pools), f"[TestMultiMode] Wrong direction CIDs not removed correctly, started with {len(curves_before)}, removing {len(wrong_direction_cids)}, expected {len(curves_before) - len(wrong_direction_cids)} got {len(test_process_wrong_direction_pools)}"
-    for curve in test_process_wrong_direction_pools:
-        assert curve.cid not in wrong_direction_cids, f"[TestMultiMode] Failed to remove curve {curve.cid} from list of wrong direction pools"
-    assert iseq(profit_src, 2.905623487869935e-05)

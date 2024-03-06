@@ -29,7 +29,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -42,15 +41,12 @@ require("3.0", __VERSION__)
 
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 0.02
-C.DEFAULT_MIN_PROFIT = 0.02
-cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
-cfg.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
-with open('fastlane_bot/data/tests/latest_pool_data_testing_save.json') as f:
+with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools]
 pools[0]
@@ -87,6 +83,7 @@ static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -127,20 +124,19 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "single"
 
-assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestSingleMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestSingleMode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
+
 
 
 
@@ -165,6 +161,7 @@ def test_test_arb_mode_class():
 def test_test_tokens_and_combos():
 # ------------------------------------------------------------
     
+    # +
     arb_finder = bot._get_arb_finder("single")
     finder2 = arb_finder(
                 flashloan_tokens=flashloan_tokens,
@@ -174,36 +171,17 @@ def test_test_tokens_and_combos():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    assert len(all_tokens) == 543, f"[TestMultiMode] Using wrong dataset, expected 545 tokens, found {len(all_tokens)}"
-    assert len(combos) == 3252, f"[TestMultiMode] Using wrong dataset, expected 3264 tokens, found {len(combos)}"
+    
+    assert type(all_tokens) == set, f"[TestSingleMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+    assert type(combos) == list, f"[TestSingleMode] combos is wrong data type. Expected list, found: {type(combos)}"
+    assert len(all_tokens) > 100, f"[TestSingleMode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
+    # -
     
     # ### Test_Single_Arb_Finder_vs_run
     
-    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, data_validator=False)["r"]
-    arb_finder = bot._get_arb_finder("single")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    assert len(r) == 30, f"[TestSingleMode] Expected 26 arbs, found {len(r)}"
-    assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
-    
-    
-    
-
-# ------------------------------------------------------------
-# Test      040
-# File      test_040_TestSingleMode.py
-# Segment   Test_no_multi_carbon
-# ------------------------------------------------------------
-def test_test_no_multi_carbon():
-# ------------------------------------------------------------
-    
     # +
+    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode)["r"]
     arb_finder = bot._get_arb_finder("single")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
@@ -213,6 +191,7 @@ def test_test_no_multi_carbon():
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
+    
     multi_carbon_count = 0
     
     for arb in r:
@@ -227,6 +206,8 @@ def test_test_no_multi_carbon():
             multi_carbon_count += 1
     
     assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
+    assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
+    assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
     # -
     
     

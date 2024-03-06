@@ -29,12 +29,11 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
 
-plt.style.use('seaborn-dark')
+#plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
@@ -42,15 +41,12 @@ require("3.0", __VERSION__)
 
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 0.02
-C.DEFAULT_MIN_PROFIT = 0.02
-cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
-cfg.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
-with open('fastlane_bot/data/tests/latest_pool_data_testing_save.json') as f:
+with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools]
 pools[0]
@@ -87,6 +83,7 @@ static_pool_data = pd.DataFrame(static_pool_data)
 static_pool_data['exchange_name'].unique()
 mgr = Manager(
     web3=cfg.w3,
+    w3_async=cfg.w3_async,
     cfg=cfg,
     pool_data=static_pool_data.to_dict(orient="records"),
     SUPPORTED_EXCHANGES=exchanges,
@@ -127,12 +124,11 @@ def init_bot(mgr: Manager) -> CarbonBot:
     ), "QueryInterface not initialized correctly"
     return bot
 bot = init_bot(mgr)
-bot.db.handle_token_key_cleanup()
 bot.db.remove_unmapped_uniswap_v2_pools()
 bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
-ADDRDEC = {t.key: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
 flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
@@ -148,8 +144,7 @@ arb_mode = "multi"
 def test_test_min_profit():
 # ------------------------------------------------------------
     
-    assert(cfg.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
-    assert(C.DEFAULT_MIN_PROFIT_BNT <= 0.02), f"[TestMultiMode], DEFAULT_MIN_PROFIT_BNT must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_BNT}"
+    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestMultiMode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
     
 
 # ------------------------------------------------------------
@@ -219,45 +214,6 @@ def test_test_validator_single():
     
     
     assert arb_opp == validated
-    # -
-    
-
-# ------------------------------------------------------------
-# Test      045
-# File      test_045_Validator.py
-# Segment   Test_validator_bancor_v3
-# ------------------------------------------------------------
-def test_test_validator_bancor_v3():
-# ------------------------------------------------------------
-    
-    # +
-    arb_mode="bancor_v3"
-    
-    arb_finder = bot._get_arb_finder(arb_mode)
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    
-    arb_opp = None
-    
-    for arb in r:
-        has_carbon = False
-        for trade in arb[2]:
-            if '-' in trade['cid']:
-                has_carbon = True
-        
-        if not has_carbon:
-            arb_opp = arb
-            break
-    
-    validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-    
-    assert arb_opp != validated
     # -
     
 

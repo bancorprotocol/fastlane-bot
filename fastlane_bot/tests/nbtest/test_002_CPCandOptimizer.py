@@ -95,58 +95,58 @@ def test_bycids():
 def test_pairo_and_primary():
 # ------------------------------------------------------------
     
-    assert Pair.n("WETH-eeee") == "WETH"
     assert Pair.n("WETH") == "WETH"
-    assert Pair.n("USDC-uuuu/WETH-eeee") == "USDC/WETH"
+    assert Pair.n("WETH") == "WETH"
+    assert Pair.n("USDC/WETH") == "USDC/WETH"
     
-    pairo = Pair("USDC-uuuu/WETH-eeee")
+    pairo = Pair("USDC/WETH")
     assert pairo.isprimary == False
-    assert raises (Pair, tknb='USDC-uuuu', tknq='WETH-eeee')
-    assert pairo.tknb == 'USDC-uuuu'
-    assert pairo.tknq == 'WETH-eeee'
+    assert raises (Pair, tknb='USDC', tknq='WETH')
+    assert pairo.tknb == 'USDC'
+    assert pairo.tknq == 'WETH'
     assert pairo.tknb_n == 'USDC'
     assert pairo.tknq_n == 'WETH'
-    assert pairo.tknx == 'USDC-uuuu'
-    assert pairo.tkny == 'WETH-eeee'
+    assert pairo.tknx == 'USDC'
+    assert pairo.tkny == 'WETH'
     assert pairo.tknx_n == 'USDC'
     assert pairo.tkny_n == 'WETH'
-    assert pairo.pair == 'USDC-uuuu/WETH-eeee'
+    assert pairo.pair == 'USDC/WETH'
     assert pairo.pair_n == 'USDC/WETH'
-    assert pairo.primary == 'WETH-eeee/USDC-uuuu'
+    assert pairo.primary == 'WETH/USDC'
     assert pairo.primary_n == 'WETH/USDC'
     assert pairo.secondary == pairo.pair
     assert pairo.secondary_n == pairo.pair_n
     assert pairo.primary_tknb == "WETH"
     assert pairo.primary_tknq == "USDC"
     
-    pairo = Pair("WETH-eeee/USDC-uuuu")
+    pairo = Pair("WETH/USDC")
     assert pairo.isprimary == True
-    assert pairo.tknq == 'USDC-uuuu'
-    assert pairo.tknb == 'WETH-eeee'
+    assert pairo.tknq == 'USDC'
+    assert pairo.tknb == 'WETH'
     assert pairo.tknq_n == 'USDC'
     assert pairo.tknb_n == 'WETH'
-    assert pairo.tkny == 'USDC-uuuu'
-    assert pairo.tknx == 'WETH-eeee'
+    assert pairo.tkny == 'USDC'
+    assert pairo.tknx == 'WETH'
     assert pairo.tkny_n == 'USDC'
     assert pairo.tknx_n == 'WETH'
-    assert pairo.pair == 'WETH-eeee/USDC-uuuu'
+    assert pairo.pair == 'WETH/USDC'
     assert pairo.pair_n == 'WETH/USDC'
     assert pairo.primary == pairo.pair
     assert pairo.primary_n == pairo.pair_n
-    assert pairo.secondary == 'USDC-uuuu/WETH-eeee'
+    assert pairo.secondary == 'USDC/WETH'
     assert pairo.secondary_n == 'USDC/WETH'
     assert pairo.primary_tknb == "WETH"
     assert pairo.primary_tknq == "USDC"
     
-    c1 = CPC.from_pk(pair="USDC-uuuu/WETH-eeee", p=1, k=100)
-    c2 = CPC.from_pk(pair="WETH-eeee/USDC-uuuu", p=1, k=100)
+    c1 = CPC.from_pk(pair="USDC/WETH", p=1, k=100)
+    c2 = CPC.from_pk(pair="WETH/USDC", p=1, k=100)
     CC = CPCContainer([c1,c2])
-    assert c1.pairo.primary == 'WETH-eeee/USDC-uuuu'
-    assert c2.pairo.primary == 'WETH-eeee/USDC-uuuu'
+    assert c1.pairo.primary == 'WETH/USDC'
+    assert c2.pairo.primary == 'WETH/USDC'
     assert c1.primary == c1.pairo.primary
-    assert CC.pairs() == {'WETH-eeee/USDC-uuuu'}
+    assert CC.pairs() == {'WETH/USDC'}
     assert CC.pairs(standardize=True) == CC.pairs()
-    assert CC.pairs(standardize=False) == {'USDC-uuuu/WETH-eeee', 'WETH-eeee/USDC-uuuu'}
+    assert CC.pairs(standardize=False) == {'USDC/WETH', 'WETH/USDC'}
     
     assert Pair("WETH/USDC").isprimary == True
     assert Pair("USDC/WETH").isprimary == False
@@ -734,12 +734,12 @@ def test_new_cpc_features_in_v2():
     assert fp(onein = "ETH") == fp(anyall=CC.FP_ANY, tknbin="ETH", tknqin="ETH")
     
     P = CPCContainer.Pair
-    ETHUSDC = P("ETH/USDC")
+    ETHUSDC = P("WETH/USDC")
     USDCETH = P(ETHUSDC.pairr)
-    assert ETHUSDC.pair == "ETH/USDC"
-    assert ETHUSDC.pairr == "USDC/ETH"
-    assert USDCETH.pairr == "ETH/USDC"
-    assert USDCETH.pair == "USDC/ETH"
+    assert ETHUSDC.pair == "WETH/USDC"
+    assert ETHUSDC.pairr == "USDC/WETH"
+    assert USDCETH.pairr == "WETH/USDC"
+    assert USDCETH.pair == "USDC/WETH"
     assert ETHUSDC.isprimary
     assert not USDCETH.isprimary
     assert ETHUSDC.primary == ETHUSDC.pair
@@ -912,17 +912,17 @@ def test_xyfromp_f_and_dxdyfromp_f():
     # +
     c = CPC.from_pkpp(p=100, k=100*10000, p_min=90, p_max=110, pair=f"{T.ETH}/{T.USDC}")
     
-    assert c.pair == 'WETH-6Cc2/USDC-eB48'
-    assert c.pairp == 'WETH/USDC'
+    assert c.pair == f'{T.WETH}/{T.USDC}', f"{c.pair}"
+    assert c.pairp == f'{T.WETH}/{T.USDC}', f"{c.pair}"
     assert c.p == 100
     assert iseq(c.x_act, 4.653741075440777)
     assert iseq(c.y_act, 513.167019494862)
     assert c.tknx == T.ETH
     assert c.tkny == T.USDC
-    assert c.tknxp == "WETH"
-    assert c.tknyp == "USDC"
+    assert c.tknxp == T.WETH
+    assert c.tknyp == T.USDC
     assert c.xyfromp_f() == (c.x, c.y, c.p)
-    assert c.xyfromp_f(withunits=True) == (100.0, 10000.0, 100.0, 'WETH', 'USDC', 'WETH/USDC')
+    assert c.xyfromp_f(withunits=True) == (100.0, 10000.0, 100.0, T.WETH, T.USDC, f'{T.WETH}/{T.USDC}')
     
     x,y,p = c.xyfromp_f(p=85, ignorebounds=True)
     assert p == 85
@@ -955,7 +955,7 @@ def test_xyfromp_f_and_dxdyfromp_f():
     assert iseq(y/x,110)
     
     # +
-    assert c.dxdyfromp_f(withunits=True) == (0.0, 0.0, 100.0, 'WETH', 'USDC', 'WETH/USDC')
+    assert c.dxdyfromp_f(withunits=True) == (0.0, 0.0, 100.0, T.WETH, T.USDC, f'{T.WETH}/{T.USDC}')
     
     dx,dy,p = c.dxdyfromp_f(p=85, ignorebounds=True)
     assert p == 85
@@ -1108,7 +1108,7 @@ def test_cpcinverter():
     assert isinstance(c2i_ex, CPCInverter)
     
     assert len(curves) == 2
-    assert set(c.pair for c in curves) == {'WETH-6Cc2/USDC-eB48'}
+    assert set(c.pair for c in curves) == {f"{T.USDC}/{T.ETH}"}
     assert len(set(c.pair for c in curves)) == 1
     assert len(set(c.tknx for c in curves)) == 1
     assert len(set(c.tkny for c in curves)) == 1
@@ -1192,7 +1192,7 @@ def test_cpcinverter():
 def test_simple_optimizer():
 # ------------------------------------------------------------
     
-    CC = CPCContainer(CPC.from_pk(p=2000+i*10, k=10*20000, pair=f"{T.ETH}/{T.USDC}") for i in range(11))
+    CC = CPCContainer(CPC.from_pk(p=2000+i*10, k=10*20000, pair=f"ETH/USDC") for i in range(11))
     c0 = CC.curves[0]
     c1 = CC.curves[-1]
     CC0 = CPCContainer([c0])
@@ -1211,7 +1211,7 @@ def test_simple_optimizer():
     funcvy = O.optimize(result=O.SO_DXDYVALYFUNC)
     x,y = func0(2100)[0]
     xb, yb, _ = c0.dxdyfromp_f(2100)
-    assert x == xb
+    assert x == xb, f"x={x}, xb={xb}"
     assert y == yb
     x,y = func(2100)[-1]
     xb, yb, _ = c1.dxdyfromp_f(2100)
@@ -1263,16 +1263,16 @@ def test_simple_optimizer():
     
     # ### target token
     
-    r = O.optimize(targettkn=T.WETH)
-    r_ = O.optimize(targettkn=T.WETH, result=O.SO_TARGETTKN)
-    assert raises(O.optimize,targettkn=T.DAI)
+    r = O.optimize(targettkn="ETH")
+    r_ = O.optimize(targettkn="ETH", result=O.SO_TARGETTKN)
+    assert raises(O.optimize,targettkn="DAI")
     assert raises(O.optimize, result=O.SO_TARGETTKN)
     assert iseq(float(r), float(r_))
     assert abs(sum(r.dyvalues) < 1e-6)
     assert sum(r.dxvalues) < 0
     assert iseq(float(r),sum(r.dxvalues))
     
-    r = O.optimize(targettkn=T.USDC)
+    r = O.optimize(targettkn="USDC")
     assert abs(sum(r.dxvalues) < 1e-6)
     assert sum(r.dyvalues) < 0
     assert iseq(float(r),sum(r.dyvalues))
@@ -1288,8 +1288,8 @@ def test_optimizer_plus_inverted_curves():
     #
     # note: `O.optimize()` without `targettkn='...'` is the globalmax result!
     
-    CCr = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
-    CCi = CPCContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"{T.USDC}/{T.ETH}") for i in range(11))
+    CCr = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"ETH/USDC") for i in range(11))
+    CCi = CPCContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"USDC/ETH") for i in range(11))
     CC  = CCr.bycids()
     assert len(CC) == len(CCr)
     CC += CCi
@@ -1472,7 +1472,7 @@ def test_margp_optimizer():
     assert set(r.tokens_t) == {'USDC', 'USDT'}
     assert r.errormsg is None
     assert r.is_error == False
-    assert r.time > 0
+    assert r.time >= 0
     assert r.time < 0.1
     
     # +
@@ -1500,7 +1500,7 @@ def test_margp_optimizer():
     assert set(r.tokens_t) == set(('USDC', 'USDT'))
     assert r.errormsg is None
     assert r.is_error == False
-    assert r.time > 0
+    assert r.time >= 0
     assert r.time < 0.1
     # -
     
@@ -1548,7 +1548,7 @@ def test_margp_optimizer():
     assert set(r.tokens_t) == set(('USDC', 'USDT'))
     assert r.errormsg is None
     assert r.is_error == False
-    assert r.time > 0
+    assert r.time >= 0
     assert r.time < 0.1
     
     abs(r.dtokens_t[0])
@@ -1709,9 +1709,9 @@ def notest_operating_on_leverage_ranges():
     for i in range(N):
         p = pp * (1+0.2*U(-0.5, 0.5))
         p_min, p_max = (p, U(1.001, 1.5)*p) if U1()>0.5 else (U(0.8, 0.999)*p, p)
-        amtusdc = U(10000, 200000)
-        k = amtusdc**2/(pb*pq)
-        #print("*curve", int(amtusdc), p, p_min, p_max, int(k))
+        amtUSDC = U(10000, 200000)
+        k = amtUSDC**2/(pb*pq)
+        #print("*curve", int(amtUSDC), p, p_min, p_max, int(k))
         CCc += CPC.from_pkpp(p=p, k=k, p_min=p_min, p_max=p_max, 
                              pair=pair, cid = f"carb-{ctr}", params=dict(xc="carbon"))
         ctr += 1

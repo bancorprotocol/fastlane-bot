@@ -1,9 +1,19 @@
-#!/usr/bin/env python
-# coding: utf-8
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.16.1
+#   kernelspec:
+#     display_name: fastlane-bot-py311
+#     language: python
+#     name: fastlane-bot-py311
+# ---
 
-# In[1]:
-
-
+# +
 # coding=utf-8
 """
 This module contains the tests for the exchanges classes
@@ -35,13 +45,11 @@ from fastlane_bot.testing import *
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
-
+# -
 
 # # Test NoEmptyCarbonOrders
 
-# In[2]:
-
-
+# +
 C = cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain='ethereum')
 cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
@@ -150,61 +158,59 @@ CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi"
-
+# -
 
 # ## Test_Empty_Carbon_Orders_Removed
 
-# In[3]:
-
-
+# +
 arb_finder = bot._get_arb_finder("multi")
 finder = arb_finder(
-    flashloan_tokens=flashloan_tokens,
-    CCm=CCm,
-    mode="bothin",
-    result=arb_finder.AO_CANDIDATES,
-    ConfigObj=bot.ConfigObj,
-)
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            mode="bothin",
+            result=arb_finder.AO_CANDIDATES,
+            ConfigObj=bot.ConfigObj,
+        )
 r = finder.find_arbitrage()
 
 (
-    best_profit,
-    best_trade_instructions_df,
-    best_trade_instructions_dic,
-    best_src_token,
-    best_trade_instructions,
-) = r[11]
-
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        ) = r[11]
+        
 best_trade_instructions_dic
 # Check that this gets filtered out
 test_trade = [{'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
-               'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-               'amtin': 0.008570336169213988,
-               'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-               'amtout': -0.13937506393995136,
-               'error': None},
-              {'cid': '9187623906865338513511114400657741709420-1',
-               'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-               'amtin': 0,
-               'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-               'amtout': 0,
-               'error': None},
-              {'cid': '9187623906865338513511114400657741709458-1',
-               'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-               'amtin': 0.13937506393995136,
-               'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-               'amtout': 0.008870336169213988,
-               'error': None}]
+  'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+  'amtin': 0.008570336169213988,
+  'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  'amtout': -0.13937506393995136,
+  'error': None},
+ {'cid': '9187623906865338513511114400657741709420-1',
+  'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  'amtin': 0,
+  'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+  'amtout': 0,
+  'error': None},
+ {'cid': '9187623906865338513511114400657741709458-1',
+  'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  'amtin': 0.13937506393995136,
+  'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+  'amtout': 0.008870336169213988,
+  'error': None}]
 
 (
-    ordered_trade_instructions_dct,
-    tx_in_count,
+ordered_trade_instructions_dct,
+tx_in_count,
 ) = bot._simple_ordering_by_src_token(
-    test_trade, best_src_token
+test_trade, best_src_token
 )
 ordered_scaled_dcts = bot._basic_scaling(
-    ordered_trade_instructions_dct, best_src_token
-)
+            ordered_trade_instructions_dct, best_src_token
+        )
 
 ordered_scaled_dcts[0]["tknin_dec_override"] = 8
 ordered_scaled_dcts[0]["tknout_dec_override"] = 18
@@ -220,20 +226,20 @@ print(ordered_scaled_dcts)
 
 ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
 tx_route_handler = bot.TxRouteHandlerClass(
-    trade_instructions=ordered_trade_instructions_objects
-)
+            trade_instructions=ordered_trade_instructions_objects
+        )
 agg_trade_instructions = (
-    tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-    if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
-    else ordered_trade_instructions_objects
-)
+            tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+            if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+            else ordered_trade_instructions_objects
+        )
 # Calculate the trade instructions
 calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
     agg_trade_instructions
 )
 encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-    calculated_trade_instructions
-)
+            calculated_trade_instructions
+        )
 deadline = bot._get_deadline(1)
 
 # Get the route struct
@@ -250,9 +256,5 @@ for route in route_struct:
         for trade in encoded_trades:
             assert trade != "0000000000000000000000000000000000000000000000000000000000000000", f"[TestEmptyCarbonOrders] Empty Carbon instructions not filtered out by calculate_trade_outputs"
 
-
-# In[4]:
-
-
-
+# + jupyter={"outputs_hidden": false}
 

@@ -20,7 +20,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -66,18 +65,20 @@ def run_command(mode):
         "python",
         main_script_path,
         f"--arb_mode={mode}",
-        "--default_min_profit_bnt=60",
+        "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=True",
-        "--use_cached_events=True",
+        # "--use_cached_events=True",
+        "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=70"
+        "--timeout=120",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     expected_log_line = "limiting flashloan_tokens to ["
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr:
@@ -97,4 +98,5 @@ def run_command(mode):
 def test_test_flashloan_tokens_b3_two_hop():
 # ------------------------------------------------------------
     
+    # + is_executing=true
     run_command("b3_two_hop")

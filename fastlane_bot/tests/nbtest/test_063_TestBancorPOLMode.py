@@ -1,9 +1,9 @@
 # ------------------------------------------------------------
-# Auto generated test file `test_054_TestAutoPoolShutdown.py`
+# Auto generated test file `test_063_TestBancorPOLMode.py`
 # ------------------------------------------------------------
-# source file   = NBTest_054_TestAutoPoolShutdown.py
-# test id       = 054
-# test comment  = TestAutoPoolShutdown
+# source file   = NBTest_063_TestBancorPOLMode.py
+# test id       = 063
+# test comment  = TestBancorPOLMode
 # ------------------------------------------------------------
 
 
@@ -21,7 +21,6 @@ from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
 from joblib import Parallel, delayed
 import pytest
 import math
@@ -41,10 +40,7 @@ require("3.0", __VERSION__)
 
 
 C = cfg = Config.new(config=Config.CONFIG_MAINNET)
-C.DEFAULT_MIN_PROFIT_BNT = 0.02
-C.DEFAULT_MIN_PROFIT = 0.02
-cfg.DEFAULT_MIN_PROFIT_BNT = 0.02
-cfg.DEFAULT_MIN_PROFIT = 0.02
+cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = 0.00001
 assert (C.NETWORK == C.NETWORK_MAINNET)
 assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
@@ -67,7 +63,7 @@ uniswap_v2_event_mappings = pd.read_csv("fastlane_bot/data/uniswap_v2_event_mapp
         
 tokens = pd.read_csv("fastlane_bot/data/tokens.csv", low_memory=False)
         
-exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2"
+exchanges = "carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,bancor_pol"
 
 exchanges = exchanges.split(",")
 
@@ -126,73 +122,108 @@ def init_bot(mgr: Manager) -> CarbonBot:
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
     return bot
+bot = init_bot(mgr)
+bot.db.remove_unmapped_uniswap_v2_pools()
+bot.db.remove_zero_liquidity_pools()
+bot.db.remove_unsupported_exchanges()
+tokens = bot.db.get_tokens()
+ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
+flashloan_tokens = bot.setup_flashloan_tokens(None)
+CCm = bot.setup_CCm(None)
+pools = db.get_pool_data_with_tokens()
 
-
-
-pool_shutdown = AutomaticPoolShutdown(mgr=mgr, polling_interval=12)
+arb_mode = "multi_pairwise_pol"
 
 
 # ------------------------------------------------------------
-# Test      054
-# File      test_054_TestAutoPoolShutdown.py
-# Segment   Test White List
+# Test      063
+# File      test_063_TestBancorPOLMode.py
+# Segment   Test_MIN_PROFIT
 # ------------------------------------------------------------
-def test_test_white_list():
+def test_test_min_profit():
 # ------------------------------------------------------------
     
-    assert len(pool_shutdown.shutdown_whitelist) > 0, f"[NB054 Automatic Shutdown] failed to retrieve pool whitelist"
+    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[NBTest 063 TestMultiPairwisePOLMode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
     
 
 # ------------------------------------------------------------
-# Test      054
-# File      test_054_TestAutoPoolShutdown.py
-# Segment   Test parse_active_pools
+# Test      063
+# File      test_063_TestBancorPOLMode.py
+# Segment   Test_get_arb_finder
 # ------------------------------------------------------------
-def test_test_parse_active_pools():
+def test_test_get_arb_finder():
+# ------------------------------------------------------------
+    
+    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
+    assert arb_finder.__name__ == "FindArbitrageMultiPairwisePol", f"[NBTest 063 TestMultiPairwisePOLMode] Expected arb_finder class name name = FindArbitrageMultiPairwisePol, found {arb_finder.__name__}"
+    
+
+# ------------------------------------------------------------
+# Test      063
+# File      test_063_TestBancorPOLMode.py
+# Segment   Test_Combos_and_Tokens
+# ------------------------------------------------------------
+def test_test_combos_and_tokens():
+# ------------------------------------------------------------
+    
+    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
+    finder2 = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_TOKENS,
+                ConfigObj=bot.ConfigObj,
+            )
+    all_tokens, combos = finder2.find_arbitrage()
+    assert type(all_tokens) == set, f"[NBTest 063 TestMultiPairwisePOLMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
+    assert "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" in all_tokens, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT address in all_tokens: {(all_tokens)}"
+    assert type(combos) == list, f"[NBTest 063 TestMultiPairwisePOLMode] combos is wrong data type. Expected list, found: {type(combos)}"
+    assert ('0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') in combos or ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C') in combos, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT/WETH or WETH/BNT in combos"
+    assert len(all_tokens) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 tokens, found {len(all_tokens)}"
+    assert len(combos) >= 146, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 146 combos, found {len(combos)}"
+    
+
+# ------------------------------------------------------------
+# Test      063
+# File      test_063_TestBancorPOLMode.py
+# Segment   Test_Expected_Output
+# ------------------------------------------------------------
+def test_test_expected_output():
 # ------------------------------------------------------------
     
     # +
-    pool_shutdown.parse_active_pools()
+    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
+    finder = arb_finder(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                mode="bothin",
+                result=bot.AO_CANDIDATES,
+                ConfigObj=bot.ConfigObj,
+            )
     
-    for pool in pool_shutdown.active_pools:
-        assert type(pool_shutdown.active_pools[pool]) == int
-        assert pool_shutdown.active_pools[pool] >= 0
-    # -
+    r = finder.find_arbitrage()
     
-
-# ------------------------------------------------------------
-# Test      054
-# File      test_054_TestAutoPoolShutdown.py
-# Segment   Test iterate_active_pools
-# ------------------------------------------------------------
-def test_test_iterate_active_pools():
-# ------------------------------------------------------------
+    multi_carbon_count = 0
+    carbon_wrong_direction_count = 0
+    for arb in r:
+        (
+                best_profit,
+                best_trade_instructions_df,
+                best_trade_instructions_dic,
+                best_src_token,
+                best_trade_instructions,
+            ) = arb
+        if len(best_trade_instructions_dic) > 2:
+            multi_carbon_count += 1
+            carbon_tkn_in = None
+            for trade in best_trade_instructions_dic:
+                if "-" in trade["cid"]:
+                    if carbon_tkn_in is None:
+                        carbon_tkn_in = trade["tknin"]
+                    else:
+                        if trade["tknin"] not in carbon_tkn_in:
+                            carbon_wrong_direction_count += 1
     
-    # +
-    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-    pool_shutdown.active_pools = {}
-    pool_shutdown.active_pools[ETH] = 100000000000000000
-    tkn = pool_shutdown.iterate_active_pools()
-    
-    assert tkn == ETH
-    # -
-    
-
-# ------------------------------------------------------------
-# Test      054
-# File      test_054_TestAutoPoolShutdown.py
-# Segment   Test iterate_active_pools_two
-# ------------------------------------------------------------
-def test_test_iterate_active_pools_two():
-# ------------------------------------------------------------
-    
-    # +
-    ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-    pool_shutdown.active_pools = {}
-    pool_shutdown.active_pools[ETH] = 100000000000000000000000
-    tkn = pool_shutdown.iterate_active_pools()
-    
-    assert tkn == None
-    # -
-    
-    
+    assert len(r) >= 36, f"[NBTest 063 TestMultiPairwisePOLMode] Expected at least 27 arbs, found {len(r)}"
+    assert multi_carbon_count > 0, f"[NBTest 063 TestMultiPairwisePOLMode] Not finding arbs with multiple Carbon curves."
+    assert carbon_wrong_direction_count == 0, f"[NBTest 063 TestMultiPairwisePOLMode Mode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."

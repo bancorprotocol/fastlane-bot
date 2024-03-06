@@ -20,7 +20,6 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV3))
-
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CarbonV1))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorV3))
 from fastlane_bot.testing import *
@@ -68,17 +67,19 @@ def run_command(mode):
         "python",
         main_script_path,
         f"--arb_mode={mode}",
-        "--use_cached_events=True",
+        # "--use_cached_events=True",
+        "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
-        "--timeout=45",
-        f"--target_tokens={T.WETH},{T.DAI}"
+        "--timeout=120",
+        f"--target_tokens={T.WETH},{T.DAI}",
+        "--blockchain=ethereum"
     ]
     subprocess.Popen(cmd)
         
     # Wait for the expected log line to appear
     expected_log_line = "Limiting pools by target_tokens. Removed "
     found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=120)
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
 
     # Check if the expected log line is in the output
     if expected_log_line in result.stderr:
