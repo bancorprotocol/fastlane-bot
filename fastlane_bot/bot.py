@@ -1295,7 +1295,7 @@ class CarbonBot(CarbonBotBase):
                 filter_out_weth = [
                     x
                     for x in CCm
-                    if (x.params.exchange in self.ConfigObj.UNI_V2_FORKS)
+                    if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
                     & (
                         (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
                         or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
