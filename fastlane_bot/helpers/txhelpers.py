@@ -187,7 +187,7 @@ class TxHelpers:
 
     def _get_transaction_info(self) -> (int, int, int, int):
         # Get current base fee for pending block
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+        current_gas_price = self._get_current_gas_price()
 
         # Get the current recommended priority fee from Alchemy, and increase it by our offset
         current_max_priority_gas = (
@@ -759,6 +759,16 @@ class TxHelpers:
         else:
             return False
 
+    def _get_current_gas_price(self):
+        """ Gets the current gas price from the network.
+
+        This function fetches the current gas price with handling for different blockchains.
+
+        """
+        if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_FANTOM]:
+            return self.web3.eth.gas_price
+        return self.web3.eth.get_block("pending").get("baseFeePerGas")
+
     def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
@@ -768,7 +778,7 @@ class TxHelpers:
         returns:
             transaction hash
         """
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+        current_gas_price = self._get_current_gas_price()
         max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
