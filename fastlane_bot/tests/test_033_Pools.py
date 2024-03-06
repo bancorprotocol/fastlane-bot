@@ -35,7 +35,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
-with open('fastlane_bot/data/event_test_data.json', 'r') as f:
+with open('fastlane_bot/tests/_data/event_test_data.json', 'r') as f:
     setup_data = json.load(f)
 
 

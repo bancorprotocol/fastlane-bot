@@ -42,10 +42,10 @@ nest_asyncio
 
 import json
 
-with open("fastlane_bot/data/event_test_data.json", "r") as f:
+with open("fastlane_bot/tests/_data/event_test_data.json", "r") as f:
     event_data = json.load(f)
 
-with open("fastlane_bot/data/test_pool_data.json", "r") as f:
+with open("fastlane_bot/tests/_data/test_pool_data.json", "r") as f:
     pool_data = json.load(f)
 
 

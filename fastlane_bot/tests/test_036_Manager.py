@@ -37,10 +37,10 @@ require("3.0", __VERSION__)
 
 import json
 
-with open("fastlane_bot/data/event_test_data.json", "r") as f:
+with open("fastlane_bot/tests/_tests/_data/event_test_data.json", "r") as f:
     event_data = json.load(f)
 
-with open("fastlane_bot/data/test_pool_data.json", "r") as f:
+with open("fastlane_bot/tests/_data/test_pool_data.json", "r") as f:
     pool_data = json.load(f)
 
 from fastlane_bot.events.utils import handle_static_pools_update, get_static_data
