@@ -70,82 +70,6 @@ CARBON_V1_FORKS = [CARBON_V1_NAME]
 SOLIDLY_V2_FORKS = [SOLIDLY_V2_NAME]
 
 
-# -
-
-def _test_create_pool(idx, cfg, record):
-    tkn0_address, tkn1_address = record["tkn0_address"], record["tkn1_address"]
-    tkn0 = tkn0_address
-    tkn1 = tkn1_address
-    pool = PoolAndTokens(
-        ConfigObj=cfg,
-        id=idx,
-        cid=record.get("cid"),
-        last_updated=record.get("last_updated"),
-        last_updated_block=record.get("last_updated_block"),
-        descr=record.get("descr"),
-        pair_name=record.get("pair_name"),
-        exchange_name=record.get("exchange_name"),
-        fee=record.get("fee"),
-        fee_float=record.get("fee_float"),
-        tkn0_balance=record.get("tkn0_balance"),
-        tkn1_balance=record.get("tkn1_balance"),
-        z_0=record.get("z_0"),
-        y_0=record.get("y_0"),
-        A_0=record.get("A_0"),
-        B_0=record.get("B_0"),
-        z_1=record.get("z_1"),
-        y_1=record.get("y_1"),
-        A_1=record.get("A_1"),
-        B_1=record.get("B_1"),
-        sqrt_price_q96=record.get("sqrt_price_q96"),
-        tick=record.get("tick"),
-        tick_spacing=record.get("tick_spacing"),
-        liquidity=record.get("liquidity"),
-        address=record.get("address"),
-        anchor=record.get("anchor"),
-        tkn0=tkn0,
-        tkn1=tkn1,
-        tkn0_address=tkn0_address,
-        tkn1_address=tkn1_address,
-        tkn0_decimals=record.get("tkn0_decimals"),
-        tkn1_decimals=record.get("tkn1_decimals"),
-        tkn0_weight=record.get("tkn0_weight"),
-        tkn1_weight=record.get("tkn1_weight"),
-        tkn2=record.get("tkn2"),
-        tkn2_balance=record.get("tkn2_balance"),
-        tkn2_address=record.get("tkn2_address"),
-        tkn2_decimals=record.get("tkn2_decimals"),
-        tkn2_weight=record.get("tkn2_weight"),
-        tkn3=record.get("tkn3"),
-        tkn3_balance=record.get("tkn3_balance"),
-        tkn3_address=record.get("tkn3_address"),
-        tkn3_decimals=record.get("tkn3_decimals"),
-        tkn3_weight=record.get("tkn3_weight"),
-        tkn4=record.get("tkn4"),
-        tkn4_balance=record.get("tkn4_balance"),
-        tkn4_address=record.get("tkn4_address"),
-        tkn4_decimals=record.get("tkn4_decimals"),
-        tkn4_weight=record.get("tkn4_weight"),
-        tkn5=record.get("tkn5"),
-        tkn5_balance=record.get("tkn5_balance"),
-        tkn5_address=record.get("tkn5_address"),
-        tkn5_decimals=record.get("tkn5_decimals"),
-        tkn5_weight=record.get("tkn5_weight"),
-        tkn6=record.get("tkn6"),
-        tkn6_balance=record.get("tkn6_balance"),
-        tkn6_address=record.get("tkn6_address"),
-        tkn6_decimals=record.get("tkn6_decimals"),
-        tkn6_weight=record.get("tkn6_weight"),
-        tkn7=record.get("tkn7"),
-        tkn7_balance=record.get("tkn7_balance"),
-        tkn7_address=record.get("tkn7_address"),
-        tkn7_decimals=record.get("tkn7_decimals"),
-        tkn7_weight=record.get("tkn7_weight"),
-        pool_type=record.get("pool_type"),
-    )
-    return pool
-
-
 # +
 @dataclass
 class Config:
@@ -163,21 +87,51 @@ class Config:
 
 cfg = Config()
 
-# +
 
-
-test_pools = [
-    {"cid": "67035626283424877302284797664058337657416", "last_updated": float('nan'), "last_updated_block": 18806136, "descr": "carbon_v1 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 2000", "pair_name": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "exchange_name": "carbon_v1", "fee": "2000", "fee_float": 0.002, "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", "anchor": float('nan'), "tkn0_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "tkn0_decimals": 18, "tkn1_decimals": 8, "exchange_id": float('nan'), "tkn0_symbol": "WETH", "tkn1_symbol": "WBTC", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": float('nan'), "exchange": float('nan'), "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": 61417813737432694, "z_0": 61417813737432694, "A_0": 4172232392952960.0, "B_0": 5542627325489121.0, "y_1": 0, "z_1": 0, "A_1": 24075842.0, "B_1": 700414721.0},
-    {"cid": "9187623906865338513511114400657741709505", "last_updated": float('nan'), "last_updated_block": 18806136, "descr": "carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 2000", "pair_name": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "exchange_name": "carbon_v1", "fee": "2000", "fee_float": 0.002, "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", "anchor": float('nan'), "tkn0_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "tkn0_decimals": 18, "tkn1_decimals": 8, "exchange_id": float('nan'), "tkn0_symbol": "ETH", "tkn1_symbol": "WBTC", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": float('nan'), "exchange": float('nan'), "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": 352000000000000000, "z_0": 352000000000000000, "A_0": 0.0, "B_0": 5550942688830527.0, "y_1": 0, "z_1": 0, "A_1": 0.0, "B_1": 732916735.0},
-    {"cid": "2381976568446569244243622252022377480572", "last_updated": float('nan'), "last_updated_block": 18806136, "descr": "carbon_v1 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 2000", "pair_name": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "exchange_name": "carbon_v1", "fee": "2000", "fee_float": 0.002, "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", "anchor": float('nan'), "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "tkn0_decimals": 18, "tkn1_decimals": 6, "exchange_id": float('nan'), "tkn0_symbol": "BNT", "tkn1_symbol": "USDC", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": float('nan'), "exchange": float('nan'), "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": 0, "z_0": 0, "A_0": 0.0, "B_0": 0.0, "y_1": 0, "z_1": 0, "A_1": 0.0, "B_1": 0.0},
-    {"cid": "2381976568446569244243622252022377480676", "last_updated": float('nan'), "last_updated_block": 18806136, "descr": "carbon_v1 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 2000", "pair_name": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "exchange_name": "carbon_v1", "fee": "2000", "fee_float": 0.002, "address": "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1", "anchor": float('nan'), "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "tkn0_decimals": 18, "tkn1_decimals": 6, "exchange_id": float('nan'), "tkn0_symbol": "BNT", "tkn1_symbol": "USDC", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": float('nan'), "exchange": float('nan'), "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": 2709066128420262279740, "z_0": 2709066128420262279740, "A_0": 0.0, "B_0": 5517798046643646.0, "y_1": 0, "z_1": 1, "A_1": 0.0, "B_1": 310899273.0},
-    {"cid": "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974", "last_updated": float('nan'), "last_updated_block": 0, "descr": "pancakeswap_v2 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 3000.0", "pair_name": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "exchange_name": "pancakeswap_v2", "fee": 0.0025, "fee_float": 0.0025, "address": "0xCBCdF9626bC03E24f779434178A73a0B4bad62eD", "anchor": float('nan'), "tkn0_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "tkn1_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "tkn0_decimals": 8, "tkn1_decimals": 18, "exchange_id": 4.0, "tkn0_symbol": "WBTC", "tkn1_symbol": "WETH", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": 60.0, "exchange": "uniswap_v3", "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": float('nan'), "z_0": float('nan'), "A_0": float('nan'), "B_0": float('nan'), "y_1": float('nan'), "z_1": float('nan'), "A_1": float('nan'), "B_1": float('nan')},
-    {"cid": "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074", "last_updated": float('nan'), "last_updated_block": 0, "descr": "bancor_v2 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C 0.01", "pair_name": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "exchange_name": "bancor_v2", "fee": 0.01, "fee_float": 0.01, "address": "0x23d1b2755d6C243DFa9Dd06624f1686b9c9E13EB", "anchor": "0x874d8dE5b26c9D9f6aA8d7bab283F9A9c6f777f4", "tkn0_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "tkn1_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn0_decimals": 6, "tkn1_decimals": 18, "exchange_id": 1.0, "tkn0_symbol": "USDC", "tkn1_symbol": "BNT", "timestamp": float('nan'), "tkn0_balance": float('nan'), "tkn1_balance": float('nan'), "liquidity": float('nan'), "sqrt_price_q96": float('nan'), "tick": float('nan'), "tick_spacing": float('nan'), "exchange": "bancor_v2", "pool_type": float('nan'), "tkn0_weight": float('nan'), "tkn1_weight": float('nan'), "tkn2_address": float('nan'), "tkn2_decimals": float('nan'), "tkn2_symbol": float('nan'), "tkn2_balance": float('nan'), "tkn2_weight": float('nan'), "tkn3_address": float('nan'), "tkn3_decimals": float('nan'), "tkn3_symbol": float('nan'), "tkn3_balance": float('nan'), "tkn3_weight": float('nan'), "tkn4_address": float('nan'), "tkn4_decimals": float('nan'), "tkn4_symbol": float('nan'), "tkn4_balance": float('nan'), "tkn4_weight": float('nan'), "tkn5_address": float('nan'), "tkn5_decimals": float('nan'), "tkn5_symbol": float('nan'), "tkn5_balance": float('nan'), "tkn5_weight": float('nan'), "tkn6_address": float('nan'), "tkn6_decimals": float('nan'), "tkn6_symbol": float('nan'), "tkn6_balance": float('nan'), "tkn6_weight": float('nan'), "tkn7_address": float('nan'), "tkn7_decimals": float('nan'), "tkn7_symbol": float('nan'), "tkn7_balance": float('nan'), "tkn7_weight": float('nan'), "y_0": float('nan'), "z_0": float('nan'), "A_0": float('nan'), "B_0": float('nan'), "y_1": float('nan'), "z_1": float('nan'), "A_1": float('nan'), "B_1": float('nan')},
-              ]
+# -
 
 @dataclass
+class _Test_Pool:
+    
+    cid: str
+    pair_name: str
+    exchange_name: str
+    tkn0_address: str
+    tkn1_address: str
+
+    @property
+    def get_tokens(self):
+        return [self.tkn0_address, self.tkn1_address]
+    
+    @property
+    def get_token_addresses(self):
+        return [self.tkn0_address, self.tkn1_address]
+
+
+_test_pools = [
+    {"cid": "67035626283424877302284797664058337657416", "exchange_name": "carbon_v1", "tkn0_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", },
+    {"cid": "9187623906865338513511114400657741709505", "exchange_name": "carbon_v1", "tkn0_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", },
+    {"cid": "2381976568446569244243622252022377480572", "exchange_name": "carbon_v1", "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", },
+    {"cid": "2381976568446569244243622252022377480676", "exchange_name": "carbon_v1", "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", },
+    {"cid": "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974", "exchange_name": "pancakeswap_v2", "tkn0_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "tkn1_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", },
+    {"cid": "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074", "exchange_name": "bancor_v2", "tkn0_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "tkn1_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", },
+              ]
+
+
+def _test_create_pool(record):
+    return _Test_Pool(
+        cid=record.get("cid"),
+        pair_name=record.get("pair_name"),
+        exchange_name=record.get("exchange_name"),
+        tkn0_address=record.get("tkn0_address"),
+        tkn1_address=record.get("tkn1_address"),
+                      )
+
+
+# +
+@dataclass
 class QueryInterface:
-    test_pools = test_pools
+    test_pools = _test_pools
 
     def get_pool_from_dict(self, cid):
         cid = cid.split("-")[0]
@@ -185,15 +139,10 @@ class QueryInterface:
 
     def get_pool(self, cid):
         pool_dict = self.get_pool_from_dict(cid)
-        pool = _test_create_pool(0, cfg, pool_dict)
+        pool = _test_create_pool(pool_dict)
         return pool
 
 db = QueryInterface()
-# -
-
-
-
-
 
 # +
 #### WETH ####
