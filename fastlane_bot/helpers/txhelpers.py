@@ -791,12 +791,12 @@ class TxHelpers:
                         )
                     )
                     self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
-                    return self.submit_regular_transaction(self.sign_transaction(approve_tx))
                 except Exception as e:
                     self.ConfigObj.logger.info(
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
+        return self.submit_regular_transaction(self.sign_transaction(approve_tx))
 
     def _get_layer_one_gas_fee_loop(self, rawTransaction) -> Decimal:
         """
