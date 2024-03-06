@@ -31,7 +31,3 @@ The `fastlane-bot` library employs the pytest framework for its testing needs. T
   ```bash
   pytest fastlane_bot/tests
   ```
-
-## Conclusion
-
-This infrastructure ensures that the `fastlane-bot` library maintains high standards of code quality and functionality through comprehensive testing practices.
