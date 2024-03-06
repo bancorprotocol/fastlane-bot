@@ -93,7 +93,7 @@ async def get_token_and_fee(
 
 async def main_get_tokens_and_fee(c: List[Dict[str, Any]], carbon_v1_forks) -> pd.DataFrame:
     vals = await asyncio.wait_for(
-        asyncio.gather(*[get_token_and_fee(**args) for args in c]), timeout=20 * 60
+        asyncio.gather(*[get_token_and_fee(carbon_v1_forks=carbon_v1_forks, **args) for args in c]), timeout=20 * 60
     )
     return pd.DataFrame(
         vals,
