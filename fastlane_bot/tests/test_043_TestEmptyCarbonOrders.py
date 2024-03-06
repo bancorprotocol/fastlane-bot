@@ -52,7 +52,7 @@ exchanges = "carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v
 exchanges = exchanges.split(",")
 
 pools = None
-with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
+with open('fastlane_bot/tests/_data/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools if pool['exchange_name'] in exchanges]
 print(f"len(pools): {len(pools)}, {pools}")

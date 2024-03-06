@@ -40,7 +40,7 @@ cfg = Config.new(config=Config.CONFIG_MAINNET, blockchain="ethereum")
 cfg.network.SOLIDLY_V2_FORKS = ["solidly_v2"]
 setup_bot = CarbonBot(ConfigObj=cfg)
 pools = None
-with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
+with open('fastlane_bot/tests/_data/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 pools = [pool for pool in pools]
 pools[0]

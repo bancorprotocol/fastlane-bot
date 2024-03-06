@@ -56,7 +56,7 @@ Put path to log file here >>>
 """
 ###
 
-path = os.path.normpath("fastlane_bot/data/tests/latest_pool_data_testing.json")
+path = os.path.normpath("fastlane_bot/tests/_data/latest_pool_data_testing.json")
 print(f"path={path}")
 with open(path) as f:
     pools = json.load(f)

@@ -51,7 +51,7 @@ assert (C.PROVIDER == C.PROVIDER_ALCHEMY)
 setup_bot = CarbonBot(ConfigObj=C)
 pools = None
 
-with open('fastlane_bot/data/tests/latest_pool_data_testing.json') as f:
+with open('fastlane_bot/tests/_data/latest_pool_data_testing.json') as f:
     pools = json.load(f)
 
 pool_data_raw = [pool for pool in pools]

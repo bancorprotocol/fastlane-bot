@@ -85,7 +85,7 @@ Put path to log file here >>>
 ###
 
 
-with open("fastlane_bot/data/tests/latest_pool_data_testing.json") as f:
+with open("fastlane_bot/tests/_data/latest_pool_data_testing.json") as f:
     pools = json.load(f)
 
 flashloan_tokens = ["0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","0x514910771AF9Ca656af840dff83E8264EcF986CA"]
