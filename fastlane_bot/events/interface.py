@@ -216,6 +216,7 @@ class QueryInterface:
                 exchanges.append(ex)
                 keys.append(["liquidity"])
             elif ex in self.cfg.CARBON_V1_FORKS:
+                print(f"[events.interface] Removing zero liquidity pools for {ex}")
                 exchanges.append(ex)
                 keys.append(["y_0", "y_1"])
             elif ex in "bancor_pol":

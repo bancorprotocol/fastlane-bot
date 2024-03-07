@@ -573,7 +573,7 @@ class CarbonBot(CarbonBotBase):
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]
                 strategy_id = pool["strategy_id"]
-                if "-0" in strategy_id or "-1" in strategy_id:
+                if "-0" in pool_cid or "-1" in pool_cid:
                     self.ConfigObj.logger.debug(
                         f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
                         f"Carbon, returning to main flow."
@@ -636,7 +636,7 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions,
         ) = arb_opp
         for pool in best_trade_instructions_dic:
-            pool_cid = pool["cid"]
+            pool_cid = pool["cid"].split("-")[0]
             strategy_id = pool["strategy_id"]
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {
@@ -962,6 +962,8 @@ class CarbonBot(CarbonBotBase):
         tx_route_handler = self.TxRouteHandlerClass(
             trade_instructions=ordered_trade_instructions_objects
         )
+
+        # ordered_trade_instructions_objects[0].db = QueryInterface(ConfigObj=self.ConfigObj)
 
         # Aggregate the carbon trades
         agg_trade_instructions = (

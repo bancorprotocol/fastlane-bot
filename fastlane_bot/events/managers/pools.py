@@ -301,6 +301,8 @@ class PoolManager(BaseManager):
                     tenderly_exchanges,
                 )
             )
+        else:
+            self.pool_data = [p for p in self.pool_data if p["cid"] != pool_info["cid"]]
 
         self.pool_data.append(pool_info)
         return pool_info

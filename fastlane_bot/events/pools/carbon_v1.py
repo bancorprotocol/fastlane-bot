@@ -140,9 +140,9 @@ class CarbonV1Pool(Pool):
         See base class.
         """
         try:
-            strategy = contract.caller.strategy(int(self.state["cid"]))
+            strategy = contract.caller.strategy(int(self.state["strategy_id"]))
         except AttributeError:
-            strategy = contract.functions.strategy(int(self.state["cid"])).call()
+            strategy = contract.functions.strategy(int(self.state["strategy_id"])).call()
 
         fake_event = {
             "args": {
@@ -162,3 +162,5 @@ class CarbonV1Pool(Pool):
             self.state[key] = value
 
         return params
+
+

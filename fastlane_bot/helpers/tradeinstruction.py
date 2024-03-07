@@ -67,11 +67,12 @@ class TradeInstruction:
     
     ConfigObj: Any
     cid: str
-    strategy_id: int
+
     tknin: str
     amtin: Union[int, Decimal, float]
     tknout: str
     amtout: Union[int, Decimal, float]
+    strategy_id: int = None
     pair_sorting: str = None
     raw_txs: str = None
     custom_data: str = ''

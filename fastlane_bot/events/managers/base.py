@@ -83,6 +83,7 @@ class BaseManager:
     pools_to_add_from_contracts: List[Tuple[str, str, Any, str, str]] = field(
         default_factory=list
     )
+    exchange_start_blocks: Dict[str, int] = field(default_factory=dict)
     blockchain: str = None
     TOKENS_MAPPING: Dict[str, Any] = field(
         default_factory=lambda: {
@@ -326,8 +327,15 @@ class BaseManager:
         """
         for ex in self.cfg.CARBON_V1_FORKS:
             if ex in self.SUPPORTED_EXCHANGES:
+                print(f"[update_carbon] Updating {ex}... update_from_contract_block: {update_from_contract_block}")
                 self.update_carbon(update_from_contract_block, ex)
 
+        # print the pool data for each altered_carbon exchange
+        for pool in self.pool_data:
+            if pool["exchange_name"] == 'altered_carbon':
+                print(f"after carbon update: {pool}")
+
+        # raise Exception("Stopit")
         return [
             i
             for i, pool_info in enumerate(self.pool_data)
