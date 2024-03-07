@@ -329,7 +329,6 @@ class PoolAndTokens:
                         "pair": _pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
                         "fee": self.fee,
                         "cid": self.cid,
-                        "strategy_id": self.strategy_id,
                         "descr": self.descr,
                         "params": self._params,
                     }
@@ -365,7 +364,6 @@ class PoolAndTokens:
             "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
             "fee": self.fee,
             "cid": self.cid,
-            "strategy_id": self.strategy_id,
             "descr": self.descr,
             "params": self._params,
         }
@@ -453,10 +451,9 @@ class PoolAndTokens:
 
             tkny = 1 if i == 0 else 0
             typed_args = {
-                "cid": self.cid,
-                "strategy_id": f"{self.strategy_id}-{i}"
+                "cid": f"{self.cid}-{i}"
                 if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
-                else self.strategy_id,
+                else self.cid,
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
@@ -532,7 +529,6 @@ class PoolAndTokens:
             self.ConfigObj.logger.debug(f"empty univ3 pool [{self.cid}]")
             return []
         params["cid"] = self.cid
-        params["strategy_id"] = self.strategy_id
         params["descr"] = self.descr
         params["params"] = self._params
         return [ConstantProductCurve.from_univ3(**params)]

@@ -22,7 +22,7 @@ class TradeInstruction:
     ----------
     cid: str
         The pool unique ID
-    strategy_id: int
+    cid: int
         The strategy ID
     tknin: str
         The input token key (e.g. 'DAI-1d46')
@@ -107,7 +107,7 @@ class TradeInstruction:
         """
         Use the database session to get the token addresses and decimals based on the Pool.cid and Token.key
         """
-        self._strategy_id_tkn: str = None
+        self._cid_tkn: str = None
         self._is_carbon = self._check_if_carbon()
         
         if self.tknin_dec_override is None:
@@ -359,18 +359,18 @@ class TradeInstruction:
         bool
             Whether the curve is a Carbon curve.
         """
-        if self.strategy_id:
-            self._strategy_id_tkn = self.strategy_id.split("-")[1]
-            self.strategy_id = self.strategy_id.split("-")[0]
+        if "-" in self.cid:
+            self._cid_tkn = self.cid.split("-")[1]
+            self.cid = self.cid.split("-")[0]
             return True
         return False
 
     @property
-    def strategy_id_tkn(self) -> str:
+    def cid_tkn(self) -> str:
         """
-        The token strategy_id.
+        The token cid.
         """
-        return self._strategy_id_tkn
+        return self._cid_tkn
 
     @property
     def tknin_address(self) -> str:

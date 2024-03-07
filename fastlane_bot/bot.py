@@ -50,7 +50,7 @@ import json
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import List, Dict, Tuple, Any, Callable
+from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
 from web3 import Web3
@@ -355,11 +355,24 @@ class CarbonBot(CarbonBotBase):
             for ti in errorless_trade_instructions_dic
             if ti is not None
         )
+        result = self._add_strategy_id_to_trade_instructions_dic(result)
         result = [TradeInstruction(**ti) for ti in result]
         return result
 
+    def _add_strategy_id_to_trade_instructions_dic(
+        self, trade_instructions_dic: Generator
+    ) -> list:
+        lst = []
+        for ti in trade_instructions_dic:
+            cid = ti["cid"].split("-")[0]
+            ti["strategy_id"] = self.db.get_pool(
+                cid=cid
+            ).strategy_id
+            lst.append(ti)
+        return lst
+
     @staticmethod
-    def _check_if_carbon(strategy_id: str):
+    def _check_if_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
 
@@ -369,14 +382,14 @@ class CarbonBot(CarbonBotBase):
             Whether the curve is a Carbon curve.
         """
 
-        if "-" in strategy_id:
-            _strategy_id_tkn = strategy_id.split("-")[1]
-            strategy_id = strategy_id.split("-")[0]
-            return True, _strategy_id_tkn, strategy_id
-        return False, "", strategy_id
+        if "-" in cid:
+            cid_tkn = cid.split("-")[1]
+            cid = cid.split("-")[0]
+            return True, cid_tkn, cid
+        return False, "", cid
 
     @staticmethod
-    def _check_if_not_carbon(strategy_id: str):
+    def _check_if_not_carbon(cid: str):
         """
         Checks if the curve is a Carbon curve.
         Returns
@@ -384,7 +397,7 @@ class CarbonBot(CarbonBotBase):
         bool
             Whether the curve is a Carbon curve.
         """
-        return "-" not in strategy_id
+        return "-" not in cid
 
     @dataclass
     class ArbCandidate:
@@ -562,14 +575,16 @@ class CarbonBot(CarbonBotBase):
                 strategy_id = pool["strategy_id"]
                 if "-0" in strategy_id or "-1" in strategy_id:
                     self.ConfigObj.logger.debug(
-                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
+                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
+                        f"Carbon, returning to main flow."
                     )
                     return arb_opp
                     # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
             if len(cids) > 3:
                 self.ConfigObj.logger.warning(
-                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
+                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
+                    f"to main flow."
                 )
                 return arb_opp
             max_trade_in = arb_finder.get_optimal_arb_trade_amts(
