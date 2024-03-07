@@ -586,102 +586,99 @@ def test_create_new_trades_from_carbon_exchanges():
 
 
 
-
-
 # ## Full Split Test
 
-# +
-split_trade_instructions_0_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_0)
-split_trade_instructions_1_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_1)
-split_trade_instructions_2_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_2)
-split_trade_instructions_3_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_3)
+def test_full_execution():
+    split_trade_instructions_0_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_0)
+    split_trade_instructions_1_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_1)
+    split_trade_instructions_2_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_2)
+    split_trade_instructions_3_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_3)
 
-assert len(split_trade_instructions_0_splitter) == len(trade_instructions_0) + 1
-assert len(split_trade_instructions_1_splitter) == len(trade_instructions_1)
-assert len(split_trade_instructions_2_splitter) == len(trade_instructions_2)
-assert len(split_trade_instructions_3_splitter) == len(trade_instructions_3)
+    assert len(split_trade_instructions_0_splitter) == len(trade_instructions_0) + 1
+    assert len(split_trade_instructions_1_splitter) == len(trade_instructions_1)
+    assert len(split_trade_instructions_2_splitter) == len(trade_instructions_2)
+    assert len(split_trade_instructions_3_splitter) == len(trade_instructions_3)
 
-assert split_trade_instructions_0_splitter[0].cid == "9187623906865338513511114400657741709505"
-assert split_trade_instructions_0_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-assert split_trade_instructions_0_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_0_splitter[0].amtin == 5
-assert split_trade_instructions_0_splitter[0].amtout == 0.5
-assert split_trade_instructions_0_splitter[0]._amtin_wei == 5000000000000000000
-assert split_trade_instructions_0_splitter[0]._amtout_wei == 50000000
-assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
+    assert split_trade_instructions_0_splitter[0].cid == "9187623906865338513511114400657741709505"
+    assert split_trade_instructions_0_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    assert split_trade_instructions_0_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_0_splitter[0].amtin == 5
+    assert split_trade_instructions_0_splitter[0].amtout == 0.5
+    assert split_trade_instructions_0_splitter[0]._amtin_wei == 5000000000000000000
+    assert split_trade_instructions_0_splitter[0]._amtout_wei == 50000000
+    assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
 
-assert split_trade_instructions_0_splitter[1].cid == "67035626283424877302284797664058337657416"
-assert split_trade_instructions_0_splitter[1].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-assert split_trade_instructions_0_splitter[1].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_0_splitter[1].amtin == 10
-assert split_trade_instructions_0_splitter[1].amtout == 1
-assert split_trade_instructions_0_splitter[1]._amtin_wei == 10000000000000000000
-assert split_trade_instructions_0_splitter[1]._amtout_wei == 100000000
-assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
+    assert split_trade_instructions_0_splitter[1].cid == "67035626283424877302284797664058337657416"
+    assert split_trade_instructions_0_splitter[1].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    assert split_trade_instructions_0_splitter[1].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_0_splitter[1].amtin == 10
+    assert split_trade_instructions_0_splitter[1].amtout == 1
+    assert split_trade_instructions_0_splitter[1]._amtin_wei == 10000000000000000000
+    assert split_trade_instructions_0_splitter[1]._amtout_wei == 100000000
+    assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
 
-assert split_trade_instructions_0_splitter[2].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-assert split_trade_instructions_0_splitter[2].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_0_splitter[2].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-assert split_trade_instructions_0_splitter[2].amtin == 2
-assert split_trade_instructions_0_splitter[2].amtout == 20
-assert split_trade_instructions_0_splitter[2]._amtin_wei == 200000000
-assert split_trade_instructions_0_splitter[2]._amtout_wei == 20000000000000000000
-assert len(json.loads(split_trade_instructions_0_splitter[2].raw_txs.replace("'", '"'))) == 0
+    assert split_trade_instructions_0_splitter[2].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
+    assert split_trade_instructions_0_splitter[2].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_0_splitter[2].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    assert split_trade_instructions_0_splitter[2].amtin == 2
+    assert split_trade_instructions_0_splitter[2].amtout == 20
+    assert split_trade_instructions_0_splitter[2]._amtin_wei == 200000000
+    assert split_trade_instructions_0_splitter[2]._amtout_wei == 20000000000000000000
+    assert len(json.loads(split_trade_instructions_0_splitter[2].raw_txs.replace("'", '"'))) == 0
 
-assert split_trade_instructions_1_splitter[0].cid == "67035626283424877302284797664058337657416"
-assert split_trade_instructions_1_splitter[0].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-assert split_trade_instructions_1_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_1_splitter[0].amtin == 20
-assert split_trade_instructions_1_splitter[0].amtout == 2
-assert split_trade_instructions_1_splitter[0]._amtin_wei == 20000000000000000000
-assert split_trade_instructions_1_splitter[0]._amtout_wei == 200000000
-assert len(json.loads(split_trade_instructions_1_splitter[0].raw_txs.replace("'", '"'))) == 2
+    assert split_trade_instructions_1_splitter[0].cid == "67035626283424877302284797664058337657416"
+    assert split_trade_instructions_1_splitter[0].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    assert split_trade_instructions_1_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_1_splitter[0].amtin == 20
+    assert split_trade_instructions_1_splitter[0].amtout == 2
+    assert split_trade_instructions_1_splitter[0]._amtin_wei == 20000000000000000000
+    assert split_trade_instructions_1_splitter[0]._amtout_wei == 200000000
+    assert len(json.loads(split_trade_instructions_1_splitter[0].raw_txs.replace("'", '"'))) == 2
 
-assert split_trade_instructions_1_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-assert split_trade_instructions_1_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_1_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-assert split_trade_instructions_1_splitter[1].amtin == 2
-assert split_trade_instructions_1_splitter[1].amtout == 20
-assert split_trade_instructions_1_splitter[1]._amtin_wei == 200000000
-assert split_trade_instructions_1_splitter[1]._amtout_wei == 20000000000000000000
-assert len(json.loads(split_trade_instructions_1_splitter[1].raw_txs.replace("'", '"'))) == 0
+    assert split_trade_instructions_1_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
+    assert split_trade_instructions_1_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_1_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    assert split_trade_instructions_1_splitter[1].amtin == 2
+    assert split_trade_instructions_1_splitter[1].amtout == 20
+    assert split_trade_instructions_1_splitter[1]._amtin_wei == 200000000
+    assert split_trade_instructions_1_splitter[1]._amtout_wei == 20000000000000000000
+    assert len(json.loads(split_trade_instructions_1_splitter[1].raw_txs.replace("'", '"'))) == 0
 
-assert split_trade_instructions_2_splitter[0].cid == "9187623906865338513511114400657741709505"
-assert split_trade_instructions_2_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-assert split_trade_instructions_2_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_2_splitter[0].amtin == 10
-assert split_trade_instructions_2_splitter[0].amtout == 1.0
-assert split_trade_instructions_2_splitter[0]._amtin_wei == 10000000000000000000
-assert split_trade_instructions_2_splitter[0]._amtout_wei == 100000000
-assert len(json.loads(split_trade_instructions_2_splitter[0].raw_txs.replace("'", '"'))) == 2
+    assert split_trade_instructions_2_splitter[0].cid == "9187623906865338513511114400657741709505"
+    assert split_trade_instructions_2_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    assert split_trade_instructions_2_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_2_splitter[0].amtin == 10
+    assert split_trade_instructions_2_splitter[0].amtout == 1.0
+    assert split_trade_instructions_2_splitter[0]._amtin_wei == 10000000000000000000
+    assert split_trade_instructions_2_splitter[0]._amtout_wei == 100000000
+    assert len(json.loads(split_trade_instructions_2_splitter[0].raw_txs.replace("'", '"'))) == 2
 
-assert split_trade_instructions_2_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-assert split_trade_instructions_2_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-assert split_trade_instructions_2_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-assert split_trade_instructions_2_splitter[1].amtin == 1
-assert split_trade_instructions_2_splitter[1].amtout == 10
-assert split_trade_instructions_2_splitter[1]._amtin_wei == 100000000
-assert split_trade_instructions_2_splitter[1]._amtout_wei == 10000000000000000000
-assert len(json.loads(split_trade_instructions_2_splitter[1].raw_txs.replace("'", '"'))) == 0
+    assert split_trade_instructions_2_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
+    assert split_trade_instructions_2_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    assert split_trade_instructions_2_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    assert split_trade_instructions_2_splitter[1].amtin == 1
+    assert split_trade_instructions_2_splitter[1].amtout == 10
+    assert split_trade_instructions_2_splitter[1]._amtin_wei == 100000000
+    assert split_trade_instructions_2_splitter[1]._amtout_wei == 10000000000000000000
+    assert len(json.loads(split_trade_instructions_2_splitter[1].raw_txs.replace("'", '"'))) == 0
 
-assert split_trade_instructions_3_splitter[0].cid == "2381976568446569244243622252022377480572"
-assert split_trade_instructions_3_splitter[0].tknin == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-assert split_trade_instructions_3_splitter[0].tknout == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-assert split_trade_instructions_3_splitter[0].amtin == 15
-assert split_trade_instructions_3_splitter[0].amtout == 150
-assert split_trade_instructions_3_splitter[0]._amtin_wei == 15000000000000000000
-assert split_trade_instructions_3_splitter[0]._amtout_wei == 150000000
-assert len(json.loads(split_trade_instructions_3_splitter[0].raw_txs.replace("'", '"'))) == 2
+    assert split_trade_instructions_3_splitter[0].cid == "2381976568446569244243622252022377480572"
+    assert split_trade_instructions_3_splitter[0].tknin == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    assert split_trade_instructions_3_splitter[0].tknout == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    assert split_trade_instructions_3_splitter[0].amtin == 15
+    assert split_trade_instructions_3_splitter[0].amtout == 150
+    assert split_trade_instructions_3_splitter[0]._amtin_wei == 15000000000000000000
+    assert split_trade_instructions_3_splitter[0]._amtout_wei == 150000000
+    assert len(json.loads(split_trade_instructions_3_splitter[0].raw_txs.replace("'", '"'))) == 2
 
-assert split_trade_instructions_3_splitter[1].cid == "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074"
-assert split_trade_instructions_3_splitter[1].tknin == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-assert split_trade_instructions_3_splitter[1].tknout == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-assert split_trade_instructions_3_splitter[1].amtin == 150
-assert split_trade_instructions_3_splitter[1].amtout == 15
-assert split_trade_instructions_3_splitter[1]._amtin_wei == 150000000
-assert split_trade_instructions_3_splitter[1]._amtout_wei == 15000000000000000000
-assert len(json.loads(split_trade_instructions_3_splitter[1].raw_txs.replace("'", '"'))) == 0
-# -
+    assert split_trade_instructions_3_splitter[1].cid == "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074"
+    assert split_trade_instructions_3_splitter[1].tknin == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    assert split_trade_instructions_3_splitter[1].tknout == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    assert split_trade_instructions_3_splitter[1].amtin == 150
+    assert split_trade_instructions_3_splitter[1].amtout == 15
+    assert split_trade_instructions_3_splitter[1]._amtin_wei == 150000000
+    assert split_trade_instructions_3_splitter[1]._amtout_wei == 15000000000000000000
+    assert len(json.loads(split_trade_instructions_3_splitter[1].raw_txs.replace("'", '"'))) == 0
 
 
 
