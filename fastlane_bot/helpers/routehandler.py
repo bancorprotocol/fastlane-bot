@@ -177,7 +177,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                 for trade in tradeInfo:
                     tradeActions += [
                         {
-                            "strategyId": int(trade["cid"].split("-")[0]),
+                            "strategyId": int(trade["strategy_id"].split("-")[0]),
                             "amount": int(
                                 trade["_amtin_wei"]
                             ),
@@ -221,7 +221,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         trade_actions_dic = [
             {
-                "strategyId": int(trade_instructions[idx].cid),
+                "strategyId": int(trade_instructions[idx].strategy_id),
                 "amount": math.floor(trade_instructions[idx].amtin_wei),
             }
             for idx in idx_of_carbon_trades
@@ -678,9 +678,10 @@ class TxRouteHandler(TxRouteHandlerBase):
     def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
         return [
             {
-                "cid": instr.cid + "-" + str(instr.cid_tkn)
-                if instr.cid_tkn
-                else instr.cid,
+                "cid": instr.cid,
+                "strategy_id": instr.strategy_id + "-" + str(instr.strategy_id_tkn)
+                if instr.strategy_id_tkn
+                else instr.strategy_id,
                 "tknin": instr.tknin,
                 "amtin": instr.amtin,
                 "_amtin_wei": instr.amtin_wei,
@@ -788,7 +789,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         listti = self._get_trade_dicts_from_objects(trade_instructions_objects)
         df = pd.DataFrame(listti)
         df["pair_sorting"] = df.tknin + df.tknout
-        df['carbon'] = [True if '-' in df.cid[i] else False for i in df.index]
+        df['carbon'] = [True if '-' in df.strategy_id[i] else False for i in df.index]
 
         carbons = df[df['carbon']].copy()
         nocarbons = df[~df['carbon']].copy()
@@ -806,6 +807,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             {
                 "pair_sorting": newdf.pair_sorting.values[0],
                 "cid": newdf.cid.values[0],
+                "strategy_id": newdf.strategy_id.values[0],
                 "tknin": newdf.tknin.values[0],
                 "amtin": newdf.amtin.sum(),
                 "_amtin_wei": newdf._amtin_wei.sum(),
@@ -834,6 +836,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             listti += [
                 {
                     "cid": instr.cid,
+                    "strategy_id": instr.strategy_id,
                     "tknin": instr.tknin,
                     "amtin": instr.amtin,
                     "tknout": instr.tknout,
@@ -1667,7 +1670,8 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                 for _idx, tx in enumerate(data):
                     cid = tx["cid"]
-                    cid = cid.split("-")[0]
+                    strategy_id = tx["strategy_id"]
+                    strategy_id = strategy_id.split("-")[0]
                     tknin_address = tx["tknin"]
 
                     _next_amt_in = Decimal(str(next_amount_in)) * tx["percent_in"]
@@ -1694,6 +1698,7 @@ class TxRouteHandler(TxRouteHandlerBase):
                         continue
                     raw_txs = {
                         "cid": cid,
+                        "strategy_id": strategy_id,
                         "tknin": tx["tknin"],
                         "amtin": amount_in,
                         "_amtin_wei": amount_in_wei,
@@ -1729,6 +1734,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
                             _raw_txs = {
                                 "cid": _tx["cid"],
+                                "strategy_id": _tx["strategy_id"],
                                 "tknin": _tx["tknin"],
                                 "amtin": _amount_in,
                                 "_amtin_wei": _amount_in_wei,

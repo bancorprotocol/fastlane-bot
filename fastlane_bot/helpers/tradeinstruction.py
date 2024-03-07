@@ -22,6 +22,8 @@ class TradeInstruction:
     ----------
     cid: str
         The pool unique ID
+    strategy_id: int
+        The strategy ID
     tknin: str
         The input token key (e.g. 'DAI-1d46')
     amtin: int or Decimal or float
@@ -65,6 +67,7 @@ class TradeInstruction:
     
     ConfigObj: Any
     cid: str
+    strategy_id: int
     tknin: str
     amtin: Union[int, Decimal, float]
     tknout: str
@@ -104,7 +107,7 @@ class TradeInstruction:
         """
         Use the database session to get the token addresses and decimals based on the Pool.cid and Token.key
         """
-        self._cid_tkn: str = None
+        self._strategy_id_tkn: str = None
         self._is_carbon = self._check_if_carbon()
         
         if self.tknin_dec_override is None:
@@ -134,7 +137,7 @@ class TradeInstruction:
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
-        pool = self.db.get_pool(cid=self.cid.split('-')[0])
+        pool = self.db.get_pool(cid=self.cid)
         if self.tknout_dec_override is None:
             tokens = pool.get_token_addresses
             self.tknin_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
@@ -356,18 +359,18 @@ class TradeInstruction:
         bool
             Whether the curve is a Carbon curve.
         """
-        if "-" in self.cid:
-            self._cid_tkn = self.cid.split("-")[1]
-            self.cid = self.cid.split("-")[0]
+        if self.strategy_id:
+            self._strategy_id_tkn = self.strategy_id.split("-")[1]
+            self.strategy_id = self.strategy_id.split("-")[0]
             return True
         return False
 
     @property
-    def cid_tkn(self) -> str:
+    def strategy_id_tkn(self) -> str:
         """
-        The token cid.
+        The token strategy_id.
         """
-        return self._cid_tkn
+        return self._strategy_id_tkn
 
     @property
     def tknin_address(self) -> str:

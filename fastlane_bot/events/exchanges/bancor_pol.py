@@ -76,6 +76,7 @@ class BancorPol(Exchange):
             The pool info.
 
         """
+        # TODO: This needs to be changed so that it is handled in the same way, and place, as the other exchanges.
         cid = f"{self.exchange_name}_{token}"
         tkn0_address = cfg.w3.to_checksum_address(token)
         tkn1_address = cfg.w3.to_checksum_address(cfg.ETH_ADDRESS) if token not in cfg.ETH_ADDRESS else cfg.BNT_ADDRESS

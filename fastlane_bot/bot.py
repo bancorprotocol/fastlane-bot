@@ -359,7 +359,7 @@ class CarbonBot(CarbonBotBase):
         return result
 
     @staticmethod
-    def _check_if_carbon(cid: str):
+    def _check_if_carbon(strategy_id: str):
         """
         Checks if the curve is a Carbon curve.
 
@@ -368,14 +368,15 @@ class CarbonBot(CarbonBotBase):
         bool
             Whether the curve is a Carbon curve.
         """
-        if "-" in cid:
-            _cid_tkn = cid.split("-")[1]
-            cid = cid.split("-")[0]
-            return True, _cid_tkn, cid
-        return False, "", cid
+
+        if "-" in strategy_id:
+            _strategy_id_tkn = strategy_id.split("-")[1]
+            strategy_id = strategy_id.split("-")[0]
+            return True, _strategy_id_tkn, strategy_id
+        return False, "", strategy_id
 
     @staticmethod
-    def _check_if_not_carbon(cid: str):
+    def _check_if_not_carbon(strategy_id: str):
         """
         Checks if the curve is a Carbon curve.
         Returns
@@ -383,7 +384,7 @@ class CarbonBot(CarbonBotBase):
         bool
             Whether the curve is a Carbon curve.
         """
-        return "-" not in cid
+        return "-" not in strategy_id
 
     @dataclass
     class ArbCandidate:
@@ -558,7 +559,8 @@ class CarbonBot(CarbonBotBase):
             cids = []
             for pool in ordered_trade_instructions_dct:
                 pool_cid = pool["cid"]
-                if "-0" in pool_cid or "-1" in pool_cid:
+                strategy_id = pool["strategy_id"]
+                if "-0" in strategy_id or "-1" in strategy_id:
                     self.ConfigObj.logger.debug(
                         f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
                     )
@@ -620,12 +622,11 @@ class CarbonBot(CarbonBotBase):
         ) = arb_opp
         for pool in best_trade_instructions_dic:
             pool_cid = pool["cid"]
-
-            if "-0" in pool_cid or "-1" in pool_cid:
-                pool_cid = pool_cid.split("-")[0]
+            strategy_id = pool["strategy_id"]
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {
                 "cid": pool_cid,
+                "strategy_id": strategy_id,
                 "id": current_pool.id,
                 "address": current_pool.address,
                 "pair_name": current_pool.pair_name,
@@ -1043,7 +1044,7 @@ class CarbonBot(CarbonBotBase):
             )
 
         # Get the cids
-        cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})
+        cids = list({ti["cid"] for ti in best_trade_instructions_dic})
 
         # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:

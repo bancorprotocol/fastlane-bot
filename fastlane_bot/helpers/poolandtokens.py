@@ -91,6 +91,7 @@ class PoolAndTokens:
     ConfigObj: Config
     id: int
     cid: str
+    strategy_id: str
     last_updated: str
     last_updated_block: int
     descr: str
@@ -168,6 +169,8 @@ class PoolAndTokens:
 
 
     def __post_init__(self):
+        if not isinstance(self.strategy_id, str):
+            self.strategy_id = str(self.strategy_id)
 
         self.A_1 = self.A_1 or 0
         self.B_1 = self.B_1 or 0
@@ -326,6 +329,7 @@ class PoolAndTokens:
                         "pair": _pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
                         "fee": self.fee,
                         "cid": self.cid,
+                        "strategy_id": self.strategy_id,
                         "descr": self.descr,
                         "params": self._params,
                     }
@@ -361,6 +365,7 @@ class PoolAndTokens:
             "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
             "fee": self.fee,
             "cid": self.cid,
+            "strategy_id": self.strategy_id,
             "descr": self.descr,
             "params": self._params,
         }
@@ -448,9 +453,10 @@ class PoolAndTokens:
 
             tkny = 1 if i == 0 else 0
             typed_args = {
-                "cid": f"{self.cid}-{i}"
+                "cid": self.cid,
+                "strategy_id": f"{self.strategy_id}-{i}"
                 if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
-                else self.cid,
+                else self.strategy_id,
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
@@ -526,6 +532,7 @@ class PoolAndTokens:
             self.ConfigObj.logger.debug(f"empty univ3 pool [{self.cid}]")
             return []
         params["cid"] = self.cid
+        params["strategy_id"] = self.strategy_id
         params["descr"] = self.descr
         params["params"] = self._params
         return [ConstantProductCurve.from_univ3(**params)]

@@ -22,6 +22,7 @@ from fastlane_bot.data.abi import (
     BALANCER_VAULT_ABI,
 )
 from fastlane_bot.events.managers.base import BaseManager
+from fastlane_bot.events.new_utils import get_pool_cid
 
 
 class ContractsManager(BaseManager):
@@ -239,6 +240,14 @@ class ContractsManager(BaseManager):
         t0_addr = self.exchanges[exchange_name].get_tkn0(address, pool_contract, event)
         t1_addr = self.exchanges[exchange_name].get_tkn1(address, pool_contract, event)
         block_number = event["blockNumber"]
+        strategy_id = event["args"]["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None
+        temp_pool_info = {
+            "exchange_name": exchange_name,
+            "fee": f"{fee}",
+            "pair_name": f"{t0_addr}/{t1_addr}",
+            "strategy_id": strategy_id,
+        }
+        cid = get_pool_cid(temp_pool_info, self.cfg.CARBON_V1_FORKS)
 
         return self.add_pool_info(
             address=address,
@@ -247,7 +256,8 @@ class ContractsManager(BaseManager):
             fee_float=fee_float,
             tkn0_address=t0_addr,
             tkn1_address=t1_addr,
-            cid=event["args"]["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None,
+            cid=cid,
+            strategy_id=strategy_id,
             contract=pool_contract,
             block_number=block_number,
             tenderly_exchanges=tenderly_exchanges,

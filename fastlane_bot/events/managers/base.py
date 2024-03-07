@@ -596,6 +596,7 @@ class BaseManager:
         strategies = []
         for cid in cids:
             pool_data = [pool for pool in self.pool_data if pool["cid"] == cid][0]
+            strategy_id = pool_data["strategy_id"]
 
             # Constructing the orders based on the values from the pool_data dictionary
             order0 = [
@@ -615,7 +616,7 @@ class BaseManager:
             tkn0_address, tkn1_address = pool_data["tkn0"], pool_data["tkn1"]
 
             # Reconstructing the strategy object
-            strategy = [cid, None, [tkn0_address, tkn1_address], [order0, order1]]
+            strategy = [strategy_id, None, [tkn0_address, tkn1_address], [order0, order1]]
 
             # Appending the strategy to the list of strategies
             strategies.append(strategy)
@@ -783,12 +784,13 @@ class BaseManager:
                 address=addr, event=event, block_number=event["blockNumber"]
             )
 
-        if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
-            cid = event["args"]["id"] if event is not None else pool_info["cid"]
-            for pool in self.pool_data:
-                if pool["cid"] == cid:
-                    pool_info = pool
-                    break
+        # if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
+        #     cid = event["args"]["id"] if event is not None else pool_info["strategy_id"]
+        #
+        #     for pool in self.pool_data:
+        #         if pool["cid"] == cid:
+        #             pool_info = pool
+        #             break
 
         if isinstance(pool_info, float):
             return
