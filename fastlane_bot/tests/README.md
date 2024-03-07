@@ -29,5 +29,5 @@ The `fastlane-bot` library employs the pytest framework for its testing needs. T
 
 - All tests are run using the following command:
   ```bash
-  pytest fastlane_bot/tests
+  ./run_tests
   ```
