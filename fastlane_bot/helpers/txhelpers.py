@@ -835,4 +835,5 @@ class TxHelpers:
         """
 
         l1_data_fee = asyncio.get_event_loop().run_until_complete(asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(rawTransaction)))
-        return Decimal(f"{l1_data_fee}")
+        ## Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
+        return Decimal(f"{l1_data_fee}e-18")
