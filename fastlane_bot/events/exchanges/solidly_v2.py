@@ -28,10 +28,10 @@ async def get_fee_3(address: str, contract: Contract, factory_contract: Contract
     return await factory_contract.caller.getFee(address, await contract.caller.stable())
 
 EXCHANGE_INFO = {
-    "velocimeter_v2": {"decimals": 5, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
-    "equalizer_v2": {"decimals": 5, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
-    "aerodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
-    "velodrome_v2": {"decimals": 5, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
+    "velocimeter_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    "equalizer_v2": {"decimals": 4, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
+    "aerodrome_v2": {"decimals": 4, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
+    "velodrome_v2": {"decimals": 4, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
 }
 
