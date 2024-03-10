@@ -188,6 +188,8 @@ raw_tx_3 = {
 
 #### MIX ####
 raw_tx_list_0 = [raw_tx_0, raw_tx_1]
+raw_tx_list_0_split_0 = [raw_tx_0]
+raw_tx_list_0_split_1 = [raw_tx_1]
 
 #### WETH ONLY ####
 raw_tx_list_1 = [raw_tx_0, raw_tx_0]
@@ -201,6 +203,9 @@ raw_tx_list_3 = [raw_tx_2, raw_tx_3]
 
 
 raw_tx_str_0 = str(raw_tx_list_0)
+raw_tx_str_0_split_0 = str(raw_tx_list_0_split_0)
+raw_tx_str_0_split_1 = str(raw_tx_list_0_split_1)
+
 raw_tx_str_1 = str(raw_tx_list_1)
 raw_tx_str_2 = str(raw_tx_list_2)
 
@@ -236,7 +241,7 @@ trade_instruction_0_split_0 = TradeInstruction(
     tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_0,
+    raw_txs=raw_tx_str_0_split_0,
 )
 trade_instruction_0_split_1 = TradeInstruction(
     cid='67035626283424877302284797664058337657416-0',
@@ -251,7 +256,7 @@ trade_instruction_0_split_1 = TradeInstruction(
     tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_0,
+    raw_txs=raw_tx_str_0_split_1,
 )
 
 #### WETH ONLY ####
@@ -274,7 +279,7 @@ trade_instruction_1 = TradeInstruction(
 #### ETH ONLY ####
 trade_instruction_2 = TradeInstruction(
     cid='67035626283424877302284797664058337657416-0',
-    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    tknin=ETH_ADDRESS,
     amtin=10,
     tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     amtout=1,
@@ -295,6 +300,20 @@ trade_instruction_3 = TradeInstruction(
     amtin=2,
     tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtout=20,
+    ConfigObj=cfg,
+    db = db,
+    tknin_dec_override =  8,
+    tknout_dec_override = 18,
+    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    exchange_override = 'pancakeswap_v2',
+)
+trade_instruction_3_split = TradeInstruction(
+    cid='0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974',
+    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    amtin=1.5,
+    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    amtout=15,
     ConfigObj=cfg,
     db = db,
     tknin_dec_override =  8,
@@ -357,6 +376,10 @@ trade_instruction_6 = TradeInstruction(
 
 #### MIX ####
 trade_instructions_0 = [trade_instruction_0, trade_instruction_3]
+
+trade_instructions_0_split = [trade_instruction_0_split_0, trade_instruction_0_split_1, trade_instruction_3_split]
+
+
 #### WETH ONLY ####
 trade_instructions_1 = [trade_instruction_1, trade_instruction_3]
 #### ETH ONLY ####
@@ -373,32 +396,18 @@ txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions
 #### NEITHER ####
 txroutehandler_ethereum_3 = TxRouteHandler(trade_instructions=trade_instructions_3)
 
-trade_instruction_0 = TradeInstruction(
-    cid='67035626283424877302284797664058337657416-0',
-    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    amtin=15,
-    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    amtout=1.5,
-    ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  18,
-    tknout_dec_override = 8,
-    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_0,
-)
-
 # Get the deadline
 deadline = 12345678
 
 flashloan_struct_0 = [{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [5000000000000000000]}]
+flashloan_struct_0_split_trades = [{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [15000000000000000000]}]
 flashloan_struct_1 = [{'platformId': 7, 'sourceTokens': ['0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'], 'sourceAmounts': [20000000000000000000]}]
 flashloan_struct_2 = [{'platformId': 2, 'sourceTokens': ['0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'], 'sourceAmounts': [10000000000000000000]}]
 flashloan_struct_3 = [{'platformId': 2, 'sourceTokens': ['0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C'], 'sourceAmounts': [15000000000000000000]}]
 
 # Get the route struct
 route_struct_0 = [{'platformId': 6, 'sourceToken': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 5000000000000000000, 'minTargetAmount': 50000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000001b000000000000000000000000000000c10000000000000000000000000000000000000000000000004563918244f40000'}, {'platformId': 6, 'sourceToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 10000000000000000000, 'minTargetAmount': 100000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000c5000000000000000000000000000002480000000000000000000000000000000000000000000000008ac7230489e80000'}, {'platformId': 4, 'sourceToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'targetToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'sourceAmount': 200000000, 'minTargetAmount': 20000000000000000000, 'deadline': 12345678, 'customAddress': '0xE592427A0AEce92De3Edee1F18E0157C05861564', 'customInt': 3000, 'customData': '0x0000000000000000000000000000000000000000000000000000000000000000'}]
+route_struct_0_split = [{'platformId': 6, 'sourceToken': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 5000000000000000000, 'minTargetAmount': 50000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000001b000000000000000000000000000000c10000000000000000000000000000000000000000000000004563918244f40000'}, {'platformId': 6, 'sourceToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 10000000000000000000, 'minTargetAmount': 100000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000c5000000000000000000000000000002480000000000000000000000000000000000000000000000008ac7230489e80000'}, {'platformId': 4, 'sourceToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'targetToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'sourceAmount': 150000000, 'minTargetAmount': 15000000000000000000, 'deadline': 12345678, 'customAddress': '0xE592427A0AEce92De3Edee1F18E0157C05861564', 'customInt': 3000, 'customData': '0x0000000000000000000000000000000000000000000000000000000000000000'}]
 route_struct_1 = [{'platformId': 6, 'sourceToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 20000000000000000000, 'minTargetAmount': 200000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000c5000000000000000000000000000002480000000000000000000000000000000000000000000000008ac7230489e80000000000000000000000000000000000c5000000000000000000000000000002480000000000000000000000000000000000000000000000008ac7230489e80000'}, {'platformId': 4, 'sourceToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'targetToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'sourceAmount': 200000000, 'minTargetAmount': 20000000000000000000, 'deadline': 12345678, 'customAddress': '0xE592427A0AEce92De3Edee1F18E0157C05861564', 'customInt': 3000, 'customData': '0x0000000000000000000000000000000000000000000000000000000000000000'}]
 route_struct_2 = [{'platformId': 6, 'sourceToken': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'targetToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'sourceAmount': 10000000000000000000, 'minTargetAmount': 100000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000001b000000000000000000000000000000c10000000000000000000000000000000000000000000000004563918244f400000000000000000000000000000000001b000000000000000000000000000000c10000000000000000000000000000000000000000000000004563918244f40000'}, {'platformId': 4, 'sourceToken': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'targetToken': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 'sourceAmount': 100000000, 'minTargetAmount': 10000000000000000000, 'deadline': 12345678, 'customAddress': '0xE592427A0AEce92De3Edee1F18E0157C05861564', 'customInt': 3000, 'customData': '0x0000000000000000000000000000000000000000000000000000000000000000'}]
 route_struct_3 = [{'platformId': 6, 'sourceToken': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', 'targetToken': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'sourceAmount': 15000000000000000000, 'minTargetAmount': 150000000, 'deadline': 12345678, 'customAddress': '0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1', 'customInt': 0, 'customData': '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000070000000000000000000000000000017c0000000000000000000000000000000000000000000000008ac7230489e8000000000000000000000000000000000007000000000000000000000000000001e40000000000000000000000000000000000000000000000004563918244f40000'}, {'platformId': 1, 'sourceToken': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'targetToken': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', 'sourceAmount': 150000000, 'minTargetAmount': 15000000000000000000, 'deadline': 12345678, 'customAddress': '0x874d8dE5b26c9D9f6aA8d7bab283F9A9c6f777f4', 'customInt': 0, 'customData': '0x'}]
@@ -455,7 +464,7 @@ def test_ensure_unique_flashloan_token():
 def test_segment_routes():
     _processor_0 = WrapUnwrapProcessor(cfg=cfg)
 
-    _segments_0 = _processor_0._segment_routes([trade_instruction_0_split_0, trade_instruction_0_split_1, trade_instruction_3], route_struct_0)
+    _segments_0 = _processor_0._segment_routes(trade_instructions_0_split, route_struct_0)
     assert len(_segments_0.keys()) == 3
 
     for trade in route_struct_0:
@@ -514,7 +523,6 @@ def test_handle_wrap_or_unwrap():
 
 
     
-test_handle_wrap_or_unwrap()
 
 
 # +
@@ -670,9 +678,40 @@ def test_get_wrap_or_unwrap_native_gas_tkn_struct():
 
 
 
+
+# +
+def test_add_wrap_or_unwrap_trades_to_route():
+    start_balance_0 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 15000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+    start_balance_1 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 20000000000000000000, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 0, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+    start_balance_2 = {'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': 0, '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE': 10000000000000000000, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': 0}
+    start_balance_3 = {'0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C': 15000000000000000000, '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48': 0}
+    _processor_0 = WrapUnwrapProcessor(cfg=cfg)
+    _processor_1 = WrapUnwrapProcessor(cfg=cfg)
+    _processor_2 = WrapUnwrapProcessor(cfg=cfg)
+    _processor_3 = WrapUnwrapProcessor(cfg=cfg)
+
+    result_2 = _processor_2.add_wrap_or_unwrap_trades_to_route(trade_instructions_2, route_struct_2, flashloan_struct_2)
+    result_0 = _processor_0.add_wrap_or_unwrap_trades_to_route(trade_instructions_0_split, route_struct_0_split, flashloan_struct_0_split_trades)
+    result_1 = _processor_1.add_wrap_or_unwrap_trades_to_route(trade_instructions_1, route_struct_1, flashloan_struct_1)
+    result_3 = _processor_3.add_wrap_or_unwrap_trades_to_route(trade_instructions_3, route_struct_3, flashloan_struct_3)
+    def check_no_negative(balance_dict):
+        for tkn in balance_dict.keys():
+            assert balance_dict[tkn] >= 0, f"negative balance found: {balance_dict}"
+
+    def loop_balances(_route_struct, _balance):
+        for trade in _route_struct:
+            _balance[trade['sourceToken']] -= trade['sourceAmount']
+            _balance[trade['targetToken']] += trade['minTargetAmount']
+
+        check_no_negative(_balance)
+
+    loop_balances(result_0, start_balance_0)
+    loop_balances(result_1, start_balance_1)
+    loop_balances(result_2, start_balance_2)
+    loop_balances(result_3, start_balance_3)
+
+
 # -
-
-
 
 
 
