@@ -1,11 +1,11 @@
 """
-dict-based vectors 
-
+Implements the ``DictVector`` class, a sparse vector based on dicts
+---
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9'
-__DATE__ = "18/Jan/2024"
+__VERSION__ = '0.9.1'
+__DATE__ = "07/Feb/2024"
 
 from dataclasses import dataclass, asdict
 import math
@@ -13,7 +13,32 @@ import math
 @dataclass
 class DictVector():
     """
-    represents a vector as a dict where different keys are orthogonal dimensions
+    A sparse vector where dict keys are dimensions and values are coefficients
+    
+    USAGE
+    
+    below an incomplete list of operations that can be performed; note that most
+    dunder methods are actually implemented, so the usual arithmetic operations
+    can be performed
+    
+    .. code-block:: python
+    
+        v1 = DictVector.new(a=1, b=2, c=3)      # use kwargs
+        
+        d2 = dict(a=10, b=20, c=30)
+        v2 = DictVector.new(d2)                 # use dict
+        
+        v1+v2                                   # {a: 11, b: 22, c: 33}
+        v2-v1                                   # {a: 9, b: 18, c: 27}
+        2*v1                                    # {a: 2, b: 4, c: 6}
+        v1.enorm                                # = sqrt(1+4+9) ~ 3.74
+        v1 == v2                                # False
+        len(v1)                                 # 3
+        
+        v = DictVector.new(a=1, d=1)
+        v += v1
+        v == DictVector.new(a=2, b=2, c=3, d=1) # True
+        
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
@@ -27,14 +52,14 @@ class DictVector():
     @classmethod
     def null(cls):
         """
-        create a null DictVector
+        Creates a *null* DictVector, aka an empty dict
         """
         return cls()
     
     @classmethod
     def new(cls, single_dict_argument=None, **kwargs):
         """
-        create a new DictVector from kwargs
+        Creates a new DictVector from `kwargs`
         """
         if not single_dict_argument is None:
             assert len(kwargs) == 0, "new must be called with either single_dict_argument or keyword arguments, not both"
@@ -43,9 +68,19 @@ class DictVector():
     n = new
     
     @property
-    def norm(self):
-        """
-        the L2 norm of self, assuming all keys are orthogonal
+    def enorm(self):
+        r"""
+        Returns Euclidian norm of `self`
+        
+        .. math::    
+            n_e = \sqrt{\sum_i \alpha_i^2}
+            
+        EXAMPLE
+        
+        .. code-block:: python
+            
+                v = DictVector.new(a=3, b=4)
+                v.enorm                         # = sqrt(3^2 + 4^2) = 5
         """
         return self.dict_norm(self.vec)
     
@@ -158,42 +193,42 @@ class DictVector():
     @classmethod
     def dict_add(cls, a, b):
         """
-        add two dict-vectors a and b
+        Adds two dict-vectors `a` and `b`
         """
         return {k: a.get(k, 0) + b.get(k, 0) for k in set(a) | set(b)}
     
     @classmethod
     def dict_sub(cls, a, b):
         """
-        subtract two dict-vectors a and b
+        Subtracts two dict-vectors `a` and `b`
         """
         return {k: a.get(k, 0) - b.get(k, 0) for k in set(a) | set(b)}
     
     @classmethod
     def dict_smul(cls, a, s):
         """
-        multiply dict-vector a by scalar s
+        Multiplies dict-vector `a` by scalar `s`
         """
         return {k: v*s for k, v in a.items()}
     
     @classmethod
     def dict_sprod(cls, a, b):
         """
-        multiply two dict-vectors a and b (scalar product)
+        Multiplies two dict-vectors `a` and `b` (scalar product)
         """
         return sum(a.get(k, 0) * b.get(k, 0) for k in set(a) | set(b))
     
     @classmethod
     def dict_norm(cls, a):
         """
-        the L2 norm of dict-vector a
+        Calculates the Euclidian norm of dict-vector `a`
         """
         return sum(v**2 for v in a.values())**0.5
     
     @classmethod
     def dict_eq(cls, a, b, *, eps=0):
         """
-        whether two dict-vectors a and b are equal (within eps, L1 norm)
+        Calculates whether two dict-vectors `a` and `b` are equal (within `eps`, on absolute value basis)
         """
         diffvec = cls.dict_sub(a, b)
         if len(diffvec) == 0:

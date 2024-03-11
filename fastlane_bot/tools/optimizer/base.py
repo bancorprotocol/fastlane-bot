@@ -1,11 +1,11 @@
 """
 optimization library -- optimizer base module
 
+
+
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
-
-This module is still subject to active research, and comments and suggestions are welcome. 
-The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
 __VERSION__ = "5.1"
 __DATE__ = "20/Sep/2023"
@@ -71,6 +71,7 @@ class OptimizerBase(ABC):
         :time:          time taken to solve the optimization
         :method:        method used to solve the optimization
         :optimizer:     the optimizer object that created this result
+        
         """
         result: float
         time: float
@@ -202,10 +203,11 @@ class OptimizerBase(ABC):
         finds the minimum or maximum of func using Newton Raphson, starting at x0
         
         :func:      the function to optimize (must take one parameter)
-        :x0L        the starting point
+        :x0:        the starting point
         :N:         the number of iterations; note that the algo will always go to
                     the full length here; there is no convergence check
         :returns:   the result of the optimization as SimpleResult
+        
         """
         x = x0
         for _ in range(N):
@@ -231,9 +233,12 @@ class OptimizerBase(ABC):
         finds the value of `x` where `func(x)` x is zero, using a bisection between a,b
         
         :func:      function for which to find the zero (must take one parameter)
-        :a, b:      bounds; we must have func(a) * func(b) < 0
+        :a:         lower bound a (1)
+        :b:         upper bound b (1)
         :eps:       desired accuracy
         :returns:   the result as SimpleResult
+        
+        NOTE 1: we must have func(a) * func(b) < 0
         """
         if eps is None: 
             eps = cls.GOALSEEKEPS

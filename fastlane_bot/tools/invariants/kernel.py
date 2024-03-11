@@ -1,6 +1,7 @@
 """
-object representing a one dimensional integration kernel, plus numeric integration code 
+Implements the `Kernel` class, an integration kernel together with numeric integration code
 
+---
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
@@ -15,18 +16,37 @@ import math as m
 @dataclass
 class Kernel():
     """
-    represents an integration kernel, and contains numeric integration code
+    Represents a one-dimensional integration kernel and provides numeric integration code
     
     :x_min:         minimum x value for integration
     :x_max:         ditto maximum
-    :kernel:        kernel function (should be positive, and defined x_min <= x <= x_max)
-                    there are available kernels and the associated constants
-                    FLAT:                   constant 1
-                    TRIANGLE:               triangle
-                    SAWTOOTHL, SAWTOOTHR:   sawtooth left/right
-                    GAUSS, GAUSSW, GAUSSN:  gaussian (fitted, wide, narrow)
-    :method:        integration method (see below)
+    :kernel:        kernel function (should be positive, and defined `x_min` <= `x` <= `x_max`);
+                    generically, the kernel function is a callable taking a single argument;
+                    alternatively there are a number of built-in kernels that can be selected 
+                    by passing the respective constant (see table)
+    :method:        integration method (currently only `METHOD_TRAPEZOID`)
     :steps:         number of steps for integration
+    
+    ======================  ====================================================
+    `kernel`                meaning
+    ======================  ====================================================
+    FLAT                    constant
+    TRIANGLE                triangle
+    SAWTOOTHL, SAWTOOTHR    sawtooth left/right
+    GAUSS, GAUSSW, GAUSSN   gaussian (fitted, wide, narrow)
+    ======================  ====================================================
+    
+    USAGE
+    
+    .. code-block:: python
+    
+        k = Kernel(x_min=-1, x_max=1, kernel=Kernel.FLAT)
+        f = lambda x: x**2
+        
+        k(0.5)                  # 0.5
+        k.integrate(f)          # ~0.6666
+        
+        Kernel.integrate_trapezoid(f, -1, 1, 100)  # ~0.6666
     """    
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
@@ -90,7 +110,7 @@ class Kernel():
                 raise ValueError(f"unknown kernel type {self.kernel_name}")
         
     def k(self, x):
-        """alias for self.kernel, but set to zero beyond x_min, x_max"""
+        """Alias for `self.kernel(x)`, but set to zero beyond `x_min`, `x_max`"""
         if self.in_domain(x):
             #print(f"[Kernel::k] {self} {x}")
             return self.kernel(x)
@@ -98,27 +118,38 @@ class Kernel():
             return 0
         
     def __call__(self, x):
-        """alias for self.k"""
+        """Alias for `self.k`"""
         return self.k(x)
     
     def in_domain(self, x):
-        """returns True iff x is in the integration domain"""
+        """Returns True iff x is in the integration domain `x_min`...`x_max`"""
         return self.x_min <= x <= self.x_max
     
     @property
     def limits(self):
-        """convenience accessor for (x_min, x_max)"""
+        """Convenience accessor for `(x_min, x_max)`"""
         return (self.x_min, self.x_max)
     domain = limits
     
     def integrate(self, func, *, steps=None, method=None):
         """
-        integrates func using the kernel
+        Integrates `func` against the kernel (calls `integrate_trapezoid`)
         
         :func:      function to integrate (single variable)
         :steps:     number of steps for integration (default: self.steps)
-        :method:    integration method (default: self.method)
-        :returns:   Int_{x_min}^{x_max} func(x) * kernel(x) dx    
+        :method:    integration method (default: self.method) (1)
+        :returns:   :math:`\int_{x_{min}}^{x_{max}} \mathrm{func}(x)\,\mathrm{kernel}(x)\,dx` 
+        
+        
+        NOTE 1: currently the only method supported is `METHOD_TRAPEZOID`
+        
+        EXAMPLE
+        
+        .. code-block:: python
+        
+                k = Kernel(x_min=-1, x_max=1, kernel=Kernel.FLAT)
+                f = lambda x: x**2
+                k.integrate(f)          # ~0.6666
         """
         if steps is None:
             steps = self.steps
@@ -141,7 +172,22 @@ class Kernel():
     
     @staticmethod
     def integrate_trapezoid(func, x_min, x_max, steps):
-        """integrate function using the trapezoid method"""
+        """
+        Integrates a function using the trapezoid method between `x_min` and `x_max`
+        
+        :func:      function to integrate (single variable callable)
+        :x_min:     minimum x value for integration
+        :x_max:     ditto maximum
+        :steps:     number of steps for integration
+        :returns:   :math:`\int_{x_{min}}^{x_{max}} \mathrm{func}(x)\,dx`
+        
+        EXAMPLE
+        
+        .. code-block:: python
+            
+                f = lambda x: x**2
+                Kernel.integrate_trapezoid(f, -1, 1, 100)  # ~0.6666
+        """
         assert x_max > x_min, "x_max must be greater than x_min"
         assert steps > 0, "steps must be positive"
         

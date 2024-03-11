@@ -1,10 +1,11 @@
 """
 estimating the scale of the token price in USD
 
-NOTE: this class is not part of the Bancor Simulator API, and breaking changes may occur at any time
-
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
+
+NOTE: this class is not part of the Bancor Simulator API, and breaking changes may occur at any time
 """
 __VERSION__ = "1.0"
 __DATE__ = "07/Apr/2022"

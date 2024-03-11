@@ -6,11 +6,12 @@ The pair optimizer uses a marginal price method in one dimension to find the opt
 solution. It uses a bisection method to find the root of the transfer equation, therefore
 it only work for a single pair. To use it on multiple pairs, use MargPOptimizer instead.
 
-(c) Copyright Bprotocol foundation 2023. 
-Licensed under MIT
-
+---
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
+
+(c) Copyright Bprotocol foundation 2023. 
+Licensed under MIT
 """
 __VERSION__ = "6.0.1"
 __DATE__ = "21/Sep/2023"
@@ -180,23 +181,30 @@ class PairOptimizer(CPCArbOptimizer):
         """
         a marginal price optimizer that works only on curves on one pair
 
-        :result:            determines what to return
-                                :SO_DXDYVECFUNC:    function of p returning vector of dx,dy values
-                                :SO_DXDYSUMFUNC:    function of p returning sum of dx,dy values
-                                :SO_DXDYVALXFUNC:   function of p returning value of dx,dy sum in units of tknx
-                                :SO_DXDYVALYFUNC:   ditto tkny
-                                :SO_PMAX:           optimal p value for global max*
-                                :SO_GLOBALMAX:      global max of sum dx*p + dy*
-                                :SO_TARGETTKN:      optimizes for one token, the other is zero
+        :result:            determines what to return (see table below)
         :targettkn:         token to optimize for (if result==SO_TARGETTKN); must be None if
                             result==SO_GLOBALMAX; result defaults to the corresponding value
                             depending on whether or not targettkn is None
         :params:            dict of parameters
-                                :eps:           accuracy parameter passed to bisection method (default: 1e-6)   
-        
-        *the modes SO_PMAX and SO_GLOBALMAX are deprecated and the code may or may not be working
-        properly; if every those functions are needed they need to be reviewed and tests need to
-        be added (most tests in NBTests 002 have been disabled)
+        :eps:               accuracy parameter passed to bisection method (default: 1e-6)
+        :returns:           depending on the `result` parameter 
+
+        =================   ============================================================      
+        `result`            returns
+        =================   ============================================================      
+        SO_DXDYVECFUNC      function of p returning vector of dx,dy values                                     
+        SO_DXDYSUMFUNC      function of p returning sum of dx,dy values                                        
+        SO_DXDYVALXFUNC     function of p returning value of dx,dy sum in units of tknx                       
+        SO_DXDYVALYFUNC     ditto tkny                                                                        
+        SO_PMAX             optimal p value for global max (1)                                                 
+        SO_GLOBALMAX        global max of sum dx*p + dy (1)                                                    
+        SO_TARGETTKN        optimizes for one token, the other is zero
+        None                SO_GLOBALMAX if targettkn is None, SO_TARGETTKN otherwise                                         
+        =================   ============================================================      
+
+        NOTE 1: the modes SO_PMAX and SO_GLOBALMAX are deprecated and the code may or 
+        may not be working properly; if every those functions are needed they need to 
+        be reviewed and tests need to be added (most tests in NBTests 002 have been disabled)
         """
         start_time = time.time()
         if params is None:
