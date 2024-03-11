@@ -20,11 +20,10 @@
 This module contains the tests for the exchanges classes
 """
 import json
-from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, CarbonTradeSplitter
+from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, split_carbon_trades
 from fastlane_bot.testing import *
 from typing import List
 from dataclasses import dataclass
-from fastlane_bot.helpers.poolandtokens import PoolAndTokens
 from fastlane_bot.events.interface import Token
 
 plt.rcParams['figure.figsize'] = [12,6]
@@ -357,242 +356,11 @@ txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions
 #### NEITHER ####
 txroutehandler_ethereum_3 = TxRouteHandler(trade_instructions=trade_instructions_3)
 
-
-# -
-
-# ## Test Split Carbon Trades
-
-# ### Test _is_carbon_trade
-
-# +
-
-def test_is_carbon_trade():
-    trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-
-    carbon_trades = [trade_instruction_0, trade_instruction_1, trade_instruction_2, trade_instruction_5]
-    non_carbon_trades = [trade_instruction_3, trade_instruction_4, trade_instruction_6]
-
-
-    for trade in carbon_trades:
-        assert trade_splitter._is_carbon_trade(trade=trade)
-
-    for trade in non_carbon_trades:
-        assert not trade_splitter._is_carbon_trade(trade=trade)
-
-
-
-# +
-def test_get_real_tkn():
-    trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-    
-    # ETH 
-    assert trade_splitter._get_real_tkn(token_address=ETH_ADDRESS, token_type=trade_splitter.NATIVE) == ETH_ADDRESS
-    assert trade_splitter._get_real_tkn(token_address=ETH_ADDRESS, token_type=trade_splitter.WRAPPED) == WETH_ADDRESS
-    
-    # WETH
-    assert trade_splitter._get_real_tkn(token_address=WETH_ADDRESS, token_type=trade_splitter.NATIVE) == ETH_ADDRESS
-    assert trade_splitter._get_real_tkn(token_address=WETH_ADDRESS, token_type=trade_splitter.WRAPPED) == WETH_ADDRESS
-    # OTHER
-
-    assert trade_splitter._get_real_tkn(token_address=USDC_ADDRESS, token_type=trade_splitter.NATIVE) == USDC_ADDRESS
-    assert trade_splitter._get_real_tkn(token_address=USDC_ADDRESS, token_type=trade_splitter.WRAPPED) == USDC_ADDRESS
-
-
-
-# +
-def test_process_carbon_trades():
-    trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-    ### MIX ###
-    carbon_exchanges_0 = trade_splitter._process_carbon_trades(trade_instruction_0)
-    ### WETH ###
-    carbon_exchanges_1 = trade_splitter._process_carbon_trades(trade_instruction_1)
-    ### ETH ###
-    carbon_exchanges_2 = trade_splitter._process_carbon_trades(trade_instruction_2)
-    ### NEITHER ###
-    carbon_exchanges_3 = trade_splitter._process_carbon_trades(trade_instruction_5)
-
-
-    def _assert_wrapped_or_native(is_native: bool, _raw_txs: List):
-            match = ETH_ADDRESS if is_native else WETH_ADDRESS
-            wrong_tkn = ETH_ADDRESS if not is_native else WETH_ADDRESS
-            for tx in _raw_txs:
-                assert (tx["tknin"] == match or tx["tknout"] == match) and (tx["tknin"] != wrong_tkn and tx["tknout"] != wrong_tkn)
-
-
-    def _test_extracted_txs(_carbon_dict):
-         _assert_wrapped_or_native(is_native=True, _raw_txs=_carbon_dict["carbon_v1"]["native"]["raw_txs"]), f"{_carbon_dict}"
-         _assert_wrapped_or_native(is_native=False, _raw_txs=_carbon_dict["carbon_v1"]["wrapped"]["raw_txs"]), f"{_carbon_dict}"
-
-    def _test_amts(_carbon_dict, _trade_instruction):
-         assert _trade_instruction._amtin_wei == (_carbon_dict["carbon_v1"]["native"]["_amtin_wei"] + _carbon_dict["carbon_v1"]["wrapped"]["_amtin_wei"] + _carbon_dict["carbon_v1"]["neither"]["_amtin_wei"]), f'instruction amtin = {_trade_instruction._amtin_wei}, extracted={(_carbon_dict["carbon_v1"]["native"]["_amtin_wei"] + _carbon_dict["carbon_v1"]["wrapped"]["_amtin_wei"] + _carbon_dict["carbon_v1"]["neither"]["_amtin_wei"])}, native={_carbon_dict["carbon_v1"]["native"]["_amtin_wei"]}, wrapped={_carbon_dict["carbon_v1"]["wrapped"]["_amtin_wei"]}, neither={_carbon_dict["carbon_v1"]["neither"]["_amtin_wei"]}'
-         assert _trade_instruction._amtout_wei == (_carbon_dict["carbon_v1"]["native"]["_amtout_wei"] + _carbon_dict["carbon_v1"]["wrapped"]["_amtout_wei"] + _carbon_dict["carbon_v1"]["neither"]["_amtout_wei"]), f'instruction amtout = {_trade_instruction._amtout_wei}, extracted={(_carbon_dict["carbon_v1"]["native"]["_amtout_wei"] + _carbon_dict["carbon_v1"]["wrapped"]["_amtout_wei"] + _carbon_dict["carbon_v1"]["neither"]["_amtout_wei"])}, native={_carbon_dict["carbon_v1"]["native"]["_amtout_wei"]}, wrapped={_carbon_dict["carbon_v1"]["wrapped"]["_amtout_wei"]}, neither={_carbon_dict["carbon_v1"]["neither"]["_amtout_wei"]}'
-
-
-    assert len(carbon_exchanges_0["carbon_v1"]["neither"]["raw_txs"]) == 0
-    assert len(carbon_exchanges_0["carbon_v1"]["native"]["raw_txs"]) == 1
-    assert len(carbon_exchanges_0["carbon_v1"]["wrapped"]["raw_txs"]) == 1
-
-    _test_extracted_txs(carbon_exchanges_0)
-    _test_extracted_txs(carbon_exchanges_1)
-    _test_extracted_txs(carbon_exchanges_2)
-    _test_extracted_txs(carbon_exchanges_3)
-
-    _test_amts(carbon_exchanges_0, trade_instruction_0)
-    _test_amts(carbon_exchanges_1, trade_instruction_1)
-    _test_amts(carbon_exchanges_2, trade_instruction_2)
-    _test_amts(carbon_exchanges_3, trade_instruction_5)
-
-
-
-
-# +
-def test_get_token_type():
-    trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-    curve_0 = db.get_pool(cid=67035626283424877302284797664058337657416)
-    curve_1 = db.get_pool(cid=9187623906865338513511114400657741709505)
-    curve_2 = db.get_pool(cid=2381976568446569244243622252022377480572)
-
-    assert trade_splitter._get_token_type(curve_0) == trade_splitter.WRAPPED
-    assert trade_splitter._get_token_type(curve_1) == trade_splitter.NATIVE
-    assert trade_splitter._get_token_type(curve_2) == trade_splitter.NEITHER
-
-
-# -
-
-def test_returns_dictionary_with_correct_keys():
-    # Arrange
-    carbon_trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-
-    # Act
-    result = carbon_trade_splitter._new_trade_data_structure()
-
-    # Assert
-    assert isinstance(result, dict)
-    assert "raw_txs" in result
-    assert "amtin" in result
-    assert "amtout" in result
-    assert "_amtin_wei" in result
-    assert "_amtout_wei" in result
-
-
-
-def test_initialize_exchange_data():
-    trade_splitter = CarbonTradeSplitter(ConfigObj=cfg)
-    init_data = trade_splitter._initialize_exchange_data()
-
-    assert trade_splitter.NATIVE in init_data
-    assert trade_splitter.WRAPPED in init_data
-    assert trade_splitter.NEITHER in init_data
-
-    for _item in init_data.keys():
-        assert len(init_data[_item]["raw_txs"]) == 0
-        assert init_data[_item]["amtin"] == 0
-        assert init_data[_item]["amtout"] == 0
-        assert init_data[_item]["_amtin_wei"] == 0
-        assert init_data[_item]["_amtout_wei"] == 0
-
-
-
-# +
-def test_valid_exchange_data():
-
-    carbon_trade_splitter = CarbonTradeSplitter(cfg)
-
-    # Arrange
-    exchange_data_0 = carbon_trade_splitter._initialize_exchange_data()
-    exchange_data_1 = carbon_trade_splitter._initialize_exchange_data()
-    exchange_data_2 = carbon_trade_splitter._initialize_exchange_data()
-
-    _tx_weth = raw_tx_0
-    _tx_eth = raw_tx_1
-    _tx_neither = raw_tx_2
-    # Act
-    carbon_trade_splitter._update_exchange_data(exchange_data_0, carbon_trade_splitter.NATIVE, _tx_eth, trade_instruction_0)
-    carbon_trade_splitter._update_exchange_data(exchange_data_1, carbon_trade_splitter.WRAPPED, _tx_weth, trade_instruction_0)
-    carbon_trade_splitter._update_exchange_data(exchange_data_1, carbon_trade_splitter.WRAPPED, _tx_weth, trade_instruction_0)
-    carbon_trade_splitter._update_exchange_data(exchange_data_2, carbon_trade_splitter.NEITHER, _tx_neither, trade_instruction_5)
-
-    assert exchange_data_0["native"]["amtin"] == raw_tx_1["amtin"]
-    assert exchange_data_0["native"]["amtout"] == raw_tx_1["amtout"]
-    assert exchange_data_0["native"]["_amtin_wei"] == raw_tx_1["_amtin_wei"]
-    assert exchange_data_0["native"]["_amtout_wei"] == raw_tx_1["_amtout_wei"]
-
-    assert exchange_data_1["wrapped"]["amtin"] == _tx_weth["amtin"] * 2
-    assert exchange_data_1["wrapped"]["amtout"] == _tx_weth["amtout"] * 2
-    assert exchange_data_1["wrapped"]["_amtin_wei"] == _tx_weth["_amtin_wei"] * 2
-    assert exchange_data_1["wrapped"]["_amtout_wei"] == _tx_weth["_amtout_wei"] * 2
-
-    assert exchange_data_2["neither"]["amtin"] == _tx_neither["amtin"]
-    assert exchange_data_2["neither"]["amtout"] == _tx_neither["amtout"]
-    assert exchange_data_2["neither"]["_amtin_wei"] == _tx_neither["_amtin_wei"]
-    assert exchange_data_2["neither"]["_amtout_wei"] == _tx_neither["_amtout_wei"]
-
-
-
-# +
-def test_create_new_trades_from_carbon_exchanges():
-    carbon_trade_splitter = CarbonTradeSplitter(cfg)
-    _mix_trade = trade_instruction_0
-    _weth_trade = trade_instruction_1
-    _eth_trade = trade_instruction_2
-    _neither_trade = trade_instruction_5
-
-    carbon_exchanges_0 = carbon_trade_splitter._process_carbon_trades(_mix_trade)
-    carbon_exchanges_1 = carbon_trade_splitter._process_carbon_trades(_weth_trade)
-    carbon_exchanges_2 = carbon_trade_splitter._process_carbon_trades(_eth_trade)
-    carbon_exchanges_3 = carbon_trade_splitter._process_carbon_trades(_neither_trade)
-
-
-    new_trades_0 = carbon_trade_splitter._create_new_trades_from_carbon_exchanges(carbon_exchanges_0, _mix_trade)
-    new_trades_1 = carbon_trade_splitter._create_new_trades_from_carbon_exchanges(carbon_exchanges_1, _weth_trade)
-    new_trades_2 = carbon_trade_splitter._create_new_trades_from_carbon_exchanges(carbon_exchanges_2, _eth_trade)
-    new_trades_3 = carbon_trade_splitter._create_new_trades_from_carbon_exchanges(carbon_exchanges_3, _neither_trade)
-
-    assert len(new_trades_0) == 2
-    assert len(new_trades_1) == 1
-    assert len(new_trades_2) == 1
-    assert len(new_trades_3) == 1
-
-    assert new_trades_0[0].tknin == ETH_ADDRESS
-    assert new_trades_0[1].tknin == WETH_ADDRESS
-    assert new_trades_0[0].tknout == WBTC_ADDRESS
-    assert new_trades_0[1].tknout == WBTC_ADDRESS
-
-    assert new_trades_1[0].tknin == WETH_ADDRESS
-    assert new_trades_1[0].tknout == WBTC_ADDRESS
-
-    assert new_trades_2[0].tknin == ETH_ADDRESS
-    assert new_trades_2[0].tknout == WBTC_ADDRESS
-
-    assert new_trades_3[0].tknin == BNT_ADDRESS
-    assert new_trades_3[0].tknout == USDC_ADDRESS
-
-    assert _mix_trade._amtin_wei == new_trades_0[0]._amtin_wei + new_trades_0[1]._amtin_wei
-    assert _mix_trade._amtout_wei == new_trades_0[0]._amtout_wei + new_trades_0[1]._amtout_wei
-
-    assert _weth_trade._amtin_wei == new_trades_1[0]._amtin_wei
-    assert _weth_trade._amtout_wei == new_trades_1[0]._amtout_wei
-
-    assert _eth_trade._amtin_wei == new_trades_2[0]._amtin_wei
-    assert _eth_trade._amtout_wei == new_trades_2[0]._amtout_wei
-
-    assert _neither_trade._amtin_wei == new_trades_3[0]._amtin_wei
-    assert _neither_trade._amtout_wei == new_trades_3[0]._amtout_wei
-
-
-
-
-# -
-
-
-
-# ## Full Split Test
-
-def test_full_execution():
-    split_trade_instructions_0_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_0)
-    split_trade_instructions_1_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_1)
-    split_trade_instructions_2_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_2)
-    split_trade_instructions_3_splitter = CarbonTradeSplitter(cfg).split_carbon_trades(trade_instructions_3)
+def test_split_carbon_trades():
+    split_trade_instructions_0_splitter = split_carbon_trades(cfg, trade_instructions_0)
+    split_trade_instructions_1_splitter = split_carbon_trades(cfg, trade_instructions_1)
+    split_trade_instructions_2_splitter = split_carbon_trades(cfg, trade_instructions_2)
+    split_trade_instructions_3_splitter = split_carbon_trades(cfg, trade_instructions_3)
 
     assert len(split_trade_instructions_0_splitter) == len(trade_instructions_0) + 1
     assert len(split_trade_instructions_1_splitter) == len(trade_instructions_1)
@@ -680,10 +448,4 @@ def test_full_execution():
     assert split_trade_instructions_3_splitter[1]._amtout_wei == 15000000000000000000
     assert len(json.loads(split_trade_instructions_3_splitter[1].raw_txs.replace("'", '"'))) == 0
 
-
-
-
-
-
-
-
+test_split_carbon_trades()
