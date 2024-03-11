@@ -10,6 +10,8 @@ class Params:
     parameter management
 
     EXAMPLE
+    
+    .. code-block:: python
 
         # Standard
 

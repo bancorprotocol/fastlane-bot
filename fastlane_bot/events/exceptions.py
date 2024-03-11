@@ -12,3 +12,10 @@ class AsyncUpdateRetryException(Exception):
     Exception raised when async_update_pools_from_contracts fails and needs to be retried.
     """
     pass
+
+
+class FlashloanTokenException(Exception):
+    """
+    Exception raised due to an incompatible Flashloan token combination.
+    """
+    pass

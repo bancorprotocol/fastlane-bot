@@ -31,8 +31,7 @@ class BancorInvariant(Invariant):
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
     
-    def __post_init__(self):
-        self._y_Func_class = BancorSwapFunction
+    YFUNC_CLASS = BancorSwapFunction
     
     def k_func(self, x, y):
         """Bancor invariant function k(x,y)=x*y"""

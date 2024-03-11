@@ -69,13 +69,14 @@ from fastlane_bot.helpers import (
     TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
-    RouteStruct,
+    RouteStruct, WrapUnwrapProcessor,
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
+from .helpers.carbon_trade_splitter import CarbonTradeSplitter
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
@@ -1037,9 +1038,13 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount_wei,
         )
 
+        # Split Carbon Orders
+        split_calculated_trade_instructions = CarbonTradeSplitter(ConfigObj=self.ConfigObj).split_carbon_trades(
+            trade_instructions=calculated_trade_instructions)
+
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-            calculated_trade_instructions
+            split_calculated_trade_instructions
         )
 
         # Get the deadline
@@ -1052,13 +1057,10 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions=encoded_trade_instructions, deadline=deadline
             )
         ]
-        route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
-        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(
-                trade_instructions=calculated_trade_instructions,
-                route_struct=route_struct,
-                flashloan_struct=flashloan_struct,
-            )
+
+        route_struct_processed = WrapUnwrapProcessor(cfg=self.ConfigObj).add_wrap_or_unwrap_trades_to_route(trade_instructions=split_calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
+
+        route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Get the cids
         cids = list({ti["cid"] for ti in best_trade_instructions_dic})
@@ -1069,12 +1071,12 @@ class CarbonBot(CarbonBotBase):
                 self._validate_and_submit_transaction_tenderly(
                     ConfigObj=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
-                    route_struct=route_struct,
+                    route_struct=route_struct_maximized,
                     src_amount=flashloan_amount_wei,
                     src_address=flashloan_token_address,
                 ),
                 cids,
-                route_struct,
+                route_struct_maximized,
                 log_dict,
             )
 
@@ -1084,7 +1086,7 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount_wei,
             flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct,
+            route_struct=route_struct_maximized,
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
@@ -1094,7 +1096,7 @@ class CarbonBot(CarbonBotBase):
         # Return the validate and submit transaction
         return (
             tx_helpers.validate_and_submit_transaction(
-                route_struct=route_struct,
+                route_struct=route_struct_maximized,
                 src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
                 expected_profit_gastkn=best_profit_gastkn,
