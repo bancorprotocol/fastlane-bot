@@ -6,7 +6,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 Licensed under MIT
 """
 
-from fastlane_bot.events.exceptions import AsyncUpdateRetryException, ReadOnlyException
+from fastlane_bot.exceptions import AsyncUpdateRetryException, ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
 
@@ -139,6 +139,12 @@ def main(args: argparse.Namespace) -> None:
         args.self_fund,
         args.rpc_url,
     )
+
+    if not cfg.SELF_FUND and not cfg.network.IS_FLASHLOAN_AVAILABLE:
+        raise FlashloanUnavailableException(f"Network: {cfg.NETWORK} does not support flashloans. "
+                                            f"This network requires the use of your own funds by setting the configuration self_fund to True."
+                                            f"Read the description of self_fund in the README before proceeding.")
+
     base_path = os.path.normpath(
         f"fastlane_bot/data/blockchain_data/{args.blockchain}/"
     )

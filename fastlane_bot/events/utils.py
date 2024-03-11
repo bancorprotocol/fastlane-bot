@@ -28,7 +28,7 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.config.connect import NetworkBase
 from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
-from fastlane_bot.events.exceptions import ReadOnlyException
+from fastlane_bot.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 
