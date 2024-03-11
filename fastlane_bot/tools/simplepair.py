@@ -1,6 +1,7 @@
 """
 simple representation of a pair of tokens, used by cpc and arbgraph
 
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
