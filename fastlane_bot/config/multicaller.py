@@ -97,12 +97,9 @@ class MultiCaller:
                 address=self.MULTICALL_CONTRACT_ADDRESS
             ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
 
-        if _encoded_data == []:
-            pass
-        else:
-            if not isinstance(_encoded_data[0], list):
-                raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
-
+        if len(_encoded_data) > 0 and not isinstance(_encoded_data[0], list):
+            raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
+        
         encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
