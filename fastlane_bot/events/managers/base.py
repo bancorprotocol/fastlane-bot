@@ -252,7 +252,7 @@ class BaseManager:
             The exchange name.
         """
         if 'id' in event['args']:
-            carbon_controller_address = event['args']['address']
+            carbon_controller_address = event['address']
             for ex in self.cfg.CARBON_CONTROLLER_MAPPING:
                 if self.cfg.CARBON_CONTROLLER_MAPPING[ex] == carbon_controller_address:
                     return ex
