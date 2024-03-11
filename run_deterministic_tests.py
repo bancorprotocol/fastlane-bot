@@ -269,13 +269,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fastlane Bot")
     parser.add_argument(
         "--task",
-        default="update_pool_params",
+        default="end_to_end",
         type=str,
         choices=[
             "set_test_state",
             "get_carbon_strategies_and_delete",
             "run_tests_on_mode",
             "run_results_crosscheck",
+            "update_pool_params",
             "end_to_end",
         ],
         help="Task to run",
