@@ -15,7 +15,7 @@ from web3.types import RPCEndpoint
 
 from fastlane_bot.tests.deterministic.dtest_constants import (
     SUPPORTED_EXCHANGES,
-    TEST_FILE_DATA_DIR,
+    TEST_DATA_DIR,
 )
 from fastlane_bot.tests.deterministic.dtest_token import TestTokenBalance
 
@@ -113,6 +113,6 @@ class TestPool:
     def load_test_pools():
         # Import pool data
         static_pool_data_testing_path = os.path.normpath(
-            f"{TEST_FILE_DATA_DIR}/static_pool_data_testing.csv"
+            f"{TEST_DATA_DIR}/static_pool_data_testing.csv"
         )
         return pd.read_csv(static_pool_data_testing_path, dtype=str)
