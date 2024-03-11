@@ -20,8 +20,8 @@ class CarbonV1Pool(Pool):
     """
     Class representing a Carbon v1 pool.
     """
-
-    exchange_name: str = "carbon_v1"
+    base_exchange_name: str = "carbon_v1"
+    exchange_name: str = None
     router_address: str = None
 
     @staticmethod

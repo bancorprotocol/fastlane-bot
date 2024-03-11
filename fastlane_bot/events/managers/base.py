@@ -251,6 +251,11 @@ class BaseManager:
         str
             The exchange name.
         """
+        if 'id' in event['args']:
+            carbon_controller_address = event['args']['address']
+            for ex in self.cfg.CARBON_CONTROLLER_MAPPING:
+                if self.cfg.CARBON_CONTROLLER_MAPPING[ex] == carbon_controller_address:
+                    return ex
 
         for exchange_name, pool_class in pool_factory._creators.items():
             for _ex_name in self.SUPPORTED_EXCHANGES:
@@ -829,7 +834,7 @@ class BaseManager:
         if ex_name == "bancor_pol":
             return "token", event["args"]["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            return "cid", event["args"]["id"]
+            return "strategy_id", event["args"]["id"]
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":
