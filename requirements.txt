@@ -18,3 +18,4 @@ protobuf~=4.24.4
 tqdm~=4.64.1
 web3~=6.11.2
 nest-asyncio~=1.5.8
+eth-abi~=5.0.0
