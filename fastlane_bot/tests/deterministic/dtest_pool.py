@@ -92,8 +92,8 @@ class TestPool:
             w3: The Web3 instance.
             token_id: The token id.
         """
-        token_address = self.tkn0_address if token_id == 0 else self.tkn1_address
-        amount_wei = self.tkn0_setBalance if token_id == 0 else self.tkn1_setBalance
+        token_address = [self.tkn0_address, self.tkn1_address][token_id]
+        amount_wei = [self.tkn0_setBalance, self.tkn1_setBalance][token_id]
         token_balance = TestTokenBalance(token=token_address, balance=amount_wei)
         params = token_balance.faucet_params(wallet_address=self.pool_address)
         method_name = RPCEndpoint(
