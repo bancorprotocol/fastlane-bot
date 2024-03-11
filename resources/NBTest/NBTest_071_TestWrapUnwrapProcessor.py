@@ -690,10 +690,11 @@ def test_add_wrap_or_unwrap_trades_to_route():
     _processor_2 = WrapUnwrapProcessor(cfg=cfg)
     _processor_3 = WrapUnwrapProcessor(cfg=cfg)
 
-    result_2 = _processor_2.add_wrap_or_unwrap_trades_to_route(trade_instructions_2, route_struct_2, flashloan_struct_2)
     result_0 = _processor_0.add_wrap_or_unwrap_trades_to_route(trade_instructions_0_split, route_struct_0_split, flashloan_struct_0_split_trades)
     result_1 = _processor_1.add_wrap_or_unwrap_trades_to_route(trade_instructions_1, route_struct_1, flashloan_struct_1)
+    result_2 = _processor_2.add_wrap_or_unwrap_trades_to_route(trade_instructions_2, route_struct_2, flashloan_struct_2)
     result_3 = _processor_3.add_wrap_or_unwrap_trades_to_route(trade_instructions_3, route_struct_3, flashloan_struct_3)
+
     def check_no_negative(balance_dict):
         for tkn in balance_dict.keys():
             assert balance_dict[tkn] >= 0, f"negative balance found: {balance_dict}"
@@ -705,12 +706,47 @@ def test_add_wrap_or_unwrap_trades_to_route():
 
         check_no_negative(_balance)
 
+    def are_dicts_equal(dict1, dict2):
+        # Ensure route legs have not been changed. 
+        
+        assert set(dict1.keys()) == set(dict2.keys())
+        for key in dict1:
+            assert dict1[key] == dict2[key]
+
+    assert(len(result_0)) == 5 # Added 2 Wrap/Unwrap trades
+    assert(len(result_1)) == 2 # Added 0 Wrap/Unwrap trades 
+    assert(len(result_2)) == 3 # Added 1 Wrap/Unwrap trades 
+    assert(len(result_3)) == 2 # Added 0 Wrap/Unwrap trades 
+    assert result_0[0]["platformId"] == 10
+    assert result_0[0]["sourceToken"] == ETH_ADDRESS
+    assert result_0[0]["targetToken"] == WETH_ADDRESS
+    assert result_0[0]["sourceAmount"] == 10000000000000000000
+    assert result_0[0]["minTargetAmount"] == 10000000000000000000
+    assert result_0[-1]["platformId"] == 10
+    assert result_0[-1]["sourceToken"] == WETH_ADDRESS
+    assert result_0[-1]["targetToken"] == ETH_ADDRESS
+    assert result_0[-1]["sourceAmount"] == 0
+    assert result_0[-1]["minTargetAmount"] == 0
+
     loop_balances(result_0, start_balance_0)
     loop_balances(result_1, start_balance_1)
     loop_balances(result_2, start_balance_2)
     loop_balances(result_3, start_balance_3)
 
+    are_dicts_equal(route_struct_0_split[0], result_0[1])
+    are_dicts_equal(route_struct_0_split[1], result_0[2])
+    are_dicts_equal(route_struct_0_split[2], result_0[3])
 
+    are_dicts_equal(route_struct_1[0], result_1[0])
+    are_dicts_equal(route_struct_1[1], result_1[1])
+
+    are_dicts_equal(route_struct_2[0], result_2[0])
+    are_dicts_equal(route_struct_2[1], result_2[1])
+
+    are_dicts_equal(route_struct_3[0], result_3[0])
+    are_dicts_equal(route_struct_3[1], result_3[1])
+
+test_add_wrap_or_unwrap_trades_to_route()
 # -
 
 
