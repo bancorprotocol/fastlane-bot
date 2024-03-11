@@ -746,7 +746,7 @@ def test_add_wrap_or_unwrap_trades_to_route():
     are_dicts_equal(route_struct_3[0], result_3[0])
     are_dicts_equal(route_struct_3[1], result_3[1])
 
-test_add_wrap_or_unwrap_trades_to_route()
+
 # -
 
 
