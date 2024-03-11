@@ -23,7 +23,7 @@ from fastlane_bot.tests.deterministic.dtest_constants import (
     DEFAULT_GAS,
     DEFAULT_GAS_PRICE,
     ETH_ADDRESS,
-    TEST_FILE_DATA_DIR,
+    TEST_DATA_DIR,
     TOKENS_MODIFICATIONS,
     TestCommandLineArgs,
 )
@@ -495,7 +495,7 @@ class TestManager:
         Gets test strategies from a JSON file.
         """
         test_strategies_path = os.path.normpath(
-            f"{TEST_FILE_DATA_DIR}/test_strategies.json"
+            f"{TEST_DATA_DIR}/test_strategies.json"
         )
         with open(test_strategies_path) as file:
             test_strategies = json.load(file)["test_strategies"]
@@ -545,7 +545,7 @@ class TestManager:
             test_strategy_txhashs (dict): The test strategy txhashs.
         """
         test_strategy_txhashs_path = os.path.normpath(
-            f"{TEST_FILE_DATA_DIR}/test_strategy_txhashs.json"
+            f"{TEST_DATA_DIR}/test_strategy_txhashs.json"
         )
         with open(test_strategy_txhashs_path, "w") as f:
             json.dump(test_strategy_txhashs, f)

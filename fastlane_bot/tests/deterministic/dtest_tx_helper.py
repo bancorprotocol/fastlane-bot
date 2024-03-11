@@ -13,7 +13,7 @@ import os
 import time
 
 from fastlane_bot.tests.deterministic.dtest_constants import (
-    TEST_FILE_DATA_DIR,
+    TEST_DATA_DIR,
 )
 
 
@@ -167,7 +167,7 @@ class TestTxHelper:
             dict: The data from the json file.
         """
         file_path = (
-            os.path.normpath(f"{TEST_FILE_DATA_DIR}/{file_name}")
+            os.path.normpath(f"{TEST_DATA_DIR}/{file_name}")
             if "/" not in file_name
             else os.path.normpath(file_name)
         )

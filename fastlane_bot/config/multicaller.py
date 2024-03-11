@@ -99,7 +99,7 @@ class MultiCaller:
 
         if len(_encoded_data) > 0 and not isinstance(_encoded_data[0], list):
             raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
-        
+
         encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
