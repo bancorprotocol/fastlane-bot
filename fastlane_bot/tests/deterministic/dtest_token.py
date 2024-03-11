@@ -23,18 +23,10 @@ class TestToken:
     """
 
     address: str or Address  # Address after __post_init__, str before
+    contract: Contract = None
 
     def __post_init__(self):
         self.address = Web3.to_checksum_address(self.address)
-        self._contract = None
-
-    @property
-    def contract(self):
-        return self._contract
-
-    @contract.setter
-    def contract(self, contract: Contract):
-        self._contract = contract
 
     @property
     def is_eth(self):
