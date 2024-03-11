@@ -80,7 +80,7 @@ class TestCommandLineArgs:
     polling_interval: int = 0
     alchemy_max_block_fetch: int = 1
     reorg_delay: int = 0
-    logging_path: str = ""
+    logging_path: str = "logs_dtest"
     loglevel: str = "INFO"
     use_cached_events: str = "False"
     run_data_validator: str = "False"
