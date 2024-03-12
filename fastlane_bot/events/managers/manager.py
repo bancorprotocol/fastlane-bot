@@ -402,6 +402,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ]
         pool_info["descr"] = self.pool_descr_from_info(pool_info)
         pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
-        pool = self.get_or_init_pool(pool_info)
-        pool_info = pool.update_from_event(event, pool.get_common_data(event, pool_info))
         self.pool_data.append(pool_info)
+        pool = self.get_or_init_pool(pool_info)
+        data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
+        self.update_pool_data(pool_info, data)
+
