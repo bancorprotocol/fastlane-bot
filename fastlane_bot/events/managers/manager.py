@@ -402,7 +402,16 @@ class Manager(PoolManager, EventManager, ContractsManager):
         ]
         pool_info["descr"] = self.pool_descr_from_info(pool_info)
         pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
-        self.pool_data.append(pool_info)
+        p = None
+        # check if the pool is already in the pool_data
+        for idx, pool in enumerate(self.pool_data):
+            if pool["cid"] == pool_info["cid"]:
+                p = pool
+                break
+        if not p:
+            self.pool_data.append(pool_info)
+        else:
+            self.pool_data[idx] = pool_info
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
         self.update_pool_data(pool_info, data)
