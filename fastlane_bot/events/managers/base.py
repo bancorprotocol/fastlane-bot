@@ -791,7 +791,7 @@ class BaseManager:
             The pool info.
 
         """
-        if key != "cid" and (pool_info is None or not pool_info):
+        if key != "strategy_id" and (pool_info is None or not pool_info):
             # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
                 address=addr, event=event, block_number=event["blockNumber"]
