@@ -15,6 +15,7 @@ from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
+from fastlane_bot.events.new_utils import get_pool_cid
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
@@ -387,7 +388,18 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.pools_to_add_from_contracts = remaining_pools
 
     def handle_strategy_created(self, event, ex_name):
-        pool_info = self.get_pool_info("strategy_id", event["args"]["strategy_id"], ex_name, event)
+        pool_info = {}
+        pool_info["exchange_name"] = ex_name
+        pool_info["address"] = event["address"]
+        pool_info["strategy_id"] = event["args"]["id"]
+        pool_info["tkn0_address"] = event["args"]["token0"]
+        pool_info["tkn1_address"] = event["args"]["token1"]
+        pool_info['fee'] = self.fee_pairs[ex_name][
+            (pool_info["tkn0_address"], pool_info["tkn1_address"])
+        ]
+        pool_info['fee_float'] = pool_info['fee'] / 1e6
+        pool_info["descr"] = self.pool_descr_from_info(pool_info)
+        pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
         pool = self.get_or_init_pool(pool_info)
         data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
         self.update_pool_data(pool_info, data)
