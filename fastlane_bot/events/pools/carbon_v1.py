@@ -77,7 +77,13 @@ class CarbonV1Pool(Pool):
         Dict[str, Any]
             The updated data.
         """
-        order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
+
+        if event_type not in ["StrategyDeleted"]:
+            order0 = list(event_args["args"].get("order0").values())
+            order1 = list(event_args["args"].get("order1").values())
+        else:
+            order0 = [0, 0, 0, 0]
+            order1 = [0, 0, 0, 0]
         data["cid"] = event_args["args"].get("id")
         data["y_0"] = order0[0]
         data["z_0"] = order0[1]
@@ -88,35 +94,8 @@ class CarbonV1Pool(Pool):
         data["A_1"] = order1[2]
         data["B_1"] = order1[3]
 
-
         return data
 
-    @staticmethod
-    def parse_orders(
-        event_args: Dict[str, Any], event_type: str
-    ) -> Tuple[List[int], List[int]]:
-        """
-        Parse the orders from the event args. If the event type is StrategyDeleted, then the orders are set to 0.
-
-        Parameters
-        ----------
-        event_args : Dict[str, Any]
-            The event arguments.
-        event_type : str
-            The event type.
-
-        Returns
-        -------
-        Tuple[List[int], List[int]]
-            The parsed orders.
-        """
-        if event_type not in ["StrategyDeleted"]:
-            order0 = event_args["args"].get("order0")
-            order1 = event_args["args"].get("order1")
-        else:
-            order0 = [0, 0, 0, 0]
-            order1 = [0, 0, 0, 0]
-        return order0, order1
 
     def update_from_contract(
         self,
