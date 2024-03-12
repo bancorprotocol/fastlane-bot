@@ -41,8 +41,13 @@ class Manager(PoolManager, EventManager, ContractsManager):
         if event["event"] == "PairCreated":
             self.handle_pair_created(event)
             return
+
         if event["event"] == "StrategyDeleted":
             self.handle_strategy_deleted(event)
+            return
+
+        if event["event"] == "StrategyCreated":
+            self.handle_strategy_created(event, ex_name)
             return
 
         addr = self.web3.to_checksum_address(event["address"])
@@ -380,3 +385,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         random.shuffle(remaining_pools)
         self.pools_to_add_from_contracts = remaining_pools
+
+    def handle_strategy_created(self, event, ex_name):
+        pool_info = self.get_pool_info("strategy_id", event["args"]["strategy_id"], ex_name, event)
+        pool = self.get_or_init_pool(pool_info)
+        data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
+        self.update_pool_data(pool_info, data)
