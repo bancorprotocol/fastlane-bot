@@ -65,6 +65,8 @@ class BaseManager:
     tenderly_event_contracts: Dict[str, Contract or Type[Contract]] = field(
         default_factory=dict
     )
+    strategies_created: List[str] = field(default_factory=list)
+
     tenderly_event_exchanges: List[str] = field(default_factory=list)
     w3_tenderly: Web3 = None
     event_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
@@ -840,7 +842,11 @@ class BaseManager:
         if ex_name == "bancor_pol":
             return "token", event["args"]["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            return "strategy_id", event["args"]["id"]
+            info = {}
+            info['exchange_name'] = ex_name
+            info['strategy_id'] = event["args"]["id"]
+            info['fee'] = self.fee_pairs[ex_name][(event["args"]["token0"], event["args"]["token1"])]
+            return "cid", get_pool_cid(info, self.cfg.CARBON_V1_FORKS)
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":

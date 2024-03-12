@@ -13,8 +13,12 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
-from fastlane_bot.events.utils import update_pools_from_events
+# from fastlane_bot.events.async_utils import get_contract_chunks
+# from fastlane_bot.events.utils import update_pools_from_events
 from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.utils import update_pools_from_events
+
+# from fastlane_bot.events.utils import update_pools_from_events
 
 nest_asyncio.apply()
 
@@ -401,45 +405,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     # split contracts into chunks of 1000
     contracts = get_pool_contracts(mgr)
     chunks = get_contract_chunks(contracts)
-    tokens_and_fee_df = process_contract_chunks(
-        base_filename="tokens_and_fee_df_",
-        chunks=chunks,
-        dirname=dirname,
-        filename="tokens_and_fee_df.csv",
-        subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
-        func=main_get_tokens_and_fee,
-        read_only=mgr.read_only,
-        carbon_v1_forks=carbon_v1_forks,
-    )
-
-    contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
-    tokens_df = process_contract_chunks(
-        base_filename="missing_tokens_df_",
-        chunks=get_contract_chunks(contracts),
-        dirname=dirname,
-        filename="missing_tokens_df.csv",
-        subset=["address"],
-        func=main_get_missing_tkn,
-        df_combined=pd.read_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
-        ),
-        read_only=mgr.read_only,
-        carbon_v1_forks=carbon_v1_forks,
-    )
-    tokens_df["symbol"] = (
-        tokens_df["symbol"]
-        .str.replace(" ", "_")
-        .str.replace("/", "_")
-        .str.replace("-", "_")
-    )
-    if not mgr.read_only:
-        tokens_df.to_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
-        )
-    tokens_df["address"] = tokens_df["address"].apply(
-        lambda x: Web3.to_checksum_address(x)
-    )
-    tokens_df = tokens_df.drop_duplicates(subset=["address"])
+    tokens_and_fee_df, tokens_df = handle_tokens_and_fee_updates(carbon_v1_forks, chunks, dirname, mgr)
 
     new_pool_data = get_new_pool_data(
         current_block, keys, mgr, tokens_and_fee_df, tokens_df
@@ -538,3 +504,45 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
     )
+
+
+def handle_tokens_and_fee_updates(carbon_v1_forks, chunks, dirname, mgr):
+    tokens_and_fee_df = process_contract_chunks(
+        base_filename="tokens_and_fee_df_",
+        chunks=chunks,
+        dirname=dirname,
+        filename="tokens_and_fee_df.csv",
+        subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
+        func=main_get_tokens_and_fee,
+        read_only=mgr.read_only,
+        carbon_v1_forks=carbon_v1_forks,
+    )
+    contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
+    tokens_df = process_contract_chunks(
+        base_filename="missing_tokens_df_",
+        chunks=get_contract_chunks(contracts),
+        dirname=dirname,
+        filename="missing_tokens_df.csv",
+        subset=["address"],
+        func=main_get_missing_tkn,
+        df_combined=pd.read_csv(
+            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
+        ),
+        read_only=mgr.read_only,
+        carbon_v1_forks=carbon_v1_forks,
+    )
+    tokens_df["symbol"] = (
+        tokens_df["symbol"]
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+        .str.replace("-", "_")
+    )
+    if not mgr.read_only:
+        tokens_df.to_csv(
+            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv", index=False
+        )
+    tokens_df["address"] = tokens_df["address"].apply(
+        lambda x: Web3.to_checksum_address(x)
+    )
+    tokens_df = tokens_df.drop_duplicates(subset=["address"])
+    return tokens_and_fee_df, tokens_df

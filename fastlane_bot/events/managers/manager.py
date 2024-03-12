@@ -7,7 +7,7 @@ Licensed under MIT
 """
 import random
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from web3.contract import Contract
 
@@ -15,10 +15,10 @@ from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
-from fastlane_bot.events.new_utils import get_pool_cid
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
+
     def update_from_event(self, event: Dict[str, Any]) -> None:
         """
         Updates the state of the pool data from an event.
@@ -48,9 +48,9 @@ class Manager(PoolManager, EventManager, ContractsManager):
             self.handle_strategy_deleted(event)
             return
 
-        if event["event"] == "StrategyCreated":
-            self.handle_strategy_created(event, ex_name)
-            return
+
+        #     self.handle_strategy_created(event, ex_name)
+        #     return
 
         addr = self.web3.to_checksum_address(event["address"])
         if not ex_name:
@@ -61,10 +61,18 @@ class Manager(PoolManager, EventManager, ContractsManager):
         pool_info = self.get_pool_info(key, key_value, ex_name)
 
         if not pool_info:
+            if event["event"] == "StrategyCreated":
+                event['pool_info_not_found'] = True
+                self.strategies_created.append(event)
+
             self.pools_to_add_from_contracts.append(
                 (addr, ex_name, event, key, key_value)
             )
             return
+
+        if event["event"] == "StrategyCreated":
+            event['pool_info_not_found'] = False
+            self.strategies_created.append(event)
 
         if "descr" not in pool_info:
             pool_info["descr"] = self.pool_descr_from_info(pool_info)
@@ -388,31 +396,39 @@ class Manager(PoolManager, EventManager, ContractsManager):
         random.shuffle(remaining_pools)
         self.pools_to_add_from_contracts = remaining_pools
 
-    def handle_strategy_created(self, event, ex_name):
-        print(f"[handle_strategy_created] ex_name: {ex_name}")
-        pool_info = {}
-        pool_info["exchange_name"] = ex_name
-        pool_info["address"] = event["address"]
-        pool_info["strategy_id"] = event["args"]["id"]
-        pool_info["tkn0_address"] = event["args"]["token0"]
-        pool_info["tkn1_address"] = event["args"]["token1"]
-        pool_info['pair_name'] = f"{pool_info['tkn0_address']}/{pool_info['tkn1_address']}"
-        pool_info['fee'] = self.fee_pairs[ex_name][
-            (pool_info["tkn0_address"], pool_info["tkn1_address"])
-        ]
-        pool_info["descr"] = self.pool_descr_from_info(pool_info)
-        pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
-        p = None
-        # check if the pool is already in the pool_data
-        for idx, pool in enumerate(self.pool_data):
-            if pool["cid"] == pool_info["cid"]:
-                p = pool
-                break
-        if not p:
-            self.pool_data.append(pool_info)
-        else:
-            self.pool_data[idx] = pool_info
-        pool = self.get_or_init_pool(pool_info)
-        data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
-        self.update_pool_data(pool_info, data)
+    # def handle_strategy_created(self, event, ex_name):
+    #     print(f"[handle_strategy_created] ex_name: {ex_name}")
+    #     pool_info = {}
+    #     pool_info["exchange_name"] = ex_name
+    #     pool_info["address"] = event["address"]
+    #     pool_info["strategy_id"] = event["args"]["id"]
+    #     pool_info["tkn0_address"] = event["args"]["token0"]
+    #     pool_info["tkn1_address"] = event["args"]["token1"]
+    #     pool_info['pair_name'] = f"{pool_info['tkn0_address']}/{pool_info['tkn1_address']}"
+    #     pool_info['fee'] = self.fee_pairs[ex_name][
+    #         (pool_info["tkn0_address"], pool_info["tkn1_address"])
+    #     ]
+    #     pool_info["descr"] = self.pool_descr_from_info(pool_info)
+    #     pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
+    #     p = None
+    #     # check if the pool is already in the pool_data
+    #     for idx, pool in enumerate(self.pool_data):
+    #         if pool["cid"] == pool_info["cid"]:
+    #             p = pool
+    #             break
+    #     if not p:
+    #         self.pool_data.append(pool_info)
+    #     else:
+    #         self.pool_data[idx] = pool_info
+    #     pool = self.get_or_init_pool(pool_info)
+    #     data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
+    #     self.update_pool_data(pool_info, data)
+    #
+    #     # split contracts into chunks of 1000
+    #     contracts = get_pool_contracts(self)
+    #     chunks = get_contract_chunks(contracts)
+    #     carbon_v1_forks = self.cfg.CARBON_V1_FORKS
+    #     dirname = "temp"
+    #     tokens_and_fee_df, tokens_df = handle_tokens_and_fee_updates(carbon_v1_forks, chunks, dirname, self)
+
 
