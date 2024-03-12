@@ -300,7 +300,7 @@ class ConfigNetwork(ConfigBase):
     # FLAGS
     #######################################################################################
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
-    IS_FLASHLOAN_AVAILABLE = True
+    IS_NO_FLASHLOAN_AVAILABLE = False
 
     @classmethod
     def new(cls, network=None):
@@ -703,7 +703,7 @@ class _ConfigNetworkMantle(ConfigNetwork):
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
-    IS_FLASHLOAN_AVAILABLE = False
+    IS_NO_FLASHLOAN_AVAILABLE = True
 
     CARBON_CONTROLLER_ADDRESS = (
         GRAPHENE_CONTROLLER_ADDRESS

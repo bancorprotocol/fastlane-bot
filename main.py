@@ -140,7 +140,7 @@ def main(args: argparse.Namespace) -> None:
         args.rpc_url,
     )
 
-    if not cfg.SELF_FUND and not cfg.network.IS_FLASHLOAN_AVAILABLE:
+    if not cfg.SELF_FUND and cfg.network.IS_NO_FLASHLOAN_AVAILABLE:
         raise FlashloanUnavailableException(f"Network: {cfg.NETWORK} does not support flashloans. "
                                             f"This network requires the use of your own funds by setting the configuration self_fund to True."
                                             f"Read the description of self_fund in the README before proceeding.")
