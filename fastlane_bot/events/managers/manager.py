@@ -30,6 +30,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         """
         ex_name = self.exchange_name_from_event(event)
+
         # bookmark
         if event["event"] == "TradingFeePPMUpdated":
             self.handle_trading_fee_updated(ex_name)
@@ -388,6 +389,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         self.pools_to_add_from_contracts = remaining_pools
 
     def handle_strategy_created(self, event, ex_name):
+        print(f"[handle_strategy_created] ex_name: {ex_name}")
         pool_info = {}
         pool_info["exchange_name"] = ex_name
         pool_info["address"] = event["address"]
@@ -398,9 +400,8 @@ class Manager(PoolManager, EventManager, ContractsManager):
         pool_info['fee'] = self.fee_pairs[ex_name][
             (pool_info["tkn0_address"], pool_info["tkn1_address"])
         ]
-        pool_info['fee_float'] = pool_info['fee'] / 1e6
         pool_info["descr"] = self.pool_descr_from_info(pool_info)
         pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
         pool = self.get_or_init_pool(pool_info)
-        data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
-        self.update_pool_data(pool_info, data)
+        pool_info = pool.update_from_event(event, pool.get_common_data(event, pool_info))
+        self.pool_data.append(pool_info)
