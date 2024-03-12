@@ -276,7 +276,6 @@ if __name__ == "__main__":
             "get_carbon_strategies_and_delete",
             "run_tests_on_mode",
             "run_results_crosscheck",
-            "update_pool_params",
             "end_to_end",
         ],
         help="Task to run",
