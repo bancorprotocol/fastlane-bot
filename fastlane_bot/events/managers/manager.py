@@ -394,6 +394,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         pool_info["strategy_id"] = event["args"]["id"]
         pool_info["tkn0_address"] = event["args"]["token0"]
         pool_info["tkn1_address"] = event["args"]["token1"]
+        pool_info['pair_name'] = f"{pool_info['tkn0_address']}/{pool_info['tkn1_address']}"
         pool_info['fee'] = self.fee_pairs[ex_name][
             (pool_info["tkn0_address"], pool_info["tkn1_address"])
         ]
