@@ -247,16 +247,16 @@ def main(args: argparse.Namespace):
     elif args.task == "get_carbon_strategies_and_delete":
         get_carbon_strategies_and_delete_task(test_manager, args)
     elif args.task == "run_tests_on_mode":
-        _extracted_task_handling(test_manager, args)
+        _extracted_run_tests_on_mode(test_manager, args)
     elif args.task == "end_to_end":
         get_carbon_strategies_and_delete_task(test_manager, args)
         set_test_state_task(test_manager.w3)
-        _extracted_task_handling(test_manager, args)
+        _extracted_run_tests_on_mode(test_manager, args)
     else:
         raise ValueError(f"Task {args.task} not recognized")
 
 
-def _extracted_task_handling(test_manager: TestManager, args: argparse.Namespace):
+def _extracted_run_tests_on_mode(test_manager: TestManager, args: argparse.Namespace):
     """
     Extracted task handling.
     """
