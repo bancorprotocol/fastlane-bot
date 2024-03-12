@@ -76,8 +76,8 @@ def test_test_balancer_exchange():
     @pytest.mark.asyncio
     async def test_balancer_exchange():
         assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
-        #assert (balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
-        #assert (balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
+        #assert (await balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
+        #assert (await balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
     # Run the test in an event loop
     asyncio.run(test_balancer_exchange())
     
