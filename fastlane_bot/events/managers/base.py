@@ -18,7 +18,7 @@ from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory, SolidlyV2
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools import pool_factory
-
+from fastlane_bot.events.new_utils import get_pool_cid
 
 @dataclass
 class BaseManager:
@@ -791,19 +791,25 @@ class BaseManager:
             The pool info.
 
         """
-        if key != "strategy_id" and (pool_info is None or not pool_info):
+        is_carbon_fork = False
+        if pool_info['exchange_name'] in self.cfg.CARBON_V1_FORKS:
+            is_carbon_fork = True
+
+        if not is_carbon_fork and (pool_info is None or not pool_info):
             # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
                 address=addr, event=event, block_number=event["blockNumber"]
             )
+        
+        if is_carbon_fork:
+            # cid = event["args"]["id"] if event is not None else pool_info["strategy_id"]
+            
+            cid = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
 
-        # if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
-        #     cid = event["args"]["id"] if event is not None else pool_info["strategy_id"]
-        #
-        #     for pool in self.pool_data:
-        #         if pool["cid"] == cid:
-        #             pool_info = pool
-        #             break
+            for pool in self.pool_data:
+                if pool["cid"] == cid:
+                    pool_info = pool
+                    break
 
         if isinstance(pool_info, float):
             return
