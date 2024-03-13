@@ -201,21 +201,19 @@ def test_create_carbon_fake_event():
 
     # Example result of calling contract.caller.strategy()
     strategy = (3743106036130323098097120681749450326077,
-                                '0x617d08085F68070F00fE4945c1e57013f7600b12',
-                                ['0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-                                '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'],
-                                [(0, 0, 67529602313984, 1961605126121825),
-                                (0, 0, 35462792969, 4450510153742)])
-    
+                '0x617d08085F68070F00fE4945c1e57013f7600b12',
+                ['0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
+                 '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'],
+                [(0, 0, 67529602313984, 1961605126121825),
+                 (0, 0, 35462792969, 4450510153742)])
+
     fake_event = {
-            "args": {
-                "id": strategy[0],
-                "order0": {"y": strategy[3][0][0], "z": strategy[3][0][0], "A": strategy[3][0][2],
-                           "B": strategy[3][0][3]},
-                "order1": {"y": strategy[3][1][0], "z": strategy[3][1][0], "A": strategy[3][1][2],
-                           "B": strategy[3][1][3]},
-            }
+        "args": {
+            "id": strategy[0],
+            "order0": strategy[3][0],
+            "order1": strategy[3][1],
         }
+    }
     data = carbon_v1_pool.parse_event(state, fake_event, "None")
     assert data["cid"] == strategy[0]
     assert data["y_0"] == strategy[3][0][0]
@@ -226,8 +224,6 @@ def test_create_carbon_fake_event():
     assert data["z_1"] == strategy[3][1][1]
     assert data["A_1"] == strategy[3][1][2]
     assert data["B_1"] == strategy[3][1][3]
-
-
 
 
 # ------------------------------------------------------------

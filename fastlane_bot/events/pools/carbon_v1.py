@@ -79,7 +79,7 @@ class CarbonV1Pool(Pool):
         """
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
         data["cid"] = event_args["args"].get("id")
-        if isinstance(order0, list) and isinstance(order1, list):
+        if isinstance(order0, (list, tuple)) and isinstance(order1, (list, tuple)):
             data["y_0"] = order0[0]
             data["z_0"] = order0[1]
             data["A_0"] = order0[2]
@@ -146,10 +146,8 @@ class CarbonV1Pool(Pool):
         fake_event = {
             "args": {
                 "id": strategy[0],
-                "order0": {"y": strategy[3][0][0], "z": strategy[3][0][0], "A": strategy[3][0][2],
-                           "B": strategy[3][0][3]},
-                "order1": {"y": strategy[3][1][0], "z": strategy[3][1][0], "A": strategy[3][1][2],
-                           "B": strategy[3][1][3]},
+                "order0": strategy[3][0],
+                "order1": strategy[3][1],
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
