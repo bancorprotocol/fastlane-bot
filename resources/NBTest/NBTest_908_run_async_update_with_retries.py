@@ -8,7 +8,7 @@ from fastlane_bot.events.async_event_update_utils import (
     update_remaining_pools,
     run_async_update_with_retries,
 )  # replace with your actual module name
-from fastlane_bot.events.exceptions import AsyncUpdateRetryException
+from fastlane_bot.exceptions import AsyncUpdateRetryException
 
 
 @pytest.fixture

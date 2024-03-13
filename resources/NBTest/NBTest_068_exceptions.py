@@ -1,6 +1,6 @@
 import pytest
 
-from fastlane_bot.events.exceptions import AsyncUpdateRetryException
+from fastlane_bot.exceptions import AsyncUpdateRetryException
 
 
 @pytest.mark.parametrize(
