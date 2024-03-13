@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -38,7 +38,7 @@ require("3.0", __VERSION__)
 try:
     market_df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
-    market_df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
+    market_df = pd.read_csv("fastlane_bot/tests/_data/NBTEST_002_Curves.csv.gz")
 CCmarket = CPCContainer.from_df(market_df)
 
 # ## description

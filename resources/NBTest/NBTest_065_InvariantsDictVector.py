@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -82,9 +82,9 @@ assert vec0a == vec0b
 assert len(vec0) == 0
 assert len(vec0a) == 0
 assert len(vec0b) == 0
-assert vec0.norm == 0
-assert vec0a.norm == 0
-assert vec0b.norm == 0
+assert vec0.enorm == 0
+assert vec0a.enorm == 0
+assert vec0b.enorm == 0
 assert not "a" in vec0
 assert not "a" in vec0a
 assert not "a" in vec0b
@@ -138,7 +138,7 @@ assert bool(0*vec1) is False
 assert 0*vec1 == vec0
 assert 0*vec1 == vec0b
 assert 0*vec1 == vec1*0
-assert (0*vec1).norm == 0
+assert (0*vec1).enorm == 0
 assert 2*3*vec1 == 6*vec1
 assert 2*vec1*3 == vec1*6
 assert 2*3*vec1/6 == vec1
@@ -213,20 +213,22 @@ assert not bar1 is bar1a
 
 va = dv.V({foo1: 3, foo2:4})
 assert len(va) == 2
-assert va.norm == 5
+assert va.enorm == 5
 
 va = dv.V({bar1: 3, foo1:4})
 assert len(va) == 2
-assert va.norm == 5
+assert va.enorm == 5
 
 va = dv.V({bar1: 3, bar1a:4})
 assert len(va) == 1
-assert va.norm == 4
+assert va.enorm == 4
 
 va = dv.V({bar1: 3})
 vb = dv.V({bar1a: 3})
 assert va == vb
 assert not va is vb
 # -
+
+
 
 

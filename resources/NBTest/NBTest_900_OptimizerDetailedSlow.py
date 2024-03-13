@@ -7,20 +7,33 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.16.1
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
-#from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
-from fastlane_bot.tools.analyzer import CPCAnalyzer
-from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
-from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
-from fastlane_bot.tools.arbgraphs import ArbGraph
-from fastlane_bot.tools.cpcbase import AttrDict
+# +
+try:
+    from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
+    from fastlane_bot.tools.analyzer import CPCAnalyzer
+    from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
+    from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
+    from fastlane_bot.tools.arbgraphs import ArbGraph
+    from fastlane_bot.tools.cpcbase import AttrDict
+    from fastlane_bot.testing import *
+
+except:
+    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
+    from tools.analyzer import CPCAnalyzer
+    from tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
+    from tools.optimizer import OptimizerBase, CPCArbOptimizer
+    from tools.arbgraphs import ArbGraph
+    from tools.cpcbase import AttrDict
+    from tools.testing import *
+    
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(OptimizerBase))
@@ -30,13 +43,13 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ConvexOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ArbGraph))
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
-from fastlane_bot.testing import *
 import itertools as it
 import collections as cl
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require("3.0", __VERSION__)
+# from fastlane_bot import __VERSION__
+# require("3.0", __VERSION__)
+# -
 
 T = AttrDict(
     NATIVE_ETH="ETH-EEeE",
@@ -72,7 +85,7 @@ T = AttrDict(
 try:
     CCm = CPCContainer.from_df(pd.read_csv("_data/NBTest_006.csv.gz"))
 except:
-    CCm = CPCContainer.from_df(pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTest_006.csv.gz"))
+    CCm = CPCContainer.from_df(pd.read_csv("fastlane_bot/tests/_data/NBTest_006.csv.gz"))
 
 CCu3    = CCm.byparams(exchange="uniswap_v3")
 CCu2    = CCm.byparams(exchange="uniswap_v2")
