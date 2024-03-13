@@ -17,6 +17,7 @@ from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory, SolidlyV2
 from fastlane_bot.events.exchanges.base import Exchange
+from fastlane_bot.events.new_utils import get_pool_cid
 from fastlane_bot.events.pools import pool_factory
 
 
@@ -834,7 +835,9 @@ class BaseManager:
         if ex_name == "bancor_pol":
             return "token", event["args"]["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            return "strategy_id", event["args"]["id"]
+            info = {'exchange_name': ex_name, 'strategy_id': event["args"]["id"],
+                    'fee': self.fee_pairs[ex_name][(event["args"]["token0"], event["args"]["token1"])]}
+            return "cid", get_pool_cid(info, self.cfg.CARBON_V1_FORKS)
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":
