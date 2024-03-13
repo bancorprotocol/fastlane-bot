@@ -104,7 +104,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         if arb_mode in ["b3_two_hop"]:
             combos = [
                 (tkn0, tkn1)
-                for tkn0, tkn1 in itertools.product(flashloan_tokens, flashloan_tokens)
+                for tkn0, tkn1 in itertools.product(flashloan_tokens, CCm.byparams(exchange="bancor_v3").tknys())
                 # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
                 if tkn0 != tkn1
             ]
