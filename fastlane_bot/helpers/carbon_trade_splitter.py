@@ -26,20 +26,29 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
                 carbon_exchanges[exchange] = [_tx]
 
         for txs in carbon_exchanges.values():
-            new_trade_instructions.append(
-                TradeInstruction(
-                    ConfigObj=cfg,
-                    db=trade_instruction.db,
-                    cid=trade_instruction.cid,
-                    tknin=trade_instruction.tknin,
-                    tknout=trade_instruction.tknout,
-                    amtin=sum([tx["amtin"] for tx in txs]),
-                    amtout=sum([tx["amtout"] for tx in txs]),
-                    _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),
-                    _amtout_wei=sum([tx["_amtout_wei"] for tx in txs]),
-                    raw_txs=str(txs)
+            amtin = 0
+            amtout = 0
+            _amtin_wei = 0
+            _amtout_wei = 0
+            for tx in txs:
+                amtin += tx["amtin"]
+                amtout += tx["amtout"]
+                _amtin_wei += tx["_amtin_wei"]
+                _amtout_wei += tx["_amtout_wei"]
+                new_trade_instructions.append(
+                    TradeInstruction(
+                        db=trade_instruction.db,
+                        ConfigObj=trade_instruction.ConfigObj,
+                        cid=tx["cid"],
+                        tknin=tx["tknin"],
+                        tknout=tx["tknout"],
+                        amtin=amtin,
+                        amtout=amtout,
+                        _amtin_wei=_amtin_wei,
+                        _amtout_wei=_amtout_wei,
+                        raw_txs=str(txs)
+                    )
                 )
-            )
 
     return new_trade_instructions
 
