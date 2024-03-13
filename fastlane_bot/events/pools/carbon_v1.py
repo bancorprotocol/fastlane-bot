@@ -77,55 +77,23 @@ class CarbonV1Pool(Pool):
         Dict[str, Any]
             The updated data.
         """
-        order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
-        data["cid"] = event_args["args"].get("id")
-        if isinstance(order0, (list, tuple)) and isinstance(order1, (list, tuple)):
-            data["y_0"] = order0[0]
-            data["z_0"] = order0[1]
-            data["A_0"] = order0[2]
-            data["B_0"] = order0[3]
-            data["y_1"] = order1[0]
-            data["z_1"] = order1[1]
-            data["A_1"] = order1[2]
-            data["B_1"] = order1[3]
-        else:
-            data["y_0"] = order0["y"]
-            data["z_0"] = order0["z"]
-            data["A_0"] = order0["A"]
-            data["B_0"] = order0["B"]
-            data["y_1"] = order1["y"]
-            data["z_1"] = order1["z"]
-            data["A_1"] = order1["A"]
-            data["B_1"] = order1["B"]
-
-        return data
-
-    @staticmethod
-    def parse_orders(
-        event_args: Dict[str, Any], event_type: str
-    ) -> Tuple[List[int], List[int]]:
-        """
-        Parse the orders from the event args. If the event type is StrategyDeleted, then the orders are set to 0.
-
-        Parameters
-        ----------
-        event_args : Dict[str, Any]
-            The event arguments.
-        event_type : str
-            The event type.
-
-        Returns
-        -------
-        Tuple[List[int], List[int]]
-            The parsed orders.
-        """
         if event_type not in ["StrategyDeleted"]:
             order0 = event_args["args"].get("order0")
             order1 = event_args["args"].get("order1")
         else:
-            order0 = [0, 0, 0, 0]
-            order1 = [0, 0, 0, 0]
-        return order0, order1
+            order0 = {"y_0": 0, "z_0": 0, "A_0": 0, "B_0": 0}
+            order1 = {"y_1": 0, "z_1": 0, "A_1": 0, "B_1": 0}
+        data["cid"] = event_args["args"].get("id")
+        data["y_0"] = order0["y"]
+        data["z_0"] = order0["z"]
+        data["A_0"] = order0["A"]
+        data["B_0"] = order0["B"]
+        data["y_1"] = order1["y"]
+        data["z_1"] = order1["z"]
+        data["A_1"] = order1["A"]
+        data["B_1"] = order1["B"]
+
+        return data
 
     def update_from_contract(
         self,
@@ -138,21 +106,18 @@ class CarbonV1Pool(Pool):
         """
         See base class.
         """
-        try:
-            strategy = contract.caller.strategy(int(self.state["cid"]))
-        except AttributeError:
-            strategy = contract.functions.strategy(int(self.state["cid"])).call()
 
-        fake_event = {
-            "args": {
-                "id": strategy[0],
-                "order0": strategy[3][0],
-                "order1": strategy[3][1],
-            }
-        }
-        params = self.parse_event(self.state, fake_event, "None")
-        params["exchange_name"] = self.exchange_name
-        params["router"] = self.router_address,
+        strategy = contract.caller.strategy(int(self.state["cid"]))
+
+        y_0, z_0, A_0, B_0 = strategy[3][0]
+        y_1, z_1, A_1, B_1 = strategy[3][1]
+
+        params = {"cid": strategy[0],
+                  "y_0": y_0, "z_0": z_0, "A_0": A_0, "B_0": B_0,
+                  "y_1": y_1, "z_1": z_1, "A_1": A_1, "B_1": B_1,
+                  "exchange_name": self.exchange_name,
+                  "router": (self.router_address,)}
+
         for key, value in params.items():
             self.state[key] = value
 
