@@ -3,22 +3,22 @@ from fastlane_bot.helpers import TradeInstruction
 
 def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list[TradeInstruction]:
     new_trade_instructions = []
-    for trade in trade_instructions:
-        if trade.exchange_name not in cfg.CARBON_V1_FORKS:
-            new_trade_instructions.append(trade)
+    for trade_instruction in trade_instructions:
+        if trade_instruction.exchange_name not in cfg.CARBON_V1_FORKS:
+            new_trade_instructions.append(trade_instruction)
             continue
 
         carbon_exchanges = {}
 
-        raw_tx_str = trade.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')
+        raw_tx_str = trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')
         raw_txs = json.loads(raw_tx_str)
 
         for _tx in raw_txs:
-            curve = trade.db.get_pool(cid=str(_tx["cid"]).split("-")[0])
+            curve = trade_instruction.db.get_pool(cid=str(_tx["cid"]).split("-")[0])
             exchange = curve.exchange_name
 
-            _tx["tknin"] = _get_token_address(cfg, curve, trade.tknin)
-            _tx["tknout"] = _get_token_address(cfg, curve, trade.tknout)
+            _tx["tknin"] = _get_token_address(cfg, curve, trade_instruction.tknin)
+            _tx["tknout"] = _get_token_address(cfg, curve, trade_instruction.tknout)
 
             if exchange in carbon_exchanges:
                 carbon_exchanges[exchange].append(_tx)
@@ -29,10 +29,10 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
             new_trade_instructions.append(
                 TradeInstruction(
                     ConfigObj=cfg,
-                    db=trade.db,
-                    cid=trade.cid,
-                    tknin=trade.tknin,
-                    tknout=trade.tknout,
+                    db=trade_instruction.db,
+                    cid=trade_instruction.cid,
+                    tknin=trade_instruction.tknin,
+                    tknout=trade_instruction.tknout,
                     amtin=sum([tx["amtin"] for tx in txs]),
                     amtout=sum([tx["amtout"] for tx in txs]),
                     _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),
