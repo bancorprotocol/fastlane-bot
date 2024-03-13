@@ -81,8 +81,8 @@ class CarbonV1Pool(Pool):
             order0 = event_args["args"].get("order0")
             order1 = event_args["args"].get("order1")
         else:
-            order0 = {"y_0": 0, "z_0": 0, "A_0": 0, "B_0": 0}
-            order1 = {"y_1": 0, "z_1": 0, "A_1": 0, "B_1": 0}
+            order0 = {"y": 0, "z": 0, "A": 0, "B": 0}
+            order1 = {"y": 0, "z": 0, "A": 0, "B": 0}
         data["cid"] = event_args["args"].get("id")
         data["y_0"] = order0["y"]
         data["z_0"] = order0["z"]
