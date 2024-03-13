@@ -146,8 +146,10 @@ class CarbonV1Pool(Pool):
         fake_event = {
             "args": {
                 "id": strategy[0],
-                "order0": strategy[3][0],
-                "order1": strategy[3][1],
+                "order0": {"y": strategy[3][0][0], "z": strategy[3][0][0], "A": strategy[3][0][2],
+                           "B": strategy[3][0][3]},
+                "order1": {"y": strategy[3][1][0], "z": strategy[3][1][0], "A": strategy[3][1][2],
+                           "B": strategy[3][1][3]},
             }
         }
         params = self.parse_event(self.state, fake_event, "None")
