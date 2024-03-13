@@ -18,17 +18,17 @@ from fastlane_bot.events.managers.pools import PoolManager
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-    def update_from_event(self, event: Dict[str, Any]) -> None:
+    def update_from_event(self, event: Dict[str, Any]):
         """
-        Updates the state of the pool data from an event.
+        Updates the state of the pool data from an event. StrategyCreated and StrategyUpdated events are handled as
+        the "default" event types to process.
 
-        Parameters
-        ----------
-        event  : Dict[str, Any]
-            The event.
+        Args:
+            event (Dict[str, Any]): The event to process.
 
         """
         ex_name = self.exchange_name_from_event(event)
+
         # bookmark
         if event["event"] == "TradingFeePPMUpdated":
             self.handle_trading_fee_updated(ex_name)
@@ -41,6 +41,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         if event["event"] == "PairCreated":
             self.handle_pair_created(event)
             return
+
         if event["event"] == "StrategyDeleted":
             self.handle_strategy_deleted(event)
             return
@@ -52,8 +53,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
         key, key_value = self.get_key_and_value(event, addr, ex_name)
 
         pool_info = self.get_pool_info(key, key_value, ex_name)
-
         if not pool_info:
+            # StrategyCreated events get appended to this list to be processed in the async workflow (see main.py),
+            # to gather any currently unknown fee and token info. Then the event will be reprocessed in this method
+            # and the pool data liquidity will be updated at that time (second pass).
             self.pools_to_add_from_contracts.append(
                 (addr, ex_name, event, key, key_value)
             )
