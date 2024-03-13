@@ -72,9 +72,14 @@ def test_test_balancer_exchange():
 # ------------------------------------------------------------
     
     balancer_exchange = Balancer()
-    assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
-    #assert (balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
-    #assert (balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
+
+    @pytest.mark.asyncio
+    async def test_balancer_exchange():
+        assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
+        #assert (await balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
+        #assert (await balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
+    # Run the test in an event loop
+    asyncio.run(test_balancer_exchange())
     
 
 # ------------------------------------------------------------
@@ -236,10 +241,13 @@ def test_test_bancor_v3_exchange():
     # +
     bancor_v3_exchange = BancorV3()
     
-    assert (bancor_v3_exchange.get_abi() == BANCOR_V3_POOL_COLLECTION_ABI)
-    assert (bancor_v3_exchange.get_fee('', mocked_contract) == ('0.000', 0.0))
-    assert (bancor_v3_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v3_event']) == bancor_v3_exchange.BNT_ADDRESS)
-    
+    @pytest.mark.asyncio
+    async def test_bancor_v3_exchange():
+        assert (bancor_v3_exchange.get_abi() == BANCOR_V3_POOL_COLLECTION_ABI)
+        assert (await bancor_v3_exchange.get_fee('', mocked_contract) == ('0.000', 0.0))
+        assert (await bancor_v3_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v3_event']) == bancor_v3_exchange.BNT_ADDRESS)
+    # Run the test in an event loop
+    asyncio.run(test_bancor_v3_exchange())
     # -
     
 
