@@ -182,7 +182,13 @@ class AutomaticPoolShutdown:
             self.tx_helpers.get_max_priority_fee_per_gas_alchemy()
             * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET
         )
-        transaction = self.tx_helpers.build_transaction_generic(self.bancor_network_contract.functions.withdrawPOL, self.mgr.web3.to_checksum_address(tkn), gas_price=gas_price, max_priority_fee=max_priority_gas, nonce=self.tx_helpers.get_nonce())
+        transaction = self.tx_helpers.build_transaction_generic(
+            self.bancor_network_contract.functions.withdrawPOL,
+            self.mgr.web3.to_checksum_address(tkn),
+            gas_price=gas_price,
+            max_priority_fee=max_priority_gas,
+            nonce=self.tx_helpers.get_nonce()
+        )
 
         if transaction is not None:
             signed_transaction = self.tx_helpers.sign_transaction(transaction)

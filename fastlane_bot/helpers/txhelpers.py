@@ -464,17 +464,17 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
-        value = src_amt if (src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and self.ConfigObj.SELF_FUND) else None
+        value = src_amt if (src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and self.ConfigObj.SELF_FUND) else 0
         transaction = self.build_transaction_generic(
-                                                    self.construct_contract_function,
-                                                    routes,
-                                                    src_amt,
-                                                    src_address,
-                                                    flashloan_struct,
-                                                    gas_price=gas_price,
-                                                    max_priority_fee=max_priority_fee,
-                                                    nonce=nonce,
-                                                    value=value
+                self.construct_contract_function,
+                routes,
+                src_amt,
+                src_address,
+                flashloan_struct,
+                gas_price=gas_price,
+                max_priority_fee=max_priority_fee,
+                nonce=nonce,
+                value=value
         )
         if transaction is None:
             return None
@@ -540,7 +540,7 @@ class TxHelpers:
             nonce: int,
             gas_price: int = 0,
             max_priority_fee: int = 0,
-            value: int = None
+            value: int = 0
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -579,7 +579,7 @@ class TxHelpers:
                 "from": self.wallet_address,
                 "nonce": nonce,
             }
-        if value is not None:
+        if value > 0:
             tx_details["value"] = value
         return tx_details
 
@@ -788,13 +788,14 @@ class TxHelpers:
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
 
-        approve_tx = self.build_transaction_generic(token_contract.functions.approve,
-                                                    self.arb_contract.address,
-                                                    approval_amount,
-                                                    gas_price=current_gas_price,
-                                                    max_priority_fee=max_priority,
-                                                    nonce=self.get_nonce(),
-                                                    )
+        approve_tx = self.build_transaction_generic(
+            token_contract.functions.approve,
+            self.arb_contract.address,
+            approval_amount,
+            gas_price=current_gas_price,
+            max_priority_fee=max_priority,
+            nonce=self.get_nonce(),
+            )
         if approve_tx is None:
             self.ConfigObj.logger.info(f"*****Failed to submit approval for token: {token_address}!*****")
             return None
