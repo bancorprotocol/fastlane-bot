@@ -59,7 +59,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "optimism": 500000,
     "coinbase_base": 250000,
     "fantom": 2000,
-    "mantle": 500000,
+    "mantle": 10000000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -1272,4 +1272,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-# terraform_blockchain(network_name="mantle", save_tokens=True)
+#terraform_blockchain(network_name="mantle", save_tokens=True)

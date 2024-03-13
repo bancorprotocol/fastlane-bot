@@ -223,9 +223,14 @@ class TxHelpers:
             / Decimal("10") ** Decimal("18")
         )
 
-        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_arb_tx)
-            gas_cost_eth += layer_one_gas_fee
+        if self.ConfigObj.NETWORK in ["optimism", "coinbase_base"]:
+            layer_one_gas_fee = self._get_layer_one_gas_fee_1(signed_arb_tx)
+        elif self.ConfigObj.NETWORK in ["mantle"]:
+            layer_one_gas_fee = self._get_layer_one_gas_fee_2(signed_arb_tx)
+        else:
+            layer_one_gas_fee = 0
+
+        gas_cost_eth += layer_one_gas_fee
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
@@ -798,9 +803,9 @@ class TxHelpers:
             else:
                 return None
 
-    def _get_layer_one_gas_fee_loop(self, rawTransaction) -> Decimal:
+    def _get_layer_one_gas_fee_1(self, rawTransaction) -> Decimal:
         """
-        Returns the expected layer one gas fee for a layer 2 Optimism transaction
+        Returns the expected layer one gas fee for a Optimism or Base (layer two) transaction
         :param rawTransaction: the raw transaction
 
         returns: Decimal
@@ -813,21 +818,22 @@ class TxHelpers:
             self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
         ))
 
-        return self._get_layer_one_gas_fee(rawTransaction, ethereum_base_fee, fixed_overhead, dynamic_overhead)
-
-    def _get_layer_one_gas_fee(self, rawTransaction, ethereum_base_fee: int, fixed_overhead: int, dynamic_overhead: int) -> Decimal:
-        """
-        Returns the expected layer one gas fee for a layer 2 Optimism transaction
-        :param rawTransaction: the raw transaction
-        :param ethereum_base_fee: the L1 base fee received from the contract
-        :param fixed_overhead: the fixed overhead received from the contract
-        :param dynamic_overhead: the dynamic fee received from the contract
-        returns: Decimal
-            The total fee (in gas token) for the l1 gas fee
-        """
         zero_bytes, non_zero_bytes = count_bytes(rawTransaction)
         tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
         tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
         l1_data_fee = tx_total_gas * ethereum_base_fee
         ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
         return Decimal(f"{l1_data_fee}e-24")
+
+    def _get_layer_one_gas_fee_2(self, rawTransaction) -> Decimal:
+        """
+        Returns the expected layer one gas fee for a Mantle (layer two) transaction
+        :param rawTransaction: the raw transaction
+
+        returns: Decimal
+            The total fee (in gas token) for the l1 gas fee
+        """
+
+        l1_data_fee = asyncio.get_event_loop().run_until_complete(asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(rawTransaction)))
+        ## Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
+        return Decimal(f"{l1_data_fee}e-18")
