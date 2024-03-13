@@ -30,6 +30,7 @@ ARBITRUM_ONE = "arbitrum_one"
 OPTIMISM = "optimism"
 BASE = "coinbase_base"
 FANTOM = "fantom"
+LINEA = "linea"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -57,6 +58,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "optimism": 500000,
     "coinbase_base": 250000,
     "fantom": 2000,
+    "linea": 50000
 }
 
 ALCHEMY_KEY_DICT = {
@@ -67,6 +69,7 @@ ALCHEMY_KEY_DICT = {
     "optimism": "WEB3_ALCHEMY_OPTIMISM",
     "coinbase_base": "WEB3_ALCHEMY_BASE",
     "fantom": "WEB3_FANTOM",
+    "linea": "WEB3_LINEA",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -77,6 +80,7 @@ ALCHEMY_RPC_LIST = {
     "optimism": "https://opt-mainnet.g.alchemy.com/v2/",
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
+    "linea": "https://rpc.linea.build/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -1253,7 +1257,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
     if save_tokens:
         save_token_data(token_dict=token_manager, write_path=write_path)
-
+    
+    exchange_df['last_updated_block'] = 0
+    exchange_df['cid'] = None
     exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
@@ -1261,4 +1267,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
+# terraform_blockchain(network_name="linea", save_tokens=True)
