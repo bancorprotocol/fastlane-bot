@@ -250,12 +250,12 @@ class WrapUnwrapProcessor:
             [
                 route_struct[trade_idx]
                 for trade_idx in segment["trades"]
-                if segment["trades"][trade_idx] not in self.cfg.CARBON_V1_FORKS
-            ]
-            + [
+                if segment["trades"][trade_idx] in self.cfg.CARBON_V1_FORKS
+            ] +
+            [
                 route_struct[trade_idx]
                 for trade_idx in segment["trades"]
-                if segment["trades"][trade_idx] in self.cfg.CARBON_V1_FORKS
+                if segment["trades"][trade_idx] not in self.cfg.CARBON_V1_FORKS
             ]
         )
         self._update_token_balance(
