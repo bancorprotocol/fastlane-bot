@@ -10,11 +10,8 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
 
         carbon_exchanges = {}
 
-        raw_tx_str = trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')
-        raw_txs = json.loads(raw_tx_str)
-
-        for _tx in raw_txs:
-            curve = trade_instruction.db.get_pool(cid=str(_tx["cid"]).split("-")[0])
+        for tx in json.loads(trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')):
+            curve = trade_instruction.db.get_pool(cid=str(tx["cid"]).split("-")[0])
 
             if cfg.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens:
                 id = cfg.NATIVE_GAS_TOKEN_ADDRESS
@@ -23,14 +20,14 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
             else:
                 id = cfg.ZERO_ADDRESS
 
-            _tx["tknin"] = _get_token_address(cfg, id, trade_instruction.tknin)
-            _tx["tknout"] = _get_token_address(cfg, id, trade_instruction.tknout)
+            tx["tknin"] = _get_token_address(cfg, id, trade_instruction.tknin)
+            tx["tknout"] = _get_token_address(cfg, id, trade_instruction.tknout)
 
             exchange_id = curve.exchange_name + id
             if exchange_id in carbon_exchanges:
-                carbon_exchanges[exchange_id].append(_tx)
+                carbon_exchanges[exchange_id].append(tx)
             else:
-                carbon_exchanges[exchange_id] = [_tx]
+                carbon_exchanges[exchange_id] = [tx]
 
         for txs in carbon_exchanges.values():
             new_trade_instructions.append(
@@ -44,7 +41,7 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
                     amtout=sum([tx["amtout"] for tx in txs]),
                     _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),
                     _amtout_wei=sum([tx["_amtout_wei"] for tx in txs]),
-                    raw_txs=str(txs)
+                    raw_txs=json.dumps(txs)
                 )
             )
 
