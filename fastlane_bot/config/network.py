@@ -18,7 +18,7 @@ load_dotenv()
 from decimal import Decimal
 
 from dotenv import load_dotenv
-
+import constants
 load_dotenv()  # take environment variables from .env.
 
 TENDERLY_FORK = os.environ.get("TENDERLY_FORK_ID")
@@ -178,12 +178,12 @@ class ConfigNetwork(ConfigBase):
     # COMMONLY USED TOKEN ADDRESSES SECTION
     #######################################################################################
     ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-    ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    ETH_ADDRESS = constants.ETH_ADDRESS
     USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
     MKR_ADDRESS = "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2"
-    LINK_ADDRESS = "0x514910771AF9Ca656af840dff83E8264EcF986CA"
-    WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    LINK_ADDRESS = constants.LINK_ADDRESS
+    WBTC_ADDRESS = constants.WBTC_ADDRESS
+    BNT_ADDRESS = constants.BNT_ADDRESS
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     # BNT_KEY = "BNT-FF1C"

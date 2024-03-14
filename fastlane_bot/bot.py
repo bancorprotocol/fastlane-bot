@@ -74,7 +74,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from .config.constants import FLASHLOAN_FEE_MAP
+from .config.constants import BNT_ADDRESS, FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
@@ -965,7 +965,8 @@ class CarbonBot(CarbonBotBase):
         )
 
         flashloan_struct = tx_route_handler.generate_flashloan_struct(
-            trade_instructions_objects=calculated_trade_instructions
+            trade_instructions_objects=calculated_trade_instructions,
+            b3_flashloan_tokens=CCm.byparams(exchange="bancor_v3").tknys()+[BNT_ADDRESS]
         )
 
         # Get the flashloan token
