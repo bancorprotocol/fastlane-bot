@@ -260,7 +260,7 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 450, 500, 2500, 3000, 10000]
+    UNIV3_FEE_LIST = [8, 10, 40, 80, 100, 250, 300, 450, 500, 1000, 2500, 3000, 10000]
     MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
     DEFAULT_GAS = 950_000
     DEFAULT_GAS_PRICE = 0
@@ -295,6 +295,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
+    NETWORK_LINEA = S.NETWORK_LINEA
 
     # FLAGS
     #######################################################################################
@@ -321,6 +322,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkOptimism(_direct=False)
         elif network == cls.NETWORK_FANTOM:
             return _ConfigNetworkFantom(_direct=False)
+        elif network == cls.NETWORK_LINEA:
+            return _ConfigNetworkLinea(_direct=False)    
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -680,6 +683,46 @@ class _ConfigNetworkFantom(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83": "WFTM",
         "0x28a92dde19D9989F39A49905d7C9C2FAc7799bDf": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+
+class _ConfigNetworkLinea(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_LINEA
+    NETWORK_ID = "59144"
+    NETWORK_NAME = "linea"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://rpc.linea.build/" #TODO
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_LINEA")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xPLACEHOLDER"  #TODO
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0xPLACEHOLDER" #TODO
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0xPLACEHOLDER" #TODO
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
+    STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0x1d0188c4B276A09366D05d6Be06aF61a73bC7535" # velocore
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f": "WETH",
+        "0x176211869ca2b568f2a7d4ee941e073a821ee1ff": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
