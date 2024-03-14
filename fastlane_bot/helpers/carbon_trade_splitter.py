@@ -15,15 +15,22 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
 
         for _tx in raw_txs:
             curve = trade_instruction.db.get_pool(cid=str(_tx["cid"]).split("-")[0])
-            exchange = curve.exchange_name
 
-            _tx["tknin"] = _get_token_address(cfg, curve, trade_instruction.tknin)
-            _tx["tknout"] = _get_token_address(cfg, curve, trade_instruction.tknout)
-
-            if exchange in carbon_exchanges:
-                carbon_exchanges[exchange].append(_tx)
+            if cfg.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens:
+                id = cfg.NATIVE_GAS_TOKEN_ADDRESS
+            elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in curve.get_tokens:
+                id = cfg.WRAPPED_GAS_TOKEN_ADDRESS
             else:
-                carbon_exchanges[exchange] = [_tx]
+                id = cfg.ZERO_ADDRESS
+
+            _tx["tknin"] = _get_token_address(cfg, id, trade_instruction.tknin)
+            _tx["tknout"] = _get_token_address(cfg, id, trade_instruction.tknout)
+
+            exchange_id = curve.exchange_name + id
+            if exchange_id in carbon_exchanges:
+                carbon_exchanges[exchange_id].append(_tx)
+            else:
+                carbon_exchanges[exchange_id] = [_tx]
 
         for txs in carbon_exchanges.values():
             new_trade_instructions.append(
@@ -43,9 +50,9 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
 
     return new_trade_instructions
 
-def _get_token_address(cfg, curve, token_address: str) -> str:
-    if cfg.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
+def _get_token_address(cfg, id: str, token_address: str) -> str:
+    if id == cfg.NATIVE_GAS_TOKEN_ADDRESS and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
         return cfg.NATIVE_GAS_TOKEN_ADDRESS
-    if cfg.WRAPPED_GAS_TOKEN_ADDRESS in curve.get_tokens and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
+    if id == cfg.WRAPPED_GAS_TOKEN_ADDRESS and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
         return cfg.WRAPPED_GAS_TOKEN_ADDRESS
     return token_address
