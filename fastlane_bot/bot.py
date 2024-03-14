@@ -74,7 +74,8 @@ from fastlane_bot.helpers import (
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
-from .config.constants import BNT_ADDRESS, FLASHLOAN_FEE_MAP
+from .config.constants import FLASHLOAN_FEE_MAP
+from .config.network import BNT_ADDRESS
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll

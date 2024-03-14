@@ -16,9 +16,9 @@ from typing import List, Any, Dict, Tuple
 import eth_abi
 import pandas as pd
 
-from run_blockchain_terraformer import BALANCER_NAME, BANCOR_V3_NAME, EXCHANGE_IDS
+import fastlane_bot.config.network
 from .tradeinstruction import TradeInstruction
-from ..config.constants import BANCOR_V3_FLASHLOAN_TOKENS
+from ..config.constants import BALANCER_NAME, BANCOR_V3_NAME, EXCHANGE_IDS
 from ..events.interface import Pool
 from ..tools.cpc import T
 
@@ -513,51 +513,44 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             return pool.tkn0_address
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction],
-                                  b3_flashloan_tokens: list = None) -> list:
-        """
-        Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
+    # def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction],
+    #                               b3_twohop_flashloan_tokens=[]) -> list:
+    #     """
+    #     Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
+    #
+    #     Args:
+    #         trade_instructions_objects: List[TradeInstruction] = The trade instructions objects
+    #         b3_twohop_flashloan_tokens: List[str] = The tokens to flashloan for Bancor V3 two-hop trades
+    #
+    #     Returns:
+    #         list: The flashloan struct
+    #     """
+    #     return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
 
-        Args:
-            trade_instructions_objects: List[TradeInstruction] = The trade instructions objects
-            b3_flashloan_tokens: List[str] = The tokens to flashloan for Bancor V3 two-hop trades
-
-        Returns:
-            list: The flashloan struct
-        """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects, b3_flashloan_tokens=b3_flashloan_tokens)
-
-    def _get_flashloan_platform_id(self, tkn: str, b3_flashloan_tokens: list = None) -> int:
+    def _get_flashloan_platform_id(self, tkn: str) -> int:
         """
         Returns the platform ID to take the flashloan from
+        :param tkn: str
 
-        Args:
-            tkn: str = The token address
-            b3_flashloan_tokens: list = The tokens to flashloan for Bancor V3 two-hop trades
-
-        Returns:
-            int: The platform ID
+        :return:
+            int
         """
 
         if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
             return EXCHANGE_IDS.get(BALANCER_NAME)
 
         # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in b3_flashloan_tokens or BANCOR_V3_FLASHLOAN_TOKENS:
+        if tkn in [fastlane_bot.config.network.BNT_ADDRESS, fastlane_bot.config.network.ETH_ADDRESS,
+                   fastlane_bot.config.network.WBTC_ADDRESS,
+                   fastlane_bot.config.network.LINK_ADDRESS, fastlane_bot.config.network.BNT_ADDRESS]:
             return EXCHANGE_IDS.get(BANCOR_V3_NAME)
         else:
             return EXCHANGE_IDS.get(BALANCER_NAME)
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction], b3_flashloan_tokens: list = None) -> list:
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
         """
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
-
-        Args:
-            trade_instructions_objects: List[TradeInstruction] = The trade instructions objects
-            b3_flashloan_tokens: List[str] = The tokens to flashloan for Bancor V3 two-hop trades
-
-        Returns:
-            list: The flashloan struct
+        :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
         """
         flash_tokens = self._extract_single_flashloan_token(trade_instructions=trade_instructions_objects)
         flashloans = []
@@ -565,7 +558,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         has_balancer = False
 
         for tkn in flash_tokens.keys():
-            platform_id = self._get_flashloan_platform_id(tkn, b3_flashloan_tokens)
+            platform_id = self._get_flashloan_platform_id(tkn)
             source_token = flash_tokens[tkn]["tkn"]
             source_amounts = abs(flash_tokens[tkn]["flash_amt"])
             if platform_id == 7:
