@@ -579,8 +579,7 @@ class TxHelpers:
                 "from": self.wallet_address,
                 "nonce": nonce,
             }
-        if value > 0:
-            tx_details["value"] = value
+        tx_details["value"] = value
         return tx_details
 
     def submit_regular_transaction(self, signed_tx) -> str:
