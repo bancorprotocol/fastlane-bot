@@ -522,7 +522,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         Returns:
             list: A list of flashloan structs
         """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects, b3_flashloan_tokens)
+        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects, b3_flashloan_tokens=b3_flashloan_tokens)
 
     def _get_flashloan_platform_id(self, tkn: str, b3_flashloan_tokens: list = None) -> int:
         """
