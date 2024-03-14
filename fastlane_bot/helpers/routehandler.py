@@ -511,40 +511,46 @@ class TxRouteHandler(TxRouteHandlerBase):
         else:
             return pool.tkn0_address
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction], b3_flashloan_tokens: list = None) -> list:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
-        :param trade_instructions_objects: a list of TradeInstruction objects
 
-        :return:
-            list
+        Args:
+            trade_instructions_objects (List[TradeInstruction]): A list of trade instruction objects
+            b3_flashloan_tokens (list): A list of tokens to flashloan from Bancor V3
+
+        Returns:
+            list: A list of flashloan structs
         """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
+        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects, b3_flashloan_tokens)
 
-    def _get_flashloan_platform_id(self, tkn: str) -> int:
+    def _get_flashloan_platform_id(self, tkn: str, b3_flashloan_tokens: list = None) -> int:
         """
         Returns the platform ID to take the flashloan from
-        :param tkn: str
-
-        :return:
-            int
+        
+        Args:
+            tkn (str): The token address
+            b3_flashloan_tokens (list): A list of tokens to flashloan from Bancor V3
+            
+        Returns:
+            int: The platform ID
         """
 
         if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
             return 7
 
-        # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
-                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
-                   self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
-            return 2
-        else:
-            return 7
+        return 2 if tkn in b3_flashloan_tokens else 7
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
+    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction], b3_flashloan_tokens: list = None) -> list:
         """
         Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
-        :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
+        
+        Args:
+            trade_instructions_objects (List[TradeInstruction]): A list of trade instruction objects
+            b3_flashloan_tokens (list): A list of tokens to flashloan from Bancor V3
+        
+        Returns:
+            list: A list of flashloan structs
         """
         flash_tokens = self._extract_single_flashloan_token(trade_instructions=trade_instructions_objects)
         flashloans = []
@@ -552,7 +558,7 @@ class TxRouteHandler(TxRouteHandlerBase):
         has_balancer = False
 
         for tkn in flash_tokens.keys():
-            platform_id = self._get_flashloan_platform_id(tkn)
+            platform_id = self._get_flashloan_platform_id(tkn, b3_flashloan_tokens)
             source_token = flash_tokens[tkn]["tkn"]
             source_amounts = abs(flash_tokens[tkn]["flash_amt"])
             if platform_id == 7:
