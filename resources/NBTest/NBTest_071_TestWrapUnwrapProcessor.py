@@ -33,8 +33,8 @@ require('3.0', __VERSION__)
 BANCOR_V2_NAME      = 'bancor_v2'
 CARBON_V1_NAME      = 'carbon_v1'
 PANCAKESWAP_V2_NAME = 'pancakeswap_v2'
-WRAP_UNWRAP_KEY     = 'wrap_or_unwrap'
-WRAP_UNWRAP_VAL     = 1234
+WRAP_UNWRAP_KEY     = 'WRAP_UNWRAP_KEY'
+WRAP_UNWRAP_VAL     = 'WRAP_UNWRAP_VAL'
 
 NONE_ADDRESS = '0x0000000000000000000000000000000000000000'
 ETH_ADDRESS  = '0x1111111111111111111111111111111111111111'
@@ -103,21 +103,6 @@ class DB:
 
 cfg = Config()
 db = DB()
-
-flashloan_0 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
-flashloan_1 = {'sourceTokens': [WETH_ADDRESS], 'sourceAmounts': [20000000000000000000]}
-flashloan_2 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [10000000000000000000]}
-flashloan_3 = {'sourceTokens': [BNT_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
-
-route_0 = {'id': 10, 'deadline': 20}
-route_1 = {'id': 11, 'deadline': 21}
-route_2 = {'id': 12, 'deadline': 22}
-route_3 = {'id': 13, 'deadline': 23}
-route_4 = {'id': 14, 'deadline': 24}
-route_5 = {'id': 15, 'deadline': 25}
-route_6 = {'id': 16, 'deadline': 26}
-route_7 = {'id': 17, 'deadline': 27}
-route_8 = {'id': 18, 'deadline': 28}
 
 trade_instruction_0 = TradeInstruction(
     cid='CID1-0',
@@ -350,6 +335,16 @@ trade_instruction_8 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
+route_0 = {'deadline': 0}
+route_1 = {'deadline': 1}
+route_2 = {'deadline': 2}
+route_3 = {'deadline': 3}
+route_4 = {'deadline': 4}
+route_5 = {'deadline': 5}
+route_6 = {'deadline': 6}
+route_7 = {'deadline': 7}
+route_8 = {'deadline': 8}
+
 route_9 = {
     'platformId': WRAP_UNWRAP_VAL,
     'sourceToken': ETH_ADDRESS,
@@ -385,6 +380,11 @@ route_11 = {
     'customInt': 0,
     'customData': '0x',
 }
+
+flashloan_0 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
+flashloan_1 = {'sourceTokens': [WETH_ADDRESS], 'sourceAmounts': [20000000000000000000]}
+flashloan_2 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [10000000000000000000]}
+flashloan_3 = {'sourceTokens': [BNT_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
 
 test_cases = [
     {
