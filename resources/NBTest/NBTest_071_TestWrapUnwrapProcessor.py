@@ -161,7 +161,7 @@ trade_instruction_1 = TradeInstruction(
 )
 
 trade_instruction_2 = TradeInstruction(
-    cid='CID5',
+    cid='CID5-0',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=1.5,
@@ -214,7 +214,7 @@ trade_instruction_3 = TradeInstruction(
 )
 
 trade_instruction_4 = TradeInstruction(
-    cid='CID5',
+    cid='CID5-0',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=2,
@@ -267,7 +267,7 @@ trade_instruction_5 = TradeInstruction(
 )
 
 trade_instruction_6 = TradeInstruction(
-    cid='CID5',
+    cid='CID5-0',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=1,
