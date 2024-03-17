@@ -4,10 +4,22 @@ from fastlane_bot.events.exceptions import FlashloanTokenException
 
 def add_wrap_or_unwrap_trades_to_route(
     cfg,
-    flashloans: list,
+    flashloans: list[dict],
     routes: list[dict],
     trade_instructions: list[TradeInstruction]
 ) -> list[dict]:
+    """
+    This method adds wrap and/or unwrap routes.
+
+    Args:
+        - `flashloans`: A list of flashloans.
+        - `routes`: A list of routes.
+        - `trade_instructions`: A list of trade instructions.
+
+    Returns:
+        - `new_routes`: A new list of routes.
+    """
+
     balance_tracker = {}
     for flashloan in flashloans:
         for token, amount in zip(flashloan["sourceTokens"], flashloan["sourceAmounts"]):

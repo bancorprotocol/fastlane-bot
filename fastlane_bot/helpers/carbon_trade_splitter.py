@@ -3,15 +3,16 @@ from fastlane_bot.helpers import TradeInstruction
 
 def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list[TradeInstruction]:
     """
-    This function splits every trade instruction which includes a mix of gas tokens and/or a mix of Carbon deployments,
+    This method splits every trade instruction which includes a mix of gas tokens and/or a mix of Carbon deployments,
     into several trade instructions. For example, `NATIVE/WRAPPED -> TKN` is split into `NATIVE -> TKN` and `WRAPPED -> TKN`.
 
     Args:
-        - trade_instructions: A list of TradeInstruction objects.
+        - `trade_instructions`: A list of trade instructions.
 
     Returns:
-        - new_trade_instructions: A new list of TradeInstruction objects.
+        - `new_trade_instructions`: A new list of trade instructions.
     """
+
     new_trade_instructions = []
     for trade_instruction in trade_instructions:
         if trade_instruction.exchange_name not in cfg.CARBON_V1_FORKS:
