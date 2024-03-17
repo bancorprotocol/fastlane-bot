@@ -1,4 +1,4 @@
-import json
+from json import loads, dumps
 from fastlane_bot.helpers import TradeInstruction
 
 def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list[TradeInstruction]:
@@ -10,12 +10,12 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
 
         carbon_exchanges = {}
 
-        for tx in json.loads(trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')):
-            curve = trade_instruction.db.get_pool(cid=str(tx["cid"]).split("-")[0])
+        for tx in loads(trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')):
+            pool = trade_instruction.db.get_pool(cid=str(tx["cid"]).split("-")[0])
 
-            if cfg.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens:
+            if cfg.NATIVE_GAS_TOKEN_ADDRESS in pool.get_tokens:
                 id = cfg.NATIVE_GAS_TOKEN_ADDRESS
-            elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in curve.get_tokens:
+            elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in pool.get_tokens:
                 id = cfg.WRAPPED_GAS_TOKEN_ADDRESS
             else:
                 id = cfg.ZERO_ADDRESS
@@ -23,7 +23,7 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
             tx["tknin"] = _get_token_address(cfg, id, trade_instruction.tknin)
             tx["tknout"] = _get_token_address(cfg, id, trade_instruction.tknout)
 
-            exchange_id = curve.exchange_name + id
+            exchange_id = pool.exchange_name + id
             if exchange_id in carbon_exchanges:
                 carbon_exchanges[exchange_id].append(tx)
             else:
@@ -41,7 +41,7 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
                     amtout=sum([tx["amtout"] for tx in txs]),
                     _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),
                     _amtout_wei=sum([tx["_amtout_wei"] for tx in txs]),
-                    raw_txs=json.dumps(txs)
+                    raw_txs=dumps(txs)
                 )
             )
 
