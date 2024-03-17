@@ -23,12 +23,7 @@ This module tests the splitting of trade instructions
 
 from json import dumps
 from dataclasses import dataclass
-from fastlane_bot.testing import plt, require
 from fastlane_bot.helpers import TradeInstruction, add_wrap_or_unwrap_trades_to_route
-
-plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require('3.0', __VERSION__)
 
 BANCOR_V2_NAME      = 'bancor_v2'
 CARBON_V1_NAME      = 'carbon_v1'
@@ -351,7 +346,7 @@ route_9 = {
     'targetToken': WETH_ADDRESS,
     'sourceAmount': 10000000000000000000,
     'minTargetAmount': 10000000000000000000,
-    'deadline': route_0['deadline'],
+    'deadline': 0,
     'customAddress': NONE_ADDRESS,
     'customInt': 0,
     'customData': '0x',
@@ -363,7 +358,7 @@ route_10 = {
     'targetToken': ETH_ADDRESS,
     'sourceAmount': 0,
     'minTargetAmount': 0,
-    'deadline': route_0['deadline'],
+    'deadline': 0,
     'customAddress': NONE_ADDRESS,
     'customInt': 0,
     'customData': '0x',
@@ -375,7 +370,7 @@ route_11 = {
     'targetToken': ETH_ADDRESS,
     'sourceAmount': 0,
     'minTargetAmount': 0,
-    'deadline': route_5['deadline'],
+    'deadline': 5,
     'customAddress': NONE_ADDRESS,
     'customInt': 0,
     'customData': '0x',

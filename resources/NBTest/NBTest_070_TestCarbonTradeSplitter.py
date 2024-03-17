@@ -23,12 +23,7 @@ This module tests the splitting of trade instructions
 
 from json import dumps
 from dataclasses import dataclass
-from fastlane_bot.testing import plt, require
 from fastlane_bot.helpers import TradeInstruction, split_carbon_trades
-
-plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require('3.0', __VERSION__)
 
 BANCOR_V2_NAME      = 'bancor_v2'
 CARBON_V1_NAME      = 'carbon_v1'
