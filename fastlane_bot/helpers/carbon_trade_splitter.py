@@ -34,9 +34,9 @@ def split_carbon_trades(cfg, trade_instructions: list[TradeInstruction]) -> list
                 TradeInstruction(
                     ConfigObj=cfg,
                     db=trade_instruction.db,
-                    cid=trade_instruction.cid,
-                    tknin=trade_instruction.tknin,
-                    tknout=trade_instruction.tknout,
+                    cid=txs[0]["cid"],
+                    tknin=txs[0]["tknin"],
+                    tknout=txs[0]["tknout"],
                     amtin=sum([tx["amtin"] for tx in txs]),
                     amtout=sum([tx["amtout"] for tx in txs]),
                     _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),

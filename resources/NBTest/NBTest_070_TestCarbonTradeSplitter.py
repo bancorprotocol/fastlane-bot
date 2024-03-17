@@ -16,57 +16,56 @@
 
 # +
 # coding=utf-8
-"""
+'''
 This module contains the tests for the exchanges classes
-"""
-import json
-from fastlane_bot.helpers import TradeInstruction, TxRouteHandler, split_carbon_trades
-from fastlane_bot.testing import *
-from typing import List
+'''
+from json import dumps
 from dataclasses import dataclass
+from fastlane_bot.helpers import TradeInstruction, split_carbon_trades
+from fastlane_bot.testing import *
 from fastlane_bot.events.interface import Token
 
 plt.rcParams['figure.figsize'] = [12,6]
 from fastlane_bot import __VERSION__
-require("3.0", __VERSION__)
+require('3.0', __VERSION__)
 
 # +
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+ETH_ADDRESS  = '0x1111111111111111111111111111111111111111'
+USDC_ADDRESS = '0x2222222222222222222222222222222222222222'
+WETH_ADDRESS = '0x3333333333333333333333333333333333333333'
+WBTC_ADDRESS = '0x4444444444444444444444444444444444444444'
+BNT_ADDRESS  = '0x5555555555555555555555555555555555555555'
 PLATFORM_ID_WRAP_UNWRAP = 10
-BANCOR_V2_NAME = "bancor_v2"
-BANCOR_V3_NAME = "bancor_v3"
-CARBON_POL_NAME = "bancor_pol"
-UNISWAP_V2_NAME = "uniswap_v2"
-UNISWAP_V3_NAME = "uniswap_v3"
-SUSHISWAP_V2_NAME = "sushiswap_v2"
-SUSHISWAP_V3_NAME = "sushiswap_v3"
-CARBON_V1_NAME = "carbon_v1"
-BANCOR_POL_NAME = "bancor_pol"
-BALANCER_NAME = "balancer"
-SOLIDLY_V2_NAME = "solidly_v2"
-AERODROME_V2_NAME = "aerodrome_v2"
-PANCAKESWAP_V2_NAME = "pancakeswap_v2"
-PANCAKESWAP_V3_NAME = "pancakeswap_v3"
+BANCOR_V2_NAME = 'bancor_v2'
+BANCOR_V3_NAME = 'bancor_v3'
+CARBON_POL_NAME = 'bancor_pol'
+UNISWAP_V2_NAME = 'uniswap_v2'
+UNISWAP_V3_NAME = 'uniswap_v3'
+SUSHISWAP_V2_NAME = 'sushiswap_v2'
+SUSHISWAP_V3_NAME = 'sushiswap_v3'
+CARBON_V1_NAME = 'carbon_v1'
+BANCOR_POL_NAME = 'bancor_pol'
+BALANCER_NAME = 'balancer'
+SOLIDLY_V2_NAME = 'solidly_v2'
+AERODROME_V2_NAME = 'aerodrome_v2'
+PANCAKESWAP_V2_NAME = 'pancakeswap_v2'
+PANCAKESWAP_V3_NAME = 'pancakeswap_v3'
 
-NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-WRAPPED_GAS_TOKEN_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+NATIVE_GAS_TOKEN_ADDRESS = ETH_ADDRESS
+WRAPPED_GAS_TOKEN_ADDRESS = WETH_ADDRESS
 EXCHANGE_IDS = {
-            BANCOR_V2_NAME: 1,
-            BANCOR_V3_NAME: 2,
-            BALANCER_NAME: 7,
-            CARBON_POL_NAME: 8,
-            PLATFORM_ID_WRAP_UNWRAP: 10,
-            UNISWAP_V2_NAME: 3,
-            UNISWAP_V3_NAME: 4,
-            SOLIDLY_V2_NAME: 11,
-            AERODROME_V2_NAME: 12,
-            CARBON_V1_NAME: 6,
-        }
+    BANCOR_V2_NAME: 1,
+    BANCOR_V3_NAME: 2,
+    BALANCER_NAME: 7,
+    CARBON_POL_NAME: 8,
+    PLATFORM_ID_WRAP_UNWRAP: 10,
+    UNISWAP_V2_NAME: 3,
+    UNISWAP_V3_NAME: 4,
+    SOLIDLY_V2_NAME: 11,
+    AERODROME_V2_NAME: 12,
+    CARBON_V1_NAME: 6,
+}
 UNI_V2_FORKS = [UNISWAP_V2_NAME, PANCAKESWAP_V2_NAME, SUSHISWAP_V2_NAME]
 UNI_V3_FORKS = [UNISWAP_V3_NAME, PANCAKESWAP_V3_NAME, SUSHISWAP_V3_NAME]
 CARBON_V1_FORKS = [CARBON_V1_NAME]
@@ -92,28 +91,6 @@ class _Test_Pool:
     def get_token_addresses(self):
         return [self.tkn0_address, self.tkn1_address]
 
-
-
-_test_pools = [
-    {"cid": "67035626283424877302284797664058337657416", "exchange_name": "carbon_v1", "tkn0_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", },
-    {"cid": "9187623906865338513511114400657741709505", "exchange_name": "carbon_v1", "tkn0_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "tkn1_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", },
-    {"cid": "2381976568446569244243622252022377480572", "exchange_name": "carbon_v1", "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", },
-    {"cid": "2381976568446569244243622252022377480676", "exchange_name": "carbon_v1", "tkn0_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", "tkn1_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", },
-    {"cid": "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974", "exchange_name": "pancakeswap_v2", "tkn0_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", "tkn1_address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", },
-    {"cid": "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074", "exchange_name": "bancor_v2", "tkn0_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "tkn1_address": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", },
-              ]
-
-
-def _test_create_pool(record):
-    return _Test_Pool(
-        cid=record.get("cid"),
-        pair_name=record.get("pair_name"),
-        exchange_name=record.get("exchange_name"),
-        tkn0_address=record.get("tkn0_address"),
-        tkn1_address=record.get("tkn1_address"),
-                      )
-
-
 # +
 @dataclass
 class Config:
@@ -129,325 +106,498 @@ class Config:
     WRAPPED_GAS_TOKEN_ADDRESS = WRAPPED_GAS_TOKEN_ADDRESS
     NATIVE_GAS_TOKEN_ADDRESS = NATIVE_GAS_TOKEN_ADDRESS
 
-cfg = Config()
-
-# +
-ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-
-_test_tokens = {
-    ETH_ADDRESS: Token(symbol="ETH", address=ETH_ADDRESS, decimals=18),
-    WETH_ADDRESS: Token(symbol="WETH", address=WETH_ADDRESS, decimals=18),
-    USDC_ADDRESS: Token(symbol="USDC", address=USDC_ADDRESS, decimals=6),
-    WBTC_ADDRESS: Token(symbol="WBTC", address=WBTC_ADDRESS, decimals=8),
-    BNT_ADDRESS: Token(symbol="BNT", address=BNT_ADDRESS, decimals=18),
-}
-
 @dataclass
 class QueryInterface:
-    test_pools = _test_pools
-    test_tokens = _test_tokens
-    def get_pool_from_dict(self, cid):
-        cid = str(cid).split("-")[0]
-        return next((pool for pool in self.test_pools if pool["cid"] == cid), None)
+    TEST_TOKENS = {
+        ETH_ADDRESS: Token(symbol='ETH', address=ETH_ADDRESS, decimals=18),
+        WETH_ADDRESS: Token(symbol='WETH', address=WETH_ADDRESS, decimals=18),
+        USDC_ADDRESS: Token(symbol='USDC', address=USDC_ADDRESS, decimals=6),
+        WBTC_ADDRESS: Token(symbol='WBTC', address=WBTC_ADDRESS, decimals=8),
+        BNT_ADDRESS: Token(symbol='BNT', address=BNT_ADDRESS, decimals=18),
+    }
+
+    TEST_POOLS = [
+        {'cid': 'CID1', 'exchange_name': 'carbon_v1', 'tkn0_address': WETH_ADDRESS, 'tkn1_address': WBTC_ADDRESS},
+        {'cid': 'CID2', 'exchange_name': 'carbon_v1', 'tkn0_address': ETH_ADDRESS, 'tkn1_address': WBTC_ADDRESS},
+        {'cid': 'CID3', 'exchange_name': 'carbon_v1', 'tkn0_address': BNT_ADDRESS, 'tkn1_address': USDC_ADDRESS},
+        {'cid': 'CID4', 'exchange_name': 'carbon_v1', 'tkn0_address': BNT_ADDRESS, 'tkn1_address': USDC_ADDRESS},
+        {'cid': 'CID5', 'exchange_name': 'pancakeswap_v2', 'tkn0_address': WBTC_ADDRESS, 'tkn1_address': WETH_ADDRESS},
+        {'cid': 'CID6', 'exchange_name': 'bancor_v2', 'tkn0_address': USDC_ADDRESS, 'tkn1_address': BNT_ADDRESS},
+    ]
+
+    def get_token(self, tkn_address):
+        return self.TEST_TOKENS[tkn_address]
 
     def get_pool(self, cid):
-        pool_dict = self.get_pool_from_dict(cid)
-        pool = _test_create_pool(pool_dict)
-        return pool
-    def get_token(self, tkn_address):
-        return self.test_tokens.get(tkn_address)
-        
+        pool_dict = next((pool for pool in self.TEST_POOLS if pool['cid'] == cid), None)
+        return _Test_Pool(
+            cid=pool_dict['cid'],
+            exchange_name=pool_dict['exchange_name'],
+            tkn0_address=pool_dict['tkn0_address'],
+            tkn1_address=pool_dict['tkn1_address'],
+            pair_name=None,
+        )
+
+cfg = Config()
 
 db = QueryInterface()
 
-# +
-#### WETH ####
-raw_tx_0 = {
-                    "cid": "67035626283424877302284797664058337657416-0",
-                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-                    "amtin": 10,
-                    "_amtin_wei": 10000000000000000000,
-                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-                    "amtout": 1,
-                    "_amtout_wei": 100000000,
-                    }
-#### ETH ####
-raw_tx_1 = {
-                    "cid": "9187623906865338513511114400657741709505-0",
-                    "tknin": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-                    "amtin": 5,
-                    "_amtin_wei": 5000000000000000000,
-                    "tknout": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-                    "amtout": 0.5,
-                    "_amtout_wei": 50000000,
-                    }
-
-#### NEITHER ####
-raw_tx_2 = {
-                    "cid": "2381976568446569244243622252022377480572-0",
-                    "tknin": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
-                    "amtin": 10,
-                    "_amtin_wei": 10000000000000000000,
-                    "tknout": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                    "amtout": 100,
-                    "_amtout_wei": 100000000,
-                    }
-raw_tx_3 = {
-                    "cid": "2381976568446569244243622252022377480676-0",
-                    "tknin": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
-                    "amtin": 5,
-                    "_amtin_wei": 5000000000000000000,
-                    "tknout": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                    "amtout": 50,
-                    "_amtout_wei": 50000000,
-                    }
-
-#### MIX ####
-raw_tx_list_0 = [raw_tx_0, raw_tx_1]
-
-#### WETH ONLY ####
-raw_tx_list_1 = [raw_tx_0, raw_tx_0]
-
-#### ETH ONLY ####
-raw_tx_list_2 = [raw_tx_1, raw_tx_1]
-
-
-#### NEITHER ####
-raw_tx_list_3 = [raw_tx_2, raw_tx_3]
-
-
-raw_tx_str_0 = str(raw_tx_list_0)
-raw_tx_str_1 = str(raw_tx_list_1)
-raw_tx_str_2 = str(raw_tx_list_2)
-
-raw_tx_str_3 = str(raw_tx_list_3)
-
-#### MIX ####
 trade_instruction_0 = TradeInstruction(
-    cid='67035626283424877302284797664058337657416-0',
-    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    cid='CID1',
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
     amtin=15,
-    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     amtout=1.5,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  18,
-    tknout_dec_override = 8,
-    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_0,
+    db=db,
+    tknin_dec_override=18,
+    tknout_dec_override=8,
+    tknin_addr_override=WETH_ADDRESS,
+    tknout_addr_override=WBTC_ADDRESS,
+    exchange_override='carbon_v1',
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': 'CID2-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+        ]
+    ),
 )
 
-#### WETH ONLY ####
 trade_instruction_1 = TradeInstruction(
-    cid='67035626283424877302284797664058337657416-0',
-    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    cid='CID1',
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
     amtin=20,
-    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     amtout=2,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  18,
-    tknout_dec_override = 8,
-    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_1,
+    db=db,
+    tknin_dec_override=18,
+    tknout_dec_override=8,
+    tknin_addr_override=WETH_ADDRESS,
+    tknout_addr_override=WBTC_ADDRESS,
+    exchange_override='carbon_v1',
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+        ]
+    ),
 )
 
-#### ETH ONLY ####
 trade_instruction_2 = TradeInstruction(
-    cid='67035626283424877302284797664058337657416-0',
-    tknin='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    cid='CID1',
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
     amtin=10,
-    tknout='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
     amtout=1,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  18,
-    tknout_dec_override = 8,
-    tknin_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    tknout_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_2,
+    db=db,
+    tknin_dec_override=18,
+    tknout_dec_override=8,
+    tknin_addr_override=WETH_ADDRESS,
+    tknout_addr_override=WBTC_ADDRESS,
+    exchange_override='carbon_v1',
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID2-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+            {
+                'cid': 'CID2-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            }
+        ]
+    ),
 )
 
-#### Pancake V2 WBTC > WETH ####
 trade_instruction_3 = TradeInstruction(
-    cid='0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974',
-    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    cid='CID5',
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
     amtin=2,
-    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtout=20,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  8,
-    tknout_dec_override = 18,
-    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    exchange_override = 'pancakeswap_v2',
+    db=db,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override='pancakeswap_v2',
 )
 
-#### Pancake V2 WBTC > WETH ####
 trade_instruction_4 = TradeInstruction(
-    cid='0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974',
-    tknin='0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    cid='CID5',
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
     amtin=1,
-    tknout='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     amtout=10,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  8,
-    tknout_dec_override = 18,
-    tknin_addr_override = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    tknout_addr_override = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-    exchange_override = 'pancakeswap_v2',
+    db=db,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override='pancakeswap_v2',
 )
-#### Carbon NEITHER BNT > USDC ####
+
 trade_instruction_5 = TradeInstruction(
-    cid='67035626283424877302284797664058337657416-0',
-    tknin='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
+    cid='CID1-0',
+    tknin=BNT_ADDRESS,
+    tknout=USDC_ADDRESS,
     amtin=15,
-    tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     amtout=150,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  18,
-    tknout_dec_override = 6,
-    tknin_addr_override = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-    tknout_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    exchange_override = 'carbon_v1',
-    raw_txs=raw_tx_str_3,
+    db=db,
+    tknin_dec_override=18,
+    tknout_dec_override=6,
+    tknin_addr_override=BNT_ADDRESS,
+    tknout_addr_override=USDC_ADDRESS,
+    exchange_override='carbon_v1',
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID3-0',
+                'tknin': BNT_ADDRESS,
+                'tknout': USDC_ADDRESS,
+                'amtin': 10,
+                'amtout': 100,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': 'CID4-0',
+                'tknin': BNT_ADDRESS,
+                'tknout': USDC_ADDRESS,
+                'amtin': 5,
+                'amtout': 50,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+        ]
+    ),
 )
 
-#### Bancor V2 USDC > BNT ####
 trade_instruction_6 = TradeInstruction(
-    cid='0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074-0',
-    tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    cid='CID6-0',
+    tknin=USDC_ADDRESS,
+    tknout=BNT_ADDRESS,
     amtin=150,
-    tknout='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
     amtout=15,
     ConfigObj=cfg,
-    db = db,
-    tknin_dec_override =  6,
-    tknout_dec_override = 18,
-    tknin_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    tknout_addr_override = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-    exchange_override = 'bancor_v2',
+    db=db,
+    tknin_dec_override=6,
+    tknout_dec_override=18,
+    tknin_addr_override=USDC_ADDRESS,
+    tknout_addr_override=BNT_ADDRESS,
+    exchange_override='bancor_v2',
 )
-#### MIX ####
-trade_instructions_0 = [trade_instruction_0, trade_instruction_3]
-#### WETH ONLY ####
-trade_instructions_1 = [trade_instruction_1, trade_instruction_3]
-#### ETH ONLY ####
-trade_instructions_2 = [trade_instruction_2, trade_instruction_4]
-#### NEITHER ####
-trade_instructions_3 = [trade_instruction_5, trade_instruction_6]
 
-#### MIX ####
-txroutehandler_ethereum_0 = TxRouteHandler(trade_instructions=trade_instructions_0)
-#### ALL WETH ####
-txroutehandler_ethereum_1 = TxRouteHandler(trade_instructions=trade_instructions_1)
-#### ALL WETH ####
-txroutehandler_ethereum_2 = TxRouteHandler(trade_instructions=trade_instructions_2)
-#### NEITHER ####
-txroutehandler_ethereum_3 = TxRouteHandler(trade_instructions=trade_instructions_3)
+trade_instruction_7 = TradeInstruction(
+    cid='CID1',
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=10,
+    amtout=1,
+    _amtin_wei=10000000000000000000,
+    _amtout_wei=100000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_8 = TradeInstruction(
+    cid='CID2',
+    tknin=ETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=5,
+    amtout=0.5,
+    _amtin_wei=5000000000000000000,
+    _amtout_wei=50000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID2-0',
+                'tknin': ETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_9 = TradeInstruction(
+    cid='CID5',
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
+    amtin=2,
+    amtout=20,
+    _amtin_wei=200000000,
+    _amtout_wei=20000000000000000000,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override='pancakeswap_v2',
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps([]),
+)
+
+trade_instruction_10 = TradeInstruction(
+    cid='CID1',
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=20,
+    amtout=2,
+    _amtin_wei=20000000000000000000,
+    _amtout_wei=200000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': 'CID1-0',
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_11 = TradeInstruction(
+    cid='CID5',
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
+    amtin=2,
+    amtout=20,
+    _amtin_wei=200000000,
+    _amtout_wei=20000000000000000000,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override='pancakeswap_v2',
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps([]),
+)
+
+trade_instruction_12 = TradeInstruction(
+    cid='CID2',
+    tknin=ETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=10,
+    amtout=1.0,
+    _amtin_wei=10000000000000000000,
+    _amtout_wei=100000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID2-0',
+                'tknin': ETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+            {
+                'cid': 'CID2-0',
+                'tknin': ETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_13 = TradeInstruction(
+    cid='CID5',
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
+    amtin=1,
+    amtout=10,
+    _amtin_wei=100000000,
+    _amtout_wei=10000000000000000000,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override='pancakeswap_v2',
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps([]),
+)
+
+trade_instruction_14 = TradeInstruction(
+    cid='CID3',
+    tknin=BNT_ADDRESS,
+    tknout=USDC_ADDRESS,
+    amtin=15,
+    amtout=150,
+    _amtin_wei=15000000000000000000,
+    _amtout_wei=150000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': 'CID3-0',
+                'tknin': BNT_ADDRESS,
+                'tknout': USDC_ADDRESS,
+                'amtin': 10,
+                'amtout': 100,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': 'CID4-0',
+                'tknin': BNT_ADDRESS,
+                'tknout': USDC_ADDRESS,
+                'amtin': 5,
+                'amtout': 50,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_15 = TradeInstruction(
+    cid='CID6',
+    tknin=USDC_ADDRESS,
+    tknout=BNT_ADDRESS,
+    amtin=150,
+    amtout=15,
+    _amtin_wei=150000000,
+    _amtout_wei=15000000000000000000,
+    tknin_dec_override=6,
+    tknout_dec_override=18,
+    tknin_addr_override=USDC_ADDRESS,
+    tknout_addr_override=BNT_ADDRESS,
+    exchange_override='bancor_v2',
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps([]),
+)
+
+input_list_0 = [trade_instruction_0, trade_instruction_3]
+input_list_1 = [trade_instruction_1, trade_instruction_3]
+input_list_2 = [trade_instruction_2, trade_instruction_4]
+input_list_3 = [trade_instruction_5, trade_instruction_6]
+
+expected_output_list_0 = [trade_instruction_7, trade_instruction_8, trade_instruction_9]
+expected_output_list_1 = [trade_instruction_10, trade_instruction_11]
+expected_output_list_2 = [trade_instruction_12, trade_instruction_13]
+expected_output_list_3 = [trade_instruction_14, trade_instruction_15]
+
+def _test_split_carbon_trades(cfg, input_list, expected_output_list):
+    actual_output_list = split_carbon_trades(cfg, input_list)
+    for actual_output, expected_output in zip(actual_output_list, expected_output_list):
+        assert actual_output.ConfigObj            == expected_output.ConfigObj           
+        assert actual_output.cid                  == expected_output.cid                 
+        assert actual_output.tknin                == expected_output.tknin               
+        assert actual_output.amtin                == expected_output.amtin               
+        assert actual_output.tknout               == expected_output.tknout              
+        assert actual_output.amtout               == expected_output.amtout              
+        assert actual_output.pair_sorting         == expected_output.pair_sorting        
+        assert actual_output.raw_txs              == expected_output.raw_txs             
+        assert actual_output.custom_data          == expected_output.custom_data         
+        assert actual_output.db                   == expected_output.db                  
+        assert actual_output.tknin_dec_override   == expected_output.tknin_dec_override  
+        assert actual_output.tknout_dec_override  == expected_output.tknout_dec_override 
+        assert actual_output.tknin_addr_override  == expected_output.tknin_addr_override 
+        assert actual_output.tknout_addr_override == expected_output.tknout_addr_override
+        assert actual_output.exchange_override    == expected_output.exchange_override   
+        assert actual_output._amtin_wei           == expected_output._amtin_wei          
+        assert actual_output._amtout_wei          == expected_output._amtout_wei         
+        assert actual_output.tknin_is_native      == expected_output.tknin_is_native     
+        assert actual_output.tknout_is_native     == expected_output.tknout_is_native    
+        assert actual_output.tknin_is_wrapped     == expected_output.tknin_is_wrapped    
+        assert actual_output.tknout_is_wrapped    == expected_output.tknout_is_wrapped   
 
 def test_split_carbon_trades():
-    split_trade_instructions_0_splitter = split_carbon_trades(cfg, trade_instructions_0)
-    split_trade_instructions_1_splitter = split_carbon_trades(cfg, trade_instructions_1)
-    split_trade_instructions_2_splitter = split_carbon_trades(cfg, trade_instructions_2)
-    split_trade_instructions_3_splitter = split_carbon_trades(cfg, trade_instructions_3)
-
-    assert len(split_trade_instructions_0_splitter) == len(trade_instructions_0) + 1
-    assert len(split_trade_instructions_1_splitter) == len(trade_instructions_1)
-    assert len(split_trade_instructions_2_splitter) == len(trade_instructions_2)
-    assert len(split_trade_instructions_3_splitter) == len(trade_instructions_3)
-
-    assert split_trade_instructions_0_splitter[0].cid == "9187623906865338513511114400657741709505"
-    assert split_trade_instructions_0_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-    assert split_trade_instructions_0_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_0_splitter[0].amtin == 5
-    assert split_trade_instructions_0_splitter[0].amtout == 0.5
-    assert split_trade_instructions_0_splitter[0]._amtin_wei == 5000000000000000000
-    assert split_trade_instructions_0_splitter[0]._amtout_wei == 50000000
-    assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
-
-    assert split_trade_instructions_0_splitter[1].cid == "67035626283424877302284797664058337657416"
-    assert split_trade_instructions_0_splitter[1].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    assert split_trade_instructions_0_splitter[1].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_0_splitter[1].amtin == 10
-    assert split_trade_instructions_0_splitter[1].amtout == 1
-    assert split_trade_instructions_0_splitter[1]._amtin_wei == 10000000000000000000
-    assert split_trade_instructions_0_splitter[1]._amtout_wei == 100000000
-    assert len(json.loads(split_trade_instructions_0_splitter[0].raw_txs.replace("'", '"'))) == 1
-
-    assert split_trade_instructions_0_splitter[2].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-    assert split_trade_instructions_0_splitter[2].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_0_splitter[2].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    assert split_trade_instructions_0_splitter[2].amtin == 2
-    assert split_trade_instructions_0_splitter[2].amtout == 20
-    assert split_trade_instructions_0_splitter[2]._amtin_wei == 200000000
-    assert split_trade_instructions_0_splitter[2]._amtout_wei == 20000000000000000000
-    assert len(json.loads(split_trade_instructions_0_splitter[2].raw_txs.replace("'", '"'))) == 0
-
-    assert split_trade_instructions_1_splitter[0].cid == "67035626283424877302284797664058337657416"
-    assert split_trade_instructions_1_splitter[0].tknin == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    assert split_trade_instructions_1_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_1_splitter[0].amtin == 20
-    assert split_trade_instructions_1_splitter[0].amtout == 2
-    assert split_trade_instructions_1_splitter[0]._amtin_wei == 20000000000000000000
-    assert split_trade_instructions_1_splitter[0]._amtout_wei == 200000000
-    assert len(json.loads(split_trade_instructions_1_splitter[0].raw_txs.replace("'", '"'))) == 2
-
-    assert split_trade_instructions_1_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-    assert split_trade_instructions_1_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_1_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    assert split_trade_instructions_1_splitter[1].amtin == 2
-    assert split_trade_instructions_1_splitter[1].amtout == 20
-    assert split_trade_instructions_1_splitter[1]._amtin_wei == 200000000
-    assert split_trade_instructions_1_splitter[1]._amtout_wei == 20000000000000000000
-    assert len(json.loads(split_trade_instructions_1_splitter[1].raw_txs.replace("'", '"'))) == 0
-
-    assert split_trade_instructions_2_splitter[0].cid == "9187623906865338513511114400657741709505"
-    assert split_trade_instructions_2_splitter[0].tknin == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-    assert split_trade_instructions_2_splitter[0].tknout == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_2_splitter[0].amtin == 10
-    assert split_trade_instructions_2_splitter[0].amtout == 1.0
-    assert split_trade_instructions_2_splitter[0]._amtin_wei == 10000000000000000000
-    assert split_trade_instructions_2_splitter[0]._amtout_wei == 100000000
-    assert len(json.loads(split_trade_instructions_2_splitter[0].raw_txs.replace("'", '"'))) == 2
-
-    assert split_trade_instructions_2_splitter[1].cid == "0x1c15cb883c57ebba91d3e698aef9311ccd5e45ad3b8005e548d02290ed1ad974"
-    assert split_trade_instructions_2_splitter[1].tknin == "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-    assert split_trade_instructions_2_splitter[1].tknout == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-    assert split_trade_instructions_2_splitter[1].amtin == 1
-    assert split_trade_instructions_2_splitter[1].amtout == 10
-    assert split_trade_instructions_2_splitter[1]._amtin_wei == 100000000
-    assert split_trade_instructions_2_splitter[1]._amtout_wei == 10000000000000000000
-    assert len(json.loads(split_trade_instructions_2_splitter[1].raw_txs.replace("'", '"'))) == 0
-
-    assert split_trade_instructions_3_splitter[0].cid == "2381976568446569244243622252022377480572"
-    assert split_trade_instructions_3_splitter[0].tknin == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-    assert split_trade_instructions_3_splitter[0].tknout == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-    assert split_trade_instructions_3_splitter[0].amtin == 15
-    assert split_trade_instructions_3_splitter[0].amtout == 150
-    assert split_trade_instructions_3_splitter[0]._amtin_wei == 15000000000000000000
-    assert split_trade_instructions_3_splitter[0]._amtout_wei == 150000000
-    assert len(json.loads(split_trade_instructions_3_splitter[0].raw_txs.replace("'", '"'))) == 2
-
-    assert split_trade_instructions_3_splitter[1].cid == "0xa680dccded6454dcad79d49c3a7f246fdb551bf782fcd020ca73bef2c5e0f074"
-    assert split_trade_instructions_3_splitter[1].tknin == "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-    assert split_trade_instructions_3_splitter[1].tknout == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-    assert split_trade_instructions_3_splitter[1].amtin == 150
-    assert split_trade_instructions_3_splitter[1].amtout == 15
-    assert split_trade_instructions_3_splitter[1]._amtin_wei == 150000000
-    assert split_trade_instructions_3_splitter[1]._amtout_wei == 15000000000000000000
-    assert len(json.loads(split_trade_instructions_3_splitter[1].raw_txs.replace("'", '"'))) == 0
+    _test_split_carbon_trades(cfg, input_list_0, expected_output_list_0)
+    _test_split_carbon_trades(cfg, input_list_1, expected_output_list_1)
+    _test_split_carbon_trades(cfg, input_list_2, expected_output_list_2)
+    _test_split_carbon_trades(cfg, input_list_3, expected_output_list_3)
 
 test_split_carbon_trades()
