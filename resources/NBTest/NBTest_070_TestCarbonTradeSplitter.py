@@ -541,5 +541,3 @@ def test_split_carbon_trades():
     _test_split_carbon_trades(cfg, input_list_1, expected_output_list_1)
     _test_split_carbon_trades(cfg, input_list_2, expected_output_list_2)
     _test_split_carbon_trades(cfg, input_list_3, expected_output_list_3)
-
-test_split_carbon_trades()
