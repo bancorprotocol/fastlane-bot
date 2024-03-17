@@ -502,50 +502,26 @@ trade_instruction_14 = TradeInstruction(
 
 test_cases = [
     {
-        'input_list': [trade_instruction_0, trade_instruction_3],
-        'expected_output_list': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
+        'input': [trade_instruction_0, trade_instruction_3],
+        'expected_output': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
     },
     {
-        'input_list': [trade_instruction_1, trade_instruction_3],
-        'expected_output_list': [trade_instruction_10, trade_instruction_9]
+        'input': [trade_instruction_1, trade_instruction_3],
+        'expected_output': [trade_instruction_10, trade_instruction_9]
     },
     {
-        'input_list': [trade_instruction_2, trade_instruction_4],
-        'expected_output_list': [trade_instruction_11, trade_instruction_12]
+        'input': [trade_instruction_2, trade_instruction_4],
+        'expected_output': [trade_instruction_11, trade_instruction_12]
     },
     {
-        'input_list': [trade_instruction_5, trade_instruction_6],
-        'expected_output_list': [trade_instruction_13, trade_instruction_14]
+        'input': [trade_instruction_5, trade_instruction_6],
+        'expected_output': [trade_instruction_13, trade_instruction_14]
     },
 ]
 
 def test_split_carbon_trades():
     for test_case in test_cases:
-        input_list = test_case['input_list']
-        expected_output_list = test_case['expected_output_list']
-        actual_output_list = split_carbon_trades(cfg, input_list)
-        assert len(actual_output_list) == len(expected_output_list)
-        for actual_output, expected_output in zip(actual_output_list, expected_output_list):
-            assert actual_output.ConfigObj            == expected_output.ConfigObj           
-            assert actual_output.cid                  == expected_output.cid                 
-            assert actual_output.tknin                == expected_output.tknin               
-            assert actual_output.amtin                == expected_output.amtin               
-            assert actual_output.tknout               == expected_output.tknout              
-            assert actual_output.amtout               == expected_output.amtout              
-            assert actual_output.pair_sorting         == expected_output.pair_sorting        
-            assert actual_output.raw_txs              == expected_output.raw_txs             
-            assert actual_output.custom_data          == expected_output.custom_data         
-            assert actual_output.db                   == expected_output.db                  
-            assert actual_output.tknin_dec_override   == expected_output.tknin_dec_override  
-            assert actual_output.tknout_dec_override  == expected_output.tknout_dec_override 
-            assert actual_output.tknin_addr_override  == expected_output.tknin_addr_override 
-            assert actual_output.tknout_addr_override == expected_output.tknout_addr_override
-            assert actual_output.exchange_override    == expected_output.exchange_override   
-            assert actual_output._amtin_wei           == expected_output._amtin_wei          
-            assert actual_output._amtout_wei          == expected_output._amtout_wei         
-            assert actual_output.tknin_is_native      == expected_output.tknin_is_native     
-            assert actual_output.tknout_is_native     == expected_output.tknout_is_native    
-            assert actual_output.tknin_is_wrapped     == expected_output.tknin_is_wrapped    
-            assert actual_output.tknout_is_wrapped    == expected_output.tknout_is_wrapped   
-
-test_split_carbon_trades()
+        input = test_case['input']
+        expected_output = test_case['expected_output']
+        actual_output = split_carbon_trades(cfg, input)
+        assert actual_output == expected_output

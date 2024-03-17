@@ -421,5 +421,3 @@ def test_add_wrap_or_unwrap_trades_to_route():
         expected_output_routes = test_case['expected_output_routes']
         actual_output_routes = add_wrap_or_unwrap_trades_to_route(cfg, input_flashloans, input_routes, input_trade_instructions)
         assert actual_output_routes == expected_output_routes
-
-test_add_wrap_or_unwrap_trades_to_route()
