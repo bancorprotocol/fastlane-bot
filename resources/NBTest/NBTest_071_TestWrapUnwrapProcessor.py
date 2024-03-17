@@ -350,75 +350,76 @@ trade_instruction_8 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
-input_object_0 = {'flashloans': [flashloan_0], 'routes': [route_0, route_1, route_2], 'trade_instructions': [trade_instruction_0, trade_instruction_1, trade_instruction_2]}
-input_object_1 = {'flashloans': [flashloan_1], 'routes': [route_3, route_4], 'trade_instructions': [trade_instruction_3, trade_instruction_4]}
-input_object_2 = {'flashloans': [flashloan_2], 'routes': [route_5, route_6], 'trade_instructions': [trade_instruction_5, trade_instruction_6]}
-input_object_3 = {'flashloans': [flashloan_3], 'routes': [route_7, route_8], 'trade_instructions': [trade_instruction_7, trade_instruction_8]}
+route_9 = {
+    'platformId': WRAP_UNWRAP_VAL,
+    'sourceToken': ETH_ADDRESS,
+    'targetToken': WETH_ADDRESS,
+    'sourceAmount': 10000000000000000000,
+    'minTargetAmount': 10000000000000000000,
+    'deadline': route_0['deadline'],
+    'customAddress': NONE_ADDRESS,
+    'customInt': 0,
+    'customData': '0x',
+}
 
-expected_output_list_0 = [
+route_10 = {
+    'platformId': WRAP_UNWRAP_VAL,
+    'sourceToken': WETH_ADDRESS,
+    'targetToken': ETH_ADDRESS,
+    'sourceAmount': 0,
+    'minTargetAmount': 0,
+    'deadline': route_0['deadline'],
+    'customAddress': NONE_ADDRESS,
+    'customInt': 0,
+    'customData': '0x',
+}
+
+route_11 = {
+    'platformId': WRAP_UNWRAP_VAL,
+    'sourceToken': WETH_ADDRESS,
+    'targetToken': ETH_ADDRESS,
+    'sourceAmount': 0,
+    'minTargetAmount': 0,
+    'deadline': route_5['deadline'],
+    'customAddress': NONE_ADDRESS,
+    'customInt': 0,
+    'customData': '0x',
+}
+
+test_cases = [
     {
-        'platformId': WRAP_UNWRAP_VAL,
-        'sourceToken': ETH_ADDRESS,
-        'targetToken': WETH_ADDRESS,
-        'sourceAmount': 10000000000000000000,
-        'minTargetAmount': 10000000000000000000,
-        'deadline': route_0['deadline'],
-        'customAddress': NONE_ADDRESS,
-        'customInt': 0,
-        'customData': '0x',
+        'input_flashloans': [flashloan_0],
+        'input_routes': [route_0, route_1, route_2],
+        'input_trade_instructions': [trade_instruction_0, trade_instruction_1, trade_instruction_2],
+        'expected_output_routes': [route_9, route_0, route_1, route_2, route_10]
     },
-    route_0,
-    route_1,
-    route_2,
     {
-        'platformId': WRAP_UNWRAP_VAL,
-        'sourceToken': WETH_ADDRESS,
-        'targetToken': ETH_ADDRESS,
-        'sourceAmount': 0,
-        'minTargetAmount': 0,
-        'deadline': route_0['deadline'],
-        'customAddress': NONE_ADDRESS,
-        'customInt': 0,
-        'customData': '0x',
+        'input_flashloans': [flashloan_1],
+        'input_routes': [route_3, route_4],
+        'input_trade_instructions': [trade_instruction_3, trade_instruction_4],
+        'expected_output_routes': [route_3, route_4]
     },
-]
-
-expected_output_list_1 = [
-    route_3,
-    route_4,
-]
-
-expected_output_list_2 = [
-    route_5,
-    route_6,
     {
-        'platformId': WRAP_UNWRAP_VAL,
-        'sourceToken': WETH_ADDRESS,
-        'targetToken': ETH_ADDRESS,
-        'sourceAmount': 0,
-        'minTargetAmount': 0,
-        'deadline': route_5['deadline'],
-        'customAddress': NONE_ADDRESS,
-        'customInt': 0,
-        'customData': '0x',
+        'input_flashloans': [flashloan_2],
+        'input_routes': [route_5, route_6],
+        'input_trade_instructions': [trade_instruction_5, trade_instruction_6],
+        'expected_output_routes': [route_5, route_6, route_11]
+    },
+    {
+        'input_flashloans': [flashloan_3],
+        'input_routes': [route_7, route_8],
+        'input_trade_instructions': [trade_instruction_7, trade_instruction_8],
+        'expected_output_routes': [route_7, route_8]
     },
 ]
-
-expected_output_list_3 = [
-    route_7,
-    route_8,
-]
-
-def _test_add_wrap_or_unwrap_trades_to_route(cfg, input_object, expected_output_list):
-    actual_output_list = add_wrap_or_unwrap_trades_to_route(cfg, input_object['flashloans'], input_object['routes'], input_object['trade_instructions'])
-    assert len(actual_output_list) == len(expected_output_list)
-    for actual_output, expected_output in zip(actual_output_list, expected_output_list):
-        assert actual_output == expected_output
 
 def test_add_wrap_or_unwrap_trades_to_route():
-    _test_add_wrap_or_unwrap_trades_to_route(cfg, input_object_0, expected_output_list_0)
-    _test_add_wrap_or_unwrap_trades_to_route(cfg, input_object_1, expected_output_list_1)
-    _test_add_wrap_or_unwrap_trades_to_route(cfg, input_object_2, expected_output_list_2)
-    _test_add_wrap_or_unwrap_trades_to_route(cfg, input_object_3, expected_output_list_3)
+    for test_case in test_cases:
+        input_flashloans = test_case['input_flashloans']
+        input_routes = test_case['input_routes']
+        input_trade_instructions = test_case['input_trade_instructions']
+        expected_output_routes = test_case['expected_output_routes']
+        actual_output_routes = add_wrap_or_unwrap_trades_to_route(cfg, input_flashloans, input_routes, input_trade_instructions)
+        assert actual_output_routes == expected_output_routes
 
 test_add_wrap_or_unwrap_trades_to_route()
