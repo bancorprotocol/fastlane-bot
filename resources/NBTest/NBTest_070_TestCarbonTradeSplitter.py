@@ -107,13 +107,13 @@ trade_instruction_0 = TradeInstruction(
     tknout=WBTC_ADDRESS,
     amtin=15,
     amtout=1.5,
-    ConfigObj=cfg,
-    db=db,
     tknin_dec_override=18,
     tknout_dec_override=8,
     tknin_addr_override=WETH_ADDRESS,
     tknout_addr_override=WBTC_ADDRESS,
     exchange_override=CARBON_V1_NAME,
+    ConfigObj=cfg,
+    db=db,
     raw_txs=dumps(
         [
             {
@@ -144,13 +144,13 @@ trade_instruction_1 = TradeInstruction(
     tknout=WBTC_ADDRESS,
     amtin=20,
     amtout=2,
-    ConfigObj=cfg,
-    db=db,
     tknin_dec_override=18,
     tknout_dec_override=8,
     tknin_addr_override=WETH_ADDRESS,
     tknout_addr_override=WBTC_ADDRESS,
     exchange_override=CARBON_V1_NAME,
+    ConfigObj=cfg,
+    db=db,
     raw_txs=dumps(
         [
             {
@@ -181,13 +181,13 @@ trade_instruction_2 = TradeInstruction(
     tknout=WBTC_ADDRESS,
     amtin=10,
     amtout=1,
-    ConfigObj=cfg,
-    db=db,
     tknin_dec_override=18,
     tknout_dec_override=8,
     tknin_addr_override=WETH_ADDRESS,
     tknout_addr_override=WBTC_ADDRESS,
     exchange_override=CARBON_V1_NAME,
+    ConfigObj=cfg,
+    db=db,
     raw_txs=dumps(
         [
             {
@@ -248,13 +248,13 @@ trade_instruction_5 = TradeInstruction(
     tknout=USDC_ADDRESS,
     amtin=15,
     amtout=150,
-    ConfigObj=cfg,
-    db=db,
     tknin_dec_override=18,
     tknout_dec_override=6,
     tknin_addr_override=BNT_ADDRESS,
     tknout_addr_override=USDC_ADDRESS,
     exchange_override=CARBON_V1_NAME,
+    ConfigObj=cfg,
+    db=db,
     raw_txs=dumps(
         [
             {

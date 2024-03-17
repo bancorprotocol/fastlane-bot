@@ -67,8 +67,8 @@ def add_wrap_or_unwrap_trades_to_route(
         new_routes.append(
             _get_wrap_or_unwrap_native_gas_tkn_struct(
                 cfg=cfg,
-                sourceToken=cfg.WRAPPED_GAS_TOKEN_ADDRESS if should_wrap else cfg.NATIVE_GAS_TOKEN_ADDRESS,
-                targetToken=cfg.NATIVE_GAS_TOKEN_ADDRESS if should_wrap else cfg.WRAPPED_GAS_TOKEN_ADDRESS,
+                sourceToken=cfg.NATIVE_GAS_TOKEN_ADDRESS if should_wrap else cfg.WRAPPED_GAS_TOKEN_ADDRESS,
+                targetToken=cfg.WRAPPED_GAS_TOKEN_ADDRESS if should_wrap else cfg.NATIVE_GAS_TOKEN_ADDRESS,
                 amount=0,
                 deadline=deadline
             )
@@ -79,7 +79,7 @@ def add_wrap_or_unwrap_trades_to_route(
 def _get_wrap_or_unwrap_native_gas_tkn_struct(cfg, sourceToken, targetToken, amount: int, deadline: int):
     return asdict(
         RouteStruct(
-            platformId=cfg.EXCHANGE_IDS[cfg.PLATFORM_NAME_WRAP_UNWRAP],
+            platformId=cfg.EXCHANGE_IDS[cfg.WRAP_UNWRAP_NAME],
             sourceToken=sourceToken,
             targetToken=targetToken,
             sourceAmount=amount,
