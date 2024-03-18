@@ -800,7 +800,7 @@ class TxHelpers:
 
     def _get_layer_one_gas_fee(self, rawTransaction) -> Decimal:
         """
-        Returns the expected layer one gas fee for a Mantle (layer two) transaction
+        Returns the expected layer one gas fee for a Mantle, Base, and Optimism transaction
         :param rawTransaction: the raw transaction
 
         returns: Decimal
