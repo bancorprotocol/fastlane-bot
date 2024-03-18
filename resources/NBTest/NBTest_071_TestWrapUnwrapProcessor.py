@@ -395,28 +395,28 @@ def cfg_fixture():
 
 @fixture(params=[
     {
-        'input_flashloans': [flashloan_0],
-        'input_routes': [route_0, route_1, route_2],
-        'input_trade_instructions': [trade_instruction_0, trade_instruction_1, trade_instruction_2],
-        'expected_output_routes': [route_9, route_0, route_1, route_2, route_10]
+        'flashloans': [flashloan_0],
+        'routes': [route_0, route_1, route_2],
+        'trade_instructions': [trade_instruction_0, trade_instruction_1, trade_instruction_2],
+        'expected_routes': [route_9, route_0, route_1, route_2, route_10]
     },
     {
-        'input_flashloans': [flashloan_1],
-        'input_routes': [route_3, route_4],
-        'input_trade_instructions': [trade_instruction_3, trade_instruction_4],
-        'expected_output_routes': [route_3, route_4]
+        'flashloans': [flashloan_1],
+        'routes': [route_3, route_4],
+        'trade_instructions': [trade_instruction_3, trade_instruction_4],
+        'expected_routes': [route_3, route_4]
     },
     {
-        'input_flashloans': [flashloan_2],
-        'input_routes': [route_5, route_6],
-        'input_trade_instructions': [trade_instruction_5, trade_instruction_6],
-        'expected_output_routes': [route_5, route_6, route_11]
+        'flashloans': [flashloan_2],
+        'routes': [route_5, route_6],
+        'trade_instructions': [trade_instruction_5, trade_instruction_6],
+        'expected_routes': [route_5, route_6, route_11]
     },
     {
-        'input_flashloans': [flashloan_3],
-        'input_routes': [route_7, route_8],
-        'input_trade_instructions': [trade_instruction_7, trade_instruction_8],
-        'expected_output_routes': [route_7, route_8]
+        'flashloans': [flashloan_3],
+        'routes': [route_7, route_8],
+        'trade_instructions': [trade_instruction_7, trade_instruction_8],
+        'expected_routes': [route_7, route_8]
     },
 ])
 
@@ -424,9 +424,9 @@ def test_case(request):
     return request.param
 
 def test_add_wrap_or_unwrap_trades_to_route(test_case, cfg_fixture):
-    input_flashloans = test_case['input_flashloans']
-    input_routes = test_case['input_routes']
-    input_trade_instructions = test_case['input_trade_instructions']
-    expected_output_routes = test_case['expected_output_routes']
-    actual_output_routes = add_wrap_or_unwrap_trades_to_route(cfg_fixture, input_flashloans, input_routes, input_trade_instructions)
-    assert actual_output_routes == expected_output_routes
+    flashloans = test_case['flashloans']
+    routes = test_case['routes']
+    trade_instructions = test_case['trade_instructions']
+    expected_routes = test_case['expected_routes']
+    actual_routes = add_wrap_or_unwrap_trades_to_route(cfg_fixture, flashloans, routes, trade_instructions)
+    assert actual_routes == expected_routes

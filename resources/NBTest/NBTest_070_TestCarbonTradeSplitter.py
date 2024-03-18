@@ -509,20 +509,20 @@ def cfg_fixture():
 
 @fixture(params=[
     {
-        'input_trade_instructions': [trade_instruction_0, trade_instruction_3],
-        'expected_output_trade_instructions': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
+        'trade_instructions': [trade_instruction_0, trade_instruction_3],
+        'expected_trade_instructions': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
     },
     {
-        'input_trade_instructions': [trade_instruction_1, trade_instruction_3],
-        'expected_output_trade_instructions': [trade_instruction_10, trade_instruction_9]
+        'trade_instructions': [trade_instruction_1, trade_instruction_3],
+        'expected_trade_instructions': [trade_instruction_10, trade_instruction_9]
     },
     {
-        'input_trade_instructions': [trade_instruction_2, trade_instruction_4],
-        'expected_output_trade_instructions': [trade_instruction_11, trade_instruction_12]
+        'trade_instructions': [trade_instruction_2, trade_instruction_4],
+        'expected_trade_instructions': [trade_instruction_11, trade_instruction_12]
     },
     {
-        'input_trade_instructions': [trade_instruction_5, trade_instruction_6],
-        'expected_output_trade_instructions': [trade_instruction_13, trade_instruction_14]
+        'trade_instructions': [trade_instruction_5, trade_instruction_6],
+        'expected_trade_instructions': [trade_instruction_13, trade_instruction_14]
     },
 ])
 
@@ -530,7 +530,7 @@ def test_case(request):
     return request.param
 
 def test_split_carbon_trades(test_case, cfg_fixture):
-    input_trade_instructions = test_case['input_trade_instructions']
-    expected_output_trade_instructions = test_case['expected_output_trade_instructions']
-    actual_output_trade_instructions = split_carbon_trades(cfg_fixture, input_trade_instructions)
-    assert actual_output_trade_instructions == expected_output_trade_instructions
+    trade_instructions = test_case['trade_instructions']
+    expected_trade_instructions = test_case['expected_trade_instructions']
+    actual_trade_instructions = split_carbon_trades(cfg_fixture, trade_instructions)
+    assert actual_trade_instructions == expected_trade_instructions
