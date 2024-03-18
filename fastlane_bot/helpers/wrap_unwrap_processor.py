@@ -1,9 +1,10 @@
 from dataclasses import asdict
+from fastlane_bot.config import Config
 from fastlane_bot.helpers import TradeInstruction, RouteStruct
 from fastlane_bot.events.exceptions import FlashloanTokenException
 
 def add_wrap_or_unwrap_trades_to_route(
-    cfg,
+    cfg: Config,
     flashloans: list[dict],
     routes: list[dict],
     trade_instructions: list[TradeInstruction]
@@ -12,6 +13,7 @@ def add_wrap_or_unwrap_trades_to_route(
     This method adds wrap and/or unwrap routes.
 
     Args:
+        - `cfg`: the configuration object.
         - `flashloans`: A list of flashloans.
         - `routes`: A list of routes.
         - `trade_instructions`: A list of trade instructions.
