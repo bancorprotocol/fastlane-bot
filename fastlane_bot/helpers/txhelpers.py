@@ -133,8 +133,8 @@ class TxHelper:
     @property
     def deadline(self):
         return (
-            self.ConfigObj.w3.eth.getBlock("latest")["timestamp"]
-            + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
+                self.ConfigObj.w3.eth.getBlock("latest")["timestamp"]
+                + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
     def get_gas_limit_from_usd(self, gas_cost_usd: float) -> int:
@@ -214,17 +214,17 @@ class TxHelpers:
             expected_profit_usd: Decimal,
             expected_profit_eth: Decimal,
             signed_arb_tx
-        ) -> (int, int, int, int):
+    ) -> (int, int, int, int):
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = (
-            Decimal(str(current_gas_price))
-            * Decimal(str(gas_estimate))
-            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
-            / Decimal("10") ** Decimal("18")
+                Decimal(str(current_gas_price))
+                * Decimal(str(gas_estimate))
+                * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
+                / Decimal("10") ** Decimal("18")
         )
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = self._get_layer_one_gas_fee_loop(signed_arb_tx)
+            layer_one_gas_fee = self._get_layer_one_gas_fee(signed_arb_tx)
             gas_cost_eth += layer_one_gas_fee
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
@@ -237,16 +237,16 @@ class TxHelpers:
         return gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd
 
     def validate_and_submit_transaction(
-        self,
-        route_struct: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        expected_profit_gastkn: Decimal,
-        expected_profit_usd: Decimal,
-        verbose: bool = False,
-        safety_override: bool = False,
-        log_object: Dict[str, Any] = None,
-        flashloan_struct: List[Dict[str, int or str]] = None,
+            self,
+            route_struct: List[Dict[str, Any]],
+            src_amt: int,
+            src_address: str,
+            expected_profit_gastkn: Decimal,
+            expected_profit_usd: Decimal,
+            verbose: bool = False,
+            safety_override: bool = False,
+            log_object: Dict[str, Any] = None,
+            flashloan_struct: List[Dict[str, int or str]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
@@ -315,7 +315,7 @@ class TxHelpers:
         }
         if "maxPriorityFeePerGas" in arb_tx:
             transaction_log["base_fee_wei"] = (
-                current_gas_price - arb_tx["maxPriorityFeePerGas"]
+                    current_gas_price - arb_tx["maxPriorityFeePerGas"]
             )
             transaction_log["priority_fee_wei"] = arb_tx["maxPriorityFeePerGas"]
 
@@ -391,11 +391,11 @@ class TxHelpers:
             return access_list
 
     def construct_contract_function(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        flashloan_struct=None,
+            self,
+            routes: List[Dict[str, Any]],
+            src_amt: int,
+            src_address: str,
+            flashloan_struct=None,
     ):
         """
         Builds the transaction using the Arb Contract function. This version can generate transactions using flashloanAndArb and flashloanAndArbV2.
@@ -444,16 +444,16 @@ class TxHelpers:
             return None
 
     def build_transaction_with_gas(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        gas_price: int,
-        max_priority_fee: int,
-        nonce: int,
-        access_list: bool = True,
-        test_fake_gas: bool = False,
-        flashloan_struct: List[Dict[str, int or str]] = None,
+            self,
+            routes: List[Dict[str, Any]],
+            src_amt: int,
+            src_address: str,
+            gas_price: int,
+            max_priority_fee: int,
+            nonce: int,
+            access_list: bool = True,
+            test_fake_gas: bool = False,
+            flashloan_struct: List[Dict[str, int or str]] = None,
     ):
         """
         Builds the transaction to be submitted to the blockchain.
@@ -466,15 +466,15 @@ class TxHelpers:
         """
         value = src_amt if (src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and self.ConfigObj.SELF_FUND) else 0
         transaction = self.build_transaction_generic(
-                self.construct_contract_function,
-                routes,
-                src_amt,
-                src_address,
-                flashloan_struct,
-                gas_price=gas_price,
-                max_priority_fee=max_priority_fee,
-                nonce=nonce,
-                value=value
+            self.construct_contract_function,
+            routes,
+            src_amt,
+            src_address,
+            flashloan_struct,
+            gas_price=gas_price,
+            max_priority_fee=max_priority_fee,
+            nonce=nonce,
+            value=value
         )
         if transaction is None:
             return None
@@ -485,8 +485,8 @@ class TxHelpers:
 
         try:
             estimated_gas = int(
-                    self.web3.eth.estimate_gas(transaction=transaction)
-                    + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                self.web3.eth.estimate_gas(transaction=transaction)
+                + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
             )
         except Exception as e:
             self.ConfigObj.logger.warning(
@@ -508,8 +508,8 @@ class TxHelpers:
                         f"[helpers.txhelpers.build_transaction_with_gas] Transaction after access list: {transaction}"
                     )
                     estimated_gas_after = (
-                        self.web3.eth.estimate_gas(transaction=transaction_after)
-                        + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                            self.web3.eth.estimate_gas(transaction=transaction_after)
+                            + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
                     )
                     self.ConfigObj.logger.debug(
                         f"[helpers.txhelpers.build_transaction_with_gas] gas before access list: {estimated_gas}, after access list: {estimated_gas_after}"
@@ -559,7 +559,7 @@ class TxHelpers:
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
-            
+
         if "tenderly" in self.web3.provider.endpoint_uri:
             print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
             max_gas_price = 3
@@ -574,7 +574,7 @@ class TxHelpers:
                 "nonce": nonce,
             }
         else:
-            tx_details =  {
+            tx_details = {
                 "gasPrice": max_gas_price,
                 "from": self.wallet_address,
                 "nonce": nonce,
@@ -713,7 +713,7 @@ class TxHelpers:
         """
         return self._query_alchemy_api_gas_methods(method="eth_gasPrice")
 
-    def check_if_token_approved(self, token_address: str, owner_address = None, spender_address = None) -> bool:
+    def check_if_token_approved(self, token_address: str, owner_address=None, spender_address=None) -> bool:
         """
         This function checks if a token has already been approved.
         :param token_address: the token to approve
@@ -773,7 +773,8 @@ class TxHelpers:
                 return None
         return transaction
 
-    def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
+    def approve_token_for_arb_contract(self, token_address: str,
+                                       approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
         :param token_address: the token to approve
@@ -783,7 +784,8 @@ class TxHelpers:
             transaction hash
         """
         current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
+        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum",
+                                                                                                      "coinbase_base"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
 
@@ -794,7 +796,7 @@ class TxHelpers:
             gas_price=current_gas_price,
             max_priority_fee=max_priority,
             nonce=self.get_nonce(),
-            )
+        )
         if approve_tx is None:
             self.ConfigObj.logger.info(f"*****Failed to submit approval for token: {token_address}!*****")
             return None
@@ -802,36 +804,16 @@ class TxHelpers:
 
         return self.submit_regular_transaction(self.sign_transaction(approve_tx))
 
-    def _get_layer_one_gas_fee_loop(self, rawTransaction) -> Decimal:
+    def _get_layer_one_gas_fee(self, rawTransaction) -> Decimal:
         """
-        Returns the expected layer one gas fee for a layer 2 Optimism transaction
+        Returns the expected layer one gas fee for a Mantle (layer two) transaction
         :param rawTransaction: the raw transaction
 
         returns: Decimal
             The total fee (in gas token) for the l1 gas fee
         """
 
-        ethereum_base_fee, fixed_overhead, dynamic_overhead = asyncio.get_event_loop().run_until_complete(asyncio.gather(
-            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.basefee(),
-            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeOverhead(),
-            self.ConfigObj.GAS_ORACLE_CONTRACT.caller.l1FeeScalar()
-        ))
-
-        return self._get_layer_one_gas_fee(rawTransaction, ethereum_base_fee, fixed_overhead, dynamic_overhead)
-
-    def _get_layer_one_gas_fee(self, rawTransaction, ethereum_base_fee: int, fixed_overhead: int, dynamic_overhead: int) -> Decimal:
-        """
-        Returns the expected layer one gas fee for a layer 2 Optimism transaction
-        :param rawTransaction: the raw transaction
-        :param ethereum_base_fee: the L1 base fee received from the contract
-        :param fixed_overhead: the fixed overhead received from the contract
-        :param dynamic_overhead: the dynamic fee received from the contract
-        returns: Decimal
-            The total fee (in gas token) for the l1 gas fee
-        """
-        zero_bytes, non_zero_bytes = count_bytes(rawTransaction)
-        tx_data_gas = zero_bytes * 4 + non_zero_bytes * 16
-        tx_total_gas = (tx_data_gas + fixed_overhead) * dynamic_overhead
-        l1_data_fee = tx_total_gas * ethereum_base_fee
-        ## Dividing by 10 ** 24 because dynamic_overhead is returned in PPM format, and to convert this from WEI format to decimal format (10 ** 18).
-        return Decimal(f"{l1_data_fee}e-24")
+        l1_data_fee = asyncio.get_event_loop().run_until_complete(
+            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(rawTransaction)))
+        # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
+        return Decimal(f"{l1_data_fee}e-18")
