@@ -503,11 +503,7 @@ trade_instruction_14 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
-@fixture
-def cfg_fixture():
-    return Config()
-
-@fixture(params=[
+test_cases = [
     {
         'trade_instructions': [trade_instruction_0, trade_instruction_3],
         'expected_trade_instructions': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
@@ -524,7 +520,13 @@ def cfg_fixture():
         'trade_instructions': [trade_instruction_5, trade_instruction_6],
         'expected_trade_instructions': [trade_instruction_13, trade_instruction_14]
     },
-])
+]
+
+@fixture
+def cfg_fixture():
+    return Config()
+
+@fixture(params=test_cases)
 
 def test_case(request):
     return request.param

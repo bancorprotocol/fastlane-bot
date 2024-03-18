@@ -389,11 +389,7 @@ flashloan_1 = {'sourceTokens': [WETH_ADDRESS], 'sourceAmounts': [200000000000000
 flashloan_2 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [10000000000000000000]}
 flashloan_3 = {'sourceTokens': [BNT_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
 
-@fixture
-def cfg_fixture():
-    return Config()
-
-@fixture(params=[
+test_cases = [
     {
         'flashloans': [flashloan_0],
         'routes': [route_0, route_1, route_2],
@@ -418,7 +414,13 @@ def cfg_fixture():
         'trade_instructions': [trade_instruction_7, trade_instruction_8],
         'expected_routes': [route_7, route_8]
     },
-])
+]
+
+@fixture
+def cfg_fixture():
+    return Config()
+
+@fixture(params=test_cases)
 
 def test_case(request):
     return request.param
