@@ -798,16 +798,18 @@ class TxHelpers:
             else:
                 return None
 
-    def _get_layer_one_gas_fee(self, rawTransaction) -> Decimal:
+    def _get_layer_one_gas_fee(self, raw_transaction) -> Decimal:
         """
         Returns the expected layer one gas fee for a Mantle, Base, and Optimism transaction
-        :param rawTransaction: the raw transaction
 
-        returns: Decimal
-            The total fee (in gas token) for the l1 gas fee
+        Args:
+            raw_transaction: the raw transaction
+
+        Returns:
+            Decimal: the expected layer one gas fee
         """
 
         l1_data_fee = asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(rawTransaction)))
+            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
         # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
         return Decimal(f"{l1_data_fee}e-18")
