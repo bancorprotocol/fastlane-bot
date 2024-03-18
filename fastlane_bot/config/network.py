@@ -611,7 +611,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
-    "0x420000000000000000000000000000000000000F"  # source: https://docs.optimism.io/builders/tools/build/oracles#gas-oracle
+    GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"  # source: https://docs.optimism.io/builders/tools/build/oracles#gas-oracle
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"

@@ -213,7 +213,7 @@ class TxHelpers:
             gas_estimate: int,
             expected_profit_usd: Decimal,
             expected_profit_eth: Decimal,
-            signed_arb_tx
+            raw_transaction: Any
         ) -> (int, int, int, int):
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = (
@@ -224,7 +224,7 @@ class TxHelpers:
         )
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = self._get_layer_one_gas_fee(signed_arb_tx)
+            layer_one_gas_fee = self._get_layer_one_gas_fee(raw_transaction)
             gas_cost_eth += layer_one_gas_fee
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
