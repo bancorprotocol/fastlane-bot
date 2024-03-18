@@ -52,7 +52,7 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
-        data["router"] = self.router_address,
+        data["router"] = self.router_address
         for key, value in data.items():
             self.state[key] = value
         return data

@@ -9,10 +9,12 @@
 
 
 import json
+from dataclasses import dataclass
 
 import pytest
 
 from fastlane_bot import Bot
+from fastlane_bot.events.new_utils import get_pool_cid
 from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
     BancorV2Pool, BancorPolPool, SolidlyV2Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -145,7 +147,8 @@ def test_test_carbon_v1_pool_update():
     
     carbon_v1_pool = CarbonV1Pool()
     carbon_v1_pool.update_from_event(setup_data['carbon_v1_event_create_for_update'], {})
-    assert (setup_data['carbon_v1_event_update']['args']['id'] == carbon_v1_pool.state['cid'])
+    strat_id = setup_data['carbon_v1_event_update']['args']['id']
+    assert (strat_id == carbon_v1_pool.state['strategy_id'])
     assert (carbon_v1_pool.state['y_0'] == 0)
     assert (carbon_v1_pool.state['z_0'] == 0)
     assert (carbon_v1_pool.state['A_0'] == 0)
@@ -174,7 +177,8 @@ def test_test_carbon_v1_pool_delete():
     
     carbon_v1_pool = CarbonV1Pool()
     carbon_v1_pool.update_from_event(setup_data['carbon_v1_event_create_for_delete'], {})
-    assert (setup_data['carbon_v1_event_delete']['args']['id'] == carbon_v1_pool.state['cid'])
+    strat_id = setup_data['carbon_v1_event_update']['args']['id']
+    assert (strat_id == carbon_v1_pool.state['strategy_id'])
     assert (carbon_v1_pool.state['y_0'] == setup_data['carbon_v1_event_delete']['args']['order0'][0])
     assert (carbon_v1_pool.state['z_0'] == setup_data['carbon_v1_event_delete']['args']['order0'][1])
     assert (carbon_v1_pool.state['A_0'] == setup_data['carbon_v1_event_delete']['args']['order0'][2])
