@@ -22,6 +22,7 @@ This module tests the splitting of trade instructions
 '''
 
 from json import dumps
+from pytest import fixture
 from dataclasses import dataclass
 from fastlane_bot.helpers import TradeInstruction, add_wrap_or_unwrap_trades_to_route
 
@@ -388,7 +389,11 @@ flashloan_1 = {'sourceTokens': [WETH_ADDRESS], 'sourceAmounts': [200000000000000
 flashloan_2 = {'sourceTokens': [ETH_ADDRESS ], 'sourceAmounts': [10000000000000000000]}
 flashloan_3 = {'sourceTokens': [BNT_ADDRESS ], 'sourceAmounts': [15000000000000000000]}
 
-test_cases = [
+@fixture
+def cfg_fixture():
+    return Config()
+
+@fixture(params=[
     {
         'input_flashloans': [flashloan_0],
         'input_routes': [route_0, route_1, route_2],
@@ -413,13 +418,15 @@ test_cases = [
         'input_trade_instructions': [trade_instruction_7, trade_instruction_8],
         'expected_output_routes': [route_7, route_8]
     },
-]
+])
 
-def test_add_wrap_or_unwrap_trades_to_route():
-    for test_case in test_cases:
-        input_flashloans = test_case['input_flashloans']
-        input_routes = test_case['input_routes']
-        input_trade_instructions = test_case['input_trade_instructions']
-        expected_output_routes = test_case['expected_output_routes']
-        actual_output_routes = add_wrap_or_unwrap_trades_to_route(cfg, input_flashloans, input_routes, input_trade_instructions)
-        assert actual_output_routes == expected_output_routes
+def test_case(request):
+    return request.param
+
+def test_add_wrap_or_unwrap_trades_to_route(test_case, cfg_fixture):
+    input_flashloans = test_case['input_flashloans']
+    input_routes = test_case['input_routes']
+    input_trade_instructions = test_case['input_trade_instructions']
+    expected_output_routes = test_case['expected_output_routes']
+    actual_output_routes = add_wrap_or_unwrap_trades_to_route(cfg_fixture, input_flashloans, input_routes, input_trade_instructions)
+    assert actual_output_routes == expected_output_routes
