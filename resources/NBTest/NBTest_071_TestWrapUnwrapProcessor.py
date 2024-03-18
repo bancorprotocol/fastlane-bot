@@ -100,7 +100,7 @@ cfg = Config()
 db = DB()
 
 trade_instruction_0 = TradeInstruction(
-    cid='CID1-0',
+    cid='CID1',
     tknin=WETH_ADDRESS,
     tknout=WBTC_ADDRESS,
     amtin=10,
@@ -115,7 +115,7 @@ trade_instruction_0 = TradeInstruction(
     raw_txs=dumps(
         [
             {
-                'cid': 'CID1-0',
+                'cid': 'CID1',
                 'tknin': WETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 10,
@@ -128,7 +128,7 @@ trade_instruction_0 = TradeInstruction(
 )
 
 trade_instruction_1 = TradeInstruction(
-    cid='CID1-0',
+    cid='CID1',
     tknin=ETH_ADDRESS,
     tknout=WBTC_ADDRESS,
     amtin=5,
@@ -143,7 +143,7 @@ trade_instruction_1 = TradeInstruction(
     raw_txs=dumps(
         [
             {
-                'cid': 'CID2-0',
+                'cid': 'CID2',
                 'tknin': ETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 5,
@@ -156,7 +156,7 @@ trade_instruction_1 = TradeInstruction(
 )
 
 trade_instruction_2 = TradeInstruction(
-    cid='CID5-0',
+    cid='CID5',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=1.5,
@@ -172,7 +172,7 @@ trade_instruction_2 = TradeInstruction(
 )
 
 trade_instruction_3 = TradeInstruction(
-    cid='CID1-0',
+    cid='CID1',
     tknin=WETH_ADDRESS,
     tknout=WBTC_ADDRESS,
     amtin=20,
@@ -187,7 +187,7 @@ trade_instruction_3 = TradeInstruction(
     raw_txs=dumps(
         [
             {
-                'cid': 'CID1-0',
+                'cid': 'CID1',
                 'tknin': WETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 10,
@@ -196,7 +196,7 @@ trade_instruction_3 = TradeInstruction(
                 '_amtout_wei': 100000000,
             },
             {
-                'cid': 'CID1-0',
+                'cid': 'CID1',
                 'tknin': WETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 10,
@@ -209,7 +209,7 @@ trade_instruction_3 = TradeInstruction(
 )
 
 trade_instruction_4 = TradeInstruction(
-    cid='CID5-0',
+    cid='CID5',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=2,
@@ -225,7 +225,7 @@ trade_instruction_4 = TradeInstruction(
 )
 
 trade_instruction_5 = TradeInstruction(
-    cid='CID1-0',
+    cid='CID1',
     tknin=ETH_ADDRESS,
     tknout=WBTC_ADDRESS,
     amtin=10,
@@ -240,7 +240,7 @@ trade_instruction_5 = TradeInstruction(
     raw_txs=dumps(
         [
             {
-                'cid': 'CID2-0',
+                'cid': 'CID2',
                 'tknin': ETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 5,
@@ -249,7 +249,7 @@ trade_instruction_5 = TradeInstruction(
                 '_amtout_wei': 50000000,
             },
             {
-                'cid': 'CID2-0',
+                'cid': 'CID2',
                 'tknin': ETH_ADDRESS,
                 'tknout': WBTC_ADDRESS,
                 'amtin': 5,
@@ -262,7 +262,7 @@ trade_instruction_5 = TradeInstruction(
 )
 
 trade_instruction_6 = TradeInstruction(
-    cid='CID5-0',
+    cid='CID5',
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
     amtin=1,
@@ -278,7 +278,7 @@ trade_instruction_6 = TradeInstruction(
 )
 
 trade_instruction_7 = TradeInstruction(
-    cid='CID1-0',
+    cid='CID1',
     tknin=BNT_ADDRESS,
     tknout=USDC_ADDRESS,
     amtin=15,
@@ -293,7 +293,7 @@ trade_instruction_7 = TradeInstruction(
     raw_txs=dumps(
         [
             {
-                'cid': 'CID3-0',
+                'cid': 'CID3',
                 'tknin': BNT_ADDRESS,
                 'tknout': USDC_ADDRESS,
                 'amtin': 10,
@@ -302,7 +302,7 @@ trade_instruction_7 = TradeInstruction(
                 '_amtout_wei': 100000000,
             },
             {
-                'cid': 'CID4-0',
+                'cid': 'CID4',
                 'tknin': BNT_ADDRESS,
                 'tknout': USDC_ADDRESS,
                 'amtin': 5,
@@ -315,7 +315,7 @@ trade_instruction_7 = TradeInstruction(
 )
 
 trade_instruction_8 = TradeInstruction(
-    cid='CID6-0',
+    cid='CID6',
     tknin=USDC_ADDRESS,
     tknout=BNT_ADDRESS,
     amtin=150,
