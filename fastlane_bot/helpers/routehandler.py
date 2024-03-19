@@ -320,7 +320,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
-            if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in self.ConfigObj.network.PANCAKESWAP_V3_NAME:
+            if self.ConfigObj.network.NETWORK in "ethereum" or exchange_name in [self.ConfigObj.network.PANCAKESWAP_V3_NAME, self.ConfigObj.network.BUTTER_V3_NAME, self.ConfigObj.network.AGNI_V3_NAME]:
                 custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
                 custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
