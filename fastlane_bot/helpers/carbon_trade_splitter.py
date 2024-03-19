@@ -11,11 +11,11 @@ def split_carbon_trades(
     into several trade instructions. For example, `NATIVE/WRAPPED -> TKN` is split into `NATIVE -> TKN` and `WRAPPED -> TKN`.
 
     Args:
-        - `cfg`: the configuration object.
-        - `trade_instructions`: A list of trade instructions.
+        cfg: the configuration object.
+        trade_instructions: A list of trade instructions.
 
     Returns:
-        - `new_trade_instructions`: A new list of trade instructions.
+        new_trade_instructions: A new list of trade instructions.
     """
 
     new_trade_instructions = []

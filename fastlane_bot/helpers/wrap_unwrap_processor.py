@@ -13,13 +13,13 @@ def add_wrap_or_unwrap_trades_to_route(
     This method adds wrap and/or unwrap routes.
 
     Args:
-        - `cfg`: the configuration object.
-        - `flashloans`: A list of flashloans.
-        - `routes`: A list of routes.
-        - `trade_instructions`: A list of trade instructions.
+        cfg: the configuration object.
+        flashloans: A list of flashloans.
+        routes: A list of routes.
+        trade_instructions: A list of trade instructions.
 
     Returns:
-        - `new_routes`: A new list of routes.
+        new_routes: A new list of routes.
     """
 
     balance_tracker = {}
