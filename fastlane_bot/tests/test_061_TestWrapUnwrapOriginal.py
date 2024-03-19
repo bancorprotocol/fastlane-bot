@@ -346,8 +346,8 @@ def test_wrap_unwrap_original():
 
 
         # print(f"\nNEW ROUTE STRUCT:\nflashloan_struct={flashloan_struct}\nroute_struct={route_struct}\n\n")
-        assert flashloan_struct[0]["sourceTokens"][0] in route_struct[0]["sourceToken"]
-        assert flashloan_struct[0]["sourceTokens"][0] in route_struct[-1]["targetToken"]
+        assert flashloan_struct[0]["sourceTokens"][0] == route_struct[0]["sourceToken"]
+        assert flashloan_struct[0]["sourceTokens"][0] == route_struct[-1]["targetToken"]
 
         for idx, route in enumerate(route_struct):
             if idx == 0:
