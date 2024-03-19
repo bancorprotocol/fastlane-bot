@@ -216,9 +216,6 @@ class ConfigNetwork(ConfigBase):
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
-    BUTTER_V3_NAME = "butter_v3"
-    AGNI_V3_NAME = "agni_v3"
-    CLEOPATRA_V3_NAME = "cleopatra_v3"
     # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
     AERODROME_V3_NAME = "aerodrome_v3"
