@@ -29,6 +29,7 @@ from fastlane_bot.helpers import TradeInstruction, split_carbon_trades
 BANCOR_V2_NAME      = 'unique_id_1'
 CARBON_V1_NAME      = 'unique_id_2'
 PANCAKESWAP_V2_NAME = 'unique_id_3'
+CARBON_V1_D2_NAME   = 'unique_id_4'
 
 ETH_ADDRESS  = 'unique_id_11'
 WETH_ADDRESS = 'unique_id_22'
@@ -42,6 +43,8 @@ CID3 = 'unique_id_333'
 CID4 = 'unique_id_444'
 CID5 = 'unique_id_555'
 CID6 = 'unique_id_666'
+CID7 = 'unique_id_777'
+CID8 = 'unique_id_888'
 
 @dataclass
 class Token:
@@ -65,7 +68,7 @@ class Pool:
 
 @dataclass
 class Config:
-    CARBON_V1_FORKS = [CARBON_V1_NAME]
+    CARBON_V1_FORKS = [CARBON_V1_NAME, CARBON_V1_D2_NAME]
     NATIVE_GAS_TOKEN_ADDRESS = ETH_ADDRESS
     WRAPPED_GAS_TOKEN_ADDRESS = WETH_ADDRESS
     EXCHANGE_IDS = {}
@@ -91,6 +94,8 @@ class DB:
         CID4: Pool(exchange_name=CARBON_V1_NAME     , tkn0_address=BNT_ADDRESS , tkn1_address=USDC_ADDRESS),
         CID5: Pool(exchange_name=PANCAKESWAP_V2_NAME, tkn0_address=WBTC_ADDRESS, tkn1_address=WETH_ADDRESS),
         CID6: Pool(exchange_name=BANCOR_V2_NAME     , tkn0_address=USDC_ADDRESS, tkn1_address=BNT_ADDRESS ),
+        CID7: Pool(exchange_name=CARBON_V1_D2_NAME  , tkn0_address=WETH_ADDRESS, tkn1_address=WBTC_ADDRESS),
+        CID8: Pool(exchange_name=CARBON_V1_D2_NAME  , tkn0_address=ETH_ADDRESS , tkn1_address=WBTC_ADDRESS),
     }
 
     def get_token(self, tkn_address):
@@ -299,6 +304,90 @@ trade_instruction_7 = TradeInstruction(
     cid=CID1,
     tknin=WETH_ADDRESS,
     tknout=WBTC_ADDRESS,
+    amtin=80,
+    amtout=8,
+    _amtin_wei=80000000000000000000,
+    _amtout_wei=800000000,
+    tknin_dec_override=18,
+    tknout_dec_override=8,
+    tknin_addr_override=WETH_ADDRESS,
+    tknout_addr_override=WBTC_ADDRESS,
+    exchange_override=CARBON_V1_D2_NAME,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': CID1,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': CID2,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+            {
+                'cid': CID7,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+            {
+                'cid': CID7,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 30,
+                'amtout': 3,
+                '_amtin_wei': 30000000000000000000,
+                '_amtout_wei': 300000000,
+            },
+            {
+                'cid': CID8,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 25,
+                'amtout': 2.5,
+                '_amtin_wei': 25000000000000000000,
+                '_amtout_wei': 250000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_8 = TradeInstruction(
+    cid=CID5,
+    tknin=WBTC_ADDRESS,
+    tknout=WETH_ADDRESS,
+    amtin=8,
+    amtout=80,
+    _amtin_wei=800000000,
+    _amtout_wei=80000000000000000000,
+    tknin_dec_override=8,
+    tknout_dec_override=18,
+    tknin_addr_override=WBTC_ADDRESS,
+    tknout_addr_override=WETH_ADDRESS,
+    exchange_override=PANCAKESWAP_V2_NAME,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps([]),
+)
+
+trade_instruction_9 = TradeInstruction(
+    cid=CID1,
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
     amtin=10,
     amtout=1,
     _amtin_wei=10000000000000000000,
@@ -320,7 +409,7 @@ trade_instruction_7 = TradeInstruction(
     ),
 )
 
-trade_instruction_8 = TradeInstruction(
+trade_instruction_10 = TradeInstruction(
     cid=CID2,
     tknin=ETH_ADDRESS,
     tknout=WBTC_ADDRESS,
@@ -345,7 +434,7 @@ trade_instruction_8 = TradeInstruction(
     ),
 )
 
-trade_instruction_9 = TradeInstruction(
+trade_instruction_11 = TradeInstruction(
     cid=CID5,
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
@@ -363,7 +452,7 @@ trade_instruction_9 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
-trade_instruction_10 = TradeInstruction(
+trade_instruction_12 = TradeInstruction(
     cid=CID1,
     tknin=WETH_ADDRESS,
     tknout=WBTC_ADDRESS,
@@ -397,7 +486,7 @@ trade_instruction_10 = TradeInstruction(
     ),
 )
 
-trade_instruction_11 = TradeInstruction(
+trade_instruction_13 = TradeInstruction(
     cid=CID2,
     tknin=ETH_ADDRESS,
     tknout=WBTC_ADDRESS,
@@ -431,7 +520,7 @@ trade_instruction_11 = TradeInstruction(
     ),
 )
 
-trade_instruction_12 = TradeInstruction(
+trade_instruction_14 = TradeInstruction(
     cid=CID5,
     tknin=WBTC_ADDRESS,
     tknout=WETH_ADDRESS,
@@ -449,7 +538,7 @@ trade_instruction_12 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
-trade_instruction_13 = TradeInstruction(
+trade_instruction_15 = TradeInstruction(
     cid=CID3,
     tknin=BNT_ADDRESS,
     tknout=USDC_ADDRESS,
@@ -483,7 +572,7 @@ trade_instruction_13 = TradeInstruction(
     ),
 )
 
-trade_instruction_14 = TradeInstruction(
+trade_instruction_16 = TradeInstruction(
     cid=CID6,
     tknin=USDC_ADDRESS,
     tknout=BNT_ADDRESS,
@@ -501,22 +590,131 @@ trade_instruction_14 = TradeInstruction(
     raw_txs=dumps([]),
 )
 
+trade_instruction_17 = TradeInstruction(
+    cid=CID1,
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=10,
+    amtout=1,
+    _amtin_wei=10000000000000000000,
+    _amtout_wei=100000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': CID1,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_18 = TradeInstruction(
+    cid=CID2,
+    tknin=ETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=10,
+    amtout=1,
+    _amtin_wei=10000000000000000000,
+    _amtout_wei=100000000,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': CID2,
+                'tknin': ETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 10,
+                'amtout': 1,
+                '_amtin_wei': 10000000000000000000,
+                '_amtout_wei': 100000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_19 = TradeInstruction(
+    cid=CID7,
+    tknin=WETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=35,
+    amtout=3.5,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': CID7,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 5,
+                'amtout': 0.5,
+                '_amtin_wei': 5000000000000000000,
+                '_amtout_wei': 50000000,
+            },
+            {
+                'cid': CID7,
+                'tknin': WETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 30,
+                'amtout': 3,
+                '_amtin_wei': 30000000000000000000,
+                '_amtout_wei': 300000000,
+            },
+        ]
+    ),
+)
+
+trade_instruction_20 = TradeInstruction(
+    cid=CID8,
+    tknin=ETH_ADDRESS,
+    tknout=WBTC_ADDRESS,
+    amtin=25,
+    amtout=2.5,
+    ConfigObj=cfg,
+    db=db,
+    raw_txs=dumps(
+        [
+            {
+                'cid': CID8,
+                'tknin': ETH_ADDRESS,
+                'tknout': WBTC_ADDRESS,
+                'amtin': 25,
+                'amtout': 2.5,
+                '_amtin_wei': 25000000000000000000,
+                '_amtout_wei': 250000000,
+            },
+        ]
+    ),
+)
+
 test_cases = [
     {
         'trade_instructions': [trade_instruction_0, trade_instruction_3],
-        'expected_trade_instructions': [trade_instruction_7, trade_instruction_8, trade_instruction_9]
+        'expected_trade_instructions': [trade_instruction_9, trade_instruction_10, trade_instruction_11]
     },
     {
         'trade_instructions': [trade_instruction_1, trade_instruction_3],
-        'expected_trade_instructions': [trade_instruction_10, trade_instruction_9]
+        'expected_trade_instructions': [trade_instruction_12, trade_instruction_11]
     },
     {
         'trade_instructions': [trade_instruction_2, trade_instruction_4],
-        'expected_trade_instructions': [trade_instruction_11, trade_instruction_12]
+        'expected_trade_instructions': [trade_instruction_13, trade_instruction_14]
     },
     {
         'trade_instructions': [trade_instruction_5, trade_instruction_6],
-        'expected_trade_instructions': [trade_instruction_13, trade_instruction_14]
+        'expected_trade_instructions': [trade_instruction_15, trade_instruction_16]
+    },
+    {
+        'trade_instructions': [trade_instruction_7, trade_instruction_8],
+        'expected_trade_instructions': [trade_instruction_17, trade_instruction_18, trade_instruction_19, trade_instruction_20, trade_instruction_8]
     },
 ]
 
