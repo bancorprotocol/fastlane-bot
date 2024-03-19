@@ -970,7 +970,7 @@ pools(
 
 
 # function to use requests.post to make an API call to the subgraph url
-def run_query(subgraph_query: str, subgraph_url: str) -> json:
+def run_query(subgraph_query: str, subgraph_url: str) -> dict:
     """
     This function executes the Balancer Subgraph query
     :param subgraph_query: the Balancer query for the Graph
