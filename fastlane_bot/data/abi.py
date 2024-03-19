@@ -629,9 +629,6 @@ UNISWAP_V3_ROUTER2_ABI = [
     }
 ]
 
-BANCOR_NETWORK_ABI = [
-]
-
 BANCOR_V3_NETWORK_INFO_ABI = [
     {
         "type": "function",
@@ -720,12 +717,6 @@ BANCOR_V2_CONVERTER_ABI = [
         "inputs": [],
         "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
-]
-
-BANCOR_V2_CONTRACT_REGISTRY_ABI = [
-]
-
-BANCOR_V2_CONVERTER_REGISTRY_ABI = [
 ]
 
 BANCOR_V2_POOL_TOKEN_ABI = [
