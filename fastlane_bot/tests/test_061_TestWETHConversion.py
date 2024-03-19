@@ -333,8 +333,13 @@ def test_test_wrap_unwrap_gas_token_in_route_struct():
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         # Check if the result is None
     
-        route_struct = add_wrap_or_unwrap_trades_to_route(trade_instructions=calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
-        
+        route_struct = add_wrap_or_unwrap_trades_to_route(
+            cfg=cfg,
+            flashloans=flashloan_struct,
+            routes=route_struct,
+            trade_instructions=calculated_trade_instructions
+        )
+
         #print(f"\nNEW ROUTE STRUCT:\nflashloan_struct={flashloan_struct}\nroute_struct={route_struct}\n\n")
         assert flashloan_struct[0]["sourceTokens"][0] in route_struct[0]["sourceToken"]
         assert flashloan_struct[0]["sourceTokens"][0] in route_struct[-1]["targetToken"]
