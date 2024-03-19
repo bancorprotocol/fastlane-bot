@@ -45,7 +45,7 @@ def add_wrap_or_unwrap_trades_to_route(
 
         segmented_routes[pair]["amt_out"] += trade_instructions[idx].amtout_wei
         segmented_routes[pair]["amt_in"] += trade_instructions[idx].amtin_wei
-        segmented_routes[pair]["trades"][idx] = trade_instructions[idx].exchange_name in  cfg.CARBON_V1_FORKS
+        segmented_routes[pair]["trades"][idx] = trade_instructions[idx].exchange_name in cfg.CARBON_V1_FORKS
 
     new_routes = []
     deadline = routes[0]["deadline"]

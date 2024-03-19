@@ -34,7 +34,7 @@ def split_carbon_trades(
             elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in pool.get_tokens:
                 token_type = cfg.WRAPPED_GAS_TOKEN_ADDRESS
             else:
-                token_type = cfg.ZERO_ADDRESS
+                token_type = ''
 
             tx["tknin"] = _get_token_address(cfg, token_type, trade_instruction.tknin)
             tx["tknout"] = _get_token_address(cfg, token_type, trade_instruction.tknout)

@@ -32,12 +32,12 @@ PANCAKESWAP_V2_NAME = 'unique_id_3'
 WRAP_UNWRAP_KEY     = 'unique_id_4'
 WRAP_UNWRAP_VAL     = 'unique_id_5'
 
-NONE_ADDRESS = 'unique_id_11'
-ETH_ADDRESS  = 'unique_id_22'
-WETH_ADDRESS = 'unique_id_33'
-USDC_ADDRESS = 'unique_id_44'
-WBTC_ADDRESS = 'unique_id_55'
-BNT_ADDRESS  = 'unique_id_66'
+ETH_ADDRESS  = 'unique_id_11'
+WETH_ADDRESS = 'unique_id_22'
+USDC_ADDRESS = 'unique_id_33'
+WBTC_ADDRESS = 'unique_id_44'
+BNT_ADDRESS  = 'unique_id_55'
+ZERO_ADDRESS = 'unique_id_66'
 
 CID1 = 'unique_id_111'
 CID2 = 'unique_id_222'
@@ -68,7 +68,7 @@ class Pool:
 
 @dataclass
 class Config:
-    ZERO_ADDRESS = NONE_ADDRESS
+    ZERO_ADDRESS = ZERO_ADDRESS
     CARBON_V1_FORKS = [CARBON_V1_NAME]
     NATIVE_GAS_TOKEN_ADDRESS = ETH_ADDRESS
     WRAPPED_GAS_TOKEN_ADDRESS = WETH_ADDRESS
@@ -355,7 +355,7 @@ route_9 = {
     'sourceAmount': 10000000000000000000,
     'minTargetAmount': 10000000000000000000,
     'deadline': 0,
-    'customAddress': NONE_ADDRESS,
+    'customAddress': ZERO_ADDRESS,
     'customInt': 0,
     'customData': '0x',
 }
@@ -367,7 +367,7 @@ route_10 = {
     'sourceAmount': 0,
     'minTargetAmount': 0,
     'deadline': 0,
-    'customAddress': NONE_ADDRESS,
+    'customAddress': ZERO_ADDRESS,
     'customInt': 0,
     'customData': '0x',
 }
@@ -379,7 +379,7 @@ route_11 = {
     'sourceAmount': 0,
     'minTargetAmount': 0,
     'deadline': 5,
-    'customAddress': NONE_ADDRESS,
+    'customAddress': ZERO_ADDRESS,
     'customInt': 0,
     'customData': '0x',
 }
