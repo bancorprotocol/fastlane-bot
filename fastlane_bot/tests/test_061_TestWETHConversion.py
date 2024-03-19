@@ -43,6 +43,7 @@ from fastlane_bot.helpers import (
     TradeInstruction,
     Univ3Calculator,
     RouteStruct,
+    add_wrap_or_unwrap_trades_to_route
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn #,BalancerInputTooLargeError
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -332,7 +333,7 @@ def test_test_wrap_unwrap_gas_token_in_route_struct():
         route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
         # Check if the result is None
     
-        route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(trade_instructions=calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
+        route_struct = add_wrap_or_unwrap_trades_to_route(trade_instructions=calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
         
         #print(f"\nNEW ROUTE STRUCT:\nflashloan_struct={flashloan_struct}\nroute_struct={route_struct}\n\n")
         assert flashloan_struct[0]["sourceTokens"][0] in route_struct[0]["sourceToken"]
