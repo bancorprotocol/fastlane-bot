@@ -69,14 +69,15 @@ from fastlane_bot.helpers import (
     TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
-    RouteStruct, WrapUnwrapProcessor,
+    RouteStruct,
+    add_wrap_or_unwrap_trades_to_route,
+    split_carbon_trades
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
-from .helpers.carbon_trade_splitter import CarbonTradeSplitter
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
@@ -1021,8 +1022,10 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Split Carbon Orders
-        split_calculated_trade_instructions = CarbonTradeSplitter(ConfigObj=self.ConfigObj).split_carbon_trades(
-            trade_instructions=calculated_trade_instructions)
+        split_calculated_trade_instructions = split_carbon_trades(
+            cfg=self.ConfigObj,
+            trade_instructions=calculated_trade_instructions
+        )
 
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
@@ -1040,7 +1043,12 @@ class CarbonBot(CarbonBotBase):
             )
         ]
 
-        route_struct_processed = WrapUnwrapProcessor(cfg=self.ConfigObj).add_wrap_or_unwrap_trades_to_route(trade_instructions=split_calculated_trade_instructions, route_struct=route_struct, flashloan_struct=flashloan_struct)
+        route_struct_processed = add_wrap_or_unwrap_trades_to_route(
+            cfg=self.ConfigObj,
+            flashloans=flashloan_struct,
+            routes=route_struct,
+            trade_instructions=split_calculated_trade_instructions,
+        )
 
         route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 

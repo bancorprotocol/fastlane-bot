@@ -1,203 +1,91 @@
-import json
-from typing import List, Dict
-
+from json import loads, dumps
+from fastlane_bot.config import Config
 from fastlane_bot.helpers import TradeInstruction
 
+def split_carbon_trades(
+    cfg: Config,
+    trade_instructions: list[TradeInstruction]
+) -> list[TradeInstruction]:
+    """
+    This method splits every trade instruction which includes a mix of gas tokens and/or a mix of Carbon deployments,
+    into several trade instructions. For example, `NATIVE/WRAPPED -> TKN` is split into `NATIVE -> TKN` and `WRAPPED -> TKN`.
 
-class CarbonTradeSplitter:
-    NATIVE = "native"
-    WRAPPED = "wrapped"
-    NEITHER = "neither"
+    Args:
+        cfg: the configuration object.
+        trade_instructions: A list of trade instructions.
 
-    def __init__(self, ConfigObj):
-        self.ConfigObj = ConfigObj
+    Returns:
+        new_trade_instructions: A new list of trade instructions.
+    """
 
-    def split_carbon_trades(
-        self, trade_instructions: List[TradeInstruction]
-    ) -> List[TradeInstruction]:
-        """Splits Carbon trades that cannot be aggregated into a single trade action.
+    new_trade_instructions = []
+    for trade_instruction in trade_instructions:
+        if trade_instruction.exchange_name not in cfg.CARBON_V1_FORKS:
+            new_trade_instructions.append(trade_instruction)
+            continue
 
-        This function split a single Carbon trade into multiple trades for cases that include a mix of tokens or different Carbon deployments.
-        For example NATIVE/WRAPPED -> TKN -> NATIVE -> TKN & WRAPPED -> TKN.
-
-        Args:
-            trade_instructions: The list of TradeInstruction objects.
-
-        Returns:
-            The processed list of TradeInstruction objects after splitting incompatible trades.
-
-        """
-        new_trade_list = []
-        for trade in trade_instructions:
-            if not self._is_carbon_trade(trade):
-                new_trade_list.append(trade)
-                continue
-            new_trade_list.extend(self._extract_carbon_trades(trade))
-
-        return new_trade_list
-
-    def _is_carbon_trade(self, trade: TradeInstruction) -> bool:
-        """Checks if a trade is on a Carbon deployment.
-
-        Args:
-            trade: a single TradeInstruction object.
-
-        Returns:
-            True if the trade is on a Carbon deployment. False otherwise.
-
-        """
-        return trade.exchange_name in self.ConfigObj.CARBON_V1_FORKS
-
-    def _get_real_tkn(self, token_address: str, token_type: str):
-        """Returns the correct token address for the trade.
-
-        This function returns the real token address for the pool. If the token isn't the native/wrapped gas token address, it just returns the token.
-        If the token is native/wrapped, it will use the token_type to return the correct address.
-
-        Args:
-            token_address: the token address
-            token_type: the self.NATIVE, self.WRAPPED, or SELF.NEITHER
-
-        Returns:
-            The correct token address for the pool.
-
-        """
-        if token_address in [
-            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
-            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
-        ]:
-            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if token_type == self.NATIVE else self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-        return token_address
-
-    def _extract_carbon_trades(self, trade) -> List[TradeInstruction]:
-        """
-        This function calls the functions containing the logic to extract Carbon trades.
-
-        Args:
-            trade: A single TradeInstruction object.
-
-        Returns:
-            A list of TradeInstruction objects.
-
-        """
-        carbon_exchanges = self._process_carbon_trades(trade)
-        return self._create_new_trades_from_carbon_exchanges(
-            carbon_exchanges, trade
-        )
-
-    def _process_carbon_trades(self, trade: TradeInstruction) -> Dict:
-        """Separates Carbon trades by exchange & wrapped/native token address.
-
-        Processes Carbon trades and organizes them by exchange and token type.
-
-        Args:
-            trade: a single TradeInstruction object
-
-        Returns:
-            A dictionary containing a list of
-
-        """
         carbon_exchanges = {}
 
-        raw_tx_str = trade.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')
-        raw_txs = json.loads(raw_tx_str)
+        for tx in loads(trade_instruction.raw_txs.replace("'", '"').replace('Decimal("', '').replace('")', '')):
+            pool = trade_instruction.db.get_pool(cid=str(tx["cid"]).split("-")[0])
 
-        for _tx in raw_txs:
-            curve = trade.db.get_pool(cid=str(_tx["cid"]).split("-")[0])
-            exchange = curve.exchange_name
-            token_type = self._get_token_type(curve)
+            if cfg.NATIVE_GAS_TOKEN_ADDRESS in pool.get_tokens:
+                pool_type = cfg.NATIVE_GAS_TOKEN_ADDRESS
+            elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in pool.get_tokens:
+                pool_type = cfg.WRAPPED_GAS_TOKEN_ADDRESS
+            else:
+                pool_type = ''
 
-            if exchange not in carbon_exchanges:
-                carbon_exchanges[exchange] = self._initialize_exchange_data()
+            tx["tknin"] = _get_token_address(cfg, pool_type, trade_instruction.tknin)
+            tx["tknout"] = _get_token_address(cfg, pool_type, trade_instruction.tknout)
 
-            self._update_exchange_data(
-                carbon_exchanges[exchange], token_type, _tx, trade
+            exchange_id = pool.exchange_name + pool_type
+            if exchange_id in carbon_exchanges:
+                carbon_exchanges[exchange_id].append(tx)
+            else:
+                carbon_exchanges[exchange_id] = [tx]
+
+        for txs in carbon_exchanges.values():
+            new_trade_instructions.append(
+                TradeInstruction(
+                    ConfigObj=cfg,
+                    db=trade_instruction.db,
+                    cid=txs[0]["cid"],
+                    tknin=txs[0]["tknin"],
+                    tknout=txs[0]["tknout"],
+                    amtin=sum([tx["amtin"] for tx in txs]),
+                    amtout=sum([tx["amtout"] for tx in txs]),
+                    _amtin_wei=sum([tx["_amtin_wei"] for tx in txs]),
+                    _amtout_wei=sum([tx["_amtout_wei"] for tx in txs]),
+                    raw_txs=dumps(txs)
+                )
             )
 
-        return carbon_exchanges
+    return new_trade_instructions
 
-    def _get_token_type(self, curve) -> str:
-        """Determines if the trade uses native or wrapped gas tokens.
+def _get_token_address(cfg, pool_type: str, token_address: str) -> str:
+    """
+    This method takes a pool and a token as input,
+    and determines the actual token which should be traded on that pool.
 
-        Args:
-            curve: the Pool object representing the curve.
+    If the pool supports trading the native token but the given token is the wrapped token,
+    then the actual token which should be traded on that pool is the native token.
 
-        Returns:
-            A string indicating if the curve contains native gas tokens, wrapped gas tokens, or neither.
+    If the pool supports trading the wrapped token but the given token is the native token,
+    then the actual token which should be traded on that pool is the wrapped token.
 
-        """
-        if self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS in curve.get_tokens:
-            return self.NATIVE
-        elif self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in curve.get_tokens:
-            return self.WRAPPED
-        return self.NEITHER
+    In all other cases, the actual token which should be traded on that pool is the given one.
 
-    def _initialize_exchange_data(self) -> Dict:
-        """Initializes data structure for a new exchange."""
-        return {
-            self.NATIVE: self._new_trade_data_structure(),
-            self.WRAPPED: self._new_trade_data_structure(),
-            self.NEITHER: self._new_trade_data_structure(),
-        }
+    Args:
+        pool_type: Native, Wrapped or Neither.
+        token_address: The address of the token.
 
-    def _new_trade_data_structure(self) -> Dict:
-        """Initializes a new trade data structure."""
-        return {
-            "raw_txs": [],
-            "amtin": 0,
-            "amtout": 0,
-            "_amtin_wei": 0,
-            "_amtout_wei": 0,
-        }
+    Returns:
+        the actual token which should be traded on then given pool.
+    """
 
-    def _update_exchange_data(
-        self, exchange_data: Dict, token_type: str, _tx: Dict, trade: TradeInstruction
-    ):
-        """Combines like-trades.
-
-        Update exchange data with information from a transaction.
-
-        Args:
-            exchange_data: The dictionary containing trades for each Carbon deployment being traded through.
-            token_type: a string indicating if the pool contains native/wrapped gas token, or neither.
-            _tx: the TX dictionary containing trade details.
-            trade: the TradeInstruction object.
-
-        """
-        _tx["tknin"] = self._get_real_tkn(trade.tknin, token_type)
-        _tx["tknout"] = self._get_real_tkn(trade.tknout, token_type)
-
-        data = exchange_data[token_type]
-        data["raw_txs"].append(_tx)
-        data["amtin"] += _tx["amtin"]
-        data["amtout"] += _tx["amtout"]
-        data["_amtin_wei"] += _tx["_amtin_wei"]
-        data["_amtout_wei"] += _tx["_amtout_wei"]
-        data["tknin"] = _tx["tknin"]
-        data["tknout"] = _tx["tknout"]
-
-    def _create_new_trades_from_carbon_exchanges(
-        self,
-        carbon_exchanges: Dict,
-        original_trade: TradeInstruction,
-    ):
-        """Creates new TradeInstruction instances from processed Carbon exchanges data.
-
-        This function adds trades that were added as a result of splitting Carbon trades.
-
-         Args:
-             carbon_exchanges: The list of Carbon deployments being traded through in this trade.
-             original_trade: The original TradeInstruction object, utilized here to pass the db & Config objects.
-             new_trade_list: The updated list of TradeInstruction objects with any trades that were added from the splitting process.
-
-        """
-        _extracted_trades = []
-        for data in carbon_exchanges.values():
-            for trade_data in data.values():
-                if trade_data["raw_txs"]:
-                    trade_data["db"] = original_trade.db
-                    trade_data["ConfigObj"] = original_trade.ConfigObj
-                    trade_data["cid"] = trade_data["raw_txs"][0]["cid"]
-                    trade_data["raw_txs"] = str(trade_data["raw_txs"])
-                    _extracted_trades.append(TradeInstruction(**trade_data))
-        return _extracted_trades
+    if pool_type == cfg.NATIVE_GAS_TOKEN_ADDRESS and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
+        return cfg.NATIVE_GAS_TOKEN_ADDRESS
+    if pool_type == cfg.WRAPPED_GAS_TOKEN_ADDRESS and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
+        return cfg.WRAPPED_GAS_TOKEN_ADDRESS
+    return token_address
