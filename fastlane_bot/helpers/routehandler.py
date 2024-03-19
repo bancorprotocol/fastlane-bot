@@ -87,7 +87,7 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict
 
     """
 
-    tkns_traded = []
+    tkns_traded = [route_struct[0]["sourceToken"]]
     for j, trade in enumerate(reversed(route_struct)):
         idx = len(route_struct) - 1 - j
         if type(trade) == dict:

@@ -2068,17 +2068,8 @@ def check_and_approve_tokens(tokens: List, cfg) -> bool:
     :param cfg: the config object
 
     """
-    _tokens = []
-    for tkn in tokens:
-        # If the token is a token key, get the address from the CHAIN_FLASHLOAN_TOKENS dict in the network.py config file
-        if "-" in tkn:
-            try:
-                _tokens.append(cfg.CHAIN_FLASHLOAN_TOKENS[tkn])
-            except KeyError:
-                cfg.logger.info(f"could not find token address for tkn: {tkn}")
-        else:
-            _tokens.append(tkn)
-    tokens = _tokens
+
+    tokens = [tkn for tkn in tokens if tkn != cfg.NATIVE_GAS_TOKEN_ADDRESS]
 
     self_funding_warning_sequence(cfg=cfg)
     tx_helpers = TxHelpers(ConfigObj=cfg)
@@ -2101,7 +2092,4 @@ def check_and_approve_tokens(tokens: List, cfg) -> bool:
     unapproved_tokens = find_unapproved_tokens(
         tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers
     )
-    if len(unapproved_tokens) == 0:
-        return True
-    else:
-        return False
+    return len(unapproved_tokens) == 0

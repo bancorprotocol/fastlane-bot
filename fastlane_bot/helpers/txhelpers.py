@@ -277,7 +277,7 @@ class TxHelpers:
             src_address=src_address,
             src_amt=src_amt,
             gas_price=current_gas_price,
-            max_priority=current_max_priority_gas,
+            max_priority_fee=current_max_priority_gas,
             nonce=nonce,
             test_fake_gas=False,
             flashloan_struct=flashloan_struct,
@@ -395,9 +395,6 @@ class TxHelpers:
         routes: List[Dict[str, Any]],
         src_amt: int,
         src_address: str,
-        gas_price: int,
-        max_priority: int,
-        nonce: int,
         flashloan_struct=None,
     ):
         """
@@ -410,31 +407,41 @@ class TxHelpers:
         returns: the transaction function ready to be submitted
         """
         if self.ConfigObj.SELF_FUND:
-            transaction = self.arb_contract.functions.fundAndArb(
+            return self.arb_contract.functions.fundAndArb(
                 routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce, value=src_amt if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else None
-                )
             )
+        return self.arb_contract.functions.flashloanAndArbV2(
+            flashloan_struct, routes
+        )
 
-        elif flashloan_struct is None:
-            transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
-            )
+    def _handle_function_build_exception(self, exception: Exception) -> int or None:
+        """Handles exceptions that occur during transaction building.
+
+        This method logs the exception and attempts to extract information from it. If the exception
+        indicates that the maximum fee per gas is less than the block base fee, it extracts and returns
+        the base fee. Otherwise, it logs a warning and returns None.
+
+        Args:
+            self: The instance of the class.
+            exception (Exception): The exception raised during transaction building.
+
+        Returns:
+            int or None: The base fee if it can be extracted from the exception, otherwise None.
+
+        """
+        self.ConfigObj.logger.debug(
+            f"[helpers.txhelpers.build_transaction_with_gas] Error when building transaction: {exception.__class__.__name__} {exception}"
+        )
+        if "max fee per gas less than block base fee" in str(exception):
+            message = str(exception)
+            return int_prefix(message.split("baseFee: ")[1])
+
         else:
-            transaction = self.arb_contract.functions.flashloanAndArbV2(
-                flashloan_struct, routes
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
+            self.ConfigObj.logger.warning(
+                f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
+                f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {exception.__class__.__name__} {exception}"
             )
-        return transaction
+            return None
 
     def build_transaction_with_gas(
         self,
@@ -442,7 +449,7 @@ class TxHelpers:
         src_amt: int,
         src_address: str,
         gas_price: int,
-        max_priority: int,
+        max_priority_fee: int,
         nonce: int,
         access_list: bool = True,
         test_fake_gas: bool = False,
@@ -457,47 +464,21 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
-
-        try:
-            transaction = self.construct_contract_function(
-                routes=routes,
-                src_amt=src_amt,
-                src_address=src_address,
+        value = src_amt if (src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and self.ConfigObj.SELF_FUND) else 0
+        transaction = self.build_transaction_generic(
+                self.construct_contract_function,
+                routes,
+                src_amt,
+                src_address,
+                flashloan_struct,
                 gas_price=gas_price,
-                max_priority=max_priority,
+                max_priority_fee=max_priority_fee,
                 nonce=nonce,
-                flashloan_struct=flashloan_struct,
-            )
-        except Exception as e:
-            self.ConfigObj.logger.debug(
-                f"[helpers.txhelpers.build_transaction_with_gas] Error when building transaction: {e.__class__.__name__} {e}"
-            )
-            if "max fee per gas less than block base fee" in str(e):
-                try:
-                    message = str(e)
-                    baseFee = int_prefix(message.split("baseFee: ")[1])
-                    transaction = self.construct_contract_function(
-                        routes=routes,
-                        src_amt=src_amt,
-                        src_address=src_address,
-                        gas_price=baseFee,
-                        max_priority=max_priority,
-                        nonce=nonce,
-                        flashloan_struct=flashloan_struct,
-                    )
-                except Exception as e:
-                    self.ConfigObj.logger.warning(
-                        f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
-                        f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
-                    )
-                    return None
-            else:
-                self.ConfigObj.logger.info(f"gas_price = {gas_price}, max_priority = {max_priority}")
-                self.ConfigObj.logger.warning(
-                    f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
-                    f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
-                )
-                return None
+                value=value
+        )
+        if transaction is None:
+            return None
+
         if test_fake_gas:
             transaction["gas"] = self.ConfigObj.DEFAULT_GAS
             return transaction
@@ -557,9 +538,9 @@ class TxHelpers:
     def build_tx(
             self,
             nonce: int,
-            base_gas_price: int = 0,
+            gas_price: int = 0,
             max_priority_fee: int = 0,
-            value: int = None
+            value: int = 0
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -573,7 +554,7 @@ class TxHelpers:
         returns: the transaction to be submitted to the blockchain
         """
         max_priority_fee = int(max_priority_fee)
-        base_gas_price = int(base_gas_price)
+        base_gas_price = int(gas_price)
         max_gas_price = base_gas_price + max_priority_fee
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
@@ -598,8 +579,7 @@ class TxHelpers:
                 "from": self.wallet_address,
                 "nonce": nonce,
             }
-        if value is not None:
-            tx_details["value"] = value
+        tx_details["value"] = value
         return tx_details
 
     def submit_regular_transaction(self, signed_tx) -> str:
@@ -759,6 +739,40 @@ class TxHelpers:
         else:
             return False
 
+    def build_transaction_generic(self, contract_function, *args, **kwargs):
+        """Builds a transaction using a contract function with the provided arguments.
+
+        This function attempts to construct a transaction by calling the given contract function
+        with the provided arguments and keyword arguments. If an exception occurs during the
+        transaction construction, it adjusts the gas price and retries the function call.
+
+        Args:
+            self: The instance of the class.
+            contract_function: The contract function to be called to construct the transaction.
+            *args: Positional arguments to be passed to the contract function.
+            **kwargs: Keyword arguments to be passed to the contract function.
+
+        Returns:
+            The constructed transaction if successful, otherwise None.
+
+        """
+        try:
+            transaction = contract_function(*args).build_transaction(self.build_tx(**kwargs))
+        except Exception as e:
+            new_base_fee = self._handle_function_build_exception(exception=e)
+            if new_base_fee is None:
+                return None
+            try:
+                kwargs['gas_price'] = new_base_fee
+                transaction = contract_function(*args, **kwargs)
+            except Exception as e:
+                self.ConfigObj.logger.warning(
+                    f" Error when building transaction, this is expected to happen occasionally, discarding. (***1***)\n"
+                    f"Exception: {e.__class__.__name__} {e}"
+                )
+                return None
+        return transaction
+
     def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
         """
         This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
@@ -772,31 +786,21 @@ class TxHelpers:
         max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
-        try:
-            approve_tx = token_contract.functions.approve(self.arb_contract.address, approval_amount).build_transaction(
-                    self.build_tx(
-                        base_gas_price=current_gas_price, max_priority_fee=max_priority, nonce=self.get_nonce()
-                    )
-                )
-        except Exception as e:
-            self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
-            if "max fee per gas less than block base fee" in str(e):
-                try:
-                    message = str(e)
-                    baseFee = int_prefix(message.split("baseFee: ")[1])
-                    approve_tx = token_contract.functions.approve(self.arb_contract.address,
-                                                                  approval_amount).build_transaction(
-                        self.build_tx(
-                            base_gas_price=baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
-                        )
-                    )
-                    self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
-                    return self.submit_regular_transaction(self.sign_transaction(approve_tx))
-                except Exception as e:
-                    self.ConfigObj.logger.info(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
-            else:
-                return None
+
+        approve_tx = self.build_transaction_generic(
+            token_contract.functions.approve,
+            self.arb_contract.address,
+            approval_amount,
+            gas_price=current_gas_price,
+            max_priority_fee=max_priority,
+            nonce=self.get_nonce(),
+            )
+        if approve_tx is None:
+            self.ConfigObj.logger.info(f"*****Failed to submit approval for token: {token_address}!*****")
+            return None
+        self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
+
+        return self.submit_regular_transaction(self.sign_transaction(approve_tx))
 
     def _get_layer_one_gas_fee_loop(self, rawTransaction) -> Decimal:
         """
