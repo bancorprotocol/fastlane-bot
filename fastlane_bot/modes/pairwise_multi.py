@@ -45,6 +45,10 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         self.ConfigObj.logger.debug(
             f"\n ************ combos: {len(combos)} ************\n"
         )
+
+        combos = [x for x in combos if x[0] != "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5"]
+        combos = [x for x in combos if x[1] != "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5"]
+
         for tkn0, tkn1 in combos:
             r = None
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")

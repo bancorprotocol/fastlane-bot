@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import TradeInstruction, RouteStruct
-from fastlane_bot.events.exceptions import FlashloanTokenException
+from fastlane_bot.exceptions import FlashloanTokenException
 
 def add_wrap_or_unwrap_trades_to_route(
     cfg: Config,
