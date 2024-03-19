@@ -69,7 +69,7 @@ class Pool:
 @dataclass
 class Config:
     ZERO_ADDRESS = NONE_ADDRESS
-    CARBON_V1_FORKS = [CARBON_V1_NAME]
+    CARBON_V1_FORKS = [CARBON_V1_NAME, ALTERED_CARBON]
     NATIVE_GAS_TOKEN_ADDRESS = ETH_ADDRESS
     WRAPPED_GAS_TOKEN_ADDRESS = WETH_ADDRESS
     EXCHANGE_IDS = {}
@@ -519,7 +519,7 @@ trade_instruction_15 = TradeInstruction(
     tknout_dec_override=8,
     tknin_addr_override=WETH_ADDRESS,
     tknout_addr_override=WBTC_ADDRESS,
-    exchange_override=CARBON_V1_NAME,
+    exchange_override=ALTERED_CARBON,
     ConfigObj=cfg,
     db=db,
     raw_txs=dumps(
