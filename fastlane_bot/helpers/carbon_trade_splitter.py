@@ -30,16 +30,16 @@ def split_carbon_trades(
             pool = trade_instruction.db.get_pool(cid=str(tx["cid"]).split("-")[0])
 
             if cfg.NATIVE_GAS_TOKEN_ADDRESS in pool.get_tokens:
-                token_type = cfg.NATIVE_GAS_TOKEN_ADDRESS
+                pool_type = cfg.NATIVE_GAS_TOKEN_ADDRESS
             elif cfg.WRAPPED_GAS_TOKEN_ADDRESS in pool.get_tokens:
-                token_type = cfg.WRAPPED_GAS_TOKEN_ADDRESS
+                pool_type = cfg.WRAPPED_GAS_TOKEN_ADDRESS
             else:
-                token_type = ''
+                pool_type = ''
 
-            tx["tknin"] = _get_token_address(cfg, token_type, trade_instruction.tknin)
-            tx["tknout"] = _get_token_address(cfg, token_type, trade_instruction.tknout)
+            tx["tknin"] = _get_token_address(cfg, pool_type, trade_instruction.tknin)
+            tx["tknout"] = _get_token_address(cfg, pool_type, trade_instruction.tknout)
 
-            exchange_id = pool.exchange_name + token_type
+            exchange_id = pool.exchange_name + pool_type
             if exchange_id in carbon_exchanges:
                 carbon_exchanges[exchange_id].append(tx)
             else:
@@ -63,9 +63,9 @@ def split_carbon_trades(
 
     return new_trade_instructions
 
-def _get_token_address(cfg, token_type: str, token_address: str) -> str:
-    if token_type == cfg.NATIVE_GAS_TOKEN_ADDRESS and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
+def _get_token_address(cfg, pool_type: str, token_address: str) -> str:
+    if pool_type == cfg.NATIVE_GAS_TOKEN_ADDRESS and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
         return cfg.NATIVE_GAS_TOKEN_ADDRESS
-    if token_type == cfg.WRAPPED_GAS_TOKEN_ADDRESS and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
+    if pool_type == cfg.WRAPPED_GAS_TOKEN_ADDRESS and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
         return cfg.WRAPPED_GAS_TOKEN_ADDRESS
     return token_address
