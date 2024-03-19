@@ -1,3 +1,4 @@
+from typing import List
 from dataclasses import asdict
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import TradeInstruction, RouteStruct
@@ -5,10 +6,10 @@ from fastlane_bot.events.exceptions import FlashloanTokenException
 
 def add_wrap_or_unwrap_trades_to_route(
     cfg: Config,
-    flashloans: list[dict],
-    routes: list[dict],
-    trade_instructions: list[TradeInstruction]
-) -> list[dict]:
+    flashloans: List[dict],
+    routes: List[dict],
+    trade_instructions: List[TradeInstruction]
+) -> List[dict]:
     """
     This method adds wrap and/or unwrap routes.
 
@@ -90,7 +91,13 @@ def add_wrap_or_unwrap_trades_to_route(
 
     return new_routes
 
-def _get_wrap_or_unwrap_native_gas_tkn_struct(cfg, sourceToken, targetToken, amount: int, deadline: int):
+def _get_wrap_or_unwrap_native_gas_tkn_struct(
+    cfg: Config,
+    sourceToken: str,
+    targetToken: str,
+    amount: int,
+    deadline: int
+) -> dict:
     return asdict(
         RouteStruct(
             platformId=cfg.EXCHANGE_IDS[cfg.WRAP_UNWRAP_NAME],

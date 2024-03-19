@@ -1,11 +1,9 @@
+from typing import List
 from json import loads, dumps
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import TradeInstruction
 
-def split_carbon_trades(
-    cfg: Config,
-    trade_instructions: list[TradeInstruction]
-) -> list[TradeInstruction]:
+def split_carbon_trades(cfg: Config, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
     """
     This method splits every trade instruction which includes a mix of gas tokens and/or a mix of Carbon deployments,
     into several trade instructions. For example, `NATIVE/WRAPPED -> TKN` is split into `NATIVE -> TKN` and `WRAPPED -> TKN`.
@@ -63,7 +61,7 @@ def split_carbon_trades(
 
     return new_trade_instructions
 
-def _get_token_address(cfg, pool_type: str, token_address: str) -> str:
+def _get_token_address(cfg: Config, pool_type: str, token_address: str) -> str:
     """
     This method takes a pool and a token as input,
     and determines the actual token which should be traded on that pool.
