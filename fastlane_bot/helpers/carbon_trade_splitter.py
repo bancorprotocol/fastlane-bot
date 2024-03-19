@@ -64,6 +64,26 @@ def split_carbon_trades(
     return new_trade_instructions
 
 def _get_token_address(cfg, pool_type: str, token_address: str) -> str:
+    """
+    This method takes a pool and a token as input,
+    and determines the actual token which should be traded on that pool.
+
+    If the pool supports trading the native token but the given token is the wrapped token,
+    then the actual token which should be traded on that pool is the native token.
+
+    If the pool supports trading the wrapped token but the given token is the native token,
+    then the actual token which should be traded on that pool is the wrapped token.
+
+    In all other cases, the actual token which should be traded on that pool is the given one.
+
+    Args:
+        pool_type: Native, Wrapped or Neither.
+        token_address: The address of the token.
+
+    Returns:
+        the actual token which should be traded on then given pool.
+    """
+
     if pool_type == cfg.NATIVE_GAS_TOKEN_ADDRESS and token_address == cfg.WRAPPED_GAS_TOKEN_ADDRESS:
         return cfg.NATIVE_GAS_TOKEN_ADDRESS
     if pool_type == cfg.WRAPPED_GAS_TOKEN_ADDRESS and token_address == cfg.NATIVE_GAS_TOKEN_ADDRESS:
