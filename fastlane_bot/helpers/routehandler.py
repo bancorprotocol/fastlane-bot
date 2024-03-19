@@ -363,13 +363,13 @@ class TxRouteHandler(TxRouteHandlerBase):
             self.to_route_struct(
                 min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
                 deadline=deadline,
-                target_address=trade_instructions[idx].tknout_address,
+                target_address=trade_instructions[idx].get_real_tkn_out,
                 custom_address=self.get_custom_address(pool=pools[idx]),
                 platform_id=trade_instructions[idx].platform_id,
                 customInt=trade_instructions[idx].custom_int,
                 customData=trade_instructions[idx].custom_data,
                 override_min_target_amount=True,
-                source_token=trade_instructions[idx].tknin_address,
+                source_token=trade_instructions[idx].get_real_tkn_in,
                 source_amount=Decimal(str(trade_instructions[idx].amtin_wei)),
                 exchange_name=trade_instructions[idx].exchange_name,
             )
