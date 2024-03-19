@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -581,7 +581,7 @@ AG.cycles()
 try:
     df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
-    df = pd.read_csv("fastlane_bot/tests/nbtest/_data/NBTEST_002_Curves.csv.gz")
+    df = pd.read_csv("fastlane_bot/tests/_data/NBTEST_002_Curves.csv.gz")
 CC0 = CPCContainer.from_df(df)
 print("Num curves:", len(CC0))
 print("Num pairs:", len(CC0.pairs()))

@@ -163,6 +163,34 @@ class TradeInstruction:
         self._exchange_id = self.get_platform_id()
         self.custom_int = self.get_custom_int()
 
+
+    def get_real_tokens(self):
+        return self.get_real_tkn_in, self.get_real_tkn_out
+
+    @property
+    def get_real_tkn_in(self):
+        """
+        Returns the correct token going into the trade.
+        """
+        if self.tknin_is_native:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif self.tknin_is_wrapped:
+            return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        else:
+            return self.tknin
+
+    @property
+    def get_real_tkn_out(self):
+        """
+        Returns the correct token received by the trade.
+        """
+        if self.tknout_is_native:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif self.tknout_is_wrapped:
+            return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        else:
+            return self.tknout
+
     def get_custom_int(self) -> int:
         """
         Gets the custom int field for the pool

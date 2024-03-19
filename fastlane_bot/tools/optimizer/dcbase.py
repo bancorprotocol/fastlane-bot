@@ -1,27 +1,55 @@
 """
-optimization library -- dataclass base module
+This module defines the `DCBase` class, from which
+dataclasses can derive, and which adds useful methods to
+those dataclasses, notably ``asdict``, ``astuple`` and ``fields``.
 
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
-
-This module is still subject to active research, and comments and suggestions are welcome. 
-The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 
 
 class DCBase:
     """
-    base class for all data classes, adding some useful methods
+    Adds useful methods to dataclasses
+    
+    USAGE
+    
+    .. code-block:: python
+    
+        @dataclass
+        class MyDataClass(DCBase):
+            ...
+        
+        obj = MyDataClass(...)
+        obj.asdict()
+        obj.astuple()
+        obj.fields()
     """
 
     def asdict(self):
+        """
+        returns the object as a dict
+        
+        alias for `dataclasses.asdict(self)`
+        """
         return asdict(self)
 
     def astuple(self):
+        """
+        returns the object as a tuple
+        
+        alias for `dataclasses.astuple(self)`
+        """
         return astuple(self)
 
     def fields(self):
+        """
+        returns the object fields
+        
+        alias for `dataclasses.fields(self)`
+        """
         return fields(self)
 
     # def pickle(self, filename, addts=True):

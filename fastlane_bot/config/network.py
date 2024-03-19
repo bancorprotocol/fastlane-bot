@@ -232,8 +232,7 @@ class ConfigNetwork(ConfigBase):
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 
-    PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
-    PLATFORM_ID_WRAP_UNWRAP = 10
+    WRAP_UNWRAP_NAME = "wrap_or_unwrap"
 
     GAS_ORACLE_ADDRESS = None
 
@@ -385,7 +384,7 @@ class ConfigNetwork(ConfigBase):
             self.BANCOR_V3_NAME: 2,
             self.BALANCER_NAME: 7,
             self.CARBON_POL_NAME: 8,
-            self.PLATFORM_ID_WRAP_UNWRAP: 10,
+            self.WRAP_UNWRAP_NAME: 10,
             self.UNISWAP_V2_NAME: 3,
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,

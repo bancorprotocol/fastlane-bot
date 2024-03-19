@@ -1,6 +1,7 @@
 """
 objects for encapsulating arbitrage-related graphs
 
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 
@@ -80,6 +81,8 @@ class TrackedStateFloat(_DCBase):
     represents a single tracked float field in a (typical dataclass) record
 
     USAGE
+    
+    .. code-block:: python
 
         @ag.dataclass
         class MyState():
@@ -769,7 +772,9 @@ class Cycle(_DCBase):
     :uid:    an optional unique identifier for the cycle
 
     USAGE
-
+    
+    .. code-block:: python
+    
         C = Cycle([1,2,3,4,5])
         for c in C.items(start_ix=2):
             print(c)
@@ -865,10 +870,10 @@ class Cycle(_DCBase):
         """
         iterate over the cycle
 
-        :start_ix:  start index*
-        :start_val: start value*
+        :start_ix:  start index (1)
+        :start_val: start value (1)
 
-        * only one of start_ix and start_val can be specified
+        NOTE 1: only one of ``start_ix`` and ``start_val`` can be specified
         """
         if not start_val is None:
             if not start_ix is None:
@@ -1115,7 +1120,7 @@ class ArbGraph(_DCBase):
         self, tkn_in, amount_in, tkn_out, amount_out, *, inverse=False, uid=None
     ):
         """
-        add an amount-type* edge to the graph
+        add an amount-type edge to the graph
 
         :tkn_in:        token name of the input node (as str)
         :amount_in:     amount of input token (as float)
@@ -1124,7 +1129,7 @@ class ArbGraph(_DCBase):
         :inverse:       if True, use reverse quote convention
         :uid:           unique id of the edge
 
-        *amount-type edges are edges that have a specific amount of input and output tokens,
+        NOTE: amount-type edges are edges that have a specific amount of input and output tokens,
         ie they correspond to a price AND a volume; connection type edges only have a price
         """
         assert amount_in > 0, f"amount_in must be positive {amount_in}"
@@ -1189,22 +1194,22 @@ class ArbGraph(_DCBase):
         uid=None,
     ):
         """
-        add a connection-type* edge to the graph
+        add a connection-type edge to the graph
 
         :tkn_in:            token name of the input node (as str)
         :tkn_out:           token name of the output node (as str)
         :price:             price of the connection (as float), according to convention
         :inverse:           if True, use reverse quote convention
         :price_outperin:    price in outperin convention (alternative to price)
-        :weight:            weight of the connection (as float; default is 1)**
+        :weight:            weight of the connection (as float; default is 1)
         :symmetric:         if True, add the inverse edge as well
         :uid:               unique id of the edge
         :returns:           self
 
-        **amount-type edges are edges that have a specific amount of input and output tokens,
+        NOTE1: amount-type edges are edges that have a specific amount of input and output tokens,
         ie they correspond to a price AND a volume; connection type edges only have a price
 
-        **the weight of the connection is mostly useful to determine the prices of combined
+        NOTE2: the weight of the connection is mostly useful to determine the prices of combined
         edges; essentially, the price of the combined edge is the weighted average of the
         prices of the individual edges
         """
@@ -1251,11 +1256,11 @@ class ArbGraph(_DCBase):
 
         :curves:    specifies one or multiple curves, depending on the type:
                     :CPC:           a single curve of type ConstantProductCurve is added*
-                    :iterable:      multiple curves of type CPC are added*
-                    :CPCContainer:  all curves in the container are added*
+                    :iterable:      multiple curves of type CPC are added (1)
+                    :CPCContainer:  all curves in the container are added (1)
         :uid:       unique id of the edge; should only be provided for singles curves
 
-        *specifically the way the algo works AT THEM MOMENT (but don't rely on this),
+        NOTE1: specifically the way the algo works AT THEM MOMENT (but don't rely on this),
         if the object has a curves method, it is assumed to be an iterable of CPCs;
         if the object is iterable, it is assumed to be an iterable of CPCs; otherwise
         it is assumbed to be a single CPC
@@ -1440,9 +1445,9 @@ class ArbGraph(_DCBase):
         """
         computes the graph Laplacian (and its eigenvalues if requested)
 
-        :returns:   the graph Laplacian L, or tuple (L, eigenvalues)*
+        :returns:   the graph Laplacian L, or tuple (L, eigenvalues)
 
-        *L is a scipy sparse matrix; use toarray() to expand to a numpy array
+        NOTE: L is a scipy sparse matrix; use toarray() to expand to a numpy array
         """
         G = self.as_graph(directed=directed, weighted=weighted)
         L = nx.laplacian_matrix(G)
@@ -1460,9 +1465,9 @@ class ArbGraph(_DCBase):
         """
         computes the graph adjacency matrix (and its eigenvalues if requested)
 
-        :returns:   the graph adjacency matrix A, or tuple (A, eigenvalues)*
+        :returns:   the graph adjacency matrix A, or tuple (A, eigenvalues)
 
-        *A is a scipy sparse matrix; use toarray() to expand to a numpy array
+        Note: A is a scipy sparse matrix; use toarray() to expand to a numpy array
         """
         G = self.as_graph(directed=directed, weighted=weighted)
         A = nx.adjacency_matrix(G)
@@ -1551,11 +1556,11 @@ class ArbGraph(_DCBase):
         check if the graph is weakly connected
 
         Note: if the graph is weakly connected, then all the cycles in the graph are subcycles
-        of a single cycle*. This is important because this means that that they can be more
+        of a single cycle (1). This is important because this means that that they can be more
         easily aligned, which means that we can combined transactions of multiple cycles
         into a single transaction.
 
-        *According to ChatGPT...
+        NOTE1: According to ChatGPT...
         """
         G = self.as_graph(directed=True, weighted=False)
         return nx.is_weakly_connected(G)
@@ -1846,7 +1851,7 @@ class ArbGraph(_DCBase):
         :cycles:    a list of Cycle objects, eg as returned by the cycles() method
         :token:     either a single token for all cycles, or a list of tokens, one for each cycle
         :params:    additional parameters that are being passed to run_arbitrage_cycle
-        :returns:   depends on the `format` parameter which is one of ACRET_GEN, ACRET_TUPLE,
+        :returns:   depends on the ``format`` parameter which is one of ACRET_GEN, ACRET_TUPLE,
                     ACRET_DICTS, ACRET_DF or ACREF_PRETTYDF
         """
         if format is None:
@@ -1865,7 +1870,7 @@ class ArbGraph(_DCBase):
         the formatting function for run_arbitrage_cycles to reformat the results
 
         :rawresults:    the ACRET_RAW result returned by run_arbitrage_cycles
-        :format:       same as in `run_arbitrage_cycles`
+        :format:       same as in ``run_arbitrage_cycles``
         """
         if format is None:
             format = self.ACREF_DF
@@ -1998,10 +2003,10 @@ class ArbGraph(_DCBase):
         """
         transport an amount along a (usually closed) path, ignoring capacities
 
-        :path:      typically a Cycle object, or another object the same API*
+        :path:      typically a Cycle object, or another object the same API (1)
                     (Cycle paths will always be closed)
 
-        *the function expect that path has a method called `pairs` that returns an
+        NOTE1: the function expect that path has a method called ``pairs`` that returns an
         iterator, and the iterator in turn yields tuples(node_in, node_out) where
         the previous node_out is the same as the next node_in
         """

@@ -7,14 +7,15 @@ slow and, importantly, converges badly on levered curves (eg Uniswap v3, Carbon)
 we may continue research into this method, at this stage it is recommended to use the 
 marginal price optimizer instead.
 
-(c) Copyright Bprotocol foundation 2023. 
-Licensed under MIT
-
+---
 This module is still subject to active research, and comments and suggestions are welcome. 
 The corresponding author is Stefan Loesch <stefan@bancor.network>
+
+(c) Copyright Bprotocol foundation 2023. 
+Licensed under MIT
 """
-__VERSION__ = "5.0"
-__DATE__ = "26/Jul/2023"
+__VERSION__ = "5.0.1"
+__DATE__ = "23/Jan/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -33,8 +34,9 @@ except:
     # if cvxpy is not installed on the system then the convex optimization methods will not work
     # however, the (superior) marginal price based methods will still work and we do not want to
     # force installation of an otherwise unused package onto the user's system
-    cp = None
-
+    from types import SimpleNamespace
+    cp = SimpleNamespace(Variable=0, ECOS=0, SCS=0, OSQP=0, CVXOPT=0, CBC=0)
+    
 from .dcbase import DCBase
 from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
@@ -200,13 +202,19 @@ class ConvexOptimizer(CPCArbOptimizer):
             returns list of TradeInstruction objects
 
             :ti_format:     format of the TradeInstruction objects, see TradeInstruction.to_format
-                            :TIF_OBJECTS:       a list of TradeInstruction objects (default)
-                            :TIF_DICTS:         a list of TradeInstruction dictionaries
-                            :TIF_DFRAW:         raw dataframe (holes are filled with NaN)
-                            :TIF_DF:            alias for :TIF_DFRAW:
-                            :TIF_DFAGRR:        aggregated dataframe
-                            :TIF_DFPG:          prices-and-gains analyis dataframe
-
+            :returns:       see table
+            
+            ================  ====================================================
+            ti_format         returns
+            ================  ====================================================
+            TIF_OBJECTS       a list of TradeInstruction objects (default)
+            TIF_DICTS         a list of TradeInstruction dictionaries
+            TIF_DFRAW         raw dataframe (holes are filled with NaN)
+            TIF_DF            alias for TIF_DFRAW            
+            TIF_DFP           returns a "pretty" dataframe (holes are spaces)
+            TIF_DFAGRR        aggregated dataframe
+            TIF_DF            alias for TIF_DFRAW
+            ================  ====================================================
             """
             result = (
                 CPCArbOptimizer.TradeInstruction.new(
