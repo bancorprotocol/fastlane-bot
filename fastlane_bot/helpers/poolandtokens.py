@@ -91,7 +91,7 @@ class PoolAndTokens:
     ConfigObj: Config
     id: int
     cid: str
-    strategy_id: str
+    strategy_id: int
     last_updated: str
     last_updated_block: int
     descr: str
@@ -169,8 +169,12 @@ class PoolAndTokens:
 
 
     def __post_init__(self):
-        if not isinstance(self.strategy_id, str):
-            self.strategy_id = str(self.strategy_id)
+        if not isinstance(self.strategy_id, int):
+            try:
+                self.strategy_id = int(self.strategy_id)
+            except Exception as e:
+                self.ConfigObj.logger.error(f"[poolandtokens.py] Error converting cid={self.cid} strategy_id={self.strategy_id} to int: {e}")
+                self.strategy_id = 0
 
         self.A_1 = self.A_1 or 0
         self.B_1 = self.B_1 or 0

@@ -62,7 +62,7 @@ class UniswapV2Pool(Pool):
             self.state[key] = value
 
         data["cid"] = self.state["cid"]
-        data["strategy_id"] = None
+        data["strategy_id"] = 0
         data["fee"] = self.state["fee"]
         data["fee_float"] = self.state["fee_float"]
         data["exchange_name"] = self.state["exchange_name"]

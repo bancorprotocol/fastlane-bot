@@ -159,7 +159,7 @@ def get_pool_info(
         "tkn1_symbol": tkn1["symbol"],
         "tkn1_decimals": tkn1["decimals"],
         "pair_name": tkn0["address"] + "/" + tkn1["address"],
-        "strategy_id": pool["strategy_id"] if "strategy_id" in pool else None,
+        "strategy_id": pool["strategy_id"] if "strategy_id" in pool else 0,
     }
     if len(pool_info["pair_name"].split("/")) != 2:
         raise Exception(f"pair_name is not valid for {pool_info}")
