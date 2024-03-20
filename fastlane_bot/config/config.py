@@ -1,6 +1,14 @@
 """
 Fastlane bot configuration object -- main object
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"

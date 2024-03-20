@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the pools classes
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from fastlane_bot.events.pools.bancor_v3 import BancorV3Pool
 from fastlane_bot.events.pools.carbon_v1 import CarbonV1Pool

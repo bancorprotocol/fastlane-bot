@@ -1,9 +1,14 @@
 """
 cloaking access to python files
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.0-BETA1"
 __DATE__ = "26/Apr 2023"
 

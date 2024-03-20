@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Main integration point for the bot optimizer and other infrastructure.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 
                       ,(&@(,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
                ,%@@@@@@@@@@,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.
@@ -39,7 +42,6 @@ Licensed under MIT
     &@@@@@@@@@@@@@@@@@@@@@@@@@@%((((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@&(((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     (@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@((,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-
 """
 __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"

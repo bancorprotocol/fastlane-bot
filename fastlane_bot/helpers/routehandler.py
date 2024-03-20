@@ -1,8 +1,12 @@
 """
 Route handler for the Fastlane project.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.1.1"
 __DATE__ = "02/May/2023"

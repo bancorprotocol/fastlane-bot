@@ -1,8 +1,12 @@
 """
-This file constains the constants used in the fastlane_bot package.
+This file contains the constants used in the fastlane_bot package.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT License.
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 FLASHLOAN_FEE_MAP = {
