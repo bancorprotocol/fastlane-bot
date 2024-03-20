@@ -953,30 +953,21 @@ SCALE_V2_FACTORY_ABI = [
 GAS_ORACLE_ABI = [
     {
         "type": "function",
-        "name": "basefee",
+        "name": "getL1Fee",
         "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "l1FeeOverhead",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "l1FeeScalar",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
+        "inputs": [
+            {
+                "type": "bytes",
+                "name": "_data",
+                "internalType": "bytes"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "uint256",
+                "name": "",
+                "internalType": "uint256"
+            }
+        ]
     }
 ]
