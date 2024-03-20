@@ -170,6 +170,15 @@ UNISWAP_V2_FACTORY_ABI = [
     }
 ]
 
+UNISWAP_V3_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PoolCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "tkn0_address", "type": "address"}, {"indexed": True, "internalType": "address", "name": "tkn1_address", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
+    }
+]
+
 PANCAKESWAP_V2_FACTORY_ABI = [
     {
         "type": "event",
@@ -186,6 +195,70 @@ PANCAKESWAP_V3_FACTORY_ABI = [
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
     },
+]
+
+SOLIDLY_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PoolCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "pool", "type": "address"}, {"internalType": "bool", "name": "_stable", "type": "bool"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
+VELOCIMETER_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
+SCALE_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getRealFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
+CLEOPATRA_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"type": "address", "name": "token0", "internalType": "address", "indexed": True}, {"type": "address", "name": "token1", "internalType": "address", "indexed": True}, {"type": "bool", "name": "stable", "internalType": "bool", "indexed": False}, {"type": "address", "name": "pair", "internalType": "address", "indexed": False}, {"type": "uint256", "name": "", "internalType": "uint256", "indexed": False}]
+    },
+    {
+        "type": "function",
+        "name": "getPairFee",
+        "stateMutability": "view",
+        "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
+        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+    }
 ]
 
 UNISWAP_V2_POOL_ABI = [
@@ -214,6 +287,76 @@ UNISWAP_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint112", "name": "_reserve0", "type": "uint112"}, {"internalType": "uint112", "name": "_reserve1", "type": "uint112"}, {"internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32"}]
+    },
+    {
+        "type": "function",
+        "name": "token0",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "token1",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    }
+]
+
+UNISWAP_V3_POOL_ABI = [
+    {
+        "type": "event",
+        "name": "Flash",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid1", "type": "uint256"}]
+    },
+    {
+        "type": "event",
+        "name": "Initialize",
+        "anonymous": False,
+        "inputs": [{"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
+    },
+    {
+        "type": "event",
+        "name": "Swap",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "int256", "name": "amount0", "type": "int256"}, {"indexed": False, "internalType": "int256", "name": "amount1", "type": "int256"}, {"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "uint128", "name": "liquidity", "type": "uint128"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
+    },
+    {
+        "type": "function",
+        "name": "factory",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "fee",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint24", "name": "", "type": "uint24"}]
+    },
+    {
+        "type": "function",
+        "name": "liquidity",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}]
+    },
+    {
+        "type": "function",
+        "name": "slot0",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"internalType": "int24", "name": "tick", "type": "int24"}, {"internalType": "uint16", "name": "observationIndex", "type": "uint16"}, {"internalType": "uint16", "name": "observationCardinality", "type": "uint16"}, {"internalType": "uint16", "name": "observationCardinalityNext", "type": "uint16"}, {"internalType": "uint8", "name": "feeProtocol", "type": "uint8"}, {"internalType": "bool", "name": "unlocked", "type": "bool"}]
+    },
+    {
+        "type": "function",
+        "name": "tickSpacing",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "int24", "name": "", "type": "int24"}]
     },
     {
         "type": "function",
@@ -301,354 +444,6 @@ PANCAKESWAP_V3_POOL_ABI = [
     }
 ]
 
-UNISWAP_V3_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "tkn0_address", "type": "address"}, {"indexed": True, "internalType": "address", "name": "tkn1_address", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
-    }
-]
-
-UNISWAP_V3_POOL_ABI = [
-    {
-        "type": "event",
-        "name": "Flash",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid1", "type": "uint256"}]
-    },
-    {
-        "type": "event",
-        "name": "Initialize",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
-    },
-    {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "int256", "name": "amount0", "type": "int256"}, {"indexed": False, "internalType": "int256", "name": "amount1", "type": "int256"}, {"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "uint128", "name": "liquidity", "type": "uint128"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
-    },
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "fee",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint24", "name": "", "type": "uint24"}]
-    },
-    {
-        "type": "function",
-        "name": "liquidity",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}]
-    },
-    {
-        "type": "function",
-        "name": "slot0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"internalType": "int24", "name": "tick", "type": "int24"}, {"internalType": "uint16", "name": "observationIndex", "type": "uint16"}, {"internalType": "uint16", "name": "observationCardinality", "type": "uint16"}, {"internalType": "uint16", "name": "observationCardinalityNext", "type": "uint16"}, {"internalType": "uint8", "name": "feeProtocol", "type": "uint8"}, {"internalType": "bool", "name": "unlocked", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "tickSpacing",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "int24", "name": "", "type": "int24"}]
-    },
-    {
-        "type": "function",
-        "name": "token0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "token1",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
-BANCOR_V3_NETWORK_INFO_ABI = [
-    {
-        "type": "function",
-        "name": "tradingFeePPM",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "tradingLiquidity",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}], "internalType": "struct TradingLiquidity", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-BANCOR_V2_CONVERTER_ABI = [
-    {
-        "type": "event",
-        "name": "Conversion",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_fromToken", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_toToken", "type": "address"}, {"indexed": True, "internalType": "address", "name": "_trader", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_amount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_return", "type": "uint256"}, {"indexed": False, "internalType": "int256", "name": "_conversionFee", "type": "int256"}]
-    },
-    {
-        "type": "event",
-        "name": "TokenRateUpdate",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_token1", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_token2", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_rateN", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_rateD", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "anchor",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "contract IConverterAnchor", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "connectorTokens",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "uint256", "name": "_index", "type": "uint256"}],
-        "outputs": [{"internalType": "contract IERC20", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "conversionFee",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "reserveBalances",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "reserveTokens",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "contract IERC20[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-BANCOR_V3_NETWORK_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract IPoolCollection", "name": "poolCollection", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "TokensTraded",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "sourceToken", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "targetToken", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "sourceAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "address", "name": "trader", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    },
-    {
-        "type": "function",
-        "name": "withdrawPOL",
-        "stateMutability": "nonpayable",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-BANCOR_V3_POOL_COLLECTION_ABI = [
-    {
-        "type": "event",
-        "name": "TradingEnabled",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "bool", "name": "newStatus", "type": "bool"}, {"indexed": True, "internalType": "uint8", "name": "reason", "type": "uint8"}]
-    },
-    {
-        "type": "event",
-        "name": "TradingFeePPMUpdated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": False, "internalType": "uint32", "name": "prevFeePPM", "type": "uint32"}, {"indexed": False, "internalType": "uint32", "name": "newFeePPM", "type": "uint32"}]
-    },
-    {
-        "type": "event",
-        "name": "TradingLiquidityUpdated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "tkn_address", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "prevLiquidity", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "newLiquidity", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "poolData",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"components": [{"internalType": "contract IPoolToken", "name": "poolToken", "type": "address"}, {"internalType": "uint32", "name": "tradingFeePPM", "type": "uint32"}, {"internalType": "bool", "name": "tradingEnabled", "type": "bool"}, {"internalType": "bool", "name": "depositingEnabled", "type": "bool"}, {"components": [{"internalType": "uint32", "name": "blockNumber", "type": "uint32"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "rate", "type": "tuple"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "invRate", "type": "tuple"}], "internalType": "struct AverageRates", "name": "averageRates", "type": "tuple"}, {"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}, {"internalType": "uint256", "name": "stakedBalance", "type": "uint256"}], "internalType": "struct PoolLiquidity", "name": "liquidity", "type": "tuple"}], "internalType": "struct Pool", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "tradingFeePPM",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-BANCOR_POL_ABI = [
-    {
-        "type": "event",
-        "name": "TokenTraded",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "caller", "type": "address"}, {"indexed": True, "internalType": "Token", "name": "token", "type": "address"}, {"indexed": False, "internalType": "uint128", "name": "inputAmount", "type": "uint128"}, {"indexed": False, "internalType": "uint128", "name": "outputAmount", "type": "uint128"}]
-    },
-    {
-        "type": "event",
-        "name": "TradingEnabled",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "Token", "name": "token", "type": "address"}, {"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "indexed": False, "internalType": "struct ICarbonPOL.Price", "name": "price", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "amountAvailableForTrading",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
-        "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}]
-    },
-    {
-        "type": "function",
-        "name": "tokenPrice",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
-        "outputs": [{"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "internalType": "struct ICarbonPOL.Price", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-BANCOR_V3_NETWORK_SETTINGS = [
-    {
-        "type": "function",
-        "name": "tokenWhitelistForPOL",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-MULTICALL_ABI = [
-    {
-        "type": "function",
-        "name": "aggregate",
-        "stateMutability": "view",
-        "inputs": [{"components": [{"internalType": "address", "name": "target", "type": "address"}, {"internalType": "bytes", "name": "callData", "type": "bytes"}], "internalType": "struct Multicall2.Call[]", "name": "calls", "type": "tuple[]"}],
-        "outputs": [{"internalType": "uint256", "name": "blockNumber", "type": "uint256"}, {"internalType": "bytes[]", "name": "returnData", "type": "bytes[]"}]
-    }
-]
-
-BALANCER_VAULT_ABI = [
-    {
-        "type": "event",
-        "name": "AuthorizerChanged",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract IAuthorizer", "name": "newAuthorizer", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "FlashLoan",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract IFlashLoanRecipient", "name": "recipient", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "token", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "feeAmount", "type": "uint256"}]
-    },
-    {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "poolId", "type": "bytes32"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenIn", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenOut", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amountIn", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amountOut", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "getPoolTokens",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "bytes32", "name": "poolId", "type": "bytes32"}],
-        "outputs": [{"internalType": "contract IERC20[]", "name": "tokens", "type": "address[]"}, {"internalType": "uint256[]", "name": "balances", "type": "uint256[]"}, {"internalType": "uint256", "name": "lastChangeBlock", "type": "uint256"}]
-    }
-]
-
-BALANCER_POOL_ABI_V1 = [
-    {
-        "type": "function",
-        "name": "getSwapFeePercentage",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-SOLIDLY_V2_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "getFee",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "pool", "type": "address"}, {"internalType": "bool", "name": "_stable", "type": "bool"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
 SOLIDLY_V2_POOL_ABI = [
     {
         "type": "event",
@@ -661,62 +456,6 @@ SOLIDLY_V2_POOL_ABI = [
         "name": "Swap",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}]
-    },
-    {
-        "type": "event",
-        "name": "Sync",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "getReserves",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "_reserve0", "type": "uint256"}, {"internalType": "uint256", "name": "_reserve1", "type": "uint256"}, {"internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "stable",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "token0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "token1",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
-EQUALIZER_V2_POOL_ABI = [
-    {
-        "type": "event",
-        "name": "Fees",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}]
-    },
-    {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
     },
     {
         "type": "event",
@@ -811,51 +550,312 @@ VELOCIMETER_V2_POOL_ABI = [
     }
 ]
 
-VELOCIMETER_V2_FACTORY_ABI = [
+EQUALIZER_V2_POOL_ABI = [
     {
         "type": "event",
-        "name": "PairCreated",
+        "name": "Fees",
         "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}]
+    },
+    {
+        "type": "event",
+        "name": "Swap",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
+    },
+    {
+        "type": "event",
+        "name": "Sync",
+        "anonymous": False,
+        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
     },
     {
         "type": "function",
-        "name": "getFee",
+        "name": "factory",
         "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "getReserves",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256", "name": "_reserve0", "type": "uint256"}, {"internalType": "uint256", "name": "_reserve1", "type": "uint256"}, {"internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "stable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
+    },
+    {
+        "type": "function",
+        "name": "token0",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "token1",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    }
+]
+
+BANCOR_V2_CONVERTER_ABI = [
+    {
+        "type": "event",
+        "name": "Conversion",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_fromToken", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_toToken", "type": "address"}, {"indexed": True, "internalType": "address", "name": "_trader", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_amount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_return", "type": "uint256"}, {"indexed": False, "internalType": "int256", "name": "_conversionFee", "type": "int256"}]
+    },
+    {
+        "type": "event",
+        "name": "TokenRateUpdate",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_token1", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_token2", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_rateN", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_rateD", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "anchor",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "contract IConverterAnchor", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "connectorTokens",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "uint256", "name": "_index", "type": "uint256"}],
+        "outputs": [{"internalType": "contract IERC20", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "conversionFee",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
+    },
+    {
+        "type": "function",
+        "name": "reserveBalances",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "reserveTokens",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "contract IERC20[]", "name": "", "type": "address[]"}]
+    },
+    {
+        "type": "function",
+        "name": "version",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    }
+]
+
+BANCOR_V3_NETWORK_ABI = [
+    {
+        "type": "event",
+        "name": "PoolCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract IPoolCollection", "name": "poolCollection", "type": "address"}]
+    },
+    {
+        "type": "event",
+        "name": "TokensTraded",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "sourceToken", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "targetToken", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "sourceAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "address", "name": "trader", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "version",
+        "stateMutability": "pure",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    },
+    {
+        "type": "function",
+        "name": "withdrawPOL",
+        "stateMutability": "nonpayable",
+        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
 
-SCALE_V2_FACTORY_ABI = [
+BANCOR_V3_NETWORK_SETTINGS = [
     {
-        "type": "event",
-        "name": "PairCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+        "type": "function",
+        "name": "tokenWhitelistForPOL",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
     },
     {
         "type": "function",
-        "name": "getRealFee",
+        "name": "version",
+        "stateMutability": "pure",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    }
+]
+
+BANCOR_V3_NETWORK_INFO_ABI = [
+    {
+        "type": "function",
+        "name": "tradingFeePPM",
         "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
+        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
+        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
+    },
+    {
+        "type": "function",
+        "name": "tradingLiquidity",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
+        "outputs": [{"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}], "internalType": "struct TradingLiquidity", "name": "", "type": "tuple"}]
+    },
+    {
+        "type": "function",
+        "name": "version",
+        "stateMutability": "pure",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    }
+]
+
+BANCOR_V3_POOL_COLLECTION_ABI = [
+    {
+        "type": "event",
+        "name": "TradingEnabled",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "bool", "name": "newStatus", "type": "bool"}, {"indexed": True, "internalType": "uint8", "name": "reason", "type": "uint8"}]
+    },
+    {
+        "type": "event",
+        "name": "TradingFeePPMUpdated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": False, "internalType": "uint32", "name": "prevFeePPM", "type": "uint32"}, {"indexed": False, "internalType": "uint32", "name": "newFeePPM", "type": "uint32"}]
+    },
+    {
+        "type": "event",
+        "name": "TradingLiquidityUpdated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "tkn_address", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "prevLiquidity", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "newLiquidity", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "poolData",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
+        "outputs": [{"components": [{"internalType": "contract IPoolToken", "name": "poolToken", "type": "address"}, {"internalType": "uint32", "name": "tradingFeePPM", "type": "uint32"}, {"internalType": "bool", "name": "tradingEnabled", "type": "bool"}, {"internalType": "bool", "name": "depositingEnabled", "type": "bool"}, {"components": [{"internalType": "uint32", "name": "blockNumber", "type": "uint32"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "rate", "type": "tuple"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "invRate", "type": "tuple"}], "internalType": "struct AverageRates", "name": "averageRates", "type": "tuple"}, {"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}, {"internalType": "uint256", "name": "stakedBalance", "type": "uint256"}], "internalType": "struct PoolLiquidity", "name": "liquidity", "type": "tuple"}], "internalType": "struct Pool", "name": "", "type": "tuple"}]
+    },
+    {
+        "type": "function",
+        "name": "tradingFeePPM",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
+        "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
+    },
+    {
+        "type": "function",
+        "name": "version",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    }
+]
+
+BANCOR_POL_ABI = [
+    {
+        "type": "event",
+        "name": "TokenTraded",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "caller", "type": "address"}, {"indexed": True, "internalType": "Token", "name": "token", "type": "address"}, {"indexed": False, "internalType": "uint128", "name": "inputAmount", "type": "uint128"}, {"indexed": False, "internalType": "uint128", "name": "outputAmount", "type": "uint128"}]
+    },
+    {
+        "type": "event",
+        "name": "TradingEnabled",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "Token", "name": "token", "type": "address"}, {"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "indexed": False, "internalType": "struct ICarbonPOL.Price", "name": "price", "type": "tuple"}]
+    },
+    {
+        "type": "function",
+        "name": "amountAvailableForTrading",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
+        "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}]
+    },
+    {
+        "type": "function",
+        "name": "tokenPrice",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
+        "outputs": [{"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "internalType": "struct ICarbonPOL.Price", "name": "", "type": "tuple"}]
+    },
+    {
+        "type": "function",
+        "name": "version",
+        "stateMutability": "pure",
+        "inputs": [],
+        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
+    }
+]
+
+BALANCER_VAULT_ABI = [
+    {
+        "type": "event",
+        "name": "AuthorizerChanged",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract IAuthorizer", "name": "newAuthorizer", "type": "address"}]
+    },
+    {
+        "type": "event",
+        "name": "FlashLoan",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "contract IFlashLoanRecipient", "name": "recipient", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "token", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "feeAmount", "type": "uint256"}]
+    },
+    {
+        "type": "event",
+        "name": "Swap",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "poolId", "type": "bytes32"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenIn", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenOut", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amountIn", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amountOut", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPoolTokens",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "bytes32", "name": "poolId", "type": "bytes32"}],
+        "outputs": [{"internalType": "contract IERC20[]", "name": "tokens", "type": "address[]"}, {"internalType": "uint256[]", "name": "balances", "type": "uint256[]"}, {"internalType": "uint256", "name": "lastChangeBlock", "type": "uint256"}]
+    }
+]
+
+BALANCER_POOL_ABI_V1 = [
+    {
+        "type": "function",
+        "name": "getSwapFeePercentage",
+        "stateMutability": "view",
+        "inputs": [],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
 
-CLEOPATRA_V2_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PairCreated",
-        "anonymous": False,
-        "inputs": [{"type": "address", "name": "token0", "internalType": "address", "indexed": True}, {"type": "address", "name": "token1", "internalType": "address", "indexed": True}, {"type": "bool", "name": "stable", "internalType": "bool", "indexed": False}, {"type": "address", "name": "pair", "internalType": "address", "indexed": False}, {"type": "uint256", "name": "", "internalType": "uint256", "indexed": False}]
-    },
+MULTICALL_ABI = [
     {
         "type": "function",
-        "name": "getPairFee",
+        "name": "aggregate",
         "stateMutability": "view",
-        "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
-        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+        "inputs": [{"components": [{"internalType": "address", "name": "target", "type": "address"}, {"internalType": "bytes", "name": "callData", "type": "bytes"}], "internalType": "struct Multicall2.Call[]", "name": "calls", "type": "tuple[]"}],
+        "outputs": [{"internalType": "uint256", "name": "blockNumber", "type": "uint256"}, {"internalType": "bytes[]", "name": "returnData", "type": "bytes[]"}]
     }
 ]
 
