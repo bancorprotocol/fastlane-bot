@@ -9,14 +9,10 @@
 
 
 import json
-from dataclasses import dataclass
-
-import pytest
 
 from fastlane_bot import Bot
-from fastlane_bot.events.new_utils import get_pool_cid
-from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool, \
-    BancorV2Pool, BancorPolPool, SolidlyV2Pool
+from fastlane_bot.events.pools import BancorPolPool, BancorV2Pool, BancorV3Pool, CarbonV1Pool, SolidlyV2Pool, \
+    UniswapV2Pool, UniswapV3Pool
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))

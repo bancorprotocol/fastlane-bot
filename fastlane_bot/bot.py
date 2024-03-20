@@ -322,13 +322,6 @@ class CarbonBot(CarbonBotBase):
 
         return scaled_best_trade_instructions_dic
 
-    @staticmethod
-    def _drop_error(trade_instructions_dct):
-        return [
-            {k: v for k, v in trade_instructions_dct[i].items() if k != "error"}
-            for i in range(len(trade_instructions_dct))
-        ]
-
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
     ) -> List[TradeInstruction]:
@@ -345,7 +338,10 @@ class CarbonBot(CarbonBotBase):
         List[Dict[str, Any]]
             The trade instructions.
         """
-        errorless_trade_instructions_dic = self._drop_error(trade_instructions_dic)
+        errorless_trade_instructions_dicts = [
+            {k: v for k, v in trade_instructions_dic[i].items() if k != "error"}
+            for i in range(len(trade_instructions_dic))
+        ]
         result = (
             {
                 **ti,
@@ -354,7 +350,7 @@ class CarbonBot(CarbonBotBase):
                 "ConfigObj": self.ConfigObj,
                 "db": self.db,
             }
-            for ti in errorless_trade_instructions_dic
+            for ti in errorless_trade_instructions_dicts
             if ti is not None
         )
         result = self._add_strategy_id_to_trade_instructions_dic(result)
@@ -363,12 +359,10 @@ class CarbonBot(CarbonBotBase):
 
     def _add_strategy_id_to_trade_instructions_dic(
         self, trade_instructions_dic: Generator
-    ) -> list:
+    ) -> List[Dict[str, Any]]:
         lst = []
         for ti in trade_instructions_dic:
-            cid = ti["cid"]
-            if '-' in cid:
-                cid = cid.split('-')[0]
+            cid = ti["cid"].split('-')[0]
             ti["strategy_id"] = self.db.get_pool(
                 cid=cid
             ).strategy_id

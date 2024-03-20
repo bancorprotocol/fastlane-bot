@@ -5,6 +5,7 @@ Contains the pool class for Carbon v1. This class is responsible for handling Ca
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import logging
 from dataclasses import dataclass
 from typing import Dict, Any, Tuple, List
 
@@ -153,11 +154,10 @@ class CarbonV1Pool(Pool):
         }
         params = self.parse_event(self.state, fake_event, "None")
         params["exchange_name"] = self.exchange_name
-        params["router"] = self.router_address,
+        params["router"] = self.router_address
         params["fee"] = self.state["fee"]
-        fake_carbon_v1_fork_list = [self.exchange_name]  # because we dont have access to the config object from here,
-        # we need to fake the list
-        params["cid"] = get_pool_cid(params, fake_carbon_v1_fork_list)
+        carbon_v1_fork_list = [self.exchange_name]  # This is safe because we are in the CarbonV1Pool class
+        params["cid"] = get_pool_cid(params, carbon_v1_fork_list)
         for key, value in params.items():
             self.state[key] = value
 
