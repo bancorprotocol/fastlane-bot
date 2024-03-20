@@ -1,9 +1,15 @@
-# coding=utf-8
 """
-Contains the exchange class for BancorV3. This class is responsible for handling BancorV3 events and updating the state of the pools.
+Contains the exchange class for BancorV3. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for handling BancorV3 events and updating the state of the pools.
+
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any

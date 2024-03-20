@@ -1,6 +1,14 @@
 """
 Fastlane bot config -- provider
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "0.9.1"
 __DATE__ = "30/Apr 2023"
 

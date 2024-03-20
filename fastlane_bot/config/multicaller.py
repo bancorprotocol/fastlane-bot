@@ -1,10 +1,14 @@
-# coding=utf-8
 """
 This is the multicaller module.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
 

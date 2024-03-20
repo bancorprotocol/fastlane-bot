@@ -4,6 +4,13 @@ Testing utilities for the fastlane_bot package
 USAGE
 
     from fastlane_bot.testing import *
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.3"
 __DATE__ = "15/Jan/2024"

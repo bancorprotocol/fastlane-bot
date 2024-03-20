@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the manager class for pools. This class is responsible for handling pools and updating their state.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import List, Dict, Any, Callable, Optional
 
