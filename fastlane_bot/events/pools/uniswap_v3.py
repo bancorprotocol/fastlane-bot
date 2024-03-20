@@ -58,7 +58,7 @@ class UniswapV3Pool(Pool):
 
         try:
             data["cid"] = self.state["cid"]
-            data["strategy_id"] = self.state["strategy_id"]
+            data["strategy_id"] = 0
             data["exchange_name"] = self.state["exchange_name"]
             data["fee"] = self.state["fee"]
             data["fee_float"] = self.state["fee_float"]
