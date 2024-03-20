@@ -15,7 +15,7 @@ from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, VELOCIMETER_V2_POOL_ABI
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V3_POOL_ABI, VELOCIMETER_V2_POOL_ABI
 
 from unittest.mock import Mock
 import nest_asyncio
@@ -173,7 +173,7 @@ def test_test_uniswap_v2_exchange_fork():
     async def test_uniswap_v2_exchange_fork():
         assert (pancake_v2_exchange.exchange_name in "pancakeswap_v2"), f"Wrong exchange name. Expected pancakeswap_v2, got {pancake_v2_exchange.exchange_name}"
         assert (pancake_v2_exchange.base_exchange_name in "uniswap_v2"), f"Wrong base exchange name. Expected uniswap_v2, got {pancake_v2_exchange.base_exchange_name}"    
-        assert (pancake_v2_exchange.get_abi() == PANCAKESWAP_V2_POOL_ABI)
+        assert (pancake_v2_exchange.get_abi() == UNISWAP_V2_POOL_ABI)
         assert (await pancake_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await uniswap_v2_exchange.get_fee('', mocked_contract)}"
         assert (await pancake_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
         assert (pancake_v2_exchange.router_address == "freds_router")
