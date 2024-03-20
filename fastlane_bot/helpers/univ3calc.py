@@ -1,7 +1,10 @@
 """
-translating Uniswap v3 contract values
+parsing Uniswap v3 contract values
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+This class converts internal Uniswap v3 contract values into values that make sense
+from a financial perspective, either in Wei or in token units. It also allows to
+convert Uniswap v3 contract parameters into generic constant product curve parameters
+that are suitable for our ``CPC`` class.
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
