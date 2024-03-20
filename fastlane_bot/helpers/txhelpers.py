@@ -8,6 +8,7 @@ __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
 
 import asyncio
+import nest_asyncio
 from _decimal import Decimal
 
 # import itertools
@@ -32,6 +33,8 @@ from web3.types import TxReceipt
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix, count_bytes
+
+nest_asyncio.apply()
 
 
 @dataclass
