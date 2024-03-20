@@ -1,7 +1,9 @@
 """
-[DOC-TODO-short description of what the file does, max 80 chars]
+Collects exceptions used by the code
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+NOTE: Use of this module is not consistent throughout the codebase. In fact, most exceptions
+are defined locally either a module or at class level. Also this file is relatively short
+and we should review whether this design makes sense (TODO)
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
