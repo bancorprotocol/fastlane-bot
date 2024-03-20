@@ -1,7 +1,8 @@
 """
-Fastlane bot config -- logger
+Logger configuration
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+NOTE: this whole logging business is a bit convoluted, so at one point
+we may consider cleaning it up
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
@@ -18,8 +19,7 @@ from .base import ConfigBase
 from . import selectors as S
 import logging
 
-# NOTE: THIS WHOLE LOGGING BUSINESS IS A BIT CONVOLUTED, SO AT ONE POINT
-# WE MAY CONSIDER CLEANING IT UP
+
 
 class ConfigLogger(ConfigBase):
     """

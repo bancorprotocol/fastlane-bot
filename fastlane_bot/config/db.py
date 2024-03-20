@@ -1,7 +1,9 @@
 """
-Fastlane bot config -- database configuration
+Database configuration
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+NOTE: This class used to hold the database configuration when the bot still 
+used a database to hold state. As far as I believe databases are no longer
+in use so this module is deprecated? Is this true? TODO-MIKE
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.

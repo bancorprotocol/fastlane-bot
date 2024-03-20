@@ -1,16 +1,13 @@
 """
 Networks module for fastlane - used to interact with the blockchain.
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+TODO: what does it do exactly and how is it used? (TODO-MIKE or TODO-KEVIN)
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
 All rights reserved.
 Licensed under MIT.
 """
-
-
-
 import subprocess
 from abc import ABCMeta, ABC
 
@@ -32,8 +29,6 @@ logger = logging.getLogger(__name__)
 # *******************************************************************************************
 # Singleton
 # *******************************************************************************************
-
-
 class Singleton(ABCMeta):
     """
     Singleton metaclass that enables the creation of a singleton object, as seen in this post:
@@ -50,8 +45,6 @@ class Singleton(ABCMeta):
 # *******************************************************************************************
 # Base Network
 # *******************************************************************************************
-
-
 class NetworkBase(ABC, metaclass=Singleton):
     """
     Base class for all networks - this is a singleton class that is used to interact with the blockchain
@@ -84,6 +77,9 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.nonce = nonce
 
 
+# *******************************************************************************************
+# Ethereum Network
+# *******************************************************************************************
 class EthereumNetwork(NetworkBase):
     """
     Ethereum network class

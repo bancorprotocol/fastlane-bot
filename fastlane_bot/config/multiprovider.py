@@ -1,7 +1,8 @@
 """
-[DOC-TODO-short description of what the file does, max 80 chars]
+Defines the ``MultiProviderContractWrapper`` class 
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+TODO-MIKE: This is a very short module, so maybe the code should move somewhere else;
+also -- should it really be in config?
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.

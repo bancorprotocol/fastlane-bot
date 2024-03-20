@@ -1,7 +1,8 @@
 """
-Base configuration class for the fastlane_bot application.
+Configuration base class
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+Defines `ConfigBase` which is the base class for the individual configuration classes
+in this module.
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
