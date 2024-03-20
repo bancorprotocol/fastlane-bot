@@ -1,5 +1,5 @@
 """
-Multi-pairwise arbitrage finder mode
+Defines the Multi-pairwise arbitrage finder class for Bancor POL
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
@@ -20,7 +20,7 @@ from fastlane_bot.tools.cpc import T
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
     """
-    Multi-pairwise arbitrage finder mode.
+    Multi-pairwise arbitrage finder mode for Bancor POL.
     """
 
     arb_mode = "multi_pairwise_pol"

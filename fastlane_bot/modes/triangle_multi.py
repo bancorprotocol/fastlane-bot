@@ -1,5 +1,5 @@
 """
-Triangular arbitrage finder mode
+Defines the Triangular arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 

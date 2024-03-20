@@ -1,5 +1,5 @@
 """
-Base class for triangular arbitrage finder modes
+Defines the base class for triangular arbitrage finder modes
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 

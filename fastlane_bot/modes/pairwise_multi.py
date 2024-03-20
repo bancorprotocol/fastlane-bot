@@ -1,5 +1,5 @@
 """
-Multi-pairwise arbitrage finder mode
+Defines the Multi-pairwise arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
