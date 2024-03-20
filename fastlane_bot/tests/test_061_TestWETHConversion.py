@@ -310,8 +310,5 @@ def test_wrap_unwrap_original():
         assert flashloan_struct[0]["sourceTokens"][0] == wrap_route_struct[0]["sourceToken"]
         assert flashloan_struct[0]["sourceTokens"][0] == wrap_route_struct[-1]["targetToken"]
 
-        for idx, route in enumerate(wrap_route_struct):
-            if idx == 0:
-                continue
-            assert route["sourceToken"] == wrap_route_struct[idx - 1]["targetToken"]
-        # Get the cids
+        for idx in range(1, len(wrap_route_struct)):
+            assert wrap_route_struct[idx]["sourceToken"] == wrap_route_struct[idx - 1]["targetToken"]
