@@ -82,7 +82,7 @@ async def get_token_and_fee(
                 tkn0 = connector_token
 
         # bookmark
-        strategy_id = str(event["args"]["id"]) if exchange_name in carbon_v1_forks else None
+        strategy_id = str(event["args"]["id"]) if exchange_name in carbon_v1_forks else 0
         pool_info = {
             "exchange_name": exchange_name,
             "address": address,
