@@ -955,19 +955,7 @@ GAS_ORACLE_ABI = [
         "type": "function",
         "name": "getL1Fee",
         "stateMutability": "view",
-        "inputs": [
-            {
-                "type": "bytes",
-                "name": "_data",
-                "internalType": "bytes"
-            }
-        ],
-        "outputs": [
-            {
-                "type": "uint256",
-                "name": "",
-                "internalType": "uint256"
-            }
-        ]
+        "inputs": [{"internalType": "bytes", "name": "_data", "type": "bytes"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
