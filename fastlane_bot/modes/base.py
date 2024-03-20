@@ -1,5 +1,5 @@
 """
-Base class for all arbitrage finder modes
+Defines the base class for all arbitrage finder modes
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 

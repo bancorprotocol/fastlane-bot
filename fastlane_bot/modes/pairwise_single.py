@@ -1,5 +1,5 @@
 """
-Single pairwise arbitrage finder mode
+Defines the Single pairwise arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 

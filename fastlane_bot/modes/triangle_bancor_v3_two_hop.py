@@ -1,5 +1,5 @@
 """
-Bancor V3 triangular arbitrage finder mode
+Defines the Bancor V3 triangular arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
