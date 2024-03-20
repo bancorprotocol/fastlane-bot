@@ -1,7 +1,8 @@
 """
-Utility functions for FastLane project
+Various utility functions
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+NOTE: Those functions would more naturally fit in `helpers` 
+TODO-MIKE, TODO-KEVIN: check how hard this is
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
