@@ -14,9 +14,8 @@ from fastlane_bot import Bot
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
-from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
-    BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_POOL_ABI
+from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, VELOCIMETER_V2_POOL_ABI
 
 from unittest.mock import Mock
 import nest_asyncio

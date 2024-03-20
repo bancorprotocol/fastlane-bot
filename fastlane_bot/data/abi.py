@@ -161,49 +161,6 @@ CARBON_CONTROLLER_ABI = [
     }
 ]
 
-SUSHISWAP_POOLS_ABI = [
-    {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "Sync",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint112", "name": "reserve0", "type": "uint112"}, {"indexed": False, "internalType": "uint112", "name": "reserve1", "type": "uint112"}]
-    },
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "getReserves",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint112", "name": "_reserve0", "type": "uint112"}, {"internalType": "uint112", "name": "_reserve1", "type": "uint112"}, {"internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "token0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "token1",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
 UNISWAP_V2_FACTORY_ABI = [
     {
         "type": "event",
