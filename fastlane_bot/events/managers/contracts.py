@@ -22,7 +22,7 @@ from fastlane_bot.data.abi import (
     BALANCER_VAULT_ABI,
 )
 from fastlane_bot.events.managers.base import BaseManager
-from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 class ContractsManager(BaseManager):

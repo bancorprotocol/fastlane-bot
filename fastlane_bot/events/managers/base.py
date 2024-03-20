@@ -9,15 +9,14 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
-import pandas as pd
 from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.events.exchanges import exchange_factory, SolidlyV2
+from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 from fastlane_bot.events.pools import pool_factory
 
 

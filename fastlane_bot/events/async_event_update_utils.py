@@ -1,7 +1,7 @@
 import asyncio
 import os
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from glob import glob
 from typing import Any, List, Dict, Tuple, Type, Callable
 
@@ -16,7 +16,7 @@ from fastlane_bot.config.constants import CARBON_V1_NAME
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
-from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 nest_asyncio.apply()
 

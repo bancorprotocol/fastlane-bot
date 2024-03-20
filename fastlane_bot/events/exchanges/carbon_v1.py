@@ -8,14 +8,13 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any, Dict, Callable
 
-import web3
 from fastlane_bot import Config
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
-from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 @dataclass

@@ -5,7 +5,6 @@ Contains the pool class for Carbon v1. This class is responsible for handling Ca
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-import logging
 from dataclasses import dataclass
 from typing import Dict, Any, Tuple, List
 
@@ -13,7 +12,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
-from ..new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 @dataclass
