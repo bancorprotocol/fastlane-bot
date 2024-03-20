@@ -366,7 +366,9 @@ class CarbonBot(CarbonBotBase):
     ) -> list:
         lst = []
         for ti in trade_instructions_dic:
-            cid = ti["cid"].split("-")[0]
+            cid = ti["cid"]
+            if "-" in cid:
+                cid = cid.split("-")[0]
             ti["strategy_id"] = self.db.get_pool(
                 cid=cid
             ).strategy_id
@@ -638,8 +640,10 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions,
         ) = arb_opp
         for pool in best_trade_instructions_dic:
-            pool_cid = pool["cid"].split("-")[0]
+            pool_cid = pool["cid"]
             strategy_id = pool["strategy_id"]
+            if "-0" in pool_cid or "-1" in pool_cid:
+                pool_cid = pool_cid.split("-")[0]
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {
                 "cid": pool_cid,
