@@ -213,15 +213,6 @@ UNISWAP_V2_FACTORY_ABI = [
     }
 ]
 
-ALIENBASE_V2_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PairCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
 PANCAKESWAP_V2_FACTORY_ABI = [
     {
         "type": "event",

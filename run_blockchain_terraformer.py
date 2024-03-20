@@ -1176,9 +1176,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             if fork in SOLIDLY_FORKS:
                 continue
 
-            if exchange_name in "alienbase_v2":
-                factory_abi = ALIENBASE_V2_FACTORY_ABI
-            elif exchange_name in ["pancakeswap_v2", "alienbase_v2", "baseswap_v2"]:
+            if exchange_name in ["pancakeswap_v2", "alienbase_v2", "baseswap_v2"]:
                 factory_abi = PANCAKESWAP_V2_FACTORY_ABI
             else:
                 factory_abi = UNISWAP_V2_FACTORY_ABI
