@@ -936,13 +936,6 @@ SCALE_V2_FACTORY_ABI = [
     },
     {
         "type": "function",
-        "name": "getFee",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "bool", "name": "_stable", "type": "bool"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "getRealFee",
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
@@ -956,13 +949,6 @@ CLEOPATRA_V2_POOL_ABI = [
         "name": "PairCreated",
         "anonymous": False,
         "inputs": [{"type": "address", "name": "token0", "internalType": "address", "indexed": True}, {"type": "address", "name": "token1", "internalType": "address", "indexed": True}, {"type": "bool", "name": "stable", "internalType": "bool", "indexed": False}, {"type": "address", "name": "pair", "internalType": "address", "indexed": False}, {"type": "uint256", "name": "", "internalType": "uint256", "indexed": False}]
-    },
-    {
-        "type": "function",
-        "name": "getFee",
-        "stateMutability": "view",
-        "inputs": [{"type": "bool", "name": "_stable", "internalType": "bool"}],
-        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
     },
     {
         "type": "function",
