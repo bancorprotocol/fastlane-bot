@@ -176,13 +176,6 @@ SUSHISWAP_POOLS_ABI = [
     },
     {
         "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -262,13 +255,6 @@ UNISWAP_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -309,13 +295,6 @@ PANCAKESWAP_V2_POOL_ABI = [
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint112", "name": "reserve0", "type": "uint112"}, {"indexed": False, "internalType": "uint112", "name": "reserve1", "type": "uint112"}]
-    },
-    {
-        "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
         "type": "function",
@@ -742,13 +721,6 @@ BALANCER_VAULT_ABI = [
 BALANCER_POOL_ABI_V1 = [
     {
         "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "address", "name": "spender", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "getSwapFeePercentage",
         "stateMutability": "view",
         "inputs": [],
@@ -797,13 +769,6 @@ SOLIDLY_V2_POOL_ABI = [
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "address", "name": "spender", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
         "type": "function",
@@ -863,13 +828,6 @@ EQUALIZER_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -917,13 +875,6 @@ VELOCIMETER_V2_POOL_ABI = [
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
         "type": "function",
