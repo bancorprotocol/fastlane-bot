@@ -420,7 +420,6 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
         address = event["address"]
         contracts.append(
             {
-                "exchange_name": exchange_name,
                 "ex": ex,
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
@@ -465,7 +464,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         chunks=chunks,
         dirname=dirname,
         filename="tokens_and_fee_df.csv",
-        subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
+        subset=["address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
         func=main_get_tokens_and_fee,
         read_only=mgr.read_only,
     )
