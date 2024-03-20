@@ -190,13 +190,6 @@ SUSHISWAP_POOLS_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -208,13 +201,6 @@ SUSHISWAP_POOLS_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint112", "name": "_reserve0", "type": "uint112"}, {"internalType": "uint112", "name": "_reserve1", "type": "uint112"}, {"internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -297,13 +283,6 @@ UNISWAP_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -315,13 +294,6 @@ UNISWAP_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint112", "name": "_reserve0", "type": "uint112"}, {"internalType": "uint112", "name": "_reserve1", "type": "uint112"}, {"internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -368,13 +340,6 @@ PANCAKESWAP_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -386,13 +351,6 @@ PANCAKESWAP_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint112", "name": "_reserve0", "type": "uint112"}, {"internalType": "uint112", "name": "_reserve1", "type": "uint112"}, {"internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -819,24 +777,10 @@ BALANCER_POOL_ABI_V1 = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "getSwapFeePercentage",
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     }
 ]
 
@@ -898,13 +842,6 @@ SOLIDLY_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -923,13 +860,6 @@ SOLIDLY_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -982,13 +912,6 @@ EQUALIZER_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -1007,13 +930,6 @@ EQUALIZER_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -1060,13 +976,6 @@ VELOCIMETER_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
         "name": "getReserves",
         "stateMutability": "view",
         "inputs": [],
@@ -1078,13 +987,6 @@ VELOCIMETER_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     },
     {
         "type": "function",
