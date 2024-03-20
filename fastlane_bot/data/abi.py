@@ -447,12 +447,6 @@ PANCAKESWAP_V3_POOL_ABI = [
 SOLIDLY_V2_POOL_ABI = [
     {
         "type": "event",
-        "name": "Fees",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}]
-    },
-    {
-        "type": "event",
         "name": "Swap",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}]
@@ -551,12 +545,6 @@ VELOCIMETER_V2_POOL_ABI = [
 ]
 
 EQUALIZER_V2_POOL_ABI = [
-    {
-        "type": "event",
-        "name": "Fees",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}]
-    },
     {
         "type": "event",
         "name": "Swap",
