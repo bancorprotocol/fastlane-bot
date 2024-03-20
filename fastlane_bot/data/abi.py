@@ -732,13 +732,6 @@ SOLIDLY_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "pool", "type": "address"}, {"internalType": "bool", "name": "_stable", "type": "bool"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "voter",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -917,13 +910,6 @@ VELOCIMETER_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "voter",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -956,13 +942,6 @@ CLEOPATRA_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
         "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "voter",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"type": "address", "name": "", "internalType": "address"}]
     }
 ]
 
