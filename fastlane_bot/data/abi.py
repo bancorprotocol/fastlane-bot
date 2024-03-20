@@ -183,13 +183,6 @@ SUSHISWAP_POOLS_ABI = [
     },
     {
         "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -276,13 +269,6 @@ UNISWAP_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -329,13 +315,6 @@ PANCAKESWAP_V2_POOL_ABI = [
         "name": "allowance",
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
@@ -770,13 +749,6 @@ BALANCER_POOL_ABI_V1 = [
     },
     {
         "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "getSwapFeePercentage",
         "stateMutability": "view",
         "inputs": [],
@@ -831,13 +803,6 @@ SOLIDLY_V2_POOL_ABI = [
         "name": "allowance",
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "address", "name": "spender", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
@@ -905,13 +870,6 @@ EQUALIZER_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
         "name": "factory",
         "stateMutability": "view",
         "inputs": [],
@@ -965,13 +923,6 @@ VELOCIMETER_V2_POOL_ABI = [
         "name": "allowance",
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
