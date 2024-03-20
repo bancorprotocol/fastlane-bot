@@ -1,0 +1,1258 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>ArbGraphs &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CPC" href="cpc.html" />
+    <link rel="prev" title="Analyzer" href="analyzer.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tools.arbgraphs">
+<span id="arbgraphs"></span><h1>ArbGraphs<a class="headerlink" href="#module-tools.arbgraphs" title="Permalink to this heading">¶</a></h1>
+<p>objects for encapsulating arbitrage-related graphs</p>
+<section id="arbgraph">
+<h2>ArbGraph<a class="headerlink" href="#arbgraph" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">ArbGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>a container object for Nodes and Edges, representing a graph</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.A">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">A</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.A" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for Adjacency(directed=True, weighted=False, include_eigenvalues=False)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.Adjacency">
+<span class="sig-name descname"><span class="pre">Adjacency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_eigenvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.Adjacency" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the graph adjacency matrix (and its eigenvalues if requested)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the graph adjacency matrix A, or tuple (A, eigenvalues)</p>
+</dd>
+</dl>
+<p>Note: A is a scipy sparse matrix; use toarray() to expand to a numpy array</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.EdgeStatistics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EdgeStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">tools.arbgraphs.Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in_remaining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">tools.arbgraphs.Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">tools.arbgraphs.Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">price</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utilization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amounts_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amounts_in_remaining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amounts_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utilizations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.EdgeStatistics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.G">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">G</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.G" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for as_graph(directed=True, weighted=False)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.L">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">L</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.L" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for Laplacian(directed=False, weighted=False, include_eigenvalues=False)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.Laplacian">
+<span class="sig-name descname"><span class="pre">Laplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_eigenvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.Laplacian" title="Permalink to this definition">¶</a></dt>
+<dd><p>computes the graph Laplacian (and its eigenvalues if requested)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the graph Laplacian L, or tuple (L, eigenvalues)</p>
+</dd>
+</dl>
+<p>NOTE: L is a scipy sparse matrix; use toarray() to expand to a numpy array</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.NodeStatistics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NodeStatistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Node" title="tools.arbgraphs.Node"><span class="pre">Node</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out_remaining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">Amount</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.NodeStatistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>attention: in and out for nodes and edges is reversed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>edges_in</strong> – all edges that have this node as node_out</p></li>
+<li><p><strong>edges_out</strong> – all edges that have this node as node_in</p></li>
+<li><p><strong>amount_in</strong> – sum of all amounts_out of edges_in</p></li>
+<li><p><strong>amount_out</strong> – sum of all amounts_in of edges_out</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.PTransportResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PTransportResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multiplier:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prices:</span> <span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numedges:</span> <span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path:</span> <span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">any&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.PTransportResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RunArbCycleResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cycle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Cycle" title="tools.arbgraphs.Cycle"><span class="pre">tools.arbgraphs.Cycle</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_ix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult.asdict">
+<span class="sig-name descname"><span class="pre">asdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult.asdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts this object to a dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>include</strong> – comprehensive list of fields to include in the dataframe (default: all fields)</p></li>
+<li><p><strong>exclude</strong> – list of fields to exclude from the dataframe (applied AFTER include)</p></li>
+<li><p><strong>dct</strong> – dict used instead of contents of the dataclass (useful for subclasses
+that want to add additional fields to the dict)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult.astuple">
+<span class="sig-name descname"><span class="pre">astuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult.astuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts this object to a tuple (parameters are passed to asdict)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult.ppcs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ppcs</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult.ppcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>profit per cycle step (in token units)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult.r">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">r</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult.r" title="Permalink to this definition">¶</a></dt>
+<dd><p>percentage overall return (out/in - 1)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.RunArbCycleResult.rpcs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rpcs</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.RunArbCycleResult.rpcs" title="Permalink to this definition">¶</a></dt>
+<dd><p>percentage return per cycle step (r/length)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.State">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.TransportResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransportResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">tools.arbgraphs.Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Amount" title="tools.arbgraphs.Amount"><span class="pre">tools.arbgraphs.Amount</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amounts_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amounts_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.TransportResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an amount-type edge to the graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tkn_in</strong> – token name of the input node (as str)</p></li>
+<li><p><strong>amount_in</strong> – amount of input token (as float)</p></li>
+<li><p><strong>tkn_out</strong> – token name of the output node (as str)</p></li>
+<li><p><strong>amount_out</strong> – amount of output token (as float)</p></li>
+<li><p><strong>inverse</strong> – if True, use reverse quote convention</p></li>
+<li><p><strong>uid</strong> – unique id of the edge</p></li>
+</ul>
+</dd>
+</dl>
+<p>NOTE: amount-type edges are edges that have a specific amount of input and output tokens,
+ie they correspond to a price AND a volume; connection type edges only have a price</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edge_connectiontype">
+<span class="sig-name descname"><span class="pre">add_edge_connectiontype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_out</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_outperin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edge_connectiontype" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a connection-type edge to the graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tkn_in</strong> – token name of the input node (as str)</p></li>
+<li><p><strong>tkn_out</strong> – token name of the output node (as str)</p></li>
+<li><p><strong>price</strong> – price of the connection (as float), according to convention</p></li>
+<li><p><strong>inverse</strong> – if True, use reverse quote convention</p></li>
+<li><p><strong>price_outperin</strong> – price in outperin convention (alternative to price)</p></li>
+<li><p><strong>weight</strong> – weight of the connection (as float; default is 1)</p></li>
+<li><p><strong>symmetric</strong> – if True, add the inverse edge as well</p></li>
+<li><p><strong>uid</strong> – unique id of the edge</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>self</p>
+</dd>
+</dl>
+<p>NOTE1: amount-type edges are edges that have a specific amount of input and output tokens,
+ie they correspond to a price AND a volume; connection type edges only have a price</p>
+<p>NOTE2: the weight of the connection is mostly useful to determine the prices of combined
+edges; essentially, the price of the combined edge is the weighted average of the
+prices of the individual edges</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edge_ct">
+<span class="sig-name descname"><span class="pre">add_edge_ct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_out</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price_outperin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edge_ct" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a connection-type edge to the graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tkn_in</strong> – token name of the input node (as str)</p></li>
+<li><p><strong>tkn_out</strong> – token name of the output node (as str)</p></li>
+<li><p><strong>price</strong> – price of the connection (as float), according to convention</p></li>
+<li><p><strong>inverse</strong> – if True, use reverse quote convention</p></li>
+<li><p><strong>price_outperin</strong> – price in outperin convention (alternative to price)</p></li>
+<li><p><strong>weight</strong> – weight of the connection (as float; default is 1)</p></li>
+<li><p><strong>symmetric</strong> – if True, add the inverse edge as well</p></li>
+<li><p><strong>uid</strong> – unique id of the edge</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>self</p>
+</dd>
+</dl>
+<p>NOTE1: amount-type edges are edges that have a specific amount of input and output tokens,
+ie they correspond to a price AND a volume; connection type edges only have a price</p>
+<p>NOTE2: the weight of the connection is mostly useful to determine the prices of combined
+edges; essentially, the price of the combined edge is the weighted average of the
+prices of the individual edges</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edge_dxdy">
+<span class="sig-name descname"><span class="pre">add_edge_dxdy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tknx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edge_dxdy" title="Permalink to this definition">¶</a></dt>
+<dd><p>like add_edge, but in and out is determined by the sign of the amounts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tknx</strong> – token name of the input node (as str)</p></li>
+<li><p><strong>dx</strong> – amount of input token (as float; in=pos, out=neg)</p></li>
+<li><p><strong>tkny</strong> – token name of the output node (as str)</p></li>
+<li><p><strong>dy</strong> – amount of output token (as float; in=pos, out=neg)</p></li>
+<li><p><strong>inverse</strong> – if True, use reverse quote convention</p></li>
+<li><p><strong>uid</strong> – unique id of the edge</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edge_obj">
+<span class="sig-name descname"><span class="pre">add_edge_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edge_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an edge object (of type Edge) to the graph; returns self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_edges_cpc">
+<span class="sig-name descname"><span class="pre">add_edges_cpc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_edges_cpc" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an edge from a CPC curve object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>curves</strong> – specifies one or multiple curves, depending on the type:</p></li>
+<li><p><strong>CPC</strong> – a single curve of type ConstantProductCurve is added*</p></li>
+<li><p><strong>iterable</strong> – multiple curves of type CPC are added (1)</p></li>
+<li><p><strong>CPCContainer</strong> – all curves in the container are added (1)</p></li>
+<li><p><strong>uid</strong> – unique id of the edge; should only be provided for singles curves</p></li>
+</ul>
+</dd>
+</dl>
+<p>NOTE1: specifically the way the algo works AT THEM MOMENT (but don’t rely on this),
+if the object has a curves method, it is assumed to be an iterable of CPCs;
+if the object is iterable, it is assumed to be an iterable of CPCs; otherwise
+it is assumbed to be a single CPC</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a node to the graph, returns self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.add_node_obj">
+<span class="sig-name descname"><span class="pre">add_node_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.add_node_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a node object (of type Node) to the graph; returns self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.as_graph">
+<span class="sig-name descname"><span class="pre">as_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.as_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert the graph to a networkx graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directed</strong> – if True, return a directed graph, otherwise undirected</p></li>
+<li><p><strong>weighted</strong> – if True, return a weighted graph, otherwise unweighted</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.cycles">
+<span class="sig-name descname"><span class="pre">cycles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asgenerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.cycles" title="Permalink to this definition">¶</a></dt>
+<dd><p>get all cycles in the graph</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.degree">
+<span class="sig-name descname"><span class="pre">degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the degree of the nodes in the graph, possibly as a matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inout</strong> – None (= symmetric degree), or self.INDEGREE, self.OUTDEGREE</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.duplicate">
+<span class="sig-name descname"><span class="pre">duplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">consolidate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.duplicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a duplicate of the current object, duplicating all nodes and edges</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>consolidate</strong> – if True, multiple edges between the same nodes are
+consolidated into a single edge</p>
+</dd>
+</dl>
+<p>Note: there is an issue with this consolidation process in that when routing through
+edges, people would go lowest price first, not pro rata. This however is a problem
+that cannot really be solved here unless we expand the data structure of the edges
+at which stage we might as well just not consolidate them in the first place.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.edge">
+<span class="sig-name descname"><span class="pre">edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>get an edge by its index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.edge_by_ix">
+<span class="sig-name descname"><span class="pre">edge_by_ix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.edge_by_ix" title="Permalink to this definition">¶</a></dt>
+<dd><p>get an edge by its index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.edge_statistics">
+<span class="sig-name descname"><span class="pre">edge_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bothways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.edge_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>get statistics about the list of edges between node_in, node_out (or sublist provided)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_in</strong> – node_in (as str or Node)</p></li>
+<li><p><strong>node_out</strong> – node_out (as str or Node)</p></li>
+<li><p><strong>edges</strong> – list of edges to be used (if not None, but have same node_in -&gt; node_out)</p></li>
+<li><p><strong>pair</strong> – the pair in the form “TKNB/TKBQ” as str</p></li>
+<li><p><strong>bothways</strong> – if True, returns pair bothways</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>EdgeStatistics object node_in -&gt; node_out; or pair thereof if bothways=True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.edgedf">
+<span class="sig-name descname"><span class="pre">edgedf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consolidated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resetindex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.edgedf" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns edges (default: all edges) as a pandas dataframe</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.edgetype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edgetype</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.edgetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>edgetype of the graph (all edges are of the same type; None if no edges)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.fe">
+<span class="sig-name descname"><span class="pre">fe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bothways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.fe" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a list of edges filtered by node_in and node_out</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_in</strong> – input node (as Node object or str)</p></li>
+<li><p><strong>node_out</strong> – output node (as Node object or str)</p></li>
+<li><p><strong>node</strong> – input or output node (as Node object or str)</p></li>
+<li><p><strong>bothways</strong> – if True, also include edges with node_in and node_out swapped
+defaults to False if no pair is given, True otherwise</p></li>
+<li><p><strong>pair</strong> – if True, use pair instead of the nodes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.fep">
+<span class="sig-name descname"><span class="pre">fep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bothways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.fep" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for filter_edges(pair=pair, bothways=bothways)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.filter_edges">
+<span class="sig-name descname"><span class="pre">filter_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bothways</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.filter_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets a list of edges filtered by node_in and node_out</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_in</strong> – input node (as Node object or str)</p></li>
+<li><p><strong>node_out</strong> – output node (as Node object or str)</p></li>
+<li><p><strong>node</strong> – input or output node (as Node object or str)</p></li>
+<li><p><strong>bothways</strong> – if True, also include edges with node_in and node_out swapped
+defaults to False if no pair is given, True otherwise</p></li>
+<li><p><strong>pair</strong> – if True, use pair instead of the nodes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.from_cc">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_cc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.from_cc" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor: from a CurveContainer object alone</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cc</strong> – a CurveContainer object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.from_ccdxdy">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_ccdxdy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dxv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dyv</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignorezero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.from_ccdxdy" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor: from curves and trade vectors dxv, dyv</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cc</strong> – a CurveContainer object</p></li>
+<li><p><strong>dxv</strong> – a vector of trade amounts in x (eg dx.values after an optimisation)</p></li>
+<li><p><strong>dyv</strong> – ditto but for y amounts</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.from_r">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignorezero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.from_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor: from an Optimizer result object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>r</strong> – Optimizer result object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.has_capacity">
+<span class="sig-name descname"><span class="pre">has_capacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.has_capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True iff any of the edges still have a capacity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Tkn_in, tkn_out<span class="colon">:</span></dt>
+<dd class="field-odd"><p>can be str, Node, or None; if None, None, all edges</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.in_degree">
+<span class="sig-name descname"><span class="pre">in_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.in_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience function for self.degree(inout=self.INDEGREE)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.is_amounttype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_amounttype</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.is_amounttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the graph is an amount-type graph</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.is_weakly_connected">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_weakly_connected</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.is_weakly_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if the graph is weakly connected</p>
+<p>Note: if the graph is weakly connected, then all the cycles in the graph are subcycles
+of a single cycle (1). This is important because this means that that they can be more
+easily aligned, which means that we can combined transactions of multiple cycles
+into a single transaction.</p>
+<p>NOTE1: According to ChatGPT…</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.len">
+<span class="sig-name descname"><span class="pre">len</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.len" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns a tuple with number of edges and nodes (nedges, nnodes)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.n">
+<span class="sig-name descname"><span class="pre">n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a node by its token name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tkn</strong> – token name (as str) or a Node object (if None returns None)</p></li>
+<li><p><strong>create</strong> – if True, create a new node if it doesn’t exist</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.node">
+<span class="sig-name descname"><span class="pre">node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.node" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a node by its index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.node_by_ix">
+<span class="sig-name descname"><span class="pre">node_by_ix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.node_by_ix" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a node by its index</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.node_by_tkn">
+<span class="sig-name descname"><span class="pre">node_by_tkn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.node_by_tkn" title="Permalink to this definition">¶</a></dt>
+<dd><p>get a node by its token name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tkn</strong> – token name (as str) or a Node object (if None returns None)</p></li>
+<li><p><strong>create</strong> – if True, create a new node if it doesn’t exist</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.node_statistics">
+<span class="sig-name descname"><span class="pre">node_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.node_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>get statistics about the node provided</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.out_degree">
+<span class="sig-name descname"><span class="pre">out_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.out_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience function for self.degree(inout=self.OUTDEGREE)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot the graph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directed</strong> – if True (default), plot a directed graph, otherwise undirected</p></li>
+<li><p><strong>labels</strong> – if True (default), plot node labels</p></li>
+<li><p><strong>edge_labels</strong> – if True (default), plot edge labels</p></li>
+<li><p><strong>node_color</strong> – node color (default: “lightblue”)</p></li>
+<li><p><strong>node_size</strong> – node size (default: 200)</p></li>
+<li><p><strong>font_size</strong> – font size (default: 12)</p></li>
+<li><p><strong>font_color</strong> – font color (default: “k”)</p></li>
+<li><p><strong>show</strong> – if True (default), show the plot</p></li>
+<li><p><strong>rnone</strong> – if True, returns None, otherwise returns self</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.price">
+<span class="sig-name descname"><span class="pre">price</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_tknb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_tknq</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.price" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price (estimate) expressed in units of end per start [only on connection-type graphs]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.pricetable">
+<span class="sig-name descname"><span class="pre">pricetable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.pricetable" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates a price table for all pairs of nodes in the graph*</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>include</strong> – nodes to include (default: all nodes)</p></li>
+<li><p><strong>exclude</strong> – nodes to exclude (default: none); exclude beats include</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a dict or pandas dataframe</p>
+</dd>
+</dl>
+<p>Note: this price table is calculated using the shortest paths in the graph;
+if the graph is not arbitrage free then those prices will not be self consistent
+this is a feature, not a bug, as this table allows to estimate the extent to
+which this graph is arbitrage free</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.ptransport">
+<span class="sig-name descname"><span class="pre">ptransport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.ptransport" title="Permalink to this definition">¶</a></dt>
+<dd><p>transport an amount along a (usually closed) path, ignoring capacities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – typically a Cycle object, or another object the same API (1)
+(Cycle paths will always be closed)</p>
+</dd>
+</dl>
+<p>NOTE1: the function expect that path has a method called <code class="docutils literal notranslate"><span class="pre">pairs</span></code> that returns an
+iterator, and the iterator in turn yields tuples(node_in, node_out) where
+the previous node_out is the same as the next node_in</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.reset_state">
+<span class="sig-name descname"><span class="pre">reset_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.reset_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>resets the state of all nodes and edges in the graph (returns self)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.run_arbitrage_cycle">
+<span class="sig-name descname"><span class="pre">run_arbitrage_cycle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cycle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.run_arbitrage_cycle" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a cycles and runs the arbitrage inherent in it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cycle</strong> – a Cycle object as returned by the cycles() method</p></li>
+<li><p><strong>token</strong> – the token around which the cycle is run (default: the first token in the cycle)</p></li>
+<li><p><strong>params</strong> – additional parameters (see below)</p></li>
+<li><p><strong>verbose</strong> – if True, print some information when running the cycle</p></li>
+<li><p><strong>allow_any_token</strong> – if True, allow any token to be used as the token around which the cycle is run</p></li>
+<li><p><strong>cycle</strong> – cycle that was run</p></li>
+<li><p><strong>start_ix</strong> – index of the token around which the cycle was run</p></li>
+<li><p><strong>token</strong> – token around which the cycle was run</p></li>
+<li><p><strong>profit</strong> – profit made in the cycle (in token units)</p></li>
+<li><p><strong>amount_in</strong> – amount of token that was put into the cycle (in token units)</p></li>
+<li><p><strong>amount_out</strong> – amount of token that was taken out of the cycle (in token units)</p></li>
+<li><p><strong>length</strong> – length of the cycle</p></li>
+<li><p><strong>r</strong> – percent overall return of the cycle (out/in - 1)</p></li>
+<li><p><strong>rpcs</strong> – return per cycle step (r/length)</p></li>
+<li><p><strong>ppcs</strong> – profit per cycle step (in token units)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a RunArbCycleResult object with the following properties:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.run_arbitrage_cycles">
+<span class="sig-name descname"><span class="pre">run_arbitrage_cycles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cycles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.run_arbitrage_cycles" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes a list of cycles and runs run_arbitrage_cycle on each of them</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cycles</strong> – a list of Cycle objects, eg as returned by the cycles() method</p></li>
+<li><p><strong>token</strong> – either a single token for all cycles, or a list of tokens, one for each cycle</p></li>
+<li><p><strong>params</strong> – additional parameters that are being passed to run_arbitrage_cycle</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>depends on the <code class="docutils literal notranslate"><span class="pre">format</span></code> parameter which is one of ACRET_GEN, ACRET_TUPLE,
+ACRET_DICTS, ACRET_DF or ACREF_PRETTYDF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.run_arbitrage_cyclesf">
+<span class="sig-name descname"><span class="pre">run_arbitrage_cyclesf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rawresults</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.run_arbitrage_cyclesf" title="Permalink to this definition">¶</a></dt>
+<dd><p>the formatting function for run_arbitrage_cycles to reformat the results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rawresults</strong> – the ACRET_RAW result returned by run_arbitrage_cycles</p></li>
+<li><p><strong>format</strong> – same as in <code class="docutils literal notranslate"><span class="pre">run_arbitrage_cycles</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.shortest_path">
+<span class="sig-name descname"><span class="pre">shortest_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.shortest_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the shortest path between two nodes</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.state">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state</span></span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns State object consolidating the state objects of nodes and edges</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.ArbGraph.transport">
+<span class="sig-name descname"><span class="pre">transport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tkn_out</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routingalgo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseonerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.ArbGraph.transport" title="Permalink to this definition">¶</a></dt>
+<dd><p>transport an amount of tkn_in to tkn_out routing through the relevant edges</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amount_in</strong> – amount to be transported (as float or Amount)</p></li>
+<li><p><strong>tkn_in</strong> – token to be transported (as str or Node)</p></li>
+<li><p><strong>tkn_out</strong> – token to be transported to (as str or Node)</p></li>
+<li><p><strong>record</strong> – if True, record the transport in the graph</p></li>
+<li><p><strong>routingalgo</strong> – routing algo to be used (default: TPROUT_PRORATA)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="component-classes">
+<h2>Component classes<a class="headerlink" href="#component-classes" title="Permalink to this heading">¶</a></h2>
+<section id="node">
+<h3>Node<a class="headerlink" href="#node" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>an arbitrage graph node, representing a token</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node.State">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount:</span> <span class="pre">dataclasses.InitVar</span> <span class="pre">=</span> <span class="pre">&lt;property</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x128be3510&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Node.State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node.create_node_list">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_node_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tkn_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Node.create_node_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a list of nodes from a list or comma separated string of tokens</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node.reset_state">
+<span class="sig-name descname"><span class="pre">reset_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Node.reset_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset the state of the node</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node.set_ix">
+<span class="sig-name descname"><span class="pre">set_ix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Node.set_ix" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the index of the node</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Node.tkn_p">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tkn_p</span></span><a class="headerlink" href="#tools.arbgraphs.Node.tkn_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>“pretty” version of the token name (removes the index)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="edge">
+<h3>Edge<a class="headerlink" href="#edge" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Node" title="tools.arbgraphs.Node"><span class="pre">Node</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Node" title="tools.arbgraphs.Node"><span class="pre">Node</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>an arbitrage graph edge, representing a possible trade</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_in</strong> – the input node, representing the token going into the AMM</p></li>
+<li><p><strong>amount_in</strong> – the amount of the token going in (positive)</p></li>
+<li><p><strong>node_out</strong> – the output node, representing the token coming out of the AMM</p></li>
+<li><p><strong>amount_out</strong> – the amount of the token coming out (positive)</p></li>
+<li><p><strong>ix</strong> – the index of the edge (in the graph)</p></li>
+<li><p><strong>inverse</strong> – whether price quote of the edge is inverse</p></li>
+<li><p><strong>uid</strong> – a unique identifier for the edge (optional; only use as kwarg)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.R">
+<span class="sig-name descname"><span class="pre">R</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.R" title="Permalink to this definition">¶</a></dt>
+<dd><p>duplicates an edge but reverses it</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.State">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_in_remaining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.State" title="Permalink to this definition">¶</a></dt>
+<dd><p>the state of an edge</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.State.is_empty">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_empty</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.State.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether the edge is empty</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.assert_edgetype">
+<span class="sig-name descname"><span class="pre">assert_edgetype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edgetype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'amount'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.assert_edgetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>assert that the edge is a connection edge</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.connection_edge">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connection_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_out</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">price</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.connection_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>alternative constructor for a connection edge (most arguments identical to main constructor)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>price</strong> – the price of the connection, with the quotation being determined by inverse</p></li>
+<li><p><strong>weight</strong> – the weight of the connection; the weight is not used for capacity, but when
+calculating the price of combined edges</p></li>
+<li><p><strong>inverse</strong> – False: price = amount_out / amount_in, True: price = amount_in / amount_out</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.convention">
+<span class="sig-name descname"><span class="pre">convention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.convention" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price convention of tokens represented by the edge</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inverse</strong> – if False, base token = out, quote token = in, otherwise reverse
+default is the value of self.inverse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.convention_outperin">
+<span class="sig-name descname"><span class="pre">convention_outperin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.convention_outperin" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price convention of tokens represented by the edge, in the convention of out per in</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.duplicate">
+<span class="sig-name descname"><span class="pre">duplicate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.duplicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>duplicate an edge with all values the same except ix</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.edgetype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edgetype</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.edgetype" title="Permalink to this definition">¶</a></dt>
+<dd><p>the type of edge (EDGE_CONNECTION = connection only, EDGE_AMOUNT = plus amount)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.has_capacity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_capacity</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.has_capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether the edge has still capacity left</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.is_amounttype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_amounttype</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.is_amounttype" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether the edge is an amount edge</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.p">
+<span class="sig-name descname"><span class="pre">p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.p" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price of the edge, in the right convention</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inverse</strong> – if == False, price = amount_out / amount_in, otherwise reverse
+default is the value of self.inverse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.p_outperin">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">p_outperin</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.p_outperin" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price of the edge, in the convention of out per in</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.pair">
+<span class="sig-name descname"><span class="pre">pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the slashpair of tokens represented by the edge</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inverse</strong> – if False, base token = out, quote token = in, otherwise reverse
+default is the value of self.inverse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.price">
+<span class="sig-name descname"><span class="pre">price</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.price" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price of the edge, in the right convention</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inverse</strong> – if == False, price = amount_out / amount_in, otherwise reverse
+default is the value of self.inverse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.price_outperin">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">price_outperin</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.price_outperin" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the price of the edge, in the convention of out per in</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.reset_state">
+<span class="sig-name descname"><span class="pre">reset_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_in_remaining</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.reset_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset the state of the edge</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.reverse">
+<span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.reverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>duplicates an edge but reverses it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.set_ix">
+<span class="sig-name descname"><span class="pre">set_ix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.set_ix" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the index of the edge</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.tkn_in">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tkn_in</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.tkn_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the token name of the input node</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.tkn_out">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tkn_out</span></span><a class="headerlink" href="#tools.arbgraphs.Edge.tkn_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the token name of the output node</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Edge.transport">
+<span class="sig-name descname"><span class="pre">transport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raiseonerror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Edge.transport" title="Permalink to this definition">¶</a></dt>
+<dd><p>transport an amount of the input token through the edge, yielding output token</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amount</strong> – amount of input token (as float or Amount object);
+if None: full edge capacity (or 1 if not amounttype)</p></li>
+<li><p><strong>record</strong> – if True, record the transaction in the edge’s and node’s state</p></li>
+<li><p><strong>raiseonerror</strong> – if True, raise an error if the amount is too large</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>amount of output token (as Amount object)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="path">
+<h3>Path<a class="headerlink" href="#path" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Path">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">Path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Path" title="Permalink to this definition">¶</a></dt>
+<dd><p>a path of nodes that can be iterated over (use Cycles for closed paths)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – list of nodes; the nodes can be any type that allows for equality comparison</p></li>
+<li><p><strong>uid</strong> – an optional unique identifier for the path</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Path.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Path.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over the cycle</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Path.pairs">
+<span class="sig-name descname"><span class="pre">pairs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Path.pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over the cycle, yielding pairs of adjacent items</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Path.pairs_s">
+<span class="sig-name descname"><span class="pre">pairs_s</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Path.pairs_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>runs pairs and returns the results as slashpairs</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="cycle">
+<h3>Cycle<a class="headerlink" href="#cycle" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">Cycle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle" title="Permalink to this definition">¶</a></dt>
+<dd><p>a cycle of nodes, allowing arbitrary entry point for iteration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – list of nodes; the nodes can be any type that allows for equality comparison</p></li>
+<li><p><strong>uid</strong> – an optional unique identifier for the cycle</p></li>
+</ul>
+</dd>
+</dl>
+<p>USAGE</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="n">Cycle</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">start_ix</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="c1"># prints 3, 4, 5, 1, 2, 3</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.byid">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">byid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cycle_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.byid" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the cycle in cycle_list with uid</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.filter_subcycles">
+<span class="sig-name descname"><span class="pre">filter_subcycles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cycle_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.filter_subcycles" title="Permalink to this definition">¶</a></dt>
+<dd><p>filter out subcycles of self from cycle_list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.is_subcycle_of">
+<span class="sig-name descname"><span class="pre">is_subcycle_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.is_subcycle_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns True iff self is a subcycle of other</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_ix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over the cycle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_ix</strong> – start index (1)</p></li>
+<li><p><strong>start_val</strong> – start value (1)</p></li>
+</ul>
+</dd>
+</dl>
+<p>NOTE 1: only one of <code class="docutils literal notranslate"><span class="pre">start_ix</span></code> and <code class="docutils literal notranslate"><span class="pre">start_val</span></code> can be specified</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.pairs">
+<span class="sig-name descname"><span class="pre">pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_ix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterate over the cycle, yielding pairs of adjacent items</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_ix</strong> – start index*</p></li>
+<li><p><strong>start_val</strong> – start value*</p></li>
+</ul>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>only one of start_ix and start_val can be specified</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.pairs_s">
+<span class="sig-name descname"><span class="pre">pairs_s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_ix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.pairs_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>runs pairs and returns the results as slashpairs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience method to call run_arbitrage_cycle on self.graph</p>
+<p>see help(ArbGraph.run_arbitrage_cycle) for details</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.Cycle.run_arbitrage_cycle">
+<span class="sig-name descname"><span class="pre">run_arbitrage_cycle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Cycle.run_arbitrage_cycle" title="Permalink to this definition">¶</a></dt>
+<dd><p>convenience method to call run_arbitrage_cycle on self.graph</p>
+<p>see help(ArbGraph.run_arbitrage_cycle) for details</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="amount">
+<h3>Amount<a class="headerlink" href="#amount" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.Amount">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">Amount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tools.arbgraphs.Node" title="tools.arbgraphs.Node"><span class="pre">Node</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.Amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>represents an amount of a given token, the latter represented by a Node</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="tools.arbgraphs.Amount.tkn">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tkn</span></span><a class="headerlink" href="#tools.arbgraphs.Amount.tkn" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for node</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="helper-classes">
+<h2>Helper classes<a class="headerlink" href="#helper-classes" title="Permalink to this heading">¶</a></h2>
+<section id="trackedstatefloat">
+<h3>TrackedStateFloat<a class="headerlink" href="#trackedstatefloat" title="Permalink to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.arbgraphs.TrackedStateFloat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.arbgraphs.</span></span><span class="sig-name descname"><span class="pre">TrackedStateFloat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inital_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.TrackedStateFloat" title="Permalink to this definition">¶</a></dt>
+<dd><p>represents a single tracked float field in a (typical dataclass) record</p>
+<p>USAGE</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ag</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span> <span class="nc">MyState</span><span class="p">():</span>
+    <span class="n">myval_</span><span class="p">:</span> <span class="n">ag</span><span class="o">.</span><span class="n">TrackedStateFloat</span> <span class="o">=</span> <span class="n">ag</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ag</span><span class="o">.</span><span class="n">TrackedStateFloat</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">myval</span><span class="p">:</span> <span class="n">ag</span><span class="o">.</span><span class="n">InitVar</span><span class="o">=</span><span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">myval</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">myval</span> <span class="o">=</span> <span class="n">myval</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">myval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">myval_</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@myval</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">myval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">myval_</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">mystate</span> <span class="o">=</span> <span class="n">MyState</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">==</span> <span class="mi">10</span>
+<span class="n">mystate</span><span class="o">.</span><span class="n">myval_</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">==</span> <span class="mi">15</span>
+<span class="n">mystate</span><span class="o">.</span><span class="n">myval_</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">==</span> <span class="mi">11</span>
+<span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="k">assert</span> <span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">==</span> <span class="mi">20</span>
+<span class="n">mystate</span><span class="o">.</span><span class="n">myval_</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">mystate</span><span class="o">.</span><span class="n">myval</span> <span class="o">==</span> <span class="mi">30</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.TrackedStateFloat.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.TrackedStateFloat.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets value of the field, typically clearing history; if value is None, only clears history; returns self</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.arbgraphs.TrackedStateFloat.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.arbgraphs.TrackedStateFloat.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets value of the field, typically clearing history; if value is None, only clears history; returns self</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="analyzer.html">Analyzer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ArbGraphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#arbgraph">ArbGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#component-classes">Component classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edge">Edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#path">Path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cycle">Cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#amount">Amount</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#helper-classes">Helper classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#trackedstatefloat">TrackedStateFloat</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="analyzer.html" title="previous chapter">Analyzer</a></li>
+      <li>Next: <a href="cpc.html" title="next chapter">CPC</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/arbgraphs.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Analyzer &#8212; FLBTools 1.0+ documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ArbGraphs" href="arbgraphs.html" />
+    <link rel="prev" title="FastLaneBot Tools" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tools.analyzer">
+<span id="analyzer"></span><h1>Analyzer<a class="headerlink" href="#module-tools.analyzer" title="Permalink to this heading">¶</a></h1>
+<p>analyzing CPC / CPCContainer based collections</p>
+<section id="cpcanalyzer-class">
+<h2>CPCAnalyzer class<a class="headerlink" href="#cpcanalyzer-class" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.analyzer.</span></span><span class="sig-name descname"><span class="pre">CPCAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CC</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="cpc.html#tools.cpc.CPCContainer" title="tools.cpc.CPCContainer"><span class="pre">CPCContainer</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer" title="Permalink to this definition">¶</a></dt>
+<dd><p>various analytics functions around a CPCContainer object</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.CurveData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CurveData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curve</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cpc.html#tools.cpc.ConstantProductCurve" title="tools.cpc.ConstantProductCurve"><span class="pre">ConstantProductCurve</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CC</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.CurveData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.PairData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PairData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CC</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dataclasses.InitVar</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.PairData" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.PairData.curve_data">
+<span class="sig-name descname"><span class="pre">curve_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.PairData.curve_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a CurveData object for the curves (or all curves of the pair if curve is None)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.PairData.curves_by_exchange">
+<span class="sig-name descname"><span class="pre">curves_by_exchange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exchange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.PairData.curves_by_exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict exchange -&gt; curves if exchange is None, otherwise just the curves for that exchange</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.count_by_pairs">
+<span class="sig-name descname"><span class="pre">count_by_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.count_by_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>counts the number of times each pair appears in the curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>minn</strong> – filter the dataset to a minimum number of curves per pair (only df)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.count_by_tokens">
+<span class="sig-name descname"><span class="pre">count_by_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byexchange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.count_by_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>counts the number of times each token appears in the curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>byexchange</strong> – if False only provides the global number from the CC object</p></li>
+<li><p><strong>asdict</strong> – if True returns dict, otherwise dataframe</p></li>
+</ul>
+</dd>
+</dl>
+<p>NOTE: the exchanges are current hardcoded, and should be made dynamic</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.curve_data">
+<span class="sig-name descname"><span class="pre">curve_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.curve_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a CurveData object for the curve (or all curves of the pair if curve is None))</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.curves">
+<span class="sig-name descname"><span class="pre">curves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>all curves</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.curvesc">
+<span class="sig-name descname"><span class="pre">curvesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.curvesc" title="Permalink to this definition">¶</a></dt>
+<dd><p>all carbon curves</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pair_analysis">
+<span class="sig-name descname"><span class="pre">pair_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pair</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pair_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pair</strong> – pair to be analyzed, eg “WETH-6Cc2/USDC-eB48”</p></li>
+<li><p><strong>params</strong> – optional parameters [see code for details]</p></li>
+<li><p><strong>pair</strong> – the input pair, eg “WETH-6Cc2/USDC-eB48”
+:tknb, tknq:    base and quote token of the pair</p></li>
+<li><p><strong>analyzer</strong> – the analyzer object</p></li>
+<li><p><strong>paird</strong> – PairData object</p></li>
+<li><p><strong>curved</strong> – tuple of CurveData objects, as returns by PairData.curve_data</p></li>
+<li><p><strong>curvedf</strong> – curve data as dataframe, as returned by PairData.curve_data</p></li>
+<li><p><strong>price</strong> – price estimate of that pair, in the native quotation of the pair</p></li>
+<li><p><strong>vlc</strong> – value locked for Carbon (in quote token units)</p></li>
+<li><p><strong>vlnc</strong> – ditto non-carbon</p></li>
+<li><p><strong>curvedfx</strong> – like curvedf, but with some fields moved to the index</p></li>
+<li><p><strong>ccurvedf</strong> – like curvedfx, but all non-carbon curves replaced with single aggregate line
+:tib, tiq:      trade instruction data frames (target = base / quote token respecitvely)</p></li>
+<li><p><strong>tibq</strong> – concatenation of the TOTAL NET line of tib, tiq
+:arbvalb/q:     arb value in base token / quote token units</p></li>
+<li><p><strong>xpairs</strong> – extended pairs (tokens of the pair plus triangulation tokens)
+:tib/q_xnoc:    trade instruction data frames for the extended pairs (non-carbon curves only)
+:tib/q_xf:      ditto (including carbon curves)
+:xarbvalp/q:    extended arb results (AttrDict with :nc: non-carbon, :full: plus Carbon, :net: difference)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an attributed dictionary with the following fields:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pair_analysis_pp">
+<span class="sig-name descname"><span class="pre">pair_analysis_pp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pair_analysis_pp" title="Permalink to this definition">¶</a></dt>
+<dd><p>pretty-print the output <cite>d</cite> of pair_analysis (returns string)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pair_data">
+<span class="sig-name descname"><span class="pre">pair_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pair_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a PairData object for the pair (dict for all pairs if pair is None)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pairs">
+<span class="sig-name descname"><span class="pre">pairs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias for CC.pairs(standardize=True)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pairsc">
+<span class="sig-name descname"><span class="pre">pairsc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pairsc" title="Permalink to this definition">¶</a></dt>
+<dd><p>all pairs with carbon curves</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.pool_arbitrage_statistics">
+<span class="sig-name descname"><span class="pre">pool_arbitrage_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_price</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_pairs_with_carbon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.pool_arbitrage_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns arbirage statistics on all Carbon pairs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – POS_DICT, POS_LIST, POS_DF (default)</p></li>
+<li><p><strong>only_pairs_with_carbon</strong> – ignore all curves that don’t have a Carbon pair</p></li>
+<li><p><strong>sort_price</strong> – sort by price</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the statistics data in the requested format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.price_ranges">
+<span class="sig-name descname"><span class="pre">price_ranges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.price_ranges" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns dataframe with price information of all curves</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – PR_TUPLE, PR_DICT, PR_DF (default)</p></li>
+<li><p><strong>short</strong> – shorten cid and pair</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tools.analyzer.CPCAnalyzer.tokens">
+<span class="sig-name descname"><span class="pre">tokens</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.CPCAnalyzer.tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>all tokens in the curves</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="helper-classes">
+<h2>Helper classes<a class="headerlink" href="#helper-classes" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tools.analyzer.AttrDict">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tools.analyzer.</span></span><span class="sig-name descname"><span class="pre">AttrDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.analyzer.AttrDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary that allows for attribute-style access</p>
+<p>see <a class="reference external" href="https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute">https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute</a></p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FLBTools</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Analyzer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cpcanalyzer-class">CPCAnalyzer class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#helper-classes">Helper classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arbgraphs.html">ArbGraphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpc.html">CPC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimizer.html">Optimizer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">FastLaneBot Tools</a></li>
+      <li>Next: <a href="arbgraphs.html" title="next chapter">ArbGraphs</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Bprotocol foundation 2023-24.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/analyzer.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
