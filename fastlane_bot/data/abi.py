@@ -943,7 +943,7 @@ SCALE_V2_FACTORY_ABI = [
     }
 ]
 
-CLEOPATRA_V2_POOL_ABI = [
+CLEOPATRA_V2_FACTORY_ABI = [
     {
         "type": "event",
         "name": "PairCreated",
