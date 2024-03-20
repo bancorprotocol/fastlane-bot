@@ -1,7 +1,19 @@
 """
-Transaction handlers for the Fastlane project.
+Defines a collection of transaction-related helper functions
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+This module defines the ``TxHelpers`` class, which provides a collection of properties
+and methods for working with transactions:
+
+- ``validate_and_submit_transaction``: Validates a transaction and then submits it to the arb contract
+- ``get_access_list``: TODO
+- ``construct_contract_function``: Builds a transaction using the Arb Contract function
+- ``build_transaction_with_gas``: Builds a transaction (how is it different from ``construct_contract_function``?)
+- ``get_nonce``: Returns the nonce of the wallet address
+- ``build_tx``: Yet another method for building a transaction (TODO)
+- ``submit_regular_transaction``: Submits a non-private transaction to the blockchain
+- ``submit_private_transaction``: Ditto private
+- ``sign_transaction``: Signs a transaction
+- ...
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
@@ -230,6 +242,7 @@ class TxHelpers:
             return None
 
     def get_access_list(self, transaction_data, expected_gas, eth_input=None):
+        """TODO: docstring"""
         expected_gas = hex(expected_gas)
         json_data = (
             {

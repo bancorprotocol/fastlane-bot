@@ -1,8 +1,13 @@
 """
 Route handler for the Fastlane project.
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+Main classes defined here are
 
+- ``RouteStruct``: represents a single trade route
+- ``TxRouteHandler``: converts trade instructions from the optimizer into routes
+
+It also defines a few helper function that should not be relied upon by external modules,
+even if they happen to be exported.
 ---
 (c) Copyright Bprotocol foundation 2023-24.
 All rights reserved.
@@ -66,6 +71,10 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
 
+    TODO: this function seems to be only used in this module and therefore should
+    be made a private function (_maximize_last_trade_per_tkn); I also would suggest
+    to move it to the TxRouteHandler class, either as static or class method.
+    
     :param route_struct: the route struct object
 
     Returns:
@@ -115,7 +124,7 @@ class TxRouteHandler:
         if not self.trade_instructions:
             raise ValueError("No trade instructions found.")
         if len(self.trade_instructions) < 2:
-            raise ValueError("Trade instructions must be greater than 1.")
+            raise ValueError("Length of trade instructions must be greater than 1.")
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
 
@@ -1479,6 +1488,8 @@ class TxRouteHandler:
     def _cid_to_pool(self, cid: str, db: any) -> Pool:
         return db.get_pool(cid=cid)
 
+# TODO: Those functions should probably be private; also -- are they needed at
+# all? Most of them seem to be extremely trivial
 
 def mulUp(a: Decimal, b: Decimal) -> Decimal:
     return a * b

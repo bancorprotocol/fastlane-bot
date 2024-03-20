@@ -1,7 +1,9 @@
 """
-[DOC-TODO-short description of what the file does, max 80 chars]
+Helper function to split Carbon trades into multiple trades, eg if ETH and WETH is involved
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+Defines the ``split_carbon_trades`` function 
+
+TODO: maybe this should be moved into a slightly bigger context
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.

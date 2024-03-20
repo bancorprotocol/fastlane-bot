@@ -1,7 +1,9 @@
 """
-[DOC-TODO-short description of what the file does, max 80 chars]
+Deals with wrap and unwrap trades (eg WETH <-> ETH) in the route.
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+Defines the ``add_wrap_or_unwrap_trades_to_route`` method.
+
+TODO: see whether to consolidate this with other objects
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.
