@@ -950,6 +950,36 @@ SCALE_V2_FACTORY_ABI = [
     }
 ]
 
+CLEOPATRA_V2_POOL_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"type": "address", "name": "token0", "internalType": "address", "indexed": True}, {"type": "address", "name": "token1", "internalType": "address", "indexed": True}, {"type": "bool", "name": "stable", "internalType": "bool", "indexed": False}, {"type": "address", "name": "pair", "internalType": "address", "indexed": False}, {"type": "uint256", "name": "", "internalType": "uint256", "indexed": False}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"type": "bool", "name": "_stable", "internalType": "bool"}],
+        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPairFee",
+        "stateMutability": "view",
+        "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
+        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "voter",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"type": "address", "name": "", "internalType": "address"}]
+    }
+]
+
 GAS_ORACLE_ABI = [
     {
         "type": "function",
