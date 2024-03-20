@@ -1,7 +1,24 @@
 """
-Fastlane bot configuration object
+Configuration-related classes
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+The classes into this module are
+
+- ``ConfigBase`` (``base``; base class)
+    - ``ConfigNetwork`` (``network``; network/chain)
+    - ``ConfigDB`` (``db``; database) -- DEPRECATED?
+    - ``ConfigLogger`` (``logger``; logging)
+    - ``ConfigProvider`` (``provider``; provider for network access) 
+- ``Config`` (``config``; main configuration class, integrates the above)
+
+Submodules provide the following
+
+- Constants (``constants`` and ``selectors``; various constants)
+- ``MultiCaller`` and related (``multicaller``; TODO: what is this?)
+- ``MultiProviderContractWrapper`` (``multiprovided``; TODO: what is this?)
+- ``NetworkBase`` and ``EthereumNetwork`` (``connect``; network/chain connection code TODO: details)
+- ``Cloaker`` (``cloaker``; deprecated)
+
+
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.

@@ -1,7 +1,7 @@
 """
-Fastlane bot config -- network
+Network configuration (defines the ``ConfigNetwork`` class)
 
-[DOC-TODO-OPTIONAL-longer description in rst format]
+Used to configure the network for the fastlane bot.
 
 ---
 (c) Copyright Bprotocol foundation 2023-24.

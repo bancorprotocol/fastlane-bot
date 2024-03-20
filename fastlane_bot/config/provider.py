@@ -1,5 +1,5 @@
 """
-Fastlane bot config -- provider
+Provider configuration (provides the ``ConfigProvider`` class)
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 

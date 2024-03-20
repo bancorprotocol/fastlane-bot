@@ -1,5 +1,5 @@
 """
-Fastlane bot configuration object -- selector constants
+Selector constants
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
