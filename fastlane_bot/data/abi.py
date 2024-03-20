@@ -161,25 +161,6 @@ CARBON_CONTROLLER_ABI = [
     }
 ]
 
-SUSHISWAP_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PairCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "tkn0_address", "type": "address"}, {"indexed": True, "internalType": "address", "name": "tkn1_address", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-SUSHISWAP_ROUTER_ABI = [
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
 SUSHISWAP_POOLS_ABI = [
     {
         "type": "event",
@@ -292,16 +273,6 @@ PANCAKESWAP_V3_FACTORY_ABI = [
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
     },
-]
-
-UNISWAP_V2_ROUTER_ABI = [
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
 ]
 
 UNISWAP_V2_POOL_ABI = [
@@ -609,26 +580,6 @@ UNISWAP_V3_POOL_ABI = [
     }
 ]
 
-UNISWAP_V3_ROUTER_ABI = [
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
-UNISWAP_V3_ROUTER2_ABI = [
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
 BANCOR_V3_NETWORK_INFO_ABI = [
     {
         "type": "function",
@@ -651,15 +602,6 @@ BANCOR_V3_NETWORK_INFO_ABI = [
         "inputs": [],
         "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
-]
-
-BANCOR_V2_ROUTER_ABI = [
-    {
-        "type": "event",
-        "name": "Conversion",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "name": "_smartToken", "type": "address"}, {"indexed": True, "name": "_fromToken", "type": "address"}, {"indexed": True, "name": "_toToken", "type": "address"}, {"indexed": False, "name": "_fromAmount", "type": "uint256"}, {"indexed": False, "name": "_toAmount", "type": "uint256"}, {"indexed": False, "name": "_trader", "type": "address"}]
-    },
 ]
 
 BANCOR_V2_CONVERTER_ABI = [
@@ -716,44 +658,6 @@ BANCOR_V2_CONVERTER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    }
-]
-
-BANCOR_V2_POOL_TOKEN_ABI = [
-    {
-        "type": "function",
-        "name": "allowance",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "approve",
-        "stateMutability": "nonpayable",
-        "inputs": [{"internalType": "address", "name": "_spender", "type": "address"}, {"internalType": "uint256", "name": "_value", "type": "uint256"}],
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "balanceOf",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "decimals",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}]
-    },
-    {
-        "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "string", "name": "", "type": "string"}]
     }
 ]
 
