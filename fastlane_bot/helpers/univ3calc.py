@@ -1,12 +1,17 @@
 """
-translating Uniswap v3 contract values
+parsing Uniswap v3 contract values
 
-(c) Copyright Bprotocol foundation 2023. 
-Licensed under MIT
+This class converts internal Uniswap v3 contract values into values that make sense
+from a financial perspective, either in Wei or in token units. It also allows to
+convert Uniswap v3 contract parameters into generic constant product curve parameters
+that are suitable for our ``CPC`` class.
 
-NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
-changes even in minor version updates. Use at your own risk.
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.4.1" 
 __DATE__ = "25/Jul/2023"
 

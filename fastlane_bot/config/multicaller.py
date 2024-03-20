@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-This is the multicaller module.
+This is the multicaller module. TODO: BETTER NAME
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+TODO-MIKE: What exactly does this do and is it a bona fide config module?
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict

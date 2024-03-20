@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the base class for the managers modules.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import time
 from dataclasses import dataclass, field

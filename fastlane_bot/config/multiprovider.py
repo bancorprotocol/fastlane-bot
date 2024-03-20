@@ -1,3 +1,14 @@
+"""
+Defines the ``MultiProviderContractWrapper`` class 
+
+TODO-MIKE: This is a very short module, so maybe the code should move somewhere else;
+also -- should it really be in config?
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 from web3 import Web3
 from typing import Dict
 

@@ -1,9 +1,22 @@
 """
-cloaking access to python files
+cloaking access to Python objects
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+NOTE: This class has been designed to be used with the Config object, to ensure
+that it can have private attributes that code using those objects cannot access.
+The idea was that this enforces clearer boundaries and therefore leads to better
+maintainability of the code. 
+
+It turns out that this feature has not been used, and unless it is found relevant
+in the redesign the code should be removed.
+
+TODO: unless decided otherwise, remove this code by July 2024
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.0-BETA1"
 __DATE__ = "26/Apr 2023"
 
@@ -17,7 +30,7 @@ class ShieldedAttribute():
     
 class Cloaker():
     """
-    Cloaking access to python files -- Base class
+    Cloaking access to Python objects -- Base class
     
     :cloaked_item:    the item to cloak
     

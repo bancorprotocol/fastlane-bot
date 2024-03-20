@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Base class for triangular arbitrage finder modes
+Defines the base class for triangular arbitrage finder modes
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import abc
 import itertools

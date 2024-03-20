@@ -1,8 +1,13 @@
 """
-Utility functions for FastLane project
+Various utility functions
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+NOTE: Those functions would more naturally fit in `helpers` 
+TODO-MIKE, TODO-KEVIN: check how hard this is
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import datetime
 import glob

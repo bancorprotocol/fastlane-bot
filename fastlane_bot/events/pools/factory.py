@@ -1,9 +1,14 @@
-# coding=utf-8
 """
-Contains the factory class for pools. This class is responsible for creating pools.
+Contains the factory class for pools. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for creating pools.
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import Any, Dict
 
