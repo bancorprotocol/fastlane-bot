@@ -121,7 +121,8 @@ class BaseManager:
 
             if base_exchange_name not in self.SUPPORTED_BASE_EXCHANGES:
                 self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg,
+                                                                          exchange_initialized=initialize_events)
             if base_exchange_name in "solidly_v2":
                 self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
 
@@ -172,34 +173,33 @@ class BaseManager:
         """
         Set the carbon v1 fee pairs.
         """
-        for ex in self.cfg.CARBON_V1_FORKS:
-            if ex in self.exchanges:
+        for ex in [ex for ex in self.cfg.CARBON_V1_FORKS if ex in self.exchanges]:
 
-                # Create or get CarbonController contract object
-                carbon_controller = self.create_or_get_carbon_controller(ex)
+            # Create or get CarbonController contract object
+            carbon_controller = self.create_or_get_carbon_controller(ex)
 
-                # Get pairs by contract
-                pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, exchange_name=ex)
-                if not pairs:
-                    self.cfg.logger.error(f"\n\n ******************************************* \n\n"
-                                          "Failed to get pairs for {ex}. Check that the contract is deployed for "
-                                          f"carbon_controller.address {carbon_controller.address}, and that the fee "
-                                          f"pairs are set. Removing {ex} from the list of supported exchanges and "
-                                          f"continuing..."
-                                          "\n\n ******************************************* \n\n")
-                    self.SUPPORTED_EXCHANGES.remove(ex)
-                    self.exchanges.pop(ex)
-                    continue
+            # Get pairs by contract
+            pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, exchange_name=ex)
+            if not pairs:
+                self.cfg.logger.error(f"\n\n ******************************************* \n\n"
+                                      "Failed to get pairs for {ex}. Check that the contract is deployed for "
+                                      f"carbon_controller.address {carbon_controller.address}, and that the fee "
+                                      f"pairs are set. Removing {ex} from the list of supported exchanges and "
+                                      f"continuing..."
+                                      "\n\n ******************************************* \n\n")
+                self.SUPPORTED_EXCHANGES.remove(ex)
+                self.exchanges.pop(ex)
+                continue
 
-                # Get the fee for each pair
-                fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
+            # Get the fee for each pair
+            fee_pairs = self.get_fee_pairs(pairs, carbon_controller)
 
-                # Set the fee pairs
-                self.exchanges[ex].fee_pairs = fee_pairs
-                self._fee_pairs[ex] = fee_pairs
+            # Set the fee pairs
+            self.exchanges[ex].fee_pairs = fee_pairs
+            self._fee_pairs[ex] = fee_pairs
 
     def get_fee_pairs(
-        self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
+            self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
     ) -> Dict[Tuple[str, str], int]:
         """
         Get the fees for each pair and store in a dictionary.
@@ -266,7 +266,7 @@ class BaseManager:
         return None
 
     def check_forked_exchange_names(
-        self, exchange_name_default: str = None, address: str = None, event: Any = None
+            self, exchange_name_default: str = None, address: str = None, event: Any = None
     ) -> str:
         """
         Check the forked exchange names. If the exchange name is forked (Sushiswap from UniswapV2, etc) return the
@@ -338,7 +338,7 @@ class BaseManager:
             i
             for i, pool_info in enumerate(self.pool_data)
             if pool_info["last_updated_block"]
-            < update_from_contract_block - self.alchemy_max_block_fetch
+               < update_from_contract_block - self.alchemy_max_block_fetch
         ]
 
     def update_carbon(self, current_block: int, exchange_name: str):
@@ -367,7 +367,8 @@ class BaseManager:
         carbon_controller = self.create_or_get_carbon_controller(exchange_name)
 
         # Create a list of pairs from the CarbonController contract object
-        pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, target_tokens=self.target_tokens, exchange_name=exchange_name)
+        pairs = self.get_carbon_pairs(carbon_controller=carbon_controller, target_tokens=self.target_tokens,
+                                      exchange_name=exchange_name)
 
         # Create a list of strategies for each pair
         strategies_by_pair = self.get_strategies(pairs, carbon_controller, exchange_name)
@@ -402,7 +403,7 @@ class BaseManager:
         )
 
     def get_carbon_pairs(
-        self, carbon_controller: Contract, exchange_name: str, target_tokens: List[str] = None
+            self, carbon_controller: Contract, exchange_name: str, target_tokens: List[str] = None
     ) -> List[Tuple[str, str, int, int]]:
         """
         Get the carbon pairs.
@@ -446,7 +447,7 @@ class BaseManager:
 
     @staticmethod
     def get_carbon_pairs_by_contract(
-        carbon_controller: Contract, replay_from_block: int or str = None
+            carbon_controller: Contract, replay_from_block: int or str = None
     ) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs by contract.
@@ -499,8 +500,8 @@ class BaseManager:
         """
         carbon_controller_address = self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
         if (
-            carbon_controller_address in self.pool_contracts[exchange_name]
-            and not self.replay_from_block
+                carbon_controller_address in self.pool_contracts[exchange_name]
+                and not self.replay_from_block
         ):
             return self.pool_contracts[exchange_name][carbon_controller_address]
 
@@ -517,10 +518,10 @@ class BaseManager:
         return carbon_controller
 
     def get_strats_by_contract(
-        self,
-        pairs: List[Tuple[str, str, int, int]],
-        carbon_controller: Contract,
-        exchange_name: str,
+            self,
+            pairs: List[Tuple[str, str, int, int]],
+            carbon_controller: Contract,
+            exchange_name: str,
     ) -> List[List[Any]]:
         """
         Get the strategies by contract.
@@ -596,8 +597,8 @@ class BaseManager:
             pool["cid"]
             for pool in self.pool_data
             if pool["exchange_name"] == exchange_name
-            and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
-            or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
+               and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
+               or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
         ]
         strategies = []
         for cid in cids:
@@ -630,7 +631,7 @@ class BaseManager:
         return strategies
 
     def get_strategies(
-        self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract, exchange_name: str
+            self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract, exchange_name: str
     ) -> List[List[str]]:
         """
         Get the strategies.
@@ -657,11 +658,12 @@ class BaseManager:
         return (
             self.get_strats_by_state(pairs, exchange_name)
             if self.carbon_inititalized[exchange_name]
-            else self.get_strats_by_contract(pairs=pairs, carbon_controller=carbon_controller, exchange_name=exchange_name)
+            else self.get_strats_by_contract(pairs=pairs, carbon_controller=carbon_controller,
+                                             exchange_name=exchange_name)
         )
 
     def get_fees_by_pair(
-        self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
+            self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
     ):
         """
         Get the fees by pair.
@@ -695,7 +697,7 @@ class BaseManager:
         return multicaller.multicall()
 
     def get_tkn_symbol_and_decimals(
-        self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
+            self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
     ) -> Tuple[str, int]:
         """
         Get the token symbol and decimals.
@@ -728,7 +730,7 @@ class BaseManager:
         return self.get_token_info_from_contract(web3, erc20_contracts, addr)
 
     def get_token_info_from_config(
-        self, cfg: Config, addr: str
+            self, cfg: Config, addr: str
     ) -> Optional[Tuple[str, int]]:
         """
         Get the token info from config.
@@ -756,11 +758,11 @@ class BaseManager:
         )
 
     def validate_pool_info(
-        self,
-        addr: Optional[str] = None,
-        event: Optional[Dict[str, Any]] = None,
-        pool_info: Optional[Dict[str, Any]] = None,
-        key: Optional[str] = None,
+            self,
+            addr: Optional[str] = None,
+            event: Optional[Dict[str, Any]] = None,
+            pool_info: Optional[Dict[str, Any]] = None,
+            key: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Validate the pool info.
@@ -804,7 +806,7 @@ class BaseManager:
         return pool_info
 
     def get_key_and_value(
-        self, event: Dict[str, Any], addr: str, ex_name: str
+            self, event: Dict[str, Any], addr: str, ex_name: str
     ) -> Tuple[str, Any]:
         """
         Get the key and value.
@@ -860,7 +862,8 @@ class BaseManager:
         strategy_id = event["args"]["id"]
         exchange_name = self.exchange_name_from_event(event)
         print(f"Deleting strategy {strategy_id} from {exchange_name}")
-        cids = [p["cid"] for p in self.pool_data if p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
+        cids = [p["cid"] for p in self.pool_data if
+                p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
         self.pool_data = [p for p in self.pool_data if p["cid"] not in cids]
         for x in cids:
             self.exchanges[exchange_name].delete_strategy(x)
@@ -951,8 +954,8 @@ class BaseManager:
 
         """
         if (
-            self.cfg.BANCOR_POL_ADDRESS in self.pool_contracts["bancor_pol"]
-            and not self.replay_from_block
+                self.cfg.BANCOR_POL_ADDRESS in self.pool_contracts["bancor_pol"]
+                and not self.replay_from_block
         ):
             return self.pool_contracts["bancor_pol"][self.cfg.BANCOR_POL_ADDRESS]
 
