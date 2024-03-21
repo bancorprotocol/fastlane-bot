@@ -174,7 +174,7 @@ class BaseManager:
         Set the carbon v1 fee pairs.
         """
         for ex in [ex for ex in self.cfg.CARBON_V1_FORKS if ex in self.exchanges]:
-
+            print(f"Setting {ex} fee pairs...")
             # Create or get CarbonController contract object
             carbon_controller = self.create_or_get_carbon_controller(ex)
 
@@ -829,8 +829,7 @@ class BaseManager:
         if ex_name == "bancor_pol":
             return "token", event["args"]["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            info = {'exchange_name': ex_name, 'strategy_id': event["args"]["id"],
-                    'fee': self.fee_pairs[ex_name][(event["args"]["token0"], event["args"]["token1"])]}
+            info = {'exchange_name': ex_name, 'strategy_id': event["args"]["id"]}
             return "cid", get_pool_cid(info, self.cfg.CARBON_V1_FORKS)
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr

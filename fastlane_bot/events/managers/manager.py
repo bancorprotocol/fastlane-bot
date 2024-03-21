@@ -15,6 +15,7 @@ from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
@@ -33,7 +34,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         if event["event"] == "PairCreated":
-            self.handle_pair_created(event)
+            self.set_carbon_v1_fee_pairs()
             return
 
         if event["event"] == "StrategyDeleted":
@@ -64,23 +65,20 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         self.update_pool_data(pool_info, data)
 
-    def handle_pair_created(self, event: Dict[str, Any]):
-        """
-        Handle the pair created event by updating the fee pairs and pool info for the given pair.
-
-        Parameters
-        ----------
-        event : Dict[str, Any]
-            The event.
-
-        """
-        for exchange_name in self.cfg.CARBON_V1_FORKS:
-            if exchange_name in self.exchanges:
-                fee_pairs = self.get_fee_pairs(
-                    [(event["args"]["token0"], event["args"]["token1"], 0, 5000)],
-                    self.create_or_get_carbon_controller(exchange_name),
-                )
-                self.fee_pairs[exchange_name].update(fee_pairs)
+    # def handle_pair_created(self, event: Dict[str, Any]):
+    #     """
+    #     Handle the pair created event by updating the fee pairs and pool info for the given pair.
+    #
+    #     Parameters
+    #     ----------
+    #     event : Dict[str, Any]
+    #         The event.
+    #
+    #     """
+    #     for exchange_name in self.cfg.CARBON_V1_FORKS:
+    #         if exchange_name in self.exchanges:
+    #             fee_pairs = self.set_carbon_v1_fee_pairs()
+    #             self.fee_pairs[exchange_name].update(fee_pairs)
 
     def update_from_pool_info(
             self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
@@ -353,13 +351,15 @@ class Manager(PoolManager, EventManager, ContractsManager):
                 self.fee_pairs[exchange_name] = self.get_fee_pairs(pairs, carbon_controller)
 
                 # Update pool info
-                for pool in self.pool_data:
+                for idx, pool in enumerate(self.pool_data):
                     if pool["exchange_name"] == exchange_name:
                         pool["fee"] = self.fee_pairs[exchange_name][
                             (pool["tkn0_address"], pool["tkn1_address"])
                         ]
                         pool["fee_float"] = pool["fee"] / 1e6
                         pool["descr"] = self.pool_descr_from_info(pool)
+                        self.pool_data[idx] = pool
+
 
     def update_remaining_pools(self):
         remaining_pools = []

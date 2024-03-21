@@ -40,8 +40,6 @@ def get_cid_base(args: Dict[str, Any], carbon_v1_forks: List[str]) -> str:
             args["exchange_name"]
             + " "
             + str(args["strategy_id"])
-            + " "
-            + str(args["fee"])
     ) if args["exchange_name"] in carbon_v1_forks else (
             args["exchange_name"]
             + " "
