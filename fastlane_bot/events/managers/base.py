@@ -9,15 +9,14 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Type, Optional, Tuple
 
-import pandas as pd
 from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.events.exchanges import exchange_factory, SolidlyV2
+from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 from fastlane_bot.events.pools import pool_factory
 
 
@@ -858,10 +857,13 @@ class BaseManager:
         event : Dict[str, Any]
             The event.
         """
-        cid = event["args"]["id"]
+        strategy_id = event["args"]["id"]
         exchange_name = self.exchange_name_from_event(event)
-        self.pool_data = [p for p in self.pool_data if p["cid"] != cid]
-        self.exchanges[exchange_name].delete_strategy(event["args"]["id"])
+        print(f"Deleting strategy {strategy_id} from {exchange_name}")
+        cids = [p["cid"] for p in self.pool_data if p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
+        self.pool_data = [p for p in self.pool_data if p["cid"] not in cids]
+        for x in cids:
+            self.exchanges[exchange_name].delete_strategy(x)
 
     def deduplicate_pool_data(self) -> None:
         """

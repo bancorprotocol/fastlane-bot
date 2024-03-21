@@ -18,4 +18,4 @@ BUTTER_V3_NAME = "butter_v3"
 AGNI_V3_NAME = "agni_v3"
 CLEOPATRA_V3_NAME = "cleopatra_v3"
 CARBON_V1_NAME = "carbon_v1"
-CARBON_V1_FORK1_NAME = "altered_carbon"  #TODO CHANGE BEFORE MERGING
+CARBON_V1_FORK1_NAME = "altered_carbon"

@@ -1678,7 +1678,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         return trade_instructions
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
-        print(f"[_from_wei_to_decimals] tkn0_amt={tkn0_amt}, tkn0_decimals={tkn0_decimals}")
         return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
 
     def _cid_to_pool(self, cid: str, db: any) -> Pool:

@@ -12,7 +12,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
-from ..new_utils import get_pool_cid
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 @dataclass
@@ -153,11 +153,10 @@ class CarbonV1Pool(Pool):
         }
         params = self.parse_event(self.state, fake_event, "None")
         params["exchange_name"] = self.exchange_name
-        params["router"] = self.router_address,
+        params["router"] = self.router_address
         params["fee"] = self.state["fee"]
-        fake_carbon_v1_fork_list = [self.exchange_name]  # because we dont have access to the config object from here,
-        # we need to fake the list
-        params["cid"] = get_pool_cid(params, fake_carbon_v1_fork_list)
+        carbon_v1_fork_list = [self.exchange_name]  # This is safe because we are in the CarbonV1Pool class
+        params["cid"] = get_pool_cid(params, carbon_v1_fork_list)
         for key, value in params.items():
             self.state[key] = value
 
