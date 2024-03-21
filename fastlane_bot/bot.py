@@ -977,7 +977,7 @@ class CarbonBot(CarbonBotBase):
         )
 
         flashloan_struct = tx_route_handler.generate_flashloan_struct(
-            trade_instructions_objects=calculated_trade_instructions
+            trade_instructions_objects=calculated_trade_instructions, b3_flashloan_tokens=list(CCm.byparams(exchange="bancor_v3").tknys())+[self.ConfigObj.BNT_ADDRESS]
         )
 
         # Get the flashloan token
