@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 from . import selectors as S
 from .base import ConfigBase
-
+from .constants import CARBON_V1_FORK1_NAME, CARBON_V1_NAME
 load_dotenv()
 
 from decimal import Decimal
@@ -208,7 +208,8 @@ class ConfigNetwork(ConfigBase):
     UNISWAP_V3_NAME = "uniswap_v3"
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
-    CARBON_V1_NAME = "carbon_v1"
+    CARBON_V1_NAME = CARBON_V1_NAME
+    CARBON_V1_X2_NAME = CARBON_V1_FORK1_NAME
     BANCOR_POL_NAME = "bancor_pol"
     BALANCER_NAME = "balancer"
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
@@ -236,7 +237,7 @@ class ConfigNetwork(ConfigBase):
 
     GAS_ORACLE_ADDRESS = None
 
-    CARBON_V1_FORKS = [CARBON_V1_NAME]
+    CARBON_V1_FORKS = [CARBON_V1_NAME, CARBON_V1_X2_NAME]
 
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
@@ -358,7 +359,7 @@ class ConfigNetwork(ConfigBase):
         )
         self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
-            df=self.network_df, fork_name=S.CARBON_V1
+            df=self.network_df, fork_name=CARBON_V1_NAME
         )
         self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
 
@@ -695,7 +696,8 @@ class _ConfigNetworkMantle(ConfigNetwork):
     NETWORK_ID = "5000"
     NETWORK_NAME = "mantle"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    RPC_ENDPOINT = "https://rpc.mantle.xyz/"
+    # Provider website: https://drpc.org/chainlist
+    RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=mantle&dkey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
 
     GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"

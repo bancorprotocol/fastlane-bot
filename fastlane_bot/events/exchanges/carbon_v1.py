@@ -8,13 +8,13 @@ Licensed under MIT
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any, Dict, Callable
 
-import web3
 from fastlane_bot import Config
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 @dataclass
@@ -22,8 +22,8 @@ class CarbonV1(Exchange):
     """
     Carbon exchange class
     """
-
-    exchange_name: str = "carbon_v1"
+    base_exchange_name: str = "carbon_v1"
+    exchange_name: str = None
     _fee_pairs: Dict[Tuple[str, str], int] = None
     router_address: str = None
     exchange_initialized: bool = False
@@ -178,7 +178,8 @@ class CarbonV1(Exchange):
             The pool info.
 
         """
-        cid = strategy[0]
+
+        strategy_id = strategy[0]
         order0, order1 = strategy[3][0], strategy[3][1]
         tkn0_address, tkn1_address = cfg.w3.to_checksum_address(
             strategy[2][0]
@@ -195,14 +196,19 @@ class CarbonV1(Exchange):
             fee_float = fee / 1e6
             self.fee_pairs[(tkn0_address, tkn1_address)] = fee
 
+        pool_info_temp = {"exchange_name": self.exchange_name, "fee": f"{fee}",
+                          'pair_name': f"{tkn0_address}/{tkn1_address}", 'strategy_id': strategy_id}
+        cid = get_pool_cid(pool_info_temp, cfg.CARBON_V1_FORKS)
+
         return func(
-            address=cfg.CARBON_CONTROLLER_ADDRESS,
-            exchange_name="carbon_v1",
+            address=cfg.CARBON_CONTROLLER_MAPPING[self.exchange_name],
+            exchange_name=self.exchange_name,
             fee=f"{fee}",
             fee_float=fee_float,
             tkn0_address=tkn0_address,
             tkn1_address=tkn1_address,
             cid=cid,
+            strategy_id=strategy_id,
             other_args=dict(
                 y_0=order0[0],
                 y_1=order1[0],
@@ -215,3 +221,4 @@ class CarbonV1(Exchange):
             ),
             block_number=block_number,
         )
+

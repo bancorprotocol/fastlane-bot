@@ -22,6 +22,7 @@ from fastlane_bot.data.abi import (
     BALANCER_VAULT_ABI,
 )
 from fastlane_bot.events.managers.base import BaseManager
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 class ContractsManager(BaseManager):
@@ -46,11 +47,11 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BANCOR_V3_NETWORK_INFO_ADDRESS,
                     abi=BANCOR_V3_NETWORK_INFO_ABI,
                 )
-            elif exchange_name == "carbon_v1":
+            elif exchange_name in self.cfg.CARBON_V1_FORKS:
                 self.tenderly_event_contracts[
                     exchange_name
                 ] = self.w3_tenderly.eth.contract(
-                    address=self.cfg.CARBON_CONTROLLER_ADDRESS,
+                    address=self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name],
                     abi=self.exchanges[exchange_name].get_abi(),
                 )
             elif exchange_name == "pancakeswap_v2":
@@ -111,6 +112,7 @@ class ContractsManager(BaseManager):
                     self.event_contracts[fork] = fork_contract
                     self.pool_contracts[fork] = {}
                     tracker.append(fork)
+                    self.carbon_inititalized[fork] = False
             elif exchange_name in self.cfg.SOLIDLY_V2_FORKS:
                 fork_contract = self.web3.eth.contract(
                     abi=self.exchanges[exchange_name].get_abi(),
@@ -148,13 +150,7 @@ class ContractsManager(BaseManager):
                     address=self.cfg.BALANCER_VAULT_ADDRESS,
                     abi=BALANCER_VAULT_ABI,
                 )
-            elif exchange_name in self.cfg.CARBON_V1_FORKS:
-                self.pool_contracts[exchange_name][
-                    self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
-                ] = self.web3.eth.contract(
-                    address=self.cfg.CARBON_CONTROLLER_MAPPING[exchange_name],
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
+
 
     @staticmethod
     def get_or_create_token_contracts(
@@ -244,6 +240,14 @@ class ContractsManager(BaseManager):
         t0_addr = self.exchanges[exchange_name].get_tkn0(address, pool_contract, event)
         t1_addr = self.exchanges[exchange_name].get_tkn1(address, pool_contract, event)
         block_number = event["blockNumber"]
+        strategy_id = event["args"]["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None
+        temp_pool_info = {
+            "exchange_name": exchange_name,
+            "fee": f"{fee}",
+            "pair_name": f"{t0_addr}/{t1_addr}",
+            "strategy_id": strategy_id,
+        }
+        cid = get_pool_cid(temp_pool_info, self.cfg.CARBON_V1_FORKS)
 
         return self.add_pool_info(
             address=address,
@@ -252,7 +256,8 @@ class ContractsManager(BaseManager):
             fee_float=fee_float,
             tkn0_address=t0_addr,
             tkn1_address=t1_addr,
-            cid=event["args"]["id"] if exchange_name == "carbon_v1" else None,
+            cid=cid,
+            strategy_id=strategy_id,
             contract=pool_contract,
             block_number=block_number,
             tenderly_exchanges=tenderly_exchanges,

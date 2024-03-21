@@ -8,6 +8,7 @@ __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
 
 import asyncio
+import nest_asyncio
 from _decimal import Decimal
 
 # import itertools
@@ -32,6 +33,8 @@ from web3.types import TxReceipt
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
 from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix, count_bytes
+
+nest_asyncio.apply()
 
 
 @dataclass
@@ -579,10 +582,10 @@ class TxHelpers:
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
             
-        if "tenderly" in self.web3.provider.endpoint_uri:
-            print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
-            max_gas_price = 3
-            max_priority_fee = 3
+        # if "tenderly" in self.web3.provider.endpoint_uri:
+        #     print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
+        #     max_gas_price = 3
+        #     max_priority_fee = 3
 
         if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             tx_details = {
