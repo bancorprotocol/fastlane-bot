@@ -16,6 +16,8 @@ from unittest.mock import MagicMock
 from fastlane_bot import Bot, Config
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
+from fastlane_bot.events.pools.utils import get_pool_cid
+
 Base = None
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
@@ -162,18 +164,24 @@ def test_test_update_from_event_carbon_v1_delete():
     
     # +
     event = event_data['carbon_v1_event_create']
-    manager.pool_data = [pool for pool in manager.pool_data if pool['cid'] != event['args']['id']]
-    assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
+    fee = manager.fee_pairs['carbon_v1'][(event["args"]["token0"], event["args"]["token1"])]
+    info = {'strategy_id': event['args']['id'], 'address': event['address'], 'fee': fee, 'exchange_name': 'carbon_v1'}
+    cid = get_pool_cid(info, ['carbon_v1'])
+
+    manager.pool_data = [pool for pool in manager.pool_data if pool['cid'] != cid]
+    assert cid not in [pool['cid'] for pool in manager.pool_data]
     
     manager.update_from_event(event)
-    
-    assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
-    
+    assert cid in [p[-1] for p in manager.pools_to_add_from_contracts]
+    fake_pool_data = {
+        "address": event['address'],
+        "cid": cid,
+        "fee": fee,
+        "exchange_name": "carbon_v1",
+        'strategy_id': event['args']['id'],
+    }
+    manager.pool_data.append(fake_pool_data)
     event['event'] = 'StrategyDeleted'
-    
+
     manager.update_from_event(event)
-    
-    assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
-    # -
-    
-    #
+    assert cid not in [pool['cid'] for pool in manager.pool_data]

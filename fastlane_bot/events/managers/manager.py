@@ -28,7 +28,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         """
         ex_name = self.exchange_name_from_event(event)
-
         if event["event"] in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"]:
             self.handle_trading_fee_updated()
             return
@@ -46,7 +45,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
             return
 
         key, key_value = self.get_key_and_value(event, addr, ex_name)
-
         pool_info = self.get_pool_info(key, key_value, ex_name)
         if not pool_info:
             # StrategyCreated events get appended to this list to be processed in the async workflow (see main.py),
@@ -64,7 +62,6 @@ class Manager(PoolManager, EventManager, ContractsManager):
         data = pool.update_from_event(
             event or {}, pool.get_common_data(event, pool_info)
         )
-
         self.update_pool_data(pool_info, data)
 
     def handle_pair_created(self, event: Dict[str, Any]):
