@@ -155,6 +155,7 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
 
 dataframe_key = [
     "cid",
+    "strategy_id",
     "last_updated",
     "last_updated_block",
     "descr",
@@ -468,6 +469,7 @@ def organize_pool_details_uni_v3(
 
     pool_info = {
         "cid": pool_address,
+        "strategy_id": 0,
         "last_updated": "",
         "last_updated_block": last_updated_block,
         "descr": description,
@@ -602,6 +604,7 @@ def organize_pool_details_balancer(
 
     pool_info = {
         "cid": pool_id,
+        "strategy_id": 0,
         "last_updated": "",
         "last_updated_block": 0,
         "descr": description,
@@ -673,6 +676,7 @@ def organize_pool_details_uni_v2(
 
     pool_info = {
         "cid": pool_address,
+        "strategy_id": 0,
         "last_updated": "",
         "last_updated_block": last_updated_block,
         "descr": description,
@@ -742,6 +746,7 @@ def organize_pool_details_solidly_v2(
 
     pool_info = {
         "cid": pool_address,
+        "strategy_id": 0,
         "last_updated": "",
         "last_updated_block": last_updated_block,
         "descr": description,
