@@ -861,7 +861,6 @@ class BaseManager:
         """
         strategy_id = event["args"]["id"]
         exchange_name = self.exchange_name_from_event(event)
-        print(f"Deleting strategy {strategy_id} from {exchange_name}")
         cids = [p["cid"] for p in self.pool_data if
                 p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
         self.pool_data = [p for p in self.pool_data if p["cid"] not in cids]
