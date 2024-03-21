@@ -13,7 +13,10 @@ FLASHLOAN_FEE_MAP = {
 }
 
 ETHEREUM = "ethereum"
+PANCAKESWAP_V2_NAME = "pancakeswap_v2"
 PANCAKESWAP_V3_NAME = "pancakeswap_v3"
 BUTTER_V3_NAME = "butter_v3"
 AGNI_V3_NAME = "agni_v3"
 CLEOPATRA_V3_NAME = "cleopatra_v3"
+VELOCIMETER_V2_NAME = "velocimeter_v2"
+SOLIDLY_V2_NAME = "solidly_v2"
