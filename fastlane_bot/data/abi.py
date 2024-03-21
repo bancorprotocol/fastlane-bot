@@ -765,12 +765,6 @@ BALANCER_VAULT_ABI = [
         "inputs": [{"indexed": True, "internalType": "contract IAuthorizer", "name": "newAuthorizer", "type": "address"}]
     },
     {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "poolId", "type": "bytes32"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenIn", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "tokenOut", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amountIn", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amountOut", "type": "uint256"}]
-    },
-    {
         "type": "function",
         "name": "getPoolTokens",
         "stateMutability": "view",
