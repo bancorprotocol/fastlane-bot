@@ -166,7 +166,7 @@ UNISWAP_V2_FACTORY_ABI = [
         "type": "event",
         "name": "PairCreated",
         "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "tkn0_address", "type": "address"}, {"indexed": True, "internalType": "address", "name": "tkn1_address", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
 
@@ -175,26 +175,8 @@ UNISWAP_V3_FACTORY_ABI = [
         "type": "event",
         "name": "PoolCreated",
         "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "tkn0_address", "type": "address"}, {"indexed": True, "internalType": "address", "name": "tkn1_address", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
-    }
-]
-
-PANCAKESWAP_V2_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PairCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-PANCAKESWAP_V3_FACTORY_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
-    },
+    }
 ]
 
 SOLIDLY_V2_FACTORY_ABI = [
