@@ -295,12 +295,6 @@ UNISWAP_V3_POOL_ABI = [
     },
     {
         "type": "event",
-        "name": "Initialize",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
-    },
-    {
-        "type": "event",
         "name": "Swap",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "int256", "name": "amount0", "type": "int256"}, {"indexed": False, "internalType": "int256", "name": "amount1", "type": "int256"}, {"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "uint128", "name": "liquidity", "type": "uint128"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
@@ -362,12 +356,6 @@ PANCAKESWAP_V3_POOL_ABI = [
         "name": "Flash",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "paid1", "type": "uint256"}]
-    },
-    {
-        "type": "event",
-        "name": "Initialize",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
     },
     {
         "type": "event",
