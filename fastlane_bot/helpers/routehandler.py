@@ -1530,7 +1530,6 @@ class TxRouteHandler(TxRouteHandlerBase):
         List[Dict[str, Any]]
             The trade outputs.
         """
-        db = trade_instructions[0].db
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
             raw_txs_lst = []
