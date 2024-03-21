@@ -39,10 +39,10 @@ FAST_LANE_CONTRACT_ABI = [
 ERC20_ABI = [
     {
         "type": "function",
-        "name": "approve",
-        "stateMutability": "nonpayable",
-        "inputs": [{"name": "spender", "type": "address"}, {"name": "value", "type": "uint256"}],
-        "outputs": [{"name": "", "type": "bool"}]
+        "name": "symbol",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "string"}]
     },
     {
         "type": "function",
@@ -60,18 +60,18 @@ ERC20_ABI = [
     },
     {
         "type": "function",
-        "name": "symbol",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"name": "", "type": "string"}]
-    },
-    {
-        "type": "function",
         "name": "allowance",
         "stateMutability": "view",
         "inputs": [{"name": "owner", "type": "address"}, {"name": "spender", "type": "address"}],
         "outputs": [{"name": "", "type": "uint256"}]
     },
+    {
+        "type": "function",
+        "name": "approve",
+        "stateMutability": "nonpayable",
+        "inputs": [{"name": "spender", "type": "address"}, {"name": "value", "type": "uint256"}],
+        "outputs": [{"name": "", "type": "bool"}]
+    }
 ]
 
 CARBON_CONTROLLER_ABI = [
