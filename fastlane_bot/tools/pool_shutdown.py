@@ -182,92 +182,15 @@ class AutomaticPoolShutdown:
             self.tx_helpers.get_max_priority_fee_per_gas_alchemy()
             * self.mgr.cfg.DEFAULT_GAS_PRICE_OFFSET
         )
-        transaction = self.build_transaction(
-            tkn=tkn,
+        transaction = self.tx_helpers.build_transaction_generic(
+            self.bancor_network_contract.functions.withdrawPOL,
+            self.mgr.web3.to_checksum_address(tkn),
             gas_price=gas_price,
-            max_priority_gas=max_priority_gas,
-            nonce=self.tx_helpers.get_nonce(),
+            max_priority_fee=max_priority_gas,
+            nonce=self.tx_helpers.get_nonce()
         )
+
         if transaction is not None:
             signed_transaction = self.tx_helpers.sign_transaction(transaction)
             return self.tx_helpers.submit_private_transaction(signed_transaction, self.mgr.web3.eth.block_number)
         return None
-
-    def build_transaction(
-        self, tkn: str, gas_price: int, max_priority_gas: int, nonce: int
-    ):
-        """
-        Handles the transaction generation
-
-        Parameters
-        ----------
-        tkn: str
-            The token address
-        gas_price: int
-            The gas price
-        max_priority_gas: int
-            The max priority gas
-        nonce: int
-            The nonce
-
-        Returns
-        --------
-        str
-            The transaction hash if successful, None if not
-        """
-
-        try:
-            return self.bancor_network_contract.functions.withdrawPOL(
-                self.mgr.web3.to_checksum_address(tkn)
-            ).build_transaction(
-                self.tx_helpers.build_tx(
-                    base_gas_price=gas_price,
-                    max_priority_fee=max_priority_gas,
-                    nonce=nonce,
-                )
-            )
-        except Exception as e:
-            self.mgr.cfg.logger.debug(
-                f"Error when building transaction: {e.__class__.__name__} {e}"
-            )
-            if "max fee per gas less than block base fee" in str(e):
-                try:
-                    return self._build_transaction(e, max_priority_gas, tkn, nonce)
-                except Exception as e:
-                    self.mgr.cfg.logger.debug(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}"
-                    )
-                    return None
-
-    def _build_transaction(self, e: Exception, max_priority: int, tkn: str, nonce: int):
-        """
-        Handles the transaction generation logic.
-
-        Parameters
-        ----------
-        e: Exception
-            The exception
-        max_priority: int
-            The max priority fee input
-        tkn: str
-            The token address
-        nonce: int
-            The nonce
-
-        Returns
-        -------
-        str
-            The transaction hash if successful, None if not
-
-        """
-        message = str(e)
-        baseFee = int_prefix(message.split("baseFee: ")[1])
-        return self.bancor_network_contract.functions.withdrawPOL(
-            self.mgr.web3.to_checksum_address(tkn)
-        ).build_transaction(
-            self.tx_helpers.build_tx(
-                base_gas_price=baseFee,
-                max_priority_fee=max_priority,
-                nonce=nonce,
-            )
-        )

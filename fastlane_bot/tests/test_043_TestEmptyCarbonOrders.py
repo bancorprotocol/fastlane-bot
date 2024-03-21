@@ -173,19 +173,23 @@ def test_test_empty_carbon_orders_removed():
             
     best_trade_instructions_dic
     # Check that this gets filtered out
-    test_trade = [{'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
+    test_trade = [{
+      'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
+      # 'strategy_id': 0,
       'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       'amtin': 0.008570336169213988,
       'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       'amtout': -0.13937506393995136,
       'error': None},
      {'cid': '9187623906865338513511114400657741709420-1',
+      'strategy_id': 9187623906865338513511114400657741709420,
       'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       'amtin': 0,
       'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       'amtout': 0,
       'error': None},
      {'cid': '9187623906865338513511114400657741709458-1',
+      'strategy_id': 9187623906865338513511114400657741709458,
       'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       'amtin': 0.13937506393995136,
       'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
@@ -198,6 +202,7 @@ def test_test_empty_carbon_orders_removed():
     ) = bot._simple_ordering_by_src_token(
     test_trade, best_src_token
     )
+    print(f"ordered_trade_instructions_dct: {ordered_trade_instructions_dct}")
     ordered_scaled_dcts = bot._basic_scaling(
                 ordered_trade_instructions_dct, best_src_token
             )
@@ -212,9 +217,10 @@ def test_test_empty_carbon_orders_removed():
     ordered_scaled_dcts[2]["tknout_dec_override"] = 8
     ordered_scaled_dcts[2]["exchange_override"] = "carbon_v1"
     
-    print(ordered_scaled_dcts)
+    print(f"ordered_scaled_dcts: {ordered_scaled_dcts}")
     
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
+    # print(f"ordered_trade_instructions_objects: {ordered_trade_instructions_objects}")
     tx_route_handler = bot.TxRouteHandlerClass(
                 trade_instructions=ordered_trade_instructions_objects
             )
@@ -223,10 +229,12 @@ def test_test_empty_carbon_orders_removed():
                 if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
                 else ordered_trade_instructions_objects
             )
+    print(f"agg_trade_instructions: {agg_trade_instructions[0]}")
     # Calculate the trade instructions
     calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
         agg_trade_instructions
     )
+
     encoded_trade_instructions = tx_route_handler.custom_data_encoder(
                 calculated_trade_instructions
             )
