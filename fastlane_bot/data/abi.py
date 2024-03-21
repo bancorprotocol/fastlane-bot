@@ -555,12 +555,6 @@ EQUALIZER_V2_POOL_ABI = [
 BANCOR_V2_CONVERTER_ABI = [
     {
         "type": "event",
-        "name": "Conversion",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_fromToken", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_toToken", "type": "address"}, {"indexed": True, "internalType": "address", "name": "_trader", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_amount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_return", "type": "uint256"}, {"indexed": False, "internalType": "int256", "name": "_conversionFee", "type": "int256"}]
-    },
-    {
-        "type": "event",
         "name": "TokenRateUpdate",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "contract IERC20", "name": "_token1", "type": "address"}, {"indexed": True, "internalType": "contract IERC20", "name": "_token2", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "_rateN", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "_rateD", "type": "uint256"}]
