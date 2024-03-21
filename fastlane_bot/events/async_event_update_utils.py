@@ -160,7 +160,7 @@ async def get_token_and_fee(
             "fee": fee,
             "strategy_id": strategy_id
         }
-        carbon_v1_forks = [CARBON_V1_NAME] if ex.is_carbon_v1_fork else []
+        carbon_v1_forks = [exchange_name] if (ex.is_carbon_v1_fork or exchange_name == CARBON_V1_NAME) else []
         cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
         return TokenFeeResponse(
             exchange_name=exchange_name, address=address, tkn0=tkn0, tkn1=tkn1, fee=fee, cid=cid,
