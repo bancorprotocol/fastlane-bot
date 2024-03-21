@@ -696,7 +696,8 @@ class _ConfigNetworkMantle(ConfigNetwork):
     NETWORK_ID = "5000"
     NETWORK_NAME = "mantle"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    RPC_ENDPOINT = "https://rpc.mantle.xyz/"
+    # Provider website: https://drpc.org/chainlist
+    RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=mantle&dkey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
 
     GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"
