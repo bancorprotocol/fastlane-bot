@@ -13,6 +13,8 @@ from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot import Config
+from fastlane_bot.config.constants import PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, \
+    SOLIDLY_V2_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
@@ -113,7 +115,8 @@ class BaseManager:
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
             base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
-            if exchange_name in ["pancakeswap_v2", "pancakeswap_v3", "velocimeter_v2"]:
+            if exchange_name in [PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME]:
+                print(f"initializing {exchange_name}")
                 initialize_events = True
             elif base_exchange_name not in initialized_exchanges:
                 initialize_events = True
@@ -121,9 +124,9 @@ class BaseManager:
 
             if base_exchange_name not in self.SUPPORTED_BASE_EXCHANGES:
                 self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
-            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg,
-                                                                          exchange_initialized=initialize_events)
-            if base_exchange_name in "solidly_v2":
+
+            self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
+            if base_exchange_name in SOLIDLY_V2_NAME:
                 self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
 
         self.init_exchange_contracts()
