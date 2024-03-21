@@ -41,7 +41,7 @@ ERC20_ABI = [
         "type": "function",
         "name": "approve",
         "stateMutability": "nonpayable",
-        "inputs": [{"name": "guy", "type": "address"}, {"name": "wad", "type": "uint256"}],
+        "inputs": [{"name": "spender", "type": "address"}, {"name": "value", "type": "uint256"}],
         "outputs": [{"name": "", "type": "bool"}]
     },
     {
@@ -55,7 +55,7 @@ ERC20_ABI = [
         "type": "function",
         "name": "balanceOf",
         "stateMutability": "view",
-        "inputs": [{"name": "", "type": "address"}],
+        "inputs": [{"name": "owner", "type": "address"}],
         "outputs": [{"name": "", "type": "uint256"}]
     },
     {
@@ -69,7 +69,7 @@ ERC20_ABI = [
         "type": "function",
         "name": "allowance",
         "stateMutability": "view",
-        "inputs": [{"name": "", "type": "address"}, {"name": "", "type": "address"}],
+        "inputs": [{"name": "owner", "type": "address"}, {"name": "spender", "type": "address"}],
         "outputs": [{"name": "", "type": "uint256"}]
     },
 ]
