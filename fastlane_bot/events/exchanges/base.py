@@ -11,6 +11,7 @@ from typing import Dict, List, Type, Any
 
 from web3.contract import Contract, AsyncContract
 
+from fastlane_bot.config.constants import CARBON_V1_NAME
 from fastlane_bot.events.pools.base import Pool
 
 
@@ -20,10 +21,16 @@ class Exchange(ABC):
     Base class for exchanges
     """
 
-    __VERSION__ = "0.0.2"
-    __DATE__ = "2023-08-27"
-
+    exchange_name: str
+    base_exchange_name: str = ''
     pools: Dict[str, Pool] = field(default_factory=dict)
+
+    __VERSION__ = "0.0.3"
+    __DATE__ = "2024-03-20"
+
+    @property
+    def is_carbon_v1_fork(self) -> bool:
+        return self.base_exchange_name == CARBON_V1_NAME
 
     def get_pools(self) -> List[Pool]:
         """
