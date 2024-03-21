@@ -1,18 +1,26 @@
 """
-optimization library -- Marginal Price Optimizer module [final optimizer class]
+Implements the "Marginal Price Optimization" method for arbitrage and routing
 
 
-The marginal price optimizer implicitly solves the optimization problem by always operating
-on the optimal hyper surface, which is the surface where all marginal prices of the same
-pair are equal, and all marginal prices across pairs follow the usual no arbitrage condition.
-Therefore the problem reduces to a goal seek -- we need to find the point on the hyper surface
-that satisfied the desired boundary conditions.
+The marginal price optimizer implicitly solves the
+optimization problem by always operating on the optimal
+hyper surface, which is the surface where all marginal
+prices of the same pair are equal, and all marginal prices
+across pairs follow the usual no arbitrage condition.
+Therefore the problem reduces to a goal seek -- we need to
+find the point on that hyper surface that satisfies the
+desired boundary conditions.
+
+This method employs a Newton-Raphson algorithm to solve the
+aforementioned goal seek problem.
+
+---
+This module is still subject to active research, and
+comments and suggestions are welcome. The corresponding
+author is Stefan Loesch <stefan@bancor.network>
 
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
-
-This module is still subject to active research, and comments and suggestions are welcome. 
-The corresponding author is Stefan Loesch <stefan@bancor.network>
 """
 __VERSION__ = "5.2"
 __DATE__ = "15/Sep/2023"
@@ -48,9 +56,9 @@ class MargPOptimizer(CPCArbOptimizer):
         """
         computes the Jacobian of func at point x
 
-        :func:    a callable x=(x1..xn) -> (y1..ym), taking and returning np.arrays
-                  must also take a quiet parameter, which if True suppresses output
-        :x:       a vector x=(x1..xn) as np.array
+        :func:  a callable x=(x1..xn) -> (y1..ym), taking and returning np.arrays
+                must also take a quiet parameter, which if True suppresses output
+        :x:     a vector x=(x1..xn) as np.array
         """
         if eps is None:
             eps = cls.JACEPS
@@ -82,39 +90,58 @@ class MargPOptimizer(CPCArbOptimizer):
 
     def optimize(self, sfc=None, result=None, *, params=None):
         """
-        optimal transactions across all curves in the optimizer, extracting targettkn*
+        optimal transactions across all curves in the optimizer, extracting targettkn (1)
 
-        :sfc:               the self financing constraint to use**
-        :result:            the result type
-                            :MO_DEBUG:         a number of items useful for debugging
-                            :MO_PSTART:        price estimates (as dataframe)
-                            :MO_PE:            alias for MO_ESTPRICE
-                            :MO_DTKNFROMPF:    the function calculating dtokens from p
-                            :MO_MINIMAL:       minimal result (omitting some big fields)
-                            :MO_FULL:          full result
-                            :None:             alias for MO_FULL
-        :params:            dict of parameters
-                            :eps:              precision parameter for accepting the result (default: 1e-6)
-                            :maxiter:          maximum number of iterations (default: 100)
-                            :verbose:          if True, print some high level output
-                            :progress:         if True, print some basic progress output
-                            :debug:            if True, print some debug output
-                            :debug2:           more debug output
-                            :raiseonerror:     if True, raise an OptimizationError exception on error
-                            :pstart:           starting price for optimization, either as dict {tkn:p, ...},
-                                                or as df as price estimate as returned by MO_PSTART;
-                                                excess tokens can be provided but all required tokens must be present
+        :sfc:               the self financing constraint to use (2)
+        :result:            the result type (see MO_XXX constants below)
+        :params:            dict of parameters (see table below)
+
 
         :returns:           MargpOptimizerResult on the default path, others depending on the
                             chosen result
+        
+        Meaning of the `result` parameter:    
+                        
+        ==============  ============================================================
+        `result`        returns
+        ==============  ============================================================
+        MO_DEBUG        a number of items useful for debugging
+        MO_PSTART       price estimates (as dataframe)
+        MO_PE           alias for MO_ESTPRICE
+        MO_DTKNFROMPF   the function calculating dtokens from p
+        MO_MINIMAL      minimal result (omitting some big fields)
+        MO_FULL         full result
+        None            alias for MO_FULL
+        ==============  ============================================================
+        
+        
+        Meaning of the `params` parameter:
+        
+        ==================  =========================================================================
+        parameter           meaning
+        ==================  =========================================================================
+        eps                 precision parameter for accepting the result (default: 1e-6)
+        maxiter             maximum number of iterations (default: 100)
+        verbose             if True, print some high level output
+        progress            if True, print some basic progress output
+        debug               if True, print some debug output
+        debug2              more debug output
+        raiseonerror        if True, raise an OptimizationError exception on error
+        pstart              starting price for optimization (3)
+        ==================  =========================================================================
+            
 
-        *this optimizer uses the marginal price method, ie it solves the equation
+        NOTE 1: this optimizer uses the marginal price method, ie it solves the equation
 
             dx_i (p) = 0 for all i != targettkn, and the whole price vector
 
-        **at the moment only the trivial self-financing constraint is allowed, ie the one that
+        NOTE 2: at the moment only the trivial self-financing constraint is allowed, ie the one that
         only specifies the target token, and where all other constraints are zero; if sfc is
         a string then this is interpreted as the target token
+        
+        NOTE 3: can be provided either as dict {tkn:p, ...}, or as df as price estimate as 
+        returned by MO_PSTART; excess tokens can be provided but all required tokens 
+        must be present
         """
         # data conversion: string to SFC object; note that anything but pure arb not currently supported
         if isinstance(sfc, str):

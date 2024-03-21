@@ -16,6 +16,7 @@ from web3.types import TxReceipt
 
 import os
 from dotenv import load_dotenv
+from web3.middleware import geth_poa_middleware
 
 load_dotenv()
 
@@ -156,7 +157,7 @@ class EthereumNetwork(NetworkBase):
         """
         self.nonce += 1
 
-    def connect_network(self):
+    def connect_network(self, inject_middleware: bool):
         """
         Connect to the network
         """
@@ -167,5 +168,10 @@ class EthereumNetwork(NetworkBase):
 
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
+
+        if inject_middleware:
+            self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+            self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
+
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

@@ -50,7 +50,7 @@ import json
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import List, Dict, Tuple, Any, Callable
+from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
 from web3 import Web3
@@ -70,6 +70,8 @@ from fastlane_bot.helpers import (
     TradeInstruction,
     Univ3Calculator,
     RouteStruct,
+    add_wrap_or_unwrap_trades_to_route,
+    split_carbon_trades
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -320,13 +322,6 @@ class CarbonBot(CarbonBotBase):
 
         return scaled_best_trade_instructions_dic
 
-    @staticmethod
-    def _drop_error(trade_instructions_dct):
-        return [
-            {k: v for k, v in trade_instructions_dct[i].items() if k != "error"}
-            for i in range(len(trade_instructions_dct))
-        ]
-
     def _convert_trade_instructions(
         self, trade_instructions_dic: List[Dict[str, Any]]
     ) -> List[TradeInstruction]:
@@ -343,7 +338,10 @@ class CarbonBot(CarbonBotBase):
         List[Dict[str, Any]]
             The trade instructions.
         """
-        errorless_trade_instructions_dic = self._drop_error(trade_instructions_dic)
+        errorless_trade_instructions_dicts = [
+            {k: v for k, v in trade_instructions_dic[i].items() if k != "error"}
+            for i in range(len(trade_instructions_dic))
+        ]
         result = (
             {
                 **ti,
@@ -352,11 +350,24 @@ class CarbonBot(CarbonBotBase):
                 "ConfigObj": self.ConfigObj,
                 "db": self.db,
             }
-            for ti in errorless_trade_instructions_dic
+            for ti in errorless_trade_instructions_dicts
             if ti is not None
         )
+        result = self._add_strategy_id_to_trade_instructions_dic(result)
         result = [TradeInstruction(**ti) for ti in result]
         return result
+
+    def _add_strategy_id_to_trade_instructions_dic(
+        self, trade_instructions_dic: Generator
+    ) -> List[Dict[str, Any]]:
+        lst = []
+        for ti in trade_instructions_dic:
+            cid = ti["cid"].split('-')[0]
+            ti["strategy_id"] = self.db.get_pool(
+                cid=cid
+            ).strategy_id
+            lst.append(ti)
+        return lst
 
     @staticmethod
     def _check_if_carbon(cid: str):
@@ -368,10 +379,11 @@ class CarbonBot(CarbonBotBase):
         bool
             Whether the curve is a Carbon curve.
         """
+
         if "-" in cid:
-            _cid_tkn = cid.split("-")[1]
+            cid_tkn = cid.split("-")[1]
             cid = cid.split("-")[0]
-            return True, _cid_tkn, cid
+            return True, cid_tkn, cid
         return False, "", cid
 
     @staticmethod
@@ -560,14 +572,15 @@ class CarbonBot(CarbonBotBase):
                 pool_cid = pool["cid"]
                 if "-0" in pool_cid or "-1" in pool_cid:
                     self.ConfigObj.logger.debug(
-                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
+                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
+                        f"Carbon, returning to main flow."
                     )
                     return arb_opp
-                    # pool_cid = pool_cid.split("-")[0]
                 cids.append(pool_cid)
             if len(cids) > 3:
                 self.ConfigObj.logger.warning(
-                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
+                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
+                    f"to main flow."
                 )
                 return arb_opp
             max_trade_in = arb_finder.get_optimal_arb_trade_amts(
@@ -619,13 +632,12 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions,
         ) = arb_opp
         for pool in best_trade_instructions_dic:
-            pool_cid = pool["cid"]
-
-            if "-0" in pool_cid or "-1" in pool_cid:
-                pool_cid = pool_cid.split("-")[0]
+            pool_cid = pool["cid"].split("-")[0]
+            strategy_id = pool["strategy_id"]
             current_pool = self.db.get_pool(cid=pool_cid)
             pool_info = {
                 "cid": pool_cid,
+                "strategy_id": strategy_id,
                 "id": current_pool.id,
                 "address": current_pool.address,
                 "pair_name": current_pool.pair_name,
@@ -650,7 +662,7 @@ class CarbonBot(CarbonBotBase):
             if ex_name == "bancor_v3":
                 self._validate_pool_data_logging(pool_cid, fetched_pool)
 
-            if current_pool.exchange_name == "carbon_v1":
+            if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
                 if (
                     current_pool.y_0 != fetched_pool["y_0"]
                     or current_pool.y_1 != fetched_pool["y_1"]
@@ -1019,9 +1031,15 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount_wei,
         )
 
+        # Split Carbon Orders
+        split_calculated_trade_instructions = split_carbon_trades(
+            cfg=self.ConfigObj,
+            trade_instructions=calculated_trade_instructions
+        )
+
         # Encode the trade instructions
         encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-            calculated_trade_instructions
+            split_calculated_trade_instructions
         )
 
         # Get the deadline
@@ -1034,16 +1052,18 @@ class CarbonBot(CarbonBotBase):
                 trade_instructions=encoded_trade_instructions, deadline=deadline
             )
         ]
-        route_struct = maximize_last_trade_per_tkn(route_struct=route_struct)
-        if self.ConfigObj.ARB_CONTRACT_VERSION >= 10:
-            route_struct = tx_route_handler.add_wrap_or_unwrap_trades_to_route(
-                trade_instructions=calculated_trade_instructions,
-                route_struct=route_struct,
-                flashloan_struct=flashloan_struct,
-            )
+
+        route_struct_processed = add_wrap_or_unwrap_trades_to_route(
+            cfg=self.ConfigObj,
+            flashloans=flashloan_struct,
+            routes=route_struct,
+            trade_instructions=split_calculated_trade_instructions,
+        )
+
+        route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Get the cids
-        cids = list({ti["cid"].split("-")[0] for ti in best_trade_instructions_dic})
+        cids = list({ti["cid"] for ti in best_trade_instructions_dic})
 
         # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
@@ -1051,12 +1071,12 @@ class CarbonBot(CarbonBotBase):
                 self._validate_and_submit_transaction_tenderly(
                     ConfigObj=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
-                    route_struct=route_struct,
+                    route_struct=route_struct_maximized,
                     src_amount=flashloan_amount_wei,
                     src_address=flashloan_token_address,
                 ),
                 cids,
-                route_struct,
+                route_struct_maximized,
                 log_dict,
             )
 
@@ -1066,7 +1086,7 @@ class CarbonBot(CarbonBotBase):
             flashloan_amount=flashloan_amount_wei,
             flashloan_token_symbol=fl_token_symbol,
             flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct,
+            route_struct=route_struct_maximized,
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
@@ -1076,7 +1096,7 @@ class CarbonBot(CarbonBotBase):
         # Return the validate and submit transaction
         return (
             tx_helpers.validate_and_submit_transaction(
-                route_struct=route_struct,
+                route_struct=route_struct_maximized,
                 src_amt=flashloan_amount_wei,
                 src_address=flashloan_token_address,
                 expected_profit_gastkn=best_profit_gastkn,
@@ -1295,7 +1315,7 @@ class CarbonBot(CarbonBotBase):
                 filter_out_weth = [
                     x
                     for x in CCm
-                    if (x.params.exchange == "carbon_v1")
+                    if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
                     & (
                         (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
                         or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)

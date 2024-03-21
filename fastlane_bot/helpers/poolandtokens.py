@@ -91,6 +91,7 @@ class PoolAndTokens:
     ConfigObj: Config
     id: int
     cid: str
+    strategy_id: int
     last_updated: str
     last_updated_block: int
     descr: str
@@ -449,7 +450,7 @@ class PoolAndTokens:
             tkny = 1 if i == 0 else 0
             typed_args = {
                 "cid": f"{self.cid}-{i}"
-                if self.exchange_name == "carbon_v1"
+                if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
                 else self.cid,
                 "yint": yint,
                 "y": y,
@@ -483,6 +484,7 @@ class PoolAndTokens:
     FEE_LOOKUP = {
         0.00008: Univ3Calculator.FEE80,
         0.0001: Univ3Calculator.FEE100,
+        0.00025: Univ3Calculator.FEE250,
         0.00045: Univ3Calculator.FEE450,
         0.0005: Univ3Calculator.FEE500,
         0.0025: Univ3Calculator.FEE2500,

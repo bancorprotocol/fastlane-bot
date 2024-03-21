@@ -16,14 +16,14 @@ The system works by executing atomic transactions that take flashloans to fulfil
 
 Permanent URL for this repository: [github.com/bancorprotocol/fastlane-bot][repo]
 
-For frequently asked questions, see [FAQ](FAQ.md).
+For frequently asked questions, see [FAQ](resources/FAQ.md).
 
 ### Profit Split
 Any profit from an arbitrage trade is split between the contract caller & the Protocol. 
 
 ### Competition
 
-The Fastlane Arbitrage Bot is competitive in nature. Bot operators compete to close arbitrage opportunities. There are many ways to improve a bot's competitiveness; the following document contains a short list of ideas on how to make a bot more competitive: [How to make your bot competitive](How_to_make_your_bot_competitive.md).
+The Fastlane Arbitrage Bot is competitive in nature. Bot operators compete to close arbitrage opportunities. There are many ways to improve a bot's competitiveness; the following document contains a short list of ideas on how to make a bot more competitive: [How to make your bot competitive](resources/How_to_make_your_bot_competitive.md).
 
 
 [repo]:https://github.com/bancorprotocol/fastlane-bot
@@ -111,6 +111,8 @@ export WEB3_ALCHEMY_PROJECT_ID="0-R5..."
 export ETH_PRIVATE_KEY_BE_CAREFUL="0x9c..."
 export WEB3_ALCHEMY_BASE="api_key_here"
 export WEB3_FANTOM="api_key_here"
+export WEB3_MANTLE="api_key_here"
+
 ```
 **Note:** To use the Fantom public RPC, write "public" in place of the API key.
 

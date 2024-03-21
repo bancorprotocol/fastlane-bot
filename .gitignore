@@ -72,3 +72,4 @@ logs/*
 /fastlane_bot/data/blockchain_data/*/token_detail/
 missing_tokens_df.csv
 tokens_and_fee_df.csv
+fastlane_bot/tests/nbtest/*

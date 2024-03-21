@@ -121,6 +121,7 @@ def main(
         loglevel=loglevel,
         logging_path=logging_path,
         blockchain="ethereum",
+        flashloan_tokens=""
     )
 
     base_path = os.path.normpath(f"fastlane_bot/data/blockchain_data/{blockchain}/")
@@ -183,6 +184,7 @@ def main(
         tokens,
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
+        solidly_v2_event_mappings,
     ) = get_static_data(
         cfg=cfg,
         exchanges=exchanges,
@@ -202,6 +204,7 @@ def main(
     # Initialize data fetch manager
     mgr = Manager(
         web3=cfg.w3,
+        w3_async=cfg.w3_async,
         cfg=cfg,
         pool_data=static_pool_data.to_dict(orient="records"),
         SUPPORTED_EXCHANGES=exchanges,
