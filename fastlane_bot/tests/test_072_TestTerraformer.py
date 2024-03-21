@@ -2,14 +2,8 @@
 '''
 This module tests the Terraformer
 '''
-import pytest
-import asyncio
 
 from unittest.mock import MagicMock, AsyncMock
-
-from json import dumps
-from pytest import fixture
-from dataclasses import dataclass
 from run_blockchain_terraformer import organize_pool_details_balancer, organize_pool_details_uni_v2, organize_pool_details_solidly_v2, organize_pool_details_uni_v3
 
 
