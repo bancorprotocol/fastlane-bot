@@ -12,7 +12,7 @@ import math as _m
 
 @_dataclass(frozen=True)
 class QuadraticFunction(_Function):
-    """quadratic function y = ax^2 + bx + c"""
+    """quadratic function ``y = ax^2 + bx + c``"""
     a: float = 0
     b: float = 0
     c: float = 0
@@ -23,7 +23,7 @@ Quadratic=QuadraticFunction
 
 @_dataclass(frozen=True)
 class PowerlawFunction(_Function):
-    """quadratic function y = N*(x-x0)^alpha"""
+    """quadratic function ``y = N*(x-x0)^alpha``"""
     N: float = 1
     alpha: float = -1
     x0: float = 0
@@ -34,7 +34,7 @@ Powerlaw=PowerlawFunction
 
 @_dataclass(frozen=True)
 class TrigFunction(_Function):
-    """trigonometric function y = amp*sin( (omega*x+phase)*pi )"""
+    """trigonometric function ``y = amp*sin( (omega*x+phase)*pi )``"""
     amp: float = 1
     omega: float = 1
     phase: float = 0
@@ -47,7 +47,7 @@ Trig = TrigFunction
 
 @_dataclass(frozen=True)
 class ExpFunction(_Function):
-    """exponential function y = N*exp(k*(x-x0))"""
+    """exponential function ``y = N*exp(k*(x-x0))``"""
     N: float = 1
     k: float = 1
     x0: float = 0
@@ -59,7 +59,7 @@ Exp = ExpFunction
 
 @_dataclass(frozen=True)
 class LogFunction(_Function):
-    """exponential function y = N*log_base(x-x0)"""
+    """exponential function ``y = N*log_base(x-x0)``"""
     base: float = 10
     N: float = 1
     x0: float = 0
@@ -71,7 +71,7 @@ Log = LogFunction
 
 @_dataclass(frozen=True)
 class HyperbolaFunction(_Function):
-    """hyperbola function y-y0 = k/(x-x0)"""
+    """hyperbola function ``y-y0 = k/(x-x0)``"""
     k: float = 1
     x0: float = 0
     y0: float = 0
