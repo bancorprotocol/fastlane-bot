@@ -959,8 +959,6 @@ class CarbonBot(CarbonBotBase):
             trade_instructions=ordered_trade_instructions_objects
         )
 
-        # ordered_trade_instructions_objects[0].db = QueryInterface(ConfigObj=self.ConfigObj)
-
         # Aggregate the carbon trades
         agg_trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
