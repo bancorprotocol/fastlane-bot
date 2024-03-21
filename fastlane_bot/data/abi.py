@@ -246,12 +246,6 @@ CLEOPATRA_V2_FACTORY_ABI = [
 UNISWAP_V2_POOL_ABI = [
     {
         "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
-    },
-    {
-        "type": "event",
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint112", "name": "reserve0", "type": "uint112"}, {"indexed": False, "internalType": "uint112", "name": "reserve1", "type": "uint112"}]
@@ -405,12 +399,6 @@ PANCAKESWAP_V3_POOL_ABI = [
 SOLIDLY_V2_POOL_ABI = [
     {
         "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}]
-    },
-    {
-        "type": "event",
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
@@ -455,12 +443,6 @@ SOLIDLY_V2_POOL_ABI = [
 VELOCIMETER_V2_POOL_ABI = [
     {
         "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
-    },
-    {
-        "type": "event",
         "name": "Sync",
         "anonymous": False,
         "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
@@ -496,56 +478,6 @@ VELOCIMETER_V2_POOL_ABI = [
     {
         "type": "function",
         "name": "voter",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
-EQUALIZER_V2_POOL_ABI = [
-    {
-        "type": "event",
-        "name": "Swap",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "amount0In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1In", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount0Out", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "amount1Out", "type": "uint256"}, {"indexed": True, "internalType": "address", "name": "to", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "Sync",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "getReserves",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "_reserve0", "type": "uint256"}, {"internalType": "uint256", "name": "_reserve1", "type": "uint256"}, {"internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "stable",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "token0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "token1",
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
