@@ -66,7 +66,6 @@ from fastlane_bot.helpers import (
     TxRouteHandler,
     TxRouteHandlerBase,
     TxHelpers,
-    TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
     RouteStruct,
@@ -103,7 +102,7 @@ class CarbonBotBase:
         ditto (default: TxReceiptHandler).
     TxRouteHandlerClass: class derived from TxRouteHandlerBase
         ditto (default: TxRouteHandler).
-    TxHelpersClass: class derived from TxHelpersBase
+    TxHelpersClass:
         ditto (default: TxHelpers).
 
     """
@@ -149,9 +148,6 @@ class CarbonBotBase:
 
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
-        assert issubclass(
-            self.TxHelpersClass.__class__, TxHelpersBase
-        ), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
