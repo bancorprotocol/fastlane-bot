@@ -68,7 +68,6 @@ class TxHelpers:
         self.wallet_address = str(self.local_account.address)
 
         self.alchemy_api_url = self.ConfigObj.RPC_URL
-        self.nonce = self.get_nonce()
 
     def validate_and_submit_transaction(
         self,
@@ -121,7 +120,7 @@ class TxHelpers:
         block_number = int(self.web3.eth.get_block("latest")["number"])
 
         # Get current nonce for our account
-        nonce = self.get_nonce()
+        nonce = self.web3.eth.get_transaction_count(self.wallet_address)
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
@@ -411,12 +410,6 @@ class TxHelpers:
         transaction["gas"] = estimated_gas
         return transaction
 
-    def get_nonce(self):
-        """
-        Returns the nonce of the wallet address.
-        """
-        return self.web3.eth.get_transaction_count(self.wallet_address)
-
     def _build_transaction(
             self,
             function_call,
@@ -587,12 +580,14 @@ class TxHelpers:
         max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
+        nonce = self.web3.eth.get_transaction_count(self.wallet_address)
+
         try:
             approve_tx = self._build_transaction(
                 function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                 base_gas_price=current_gas_price,
                 max_priority_fee=max_priority,
-                nonce=self.get_nonce()
+                nonce=nonce
             )
         except Exception as e:
             self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
@@ -602,7 +597,7 @@ class TxHelpers:
                         function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                         base_gas_price=int_prefix(str(e).split("baseFee: ")[1]),
                         max_priority_fee=max_priority,
-                        nonce=self.get_nonce()
+                        nonce=nonce
                     )
                     self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
                     return self.submit_regular_transaction(self.sign_transaction(approve_tx))
