@@ -68,57 +68,6 @@ class TxHelpers:
         self.alchemy_api_url = self.ConfigObj.RPC_URL
         self.nonce = self.get_nonce()
 
-    def _get_transaction_info(self) -> (int, int, int, int):
-        # Get current base fee for pending block
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-
-        # Get the current recommended priority fee from Alchemy, and increase it by our offset
-        current_max_priority_gas = (
-            int(
-                self.get_max_priority_fee_per_gas_alchemy()
-                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-            )
-            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
-            else 0
-        )
-
-        # Get current block number
-        block_number = int(self.web3.eth.get_block("latest")["number"])
-
-        # Get current nonce for our account
-        nonce = self.get_nonce()
-
-        return current_gas_price, current_max_priority_gas, block_number, nonce
-
-    def _get_prices_info(
-            self,
-            current_gas_price: int,
-            gas_estimate: int,
-            expected_profit_usd: Decimal,
-            expected_profit_eth: Decimal,
-            raw_transaction: Any
-        ) -> (int, int, int, int):
-        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
-        gas_cost_eth = (
-            Decimal(str(current_gas_price))
-            * Decimal(str(gas_estimate))
-            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
-            / Decimal("10") ** Decimal("18")
-        )
-
-        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            layer_one_gas_fee = self._get_layer_one_gas_fee(raw_transaction)
-            gas_cost_eth += layer_one_gas_fee
-
-        # Gas cost in usd can be estimated using the profit usd/eth rate
-        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_eth
-
-        # Multiply by reward percentage, taken from the arb contract
-        adjusted_reward_eth = Decimal(Decimal(expected_profit_eth) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
-        adjusted_reward_usd = adjusted_reward_eth * expected_profit_usd / expected_profit_eth
-
-        return gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd
-
     def validate_and_submit_transaction(
         self,
         route_struct: List[Dict[str, Any]],
@@ -153,7 +102,24 @@ class TxHelpers:
                 f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_gastkn)} \n\n"
             )
 
-        current_gas_price, current_max_priority_gas, block_number, nonce = self._get_transaction_info()
+        # Get current base fee for pending block
+        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+
+        # Get the current recommended priority fee from Alchemy, and increase it by our offset
+        current_max_priority_gas = (
+            int(
+                self.get_max_priority_fee_per_gas_alchemy()
+                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
+            )
+            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+            else 0
+        )
+
+        # Get current block number
+        block_number = int(self.web3.eth.get_block("latest")["number"])
+
+        # Get current nonce for our account
+        nonce = self.get_nonce()
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
@@ -181,13 +147,27 @@ class TxHelpers:
 
         signed_arb_tx = self.sign_transaction(arb_tx)
 
-        gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = self._get_prices_info(
-            current_gas_price,
-            gas_estimate,
-            expected_profit_usd,
-            expected_profit_gastkn,
-            signed_arb_tx.rawTransaction
+        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
+        gas_cost_eth = (
+            Decimal(str(current_gas_price))
+            * Decimal(str(gas_estimate))
+            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
+            / Decimal("10") ** Decimal("18")
         )
+
+        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
+            l1_data_fee = asyncio.get_event_loop().run_until_complete(
+                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
+            # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
+            layer_one_gas_fee = Decimal(f"{l1_data_fee}e-18")
+            gas_cost_eth += layer_one_gas_fee
+
+        # Gas cost in usd can be estimated using the profit usd/eth rate
+        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
+
+        # Multiply by reward percentage, taken from the arb contract
+        adjusted_reward_eth = Decimal(Decimal(expected_profit_gastkn) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        adjusted_reward_usd = adjusted_reward_eth * expected_profit_usd / expected_profit_gastkn
 
         transaction_log = {
             "block_number": block_number,
@@ -293,31 +273,29 @@ class TxHelpers:
         returns: the transaction function ready to be submitted
         """
         if self.ConfigObj.SELF_FUND:
-            transaction = self.arb_contract.functions.fundAndArb(
-                routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce, value=src_amt if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else None
-                )
+            return self.build_transaction(
+                function_call=self.arb_contract.functions.fundAndArb(routes, src_address, src_amt),
+                base_gas_price=gas_price,
+                max_priority_fee=max_priority,
+                nonce=nonce,
+                value=src_amt if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
             )
 
         elif flashloan_struct is None:
-            transaction = self.arb_contract.functions.flashloanAndArb(
-                routes, src_address, src_amt
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
+            return self.build_transaction(
+                function_call=self.arb_contract.functions.flashloanAndArb(routes, src_address, src_amt),
+                base_gas_price=gas_price,
+                max_priority_fee=max_priority,
+                nonce=nonce
             )
+
         else:
-            transaction = self.arb_contract.functions.flashloanAndArbV2(
-                flashloan_struct, routes
-            ).build_transaction(
-                self.build_tx(
-                    base_gas_price=gas_price, max_priority_fee=max_priority, nonce=nonce
-                )
+            return self.build_transaction(
+                function_call=self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, routes),
+                base_gas_price=gas_price,
+                max_priority_fee=max_priority,
+                nonce=nonce
             )
-        return transaction
 
     def build_transaction_with_gas(
         self,
@@ -437,12 +415,13 @@ class TxHelpers:
         """
         return self.web3.eth.get_transaction_count(self.wallet_address)
 
-    def build_tx(
+    def build_transaction(
             self,
+            function_call,
             nonce: int,
             base_gas_price: int = 0,
             max_priority_fee: int = 0,
-            value: int = None
+            value: int = 0
     ) -> Dict[str, Any]:
         """
         Builds the transaction to be submitted to the blockchain.
@@ -455,35 +434,29 @@ class TxHelpers:
 
         returns: the transaction to be submitted to the blockchain
         """
-        max_priority_fee = int(max_priority_fee)
-        base_gas_price = int(base_gas_price)
-        max_gas_price = base_gas_price + max_priority_fee
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
             
-        # if "tenderly" in self.web3.provider.endpoint_uri:
-        #     print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
-        #     max_gas_price = 3
-        #     max_priority_fee = 3
-
         if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             tx_details = {
-                "type": "0x2",
-                "maxFeePerGas": max_gas_price,
+                "type": 2,
+                "maxFeePerGas": base_gas_price + max_priority_fee,
                 "maxPriorityFeePerGas": max_priority_fee,
                 "from": self.wallet_address,
                 "nonce": nonce,
+                "value": value
             }
         else:
             tx_details =  {
-                "gasPrice": max_gas_price,
+                "type": 1,
+                "gasPrice": base_gas_price + max_priority_fee,
                 "from": self.wallet_address,
                 "nonce": nonce,
+                "value": value
             }
-        if value is not None:
-            tx_details["value"] = value
-        return tx_details
+
+        return function_call.build_transaction(tx_details)
 
     def submit_regular_transaction(self, signed_tx) -> str:
         """
@@ -656,22 +629,21 @@ class TxHelpers:
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
         try:
-            approve_tx = token_contract.functions.approve(self.arb_contract.address, approval_amount).build_transaction(
-                    self.build_tx(
-                        base_gas_price=current_gas_price, max_priority_fee=max_priority, nonce=self.get_nonce()
-                    )
-                )
+            approve_tx = self.build_transaction(
+                function_call=token_contract.functions.approve(self.arb_contract.address, approval_amount),
+                base_gas_price=current_gas_price,
+                max_priority_fee=max_priority,
+                nonce=self.get_nonce()
+            )
         except Exception as e:
             self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
-                    message = str(e)
-                    baseFee = int_prefix(message.split("baseFee: ")[1])
-                    approve_tx = token_contract.functions.approve(self.arb_contract.address,
-                                                                  approval_amount).build_transaction(
-                        self.build_tx(
-                            base_gas_price=baseFee, max_priority_fee=max_priority, nonce=self.get_nonce()
-                        )
+                    approve_tx = self.build_transaction(
+                        function_call=token_contract.functions.approve(self.arb_contract.address, approval_amount),
+                        base_gas_price=int_prefix(str(e).split("baseFee: ")[1]),
+                        max_priority_fee=max_priority,
+                        nonce=self.get_nonce()
                     )
                     self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
                     return self.submit_regular_transaction(self.sign_transaction(approve_tx))
@@ -680,19 +652,3 @@ class TxHelpers:
                         f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
             else:
                 return None
-
-    def _get_layer_one_gas_fee(self, raw_transaction) -> Decimal:
-        """
-        Returns the expected layer one gas fee for a Mantle, Base, and Optimism transaction
-
-        Args:
-            raw_transaction: the raw transaction
-
-        Returns:
-            Decimal: the expected layer one gas fee
-        """
-
-        l1_data_fee = asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
-        # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
-        return Decimal(f"{l1_data_fee}e-18")
