@@ -501,7 +501,7 @@ class TxHelpers:
             method="eth_sendPrivateTransaction",
             params=params,
             method_name="eth_sendPrivateTransaction",
-            headers=self._get_headers,
+            headers={"accept": "application/json", "content-type": "application/json"},
         )
 
         if response != 400:
@@ -538,45 +538,16 @@ class TxHelpers:
             transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
         )
 
-    @property
-    def _get_alchemy_url(self):
-        """
-        Returns the Alchemy API URL with attached API key
-        """
-        return self.alchemy_api_url
-
-    @property
-    def _get_headers(self):
-        """
-        Returns the headers for the API call
-        """
-        return {"accept": "application/json", "content-type": "application/json"}
-
-    def _query_alchemy_api_gas_methods(self, method: str):
-        """
-        This queries the Alchemy API for a gas-related call which returns a Hex String.
-        The Hex String can be decoded by casting it as an int like so: int(hex_str, 16)
-
-        :param method: the API method to call
-        """
-        response = requests.post(
-            self.alchemy_api_url,
-            json={"id": 1, "jsonrpc": "2.0", "method": method},
-            headers=self._get_headers,
-        )
-        return int(json.loads(response.text)["result"].split("0x")[1], 16)
-
     def get_max_priority_fee_per_gas_alchemy(self):
         """
         Queries the Alchemy API to get an estimated max priority fee per gas
         """
-        return self._query_alchemy_api_gas_methods(method="eth_maxPriorityFeePerGas")
-
-    def get_eth_gas_price_alchemy(self):
-        """
-        Returns an estimated gas price for the upcoming block
-        """
-        return self._query_alchemy_api_gas_methods(method="eth_gasPrice")
+        response = requests.post(
+            self.alchemy_api_url,
+            json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
+            headers={"accept": "application/json", "content-type": "application/json"},
+        )
+        return int(json.loads(response.text)["result"].split("0x")[1], 16)
 
     def check_if_token_approved(self, token_address: str, owner_address = None, spender_address = None) -> bool:
         """
