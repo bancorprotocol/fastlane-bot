@@ -18,7 +18,7 @@ from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
+from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.tools.pool_shutdown import AutomaticPoolShutdown
