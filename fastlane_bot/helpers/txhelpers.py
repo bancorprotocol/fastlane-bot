@@ -46,15 +46,13 @@ class TxHelpers:
     __DATE__ = __DATE__
 
     ConfigObj: Config
-    # This is used for the Alchemy SDK
-    network = Network.ETH_MAINNET
 
     def __post_init__(self):
 
         if self.ConfigObj.network.DEFAULT_PROVIDER != "tenderly":
             self.alchemy = Alchemy(
                 api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID,
-                network=self.network,
+                network=Network.ETH_MAINNET,
                 max_retries=3,
             )
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
