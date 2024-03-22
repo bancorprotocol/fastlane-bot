@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -38,7 +38,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(f.Function))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorInvariant))
 # -
 
-# # Invariants Module
+# # Invariants (Invariants Module; NBTest067)
 
 # ## General invariants
 
