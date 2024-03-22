@@ -88,8 +88,8 @@ class TokenFeeResponse:
     """
     exchange_name: str
     address: str
-    tkn0: str
-    tkn1: str
+    tkn0_address: str
+    tkn1_address: str
     fee: float
     cid: str
     strategy_id: int
@@ -100,20 +100,7 @@ class TokenFeeResponse:
         """
         This property returns the response as a DataFrame.
         """
-        return pd.DataFrame(
-            [
-                {
-                    "exchange_name": self.exchange_name,
-                    "address": self.address,
-                    "tkn0_address": self.tkn0,
-                    "tkn1_address": self.tkn1,
-                    "fee": self.fee,
-                    "cid": self.cid,
-                    "strategy_id": self.strategy_id,
-                    "anchor": self.anchor,
-                }
-            ]
-        )
+        return pd.DataFrame([self.__dict__])
 
 
 async def get_token_and_fee(
@@ -163,7 +150,7 @@ async def get_token_and_fee(
         carbon_v1_forks = [exchange_name] if (ex.is_carbon_v1_fork or exchange_name == CARBON_V1_NAME) else []
         cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
         return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0=tkn0, tkn1=tkn1, fee=fee, cid=cid,
+            exchange_name=exchange_name, address=address, tkn0_address=tkn0, tkn1_address=tkn1, fee=fee, cid=cid,
             strategy_id=strategy_id, anchor=anchor
         )
     except Exception as e:
@@ -171,7 +158,7 @@ async def get_token_and_fee(
             f"Failed to get tokens and fee for {address} {exchange_name} {e}"
         )
         return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0=None, tkn1=None, fee=None, cid=None,
+            exchange_name=exchange_name, address=address, tkn0_address=None, tkn1_address=None, fee=None, cid=None,
             strategy_id=None, anchor=None
         )
 
