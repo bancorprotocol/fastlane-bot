@@ -232,20 +232,16 @@ class TxRouteHandler:
             custom_data: bytes
         """
 
-        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
-                self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
-            self.ConfigObj.network.AERODROME_V2_NAME):
-            return custom_data
-
-        assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
+            assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
             if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME]:
-                custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
+                return '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
-                custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
-        elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
-            custom_data = '0x' + eth_abi.encode(['address'],
-                                                [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
+                return '0x0100000000000000000000000000000000000000000000000000000000000000'
+
+        if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
+            assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
+            return '0x' + eth_abi.encode(['address'], [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
 
         return custom_data
 
