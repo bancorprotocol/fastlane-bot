@@ -35,6 +35,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         self.ConfigObj.logger.debug(
             f"\n ************ combos: {len(combos)} ************\n"
         )
+
         for tkn0, tkn1 in combos:
             r = None
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
@@ -42,24 +43,21 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
                 continue
             pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
             not_bancor_pol_curves = [
-                x for x in CC.curves if x.params.exchange not in ["bancor_pol", "carbon_v1"]
+                x for x in CC.curves if x.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS
             ]
-            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             curve_combos = [[curve] + pol_curves for curve in not_bancor_pol_curves]
-
 
             if len(carbon_curves) > 0:
                 base_direction_pair = carbon_curves[0].pair
                 base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
                 base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
 
-
                 if len(base_direction_one) > 0:
                     curve_combos += [[curve] + base_direction_one for curve in pol_curves]
 
                 if len(base_direction_two) > 0:
                     curve_combos += [[curve] + base_direction_two for curve in pol_curves]
-
 
             for curve_combo in curve_combos:
                 src_token = tkn1

@@ -50,9 +50,9 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
             if len(CC) < 2:
                 continue
-            carbon_curves = [x for x in CC.curves if x.params.exchange == "carbon_v1"]
+            carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             not_carbon_curves = [
-                x for x in CC.curves if x.params.exchange != "carbon_v1"
+                x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS
             ]
             curve_combos = []
 

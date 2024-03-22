@@ -91,6 +91,7 @@ class PoolAndTokens:
     ConfigObj: Config
     id: int
     cid: str
+    strategy_id: int
     last_updated: str
     last_updated_block: int
     descr: str
@@ -449,7 +450,7 @@ class PoolAndTokens:
             tkny = 1 if i == 0 else 0
             typed_args = {
                 "cid": f"{self.cid}-{i}"
-                if self.exchange_name == "carbon_v1"
+                if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
                 else self.cid,
                 "yint": yint,
                 "y": y,

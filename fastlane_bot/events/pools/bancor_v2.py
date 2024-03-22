@@ -63,32 +63,12 @@ class BancorV2Pool(Pool):
         data["tkn0_balance"] = event_args["args"]["_rateD"]
         data["tkn1_balance"] = event_args["args"]["_rateN"]
 
-        # if (
-        #     self.state["tkn0_address"] == event_args["args"]["_token1"]
-        #     and self.state["tkn1_address"] == event_args["args"]["_token2"]
-        # ):
-        #     data["tkn0_balance"] = event_args["args"]["_rateD"]
-        #     data["tkn1_balance"] = event_args["args"]["_rateN"]
-        #     case = 1
-        # elif (
-        #     self.state["tkn0_address"] == event_args["args"]["_token2"]
-        #     and self.state["tkn1_address"] == event_args["args"]["_token1"]
-        # ):
-        #     data["tkn0_balance"] = event_args["args"]["_rateN"]
-        #     data["tkn1_balance"] = event_args["args"]["_rateD"]
-        #     case = 2
-        # else:
-        #     data["tkn0_balance"] = self.state["tkn0_balance"]
-        #     data["tkn1_balance"] = self.state["tkn1_balance"]
-        #     case = 3
-
-        # print(f"case: {case}, address: {self.state['address']}, event: {event_args}")
-
         for key, value in data.items():
             self.state[key] = value
 
         data["anchor"] = self.state["anchor"]
         data["cid"] = self.state["cid"]
+        data["strategy_id"] = 0
         data["fee"] = self.state["fee"]
         data["fee_float"] = self.state["fee_float"]
         data["exchange_name"] = self.state["exchange_name"]
