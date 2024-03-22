@@ -54,24 +54,21 @@ from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
 from web3 import Web3
-from web3.datastructures import AttributeDict
 
 import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
-    TxSubmitHandler,
-    TxSubmitHandlerBase,
     TxReceiptHandler,
     TxReceiptHandlerBase,
     TxRouteHandler,
-    TxRouteHandlerBase,
     TxHelpers,
     TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
     RouteStruct,
     add_wrap_or_unwrap_trades_to_route,
-    split_carbon_trades
+    split_carbon_trades,
+    submit_transaction_tenderly
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -97,11 +94,9 @@ class CarbonBotBase:
     ----------
     db: DatabaseManager
         the database manager.
-    TxSubmitHandler: class derived from TxSubmitHandlerBase
-        the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
     TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
         ditto (default: TxReceiptHandler).
-    TxRouteHandlerClass: class derived from TxRouteHandlerBase
+    TxRouteHandlerClass:
         ditto (default: TxRouteHandler).
     TxHelpersClass: class derived from TxHelpersBase
         ditto (default: TxHelpers).
@@ -112,7 +107,6 @@ class CarbonBotBase:
     __DATE__ = __DATE__
 
     db: QueryInterface = field(init=False)
-    TxSubmitHandler: any = None
     TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
@@ -143,9 +137,6 @@ class CarbonBotBase:
 
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler
-        assert issubclass(
-            self.TxRouteHandlerClass, TxRouteHandlerBase
-        ), f"TxRouteHandlerClass not derived from TxRouteHandlerBase {self.TxRouteHandlerClass}"
 
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
@@ -1241,20 +1232,14 @@ class CarbonBot(CarbonBotBase):
             The transaction receipt
 
         """
-        tx_submit_handler = TxSubmitHandler(
-            ConfigObj=ConfigObj,
-            route_struct=route_struct,
-            flashloan_struct=flashloan_struct,
-            src_address=src_address,
-            src_amount=src_amount,
-        )
         self.ConfigObj.logger.debug(
             f"[bot._validate_and_submit_transaction_tenderly] route_struct: {route_struct}"
         )
         self.ConfigObj.logger.debug(
             f"[bot._validate_and_submit_transaction_tenderly] src_address: {src_address}"
         )
-        tx = tx_submit_handler.submit_transaction_tenderly(
+        tx = submit_transaction_tenderly(
+            cfg=ConfigObj,
             route_struct=route_struct,
             src_address=src_address,
             src_amount=src_amount,
@@ -1508,12 +1493,6 @@ class CarbonBot(CarbonBotBase):
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
-
-        if self.TxSubmitHandler is None:
-            self.TxSubmitHandler = TxSubmitHandler(ConfigObj=self.ConfigObj)
-        assert issubclass(
-            self.TxSubmitHandler.__class__, TxSubmitHandlerBase
-        ), f"[bot.run] TxSubmitHandler not derived from TxSubmitHandlerBase {self.TxSubmitHandler.__class__}"
 
         if arb_mode in {"bancor_v3", "b3_two_hop"}:
             run_data_validator = True
