@@ -464,7 +464,7 @@ class CarbonBot(CarbonBotBase):
         randomizer=int,
         data_validator=True,
         replay_mode: bool = False,
-    ) -> Optional[Tuple[str, List[Any]]]:
+    ) -> Any:
         """
         Runs the bot.
 
@@ -483,8 +483,7 @@ class CarbonBot(CarbonBotBase):
 
         Returns
         -------
-        Optional[Tuple[str, List[Any]]]
-            The result.
+        Transaction hash.
 
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
@@ -1011,7 +1010,7 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.info(
                 f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
-            return None, None
+            return None
 
         # Get the flashloan amount and token address
         flashloan_token_address = fl_token
@@ -1058,17 +1057,12 @@ class CarbonBot(CarbonBotBase):
 
         # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            return (
-                submit_transaction_tenderly(
-                    cfg=self.ConfigObj,
-                    flashloan_struct=flashloan_struct,
-                    route_struct=route_struct_maximized,
-                    src_amount=flashloan_amount_wei,
-                    src_address=flashloan_token_address,
-                ),
-                cids,
-                route_struct_maximized,
-                log_dict,
+            return submit_transaction_tenderly(
+                cfg=self.ConfigObj,
+                flashloan_struct=flashloan_struct,
+                route_struct=route_struct_maximized,
+                src_amount=flashloan_amount_wei,
+                src_address=flashloan_token_address,
             )
 
         # Log the route_struct
@@ -1085,21 +1079,16 @@ class CarbonBot(CarbonBotBase):
         tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
 
         # Return the validate and submit transaction
-        return (
-            tx_helpers.validate_and_submit_transaction(
-                route_struct=route_struct_maximized,
-                src_amt=flashloan_amount_wei,
-                src_address=flashloan_token_address,
-                expected_profit_gastkn=best_profit_gastkn,
-                expected_profit_usd=best_profit_usd,
-                safety_override=False,
-                verbose=True,
-                log_object=log_dict,
-                flashloan_struct=flashloan_struct,
-            ),
-            cids,
-            route_struct,
-            log_dict,
+        return tx_helpers.validate_and_submit_transaction(
+            route_struct=route_struct_maximized,
+            src_amt=flashloan_amount_wei,
+            src_address=flashloan_token_address,
+            expected_profit_gastkn=best_profit_gastkn,
+            expected_profit_usd=best_profit_usd,
+            safety_override=False,
+            verbose=True,
+            log_object=log_dict,
+            flashloan_struct=flashloan_struct,
         )
 
     def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
@@ -1285,14 +1274,14 @@ class CarbonBot(CarbonBotBase):
         while True:
             try:
                 CCm = self.get_curves()
-                tx_hash, cids, route_struct = self._run(
+                tx_hash = self._run(
                     flashloan_tokens,
                     CCm,
                     arb_mode=arb_mode,
                     data_validator=run_data_validator,
                     randomizer=randomizer,
                 )
-                if tx_hash and tx_hash[0]:
+                if tx_hash:
                     self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
                 time.sleep(self.polling_interval)
