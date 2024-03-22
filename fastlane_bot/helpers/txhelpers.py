@@ -11,25 +11,16 @@ import asyncio
 import nest_asyncio
 from _decimal import Decimal
 
-# import itertools
-# import random
-# import time
 from dataclasses import dataclass
 from typing import List, Any, Dict, Optional
 
-# import eth_abi
-# import math
-# import pandas as pd
+import json
 import requests
 from alchemy import Network, Alchemy
 from web3.exceptions import TimeExhausted
 
-# from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-# from fastlane_bot.db.models import Token, Pool
-# import fastlane_bot.config as c
-# from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
-from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
+from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
 
 nest_asyncio.apply()
