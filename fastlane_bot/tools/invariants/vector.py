@@ -101,6 +101,22 @@ class DictVector():
         """
         return dict()   
     
+    @property
+    def elements(self):
+        """returns the elements (keys!) of the vector as a list"""
+        return list(self.vec.keys())
+    el = elements
+    
+    @property
+    def coeffs(self):
+        """returns the coefficients of the vector as a list"""
+        return list(self.vec.values())
+    
+    @property
+    def items(self):
+        """returns the items of the vector as a list of tuples (element, coeff)"""
+        return list(self.vec.items())
+    
     def __getitem__(self, key):
         return self.vec.get(key, 0)
     
