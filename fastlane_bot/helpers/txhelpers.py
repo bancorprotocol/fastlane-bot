@@ -275,7 +275,7 @@ class TxHelpers:
         returns: the transaction function ready to be submitted
         """
         if self.ConfigObj.SELF_FUND:
-            return self.build_transaction(
+            return self._build_transaction(
                 function_call=self.arb_contract.functions.fundAndArb(routes, src_address, src_amt),
                 base_gas_price=gas_price,
                 max_priority_fee=max_priority,
@@ -284,7 +284,7 @@ class TxHelpers:
             )
 
         elif flashloan_struct is None:
-            return self.build_transaction(
+            return self._build_transaction(
                 function_call=self.arb_contract.functions.flashloanAndArb(routes, src_address, src_amt),
                 base_gas_price=gas_price,
                 max_priority_fee=max_priority,
@@ -292,7 +292,7 @@ class TxHelpers:
             )
 
         else:
-            return self.build_transaction(
+            return self._build_transaction(
                 function_call=self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, routes),
                 base_gas_price=gas_price,
                 max_priority_fee=max_priority,
@@ -417,7 +417,7 @@ class TxHelpers:
         """
         return self.web3.eth.get_transaction_count(self.wallet_address)
 
-    def build_transaction(
+    def _build_transaction(
             self,
             function_call,
             nonce: int,
@@ -588,7 +588,7 @@ class TxHelpers:
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
         try:
-            approve_tx = self.build_transaction(
+            approve_tx = self._build_transaction(
                 function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                 base_gas_price=current_gas_price,
                 max_priority_fee=max_priority,
@@ -598,7 +598,7 @@ class TxHelpers:
             self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
             if "max fee per gas less than block base fee" in str(e):
                 try:
-                    approve_tx = self.build_transaction(
+                    approve_tx = self._build_transaction(
                         function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                         base_gas_price=int_prefix(str(e).split("baseFee: ")[1]),
                         max_priority_fee=max_priority,
