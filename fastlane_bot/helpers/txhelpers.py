@@ -424,7 +424,7 @@ class TxHelpers:
             base_gas_price: int = 0,
             max_priority_fee: int = 0,
             value: int = 0
-    ) -> Dict[str, Any]:
+    ) -> Any:
         """
         Builds the transaction to be submitted to the blockchain.
 
