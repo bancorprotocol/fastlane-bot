@@ -1059,8 +1059,8 @@ class CarbonBot(CarbonBotBase):
         # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             return (
-                self._validate_and_submit_transaction_tenderly(
-                    ConfigObj=self.ConfigObj,
+                submit_transaction_tenderly(
+                    cfg=self.ConfigObj,
                     flashloan_struct=flashloan_struct,
                     route_struct=route_struct_maximized,
                     src_amount=flashloan_amount_wei,
@@ -1202,50 +1202,6 @@ class CarbonBot(CarbonBotBase):
         self.ConfigObj.logger.debug(
             f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
-
-    def _validate_and_submit_transaction_tenderly(
-        self,
-        ConfigObj: Config,
-        route_struct: [RouteStruct],
-        src_address: str,
-        src_amount: int,
-        flashloan_struct: [Dict[str, Any]],
-    ):
-        """
-        Validate and submit the transaction tenderly
-
-        Parameters
-        ----------
-        ConfigObj: Config
-            The Config object
-        route_struct: List[RouteStruct]
-            The route struct
-        src_address: str
-            The source address
-        src_amount: int
-            The source amount
-        flashloan_struct: List[Dict]
-            This is a list containing dicts that have Flashloan instructions
-        Returns
-        -------
-        Any
-            The transaction receipt
-
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot._validate_and_submit_transaction_tenderly] route_struct: {route_struct}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot._validate_and_submit_transaction_tenderly] src_address: {src_address}"
-        )
-        tx = submit_transaction_tenderly(
-            cfg=ConfigObj,
-            route_struct=route_struct,
-            src_address=src_address,
-            src_amount=src_amount,
-            flashloan_struct=flashloan_struct,
-        )
-        return self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx)
 
     def validate_mode(self, mode: str):
         """

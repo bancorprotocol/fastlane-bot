@@ -34,7 +34,16 @@ def submit_transaction_tenderly(
     str
         The transaction hash.
     """
+    tx = _submit_transaction_tenderly(cfg, route_struct, src_address, src_amount, flashloan_struct)
+    return cfg.w3.eth.wait_for_transaction_receipt(tx)
 
+def _submit_transaction_tenderly(
+    cfg: Config,
+    route_struct: List[RouteStruct],
+    src_address: str,
+    src_amount: int,
+    flashloan_struct: List[Dict[str, int or str]],
+) -> Any:
     arb_contract = cfg.w3.eth.contract(
         address=cfg.w3.to_checksum_address(cfg.network.FASTLANE_CONTRACT_ADDRESS),
         abi=FAST_LANE_CONTRACT_ABI
