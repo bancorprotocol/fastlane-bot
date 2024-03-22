@@ -34,6 +34,8 @@ from fastlane_bot.utils import num_format, log_format, num_format_float, int_pre
 
 nest_asyncio.apply()
 
+MAX_UINT256 = 2 ** 256 - 1
+
 @dataclass
 class TxHelpers:
     """
@@ -157,7 +159,7 @@ class TxHelpers:
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
             l1_data_fee = asyncio.get_event_loop().run_until_complete(
-                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
+                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(signed_arb_tx.rawTransaction)))
             # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
             layer_one_gas_fee = Decimal(f"{l1_data_fee}e-18")
             gas_cost_eth += layer_one_gas_fee
@@ -550,19 +552,7 @@ class TxHelpers:
         """
         return {"accept": "application/json", "content-type": "application/json"}
 
-    @staticmethod
-    def _get_payload(method: str, params: [] = None) -> Dict:
-        """
-        Generates the request payload for the API call. If the method is "eth_estimateGas", it attaches the params
-        :param method: the API method to call
-        """
-
-        if method == "eth_estimateGas" or method == "eth_sendPrivateTransaction":
-            return {"id": 1, "jsonrpc": "2.0", "method": method, "params": params}
-        else:
-            return {"id": 1, "jsonrpc": "2.0", "method": method}
-
-    def _query_alchemy_api_gas_methods(self, method: str, params: list = None):
+    def _query_alchemy_api_gas_methods(self, method: str):
         """
         This queries the Alchemy API for a gas-related call which returns a Hex String.
         The Hex String can be decoded by casting it as an int like so: int(hex_str, 16)
@@ -571,7 +561,7 @@ class TxHelpers:
         """
         response = requests.post(
             self.alchemy_api_url,
-            json=self._get_payload(method=method, params=params),
+            json={"id": 1, "jsonrpc": "2.0", "method": method},
             headers=self._get_headers,
         )
         return int(json.loads(response.text)["result"].split("0x")[1], 16)
@@ -580,8 +570,7 @@ class TxHelpers:
         """
         Queries the Alchemy API to get an estimated max priority fee per gas
         """
-        result = self._query_alchemy_api_gas_methods(method="eth_maxPriorityFeePerGas")
-        return result
+        return self._query_alchemy_api_gas_methods(method="eth_maxPriorityFeePerGas")
 
     def get_eth_gas_price_alchemy(self):
         """
@@ -615,11 +604,10 @@ class TxHelpers:
         else:
             return False
 
-    def approve_token_for_arb_contract(self, token_address: str, approval_amount: int = 115792089237316195423570985008687907853269984665640564039457584007913129639935):
+    def approve_token_for_arb_contract(self, token_address: str):
         """
-        This function submits a token approval to the Arb Contract. The default approval amount is the max approval.
+        This function submits a token approval to the Arb Contract.
         :param token_address: the token to approve
-        :param approval_amount: the amount to approve. This is set to the max possible by default
 
         returns:
             transaction hash
@@ -630,7 +618,7 @@ class TxHelpers:
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
         try:
             approve_tx = self.build_transaction(
-                function_call=token_contract.functions.approve(self.arb_contract.address, approval_amount),
+                function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                 base_gas_price=current_gas_price,
                 max_priority_fee=max_priority,
                 nonce=self.get_nonce()
@@ -640,7 +628,7 @@ class TxHelpers:
             if "max fee per gas less than block base fee" in str(e):
                 try:
                     approve_tx = self.build_transaction(
-                        function_call=token_contract.functions.approve(self.arb_contract.address, approval_amount),
+                        function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
                         base_gas_price=int_prefix(str(e).split("baseFee: ")[1]),
                         max_priority_fee=max_priority,
                         nonce=self.get_nonce()
