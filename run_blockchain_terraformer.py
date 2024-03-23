@@ -448,13 +448,7 @@ def organize_pool_details_uni_v3(
     token_info = {}
     pair = ""
     tick_spacing = pool_data["args"]["tickSpacing"]
-    if "tkn0_address" in pool_data["args"]:
-        tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
-    elif "token0" in pool_data["args"]:
-        tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
-    else:
-        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
-        assert False
+    tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
     if len(tokens) > 2:
         return None
     token_info, pair, skip_pool = process_token_details(
@@ -658,13 +652,7 @@ def organize_pool_details_uni_v2(
     if default_fee == "TBD":
         return None
     default_fee = float(default_fee)
-    if "tkn0_address" in pool_data["args"]:
-        tokens = [pool_data["args"]["tkn0_address"], pool_data["args"]["tkn1_address"]]
-    elif "token0" in pool_data["args"]:
-        tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
-    else:
-        print(f"failed to get tkn0_address for exchange: {exchange} from pool_data: {pool_data}")
-        assert False
+    tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
     if len(tokens) > 2:
         return None
     token_info, pair, skip_pool = process_token_details(
@@ -986,7 +974,7 @@ pools(
 
 
 # function to use requests.post to make an API call to the subgraph url
-def run_query(subgraph_query: str, subgraph_url: str) -> json:
+def run_query(subgraph_query: str, subgraph_url: str) -> dict:
     """
     This function executes the Balancer Subgraph query
     :param subgraph_query: the Balancer query for the Graph
@@ -1192,12 +1180,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             if fork in SOLIDLY_FORKS:
                 continue
 
-            if exchange_name in "alienbase_v2":
-                factory_abi = ALIENBASE_V2_FACTORY_ABI
-            elif exchange_name in ["pancakeswap_v2", "alienbase_v2", "baseswap_v2"]:
-                factory_abi = PANCAKESWAP_V2_FACTORY_ABI
-            else:
-                factory_abi = UNISWAP_V2_FACTORY_ABI
+            factory_abi = UNISWAP_V2_FACTORY_ABI
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
 
             factory_contract = web3.eth.contract(
@@ -1218,7 +1201,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             if fee == "TBD":
                 continue
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
-            factory_abi = UNISWAP_V3_FACTORY_ABI if exchange_name not in ["pancakeswap_v3"] else PANCAKESWAP_V3_FACTORY_ABI
+            factory_abi = UNISWAP_V3_FACTORY_ABI
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
