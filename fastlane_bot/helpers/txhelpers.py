@@ -26,7 +26,6 @@ from fastlane_bot.utils import num_format, log_format, num_format_float, int_pre
 nest_asyncio.apply()
 
 MAX_UINT256 = 2 ** 256 - 1
-MAX_UINT128 = 2 ** 128 - 1
 
 @dataclass
 class TxHelpers:
@@ -532,7 +531,7 @@ class TxHelpers:
         )
         return int(json.loads(response.text)["result"].split("0x")[1], 16)
 
-    def check_and_approve_tokens(self, tokens: List) -> bool:
+    def check_and_approve_tokens(self, tokens: List):
         """
         This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
         If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
@@ -546,7 +545,9 @@ class TxHelpers:
 
         for token_address in [token for token in tokens if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
             token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
-            if token_contract.caller.allowance(owner_address, self.arb_contract.address) > MAX_UINT128:
+            allowance = token_contract.caller.allowance(owner_address, self.arb_contract.address)
+            self.ConfigObj.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
+            if allowance > 0:
                 continue
 
             base_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
@@ -561,7 +562,7 @@ class TxHelpers:
                     nonce=nonce
                 )
 
-                self.ConfigObj.logger.info(f"Attempt {attempt} for approving token: {token_address}")
+                self.ConfigObj.logger.info(f"Attempt {attempt} for approving token {token_address}")
 
                 try:
                     tx_hash = self.submit_regular_transaction(self.sign_transaction(tx))
@@ -574,4 +575,4 @@ class TxHelpers:
                         tx_hash = None
                         break
 
-                assert tx_hash is not None, f"Failed to approve token: {token_address}"
+                assert tx_hash is not None, f"Failed to approve token {token_address}"
