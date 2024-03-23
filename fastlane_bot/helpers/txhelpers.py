@@ -26,6 +26,7 @@ from fastlane_bot.utils import num_format, log_format, num_format_float, int_pre
 nest_asyncio.apply()
 
 MAX_UINT256 = 2 ** 256 - 1
+ETH_DECIMALS = 10 ** 18
 
 @dataclass
 class TxHelpers:
@@ -65,61 +66,31 @@ class TxHelpers:
         src_address: str,
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
-        verbose: bool = False,
-        safety_override: bool = False,
-        log_object: Dict[str, Any] = None,
-        flashloan_struct: List[Dict[str, int or str]] = None,
+        log_object: Dict[str, Any],
+        flashloan_struct: List[Dict[str, int or str]],
     ) -> Optional[Dict[str, Any]]:
         """
         Validates and submits a transaction to the arb contract.
-
-        Parameters
-        ----------
-
         """
 
-        if expected_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
-            self.ConfigObj.logger.info(
-                f"Transaction below minimum profit, reverting... /*_*\\"
-            )
-            return None
-
-        if verbose:
-            self.ConfigObj.logger.info(
-                "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
-            )
-            self.ConfigObj.logger.debug(
-                f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_gastkn)} \n\n"
-            )
-
-        # Get current base fee for pending block
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-
-        # Get the current recommended priority fee from Alchemy, and increase it by our offset
-        current_max_priority_gas = (
-            int(
-                self.get_max_priority_fee_per_gas_alchemy()
-                * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
-            )
-            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
-            else 0
+        self.ConfigObj.logger.info(
+            "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
+        )
+        self.ConfigObj.logger.debug(
+            f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_gastkn)} \n\n"
         )
 
-        # Get current block number
-        block_number = int(self.web3.eth.get_block("latest")["number"])
-
-        # Get current nonce for our account
-        nonce = self.web3.eth.get_transaction_count(self.wallet_address)
+        # Get pending block
+        pending_block = self.web3.eth.get_block("pending")
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
             src_address=src_address,
             src_amt=src_amt,
-            gas_price=current_gas_price,
-            max_priority=current_max_priority_gas,
-            nonce=nonce,
-            test_fake_gas=False,
-            flashloan_struct=flashloan_struct,
+            gas_price=pending_block.get("baseFeePerGas"),
+            max_priority=self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET,
+            nonce=self.web3.eth.get_transaction_count(self.wallet_address),
+            flashloan_struct=flashloan_struct
         )
 
         if arb_tx is None:
@@ -128,29 +99,21 @@ class TxHelpers:
                 "This is expected to happen occasionally, discarding..."
             )
             return None
+
         gas_estimate = arb_tx["gas"]
 
-        if "maxFeePerGas" in arb_tx:
-            current_gas_price = arb_tx["maxFeePerGas"]
-        else:
-            current_gas_price = arb_tx["gasPrice"]
+        current_gas_price = arb_tx["maxFeePerGas" if "maxFeePerGas" in arb_tx else "gasPrice"]
 
         signed_arb_tx = self.web3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
-        gas_cost_eth = (
-            Decimal(str(current_gas_price))
-            * Decimal(str(gas_estimate))
-            * Decimal(self.ConfigObj.EXPECTED_GAS_MODIFIER)
-            / Decimal("10") ** Decimal("18")
-        )
+        gas_cost_wei = current_gas_price * gas_estimate * self.ConfigObj.EXPECTED_GAS_MODIFIER 
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            l1_data_fee = asyncio.get_event_loop().run_until_complete(
-                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(signed_arb_tx.rawTransaction)))
-            # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
-            layer_one_gas_fee = Decimal(f"{l1_data_fee}e-18")
-            gas_cost_eth += layer_one_gas_fee
+            gas_cost_wei += asyncio.get_event_loop().run_until_complete(
+                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(signed_arb_tx.rawTransaction))
+            )
+
+        gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
 
         # Gas cost in usd can be estimated using the profit usd/eth rate
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
@@ -160,25 +123,22 @@ class TxHelpers:
         adjusted_reward_usd = adjusted_reward_eth * expected_profit_usd / expected_profit_gastkn
 
         transaction_log = {
-            "block_number": block_number,
+            "block_number": pending_block["number"],
             "gas": gas_estimate,
             "max_gas_fee_wei": current_gas_price,
             "gas_cost_eth": num_format_float(gas_cost_eth),
             "gas_cost_usd": +num_format_float(gas_cost_usd),
         }
+
         if "maxPriorityFeePerGas" in arb_tx:
-            transaction_log["base_fee_wei"] = (
-                current_gas_price - arb_tx["maxPriorityFeePerGas"]
-            )
+            transaction_log["base_fee_wei"] = current_gas_price - arb_tx["maxPriorityFeePerGas"]
             transaction_log["priority_fee_wei"] = arb_tx["maxPriorityFeePerGas"]
 
         log_json = {**log_object, **transaction_log}
 
-        self.ConfigObj.logger.info(
-            log_format(log_data=log_json, log_name="arb_with_gas")
-        )
+        self.ConfigObj.logger.info(log_format(log_data=log_json, log_name="arb_with_gas"))
 
-        if adjusted_reward_eth > gas_cost_eth or safety_override:
+        if adjusted_reward_eth > gas_cost_eth:
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward_eth)} GAS TOKEN vs cost of {num_format(gas_cost_eth)} GAS TOKEN in gas, executing arb."
             )
@@ -190,7 +150,7 @@ class TxHelpers:
             if "tenderly" in self.web3.provider.endpoint_uri or self.ConfigObj.NETWORK != "ethereum":
                 tx_hash = self.submit_regular_transaction(signed_arb_tx)
             else:
-                tx_hash = self.submit_private_transaction(signed_arb_tx, block_number)
+                tx_hash = self.submit_private_transaction(signed_arb_tx, pending_block["number"])
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers.validate_and_submit_transaction] Arbitrage executed, tx hash: {tx_hash}"
             )
@@ -295,7 +255,6 @@ class TxHelpers:
         max_priority: int,
         nonce: int,
         access_list: bool = True,
-        test_fake_gas: bool = False,
         flashloan_struct: List[Dict[str, int or str]] = None,
     ):
         """
@@ -348,15 +307,9 @@ class TxHelpers:
                     f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
                 )
                 return None
-        if test_fake_gas:
-            transaction["gas"] = self.ConfigObj.DEFAULT_GAS
-            return transaction
 
         try:
-            estimated_gas = int(
-                    self.web3.eth.estimate_gas(transaction=transaction)
-                    + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
-            )
+            estimated_gas = self.web3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
         except Exception as e:
             self.ConfigObj.logger.warning(
                 f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the "
@@ -507,10 +460,13 @@ class TxHelpers:
             )
             return None
 
-    def get_max_priority_fee_per_gas_alchemy(self):
+    def get_max_priority_fee_per_gas_alchemy(self) -> int:
         """
         Queries the Alchemy API to get an estimated max priority fee per gas
         """
+        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
+            return 0
+
         response = requests.post(
             self.alchemy_api_url,
             json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
@@ -538,7 +494,7 @@ class TxHelpers:
                 continue
 
             base_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-            max_priority_fee = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
+            max_priority_fee = self.get_max_priority_fee_per_gas_alchemy()
             nonce = self.web3.eth.get_transaction_count(self.wallet_address)
 
             for attempt in [1, 2]:
