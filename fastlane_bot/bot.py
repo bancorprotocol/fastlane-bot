@@ -103,7 +103,6 @@ class CarbonBotBase:
     __DATE__ = __DATE__
 
     db: QueryInterface = field(init=False)
-    TxReceiptHandlerClass: any = None
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
     ConfigObj: Config = None
