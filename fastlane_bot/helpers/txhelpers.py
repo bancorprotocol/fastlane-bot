@@ -164,43 +164,22 @@ class TxHelpers:
             )
             return None
 
-    def get_access_list(self, transaction_data, expected_gas, eth_input=None):
-        expected_gas = hex(expected_gas)
-        json_data = (
-            {
-                "id": 1,
-                "jsonrpc": "2.0",
-                "method": "eth_createAccessList",
-                "params": [
-                    {
-                        "from": self.wallet_address,
-                        "to": self.arb_contract.address,
-                        "gas": expected_gas,
-                        "data": transaction_data,
-                    }
-                ],
-            }
-            if eth_input is None
-            else {
-                "id": 1,
-                "jsonrpc": "2.0",
-                "method": "eth_createAccessList",
-                "params": [
-                    {
-                        "from": self.wallet_address,
-                        "to": self.arb_contract.address,
-                        "gas": expected_gas,
-                        "value": hex(eth_input),
-                        "data": transaction_data,
-                    }
-                ],
-            }
-        )
+    def get_access_list(self, transaction_data, expected_gas):
+        json_data = {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "eth_createAccessList",
+            "params": [
+                {
+                    "from": self.wallet_address,
+                    "to": self.arb_contract.address,
+                    "gas": expected_gas,
+                    "data": transaction_data
+                }
+            ]
+        }
         response = requests.post(self.alchemy_api_url, json=json_data)
-        if "failed to apply transaction" in response.text:
-            return None
-        else:
-            return loads(response.text)["result"]["accessList"]
+        return loads(response.text)["result"]["accessList"]
 
     def construct_contract_function(
         self,
@@ -317,37 +296,24 @@ class TxHelpers:
                 f"but it can include other bugs. This is expected to happen occasionally, discarding. Exception: {e}"
             )
             return None
+
         try:
             if access_list and self.ConfigObj.NETWORK_NAME in "ethereum":
-                access_list = self.get_access_list(
-                    transaction_data=transaction["data"], expected_gas=estimated_gas
+                transaction["accessList"] = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
+                self.ConfigObj.logger.debug(
+                    f"[helpers.txhelpers.build_transaction_with_gas] Transaction after access list: {transaction}"
                 )
-
-                if access_list is not None:
-                    transaction_after = transaction
-                    transaction_after["accessList"] = access_list
-                    self.ConfigObj.logger.debug(
-                        f"[helpers.txhelpers.build_transaction_with_gas] Transaction after access list: {transaction}"
-                    )
-                    estimated_gas_after = (
-                        self.web3.eth.estimate_gas(transaction=transaction_after)
-                        + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
-                    )
-                    self.ConfigObj.logger.debug(
-                        f"[helpers.txhelpers.build_transaction_with_gas] gas before access list: {estimated_gas}, after access list: {estimated_gas_after}"
-                    )
-                    if estimated_gas_after is not None:
-                        if estimated_gas_after < estimated_gas:
-                            transaction = transaction_after
-                            estimated_gas = estimated_gas_after
-                else:
-                    self.ConfigObj.logger.info(
-                        f"[helpers.txhelpers.build_transaction_with_gas] Failed to apply access list to transaction"
-                    )
+                estimated_gas_after = self.web3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                self.ConfigObj.logger.debug(
+                    f"[helpers.txhelpers.build_transaction_with_gas] gas before access list: {estimated_gas}, after access list: {estimated_gas_after}"
+                )
+                if estimated_gas > estimated_gas_after:
+                    estimated_gas = estimated_gas_after
         except Exception as e:
             self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.build_transaction_with_gas] Failed to add Access List to transaction. This should not invalidate the transaction. Exception: {e}"
+                f"[helpers.txhelpers.build_transaction_with_gas] Failed to apply access list to transaction. Exception: {e}"
             )
+
         transaction["gas"] = estimated_gas
         return transaction
 
