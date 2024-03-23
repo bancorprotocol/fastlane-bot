@@ -11,10 +11,10 @@ import asyncio
 import nest_asyncio
 from _decimal import Decimal
 
+from json import loads
 from dataclasses import dataclass
 from typing import List, Any, Dict, Optional
 
-import json
 import requests
 from alchemy import Network, Alchemy
 from web3.exceptions import TimeExhausted
@@ -240,8 +240,7 @@ class TxHelpers:
         if "failed to apply transaction" in response.text:
             return None
         else:
-            access_list = json.loads(response.text)["result"]["accessList"]
-            return access_list
+            return loads(response.text)["result"]["accessList"]
 
     def construct_contract_function(
         self,
@@ -517,7 +516,7 @@ class TxHelpers:
             json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
             headers={"accept": "application/json", "content-type": "application/json"},
         )
-        return int(json.loads(response.text)["result"].split("0x")[1], 16)
+        return int(loads(response.text)["result"].split("0x")[1], 16)
 
     def check_and_approve_tokens(self, tokens: List):
         """
