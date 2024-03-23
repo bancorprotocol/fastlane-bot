@@ -11,7 +11,7 @@ from typing import List, Type, Tuple, Any
 from web3.contract import Contract
 
 from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
+from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -34,7 +34,7 @@ class UniswapV3(Exchange):
 
     @property
     def get_factory_abi(self):
-        return UNISWAP_V3_FACTORY_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME] else PANCAKESWAP_V3_FACTORY_ABI
+        return UNISWAP_V3_FACTORY_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap] if self.exchange_initialized else []
