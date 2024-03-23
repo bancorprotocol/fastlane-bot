@@ -557,41 +557,40 @@ class TxHelpers:
         else:
             return False
 
-    def approve_token_for_arb_contract(self, token_address: str):
+    def check_and_approve_tokens(self, tokens: List) -> bool:
         """
-        This function submits a token approval to the Arb Contract.
-        :param token_address: the token to approve
-
-        returns:
-            transaction hash
+        This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+        If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
+        :param tokens: the list of tokens to check/approve
         """
-        current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
+        for token_address in [
+            token for token in tokens
+            if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and not self.check_if_token_approved(token_address=token)
+        ]:
+            token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
+            base_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+            max_priority_fee = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
+            nonce = self.web3.eth.get_transaction_count(self.wallet_address)
 
-        token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
-        nonce = self.web3.eth.get_transaction_count(self.wallet_address)
+            for attempt in [1, 2]:
+                tx = self._build_transaction(
+                    function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
+                    base_gas_price=base_gas_price,
+                    max_priority_fee=max_priority_fee,
+                    nonce=nonce
+                )
 
-        try:
-            approve_tx = self._build_transaction(
-                function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
-                base_gas_price=current_gas_price,
-                max_priority_fee=max_priority,
-                nonce=nonce
-            )
-        except Exception as e:
-            self.ConfigObj.logger.info(f"Error when building transaction: {e.__class__.__name__} {e}")
-            if "max fee per gas less than block base fee" in str(e):
+                self.ConfigObj.logger.info(f"Attempt {attempt} for approving token: {token_address}")
+
                 try:
-                    approve_tx = self._build_transaction(
-                        function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
-                        base_gas_price=int_prefix(str(e).split("baseFee: ")[1]),
-                        max_priority_fee=max_priority,
-                        nonce=nonce
-                    )
-                    self.ConfigObj.logger.info(f"Submitting approval for token: {token_address}")
-                    return self.submit_regular_transaction(self.sign_transaction(approve_tx))
+                    tx_hash = self.submit_regular_transaction(self.sign_transaction(tx))
+                    break
                 except Exception as e:
-                    self.ConfigObj.logger.info(
-                        f"(***2***) Error when building transaction: {e.__class__.__name__} {e}")
-            else:
-                return None
+                    self.ConfigObj.logger.info(f"Attempt {attempt} failed: {e.__class__.__name__} {e}")
+                    if "max fee per gas less than block base fee" in str(e):
+                        base_gas_price = int_prefix(str(e).split("baseFee: ")[1])
+                    else:
+                        tx_hash = None
+                        break
+
+                assert tx_hash is not None, f"Failed to approve token: {token_address}"
