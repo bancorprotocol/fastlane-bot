@@ -61,8 +61,6 @@ from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxSubmitHandler,
     TxSubmitHandlerBase,
-    TxReceiptHandler,
-    TxReceiptHandlerBase,
     TxRouteHandler,
     TxRouteHandlerBase,
     TxHelpers,
@@ -99,8 +97,6 @@ class CarbonBotBase:
         the database manager.
     TxSubmitHandler: class derived from TxSubmitHandlerBase
         the class to be instantiated for the transaction submit handler (default: TxSubmitHandler).
-    TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
-        ditto (default: TxReceiptHandler).
     TxRouteHandlerClass: class derived from TxRouteHandlerBase
         ditto (default: TxRouteHandler).
     TxHelpersClass: class derived from TxHelpersBase
@@ -134,12 +130,6 @@ class CarbonBotBase:
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
-
-        if self.TxReceiptHandlerClass is None:
-            self.TxReceiptHandlerClass = TxReceiptHandler
-        assert issubclass(
-            self.TxReceiptHandlerClass, TxReceiptHandlerBase
-        ), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
 
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler
