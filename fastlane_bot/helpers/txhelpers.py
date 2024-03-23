@@ -135,7 +135,7 @@ class TxHelpers:
         else:
             current_gas_price = arb_tx["gasPrice"]
 
-        signed_arb_tx = self.sign_transaction(arb_tx)
+        signed_arb_tx = self.web3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
         # Multiply expected gas by 0.8 to account for actual gas usage vs expected.
         gas_cost_eth = (
@@ -508,18 +508,6 @@ class TxHelpers:
             )
             return None
 
-    def sign_transaction(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Signs the transaction.
-
-        transaction: the transaction to be signed
-
-        returns: the signed transaction
-        """
-        return self.web3.eth.account.sign_transaction(
-            transaction, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        )
-
     def get_max_priority_fee_per_gas_alchemy(self):
         """
         Queries the Alchemy API to get an estimated max priority fee per gas
@@ -565,7 +553,8 @@ class TxHelpers:
                 self.ConfigObj.logger.info(f"Attempt {attempt} for approving token {token_address}")
 
                 try:
-                    tx_hash = self.submit_regular_transaction(self.sign_transaction(tx))
+                    signed_tx = self.web3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+                    tx_hash = self.submit_regular_transaction(signed_tx)
                     break
                 except Exception as e:
                     self.ConfigObj.logger.info(f"Attempt {attempt} failed: {e.__class__.__name__} {e}")
