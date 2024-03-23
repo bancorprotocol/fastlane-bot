@@ -58,8 +58,6 @@ from web3 import Web3
 import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
-    TxReceiptHandler,
-    TxReceiptHandlerBase,
     TxRouteHandler,
     TxHelpers,
     TxHelpersBase,
@@ -94,9 +92,7 @@ class CarbonBotBase:
     ----------
     db: DatabaseManager
         the database manager.
-    TxReceiptHandlerClass: class derived from TxReceiptHandlerBase
-        ditto (default: TxReceiptHandler).
-    TxRouteHandlerClass:
+    TxRouteHandlerClass: class derived from TxRouteHandlerBase
         ditto (default: TxRouteHandler).
     TxHelpersClass: class derived from TxHelpersBase
         ditto (default: TxHelpers).
@@ -128,12 +124,6 @@ class CarbonBotBase:
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
-
-        if self.TxReceiptHandlerClass is None:
-            self.TxReceiptHandlerClass = TxReceiptHandler
-        assert issubclass(
-            self.TxReceiptHandlerClass, TxReceiptHandlerBase
-        ), f"TxReceiptHandlerClass not derived from TxReceiptHandlerBase {self.TxReceiptHandlerClass}"
 
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler

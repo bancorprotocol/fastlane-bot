@@ -8,8 +8,8 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.3.1"
-__DATE__ = "05/Oct/2023"
+__VERSION__ = "3.4"
+__DATE__ = "23/Jan/2024"
 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
@@ -837,6 +837,151 @@ class ConstantProductCurve(CurveBase):
             params=params,
         )
 
+    SOLIDLY_PRICE_SPREAD = 0.06     # 0.06 gives pretty good results for m=2.6
+    @classmethod
+    def from_solidly(
+        cls,
+        *,
+        k=None,
+        x=None,
+        y=None,
+        price_spread=None,
+        pair=None,
+        fee=None,
+        cid=None,
+        descr=None,
+        params=None,
+        as_list=True,
+    ):
+        """
+        constructor: from a Solidly curve (see class docstring for other parameters)*
+
+        :k:             Solidly pool constant, x^3 y + x y^3 = k*
+        :x:             current pool liquidity in token x*
+        :y:             current pool liquidity in token y*
+        :price_spread:  price spread to use for converting constant price -> constant product
+        :as_list:       if True (default) returns a list of curves, otherwise a single curve
+                        (see note below and note that as_list=False is deprecated)
+        
+        exactly 2 out of those three must be given; the third one is calculated
+        
+        The Solidly curve is NOT a constant product curve, as it follows the equation
+        
+            x^3 y + x y^3 = k
+            
+        where k is the pool invariant. This curve is a stable swap curve in the it is
+        very flat in the middle, at a unity price (see the `invariants` module and the
+        associated tests and notebooks). In fact, in the range
+        
+            1/2.6 < y/x < 2.6
+            
+        we find that the prices is essentially unity, and we therefore approximate it
+        was an (almost) constant price curve, ie a constant product curve with a very
+        large invariant k, and we will set the x_act and y_act parameters so that the
+        curve only covers the above range.
+        
+        IMPORTANT: IF as_list is True (default) THEN THE RESULT IS RETURNED AS A LIST
+        CURRENTLY CONTAINING A SINGLE CURVE, NOT THE CURVE ITSELF. This is because we 
+        may in the future a list of curves, with additional curves matching the function
+        in the wings. IT IS RECOMMENDED THAT ANY CODE IMPLEMENTING THIS FUNCTION USES
+        as_list = True, AS IN THE FUTURE as_list = FALSE will raise an exception.
+        """
+        # rename the solidly parameters to avoid name confusion
+        solidly_x = x
+        solidly_y = y
+        solidly_k = k
+        del x, y, k
+        price_spread = price_spread or cls.SOLIDLY_PRICE_SPREAD
+        #print([_ for _ in [solidly_x, solidly_y, solidly_k] if not _ is None])
+        assert len([_ for _ in [solidly_x, solidly_y, solidly_k] if not _ is None]) == 2, f"exactly 2 out of k,x,y must be given (x={solidly_x}, y={solidly_y}, k={solidly_x})"
+        if solidly_k is None:
+            solidly_k = solidly_x**3 * solidly_y + solidly_x * solidly_y**3
+            # NOTE: this is currently the only implemented version, and it should be
+            # enough for our purposes; the other two can be implemented using the 
+            # y(x) function from the invariants module (note that y(x) and x(y) are 
+            # the same as the function is symmetric). We do not want to implement it
+            # at the moment as we do not think we need it, and we want to avoid this
+            # external dependency for the time being.
+        elif solidly_x is None:
+            raise NotImplementedError("providing k, y not implemented yet")
+        elif solidly_y is None:
+            raise NotImplementedError("providing k, x not implemented yet")
+        else:
+            raise ValueError(f"should never get here")
+        # kbar = (k/2)**(1/4) is the equivalent of kbar = sqrt(k) for constant product
+        # center of the curve is (xy_c, xy_c) = (kbar, kbar)
+        # we are looking for the intersects of y=mx for m=2.6 and m=1/2.6 (linear segment)
+        # we know that within that range, x-y = const, so we can analytically solve for x and y
+        # specifically, we have y = 2 xy_c - x = mx  
+        # therefore x = 2 xy_c / (m+1)
+        solidly_kbar = (solidly_k/2)**(1/4)
+        solidly_xyc = solidly_kbar
+        solidly_xmin = 2 * solidly_xyc / (2.6 + 1)
+        solidly_xmax = 2 * solidly_xyc / (1/2.6 + 1)
+        solidly_xrange = solidly_xmax - solidly_xmin
+        # print(f"[from_solidly] k = {solidly_k}, kbar = {solidly_kbar}, xy_c = {xy_c}")
+        # print(f"[from_solidly] x_min = {solidly_xmin}, x_max = {solidly_xmax}, x_range = {x_range}")
+        
+        # the curve has a unity price, which we spread to 1+price_spread at x_min,
+        # and 1-price_spread at x_max; we set x_range = x_max - x_min and we get
+        # the following equations
+        #   k/x0**2 = (1+price_spread)
+        #   k/(x0+xrange)**2 = 1/(1+price_spread)
+        # solving this fo k, x0 we get
+        #   k = (1+price_spread)*xrange**2 / price_spread**2
+        #   x0 = xrange / price_spread
+        cpc_k = (1+price_spread)*solidly_xrange**2 / price_spread**2
+        cpc_x0 = solidly_xrange / price_spread
+        
+        # finally we need to see where in the range we are; we look at 
+        #    del_x = x - x_min
+        # and we must have
+        #   del_x > 0
+        #   del_x < x_range
+        # for the approximation to be valid; we recall that x_min ~ cpc_x0, therefore
+        #   x = cpc_x0 + del_x
+        # Also, x_act is the x that is left to the right of the range, therefore 
+        #   x_act = x_range - del_x
+        # Finally, y_act is the amount of y that trades use from our current position
+        # back to x=x_min; we slightly approximate this by ignoring the price spread
+        # (which in any case is not real!) and assuming unity price, so del_y ~ del_y
+        #   y_act = del_y = del_x
+        solidly_delx = solidly_x - solidly_xmin
+        if solidly_delx < 0 or solidly_delx > solidly_xrange:
+            if as_list:
+                #print(f"[cpc::from_solidly] x={solidly_x} is outside the range [{solidly_xmin}, {solidly_xmax}] and as_list=True")
+                return []
+            else:
+                raise ValueError(f"x={solidly_x} is outside the range [{solidly_xmin}, {solidly_xmax}] and as_list=False")
+        
+        # now deal with the params, ie add the s_xxx parameters for solidly
+        params0 = dict(s_x = solidly_x, s_y = solidly_y, s_k = solidly_k, s_kbar = solidly_kbar, s_cpck=cpc_k, s_cpcx0 = cpc_x0,
+                    s_xmin = solidly_xmin, s_xmax = solidly_xmax, s_price_spread = price_spread)
+        if params is None:
+            params = AttrDict(params0)
+        else:
+            params = AttrDict({**params, **params0})
+        
+        result = cls(
+            k=cpc_k,
+            x=cpc_x0+solidly_delx,                # del_x = x - xmin
+            # x_act=solidly_xrange-solidly_delx,
+            # y_act=solidly_delx,
+            x_act=solidly_delx,
+            y_act=solidly_xrange-solidly_delx,
+            pair=pair,
+            cid=cid,
+            fee=fee,
+            descr=descr,
+            constr="solidly",
+            params=params,
+        )
+        if as_list:
+            return [result]
+        else:
+            print("[cpc::from_solidly] returning curve directly is deprecated; prepare to accept a list of curves in the future")
+            return result
+        
     @classmethod
     def from_carbon(
         cls,
@@ -1550,11 +1695,51 @@ class ConstantProductCurve(CurveBase):
         return abs(y / x - 1) < self.EPS
 
     def isbigger(self, small, big):
-        "returns True if small is bigger than big within EPS"
+        "returns True if small is bigger than big within EPS (small, big > 0)"
         if small == 0:
             return big > self.EPS
         return big / small > 1 + self.EPS
 
+    def plot(self, xmin=None, xmax=None, steps=None, *, xvals=None, func=None, show=False, title=None, xlabel=None, ylabel=None, grid=True, **params):
+        """
+        plots the curve associated with this pool
+        
+        :xmin, xmax, steps:    x range (args for np.linspace)
+        :xvals:                x values (alternative to xmin, xmax, steps)
+        :func:                 function to plot (default: dyfrpmdx_f)
+        :show:                 if True, call plt.show()
+        :title:                plot title
+        :xlabel, ylabel:       axis labels
+        :grid:                 if True [False], [do not] show grid; None: ignore
+        :params:               additional kwargs passed to plt.plot
+        """
+        if xvals is None:
+            assert not xmin is None, "xmin must not be None if xv is None"
+            assert not xmax is None, "xmin must not be None if xv is None"
+            x_v = np.linspace(xmin, xmax, steps) if steps else np.linspace(xmin, xmax)
+        else:
+            assert xmin is None, "xmin must be None if xv is not None"
+            assert xmax is None, "xmax must be None if xv is not None"
+            assert steps is None, "steps must be None if xv is not None"
+            x_v = xvals
+            
+        xlabel = xlabel or (f"dx [{self.tknx}]" if not func else "x")
+        ylabel = ylabel or (f"dy [{self.tkny}]" if not func else "y")
+        func = func or self.dyfromdx_f
+        #print("moo", self.cid, self.cid is None, 'self.cid' if self.cid else 'NO')
+        title = title or f"Invariance curve {self.pairp} {self.cid if (self.cid and not self.cid=='None') else ''}"
+        
+        y_v = [func(xx) for xx in x_v]
+        result = plt.plot(x_v, y_v, **params)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        if not grid is None:
+            plt.grid(grid)
+        if show:
+            plt.show()
+        return result
+            
     @staticmethod
     def digest(datastr, len=4):
         """returns a digest of a string of a certain length"""
@@ -2613,6 +2798,7 @@ class CPCContainer:
             if p.printline:
                 print(p.printline.format(c=curves[0], p=curves[0].params))
             statx, staty = self.xystats(curves)
+            #print(f"[CC::plot] stats x={statx}, y={staty}")
             xr = np.linspace(0.0000001, statx.maxv * 1.2, int(p.npoints))
             for i, c in enumerate(curves):
                 # plotf is the full curve
