@@ -92,7 +92,7 @@ class CarbonBotBase:
     ----------
     db: DatabaseManager
         the database manager.
-    TxRouteHandlerClass: class derived from TxRouteHandlerBase
+    TxRouteHandlerClass
         ditto (default: TxRouteHandler).
     TxHelpersClass: class derived from TxHelpersBase
         ditto (default: TxHelpers).
