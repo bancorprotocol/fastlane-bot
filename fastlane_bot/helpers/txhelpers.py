@@ -26,6 +26,7 @@ from fastlane_bot.utils import num_format, log_format, num_format_float, int_pre
 nest_asyncio.apply()
 
 MAX_UINT256 = 2 ** 256 - 1
+MAX_UINT128 = 2 ** 128 - 1
 
 @dataclass
 class TxHelpers:
@@ -531,43 +532,23 @@ class TxHelpers:
         )
         return int(json.loads(response.text)["result"].split("0x")[1], 16)
 
-    def check_if_token_approved(self, token_address: str, owner_address = None, spender_address = None) -> bool:
-        """
-        This function checks if a token has already been approved.
-        :param token_address: the token to approve
-        :param owner_address: Optional param for specific debugging, otherwise it will be automatically set to the wallet address
-        :param spender_address: Optional param for specific debugging, otherwise it will be set to the arb contract address
-
-        returns:
-            bool
-        """
-        owner_address = self.wallet_address if owner_address is None else owner_address
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            owner_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
-
-        spender_address = self.arb_contract.address if spender_address is None else spender_address
-
-        token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
-
-        allowance = token_contract.caller.allowance(owner_address, spender_address)
-        if type(allowance) == int:
-            if allowance > 0:
-                return True
-            return False
-        else:
-            return False
-
     def check_and_approve_tokens(self, tokens: List) -> bool:
         """
         This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
         If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
         :param tokens: the list of tokens to check/approve
         """
-        for token_address in [
-            token for token in tokens
-            if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS and not self.check_if_token_approved(token_address=token)
-        ]:
+
+        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
+            owner_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
+        else:
+            owner_address = self.wallet_address
+
+        for token_address in [token for token in tokens if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
             token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
+            if token_contract.caller.allowance(owner_address, self.arb_contract.address) > MAX_UINT128:
+                continue
+
             base_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
             max_priority_fee = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
             nonce = self.web3.eth.get_transaction_count(self.wallet_address)
