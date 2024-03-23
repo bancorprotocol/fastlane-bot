@@ -912,9 +912,7 @@ def init_bot(mgr: Any) -> CarbonBot:
     )
     bot = CarbonBot(ConfigObj=mgr.cfg)
     bot.db = db
-    # bot.TxSubmitHandler.ConfigObj = mgr.cfg
-    # bot.TxSubmitHandler.ConfigObj.w3 = mgr.cfg.w3
-    # bot.TxSubmitHandler.ConfigObj.w3 = mgr.cfg.w3
+
     assert isinstance(
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
