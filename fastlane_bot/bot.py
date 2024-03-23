@@ -63,7 +63,6 @@ from fastlane_bot.helpers import (
     TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
-    RouteStruct,
     add_wrap_or_unwrap_trades_to_route,
     split_carbon_trades,
     submit_transaction_tenderly
