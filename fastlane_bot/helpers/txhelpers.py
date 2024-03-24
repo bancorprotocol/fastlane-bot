@@ -88,7 +88,7 @@ class TxHelpers:
             src_address=src_address,
             src_amt=src_amt,
             gas_price=pending_block.get("baseFeePerGas"),
-            max_priority=self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET,
+            max_priority=int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET),
             nonce=self.web3.eth.get_transaction_count(self.wallet_address),
             flashloan_struct=flashloan_struct
         )
@@ -106,7 +106,7 @@ class TxHelpers:
 
         signed_arb_tx = self.web3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        gas_cost_wei = current_gas_price * gas_estimate * self.ConfigObj.EXPECTED_GAS_MODIFIER 
+        gas_cost_wei = int(current_gas_price * gas_estimate * self.ConfigObj.EXPECTED_GAS_MODIFIER)
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += asyncio.get_event_loop().run_until_complete(
