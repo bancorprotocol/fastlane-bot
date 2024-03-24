@@ -48,16 +48,12 @@ class TxHelpers:
                 max_retries=3,
             )
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.web3 = self.ConfigObj.w3
-        # Set the local account
-        self.local_account = self.web3.eth.account.from_key(
-            self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        )
 
         # Set the public address
-        self.wallet_address = str(self.local_account.address)
-
-        self.alchemy_api_url = self.ConfigObj.RPC_URL
+        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
+            self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
+        else:
+            self.wallet_address = str(self.ConfigObj.w3.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).address)
 
     def validate_and_submit_transaction(
         self,
@@ -81,7 +77,7 @@ class TxHelpers:
         )
 
         # Get pending block
-        pending_block = self.web3.eth.get_block("pending")
+        pending_block = self.ConfigObj.w3.eth.get_block("pending")
 
         arb_tx = self.build_transaction_with_gas(
             routes=route_struct,
@@ -89,7 +85,7 @@ class TxHelpers:
             src_amt=src_amt,
             gas_price=pending_block.get("baseFeePerGas"),
             max_priority=int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET),
-            nonce=self.web3.eth.get_transaction_count(self.wallet_address),
+            nonce=self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address),
             flashloan_struct=flashloan_struct
         )
 
@@ -104,7 +100,7 @@ class TxHelpers:
 
         current_gas_price = arb_tx["maxFeePerGas" if "maxFeePerGas" in arb_tx else "gasPrice"]
 
-        signed_arb_tx = self.web3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+        signed_arb_tx = self.ConfigObj.w3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
         gas_cost_wei = int(current_gas_price * gas_estimate * self.ConfigObj.EXPECTED_GAS_MODIFIER)
 
@@ -147,7 +143,7 @@ class TxHelpers:
             )
 
             # Submit the transaction
-            if "tenderly" in self.web3.provider.endpoint_uri or self.ConfigObj.NETWORK != "ethereum":
+            if "tenderly" in self.ConfigObj.w3.provider.endpoint_uri or self.ConfigObj.NETWORK != "ethereum":
                 tx_hash = self.submit_regular_transaction(signed_arb_tx)
             else:
                 tx_hash = self.submit_private_transaction(signed_arb_tx, pending_block["number"])
@@ -178,7 +174,7 @@ class TxHelpers:
                 }
             ]
         }
-        response = requests.post(self.alchemy_api_url, json=json_data)
+        response = requests.post(self.ConfigObj.RPC_URL, json=json_data)
         return loads(response.text)["result"]["accessList"]
 
     def construct_contract_function(
@@ -288,7 +284,7 @@ class TxHelpers:
                 return None
 
         try:
-            estimated_gas = self.web3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+            estimated_gas = self.ConfigObj.w3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
         except Exception as e:
             self.ConfigObj.logger.warning(
                 f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the "
@@ -303,7 +299,7 @@ class TxHelpers:
                 self.ConfigObj.logger.debug(
                     f"[helpers.txhelpers.build_transaction_with_gas] Transaction after access list: {transaction}"
                 )
-                estimated_gas_after = self.web3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                estimated_gas_after = self.ConfigObj.w3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
                 self.ConfigObj.logger.debug(
                     f"[helpers.txhelpers.build_transaction_with_gas] gas before access list: {estimated_gas}, after access list: {estimated_gas_after}"
                 )
@@ -337,9 +333,6 @@ class TxHelpers:
         returns: the transaction to be submitted to the blockchain
         """
 
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
-            
         if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             tx_details = {
                 "type": 2,
@@ -373,7 +366,7 @@ class TxHelpers:
             f"[helpers.txhelpers.submit_regular_transaction] Attempting to submit transaction {signed_tx}"
         )
 
-        return self._submit_transaction(self.web3.eth.send_raw_transaction(signed_tx.rawTransaction))
+        return self._submit_transaction(self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction))
 
     def submit_private_transaction(self, signed_tx, block_number: int) -> str:
         """
@@ -417,7 +410,7 @@ class TxHelpers:
 
     def _submit_transaction(self, tx_hash) -> str:
         try:
-            tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+            tx_receipt = self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx_hash)
             assert tx_hash == tx_receipt["transactionHash"]
             return tx_hash
         except TimeExhausted as e:
@@ -434,7 +427,7 @@ class TxHelpers:
             return 0
 
         response = requests.post(
-            self.alchemy_api_url,
+            self.ConfigObj.RPC_URL,
             json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
             headers={"accept": "application/json", "content-type": "application/json"},
         )
@@ -447,21 +440,16 @@ class TxHelpers:
         :param tokens: the list of tokens to check/approve
         """
 
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            owner_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
-        else:
-            owner_address = self.wallet_address
-
         for token_address in [token for token in tokens if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
-            token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
-            allowance = token_contract.caller.allowance(owner_address, self.arb_contract.address)
+            token_contract = self.ConfigObj.w3.eth.contract(address=token_address, abi=ERC20_ABI)
+            allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
             self.ConfigObj.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance > 0:
                 continue
 
-            base_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
+            base_gas_price = self.ConfigObj.w3.eth.get_block("pending").get("baseFeePerGas")
             max_priority_fee = self.get_max_priority_fee_per_gas_alchemy()
-            nonce = self.web3.eth.get_transaction_count(self.wallet_address)
+            nonce = self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address)
 
             for attempt in [1, 2]:
                 tx = self._build_transaction(
@@ -474,7 +462,7 @@ class TxHelpers:
                 self.ConfigObj.logger.info(f"Attempt {attempt} for approving token {token_address}")
 
                 try:
-                    signed_tx = self.web3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+                    signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
                     tx_hash = self.submit_regular_transaction(signed_tx)
                     break
                 except Exception as e:
