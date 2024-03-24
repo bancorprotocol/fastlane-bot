@@ -19,3 +19,4 @@ tqdm~=4.64.1
 web3~=6.11.2
 nest-asyncio~=1.5.8
 jupytext~=1.16.1
+pytest-asyncio~=0.23.6

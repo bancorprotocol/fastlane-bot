@@ -1,7 +1,7 @@
 import asyncio
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from glob import glob
 from typing import Any, List, Dict, Tuple, Type, Callable
 
@@ -100,17 +100,17 @@ class TokenFeeResponse:
         """
         This property returns the response as a DataFrame.
         """
-        return pd.DataFrame([self.__dict__])
+        return pd.DataFrame([asdict(self)])
 
 
 async def get_token_and_fee(
-        ex: Any, address: str, contract: AsyncContract, event: Any
+        exchange: Any, address: str, contract: AsyncContract, event: Any
 ) -> TokenFeeResponse:
     """
     This function uses the exchange object to get the tokens and fee for a given pool.
 
     Args:
-        ex(Any): The exchange object
+        exchange(Any): The exchange object
         address(str): The pool address
         contract(AsyncContract): The contract object
         event(Any): The event object
@@ -118,49 +118,40 @@ async def get_token_and_fee(
     Returns:
         TokenFeeResponse: The tokens and fee for the pool
     """
-    try:
-        anchor = None
-        tkn0 = await ex.get_tkn0(address, contract, event=event)
-        tkn1 = await ex.get_tkn1(address, contract, event=event)
-        fee = await ex.get_fee(address, contract)
-        exchange_name = ex.exchange_name
-        if exchange_name == "bancor_v2":
-            anchor = await ex.get_anchor(contract)
-            for i in [0, 1]:
-                connector_token = await ex.get_connector_tokens(contract, i)
-                if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                    break
+    exchange_name = exchange.exchange_name
+    anchor = None
+    tkn0 = await exchange.get_tkn0(address, contract, event=event)
+    tkn1 = await exchange.get_tkn1(address, contract, event=event)
+    fee = await exchange.get_fee(address, contract)
+    if exchange_name == "bancor_v2":
+        anchor = await exchange.get_anchor(contract)
+        for i in [0, 1]:
+            connector_token = await exchange.get_connector_tokens(contract, i)
+            if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                break
 
-            if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                tkn1 = connector_token
-            elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                tkn0 = connector_token
+        if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+            tkn1 = connector_token
+        elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+            tkn0 = connector_token
 
-        # bookmark
-        strategy_id = str(event["args"]["id"]) if ex.is_carbon_v1_fork else 0
-        pool_info = {
-            "exchange_name": exchange_name,
-            "address": address,
-            "tkn0_address": tkn0,
-            "tkn1_address": tkn1,
-            "pair_name": f"{tkn0}/{tkn1}",
-            "fee": fee,
-            "strategy_id": strategy_id
-        }
-        carbon_v1_forks = [exchange_name] if (ex.is_carbon_v1_fork or exchange_name == CARBON_V1_NAME) else []
-        cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
-        return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0_address=tkn0, tkn1_address=tkn1, fee=fee, cid=cid,
-            strategy_id=strategy_id, anchor=anchor
-        )
-    except Exception as e:
-        cfg.logger.info(
-            f"Failed to get tokens and fee for {address} {exchange_name} {e}"
-        )
-        return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0_address=None, tkn1_address=None, fee=None, cid=None,
-            strategy_id=None, anchor=None
-        )
+    strategy_id = str(event["args"]["id"]) if 'id' in event["args"] and exchange.is_carbon_v1_fork else 0
+    pool_info = {
+        "exchange_name": exchange_name,
+        "address": address,
+        "tkn0_address": tkn0,
+        "tkn1_address": tkn1,
+        "pair_name": f"{tkn0}/{tkn1}",
+        "fee": fee,
+        "strategy_id": strategy_id
+    }
+    carbon_v1_forks = [exchange_name] if (exchange.is_carbon_v1_fork or exchange_name == CARBON_V1_NAME) else []
+    cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
+    return TokenFeeResponse(
+        exchange_name=exchange_name, address=address, tkn0_address=tkn0, tkn1_address=tkn1, fee=fee, cid=cid,
+        strategy_id=strategy_id, anchor=anchor
+    )
+
 
 
 async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
