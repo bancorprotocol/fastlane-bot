@@ -52,6 +52,8 @@ class TxHelpers:
 
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
 
+        self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+
         # Set the wallet address
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
@@ -228,7 +230,13 @@ class TxHelpers:
         block = self.ConfigObj.w3.eth.get_block("pending")
         base_fee_per_gas = block["baseFeePerGas"]
 
-        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
+        tx_details = {
+            "nonce": nonce,
+            "value": value,
+            "from": self.wallet_address,
+        }
+
+        if self.use_eip_1559:
             response = requests.post(
                 self.ConfigObj.RPC_URL,
                 json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
@@ -237,35 +245,27 @@ class TxHelpers:
             result = int(loads(response.text)["result"].split("0x")[1], 16)
             max_priority_fee_per_gas = int(result * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
             current_gas_price = base_fee_per_gas + max_priority_fee_per_gas
-            tx_details = {
-                "type": 2,
-                "nonce": nonce,
-                "value": value,
-                "from": self.wallet_address,
-                "maxFeePerGas": current_gas_price,
-                "maxPriorityFeePerGas": max_priority_fee_per_gas,
-            }
+            current_gas_price_key = "maxFeePerGas"
+            tx_details["type"] = 2
+            tx_details["maxPriorityFeePerGas"] = max_priority_fee_per_gas
         else:
             current_gas_price = base_fee_per_gas
-            tx_details = {
-                "type": 1,
-                "nonce": nonce,
-                "value": value,
-                "from": self.wallet_address,
-                "gasPrice": current_gas_price,
-            }
+            current_gas_price_key = "gasPrice"
+            tx_details["type"] = 1
 
-        try:
-            tx = function.build_transaction(tx_details)
-        except Exception as e:
-            self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
-            message_parts = str(e).split("baseFee: ")
-            if len(message_parts) > 1:
-                current_gas_price = int_prefix(message_parts[1])
-                tx_details[{2: "maxFeePerGas", 1: "gasPrice"}[tx_details["type"]]] = current_gas_price
+        while True:
+            tx_details[current_gas_price_key] = current_gas_price
+            try:
                 tx = function.build_transaction(tx_details)
-            else:
-                tx = None
+                break
+            except Exception as e:
+                self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
+                message_parts = str(e).split("baseFee: ")
+                if len(message_parts) > 1:
+                    current_gas_price = int_prefix(message_parts[1])
+                else:
+                    tx = None
+                    break
 
         return tx, current_gas_price, block["number"]
 
