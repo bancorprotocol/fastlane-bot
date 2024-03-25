@@ -150,7 +150,7 @@ class TxHelpers:
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.ConfigObj.logger.info("Attempting to execute profitable arb transaction...")
+            self.ConfigObj.logger.info("Attempting to execute profitable arb transaction")
             try:
                 if self.use_tenderly:
                     tx_hash = self.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -162,7 +162,7 @@ class TxHelpers:
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
         else:
-            self.ConfigObj.logger.info("Not attempting to execute non-profitable arb transaction...")
+            self.ConfigObj.logger.info("Discarding non-profitable arb transaction")
             return None
 
     def check_and_approve_tokens(self, tokens: List):
