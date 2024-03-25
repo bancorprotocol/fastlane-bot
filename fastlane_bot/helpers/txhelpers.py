@@ -94,7 +94,7 @@ class TxHelpers:
             return None
 
         try:
-            estimated_gas = self.eth.estimate_gas(transaction=tx) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+            estimated_gas = self.eth.estimate_gas(transaction=tx)
         except Exception as e:
             self.ConfigObj.logger.warning(
                 f"Failed to estimate gas for transaction because the transaction is likely fail.\n"
@@ -105,17 +105,17 @@ class TxHelpers:
 
         if self.access_lists:
             try:
-                access_list = self._create_access_list(tx, estimated_gas)
+                access_list = self._create_access_list(tx["data"])
                 tx_after = dict(tx, {"accessList": access_list})
-                estimated_gas_after = self.eth.estimate_gas(transaction=tx_after) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                estimated_gas_after = self.eth.estimate_gas(transaction=tx_after)
                 if estimated_gas > estimated_gas_after:
                     estimated_gas = estimated_gas_after
                     tx = tx_after
-                self.ConfigObj.logger.debug(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
+                self.ConfigObj.logger.info(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
             except Exception as e:
                 self.ConfigObj.logger.info(f"Applying access list to transaction failed with {e}")
 
-        tx["gas"] = estimated_gas
+        tx["gas"] = estimated_gas + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
 
         signed_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
 
@@ -233,7 +233,7 @@ class TxHelpers:
         )
         return int(loads(response.text)["result"].split("0x")[1], 16)
 
-    def _create_access_list(self, tx, estimated_gas):
+    def _create_access_list(self, data):
         response = requests.post(
             self.ConfigObj.RPC_URL,
             json = {
@@ -244,8 +244,7 @@ class TxHelpers:
                     {
                         "from": self.wallet_address,
                         "to": self.arb_contract.address,
-                        "gas": estimated_gas,
-                        "data": tx["data"]
+                        "data": data
                     }
                 ]
             }
