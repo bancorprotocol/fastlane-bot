@@ -88,11 +88,13 @@ class SolidlyV2Pool(Pool):
         """
         reserve_balance = contract.caller.getReserves()
 
-        try:
+        if hasattr(contract.caller, "factory"):
             factory_address = contract.caller.factory()
-        except Exception:
-            # Velocimeter does not expose factory function - call voter to get an address that is the same for all Velcoimeter pools
+        elif hasattr(contract.caller, "voter"):
             factory_address = contract.caller.voter()
+        else:
+            slot = contract.w3.eth.get_storage_at(contract.address, 11)
+            factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
 
         self.is_stable = contract.caller.stable()
         params = {
@@ -107,6 +109,7 @@ class SolidlyV2Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
     async def async_update_from_contract(
         self,
         contract: Contract,
@@ -120,11 +123,13 @@ class SolidlyV2Pool(Pool):
         """
         reserve_balance = await contract.caller.getReserves()
 
-        try:
+        if hasattr(contract.caller, "factory"):
             factory_address = await contract.caller.factory()
-        except Exception:
-            # Velocimeter does not expose factory function - call voter to get an address that is the same for all Velcoimeter pools
+        elif hasattr(contract.caller, "voter"):
             factory_address = await contract.caller.voter()
+        else:
+            slot = await contract.w3.eth.get_storage_at(contract.address, 11)
+            factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
 
         self.is_stable = await contract.caller.stable()
         params = {

@@ -236,10 +236,10 @@ CLEOPATRA_V2_FACTORY_ABI = [
     },
     {
         "type": "function",
-        "name": "getPairFee",
+        "name": "getFee",
         "stateMutability": "view",
-        "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
-        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+        "inputs": [{"internalType": "bool", "name": "stable", "type": "bool"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
 
@@ -478,6 +478,43 @@ VELOCIMETER_V2_POOL_ABI = [
     {
         "type": "function",
         "name": "voter",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    }
+]
+
+CLEOPATRA_V2_POOL_ABI = [
+    {
+        "type": "event",
+        "name": "Sync",
+        "anonymous": False,
+        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getReserves",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256", "name": "_reserve0", "type": "uint256"}, {"internalType": "uint256", "name": "_reserve1", "type": "uint256"}, {"internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "stable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
+    },
+    {
+        "type": "function",
+        "name": "token0",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "token1",
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
