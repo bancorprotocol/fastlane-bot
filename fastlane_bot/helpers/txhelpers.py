@@ -76,7 +76,7 @@ class TxHelpers:
             f"- Routes: {route_struct}\n"
             f"- Source amount: {src_amt}\n"
             f"- Source token: {src_address}\n"
-            f"- Expected profit in GAS token: {num_format(expected_profit_gastkn)}\n"
+            f"- Expected profit: {num_format(expected_profit_gastkn)} GAS token ({num_format(expected_profit_usd)} USD)\n"
         )
 
         if self.ConfigObj.SELF_FUND:
@@ -131,25 +131,22 @@ class TxHelpers:
             )
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
-        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
-
         gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARD_PERCENTAGE
+
+        gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
         gas_gain_usd = gas_gain_eth * expected_profit_usd / expected_profit_gastkn
 
-        transaction_log = {
-            "block_number": block_number,
-            "gas_cost_eth": num_format_float(gas_cost_eth),
-            "gas_cost_usd": num_format_float(gas_cost_usd),
-            "tx": tx
-        }
-
-        self.ConfigObj.logger.info(log_format(log_data={**log_object, **transaction_log}, log_name="arb_with_gas"))
+        self.ConfigObj.logger.info(
+            log_format(
+                log_name="arb_with_gas",
+                log_data={**log_object, "block_number": block_number, "tx": tx}
+            )
+        )
 
         self.ConfigObj.logger.info(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
-            f"- Expected gain: {num_format(gas_gain_eth)} GAS token ({num_format(gas_gain_usd)} USD)\n"
             f"- Expected cost: {num_format(gas_cost_eth)} GAS token ({num_format(gas_cost_usd)} USD)\n"
-            f"- Expected cost of {num_format(gas_cost_eth)} GAS token\n"
+            f"- Expected gain: {num_format(gas_gain_eth)} GAS token ({num_format(gas_gain_usd)} USD)\n"
         )
 
         if gas_gain_eth > gas_cost_eth:
