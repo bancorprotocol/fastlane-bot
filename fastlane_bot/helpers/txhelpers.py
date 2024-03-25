@@ -19,7 +19,6 @@ import requests
 from alchemy import Network, Alchemy
 from web3.exceptions import TimeExhausted
 
-
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.utils import num_format, log_format, int_prefix
