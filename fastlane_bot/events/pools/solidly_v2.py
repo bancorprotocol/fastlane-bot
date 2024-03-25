@@ -89,10 +89,13 @@ class SolidlyV2Pool(Pool):
         reserve_balance = contract.caller.getReserves()
 
         if hasattr(contract.caller, "factory"):
+            # in solidly, the factory is available via function `factory`
             factory_address = contract.caller.factory()
         elif hasattr(contract.caller, "voter"):
+            # in velocimiter, the factory is available via function `voter`
             factory_address = contract.caller.voter()
         else:
+            # in cleopatra, the factory is stored in private variable at slot 11
             slot = contract.w3.eth.get_storage_at(contract.address, 11)
             factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
 
@@ -124,10 +127,13 @@ class SolidlyV2Pool(Pool):
         reserve_balance = await contract.caller.getReserves()
 
         if hasattr(contract.caller, "factory"):
+            # in solidly, the factory is available via function `factory`
             factory_address = await contract.caller.factory()
         elif hasattr(contract.caller, "voter"):
+            # in velocimiter, the factory is available via function `voter`
             factory_address = await contract.caller.voter()
         else:
+            # in cleopatra, the factory is stored in private variable at slot 11
             slot = await contract.w3.eth.get_storage_at(contract.address, 11)
             factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
 

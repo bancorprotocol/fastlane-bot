@@ -236,10 +236,10 @@ CLEOPATRA_V2_FACTORY_ABI = [
     },
     {
         "type": "function",
-        "name": "getFee",
+        "name": "getPairFee",
         "stateMutability": "view",
-        "inputs": [{"internalType": "bool", "name": "stable", "type": "bool"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+        "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
+        "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
     }
 ]
 
