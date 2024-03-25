@@ -92,7 +92,7 @@ class SolidlyV2Pool(Pool):
             # in solidly, the factory is available via function `factory`
             factory_address = contract.caller.factory()
         elif hasattr(contract.caller, "voter"):
-            # in velocimiter, the factory is available via function `voter`
+            # in velocimeter, the factory is available via function `voter`
             factory_address = contract.caller.voter()
         else:
             # in cleopatra, the factory is stored in private variable at slot 11
@@ -130,7 +130,7 @@ class SolidlyV2Pool(Pool):
             # in solidly, the factory is available via function `factory`
             factory_address = await contract.caller.factory()
         elif hasattr(contract.caller, "voter"):
-            # in velocimiter, the factory is available via function `voter`
+            # in velocimeter, the factory is available via function `voter`
             factory_address = await contract.caller.voter()
         else:
             # in cleopatra, the factory is stored in private variable at slot 11
