@@ -257,8 +257,7 @@ class TxHelpers:
         except Exception as e:
             self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
             current_gas_price = int_prefix(str(e).split("baseFee: ")[1])
-            tx_details["maxFeePerGas"] = current_gas_price
-            tx_details["gasPrice"] = current_gas_price
+            tx_details[{2: "maxFeePerGas", 1: "gasPrice"}[tx_details["type"]]] = current_gas_price
             tx = function.build_transaction(tx_details)
 
         return tx, current_gas_price, block["number"]
