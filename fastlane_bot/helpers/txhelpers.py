@@ -17,7 +17,6 @@ from typing import List, Any, Dict
 
 import requests
 from alchemy import Network, Alchemy
-from alchemy.exceptions import AlchemyError
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
@@ -41,24 +40,20 @@ class TxHelpers:
     ConfigObj: Config
 
     def __post_init__(self):
-        if self.ConfigObj.network.DEFAULT_PROVIDER != "tenderly":
-            self.alchemy = Alchemy(
-                api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID,
-                network=Network.ETH_MAINNET,
-                max_retries=3,
-            )
-        else:
-            self.alchemy = None
-
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-
+        self.use_tenderly = self.ConfigObj.network.DEFAULT_PROVIDER == "tenderly"
         self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
+        self.access_lists = self.ConfigObj.NETWORK in ["ethereum"]
 
-        # Set the wallet address
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
         else:
             self.wallet_address = str(self.ConfigObj.w3.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).address)
+
+        if self.use_tenderly:
+            self.alchemy = None
+        else:
+            self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=Network.ETH_MAINNET, max_retries=3)
 
     def validate_and_submit_transaction(
         self,
@@ -107,36 +102,17 @@ class TxHelpers:
             )
             return None
 
-        try:
-            if self.ConfigObj.NETWORK_NAME in "ethereum":
-                response = requests.post(
-                    self.ConfigObj.RPC_URL,
-                    json = {
-                        "id": 1,
-                        "jsonrpc": "2.0",
-                        "method": "eth_createAccessList",
-                        "params": [
-                            {
-                                "from": self.wallet_address,
-                                "to": self.arb_contract.address,
-                                "gas": estimated_gas,
-                                "data": tx["data"]
-                            }
-                        ]
-                    }
-                )
-
-                access_list = loads(response.text)["result"]["accessList"]
+        if self.access_lists:
+            try:
+                access_list = self._create_access_list(tx, estimated_gas)
                 tx_after = dict(tx, {"accessList": access_list})
-
                 estimated_gas_after = self.ConfigObj.w3.eth.estimate_gas(transaction=tx_after) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
                 if estimated_gas > estimated_gas_after:
                     estimated_gas = estimated_gas_after
                     tx = tx_after
-
                 self.ConfigObj.logger.debug(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
-        except Exception as e:
-            self.ConfigObj.logger.info(f"Applying access list to transaction failed with {e}")
+            except Exception as e:
+                self.ConfigObj.logger.info(f"Applying access list to transaction failed with {e}")
 
         tx["gas"] = estimated_gas
 
@@ -156,7 +132,7 @@ class TxHelpers:
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
 
-        gas_gain_eth = Decimal(Decimal(expected_profit_gastkn) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARD_PERCENTAGE
         gas_gain_usd = gas_gain_eth * expected_profit_usd / expected_profit_gastkn
 
         transaction_log = {
@@ -177,31 +153,16 @@ class TxHelpers:
 
         if gas_gain_eth > gas_cost_eth:
             self.ConfigObj.logger.info("Attempting to execute profitable arb transaction...")
-
-            if self.alchemy is not None:
-                try:
-                    response = self.alchemy.core.provider.make_request(
-                        method="eth_sendPrivateTransaction",
-                        params=[
-                            {
-                                "tx": signed_tx.rawTransaction.hex(),
-                                "maxBlockNumber": block_number + 10,
-                                "preferences": {"fast": True},
-                            }
-                        ],
-                        method_name="eth_sendPrivateTransaction",
-                        headers={"accept": "application/json", "content-type": "application/json"},
-                    )
-                except AlchemyError as e:
-                    self.ConfigObj.logger.info(f"Private transaction request failed with {e}")
-                    return None
-                tx_hash = response.get("result")
-            else:
-                tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-
+            try:
+                if self.use_tenderly:
+                    tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                else:
+                    tx_hash = self._send_private_transaction(signed_tx, block_number)
+            except Exception as e:
+                self.ConfigObj.logger.info(f"Transaction execution failed with {e}")
+                return None
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
-
         else:
             self.ConfigObj.logger.info("Not attempting to execute non-profitable arb transaction...")
             return None
@@ -268,6 +229,40 @@ class TxHelpers:
                     break
 
         return tx, current_gas_price, block["number"]
+
+    def _create_access_list(self, tx, estimated_gas):
+        response = requests.post(
+            self.ConfigObj.RPC_URL,
+            json = {
+                "id": 1,
+                "jsonrpc": "2.0",
+                "method": "eth_createAccessList",
+                "params": [
+                    {
+                        "from": self.wallet_address,
+                        "to": self.arb_contract.address,
+                        "gas": estimated_gas,
+                        "data": tx["data"]
+                    }
+                ]
+            }
+        )
+        return loads(response.text)["result"]["accessList"]
+
+    def _send_private_transaction(self, signed_tx, block_number):
+        response = self.alchemy.core.provider.make_request(
+            method="eth_sendPrivateTransaction",
+            params=[
+                {
+                    "tx": signed_tx.rawTransaction.hex(),
+                    "maxBlockNumber": block_number + 10,
+                    "preferences": {"fast": True},
+                }
+            ],
+            method_name="eth_sendPrivateTransaction",
+            headers={"accept": "application/json", "content-type": "application/json"},
+        )
+        return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash):
         try:
