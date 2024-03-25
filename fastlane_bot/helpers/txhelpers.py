@@ -63,7 +63,7 @@ class TxHelpers:
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
         log_object: Dict[str, Any],
-        flashloan_struct: List[Dict[str, int or str]],
+        flashloan_struct: List[Dict],
     ) -> str:
         """
         Validates and submits a transaction to the arb contract.
@@ -198,13 +198,7 @@ class TxHelpers:
         }
 
         if self.use_eip_1559:
-            response = requests.post(
-                self.ConfigObj.RPC_URL,
-                json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
-                headers={"accept": "application/json", "content-type": "application/json"},
-            )
-            result = int(loads(response.text)["result"].split("0x")[1], 16)
-            max_priority_fee_per_gas = int(result * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+            max_priority_fee_per_gas = int(self._max_priority_fee_per_gas() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
             current_gas_price = base_fee_per_gas + max_priority_fee_per_gas
             current_gas_price_key = "maxFeePerGas"
             tx_details["type"] = 2
@@ -229,6 +223,14 @@ class TxHelpers:
                     break
 
         return tx, current_gas_price, block["number"]
+
+    def _max_priority_fee_per_gas(self):
+        response = requests.post(
+            self.ConfigObj.RPC_URL,
+            json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
+            headers={"accept": "application/json", "content-type": "application/json"},
+        )
+        return int(loads(response.text)["result"].split("0x")[1], 16)
 
     def _create_access_list(self, tx, estimated_gas):
         response = requests.post(
