@@ -232,7 +232,7 @@ CLEOPATRA_V2_FACTORY_ABI = [
         "type": "event",
         "name": "PairCreated",
         "anonymous": False,
-        "inputs": [{"type": "address", "name": "token0", "internalType": "address", "indexed": True}, {"type": "address", "name": "token1", "internalType": "address", "indexed": True}, {"type": "bool", "name": "stable", "internalType": "bool", "indexed": False}, {"type": "address", "name": "pair", "internalType": "address", "indexed": False}, {"type": "uint256", "name": "", "internalType": "uint256", "indexed": False}]
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
         "type": "function",
