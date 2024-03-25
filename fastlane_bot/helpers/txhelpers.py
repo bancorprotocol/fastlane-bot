@@ -92,6 +92,8 @@ class TxHelpers:
             value = 0
 
         tx, current_gas_price, block_number = self._build_transaction(function=function, value=value)
+        if tx is None:
+            return None
 
         try:
             estimated_gas = self.ConfigObj.w3.eth.estimate_gas(transaction=tx) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
@@ -216,13 +218,14 @@ class TxHelpers:
             if allowance == 0:
                 function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
                 tx, _, _ = self._build_transaction(function=function, value=0)
-                signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
-                tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-                self._wait_for_transaction_receipt(tx_hash)
+                if tx is not None:
+                    signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+                    tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                    self._wait_for_transaction_receipt(tx_hash)
 
     def _build_transaction(self, function, value):
         nonce = self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address)
-        block = self.ConfigObj.w3.eth.get_block("latest")
+        block = self.ConfigObj.w3.eth.get_block("pending")
         base_fee_per_gas = block["baseFeePerGas"]
 
         if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
@@ -256,9 +259,13 @@ class TxHelpers:
             tx = function.build_transaction(tx_details)
         except Exception as e:
             self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
-            current_gas_price = int_prefix(str(e).split("baseFee: ")[1])
-            tx_details[{2: "maxFeePerGas", 1: "gasPrice"}[tx_details["type"]]] = current_gas_price
-            tx = function.build_transaction(tx_details)
+            message_parts = str(e).split("baseFee: ")
+            if len(message_parts) > 1:
+                current_gas_price = int_prefix(message_parts[1])
+                tx_details[{2: "maxFeePerGas", 1: "gasPrice"}[tx_details["type"]]] = current_gas_price
+                tx = function.build_transaction(tx_details)
+            else:
+                tx = None
 
         return tx, current_gas_price, block["number"]
 
