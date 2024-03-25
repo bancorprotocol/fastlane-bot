@@ -13,10 +13,11 @@ from _decimal import Decimal
 
 from json import loads
 from dataclasses import dataclass
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict
 
 import requests
 from alchemy import Network, Alchemy
+from alchemy.exceptions import AlchemyError
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
@@ -40,16 +41,18 @@ class TxHelpers:
     ConfigObj: Config
 
     def __post_init__(self):
-
         if self.ConfigObj.network.DEFAULT_PROVIDER != "tenderly":
             self.alchemy = Alchemy(
                 api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID,
                 network=Network.ETH_MAINNET,
                 max_retries=3,
             )
+        else:
+            self.alchemy = None
+
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
 
-        # Set the public address
+        # Set the wallet address
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
         else:
@@ -64,374 +67,140 @@ class TxHelpers:
         expected_profit_usd: Decimal,
         log_object: Dict[str, Any],
         flashloan_struct: List[Dict[str, int or str]],
-    ) -> Optional[Dict[str, Any]]:
+    ) -> str:
         """
         Validates and submits a transaction to the arb contract.
         """
 
-        self.ConfigObj.logger.info(
-            "[helpers.txhelpers.validate_and_submit_transaction] Validating trade..."
-        )
+        self.ConfigObj.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
         self.ConfigObj.logger.debug(
-            f"[helpers.txhelpers.validate_and_submit_transaction] \nRoute to execute: routes: {route_struct}, sourceAmount: {src_amt}, source token: {src_address}, expected profit in GAS TOKEN: {num_format(expected_profit_gastkn)} \n\n"
+            f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
+            f"- Routes: {route_struct}\n"
+            f"- Source amount: {src_amt}\n"
+            f"- Source token: {src_address}\n"
+            f"- Expected profit in GAS token: {num_format(expected_profit_gastkn)}\n"
         )
 
-        # Get pending block
-        pending_block = self.ConfigObj.w3.eth.get_block("pending")
+        if self.ConfigObj.SELF_FUND:
+            function = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
+            value = src_amt if src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
+        elif flashloan_struct is None:
+            function = self.arb_contract.functions.flashloanAndArb(route_struct, src_address, src_amt)
+            value = 0
+        else:
+            function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
+            value = 0
 
-        arb_tx = self.build_transaction_with_gas(
-            routes=route_struct,
-            src_address=src_address,
-            src_amt=src_amt,
-            gas_price=pending_block.get("baseFeePerGas"),
-            max_priority=int(self.get_max_priority_fee_per_gas_alchemy() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET),
-            nonce=self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address),
-            flashloan_struct=flashloan_struct
-        )
+        tx, current_gas_price, block_number = self._build_transaction(function=function, value=value)
 
-        if arb_tx is None:
-            self.ConfigObj.logger.info(
-                "[helpers.txhelpers.validate_and_submit_transaction] Failed to construct trade. "
-                "This is expected to happen occasionally, discarding..."
+        try:
+            estimated_gas = self.ConfigObj.w3.eth.estimate_gas(transaction=tx) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+        except Exception as e:
+            self.ConfigObj.logger.warning(
+                f"Failed to estimate gas for transaction because the transaction is likely fail.\n"
+                f"Most often this is due to an arb opportunity already being closed, but it can include other bugs\n."
+                f"This is expected to happen occasionally, discarding; exception: {e}"
             )
             return None
 
-        gas_estimate = arb_tx["gas"]
+        try:
+            if self.ConfigObj.NETWORK_NAME in "ethereum":
+                response = requests.post(
+                    self.ConfigObj.RPC_URL,
+                    json = {
+                        "id": 1,
+                        "jsonrpc": "2.0",
+                        "method": "eth_createAccessList",
+                        "params": [
+                            {
+                                "from": self.wallet_address,
+                                "to": self.arb_contract.address,
+                                "gas": estimated_gas,
+                                "data": tx["data"]
+                            }
+                        ]
+                    }
+                )
 
-        current_gas_price = arb_tx["maxFeePerGas" if "maxFeePerGas" in arb_tx else "gasPrice"]
+                access_list = loads(response.text)["result"]["accessList"]
+                tx_after = dict(tx, {"accessList": access_list})
 
-        signed_arb_tx = self.ConfigObj.w3.eth.account.sign_transaction(arb_tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+                estimated_gas_after = self.ConfigObj.w3.eth.estimate_gas(transaction=tx_after) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+                if estimated_gas > estimated_gas_after:
+                    estimated_gas = estimated_gas_after
+                    tx = tx_after
 
-        gas_cost_wei = int(current_gas_price * gas_estimate * self.ConfigObj.EXPECTED_GAS_MODIFIER)
+                self.ConfigObj.logger.debug(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
+        except Exception as e:
+            self.ConfigObj.logger.info(f"Applying access list to transaction failed with {e}")
+
+        tx["gas"] = estimated_gas
+
+        signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+
+        gas_cost_wei = int(current_gas_price * estimated_gas * self.ConfigObj.EXPECTED_GAS_MODIFIER)
 
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += asyncio.get_event_loop().run_until_complete(
-                asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(signed_arb_tx.rawTransaction))
+                asyncio.gather(
+                    self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(
+                        signed_tx.rawTransaction
+                    )
+                )
             )
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
-
-        # Gas cost in usd can be estimated using the profit usd/eth rate
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
 
-        # Multiply by reward percentage, taken from the arb contract
-        adjusted_reward_eth = Decimal(Decimal(expected_profit_gastkn) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
-        adjusted_reward_usd = adjusted_reward_eth * expected_profit_usd / expected_profit_gastkn
+        gas_gain_eth = Decimal(Decimal(expected_profit_gastkn) * Decimal(self.ConfigObj.ARB_REWARD_PERCENTAGE))
+        gas_gain_usd = gas_gain_eth * expected_profit_usd / expected_profit_gastkn
 
         transaction_log = {
-            "block_number": pending_block["number"],
-            "gas": gas_estimate,
-            "max_gas_fee_wei": current_gas_price,
+            "block_number": block_number,
             "gas_cost_eth": num_format_float(gas_cost_eth),
-            "gas_cost_usd": +num_format_float(gas_cost_usd),
+            "gas_cost_usd": num_format_float(gas_cost_usd),
+            "tx": tx
         }
 
-        if "maxPriorityFeePerGas" in arb_tx:
-            transaction_log["base_fee_wei"] = current_gas_price - arb_tx["maxPriorityFeePerGas"]
-            transaction_log["priority_fee_wei"] = arb_tx["maxPriorityFeePerGas"]
+        self.ConfigObj.logger.info(log_format(log_data={**log_object, **transaction_log}, log_name="arb_with_gas"))
 
-        log_json = {**log_object, **transaction_log}
+        self.ConfigObj.logger.info(
+            f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
+            f"- Expected gain: {num_format(gas_gain_eth)} GAS token ({num_format(gas_gain_usd)} USD)\n"
+            f"- Expected cost: {num_format(gas_cost_eth)} GAS token ({num_format(gas_cost_usd)} USD)\n"
+            f"- Expected cost of {num_format(gas_cost_eth)} GAS token\n"
+        )
 
-        self.ConfigObj.logger.info(log_format(log_data=log_json, log_name="arb_with_gas"))
+        if gas_gain_eth > gas_cost_eth:
+            self.ConfigObj.logger.info("Attempting to execute profitable arb transaction...")
 
-        if adjusted_reward_eth > gas_cost_eth:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward_eth)} GAS TOKEN vs cost of {num_format(gas_cost_eth)} GAS TOKEN in gas, executing arb."
-            )
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Expected reward of {num_format(adjusted_reward_usd)} USD vs cost of {num_format(gas_cost_usd)} USD in gas, executing arb."
-            )
-
-            # Submit the transaction
-            if "tenderly" in self.ConfigObj.w3.provider.endpoint_uri or self.ConfigObj.NETWORK != "ethereum":
-                tx_hash = self.submit_regular_transaction(signed_arb_tx)
-            else:
-                tx_hash = self.submit_private_transaction(signed_arb_tx, pending_block["number"])
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Arbitrage executed, tx hash: {tx_hash}"
-            )
-            return tx_hash
-        else:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward_eth)} GAS TOKEN vs gas cost of {num_format(gas_cost_eth)} GAS TOKEN. Abort, abort!\n\n"
-            )
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.validate_and_submit_transaction] Gas price too expensive! profit of {num_format(adjusted_reward_usd)} USD vs gas cost of {num_format(gas_cost_usd)} USD. Abort, abort!\n\n"
-            )
-            return None
-
-    def get_access_list(self, transaction_data, expected_gas):
-        json_data = {
-            "id": 1,
-            "jsonrpc": "2.0",
-            "method": "eth_createAccessList",
-            "params": [
-                {
-                    "from": self.wallet_address,
-                    "to": self.arb_contract.address,
-                    "gas": expected_gas,
-                    "data": transaction_data
-                }
-            ]
-        }
-        response = requests.post(self.ConfigObj.RPC_URL, json=json_data)
-        return loads(response.text)["result"]["accessList"]
-
-    def construct_contract_function(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        gas_price: int,
-        max_priority: int,
-        nonce: int,
-        flashloan_struct=None,
-    ):
-        """
-        Builds the transaction using the Arb Contract function. This version can generate transactions using flashloanAndArb and flashloanAndArbV2.
-
-        routes: the routes to be used in the transaction
-        src_amt: the amount of the source token to be sent to the transaction
-        gas_price: the gas price to be used in the transaction
-
-        returns: the transaction function ready to be submitted
-        """
-        if self.ConfigObj.SELF_FUND:
-            return self._build_transaction(
-                function_call=self.arb_contract.functions.fundAndArb(routes, src_address, src_amt),
-                base_gas_price=gas_price,
-                max_priority_fee=max_priority,
-                nonce=nonce,
-                value=src_amt if src_address in self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
-            )
-
-        elif flashloan_struct is None:
-            return self._build_transaction(
-                function_call=self.arb_contract.functions.flashloanAndArb(routes, src_address, src_amt),
-                base_gas_price=gas_price,
-                max_priority_fee=max_priority,
-                nonce=nonce
-            )
-
-        else:
-            return self._build_transaction(
-                function_call=self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, routes),
-                base_gas_price=gas_price,
-                max_priority_fee=max_priority,
-                nonce=nonce
-            )
-
-    def build_transaction_with_gas(
-        self,
-        routes: List[Dict[str, Any]],
-        src_amt: int,
-        src_address: str,
-        gas_price: int,
-        max_priority: int,
-        nonce: int,
-        access_list: bool = True,
-        flashloan_struct: List[Dict[str, int or str]] = None,
-    ):
-        """
-        Builds the transaction to be submitted to the blockchain.
-
-        routes: the routes to be used in the transaction
-        src_amt: the amount of the source token to be sent to the transaction
-        gas_price: the gas price to be used in the transaction
-
-        returns: the transaction to be submitted to the blockchain
-        """
-
-        try:
-            transaction = self.construct_contract_function(
-                routes=routes,
-                src_amt=src_amt,
-                src_address=src_address,
-                gas_price=gas_price,
-                max_priority=max_priority,
-                nonce=nonce,
-                flashloan_struct=flashloan_struct,
-            )
-        except Exception as e:
-            self.ConfigObj.logger.debug(
-                f"[helpers.txhelpers.build_transaction_with_gas] Error when building transaction: {e.__class__.__name__} {e}"
-            )
-            if "max fee per gas less than block base fee" in str(e):
+            if self.alchemy is not None:
                 try:
-                    message = str(e)
-                    baseFee = int_prefix(message.split("baseFee: ")[1])
-                    transaction = self.construct_contract_function(
-                        routes=routes,
-                        src_amt=src_amt,
-                        src_address=src_address,
-                        gas_price=baseFee,
-                        max_priority=max_priority,
-                        nonce=nonce,
-                        flashloan_struct=flashloan_struct,
+                    response = self.alchemy.core.provider.make_request(
+                        method="eth_sendPrivateTransaction",
+                        params=[
+                            {
+                                "tx": signed_tx.rawTransaction.hex(),
+                                "maxBlockNumber": block_number + 10,
+                                "preferences": {"fast": True},
+                            }
+                        ],
+                        method_name="eth_sendPrivateTransaction",
+                        headers={"accept": "application/json", "content-type": "application/json"},
                     )
-                except Exception as e:
-                    self.ConfigObj.logger.warning(
-                        f"[helpers.txhelpers.build_transaction_with_gas] (***1***) \n"
-                        f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
-                    )
+                except AlchemyError as e:
+                    self.ConfigObj.logger.info(f"Private transaction request failed with {e}")
                     return None
+                tx_hash = response.get("result")
             else:
-                self.ConfigObj.logger.info(f"gas_price = {gas_price}, max_priority = {max_priority}")
-                self.ConfigObj.logger.warning(
-                    f"[helpers.txhelpers.build_transaction_with_gas] (***2***) \n"
-                    f"Error when building transaction, this is expected to happen occasionally, discarding. Exception: {e.__class__.__name__} {e}"
-                )
-                return None
+                tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
-        try:
-            estimated_gas = self.ConfigObj.w3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
-        except Exception as e:
-            self.ConfigObj.logger.warning(
-                f"[helpers.txhelpers.build_transaction_with_gas] Failed to estimate gas for transaction because the "
-                f"transaction is likely fail. Most often this is due to an arb opportunity already being closed, "
-                f"but it can include other bugs. This is expected to happen occasionally, discarding. Exception: {e}"
-            )
-            return None
-
-        try:
-            if access_list and self.ConfigObj.NETWORK_NAME in "ethereum":
-                transaction["accessList"] = self.get_access_list(transaction_data=transaction["data"], expected_gas=estimated_gas)
-                self.ConfigObj.logger.debug(
-                    f"[helpers.txhelpers.build_transaction_with_gas] Transaction after access list: {transaction}"
-                )
-                estimated_gas_after = self.ConfigObj.w3.eth.estimate_gas(transaction=transaction) + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
-                self.ConfigObj.logger.debug(
-                    f"[helpers.txhelpers.build_transaction_with_gas] gas before access list: {estimated_gas}, after access list: {estimated_gas_after}"
-                )
-                if estimated_gas > estimated_gas_after:
-                    estimated_gas = estimated_gas_after
-        except Exception as e:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.build_transaction_with_gas] Failed to apply access list to transaction. Exception: {e}"
-            )
-
-        transaction["gas"] = estimated_gas
-        return transaction
-
-    def _build_transaction(
-            self,
-            function_call,
-            nonce: int,
-            base_gas_price: int = 0,
-            max_priority_fee: int = 0,
-            value: int = 0
-    ) -> Any:
-        """
-        Builds the transaction to be submitted to the blockchain.
-
-        maxFeePerGas: the maximum gas price to be paid for the transaction
-        maxPriorityFeePerGas: the maximum miner tip to be given for the transaction
-        value: The amount of ETH to send - only relevant if not using Flashloans
-        The following condition must be met:
-        maxFeePerGas <= baseFee + maxPriorityFeePerGas
-
-        returns: the transaction to be submitted to the blockchain
-        """
-
-        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
-            tx_details = {
-                "type": 2,
-                "maxFeePerGas": base_gas_price + max_priority_fee,
-                "maxPriorityFeePerGas": max_priority_fee,
-                "from": self.wallet_address,
-                "nonce": nonce,
-                "value": value
-            }
-        else:
-            tx_details =  {
-                "type": 1,
-                "gasPrice": base_gas_price + max_priority_fee,
-                "from": self.wallet_address,
-                "nonce": nonce,
-                "value": value
-            }
-
-        return function_call.build_transaction(tx_details)
-
-    def submit_regular_transaction(self, signed_tx) -> str:
-        """
-        Submits the transaction to the blockchain.
-
-        :param signed_tx: the signed transaction to be submitted to the blockchain
-
-        returns: the transaction hash of the submitted transaction
-        """
-
-        self.ConfigObj.logger.info(
-            f"[helpers.txhelpers.submit_regular_transaction] Attempting to submit transaction {signed_tx}"
-        )
-
-        return self._submit_transaction(self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction))
-
-    def submit_private_transaction(self, signed_tx, block_number: int) -> str:
-        """
-        Submits the transaction privately through Alchemy -> Flashbots RPC to mitigate frontrunning.
-
-        :param signed_tx: the signed transaction to be submitted to the blockchain
-        :param block_number: the current block number
-
-        returns: The transaction receipt, or None if the transaction failed
-        """
-
-        self.ConfigObj.logger.info(
-            f"[helpers.txhelpers.submit_private_transaction] Attempting to submit transaction to Flashbots"
-        )
-
-        params = [
-            {
-                "tx": signed_tx.rawTransaction.hex(),
-                "maxBlockNumber": hex(block_number + 10),
-                "preferences": {"fast": True},
-            }
-        ]
-
-        response = self.alchemy.core.provider.make_request(
-            method="eth_sendPrivateTransaction",
-            params=params,
-            method_name="eth_sendPrivateTransaction",
-            headers={"accept": "application/json", "content-type": "application/json"},
-        )
-
-        if response != 400:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.submit_private_transaction] Submitted transaction to Flashbots succeeded"
-            )
-            return self._submit_transaction(response.get("result"))
-        else:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers.submit_private_transaction] Submitted transaction to Flashbots failed with response = {response}"
-            )
-            return None
-
-    def _submit_transaction(self, tx_hash) -> str:
-        try:
-            tx_receipt = self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx_hash)
-            assert tx_hash == tx_receipt["transactionHash"]
+            self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
-        except TimeExhausted as e:
-            self.ConfigObj.logger.info(
-                f"[helpers.txhelpers._submit_transaction] Transaction timeout (stuck in mempool); moving on"
-            )
+
+        else:
+            self.ConfigObj.logger.info("Not attempting to execute non-profitable arb transaction...")
             return None
-
-    def get_max_priority_fee_per_gas_alchemy(self) -> int:
-        """
-        Queries the Alchemy API to get an estimated max priority fee per gas
-        """
-        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
-            return 0
-
-        response = requests.post(
-            self.ConfigObj.RPC_URL,
-            json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
-            headers={"accept": "application/json", "content-type": "application/json"},
-        )
-        return int(loads(response.text)["result"].split("0x")[1], 16)
 
     def check_and_approve_tokens(self, tokens: List):
         """
@@ -444,33 +213,60 @@ class TxHelpers:
             token_contract = self.ConfigObj.w3.eth.contract(address=token_address, abi=ERC20_ABI)
             allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
             self.ConfigObj.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
-            if allowance > 0:
-                continue
+            if allowance == 0:
+                function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
+                tx, _, _ = self._build_transaction(function=function, value=0)
+                signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+                tx_hash = self.ConfigObj.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                self._wait_for_transaction_receipt(tx_hash)
 
-            base_gas_price = self.ConfigObj.w3.eth.get_block("pending").get("baseFeePerGas")
-            max_priority_fee = self.get_max_priority_fee_per_gas_alchemy()
-            nonce = self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address)
+    def _build_transaction(self, function, value):
+        nonce = self.ConfigObj.w3.eth.get_transaction_count(self.wallet_address)
+        block = self.ConfigObj.w3.eth.get_block("latest")
+        base_fee_per_gas = block["baseFeePerGas"]
 
-            for attempt in [1, 2]:
-                tx = self._build_transaction(
-                    function_call=token_contract.functions.approve(self.arb_contract.address, MAX_UINT256),
-                    base_gas_price=base_gas_price,
-                    max_priority_fee=max_priority_fee,
-                    nonce=nonce
-                )
+        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
+            response = requests.post(
+                self.ConfigObj.RPC_URL,
+                json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
+                headers={"accept": "application/json", "content-type": "application/json"},
+            )
+            result = int(loads(response.text)["result"].split("0x")[1], 16)
+            max_priority_fee_per_gas = int(result * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+            current_gas_price = base_fee_per_gas + max_priority_fee_per_gas
+            tx_details = {
+                "type": 2,
+                "nonce": nonce,
+                "value": value,
+                "from": self.wallet_address,
+                "maxFeePerGas": current_gas_price,
+                "maxPriorityFeePerGas": max_priority_fee_per_gas,
+            }
+        else:
+            current_gas_price = base_fee_per_gas
+            tx_details = {
+                "type": 1,
+                "nonce": nonce,
+                "value": value,
+                "from": self.wallet_address,
+                "gasPrice": current_gas_price,
+            }
 
-                self.ConfigObj.logger.info(f"Attempt {attempt} for approving token {token_address}")
+        try:
+            tx = function.build_transaction(tx_details)
+        except Exception as e:
+            self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
+            current_gas_price = int_prefix(str(e).split("baseFee: ")[1])
+            tx_details["maxFeePerGas"] = current_gas_price
+            tx_details["gasPrice"] = current_gas_price
+            tx = function.build_transaction(tx_details)
 
-                try:
-                    signed_tx = self.ConfigObj.w3.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
-                    tx_hash = self.submit_regular_transaction(signed_tx)
-                    break
-                except Exception as e:
-                    self.ConfigObj.logger.info(f"Attempt {attempt} failed: {e.__class__.__name__} {e}")
-                    if "max fee per gas less than block base fee" in str(e):
-                        base_gas_price = int_prefix(str(e).split("baseFee: ")[1])
-                    else:
-                        tx_hash = None
-                        break
+        return tx, current_gas_price, block["number"]
 
-                assert tx_hash is not None, f"Failed to approve token {token_address}"
+    def _wait_for_transaction_receipt(self, tx_hash):
+        try:
+            tx_receipt = self.ConfigObj.w3.eth.wait_for_transaction_receipt(tx_hash)
+            assert tx_hash == tx_receipt["transactionHash"]
+            self.ConfigObj.logger.info(f"Transaction {tx_hash} completed")
+        except TimeExhausted as e:
+            self.ConfigObj.logger.info(f"Transaction {tx_hash} timeout (stuck in mempool); moving on")
