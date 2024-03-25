@@ -131,9 +131,9 @@ class TxHelpers:
             )
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
-        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
-
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
+
+        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
         gas_gain_usd = expected_profit_usd * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
 
         self.ConfigObj.logger.info(
