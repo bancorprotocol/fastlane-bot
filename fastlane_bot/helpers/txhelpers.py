@@ -21,7 +21,7 @@ from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
+from fastlane_bot.utils import num_format, log_format, int_prefix
 
 nest_asyncio.apply()
 
@@ -131,10 +131,10 @@ class TxHelpers:
             )
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
-        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARD_PERCENTAGE
+        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
 
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
-        gas_gain_usd = gas_gain_eth * expected_profit_usd / expected_profit_gastkn
+        gas_gain_usd = expected_profit_usd * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
 
         self.ConfigObj.logger.info(
             log_format(

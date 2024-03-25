@@ -4,8 +4,6 @@ Fastlane bot config -- provider
 __VERSION__ = "0.9.1"
 __DATE__ = "30/Apr 2023"
 
-from web3.contract import Contract
-
 from .base import ConfigBase
 from . import selectors as S
 from .network import ConfigNetwork
@@ -139,16 +137,11 @@ class _ConfigProviderAlchemy(ConfigProvider):
 
         if self.BANCOR_ARBITRAGE_CONTRACT is not None:
             try:
-                (
-                    reward_percent,
-                    max_profit,
-                ) = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
-                self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-                self.ARB_MAX_PROFIT = 1000000  # This is no longer used
+                self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
             except:
-                self.ARB_REWARD_PERCENTAGE = "0.5"
+                self.ARB_REWARDS_PPM = 500_000
         else:
-            self.ARB_REWARD_PERCENTAGE = "0.5"
+            self.ARB_REWARDS_PPM = 500_000
 
         self.EXPECTED_GAS_MODIFIER = "0.85"
 
@@ -190,12 +183,9 @@ class _ConfigProviderTenderly(ConfigProvider):
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
+
         self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-
-        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
-
-        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-        self.ARB_MAX_PROFIT = str(int(max_profit) / (10**18))
+        self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
 class _ConfigProviderInfura(ConfigProvider):
