@@ -90,7 +90,7 @@ EXCHANGE_INFO = {
     "aerodrome_v2": {"decimals": 4, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "velodrome_v2": {"decimals": 4, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_3},
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
-    "cleopatra_v2": {"decimals": 18, "factory_abi": CLEOPATRA_V2_FACTORY_ABI, "pool_abi": CLEOPATRA_V2_POOL_ABI, "fee_function": get_fee_4},
+    "cleopatra_v2": {"decimals": 4, "factory_abi": CLEOPATRA_V2_FACTORY_ABI, "pool_abi": CLEOPATRA_V2_POOL_ABI, "fee_function": get_fee_4},
     "stratum_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
 }
 
