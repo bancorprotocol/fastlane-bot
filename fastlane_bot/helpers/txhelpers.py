@@ -35,20 +35,16 @@ class TxHelpers:
 
     def __post_init__(self):
         self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.use_tenderly = self.ConfigObj.network.DEFAULT_PROVIDER == "tenderly"
+        self.use_tenderly = self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY
         self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
         self.access_lists = self.ConfigObj.NETWORK in ["ethereum"]
         self.arb_rewards = Decimal(self.ConfigObj.ARB_REWARDS_PPM / 1_000_000)
         self.eth = self.ConfigObj.w3.eth
 
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
+        if self.use_tenderly:
             self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
         else:
             self.wallet_address = str(self.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).address)
-
-        if self.use_tenderly:
-            self.alchemy = None
-        else:
             self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=Network.ETH_MAINNET, max_retries=3)
 
     def validate_and_submit_transaction(
