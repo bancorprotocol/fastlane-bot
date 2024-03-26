@@ -7,23 +7,17 @@ Licensed under MIT
 __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
 
-import asyncio
-import nest_asyncio
 from _decimal import Decimal
 
-from json import loads
 from dataclasses import dataclass
 from typing import List, Any, Dict
 
-import requests
 from alchemy import Network, Alchemy
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.utils import num_format, log_format, int_prefix
-
-nest_asyncio.apply()
 
 MAX_UINT256 = 2 ** 256 - 1
 ETH_DECIMALS = 10 ** 18
@@ -44,6 +38,7 @@ class TxHelpers:
         self.use_tenderly = self.ConfigObj.network.DEFAULT_PROVIDER == "tenderly"
         self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
         self.access_lists = self.ConfigObj.NETWORK in ["ethereum"]
+        self.arb_rewards = Decimal(self.ConfigObj.ARB_REWARDS_PPM / 1_000_000)
         self.eth = self.ConfigObj.w3.eth
 
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
@@ -89,7 +84,7 @@ class TxHelpers:
             function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
             value = 0
 
-        tx, current_gas_price, block_number = self._build_transaction(function=function, value=value)
+        tx, current_gas_price = self._build_transaction(function=function, value=value)
         if tx is None:
             return None
 
@@ -105,8 +100,8 @@ class TxHelpers:
 
         if self.access_lists:
             try:
-                access_list = self._create_access_list(tx["data"])
-                tx_after = dict(tx, {"accessList": access_list})
+                access_list = self.eth.create_access_list({"from": self.wallet_address, "to": self.arb_contract.address, "data": tx["data"]})
+                tx_after = {**tx, "accessList": access_list}
                 estimated_gas_after = self.eth.estimate_gas(transaction=tx_after)
                 if estimated_gas > estimated_gas_after:
                     estimated_gas = estimated_gas_after
@@ -117,31 +112,19 @@ class TxHelpers:
 
         tx["gas"] = estimated_gas + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
 
-        signed_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
+        raw_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
         gas_cost_wei = int(current_gas_price * estimated_gas * self.ConfigObj.EXPECTED_GAS_MODIFIER)
-
         if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            gas_cost_wei += asyncio.get_event_loop().run_until_complete(
-                asyncio.gather(
-                    self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(
-                        signed_tx.rawTransaction
-                    )
-                )
-            )
+            gas_cost_wei += self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
 
-        gas_gain_eth = expected_profit_gastkn * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
-        gas_gain_usd = expected_profit_usd * self.ConfigObj.ARB_REWARDS_PPM / 1_000_000
+        gas_gain_eth = self.arb_rewards * expected_profit_gastkn
+        gas_gain_usd = self.arb_rewards * expected_profit_usd
 
-        self.ConfigObj.logger.info(
-            log_format(
-                log_name="arb_with_gas",
-                log_data={**log_object, "block_number": block_number, "tx": tx}
-            )
-        )
+        self.ConfigObj.logger.info(log_format(log_name="arb_with_gas", log_data={**log_object, "tx": tx}))
 
         self.ConfigObj.logger.info(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
@@ -153,9 +136,9 @@ class TxHelpers:
             self.ConfigObj.logger.info("Attempting to execute profitable arb transaction")
             try:
                 if self.use_tenderly:
-                    tx_hash = self.eth.send_raw_transaction(signed_tx.rawTransaction)
+                    tx_hash = self.eth.send_raw_transaction(raw_tx)
                 else:
-                    tx_hash = self._send_private_transaction(signed_tx, block_number)
+                    tx_hash = self._send_private_transaction(raw_tx)
             except Exception as e:
                 self.ConfigObj.logger.info(f"Transaction execution failed with {e}")
                 return None
@@ -178,33 +161,28 @@ class TxHelpers:
             self.ConfigObj.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
                 function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
-                tx, _, _ = self._build_transaction(function=function, value=0)
+                tx, _ = self._build_transaction(function=function, value=0)
                 if tx is not None:
-                    signed_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL)
-                    tx_hash = self.eth.send_raw_transaction(signed_tx.rawTransaction)
+                    raw_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+                    tx_hash = self.eth.send_raw_transaction(raw_tx)
                     self._wait_for_transaction_receipt(tx_hash)
 
     def _build_transaction(self, function, value):
-        nonce = self.eth.get_transaction_count(self.wallet_address)
-        block = self.eth.get_block("pending")
-        base_fee_per_gas = block["baseFeePerGas"]
-
         tx_details = {
-            "nonce": nonce,
+            "from": self.wallet_address,
             "value": value,
-            "from": self.wallet_address
+            "nonce": self.eth.get_transaction_count(self.wallet_address)
         }
 
         if self.use_eip_1559:
-            max_priority_fee_per_gas = int(self._max_priority_fee_per_gas() * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
-            current_gas_price = base_fee_per_gas + max_priority_fee_per_gas
-            current_gas_price_key = "maxFeePerGas"
             tx_details["type"] = 2
-            tx_details["maxPriorityFeePerGas"] = max_priority_fee_per_gas
+            tx_details["maxPriorityFeePerGas"] = int(self.eth.max_priority_fee * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+            current_gas_price_key = "maxFeePerGas"
+            current_gas_price = self.eth.gas_price + tx_details["maxPriorityFeePerGas"]
         else:
-            current_gas_price = base_fee_per_gas
-            current_gas_price_key = "gasPrice"
             tx_details["type"] = 1
+            current_gas_price_key = "gasPrice"
+            current_gas_price = self.eth.gas_price
 
         while True:
             tx_details[current_gas_price_key] = current_gas_price
@@ -220,44 +198,12 @@ class TxHelpers:
                     tx = None
                     break
 
-        return tx, current_gas_price, block["number"]
+        return tx, current_gas_price
 
-    def _max_priority_fee_per_gas(self):
-        response = requests.post(
-            self.ConfigObj.RPC_URL,
-            json={"id": 1, "jsonrpc": "2.0", "method": "eth_maxPriorityFeePerGas"},
-            headers={"accept": "application/json", "content-type": "application/json"}
-        )
-        return int(loads(response.text)["result"].split("0x")[1], 16)
-
-    def _create_access_list(self, data):
-        response = requests.post(
-            self.ConfigObj.RPC_URL,
-            json = {
-                "id": 1,
-                "jsonrpc": "2.0",
-                "method": "eth_createAccessList",
-                "params": [
-                    {
-                        "from": self.wallet_address,
-                        "to": self.arb_contract.address,
-                        "data": data
-                    }
-                ]
-            }
-        )
-        return loads(response.text)["result"]["accessList"]
-
-    def _send_private_transaction(self, signed_tx, block_number):
+    def _send_private_transaction(self, raw_tx):
         response = self.alchemy.core.provider.make_request(
             method="eth_sendPrivateTransaction",
-            params=[
-                {
-                    "tx": signed_tx.rawTransaction.hex(),
-                    "maxBlockNumber": block_number + 10,
-                    "preferences": {"fast": True}
-                }
-            ],
+            params=[{"tx": raw_tx, "maxBlockNumber": self.eth.block_number + 10, "preferences": {"fast": True}}],
             method_name="eth_sendPrivateTransaction",
             headers={"accept": "application/json", "content-type": "application/json"}
         )
