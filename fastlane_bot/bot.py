@@ -855,7 +855,89 @@ class CarbonBot:
 
         maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
-        # Log the flashloan details
+        # Get the cids
+        cids = [(ti.cid,ti.strategy_id) for ti in ordered_trade_instructions_objects]
+
+        # Check if the network is tenderly and submit the transaction accordingly
+        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
+            return (
+                self._validate_and_submit_transaction_tenderly(
+                    ConfigObj=self.ConfigObj,
+                    flashloan_struct=flashloan_struct,
+                    route_struct=route_struct_maximized,
+                    src_amount=flashloan_amount_wei,
+                    src_address=flashloan_token_address,
+                ),
+                cids,
+                route_struct_maximized,
+                log_dict,
+            )
+
+        # Log the route_struct
+        self.handle_logging_for_trade_instructions(
+            4,  # The log id
+            flashloan_amount=flashloan_amount_wei,
+            flashloan_token_symbol=fl_token_symbol,
+            flashloan_token_address=flashloan_token_address,
+            route_struct=route_struct_maximized,
+            best_trade_instructions_dic=best_trade_instructions_dic,
+        )
+
+        # Get the tx helpers class
+        tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
+
+        # Return the validate and submit transaction
+        return (
+            tx_helpers.validate_and_submit_transaction(
+                route_struct=route_struct_maximized,
+                src_amt=flashloan_amount_wei,
+                src_address=flashloan_token_address,
+                expected_profit_gastkn=best_profit_gastkn,
+                expected_profit_usd=best_profit_usd,
+                safety_override=False,
+                verbose=True,
+                log_object=log_dict,
+                flashloan_struct=flashloan_struct,
+            ),
+            cids,
+            route_struct,
+            log_dict,
+        )
+
+    def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
+        """
+        Handles logging for trade instructions based on log_id.
+
+        Parameters
+        ----------
+        log_id : int
+            The ID for log type.
+        **kwargs : dict
+            Additional parameters required for logging.
+
+        Returns
+        -------
+        None
+        """
+        log_actions = {
+            1: self.log_best_profit,
+            2: self.log_calculated_arb,
+            3: self.log_flashloan_amount,
+            4: self.log_flashloan_details,
+        }
+        log_action = log_actions.get(log_id)
+        if log_action:
+            log_action(**kwargs)
+
+    def log_best_profit(self, best_profit: Optional[float] = None):
+        """
+        Logs the best profit.
+
+        Parameters
+        ----------
+        best_profit : Optional[float], optional
+            The best profit, by default None
+        """
         self.ConfigObj.logger.debug(
             f"[bot._handle_trade_instructions] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
         )
