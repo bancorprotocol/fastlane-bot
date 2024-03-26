@@ -1063,7 +1063,7 @@ class CarbonBot(CarbonBotBase):
         route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Get the cids
-        cids = list({ti["cid"] for ti in best_trade_instructions_dic})
+        cids = [(ti.cid,ti.strategy_id) for ti in ordered_trade_instructions_objects]
 
         # Check if the network is tenderly and submit the transaction accordingly
         if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
