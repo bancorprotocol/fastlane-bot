@@ -373,12 +373,11 @@ def process_contract_chunks(
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
-        if filename == "tokens_and_fee_df.csv":
-            df = loop.run_until_complete(func(chunk))
-            if not read_only:
-                df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
-            else:
-                lst.append(df)
+        df = loop.run_until_complete(func(chunk))
+        if not read_only:
+            df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
+        else:
+            lst.append(df)
 
     filepaths = glob(f"{dirname}/*.csv")
 
