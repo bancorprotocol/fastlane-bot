@@ -63,7 +63,8 @@ class TestManager:
 
     @property
     def logs_path(self) -> str:
-        return os.path.normpath("./logs/*")
+        """TODO: This should be read from dtest_constants"""
+        return os.path.normpath("./logs_dtest/logs/*")
 
     def get_carbon_controller(self, address: Address or str) -> Contract:
         """
