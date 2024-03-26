@@ -38,7 +38,7 @@ class TxHelpers:
         self.use_tenderly = self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY
         self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
         self.access_lists = self.ConfigObj.NETWORK in ["ethereum"]
-        self.arb_rewards = Decimal(self.ConfigObj.ARB_REWARDS_PPM / 1_000_000)
+        self.arb_rewards = Decimal(self.ConfigObj.ARB_REWARDS_PPM) / 1_000_000
         self.eth = self.ConfigObj.w3.eth
 
         if self.use_tenderly:
