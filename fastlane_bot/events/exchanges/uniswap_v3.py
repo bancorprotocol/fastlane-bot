@@ -30,11 +30,11 @@ class UniswapV3(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
+        return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
 
     @property
     def get_factory_abi(self):
-        return UNISWAP_V3_FACTORY_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME] else PANCAKESWAP_V3_FACTORY_ABI
+        return UNISWAP_V3_FACTORY_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME] else PANCAKESWAP_V3_FACTORY_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap] if self.exchange_initialized else []
