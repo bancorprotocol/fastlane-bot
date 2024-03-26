@@ -116,7 +116,6 @@ class BaseManager:
             initialize_events = False
             base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
             if exchange_name in [PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME]:
-                print(f"initializing {exchange_name}")
                 initialize_events = True
             elif base_exchange_name not in initialized_exchanges:
                 initialize_events = True
@@ -177,7 +176,6 @@ class BaseManager:
         Set the carbon v1 fee pairs.
         """
         for ex in [ex for ex in self.cfg.CARBON_V1_FORKS if ex in self.exchanges]:
-            print(f"Setting {ex} fee pairs...")
             # Create or get CarbonController contract object
             carbon_controller = self.create_or_get_carbon_controller(ex)
 
