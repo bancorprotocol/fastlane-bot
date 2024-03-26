@@ -22,6 +22,10 @@ class TestTxHelper:
     This is a utility class to scan the logs directory for successful transactions and clean and extract the
     transaction data.
     """
+    @property
+    def logs_path(self) -> str:
+        """TODO TESTS: This should be read from dtest_constants"""
+        return os.path.normpath("./logs_dtest/logs/*")
 
     @staticmethod
     def find_most_recent_log_folder(logs_path="./logs/*") -> str:
@@ -98,8 +102,10 @@ class TestTxHelper:
         Returns:
             list: A list of successful transactions.
         """
-        most_recent_log_folder = self.find_most_recent_log_folder()
-        args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
+        most_recent_log_folder = [
+            f for f in glob.glob(self.logs_path) if os.path.isdir(f)
+        ][-1]
+        args.logger.debug(f"[dtest_tx_helper.tx_scanner] Accessing log folder {most_recent_log_folder}")
 
         pool_data_file = os.path.join(most_recent_log_folder, "latest_pool_data.json")
         if self.wait_for_file(pool_data_file, args.logger):

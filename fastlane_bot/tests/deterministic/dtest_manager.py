@@ -63,7 +63,7 @@ class TestManager:
 
     @property
     def logs_path(self) -> str:
-        """TODO: This should be read from dtest_constants"""
+        """TODO TESTS: This should be read from dtest_constants"""
         return os.path.normpath("./logs_dtest/logs/*")
 
     def get_carbon_controller(self, address: Address or str) -> Contract:
@@ -633,7 +633,7 @@ class TestManager:
         most_recent_log_folder = [
             f for f in glob.glob(self.logs_path) if os.path.isdir(f)
         ][-1]
-        args.logger.debug(f"Accessing log folder {most_recent_log_folder}")
+        args.logger.debug(f"[dtest_manager.get_most_recent_pool_data_path] Accessing log folder {most_recent_log_folder}")
         return os.path.join(most_recent_log_folder, "latest_pool_data.json")
 
     def delete_old_logs(self, args: argparse.Namespace):
