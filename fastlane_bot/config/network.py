@@ -197,7 +197,7 @@ class ConfigNetwork(ConfigBase):
     # ACCOUNTS SECTION
     #######################################################################################
     BINANCE8_WALLET_ADDRESS = "0xF977814e90dA44bFA03b6295A0616a897441aceC"
-    BINANCE14_WALLET_ADDRESS = "0x28c6c06298d514db089934071355e5743bf21d60"
+    BINANCE14_WALLET_ADDRESS = "0x28C6c06298d514Db089934071355E5743bf21d60"
 
     # EXCHANGE IDENTIFIERS SECTION
     #######################################################################################

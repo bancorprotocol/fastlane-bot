@@ -293,7 +293,7 @@ class TxRouteHandler(TxRouteHandlerBase):
             targetToken=target_address,
             sourceToken=source_token,
             sourceAmount=int(source_amount),
-            minTargetAmount=int(min_target_amount),
+            minTargetAmount=0,
             deadline=deadline,
             customAddress=custom_address,
             customInt=customInt,

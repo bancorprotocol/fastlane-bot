@@ -176,9 +176,9 @@ class ArbitrageFinderBase:
             sort_sequence = ['bancor_v2','bancor_v3','uniswap_v2','uniswap_v3']
             price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token_with_weth)
             sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sort_sequence] {sort_sequence}")
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit price_curves] {price_curves}")
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
+            # self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sort_sequence] {sort_sequence}")
+            # self.ConfigObj.logger.debug(f"[modes.base.calculate_profit price_curves] {price_curves}")
+            # self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
                 fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
                 best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))

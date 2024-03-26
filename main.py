@@ -163,8 +163,8 @@ def main(args: argparse.Namespace) -> None:
     # Format the flashloan tokens
     args.flashloan_tokens = handle_flashloan_tokens(cfg, args.flashloan_tokens, tokens)
 
-    if args.self_fund:
-        check_and_approve_tokens(tokens=args.flashloan_tokens, cfg=cfg)
+    # if args.self_fund:
+    #     check_and_approve_tokens(tokens=args.flashloan_tokens, cfg=cfg)
 
     # Search the logging directory for the latest timestamped folder
     args.logging_path = find_latest_timestamped_folder(args.logging_path)

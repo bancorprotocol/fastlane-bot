@@ -104,7 +104,7 @@ def _get_wrap_or_unwrap_native_gas_tkn_struct(
             sourceToken=sourceToken,
             targetToken=targetToken,
             sourceAmount=amount,
-            minTargetAmount=amount,
+            minTargetAmount=0,
             deadline=deadline,
             customAddress=cfg.ZERO_ADDRESS,
             customInt=0,

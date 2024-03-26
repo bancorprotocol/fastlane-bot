@@ -301,13 +301,14 @@ class TxHelpers:
 
         signed_arb_tx = self.sign_transaction(arb_tx)
 
-        gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = self._get_prices_info(
-            current_gas_price,
-            gas_estimate,
-            expected_profit_usd,
-            expected_profit_gastkn,
-            signed_arb_tx.rawTransaction
-        )
+        gas_cost_eth, gas_cost_usd, adjusted_reward_eth, adjusted_reward_usd = 0, 0, 0, 0
+        # self._get_prices_info(
+        #     current_gas_price,
+        #     gas_estimate,
+        #     expected_profit_usd,
+        #     expected_profit_gastkn,
+        #     signed_arb_tx.rawTransaction
+        # )
 
         transaction_log = {
             "block_number": block_number,
@@ -560,8 +561,8 @@ class TxHelpers:
         base_gas_price = int(gas_price)
         max_gas_price = base_gas_price + max_priority_fee
 
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
+        # if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
+        #     self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
             
         # if "tenderly" in self.web3.provider.endpoint_uri:
         #     print("Tenderly network detected: Manually setting maxFeePerFas and maxPriorityFeePerGas")
@@ -573,6 +574,13 @@ class TxHelpers:
                 "type": "0x2",
                 "maxFeePerGas": max_gas_price,
                 "maxPriorityFeePerGas": max_priority_fee,
+                "from": self.wallet_address,
+                "nonce": nonce,
+            }
+        elif self.ConfigObj.NETWORK in ["tenderly"]:
+            tx_details =  {
+                "gas": 200000000000,
+                "gasPrice": 0,
                 "from": self.wallet_address,
                 "nonce": nonce,
             }
