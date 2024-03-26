@@ -767,7 +767,7 @@ class TxHelpers:
                 return None
             try:
                 kwargs['gas_price'] = new_base_fee
-                transaction = contract_function(*args, **kwargs)
+                transaction = contract_function(*args).build_transaction(self.build_tx(**kwargs))
             except Exception as e:
                 self.ConfigObj.logger.warning(
                     f" Error when building transaction, this is expected to happen occasionally, discarding. (***1***)\n"
