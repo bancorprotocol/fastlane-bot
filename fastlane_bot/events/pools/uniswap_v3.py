@@ -109,7 +109,6 @@ class UniswapV3Pool(Pool):
         See base class.
         """
         fee = await contract.caller.fee()
-        factory_address = await contract.caller.factory()
         slot0 = await contract.caller.slot0()
 
         params = {
@@ -122,7 +121,6 @@ class UniswapV3Pool(Pool):
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
             "router": self.router_address,
-            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value
