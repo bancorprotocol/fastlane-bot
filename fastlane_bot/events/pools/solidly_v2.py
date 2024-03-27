@@ -98,6 +98,9 @@ class SolidlyV2Pool(Pool):
             # in cleopatra, the factory is stored in private variable at slot 11
             slot = contract.w3.eth.get_storage_at(contract.address, 11)
             factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
+            code = contract.w3.eth.get_code(factory_address)
+            if code == "0x":
+                factory_address = "0x" + "0" * 40
 
         self.is_stable = contract.caller.stable()
         params = {
@@ -136,6 +139,9 @@ class SolidlyV2Pool(Pool):
             # in cleopatra, the factory is stored in private variable at slot 11
             slot = await contract.w3.eth.get_storage_at(contract.address, 11)
             factory_address = "0x" + contract.w3.to_checksum_address(slot.hex()[26:])
+            code = await contract.w3.eth.get_code(factory_address)
+            if code == "0x":
+                factory_address = "0x" + "0" * 40
 
         self.is_stable = await contract.caller.stable()
         params = {
