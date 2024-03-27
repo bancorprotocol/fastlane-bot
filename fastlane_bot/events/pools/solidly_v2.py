@@ -87,13 +87,6 @@ class SolidlyV2Pool(Pool):
         See base class.
         """
         reserve_balance = contract.caller.getReserves()
-
-        try:
-            factory_address = contract.caller.factory()
-        except Exception:
-            # Velocimeter does not expose factory function - call voter to get an address that is the same for all Velcoimeter pools
-            factory_address = contract.caller.voter()
-
         self.is_stable = contract.caller.stable()
         params = {
 
@@ -101,12 +94,12 @@ class SolidlyV2Pool(Pool):
             "tkn1_balance": reserve_balance[1],
             "exchange_name": self.exchange_name,
             "router": self.router_address,
-            "factory": factory_address,
             "pool_type": self.pool_type,
         }
         for key, value in params.items():
             self.state[key] = value
         return params
+
     async def async_update_from_contract(
         self,
         contract: Contract,
@@ -119,13 +112,6 @@ class SolidlyV2Pool(Pool):
         See base class.
         """
         reserve_balance = await contract.caller.getReserves()
-
-        try:
-            factory_address = await contract.caller.factory()
-        except Exception:
-            # Velocimeter does not expose factory function - call voter to get an address that is the same for all Velcoimeter pools
-            factory_address = await contract.caller.voter()
-
         self.is_stable = await contract.caller.stable()
         params = {
 
@@ -133,7 +119,6 @@ class SolidlyV2Pool(Pool):
             "tkn1_balance": reserve_balance[1],
             "exchange_name": self.exchange_name,
             "router": self.router_address,
-            "factory": factory_address,
             "pool_type": self.pool_type,
         }
         for key, value in params.items():
