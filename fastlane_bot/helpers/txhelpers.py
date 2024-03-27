@@ -767,7 +767,7 @@ class TxHelpers:
                 return None
             try:
                 kwargs['gas_price'] = new_base_fee
-                transaction = contract_function(*args, **kwargs)
+                transaction = contract_function(*args).build_transaction(self.build_tx(**kwargs))
             except Exception as e:
                 self.ConfigObj.logger.warning(
                     f" Error when building transaction, this is expected to happen occasionally, discarding. (***1***)\n"
@@ -818,6 +818,6 @@ class TxHelpers:
         """
 
         l1_data_fee = asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
+            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))[0]
         # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
         return Decimal(f"{l1_data_fee}e-18")
