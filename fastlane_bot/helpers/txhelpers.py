@@ -73,9 +73,6 @@ class TxHelpers:
         if self.ConfigObj.SELF_FUND:
             function = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
             value = src_amt if src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
-        elif flashloan_struct is None:
-            function = self.arb_contract.functions.flashloanAndArb(route_struct, src_address, src_amt)
-            value = 0
         else:
             function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
             value = 0

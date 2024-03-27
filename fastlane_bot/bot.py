@@ -63,8 +63,7 @@ from fastlane_bot.helpers import (
     TradeInstruction,
     Univ3Calculator,
     add_wrap_or_unwrap_trades_to_route,
-    split_carbon_trades,
-    submit_transaction_tenderly
+    split_carbon_trades
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -1035,16 +1034,6 @@ class CarbonBot(CarbonBotBase):
         )
 
         route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
-
-        # Check if the network is tenderly and submit the transaction accordingly
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            return submit_transaction_tenderly(
-                cfg=self.ConfigObj,
-                flashloan_struct=flashloan_struct,
-                route_struct=route_struct_maximized,
-                src_amount=flashloan_amount_wei,
-                src_address=flashloan_token_address,
-            )
 
         # Log the route_struct
         self.handle_logging_for_trade_instructions(
