@@ -6,7 +6,7 @@
 
 ### **2. Using a Private Node or Infura with the Fastlane Bot**
 - **Question:** Can a private node or Infura be used with the Fastlane Bot?
-- **Answer:** Yes. The bot can use any RPC. This can be edited in the fastlane_bot/config/providers file - search for: self.RPC_URL. Note that some functions require an Alchemy API key, making it necessary unless the functions themselves are modified. These functions are in fastlane_bot/helpers/txhelpers, and include _create_access_list, _send_private_transaction, and _max_priority_fee_per_gas.
+- **Answer:** Yes. The bot can use any RPC. This can be edited in the fastlane_bot/config/providers file - search for: self.RPC_URL. Note that some functions require an Alchemy API key, making it necessary unless the functions themselves are modified. These functions are in fastlane_bot/helpers/txhelpers.
 
 ### **3. Arbitraging Specific Tokens using the Fastlane Bot**
 - **Question:** How can I search for arbitrage for specific tokens using the Fastlane Bot?

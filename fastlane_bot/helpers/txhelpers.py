@@ -88,8 +88,8 @@ class TxHelpers:
             estimated_gas = self.eth.estimate_gas(transaction=tx)
         except Exception as e:
             self.ConfigObj.logger.warning(
-                f"Failed to estimate gas for transaction because the transaction is likely fail.\n"
-                f"Most often this is due to an arb opportunity already being closed, but it can include other bugs\n."
+                f"Failed to estimate gas for the transaction because it would likely revert when executed.\n"
+                f"Most often this is due to the arb opportunity already being closed\n."
                 f"This is expected to happen occasionally, discarding; exception: {e}"
             )
             return None
