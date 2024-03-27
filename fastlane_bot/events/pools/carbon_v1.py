@@ -12,6 +12,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 @dataclass
@@ -19,8 +20,8 @@ class CarbonV1Pool(Pool):
     """
     Class representing a Carbon v1 pool.
     """
-
-    exchange_name: str = "carbon_v1"
+    base_exchange_name: str = "carbon_v1"
+    exchange_name: str = None
     router_address: str = None
 
     @staticmethod
@@ -51,7 +52,7 @@ class CarbonV1Pool(Pool):
             "This event should not be " "handled by this class."
         )
         data = CarbonV1Pool.parse_event(data, event_args, event_type)
-        data["router"] = self.router_address,
+        data["router"] = self.router_address
         for key, value in data.items():
             self.state[key] = value
         return data
@@ -78,7 +79,7 @@ class CarbonV1Pool(Pool):
             The updated data.
         """
         order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
-        data["cid"] = event_args["args"].get("id")
+        data["strategy_id"] = event_args["args"].get("id")
         if isinstance(order0, list) and isinstance(order1, list):
             data["y_0"] = order0[0]
             data["z_0"] = order0[1]
@@ -139,9 +140,9 @@ class CarbonV1Pool(Pool):
         See base class.
         """
         try:
-            strategy = contract.caller.strategy(int(self.state["cid"]))
+            strategy = contract.caller.strategy(int(self.state["strategy_id"]))
         except AttributeError:
-            strategy = contract.functions.strategy(int(self.state["cid"])).call()
+            strategy = contract.functions.strategy(int(self.state["strategy_id"])).call()
 
         fake_event = {
             "args": {
@@ -152,8 +153,13 @@ class CarbonV1Pool(Pool):
         }
         params = self.parse_event(self.state, fake_event, "None")
         params["exchange_name"] = self.exchange_name
-        params["router"] = self.router_address,
+        params["router"] = self.router_address
+        params["fee"] = self.state["fee"]
+        carbon_v1_fork_list = [self.exchange_name]  # This is safe because we are in the CarbonV1Pool class
+        params["cid"] = get_pool_cid(params, carbon_v1_fork_list)
         for key, value in params.items():
             self.state[key] = value
 
         return params
+
+

@@ -172,7 +172,7 @@ def multicall_fn(exchange: str, mc: Any, mgr: Any, multicall_contract: Any, pool
         mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
         if mgr.cfg.ARB_CONTRACT_VERSION >= 10:
             mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
-    elif exchange == 'carbon_v1':
+    elif exchange in mgr.cfg.CARBON_V1_FORKS:
         mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
     elif exchange == 'balancer':
         mc.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
@@ -223,7 +223,7 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
 
     """
     params = {}
-    if exchange == 'carbon_v1':
+    if exchange in mgr.cfg.CARBON_V1_FORKS:
         strategy = result
         fake_event = {
             "args": {

@@ -4,8 +4,6 @@ Fastlane bot config -- provider
 __VERSION__ = "0.9.1"
 __DATE__ = "30/Apr 2023"
 
-from web3.contract import Contract
-
 from .base import ConfigBase
 from . import selectors as S
 from .network import ConfigNetwork
@@ -99,7 +97,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         N = self.network
         self.connection = EthereumNetwork(
             network_id=N.NETWORK_ID,
-            network_name=f"{N.NETWORK_NAME} (Alchemy)",
+            network_name=N.NETWORK_NAME,
             provider_url=self.RPC_URL,
             provider_name="alchemy",
         )
@@ -109,7 +107,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
 
-        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM, N.NETWORK_FANTOM]:
+        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM, N.NETWORK_FANTOM, N.NETWORK_MANTLE]:
             self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
                 address=network.CARBON_CONTROLLER_ADDRESS,
                 abi=CARBON_CONTROLLER_ABI,

@@ -401,6 +401,7 @@ class QueryInterface:
                 key: record.get(key)
                 for key in [
                     "cid",
+                    "strategy_id",
                     "last_updated",
                     "last_updated_block",
                     "descr",

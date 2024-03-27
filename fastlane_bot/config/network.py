@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 from . import selectors as S
 from .base import ConfigBase
-
+from .constants import CARBON_V1_FORK1_NAME, CARBON_V1_NAME
 load_dotenv()
 
 from decimal import Decimal
@@ -208,7 +208,8 @@ class ConfigNetwork(ConfigBase):
     UNISWAP_V3_NAME = "uniswap_v3"
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
-    CARBON_V1_NAME = "carbon_v1"
+    CARBON_V1_NAME = CARBON_V1_NAME
+    CARBON_V1_X2_NAME = CARBON_V1_FORK1_NAME
     BANCOR_POL_NAME = "bancor_pol"
     BALANCER_NAME = "balancer"
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
@@ -216,7 +217,6 @@ class ConfigNetwork(ConfigBase):
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
-
     # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
     AERODROME_V3_NAME = "aerodrome_v3"
@@ -233,12 +233,11 @@ class ConfigNetwork(ConfigBase):
     VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
 
-    PLATFORM_NAME_WRAP_UNWRAP = "wrap_or_unwrap"
-    PLATFORM_ID_WRAP_UNWRAP = 10
+    WRAP_UNWRAP_NAME = "wrap_or_unwrap"
 
     GAS_ORACLE_ADDRESS = None
 
-    CARBON_V1_FORKS = [CARBON_V1_NAME]
+    CARBON_V1_FORKS = [CARBON_V1_NAME, CARBON_V1_X2_NAME]
 
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
@@ -260,7 +259,7 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 450, 500, 2500, 3000, 10000]
+    UNIV3_FEE_LIST = [80, 100, 250, 450, 500, 2500, 3000, 10000]
     MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
     DEFAULT_GAS = 950_000
     DEFAULT_GAS_PRICE = 0
@@ -295,10 +294,12 @@ class ConfigNetwork(ConfigBase):
     NETWORK_POLYGON_ZKEVM = S.NETWORK_POLYGON_ZKEVM
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
+    NETWORK_MANTLE = S.NETWORK_MANTLE
 
     # FLAGS
     #######################################################################################
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
+    IS_NO_FLASHLOAN_AVAILABLE = False
 
     @classmethod
     def new(cls, network=None):
@@ -321,6 +322,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkOptimism(_direct=False)
         elif network == cls.NETWORK_FANTOM:
             return _ConfigNetworkFantom(_direct=False)
+        elif network == cls.NETWORK_MANTLE:
+            return _ConfigNetworkMantle(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -356,7 +359,7 @@ class ConfigNetwork(ConfigBase):
         )
         self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
-            df=self.network_df, fork_name=S.CARBON_V1
+            df=self.network_df, fork_name=CARBON_V1_NAME
         )
         self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
 
@@ -382,7 +385,7 @@ class ConfigNetwork(ConfigBase):
             self.BANCOR_V3_NAME: 2,
             self.BALANCER_NAME: 7,
             self.CARBON_POL_NAME: 8,
-            self.PLATFORM_ID_WRAP_UNWRAP: 10,
+            self.WRAP_UNWRAP_NAME: 10,
             self.UNISWAP_V2_NAME: 3,
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
@@ -574,7 +577,7 @@ class _ConfigNetworkOptimism(ConfigNetwork):
     RPC_ENDPOINT = "https://opt-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_OPTIMISM")
 
-    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
+    GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"  # source: https://docs.optimism.io/builders/tools/build/oracles#gas-oracle
     FASTLANE_CONTRACT_ADDRESS = ""  # TODO
     MULTICALL_CONTRACT_ADDRESS = ""  # TODO
 
@@ -611,7 +614,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
-    GAS_ORACLE_ADDRESS = "0x4200000000000000000000000000000000000015"
+    GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"  # source: https://docs.optimism.io/builders/tools/build/oracles#gas-oracle
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
@@ -680,6 +683,51 @@ class _ConfigNetworkFantom(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83": "WFTM",
         "0x28a92dde19D9989F39A49905d7C9C2FAc7799bDf": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkMantle(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_MANTLE
+    NETWORK_ID = "5000"
+    NETWORK_NAME = "mantle"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    # Provider website: https://drpc.org/chainlist
+    RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=mantle&dkey="
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
+
+    GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+    IS_NO_FLASHLOAN_AVAILABLE = True
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0x7900f766F06e361FDDB4FdeBac5b138c4EEd8d4A"
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0x953A6D3f9DB06027b2feb8b76a76AA2FC8334865"
+    # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
+    # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
+    # STABLECOIN_KEY = "USDC-2913"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8"
+    NATIVE_GAS_TOKEN_SYMBOL = "MNT"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WMNT"
+    STABLECOIN_ADDRESS = "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = ""
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8": "WMNT",
+        "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []

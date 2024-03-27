@@ -22,6 +22,8 @@ class TradeInstruction:
     ----------
     cid: str
         The pool unique ID
+    cid: int
+        The strategy ID
     tknin: str
         The input token key (e.g. 'DAI-1d46')
     amtin: int or Decimal or float
@@ -65,10 +67,12 @@ class TradeInstruction:
     
     ConfigObj: Any
     cid: str
+
     tknin: str
     amtin: Union[int, Decimal, float]
     tknout: str
     amtout: Union[int, Decimal, float]
+    strategy_id: int = None
     pair_sorting: str = None
     raw_txs: str = None
     custom_data: str = ''
@@ -134,7 +138,7 @@ class TradeInstruction:
         else:
             self._tknout_address = self.tknout_addr_override
             self._tknout_decimals = self.tknout_dec_override
-        pool = self.db.get_pool(cid=self.cid.split('-')[0])
+        pool = self.db.get_pool(cid=self.cid)
         if self.tknout_dec_override is None:
             tokens = pool.get_token_addresses
             self.tknin_is_wrapped = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS in tokens and self._tknin_address in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]
@@ -162,6 +166,34 @@ class TradeInstruction:
             self._exchange_name = self.exchange_override
         self._exchange_id = self.get_platform_id()
         self.custom_int = self.get_custom_int()
+
+
+    def get_real_tokens(self):
+        return self.get_real_tkn_in, self.get_real_tkn_out
+
+    @property
+    def get_real_tkn_in(self):
+        """
+        Returns the correct token going into the trade.
+        """
+        if self.tknin_is_native:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif self.tknin_is_wrapped:
+            return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        else:
+            return self.tknin
+
+    @property
+    def get_real_tkn_out(self):
+        """
+        Returns the correct token received by the trade.
+        """
+        if self.tknout_is_native:
+            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif self.tknout_is_wrapped:
+            return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        else:
+            return self.tknout
 
     def get_custom_int(self) -> int:
         """

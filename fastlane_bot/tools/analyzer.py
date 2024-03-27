@@ -1,6 +1,7 @@
 """
 analyzing CPC / CPCContainer based collections
 
+---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 

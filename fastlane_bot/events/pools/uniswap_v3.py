@@ -58,6 +58,7 @@ class UniswapV3Pool(Pool):
 
         try:
             data["cid"] = self.state["cid"]
+            data["strategy_id"] = 0
             data["exchange_name"] = self.state["exchange_name"]
             data["fee"] = self.state["fee"]
             data["fee_float"] = self.state["fee_float"]
@@ -108,7 +109,6 @@ class UniswapV3Pool(Pool):
         See base class.
         """
         fee = await contract.caller.fee()
-        factory_address = await contract.caller.factory()
         slot0 = await contract.caller.slot0()
 
         params = {
@@ -121,7 +121,6 @@ class UniswapV3Pool(Pool):
             "exchange_name": self.state["exchange_name"],
             "address": self.state["address"],
             "router": self.router_address,
-            "factory": factory_address,
         }
         for key, value in params.items():
             self.state[key] = value
