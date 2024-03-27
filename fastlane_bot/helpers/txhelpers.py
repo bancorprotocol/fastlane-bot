@@ -31,21 +31,21 @@ class TxHelpers:
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
-    ConfigObj: Config
+    cfg: Config
 
     def __post_init__(self):
-        self.arb_contract = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.use_tenderly = self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY
-        self.use_eip_1559 = self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
-        self.access_lists = self.ConfigObj.NETWORK in ["ethereum"]
-        self.arb_rewards = Decimal(self.ConfigObj.ARB_REWARDS_PPM) / 1_000_000
-        self.eth = self.ConfigObj.w3.eth
+        self.arb_contract = self.cfg.BANCOR_ARBITRAGE_CONTRACT
+        self.use_tenderly = self.cfg.NETWORK == self.cfg.NETWORK_TENDERLY
+        self.use_eip_1559 = self.cfg.NETWORK in ["ethereum", "coinbase_base"]
+        self.access_lists = self.cfg.NETWORK in ["ethereum"]
+        self.arb_rewards = Decimal(self.cfg.ARB_REWARDS_PPM) / 1_000_000
+        self.eth = self.cfg.w3.eth
 
         if self.use_tenderly:
-            self.wallet_address = self.ConfigObj.BINANCE14_WALLET_ADDRESS
+            self.wallet_address = self.cfg.BINANCE14_WALLET_ADDRESS
         else:
-            self.wallet_address = str(self.eth.account.from_key(self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).address)
-            self.alchemy = Alchemy(api_key=self.ConfigObj.WEB3_ALCHEMY_PROJECT_ID, network=Network.ETH_MAINNET, max_retries=3)
+            self.wallet_address = str(self.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address)
+            self.alchemy = Alchemy(api_key=self.cfg.WEB3_ALCHEMY_PROJECT_ID, network=Network.ETH_MAINNET, max_retries=3)
 
     def validate_and_submit_transaction(
         self,
@@ -61,8 +61,8 @@ class TxHelpers:
         Validates and submits a transaction to the arb contract.
         """
 
-        self.ConfigObj.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
-        self.ConfigObj.logger.debug(
+        self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
+        self.cfg.logger.debug(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
             f"- Routes: {route_struct}\n"
             f"- Source amount: {src_amt}\n"
@@ -70,9 +70,9 @@ class TxHelpers:
             f"- Expected profit: {num_format(expected_profit_gastkn)} GAS token ({num_format(expected_profit_usd)} USD)\n"
         )
 
-        if self.ConfigObj.SELF_FUND:
+        if self.cfg.SELF_FUND:
             function = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
-            value = src_amt if src_address == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else 0
+            value = src_amt if src_address == self.cfg.NATIVE_GAS_TOKEN_ADDRESS else 0
         else:
             function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
             value = 0
@@ -84,7 +84,7 @@ class TxHelpers:
         try:
             estimated_gas = self.eth.estimate_gas(transaction=tx)
         except Exception as e:
-            self.ConfigObj.logger.warning(
+            self.cfg.logger.warning(
                 f"Failed to estimate gas for the transaction because it would likely revert when executed.\n"
                 f"Most often this is due to the arb opportunity already being closed\n."
                 f"This is expected to happen occasionally, discarding; exception: {e}"
@@ -99,17 +99,17 @@ class TxHelpers:
                 if estimated_gas > estimated_gas_after:
                     estimated_gas = estimated_gas_after
                     tx = tx_after
-                self.ConfigObj.logger.info(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
+                self.cfg.logger.info(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
             except Exception as e:
-                self.ConfigObj.logger.info(f"Applying access list to transaction failed with {e}")
+                self.cfg.logger.info(f"Applying access list to transaction failed with {e}")
 
-        tx["gas"] = estimated_gas + self.ConfigObj.DEFAULT_GAS_SAFETY_OFFSET
+        tx["gas"] = estimated_gas + self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
-        raw_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+        raw_tx = self.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
-        gas_cost_wei = int(gas_price * estimated_gas * self.ConfigObj.EXPECTED_GAS_MODIFIER)
-        if self.ConfigObj.network.GAS_ORACLE_ADDRESS:
-            gas_cost_wei += self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
+        gas_cost_wei = int(gas_price * estimated_gas * self.cfg.EXPECTED_GAS_MODIFIER)
+        if self.cfg.network.GAS_ORACLE_ADDRESS:
+            gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
         gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
@@ -117,28 +117,28 @@ class TxHelpers:
         gas_gain_eth = self.arb_rewards * expected_profit_gastkn
         gas_gain_usd = self.arb_rewards * expected_profit_usd
 
-        self.ConfigObj.logger.info(log_format(log_name="arb_with_gas", log_data={**log_object, "tx": tx}))
+        self.cfg.logger.info(log_format(log_name="arb_with_gas", log_data={**log_object, "tx": tx}))
 
-        self.ConfigObj.logger.info(
+        self.cfg.logger.info(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
             f"- Expected cost: {num_format(gas_cost_eth)} GAS token ({num_format(gas_cost_usd)} USD)\n"
             f"- Expected gain: {num_format(gas_gain_eth)} GAS token ({num_format(gas_gain_usd)} USD)\n"
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.ConfigObj.logger.info("Attempting to execute profitable arb transaction")
+            self.cfg.logger.info("Attempting to execute profitable arb transaction")
             try:
                 if self.use_tenderly:
                     tx_hash = self.eth.send_raw_transaction(raw_tx)
                 else:
                     tx_hash = self._send_private_transaction(raw_tx)
             except Exception as e:
-                self.ConfigObj.logger.info(f"Transaction execution failed with {e}")
+                self.cfg.logger.info(f"Transaction execution failed with {e}")
                 return None
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
         else:
-            self.ConfigObj.logger.info("Discarding non-profitable arb transaction")
+            self.cfg.logger.info("Discarding non-profitable arb transaction")
             return None
 
     def check_and_approve_tokens(self, tokens: List):
@@ -148,15 +148,15 @@ class TxHelpers:
         :param tokens: the list of tokens to check/approve
         """
 
-        for token_address in [token for token in tokens if token != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
+        for token_address in [token for token in tokens if token != self.cfg.NATIVE_GAS_TOKEN_ADDRESS]:
             token_contract = self.eth.contract(address=token_address, abi=ERC20_ABI)
             allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
-            self.ConfigObj.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
+            self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
                 function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
                 tx, _ = self._build_transaction(function=function, value=0)
                 if tx is not None:
-                    raw_tx = self.eth.account.sign_transaction(tx, self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+                    raw_tx = self.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
                     tx_hash = self.eth.send_raw_transaction(raw_tx)
                     self._wait_for_transaction_receipt(tx_hash)
 
@@ -170,7 +170,7 @@ class TxHelpers:
         gas_price = self.eth.gas_price
 
         if self.use_eip_1559:
-            max_priority_fee = int(self.eth.max_priority_fee * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET)
+            max_priority_fee = int(self.eth.max_priority_fee * self.cfg.DEFAULT_GAS_PRICE_OFFSET)
             tx_details["type"] = 2
             tx_details["maxPriorityFeePerGas"] = max_priority_fee
             tx_details["maxFeePerGas"] = gas_price + max_priority_fee
@@ -182,7 +182,7 @@ class TxHelpers:
             tx = function.build_transaction(tx_details)
             return tx, gas_price
         except Exception as e:
-            self.ConfigObj.logger.info(f"Failed building transaction {tx_details}; exception {e}")
+            self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
             return None, gas_price
 
     def _send_private_transaction(self, raw_tx):
@@ -198,6 +198,6 @@ class TxHelpers:
         try:
             tx_receipt = self.eth.wait_for_transaction_receipt(tx_hash)
             assert tx_hash == tx_receipt["transactionHash"]
-            self.ConfigObj.logger.info(f"Transaction {tx_hash} completed")
+            self.cfg.logger.info(f"Transaction {tx_hash} completed")
         except TimeExhausted as _:
-            self.ConfigObj.logger.info(f"Transaction {tx_hash} timeout (stuck in mempool); moving on")
+            self.cfg.logger.info(f"Transaction {tx_hash} timeout (stuck in mempool); moving on")

@@ -1998,13 +1998,13 @@ def handle_tokens_csv(mgr, prefix_path, read_only: bool = False):
     )
 
 
-def check_and_approve_tokens(tokens: List, cfg: Config):
+def check_and_approve_tokens(cfg: Config, tokens: List):
     """
     This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
     If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
 
-    :param tokens: the list of tokens to check/approve
     :param cfg: the config object
+    :param tokens: the list of tokens to check/approve
 
     """
-    TxHelpers(ConfigObj=cfg).check_and_approve_tokens(tokens=tokens)
+    TxHelpers(cfg=cfg).check_and_approve_tokens(tokens=tokens)

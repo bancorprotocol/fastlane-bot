@@ -115,8 +115,6 @@ class CarbonBotBase:
         if self.ConfigObj is None:
             self.ConfigObj = Config()
 
-        self.c = self.ConfigObj
-
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
@@ -125,7 +123,7 @@ class CarbonBotBase:
             self.TxRouteHandlerClass = TxRouteHandler
 
         if self.TxHelpersClass is None:
-            self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
+            self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
