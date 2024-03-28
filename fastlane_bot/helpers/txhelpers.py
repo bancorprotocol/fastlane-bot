@@ -36,8 +36,8 @@ class TxHelpers:
     def __post_init__(self):
         self.arb_contract = self.cfg.BANCOR_ARBITRAGE_CONTRACT
         self.use_tenderly = self.cfg.NETWORK == self.cfg.NETWORK_TENDERLY
-        self.use_eip_1559 = self.cfg.NETWORK in ["ethereum", "coinbase_base"]
-        self.access_lists = self.cfg.NETWORK in ["ethereum"]
+        self.use_eip_1559 = self.cfg.NETWORK in [self.cfg.NETWORK_ETHEREUM, self.cfg.NETWORK_BASE]
+        self.access_lists = self.cfg.NETWORK in [self.cfg.NETWORK_ETHEREUM]
         self.arb_rewards = Decimal(self.cfg.ARB_REWARDS_PPM) / 1_000_000
         self.eth = self.cfg.w3.eth
 
