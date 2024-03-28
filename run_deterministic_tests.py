@@ -5,7 +5,7 @@ The script is run from the command line with the following command: `python run_
 --rpc_url <rpc_url> --network <network> --arb_mode <arb_mode>` --timeout_minutes <timeout_minutes> --from_block
 <from_block> --create_new_testnet <create_new_testnet>
 
-The `--task` argument specifies the task to run. The options are:
+The `--task` argument specifies the task to run. The default task is `end_to_end`. The options are:
 - `set_test_state`: Set the test state based on the static_pool_data_testing.csv file.
 - `get_carbon_strategies_and_delete`: Get the carbon strategies and delete them.
 - `run_tests_on_mode`: Run tests on the specified arbitrage mode.
@@ -13,30 +13,31 @@ The `--task` argument specifies the task to run. The options are:
 
 The `--rpc_url` argument specifies the URL for the RPC endpoint.
 
-The `--network` argument specifies the network to test. The options are:
+The `--network` argument specifies the network to test. Default is `ethereum`. The options are:
 - `ethereum`: Ethereum network.
 
-The `--arb_mode` argument specifies the arbitrage mode to test. The options are:
+The `--arb_mode` argument specifies the arbitrage mode to test. Default is `multi`. The options are:
 - `single`: Single arbitrage mode.
 - `multi`: Multi arbitrage mode.
 - `triangle`: Triangle arbitrage mode.
 - `multi_triangle`: Multi triangle arbitrage mode.
 
-The `--timeout_minutes` argument specifies the timeout for the tests (in minutes).
+The `--timeout_minutes` argument specifies the timeout for the tests (in minutes). The default is 10 minutes.
 
-The `--from_block` argument specifies the block number to start from.
+The `--from_block` argument specifies the block number to start from. The default is 1000000.
 
-The `--create_new_testnet` argument specifies whether to create a new testnet. The options are:
+The `--create_new_testnet` argument specifies whether to create a new testnet. The default is `False`. The options are:
 - `True`: Create a new testnet.
 - `False`: Do not create a new testnet.
 
-All data used in the tests is stored in the `fastlane_bot/tests/deterministic/_data` directory.
+All data used in the tests is stored in the `fastlane_bot/tests/_data` directory.
 
 Note: This script uses the function `get_default_main_args` which returns the default command line arguments for the
 `main` function in the `main.py` file. If these arguments change in main.py then they should be updated in the
 `get_default_main_args` function as well.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import argparse
