@@ -117,7 +117,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add CHANGELOG.md
-          git commit -m "Update changelog [skip ci]"
+          git commit --allow-empty -m "Update changelog [skip ci]"
 
       # push to main branch using CasperWA/push-protected@v2 action
       - name: Push to protected branch
@@ -174,28 +174,5 @@ jobs:
         with:
           password: ${{ secrets.FASTLANE_PYPI_API_TOKEN }}
           repository-url: https://upload.pypi.org/legacy/
-
-  restart_jobs:
-    runs-on: ubuntu-latest
-    needs: combined_job
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Restart Databricks Jobs
-        run: |
-          echo "Getting list of jobs..."
-          JOB_LIST=$(curl -X GET -H "Authorization: Bearer ${{ secrets.SERVER_TOKEN }}" "https://${{ secrets.SERVER_DOMAIN }}/api/2.0/jobs/list")
-          echo "Jobs: $JOB_LIST"
-
-          for JOB in $(echo "${JOB_LIST}" | jq -r '.jobs[].job_id'); do
-            JOB_INFO=$(curl -X GET -H "Authorization: Bearer ${{ secrets.SERVER_TOKEN }}" "https://${{ secrets.SERVER_DOMAIN }}/api/2.0/jobs/get?job_id=$JOB")
-            CLUSTER_NAME=$(echo "$JOB_INFO" | jq -r '.settings.new_cluster.cluster_name')
-
-            if [ "$CLUSTER_NAME" = "Fastlane (v3)" ]; then
-              echo "Restarting job $JOB on cluster $CLUSTER_NAME..."
-              RESPONSE=$(curl -X POST -H "Authorization: Bearer ${{ secrets.SERVER_TOKEN }}" -d "{\"job_id\": $JOB}" "https://${{ secrets.SERVER_DOMAIN }}/api/2.0/jobs/run-now")
-              echo "Response: $RESPONSE"
-            fi
-          done
 
 

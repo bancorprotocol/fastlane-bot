@@ -81,44 +81,9 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.concat(vals)
 
 
-@dataclass
-class TokenFeeResponse:
-    """
-    This dataclass is used to store the response from the get_token_and_fee function.
-    """
-    exchange_name: str
-    address: str
-    tkn0: str
-    tkn1: str
-    fee: float
-    cid: str
-    strategy_id: int
-    anchor: str
-
-    @property
-    def df(self) -> pd.DataFrame:
-        """
-        This property returns the response as a DataFrame.
-        """
-        return pd.DataFrame(
-            [
-                {
-                    "exchange_name": self.exchange_name,
-                    "address": self.address,
-                    "tkn0_address": self.tkn0,
-                    "tkn1_address": self.tkn1,
-                    "fee": self.fee,
-                    "cid": self.cid,
-                    "strategy_id": self.strategy_id,
-                    "anchor": self.anchor,
-                }
-            ]
-        )
-
-
 async def get_token_and_fee(
-        ex: Any, address: str, contract: AsyncContract, event: Any
-) -> TokenFeeResponse:
+        exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
+):
     """
     This function uses the exchange object to get the tokens and fee for a given pool.
 
@@ -129,14 +94,13 @@ async def get_token_and_fee(
         event(Any): The event object
 
     Returns:
-        TokenFeeResponse: The tokens and fee for the pool
+        The tokens and fee info for the pool
     """
     try:
         anchor = None
         tkn0 = await ex.get_tkn0(address, contract, event=event)
         tkn1 = await ex.get_tkn1(address, contract, event=event)
         fee = await ex.get_fee(address, contract)
-        exchange_name = ex.exchange_name
         if exchange_name == "bancor_v2":
             anchor = await ex.get_anchor(contract)
             for i in [0, 1]:
@@ -149,8 +113,7 @@ async def get_token_and_fee(
             elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
                 tkn0 = connector_token
 
-        # bookmark
-        strategy_id = str(event["args"]["id"]) if ex.is_carbon_v1_fork else 0
+        strategy_id = 0 if not ex.is_carbon_v1_fork else str(event["args"]["id"])
         pool_info = {
             "exchange_name": exchange_name,
             "address": address,
@@ -162,18 +125,12 @@ async def get_token_and_fee(
         }
         carbon_v1_forks = [exchange_name] if (ex.is_carbon_v1_fork or exchange_name == CARBON_V1_NAME) else []
         cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
-        return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0=tkn0, tkn1=tkn1, fee=fee, cid=cid,
-            strategy_id=strategy_id, anchor=anchor
-        )
+        return exchange_name, address, tkn0, tkn1, fee, cid, strategy_id, anchor
     except Exception as e:
         cfg.logger.info(
             f"Failed to get tokens and fee for {address} {exchange_name} {e}"
         )
-        return TokenFeeResponse(
-            exchange_name=exchange_name, address=address, tkn0=None, tkn1=None, fee=None, cid=None,
-            strategy_id=None, anchor=None
-        )
+        return exchange_name, address, None, None, None, None, None, anchor
 
 
 async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -183,7 +140,19 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
     vals = await asyncio.wait_for(
         asyncio.gather(*[get_token_and_fee(**args) for args in c]), timeout=20 * 60
     )
-    return pd.concat([val.df for val in vals])
+    return pd.DataFrame(
+        vals,
+        columns=[
+            "exchange_name",
+            "address",
+            "tkn0_address",
+            "tkn1_address",
+            "fee",
+            "cid",
+            "strategy_id",
+            "anchor",
+        ],
+    )
 
 
 def pair_name(
@@ -373,12 +342,11 @@ def process_contract_chunks(
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
-        if filename == "tokens_and_fee_df.csv":
-            df = loop.run_until_complete(func(chunk))
-            if not read_only:
-                df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
-            else:
-                lst.append(df)
+        df = loop.run_until_complete(func(chunk))
+        if not read_only:
+            df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
+        else:
+            lst.append(df)
 
     filepaths = glob(f"{dirname}/*.csv")
 
@@ -420,6 +388,7 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
         address = event["address"]
         contracts.append(
             {
+                "exchange_name": exchange_name,
                 "ex": ex,
                 "address": address,
                 "contract": mgr.w3_async.eth.contract(address=address, abi=abi),
@@ -464,7 +433,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
         chunks=chunks,
         dirname=dirname,
         filename="tokens_and_fee_df.csv",
-        subset=["address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
+        subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
         func=main_get_tokens_and_fee,
         read_only=mgr.read_only,
     )
@@ -527,7 +496,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
 
     new_pool_data_dict = new_pool_data_df.to_dict(orient="records")
 
-    # Initialize web3
     new_pool_data_df["cid"] = [
         get_pool_cid(row, carbon_v1_forks=mgr.cfg.CARBON_V1_FORKS)
         for row in new_pool_data_dict
