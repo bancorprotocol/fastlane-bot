@@ -2,7 +2,37 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.32...HEAD)
+
+- Cleopatra and Stratum exchanges not handled correctly [\#488](https://github.com/bancorprotocol/fastlane-bot/issues/488)
+- Test files under NBTest [\#448](https://github.com/bancorprotocol/fastlane-bot/issues/448)
+- Mantle gas pricing and tx formatting needs to be handled correctly [\#386](https://github.com/bancorprotocol/fastlane-bot/issues/386)
+- Incorrect Solidly Factory ABI used for scale & equalizer [\#372](https://github.com/bancorprotocol/fastlane-bot/issues/372)
+
+- Add Support for multiple Carbon deployments per-chain [\#379](https://github.com/bancorprotocol/fastlane-bot/issues/379)
+- Add support for Fantom Network [\#369](https://github.com/bancorprotocol/fastlane-bot/issues/369)
+- python main.py --arb\_mode=b3\_two\_hop --alchemy\_max\_block\_fetch=200 --loglevel=INFO --backdate\_pools=False --polling\_interval=0 --reorg\_delay=0 --run\_data\_validator=False --limit\_bancor3\_flashloan\_tokens=True --randomizer=2 --default\_min\_profit\_gas\_token=0.01 --exchanges=carbon\_v1,bancor\_v3,uniswap\_v3,uniswap\_v2,sushiswap\_v2,balancer,pancakeswap\_v2,pancakeswap\_v3 --flashloan\_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA" [\#367](https://github.com/bancorprotocol/fastlane-bot/issues/367)
+- Minor optimization in multicaller [\#348](https://github.com/bancorprotocol/fastlane-bot/issues/348)
+- Add Handling of Flashloan Fee [\#346](https://github.com/bancorprotocol/fastlane-bot/issues/346)
+
+Closed issues
+
+- Fix rate-limit issue [\#375](https://github.com/bancorprotocol/fastlane-bot/issues/375)
+
+## [v3.0.32](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.32) (2024-02-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.31...v3.0.32)
+
+- Update Base static data & small fix in Terraformer [\#363](https://github.com/bancorprotocol/fastlane-bot/pull/363) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Merged pull requests
+
+- Release candidate [\#366](https://github.com/bancorprotocol/fastlane-bot/pull/366) ([zavelevsky](https://github.com/zavelevsky))
+- Develop [\#365](https://github.com/bancorprotocol/fastlane-bot/pull/365) ([mikewcasale](https://github.com/mikewcasale))
+
+## [v3.0.31](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.31) (2024-02-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.30...v3.0.31)
 
 Merged pull requests
 
