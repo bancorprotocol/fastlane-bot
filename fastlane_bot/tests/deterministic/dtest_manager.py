@@ -20,13 +20,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
-from fastlane_bot.tests.deterministic.dtest_constants import (
-    DEFAULT_GAS,
-    DEFAULT_GAS_PRICE,
-    ETH_ADDRESS,
-    TEST_DATA_DIR,
-    TOKENS_MODIFICATIONS,
-)
+from fastlane_bot.tests.deterministic import dtest_constants as constants
 from fastlane_bot.tests.deterministic.dtest_cmd_line_args import TestCommandLineArgs
 from fastlane_bot.tests.deterministic.dtest_strategy import TestStrategy
 
@@ -304,7 +298,7 @@ class TestManager:
         """
         token_address = w3.to_checksum_address(token_address)
         wallet = w3.to_checksum_address(wallet)
-        if token_address in {ETH_ADDRESS}:
+        if token_address in {constants.ETH_ADDRESS}:
             method = "tenderly_setBalance"
             params = [[wallet], w3.to_hex(amount_wei)]
         else:
@@ -371,7 +365,7 @@ class TestManager:
         Args:
             args (argparse.Namespace): The command-line arguments.
         """
-        for token_name, details in TOKENS_MODIFICATIONS.items():
+        for token_name, details in constants.TOKENS_MODIFICATIONS.items():
             args.logger.debug(f"Modifying {token_name} token..., details: {details}")
             self.modify_token(
                 args,
@@ -396,8 +390,8 @@ class TestManager:
         tx_params = {
             "from": strategy.wallet.address,
             "nonce": strategy.wallet.nonce,
-            "gasPrice": DEFAULT_GAS_PRICE,
-            "gas": DEFAULT_GAS,
+            "gasPrice": constants.DEFAULT_GAS_PRICE,
+            "gas": constants.DEFAULT_GAS,
         }
         if strategy.value:
             tx_params["value"] = strategy.value
@@ -434,8 +428,8 @@ class TestManager:
         tx_params = {
             "from": wallet,
             "nonce": nonce,
-            "gasPrice": DEFAULT_GAS_PRICE,
-            "gas": DEFAULT_GAS,
+            "gasPrice": constants.DEFAULT_GAS_PRICE,
+            "gas": constants.DEFAULT_GAS,
         }
         tx_hash = self.carbon_controller.functions.deleteStrategy(strategy_id).transact(
             tx_params
@@ -496,7 +490,7 @@ class TestManager:
         Gets test strategies from a JSON file.
         """
         test_strategies_path = os.path.normpath(
-            f"{TEST_DATA_DIR}/test_strategies.json"
+            f"{constants.TEST_DATA_DIR}/test_strategies.json"
         )
         with open(test_strategies_path) as file:
             test_strategies = json.load(file)["test_strategies"]
@@ -546,7 +540,7 @@ class TestManager:
             test_strategy_txhashs (dict): The test strategy txhashs.
         """
         test_strategy_txhashs_path = os.path.normpath(
-            f"{TEST_DATA_DIR}/test_strategy_txhashs.json"
+            f"{constants.TEST_DATA_DIR}/test_strategy_txhashs.json"
         )
         with open(test_strategy_txhashs_path, "w") as f:
             json.dump(test_strategy_txhashs, f)

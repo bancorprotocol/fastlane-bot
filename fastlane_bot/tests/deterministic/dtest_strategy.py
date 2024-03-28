@@ -12,14 +12,7 @@ from eth_typing import ChecksumAddress
 from web3 import Web3
 
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.tests.deterministic.dtest_constants import (
-    BNT_ADDRESS,
-    DEFAULT_GAS,
-    DEFAULT_GAS_PRICE,
-    TEST_MODE_AMT,
-    USDC_ADDRESS,
-    USDT_ADDRESS,
-)
+from fastlane_bot.tests.deterministic import dtest_constants as constants
 from fastlane_bot.tests.deterministic.dtest_token import TestToken
 from fastlane_bot.tests.deterministic.dtest_wallet import TestWallet
 
@@ -78,16 +71,16 @@ class TestStrategy:
         """
         token = self.token0 if token_id == 0 else self.token1
         if token.address in [
-            BNT_ADDRESS,
-            USDC_ADDRESS,
-            USDT_ADDRESS,
+            constants.BNT_ADDRESS,
+            constants.USDC_ADDRESS,
+            constants.USDT_ADDRESS,
         ]:
             function_call = token.contract.functions.approve(
                 approval_address, 0
             ).transact(
                 {
-                    "gasPrice": DEFAULT_GAS_PRICE,
-                    "gas": DEFAULT_GAS,
+                    "gasPrice": constants.DEFAULT_GAS_PRICE,
+                    "gas": constants.DEFAULT_GAS,
                     "from": self.wallet.address,
                     "nonce": self.wallet.nonce,
                 }
@@ -103,11 +96,11 @@ class TestStrategy:
             args.logger.debug(f"tx_hash = {tx_hash}")
 
         function_call = token.contract.functions.approve(
-            approval_address, TEST_MODE_AMT
+            approval_address, constants.TEST_MODE_AMT
         ).transact(
             {
-                "gasPrice": DEFAULT_GAS_PRICE,
-                "gas": DEFAULT_GAS,
+                "gasPrice": constants.DEFAULT_GAS_PRICE,
+                "gas": constants.DEFAULT_GAS,
                 "from": self.wallet.address,
                 "nonce": self.wallet.nonce,
             }

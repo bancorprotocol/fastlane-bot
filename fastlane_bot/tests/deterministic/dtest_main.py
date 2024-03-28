@@ -13,7 +13,7 @@ import time
 from typing import Dict
 
 from fastlane_bot.tests.deterministic.dtest_cmd_line_args import TestCommandLineArgs
-from fastlane_bot.tests.deterministic.dtest_constants import KNOWN_UNABLE_TO_DELETE
+from fastlane_bot.tests.deterministic import dtest_constants as constants
 from fastlane_bot.tests.deterministic.dtest_manager import TestManager
 from fastlane_bot.tests.deterministic.dtest_pool import TestPool
 from fastlane_bot.tests.deterministic.dtest_pool_params_builder import TestPoolParamsBuilder
@@ -89,7 +89,7 @@ def get_carbon_strategies_and_delete_task(
 
     # These strategies cannot be deleted on Ethereum
     assert all(
-        x in KNOWN_UNABLE_TO_DELETE for x in undeleted_strategies
+        x in constants.KNOWN_UNABLE_TO_DELETE for x in undeleted_strategies
     ), f"Strategies not deleted that are unknown: {undeleted_strategies}"
 
 
