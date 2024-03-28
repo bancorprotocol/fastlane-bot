@@ -20,7 +20,7 @@ from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.utils import num_format, log_format
 
 MAX_UINT256 = 2 ** 256 - 1
-ETH_DECIMALS = 10 ** 18
+ETH_RESOLUTION = 10 ** 18
 
 @dataclass
 class TxHelpers:
@@ -110,7 +110,7 @@ class TxHelpers:
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
-        gas_cost_eth = Decimal(gas_cost_wei) / ETH_DECIMALS
+        gas_cost_eth = Decimal(gas_cost_wei) / ETH_RESOLUTION
         gas_cost_usd = gas_cost_eth * expected_profit_usd / expected_profit_gastkn
 
         gas_gain_eth = self.arb_rewards_portion * expected_profit_gastkn
