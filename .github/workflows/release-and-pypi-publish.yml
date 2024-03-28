@@ -117,7 +117,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add CHANGELOG.md
-          git commit --allow-empty -m "Update changelog [skip ci]"
+          git commit -m "Update changelog [skip ci]"
 
       # push to main branch using CasperWA/push-protected@v2 action
       - name: Push to protected branch
