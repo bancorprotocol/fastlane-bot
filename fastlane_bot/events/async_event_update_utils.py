@@ -128,7 +128,7 @@ async def get_token_and_fee(
         return exchange_name, address, tkn0, tkn1, fee, cid, strategy_id, anchor
     except Exception as e:
         cfg.logger.info(
-            f"Failed to get tokens and fee for {address} {ex.exchange_name} {e}"
+            f"Failed to get tokens and fee for {address} {exchange_name} {e}"
         )
         return exchange_name, address, None, None, None, None, None, anchor
 
