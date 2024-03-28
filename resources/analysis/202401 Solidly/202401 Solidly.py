@@ -590,21 +590,26 @@ y1_f, y2_f, dy_f
 # \sqrt{1+\xi}-1 = \frac{\xi}{2} - \frac{\xi^2}{8} + \frac{\xi^3}{16} - \frac{5\xi^4}{128} + O(\xi^5)
 # $$
 
-# +
-# x1_v = np.linspace(0,1,100)
-# x1_v[0] = x1_v[1]/2
-# data = [(
-#     xx, 
-#     m.sqrt(1+xx)-1,
-#     xx * (0.5 - xx*1/8),
-#     #xx/2 - xx**2/8 + xx**3/16 - xx**4 * 5 / 128,
-#     xx * (0.5 - xx*(1/8 - xx*(1/16 - 5/128*xx))),
-# ) for xx in x1_v
-# ]
-# df = pd.DataFrame(data, columns=['x', 'Float', 'Taylor2', 'Taylor4']).set_index("x")
-# df.plot()
-# plt.grid()
-# df.head()
+x1_v = np.linspace(0,1,100)
+x1_v[0] = x1_v[1]/2
+data = [(
+    xx, 
+    m.sqrt(1+xx)-1,
+    xx * (0.5 - xx*1/8),
+    #xx/2 - xx**2/8 + xx**3/16 - xx**4 * 5 / 128,
+    xx * (0.5 - xx*(1/8 - xx*(1/16 - 5/128*xx))),
+) for xx in x1_v
+]
+df = pd.DataFrame(data, columns=['xi', 'Float', 'Taylor2', 'Taylor4']).set_index("xi")
+oldfs = plt.rcParams['figure.figsize']
+plt.rcParams['figure.figsize'] = [12,6]
+#plt.figure(figsize=(12, 6))
+df.plot()
+plt.grid(True)
+plt.rcParams['figure.figsize'] = oldfs
+plt.savefig("/Users/skl/Desktop/image.jpg")
+#plt.grid()
+df.head()
 
 # +
 # x2_v = np.linspace(0,0.2,100)

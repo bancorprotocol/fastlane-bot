@@ -14,7 +14,7 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.constants import PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, \
-    SOLIDLY_V2_NAME
+    SOLIDLY_V2_NAME, FUSIONX_V3_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
@@ -115,7 +115,7 @@ class BaseManager:
         for exchange_name in self.SUPPORTED_EXCHANGES:
             initialize_events = False
             base_exchange_name = self.cfg.network.exchange_name_base_from_fork(exchange_name=exchange_name)
-            if exchange_name in [PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME]:
+            if exchange_name in [PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME]:
                 initialize_events = True
             elif base_exchange_name not in initialized_exchanges:
                 initialize_events = True

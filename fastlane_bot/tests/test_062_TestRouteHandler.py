@@ -201,8 +201,8 @@ def test_test_uniswap_v3_router_switch():
     platform_id_uni_v3 = cfg.network.EXCHANGE_IDS.get(cfg.network.UNISWAP_V3_NAME)
     
     
-    custom_data_not_uni_v3_ethereum = txroutehandler.handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="uniswap_v2")
-    custom_data_uni_v3_ethereum = txroutehandler.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v2")
+    custom_data_not_uni_v3_ethereum = txroutehandler._handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="uniswap_v2")
+    custom_data_uni_v3_ethereum = txroutehandler._handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v2")
     
     # Non Uni V3 pool custom data field on Ethereum
     assert custom_data_not_uni_v3_ethereum in custom_data_input, f"[NBTest 062 TestRouteHandler] Expected non Uni V3 route custom data field to not be changed, however {custom_data_not_uni_v3_ethereum} not in {custom_data_input}"
@@ -255,12 +255,12 @@ def test_test_uniswap_v3_router_switch():
     )
     txroutehandler_base = TxRouteHandler(trade_instructions=[trade_instruction_3, trade_instruction_4])
     
-    custom_data_not_uni_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="sushiswap_v2")
-    custom_data_uni_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v3")
+    custom_data_not_uni_v3_base = txroutehandler_base._handle_custom_data_extras(platform_id=platform_id_uni_v2, custom_data=custom_data_input, exchange_name="sushiswap_v2")
+    custom_data_uni_v3_base = txroutehandler_base._handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="uniswap_v3")
     
-    custom_data_pancake_v3_base = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="pancakeswap_v3")
-    custom_data_aerodrome = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_aerodrome, custom_data=custom_data_input, exchange_name="aerodrome_v2")
-    custom_data_velocimeter = txroutehandler_base.handle_custom_data_extras(platform_id=platform_id_solidly, custom_data=custom_data_input, exchange_name="velocimeter_v2")
+    custom_data_pancake_v3_base = txroutehandler_base._handle_custom_data_extras(platform_id=platform_id_uni_v3, custom_data=custom_data_input, exchange_name="pancakeswap_v3")
+    custom_data_aerodrome = txroutehandler_base._handle_custom_data_extras(platform_id=platform_id_aerodrome, custom_data=custom_data_input, exchange_name="aerodrome_v2")
+    custom_data_velocimeter = txroutehandler_base._handle_custom_data_extras(platform_id=platform_id_solidly, custom_data=custom_data_input, exchange_name="velocimeter_v2")
     
     
     assert type(platform_id_uni_v3) == int

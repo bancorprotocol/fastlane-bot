@@ -282,15 +282,3 @@ def find_latest_timestamped_folder(logging_path=None):
 
     list_of_folders.sort(reverse=True)  # Sort the folders in descending order
     return list_of_folders[0]  # The first one is the latest
-
-
-def count_bytes(data: HexBytes) -> (int, int):
-    """
-    This function counts the number of zero and non-zero bytes in a given input data.
-    :param data: HexBytes
-    returns Tuple(int, int):
-        The zero & non zero count of bytes in the input
-    """
-    zero_bytes = len([byte for byte in data if byte == 0])
-    non_zero_bytes = len(data) - zero_bytes
-    return zero_bytes, non_zero_bytes
