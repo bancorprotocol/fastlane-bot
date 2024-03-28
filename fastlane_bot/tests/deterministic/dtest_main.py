@@ -1,3 +1,10 @@
+"""This file contains the main function for the deterministic tests. Used to run the specified task based on the
+command line arguments defined in `run_deterministic_tests.py`.
+
+(c) Copyright Bprotocol foundation 2024.
+All rights reserved.
+Licensed under MIT License.
+"""
 import argparse
 import logging
 import os
@@ -5,10 +12,8 @@ import subprocess
 import time
 from typing import Dict
 
-from web3 import Web3
-
-from fastlane_bot.tests.deterministic.dtest_constants import KNOWN_UNABLE_TO_DELETE
 from fastlane_bot.tests.deterministic.dtest_cmd_line_args import TestCommandLineArgs
+from fastlane_bot.tests.deterministic.dtest_constants import KNOWN_UNABLE_TO_DELETE
 from fastlane_bot.tests.deterministic.dtest_manager import TestManager
 from fastlane_bot.tests.deterministic.dtest_pool import TestPool
 from fastlane_bot.tests.deterministic.dtest_pool_params_builder import TestPoolParamsBuilder

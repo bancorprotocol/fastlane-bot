@@ -2,6 +2,7 @@
 Token class to store token address and contract object for interacting with the token on the blockchain.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 from dataclasses import dataclass

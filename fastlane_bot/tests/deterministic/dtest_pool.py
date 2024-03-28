@@ -2,6 +2,7 @@
 This module contains the Wallet class, which is a dataclass that represents a wallet on the given network.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import argparse

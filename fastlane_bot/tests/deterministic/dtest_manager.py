@@ -2,6 +2,7 @@
 A module to manage Carbon strategies.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import argparse
@@ -39,7 +40,7 @@ class TestManager:
     """
 
     def __init__(self, args: argparse.Namespace):
-        
+
         self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
         assert self.w3.is_connected(), "Web3 connection failed"
 

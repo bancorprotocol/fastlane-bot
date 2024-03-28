@@ -1,3 +1,10 @@
+"""
+This file contains the TestCommandLineArgs class, which is a dataclass that represents the command-line arguments for the main.py.
+
+(c) Copyright Bprotocol foundation 2024.
+All rights reserved.
+Licensed under MIT License.
+"""
 from dataclasses import dataclass
 
 from fastlane_bot.tools.cpc import T

@@ -3,6 +3,7 @@ This module is used to build the parameters for the test pool. It is used to bui
 encode them into a string that can be used to update the storage of the pool contract.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import re
