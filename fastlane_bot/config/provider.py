@@ -101,7 +101,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
             provider_url=self.RPC_URL,
             provider_name="alchemy",
         )
-        self.connection.connect_network(network.NETWORK == N.NETWORK_MANTLE)
+        self.connection.connect_network()
         self.w3 = self.connection.web3
         self.w3_async = self.connection.w3_async
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
@@ -167,7 +167,7 @@ class _ConfigProviderTenderly(ConfigProvider):
             provider_url=self.RPC_URL,
             provider_name="tenderly",
         )
-        self.connection.connect_network(network.NETWORK == N.NETWORK_MANTLE)
+        self.connection.connect_network()
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
