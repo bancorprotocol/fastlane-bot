@@ -21,7 +21,7 @@ class TestToken:
     A class to represent a token on the blockchain.
 
     Attributes:
-        address: str or Address
+        address (str or Address): The address of the token.
     """
 
     address: str or Address  # Address after __post_init__, str before
