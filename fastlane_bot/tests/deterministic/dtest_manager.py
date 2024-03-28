@@ -38,13 +38,9 @@ class TestManager:
         self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
         assert self.w3.is_connected(), "Web3 connection failed"
 
-        multichain_addresses_path = os.path.normpath(
-            "fastlane_bot/data/multichain_addresses.csv"
-        )
-
         # Get the Carbon Controller Address for the network
         carbon_controller_address = self.get_carbon_controller_address(
-            multichain_addresses_path=multichain_addresses_path, network=args.network
+            multichain_addresses_path=constants.MULTICHAIN_ADDRESSES_PATH, network=args.network
         )
 
         # Initialize the Carbon Controller contract
@@ -57,12 +53,14 @@ class TestManager:
 
     @property
     def logs_path(self) -> str:
-        """TODO TESTS: This should be read from dtest_constants"""
+        """TODO TESTS: This should be read from TestCommandLineArgs"""
         return os.path.normpath("./logs_dtest/logs/*")
 
     def get_carbon_controller(self, address: Address or str) -> Contract:
         """
         Gets the Carbon Controller contract on the given network.
+
+        TODO: This needs to be updated when tests are added for multiple carbon deployments
 
         Args:
             address (Address or str): The address.
@@ -78,6 +76,8 @@ class TestManager:
     ) -> str:
         """
         Gets the Carbon Controller contract address on the given network.
+
+        TODO: This needs to be updated when tests are added for multiple carbon deployments
 
         Args:
             multichain_addresses_path (str): The path to the multichain addresses file.
