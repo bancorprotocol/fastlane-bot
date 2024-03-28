@@ -14,6 +14,7 @@ TEST_MODE_AMT = (
 )
 ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 SUPPORTED_EXCHANGES = ["uniswap_v2", "uniswap_v3", "pancakeswap_v2", "pancakeswap_v3"]
+CARBON_V1_FORKS = ["carbon_v1"]  # See usage in dtest_tx_helper.py if developing multi-carbon tenderly tests
 BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
 USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
