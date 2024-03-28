@@ -2,6 +2,7 @@
 This file contains the Strategy class, which is used to represent a strategy in the deterministic tests.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import argparse

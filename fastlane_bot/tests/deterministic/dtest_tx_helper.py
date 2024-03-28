@@ -3,6 +3,7 @@ This module contains the TxHelper class which is a utility class to scan the log
 and clean and extract the transaction data.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 import argparse

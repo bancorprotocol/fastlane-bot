@@ -2,6 +2,7 @@
 This file contains constants used in the deterministic tests.
 
 (c) Copyright Bprotocol foundation 2024.
+All rights reserved.
 Licensed under MIT License.
 """
 
