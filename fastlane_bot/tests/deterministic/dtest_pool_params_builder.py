@@ -7,6 +7,7 @@ Licensed under MIT License.
 """
 import re
 from dataclasses import dataclass
+from typing import Dict, List, Tuple
 
 import eth_abi
 from web3 import Web3
@@ -74,8 +75,8 @@ class TestPoolParamsBuilder:
         return result
 
     def build_type_val_dict(
-        self, pool: TestPool, param_list_single: list[str]
-    ) -> tuple:
+        self, pool: TestPool, param_list_single: List[str]
+    ) -> Tuple:
         """
         This method is used to build the type_val_dict and the encoded_params for the given pool.
         """
@@ -114,7 +115,7 @@ class TestPoolParamsBuilder:
             print(f"Error fetching latest block timestamp: {e}")
             return None
 
-    def encode_params(self, type_val_dict: dict, param_list_single: list[str]) -> str:
+    def encode_params(self, type_val_dict: Dict, param_list_single: List[str]) -> str:
         """
         This method is used to encode the parameters into a string that can be used to update the storage of the pool
         contract.
@@ -136,7 +137,7 @@ class TestPoolParamsBuilder:
             print(f"Error encoding params: {e}, {type_val_dict}")
             return None
 
-    def get_update_params_dict(self, pool: TestPool) -> dict:
+    def get_update_params_dict(self, pool: TestPool) -> Dict:
         """
         This method is used to get the update parameters dictionary for the given pool.
 
@@ -159,7 +160,7 @@ class TestPoolParamsBuilder:
             params_dict[pool.slots[i]]["encoded_params"] = encoded_params
         return params_dict
 
-    def set_storage_at(self, pool_address: str, update_params_dict_single: dict):
+    def set_storage_at(self, pool_address: str, update_params_dict_single: Dict):
         method = RPCEndpoint("tenderly_setStorageAt")
         self.w3.provider.make_request(
             method=method,

@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import time
+from typing import Dict, List
 
 from fastlane_bot.tests.deterministic.dtest_constants import (
     TEST_DATA_DIR,
@@ -63,7 +64,7 @@ class TestTxHelper:
         return True
 
     @staticmethod
-    def load_json_data(file_path: str) -> dict:
+    def load_json_data(file_path: str) -> Dict:
         """Safely load JSON data from a file.
 
         Args:
@@ -76,7 +77,7 @@ class TestTxHelper:
             return json.load(file)
 
     @staticmethod
-    def read_transaction_files(log_folder: str) -> list:
+    def read_transaction_files(log_folder: str) -> List:
         """Read all transaction files in a folder and return their content.
         
         Args:
@@ -92,7 +93,7 @@ class TestTxHelper:
                 transactions.append(file.read())
         return transactions
 
-    def tx_scanner(self, args: argparse.Namespace) -> list:
+    def tx_scanner(self, args: argparse.Namespace) -> List:
         """
         Scan for successful transactions in the most recent log folder.
         
@@ -119,7 +120,7 @@ class TestTxHelper:
         return successful_txs
 
     @staticmethod
-    def clean_tx_data(tx_data: dict) -> dict:
+    def clean_tx_data(tx_data: Dict) -> Dict:
         """
         This method takes a transaction data dictionary and removes the cid0 key from the trades.
         
@@ -138,7 +139,7 @@ class TestTxHelper:
         return tx_data
 
     @staticmethod
-    def get_tx_data(strategy_id: int, txt_all_successful_txs: list) -> dict:
+    def get_tx_data(strategy_id: int, txt_all_successful_txs: List) -> Dict:
         """
         This method takes a list of successful transactions and a strategy_id and returns the transaction data for the
         given strategy_id.
@@ -161,7 +162,7 @@ class TestTxHelper:
                 )
 
     @staticmethod
-    def load_json_file(file_name: str, args: argparse.Namespace) -> dict:
+    def load_json_file(file_name: str, args: argparse.Namespace) -> Dict:
         """
         This method loads a json file and returns the data as a dictionary.
         
@@ -187,7 +188,7 @@ class TestTxHelper:
         return data
 
     @staticmethod
-    def log_txs(tx_list: list, args: argparse.Namespace):
+    def log_txs(tx_list: List, args: argparse.Namespace):
         """
         This method logs the transactions in a list.
         
@@ -198,7 +199,7 @@ class TestTxHelper:
         for i, tx in enumerate(tx_list):
             args.logger.debug(f"\nsuccessful_txs[{i}]: {tx}")
 
-    def log_results(self, args: argparse.Namespace, actual_txs: list, expected_txs: dict, test_strategy_txhashs: dict) -> dict:
+    def log_results(self, args: argparse.Namespace, actual_txs: List, expected_txs: Dict, test_strategy_txhashs: Dict) -> Dict:
         """
         Logs the results of the tests and returns a dictionary with the results.
 
@@ -246,8 +247,8 @@ class TestTxHelper:
 
     @staticmethod
     def log_test_failure(test_id: int,
-                         reason: str, results_description: dict,
-                         tx_data: dict = None, expected_data: dict = None):
+                         reason: str, results_description: Dict,
+                         tx_data: Dict = None, expected_data: Dict = None):
         """
         Logs a test failure.
 
@@ -279,7 +280,7 @@ class TestTxHelper:
         else:
             args.logger.warning("SOME TESTS FAILED")
 
-    def wait_for_txs(self, args: argparse.Namespace) -> dict:
+    def wait_for_txs(self, args: argparse.Namespace) -> Dict:
         """
         This method waits for the transactions to be executed and returns the test strategy txhashs.
 

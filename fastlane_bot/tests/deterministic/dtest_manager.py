@@ -9,7 +9,7 @@ import glob
 import json
 import os
 import time
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import pandas as pd
 import requests
@@ -100,7 +100,7 @@ class TestManager:
         )
 
     @staticmethod
-    def create_new_testnet() -> tuple:
+    def create_new_testnet() -> Tuple[str, int]:
         """
         Creates a new testnet on Tenderly.
 
@@ -141,7 +141,7 @@ class TestManager:
         return uri, from_block
 
     @staticmethod
-    def process_order_data(log_args: dict, order_key: str) -> dict:
+    def process_order_data(log_args: Dict, order_key: str) -> Dict:
         """
         Transforms nested order data by appending a suffix to each key.
 
@@ -160,9 +160,9 @@ class TestManager:
     @staticmethod
     def print_state_changes(
         args: argparse.Namespace,
-        all_carbon_strategies: list,
-        deleted_strategies: list,
-        remaining_carbon_strategies: list,
+        all_carbon_strategies: List,
+        deleted_strategies: List,
+        remaining_carbon_strategies: List,
     ) -> None:
         """
         Prints the state changes of Carbon strategies.
@@ -234,7 +234,7 @@ class TestManager:
 
     def get_state_of_carbon_strategies(
         self, args: argparse.Namespace, from_block: int
-    ) -> tuple:
+    ) -> Tuple:
         """
         Fetches the state of Carbon strategies.
 
@@ -327,7 +327,7 @@ class TestManager:
         self,
         args: argparse.Namespace,
         token_address: str,
-        modifications: dict,
+        modifications: Dict,
         strategy_id: int,
         strategy_beneficiary: Address,
     ):
@@ -445,8 +445,8 @@ class TestManager:
         return tx_receipt.status
 
     def delete_all_carbon_strategies(
-        self, args: argparse.Namespace, carbon_strategy_id_owner_list: list
-    ) -> list:
+        self, args: argparse.Namespace, carbon_strategy_id_owner_list: List
+    ) -> List:
         """
         Deletes all Carbon strategies.
 
@@ -491,7 +491,7 @@ class TestManager:
         return undeleted_strategies
 
     @staticmethod
-    def get_test_strategies(args: argparse.Namespace) -> dict:
+    def get_test_strategies(args: argparse.Namespace) -> Dict:
         """
         Gets test strategies from a JSON file.
         """
@@ -504,8 +504,8 @@ class TestManager:
         return test_strategies
 
     def append_strategy_ids(
-        self, args: argparse.Namespace, test_strategy_txhashs: dict, from_block: int
-    ) -> dict:
+        self, args: argparse.Namespace, test_strategy_txhashs: Dict, from_block: int
+    ) -> Dict:
         """
         Appends the strategy ids to the test strategies.
 
@@ -538,7 +538,7 @@ class TestManager:
         return test_strategy_txhashs
 
     @staticmethod
-    def write_strategy_txhashs_to_json(test_strategy_txhashs: dict):
+    def write_strategy_txhashs_to_json(test_strategy_txhashs: Dict):
         """
         Writes the test strategy txhashs to a file.
 
@@ -568,8 +568,8 @@ class TestManager:
         return strats_created_from_block
 
     def approve_and_create_strategies(
-        self, args: argparse.Namespace, test_strategies: dict, from_block: int
-    ) -> dict:
+        self, args: argparse.Namespace, test_strategies: Dict, from_block: int
+    ) -> Dict:
         """
         Approves and creates test strategies.
 
