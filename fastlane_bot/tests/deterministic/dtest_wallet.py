@@ -5,6 +5,7 @@ This module contains the Wallet class, which is a dataclass that represents a wa
 Licensed under MIT License.
 """
 from dataclasses import dataclass
+from typing import List
 
 from eth_typing import Address
 from web3 import Web3
@@ -20,7 +21,7 @@ class TestWallet:
 
     w3: Web3
     address: str or Address  # Address after __post_init__, str before
-    balances: list[
+    balances: List[
         TestTokenBalance or dict
     ] = None  # List of TokenBalances after __post_init__, list of dicts before
 

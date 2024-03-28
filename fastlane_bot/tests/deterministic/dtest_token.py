@@ -5,6 +5,7 @@ Token class to store token address and contract object for interacting with the 
 Licensed under MIT License.
 """
 from dataclasses import dataclass
+from typing import Any, List
 
 from eth_typing import Address
 from web3 import Web3
@@ -54,7 +55,7 @@ class TestTokenBalance:
     def hex_balance(self):
         return Web3.to_hex(self.balance)
 
-    def faucet_params(self, wallet_address: str = None) -> list:
+    def faucet_params(self, wallet_address: str = None) -> List:
         """
         This method is used to return the faucet parameters for the token balance.
 
