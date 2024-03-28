@@ -24,7 +24,7 @@ def get_logger(args: argparse.Namespace) -> logging.Logger:
     """
     Get the logger for the script.
     """
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(args.task)
     logger.setLevel(args.loglevel)
     logger.handlers.clear()  # Clear existing handlers to avoid duplicate logging
 
