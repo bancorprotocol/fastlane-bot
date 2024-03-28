@@ -69,7 +69,7 @@ class TestStrategy:
         Returns:
             str: The transaction hash.
         """
-        token = self.token0 if token_id == 0 else self.token1
+        token = [self.token0, self.token1][token_id]
         if token.address in [
             constants.BNT_ADDRESS,
             constants.USDC_ADDRESS,
