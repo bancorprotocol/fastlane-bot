@@ -6,9 +6,10 @@ encode them into a string that can be used to update the storage of the pool con
 All rights reserved.
 Licensed under MIT License.
 """
+import argparse
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import eth_abi
 from web3 import Web3
@@ -32,8 +33,9 @@ class TestPoolParamsBuilder:
     This class is used to build the parameters for the test pool.
     """
 
-    def __init__(self, w3: Web3):
+    def __init__(self, args: argparse.Namespace, w3: Web3):
         self.w3 = w3
+        self.args = args
 
     @staticmethod
     def convert_to_bool(value: str or int) -> bool:
@@ -44,19 +46,17 @@ class TestPoolParamsBuilder:
             return value.lower() in ["true", "1"]
         return bool(value)
 
-    @staticmethod
-    def safe_int_conversion(value: any) -> int or None:
+    def safe_int_conversion(self, value: Any) -> int or None:
         """
         This method is used to convert a value to an integer.
         """
         try:
             return int(value)
         except (ValueError, TypeError):
-            print(f"Error converting {value} to int")
+            self.args.logger.error(f"Error converting {value} to int")
             return None
 
-    @staticmethod
-    def append_zeros(value: any, type_str: str) -> str:
+    def append_zeros(self, value: any, type_str: str) -> str:
         """
         This method is used to append zeros to a value based on the type.
         """
@@ -72,7 +72,7 @@ class TestPoolParamsBuilder:
                 length = int(re.search(r"\d+", type_str).group()) // 4
                 result = "0" * (length - len(hex_value)) + hex_value
             except Exception as e:
-                print(f"Error building append_zeros {str(e)}")
+                self.args.logger.error(f"Error building append_zeros {str(e)}")
         return result
 
     def build_type_val_dict(
@@ -113,7 +113,7 @@ class TestPoolParamsBuilder:
         try:
             return int(self.w3.eth.get_block("latest")["timestamp"])
         except Exception as e:
-            print(f"Error fetching latest block timestamp: {e}")
+            self.args.logger.error(f"Error fetching latest block timestamp: {e}")
             return None
 
     def encode_params(self, type_val_dict: Dict, param_list_single: List[str]) -> str:
@@ -135,7 +135,7 @@ class TestPoolParamsBuilder:
             )
             return "0x" + "0" * (64 - len(result)) + result
         except Exception as e:
-            print(f"Error encoding params: {e}, {type_val_dict}")
+            self.args.logger.error(f"Error encoding params: {e}, {type_val_dict}")
             return None
 
     def get_update_params_dict(self, pool: TestPool) -> Dict:
@@ -171,8 +171,8 @@ class TestPoolParamsBuilder:
                 update_params_dict_single["encoded_params"],
             ],
         )
-        print(f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}")
-        print(
+        self.args.logger.debug(f"[set_storage_at] {pool_address}, {update_params_dict_single['slot']}")
+        self.args.logger.debug(
             f"[set_storage_at] Updated storage parameters for {pool_address} at slot {update_params_dict_single['slot']}"
         )
 

@@ -59,7 +59,7 @@ def set_test_state_task(mgr: TestManager):
         for index, test_pools_row in test_pools.iterrows()
     ]
     pools = [pool for pool in pools if pool.is_supported]
-    builder = TestPoolParamsBuilder(mgr.w3)
+    builder = TestPoolParamsBuilder(mgr.args, mgr.w3)
     builder.update_pools_by_exchange(mgr.args, builder, pools, mgr.w3)
 
 
