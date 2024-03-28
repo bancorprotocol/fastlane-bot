@@ -7,7 +7,8 @@ from typing import Dict
 
 from web3 import Web3
 
-from fastlane_bot.tests.deterministic.dtest_constants import KNOWN_UNABLE_TO_DELETE, TestCommandLineArgs
+from fastlane_bot.tests.deterministic.dtest_constants import KNOWN_UNABLE_TO_DELETE
+from fastlane_bot.tests.deterministic.dtest_cmd_line_args import TestCommandLineArgs
 from fastlane_bot.tests.deterministic.dtest_manager import TestManager
 from fastlane_bot.tests.deterministic.dtest_pool import TestPool
 from fastlane_bot.tests.deterministic.dtest_pool_params_builder import TestPoolParamsBuilder

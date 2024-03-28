@@ -25,8 +25,8 @@ from fastlane_bot.tests.deterministic.dtest_constants import (
     ETH_ADDRESS,
     TEST_DATA_DIR,
     TOKENS_MODIFICATIONS,
-    TestCommandLineArgs,
 )
+from fastlane_bot.tests.deterministic.dtest_cmd_line_args import TestCommandLineArgs
 from fastlane_bot.tests.deterministic.dtest_strategy import TestStrategy
 
 
