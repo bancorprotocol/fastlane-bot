@@ -33,15 +33,13 @@ from fastlane_bot.tests.deterministic.dtest_strategy import TestStrategy
 class TestManager:
     """
     A class to manage Web3 contracts and Carbon strategies.
+
+    Args:
+            args (argparse.Namespace): The command-line arguments.
     """
 
     def __init__(self, args: argparse.Namespace):
-        """
-        Initializes the TestManager.
-
-        Args:
-            args (argparse.Namespace): The command-line arguments.
-        """
+        
         self.w3 = Web3(Web3.HTTPProvider(args.rpc_url, {"timeout": 60}))
         assert self.w3.is_connected(), "Web3 connection failed"
 
