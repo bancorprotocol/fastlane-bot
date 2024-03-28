@@ -68,6 +68,7 @@ latest_pool_data.json
 missing_events.json
 *.log
 logs/*
+logs_dtest/*
 /token_details.csv
 /fastlane_bot/data/blockchain_data/*/token_detail/
 missing_tokens_df.csv
