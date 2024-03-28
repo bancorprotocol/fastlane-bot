@@ -127,10 +127,13 @@ class TestManager:
             "syncState": False,
         }
 
-        response = requests.post(url, headers=headers, data=json.dumps(data))
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(data))
 
-        uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
-        from_block = int(response.json()["container"]["networkConfig"]["blockNumber"])
+            uri = f"{response.json()['container']['connectivityConfig']['endpoints'][0]['uri']}"
+            from_block = int(response.json()["container"]["networkConfig"]["blockNumber"])
+        except Exception as e:
+            raise Exception(f"[create_new_testnet] Error creating new testnet: {e}") from e
 
         return uri, from_block
 
