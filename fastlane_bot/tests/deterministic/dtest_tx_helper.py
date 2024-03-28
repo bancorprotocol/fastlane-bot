@@ -121,7 +121,7 @@ class TestTxHelper:
     @staticmethod
     def clean_tx_data(tx_data: Dict) -> Dict:
         """
-        This method takes a transaction data dictionary and removes the cid0 key from the trades.
+        This method takes a transaction data dictionary and removes the cid0 key from the trades. Note that the same dict object is modified in place.
         
         Args:
             tx_data (dict): The transaction data.
