@@ -15,7 +15,7 @@ from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V3_POOL_ABI, VELOCIMETER_V2_POOL_ABI
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI
 
 from unittest.mock import Mock
 import nest_asyncio
@@ -96,7 +96,7 @@ def test_test_solidly_v2_exchange():
     
     @pytest.mark.asyncio
     async def test_solidly_v2_exchange():
-        assert (solidly_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
+        assert (solidly_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
         #assert (await solidly_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await solidly_v2_exchange.get_fee('', mocked_contract)}"
         assert (await solidly_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
         assert (solidly_v2_exchange.router_address == "jeffs_router")
@@ -121,7 +121,7 @@ def test_test_solidly_v2_exchange_fork():
     async def test_uniswap_v2_exchange():
         assert (velocimeter_v2_exchange.exchange_name in "velocimeter_v2"), f"Wrong exchange name. Expected velocimeter_v2, got {velocimeter_v2_exchange.exchange_name}"
         assert (velocimeter_v2_exchange.base_exchange_name in "solidly_v2"), f"Wrong base exchange name. Expected solidly_v2, got {velocimeter_v2_exchange.base_exchange_name}"    
-        assert (velocimeter_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
+        assert (velocimeter_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
         #assert (await velocimeter_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await velocimeter_v2_exchange.get_fee('', mocked_contract)}"
         assert (await velocimeter_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
         assert (velocimeter_v2_exchange.router_address == "jjs_router")
