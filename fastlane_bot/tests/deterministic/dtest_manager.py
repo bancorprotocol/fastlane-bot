@@ -60,6 +60,7 @@ class TestManager:
         )
 
         self.carbon_controller = carbon_controller
+        self.args = args
 
     @property
     def logs_path(self) -> str:
