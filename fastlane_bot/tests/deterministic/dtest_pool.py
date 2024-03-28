@@ -14,10 +14,7 @@ import pandas as pd
 from web3 import Web3
 from web3.types import RPCEndpoint
 
-from fastlane_bot.tests.deterministic.dtest_constants import (
-    SUPPORTED_EXCHANGES,
-    TEST_DATA_DIR,
-)
+from fastlane_bot.tests.deterministic import dtest_constants as constants
 from fastlane_bot.tests.deterministic.dtest_token import TestTokenBalance
 
 
@@ -81,7 +78,7 @@ class TestPool:
         """
         Returns True if the pool is supported, otherwise False.
         """
-        return self.exchange_type in SUPPORTED_EXCHANGES
+        return self.exchange_type in constants.SUPPORTED_EXCHANGES
 
     def set_balance_via_faucet(self, args: argparse.Namespace,
                                w3: Web3, token_id: int):
@@ -114,6 +111,6 @@ class TestPool:
     def load_test_pools():
         # Import pool data
         static_pool_data_testing_path = os.path.normpath(
-            f"{TEST_DATA_DIR}/static_pool_data_testing.csv"
+            f"{constants.TEST_DATA_DIR}/static_pool_data_testing.csv"
         )
         return pd.read_csv(static_pool_data_testing_path, dtype=str)

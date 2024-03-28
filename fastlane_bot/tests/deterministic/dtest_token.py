@@ -12,7 +12,7 @@ from eth_typing import Address
 from web3 import Web3
 from web3.contract import Contract
 
-from fastlane_bot.tests.deterministic.dtest_constants import ETH_ADDRESS
+from fastlane_bot.tests.deterministic import dtest_constants as constants
 
 
 @dataclass
@@ -32,7 +32,7 @@ class TestToken:
 
     @property
     def is_eth(self):
-        return self.address == ETH_ADDRESS
+        return self.address == constants.ETH_ADDRESS
 
 
 @dataclass
