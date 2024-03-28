@@ -359,10 +359,10 @@ plt.plot(x_v, y1_v, label="f")
 #plt.legend()
 plt.grid()
 
-assert iseq(f1v.goalseek(0, x0=1), 2)
-assert iseq(f1v.goalseek(0, x0=-1), -2)
-assert iseq(f1v.goalseek(-3, x0=1), 1)
-assert iseq(f1v.goalseek(-3, x0=-1), -1)
+assert iseq(f1v.goalseek(target=0, x0=1), 2)
+assert iseq(f1v.goalseek(target=0, x0=-1), -2)
+assert iseq(f1v.goalseek(target=-3, x0=1), 1)
+assert iseq(f1v.goalseek(target=-3, x0=-1), -1)
 assert iseq(0, f1v.minimize1(x0=5), eps=1e-3)
 f1v.minimize1(x0=5)
 
@@ -374,9 +374,9 @@ plt.plot(x_v, y2_v, label="f")
 #plt.legend()
 plt.grid()
 
-assert iseq(f2v.goalseek(5), 0.8685170919424989, eps=1e-4)
+assert iseq(f2v.goalseek(target=5), 0.8685170919424989, eps=1e-4)
 assert iseq(f2v.minimize1(), -0.3332480000000852, eps=1e-4)
-f2v.goalseek(5), f2v.minimize1()
+f2v.goalseek(target=5), f2v.minimize1()
 
 # ## Restricted and apply kernel
 #
@@ -466,10 +466,10 @@ diff1 = (f0v-f1v).norm()
 diff2 = (f0v-f2v).norm()
 assert iseq( (f0v-f1v).norm2(), (f0v-f1v).norm()**2)
 assert iseq( (f0v-f2v).norm2(), (f0v-f2v).norm()**2)
-assert iseq(f1v.distance2(f0), (f0v-f1v).norm2())
-assert iseq(f2v.distance2(f0), (f0v-f2v).norm2())
-assert iseq(f1v.distance(f0), (f0v-f1v).norm())
-assert iseq(f2v.distance(f0), (f0v-f2v).norm())
+assert iseq(f1v.dist2_L2(f0), (f0v-f1v).norm2())
+assert iseq(f2v.dist2_L2(f0), (f0v-f2v).norm2())
+assert iseq(f1v.dist_L2(f0), (f0v-f1v).norm())
+assert iseq(f2v.dist_L2(f0), (f0v-f2v).norm())
 
 # plot
 f0v.plot(show=False, label="f0 [target function]")

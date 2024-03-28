@@ -11,148 +11,19 @@ import asyncio
 import nest_asyncio
 from _decimal import Decimal
 
-# import itertools
-# import random
-# import time
+from json import loads
 from dataclasses import dataclass
-from typing import List, Any, Dict, Tuple, Optional
+from typing import List, Any, Dict, Optional
 
-# import eth_abi
-# import math
-# import pandas as pd
 import requests
 from alchemy import Network, Alchemy
-from web3 import Web3
 from web3.exceptions import TimeExhausted
-from web3.types import TxReceipt
 
-# from fastlane_bot.config import *  # TODO: PRECISE THE IMPORTS or from .. import config
-# from fastlane_bot.db.models import Token, Pool
-# import fastlane_bot.config as c
-# from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.config import Config
-from fastlane_bot.data.abi import *  # TODO: PRECISE THE IMPORTS or from .. import abi
-from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix, count_bytes
+from fastlane_bot.data.abi import ERC20_ABI
+from fastlane_bot.utils import num_format, log_format, num_format_float, int_prefix
 
 nest_asyncio.apply()
-
-
-@dataclass
-class TxHelper:
-    """
-    A class to represent a flashloan arbitrage.
-
-    Attributes
-    ----------
-    usd_gas_limit : float
-        The USD gas limit.
-    gas_price_multiplier : float
-        The gas price multiplier.
-    """
-
-    __VERSION__ = __VERSION__
-    __DATE__ = __DATE__
-
-    ConfigObj: Config
-    usd_gas_limit: float = 20  # TODO this needs to be dynamic
-    gas_price_multiplier: float = 1.2
-
-    def __post_init__(self):
-        self.PRIVATE_KEY: str = self.ConfigObj.ETH_PRIVATE_KEY_BE_CAREFUL
-        self.COINGECKO_URL: str = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_24hr_change=true"
-        self.arb_contract: Any = self.ConfigObj.BANCOR_ARBITRAGE_CONTRACT
-        self.w3: Web3 = self.ConfigObj.w3
-
-    @property
-    def wallet_address(self) -> str:
-        """Get the wallet address.
-
-        Returns:
-            str: The wallet address.
-        """
-        return self.ConfigObj.LOCAL_ACCOUNT.address
-
-    @property
-    def wallet_balance(self) -> Tuple[Any, int]:
-        """Get the wallet balance in Ether.
-
-        Returns:
-            float: The wallet balance in Ether.
-        """
-        balance = self.w3.eth.getBalance(self.wallet_address)
-        return balance, self.w3.fromWei(balance, "ether")
-
-    @property
-    def wei_balance(self) -> int:
-        """Get the wallet balance in Wei.
-
-        Returns:
-            int: The wallet balance in Wei.
-        """
-        return self.wallet_balance[0]
-
-    @property
-    def ether_balance(self) -> float:
-        """Get the wallet balance in Ether.
-
-        Returns:
-            float: The wallet balance in Ether.
-        """
-        return self.wallet_balance[1]
-
-    @property
-    def nonce(self):
-        return self.ConfigObj.w3.eth.get_transaction_count(
-            self.ConfigObj.LOCAL_ACCOUNT.address
-        )
-
-    @property
-    def gas_limit(self):
-        return self.get_gas_limit_from_usd(self.usd_gas_limit)
-
-    @property
-    def base_gas_price(self):
-        """
-        Get the base gas price from the Web3 instance.
-        """
-        return self.ConfigObj.w3.eth.gasPrice
-
-    @property
-    def gas_price_gwei(self):
-        """
-        Get the gas price from the Web3 instance (gwei).
-        """
-        return self.base_gas_price / 1e9
-
-    @property
-    def ether_price_usd(self):
-        """
-        Get the ether price in USD.
-        """
-        response = requests.get(self.COINGECKO_URL)
-        data = response.json()
-        return data["ethereum"]["usd"]
-
-    @property
-    def deadline(self):
-        return (
-            self.ConfigObj.w3.eth.getBlock("latest")["timestamp"]
-            + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
-        )
-
-    def get_gas_limit_from_usd(self, gas_cost_usd: float) -> int:
-        """Calculate the gas limit based on the desired gas cost in USD.
-
-        Args:
-            gas_cost_usd (float): The desired gas cost in USD.
-
-        Returns:
-            int: The calculated gas limit.
-        """
-        ether_cost = gas_cost_usd / self.ether_price_usd
-        gas_limit = ether_cost / self.gas_price_gwei * 1e9
-        return int(gas_limit)
-
 
 @dataclass
 class TxHelpers:
@@ -390,7 +261,7 @@ class TxHelpers:
         if "failed to apply transaction" in response.text:
             return None
         else:
-            access_list = json.loads(response.text)["result"]["accessList"]
+            access_list = loads(response.text)["result"]["accessList"]
             return access_list
 
     def construct_contract_function(
@@ -701,7 +572,7 @@ class TxHelpers:
             json=self._get_payload(method=method, params=params),
             headers=self._get_headers,
         )
-        return int(json.loads(response.text)["result"].split("0x")[1], 16)
+        return int(loads(response.text)["result"].split("0x")[1], 16)
 
     def get_max_priority_fee_per_gas_alchemy(self):
         """
@@ -818,6 +689,6 @@ class TxHelpers:
         """
 
         l1_data_fee = asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))
+            asyncio.gather(self.ConfigObj.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_transaction)))[0]
         # Dividing by 10 ** 18 in order to convert from wei resolution to native-token resolution
         return Decimal(f"{l1_data_fee}e-18")

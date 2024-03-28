@@ -5,8 +5,8 @@ Implements the `Kernel` class, an integration kernel together with numeric integ
 (c) Copyright Bprotocol foundation 2024. 
 Licensed under MIT
 """
-__VERSION__ = '0.9'
-__DATE__ = "18/Jan/2024"
+__VERSION__ = '0.9.1'
+__DATE__ = "26/Jan/2024"
 
 from dataclasses import dataclass, asdict
 from scipy.stats import norm
@@ -191,11 +191,17 @@ class Kernel():
         assert x_max > x_min, "x_max must be greater than x_min"
         assert steps > 0, "steps must be positive"
         
+        def func1(x):
+            try:
+                return func(x)
+            except Exception as e:
+                return 0
+        
         try:
             dx = (x_max-x_min)/steps
-            f = [func(x_min+i*dx) for i in range(steps+1)]
+            f = [func1(x_min+i*dx) for i in range(steps+1)]
         except Exception as e:
-            raise ValueError(f"failed to calculate function values using {func}") from e
+            raise ValueError(f"calculation error (xmin={x_min}, xmax={x_max}, steps={steps}) [{e}]") from e
         return (sum(f) - 0.5*(f[0]+f[-1])) * dx
     
     # METHODS = {
