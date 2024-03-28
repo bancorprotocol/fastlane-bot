@@ -5,6 +5,7 @@ This file contains constants used in the deterministic tests.
 All rights reserved.
 Licensed under MIT License.
 """
+import os
 
 KNOWN_UNABLE_TO_DELETE = {
     68737038118029569619601670701217178714718: ("pDFS", "ETH"),
@@ -24,6 +25,9 @@ DEFAULT_FROM_BLOCK = 1000000
 TENDERLY_RPC_KEY = "fb866397-29bd-4886-8406-a2cc7b7c5b1f"  # https://virtual.mainnet.rpc.tenderly.co/9ea4ceb3-d0f5-4faf-959e-f51cf1f6b52b, from_block: 19325893, fb866397-29bd-4886-8406-a2cc7b7c5b1f
 REAL_DATA_DIR = "fastlane_bot/data/blockchain_data"
 TEST_DATA_DIR = "fastlane_bot/tests/_data"
+MULTICHAIN_ADDRESSES_PATH = os.path.normpath(
+    "fastlane_bot/data/multichain_addresses.csv"
+)
 binance14 = "0x28C6c06298d514Db089934071355E5743bf21d60"
 TOKENS_MODIFICATIONS = {
     "0x0": {
