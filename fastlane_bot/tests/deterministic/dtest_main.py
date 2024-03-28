@@ -39,14 +39,13 @@ def get_logger(args: argparse.Namespace) -> logging.Logger:
     return logger
 
 
-def set_test_state_task(args: argparse.Namespace):
+def set_test_state_task(mgr: TestManager):
     """
     Sets the test state based on the static_pool_data_testing.csv file.
 
     Args:
-        args: argparse.Namespace, the command line arguments
+        mgr: TestManager, the test manager
     """
-    args.logger.info("\nRunning set_test_state_task...")
 
     test_pools = TestPool.load_test_pools()
 
@@ -55,8 +54,8 @@ def set_test_state_task(args: argparse.Namespace):
         for index, test_pools_row in test_pools.iterrows()
     ]
     pools = [pool for pool in pools if pool.is_supported]
-    builder = TestPoolParamsBuilder(args.w3)
-    builder.update_pools_by_exchange(args, builder, pools, args.w3)
+    builder = TestPoolParamsBuilder(mgr.w3)
+    builder.update_pools_by_exchange(mgr.args, builder, pools, mgr.w3)
 
 
 def get_carbon_strategies_and_delete_task(
@@ -192,14 +191,14 @@ def main(args: argparse.Namespace):
         test_manager.delete_old_logs(args)
 
     if args.task == "set_test_state":
-        set_test_state_task(test_manager.w3)
+        set_test_state_task(test_manager)
     elif args.task == "get_carbon_strategies_and_delete":
         get_carbon_strategies_and_delete_task(test_manager, args)
     elif args.task == "run_tests_on_mode":
         _extracted_run_tests_on_mode(test_manager, args)
     elif args.task == "end_to_end":
         get_carbon_strategies_and_delete_task(test_manager, args)
-        set_test_state_task(test_manager.w3)
+        set_test_state_task(test_manager)
         _extracted_run_tests_on_mode(test_manager, args)
     else:
         raise ValueError(f"Task {args.task} not recognized")

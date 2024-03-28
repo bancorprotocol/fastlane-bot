@@ -21,7 +21,7 @@ DEFAULT_GAS_PRICE = 0
 DEFAULT_FROM_BLOCK = 1000000
 TENDERLY_RPC_KEY = "fb866397-29bd-4886-8406-a2cc7b7c5b1f"  # https://virtual.mainnet.rpc.tenderly.co/9ea4ceb3-d0f5-4faf-959e-f51cf1f6b52b, from_block: 19325893, fb866397-29bd-4886-8406-a2cc7b7c5b1f
 REAL_DATA_DIR = "fastlane_bot/data/blockchain_data"
-TEST_DATA_DIR = "fastlane_bot/tests/deterministic/_data"
+TEST_DATA_DIR = "fastlane_bot/tests/_data"
 binance14 = "0x28C6c06298d514Db089934071355E5743bf21d60"
 TOKENS_MODIFICATIONS = {
     "0x0": {
