@@ -252,13 +252,6 @@ UNISWAP_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
         "name": "getReserves",
         "stateMutability": "view",
         "inputs": [],
@@ -286,13 +279,6 @@ UNISWAP_V3_POOL_ABI = [
         "name": "Swap",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "sender", "type": "address"}, {"indexed": True, "internalType": "address", "name": "recipient", "type": "address"}, {"indexed": False, "internalType": "int256", "name": "amount0", "type": "int256"}, {"indexed": False, "internalType": "int256", "name": "amount1", "type": "int256"}, {"indexed": False, "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160"}, {"indexed": False, "internalType": "uint128", "name": "liquidity", "type": "uint128"}, {"indexed": False, "internalType": "int24", "name": "tick", "type": "int24"}]
-    },
-    {
-        "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     },
     {
         "type": "function",
@@ -347,13 +333,6 @@ PANCAKESWAP_V3_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
         "name": "fee",
         "stateMutability": "view",
         "inputs": [],
@@ -405,13 +384,6 @@ SOLIDLY_V2_POOL_ABI = [
     },
     {
         "type": "function",
-        "name": "factory",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
         "name": "getReserves",
         "stateMutability": "view",
         "inputs": [],
@@ -434,50 +406,6 @@ SOLIDLY_V2_POOL_ABI = [
     {
         "type": "function",
         "name": "token1",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
-]
-
-VELOCIMETER_V2_POOL_ABI = [
-    {
-        "type": "event",
-        "name": "Sync",
-        "anonymous": False,
-        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "getReserves",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint256", "name": "_reserve0", "type": "uint256"}, {"internalType": "uint256", "name": "_reserve1", "type": "uint256"}, {"internalType": "uint256", "name": "_blockTimestampLast", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "stable",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}]
-    },
-    {
-        "type": "function",
-        "name": "token0",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "token1",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "voter",
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
