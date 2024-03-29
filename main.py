@@ -382,11 +382,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
                     f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
-                run_async_update_with_retries(
-                    mgr,
-                    current_block=current_block,
-                    logging_path=args.logging_path,
-                )
+                _run_async_update_with_retries(mgr, current_block=current_block)
                 mgr.pools_to_add_from_contracts = []
 
             # Increment the loop index
@@ -570,12 +566,12 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 break
 
 
-def run_async_update_with_retries(mgr, current_block, logging_path, max_retries=5):
+def _run_async_update_with_retries(mgr, current_block, max_retries=5):
     failed_async_calls = 0
 
     while failed_async_calls < max_retries:
         try:
-            async_update_pools_from_contracts(mgr, current_block, logging_path)
+            async_update_pools_from_contracts(mgr, current_block)
             return  # Successful execution
         except AsyncUpdateRetryException as e:
             failed_async_calls += 1

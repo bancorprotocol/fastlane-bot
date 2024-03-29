@@ -368,7 +368,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             addr = self.web3.to_checksum_address(event["address"])
             ex_name = self.exchange_name_from_event(event)
             if not ex_name:
-                self.cfg.logger.warning("[run_async_update_with_retries] ex_name not found from event")
+                self.cfg.logger.warning("[update_remaining_pools] ex_name not found from event")
                 continue
 
             key, key_value = self.get_key_and_value(event, addr, ex_name)
