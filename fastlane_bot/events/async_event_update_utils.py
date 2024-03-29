@@ -148,8 +148,8 @@ async def _get_tokens_and_fees(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFram
 
 
 def _get_pool_info(
-        pool: pd.Series,
         mgr: Any,
+        pool: pd.Series,
         current_block: int,
         tkn0: Dict[str, Any],
         tkn1: Dict[str, Any],
@@ -216,7 +216,7 @@ def _get_new_pool_data(
             continue
         tkn0["address"] = pool["tkn0_address"]
         tkn1["address"] = pool["tkn1_address"]
-        pool_info = _get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
+        pool_info = _get_pool_info(mgr, pool, current_block, tkn0, tkn1, pool_data_keys)
         new_pool_data.append(pool_info)
     return new_pool_data
 
