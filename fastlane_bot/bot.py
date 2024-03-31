@@ -1043,11 +1043,8 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
-        # Get the tx helpers class
-        tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
-
         # Return the validate and submit transaction
-        return tx_helpers.validate_and_submit_transaction(
+        return self.TxHelpersClass.validate_and_submit_transaction(
             route_struct=route_struct_maximized,
             src_amt=flashloan_amount_wei,
             src_address=flashloan_token_address,
