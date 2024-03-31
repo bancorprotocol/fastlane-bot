@@ -17,7 +17,7 @@ from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.utils import num_format, log_format
+from fastlane_bot.utils import num_format, log_format, int_prefix
 
 MAX_UINT256 = 2 ** 256 - 1
 ETH_RESOLUTION = 10 ** 18
@@ -80,33 +80,20 @@ class TxHelpers:
         if tx is None:
             return None
 
-        try:
-            estimated_gas = self.cfg.w3.eth.estimate_gas(transaction=tx)
-        except Exception as e:
-            self.cfg.logger.warning(
-                f"Failed to estimate gas for the transaction because it would likely revert when executed.\n"
-                f"Most often this is due to the arb opportunity already being closed\n."
-                f"This is expected to happen occasionally, discarding; exception: {e}"
-            )
-            return None
-
         if self.use_access_lists:
             try:
-                access_list = self.cfg.w3.eth.create_access_list({"from": self.wallet_address, "to": self.arb_contract.address, "data": tx["data"]})
-                tx_after = {**tx, "accessList": access_list}
-                estimated_gas_after = self.cfg.w3.eth.estimate_gas(transaction=tx_after)
-                if estimated_gas > estimated_gas_after:
-                    estimated_gas = estimated_gas_after
-                    tx = tx_after
-                self.cfg.logger.info(f"Access list: {access_list}\n, gas before and after: {estimated_gas}, {estimated_gas_after}")
+                result = self.cfg.w3.eth.create_access_list(tx)
+                if tx["gas"] > result["gasUsed"]:
+                    tx["gas"] = result["gasUsed"]
+                    tx["accessList"] = [{"address": item["address"], "storageKeys": [key.hex() for key in item["storageKeys"]]} for item in result["accessList"]]
             except Exception as e:
-                self.cfg.logger.info(f"Applying access list to transaction failed with {e}")
+                self.cfg.logger.info(f"create_access_list({tx}) failed with {e}")
 
-        tx["gas"] = estimated_gas + self.cfg.DEFAULT_GAS_SAFETY_OFFSET
+        tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
         raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
-        gas_cost_wei = int(gas_price * estimated_gas * self.cfg.EXPECTED_GAS_MODIFIER)
+        gas_cost_wei = int(gas_price * tx["gas"] * self.cfg.EXPECTED_GAS_MODIFIER)
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
@@ -170,19 +157,26 @@ class TxHelpers:
 
         if self.use_eip_1559:
             max_priority_fee = int(self.cfg.w3.eth.max_priority_fee * self.cfg.DEFAULT_GAS_PRICE_OFFSET)
+            gas_price += max_priority_fee
             tx_details["type"] = 2
             tx_details["maxPriorityFeePerGas"] = max_priority_fee
-            tx_details["maxFeePerGas"] = gas_price + max_priority_fee
+            gas_price_key = "maxFeePerGas"
         else:
             tx_details["type"] = 1
-            tx_details["gasPrice"] = gas_price
+            gas_price_key = "gasPrice"
 
-        try:
-            tx = function.build_transaction(tx_details)
-            return tx, gas_price
-        except Exception as e:
-            self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
-            return None, gas_price
+        while True:
+            tx_details[gas_price_key] = gas_price
+            try:
+                tx = function.build_transaction(tx_details)
+                return tx, gas_price
+            except Exception as e:
+                self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
+                message_parts = str(e).split("baseFee: ")
+                if len(message_parts) > 1:
+                    gas_price = int_prefix(message_parts[1])
+                else:
+                    return None, gas_price
 
     def _send_private_transaction(self, raw_tx):
         response = self.alchemy.core.provider.make_request(
