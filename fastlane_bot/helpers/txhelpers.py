@@ -93,7 +93,7 @@ class TxHelpers:
 
         raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
-        gas_cost_wei = int(gas_price * tx["gas"] * self.cfg.EXPECTED_GAS_MODIFIER)
+        gas_cost_wei = int(tx["gas"] * gas_price * self.cfg.EXPECTED_GAS_MODIFIER)
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
