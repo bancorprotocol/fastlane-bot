@@ -262,7 +262,7 @@ class PoolAndTokens:
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()
         elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
-            if self.pool_type in "volatile":
+            if self.pool_type == "volatile":
                 out = self._other_to_cpc()
             else:
                 raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
