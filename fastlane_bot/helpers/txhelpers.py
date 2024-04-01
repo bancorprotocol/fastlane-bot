@@ -17,7 +17,7 @@ from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.utils import num_format, log_format, int_prefix
+from fastlane_bot.utils import num_format, log_format
 
 MAX_UINT256 = 2 ** 256 - 1
 ETH_RESOLUTION = 10 ** 18
