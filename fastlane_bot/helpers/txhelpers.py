@@ -159,8 +159,8 @@ class TxHelpers:
             max_priority_fee = int(self.cfg.w3.eth.max_priority_fee * self.cfg.DEFAULT_GAS_PRICE_OFFSET)
             gas_price += max_priority_fee
             tx_details["type"] = 2
-            tx_details["maxPriorityFeePerGas"] = max_priority_fee
             tx_details["maxFeePerGas"] = gas_price
+            tx_details["maxPriorityFeePerGas"] = max_priority_fee
         else:
             tx_details["type"] = 1
             tx_details["gasPrice"] = gas_price
