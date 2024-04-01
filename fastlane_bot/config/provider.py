@@ -143,8 +143,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
         else:
             self.ARB_REWARDS_PPM = 500_000
 
-        self.EXPECTED_GAS_MODIFIER = 0.85
-
 
 class _ConfigProviderTenderly(ConfigProvider):
     """

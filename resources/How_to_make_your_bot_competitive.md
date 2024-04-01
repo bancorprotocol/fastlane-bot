@@ -4,9 +4,6 @@
 
 Typically only one bot-operator is able to close each arbitrage opportunity, making bot operation competitive in nature. The purpose of this document is to provide ideas on ways to improve your own bot. 
 
-### Gas Priority Fee Optimization
-In config/network.py there is a constant: DEFAULT_GAS_PRICE_OFFSET. This is a multiplier that increases the priority fee paid by your TX. The higher it is, the more likely your TX will get executed, but the more the TX costs. It’s set to increase by 9% by default, which is likely insufficient to be competitive. You could also design a custom function to modify the priority fee based on profit - this could likely make you competitive, but would require some work. 
-
 ### Data Throughput
 Faster data means faster cycles for the arbitrage bot. The easiest way to achieve this is by using a premium plan from a data provider such as Alchemy. 
 
