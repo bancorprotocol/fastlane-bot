@@ -1,5 +1,11 @@
 # Changelog
 
+## [v3.1.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.2) (2024-04-01)
+
+- Pool-Type not handled correctly after changing input from None to '' [\#509](https://github.com/bancorprotocol/fastlane-bot/issues/509)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.1...v3.1.2)
+
 ## [v3.1.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.1) (2024-03-27)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.32...v3.1.1)
