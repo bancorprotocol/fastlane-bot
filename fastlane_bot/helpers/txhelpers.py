@@ -76,7 +76,7 @@ class TxHelpers:
             function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
             value = 0
 
-        tx, gas_price = self._build_transaction(function=function, value=value)
+        tx = self._build_transaction(function=function, value=value)
         if tx is None:
             return None
 
@@ -93,7 +93,7 @@ class TxHelpers:
 
         raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
-        gas_cost_wei = tx["gas"] * gas_price
+        gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
@@ -140,7 +140,7 @@ class TxHelpers:
             self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
                 function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
-                tx, _ = self._build_transaction(function=function, value=0)
+                tx = self._build_transaction(function=function, value=0)
                 if tx is not None:
                     raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
                     tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
@@ -148,27 +148,20 @@ class TxHelpers:
 
     def _build_transaction(self, function, value):
         tx_details = {
+            "type": 2,
             "from": self.wallet_address,
             "value": value,
-            "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
+            "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address),
+            "maxFeePerGas": self.cfg.w3.eth.gas_price,
+            "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
         }
-
-        gas_price = self.cfg.w3.eth.gas_price
-
-        if self.use_eip_1559:
-            tx_details["type"] = 2
-            tx_details["maxFeePerGas"] = gas_price
-            tx_details["maxPriorityFeePerGas"] = self.cfg.w3.eth.max_priority_fee
-        else:
-            tx_details["type"] = 1
-            tx_details["gasPrice"] = gas_price
 
         try:
             tx = function.build_transaction(tx_details)
-            return tx, gas_price
+            return tx
         except Exception as e:
             self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
-            return None, None
+            return None
 
     def _send_private_transaction(self, raw_tx):
         response = self.alchemy.core.provider.make_request(
