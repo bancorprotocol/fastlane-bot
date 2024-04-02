@@ -83,7 +83,13 @@ class TxHelpers:
                 result = self.cfg.w3.eth.create_access_list(tx)
                 if tx["gas"] > result["gasUsed"]:
                     tx["gas"] = result["gasUsed"]
-                    tx["accessList"] = [{"address": item["address"], "storageKeys": [key.hex() for key in item["storageKeys"]]} for item in result["accessList"]]
+                    tx["accessList"] = [
+                        {
+                            "address": access_item["address"],
+                            "storageKeys": [storage_key.hex() for storage_key in access_item["storageKeys"]]
+                        }
+                        for access_item in result["accessList"]
+                    ]
             except Exception as e:
                 self.cfg.logger.info(f"create_access_list({tx}) failed with {e}")
 
