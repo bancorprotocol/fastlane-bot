@@ -211,6 +211,22 @@ VELOCIMETER_V2_FACTORY_ABI = [
     }
 ]
 
+LYNEX_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "bool", "name": "_stable", "type": "bool"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
 SCALE_V2_FACTORY_ABI = [
     {
         "type": "event",
