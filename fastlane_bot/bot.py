@@ -1293,7 +1293,7 @@ class CarbonBot(CarbonBotBase):
                 randomizer=randomizer,
                 replay_mode=replay_mode,
             )
-            if tx_hash and tx_hash[0]:
+            if tx_hash:
                 self.ConfigObj.logger.info(
                     f"[bot.run_single_mode] Arbitrage executed [hash={tx_hash}]"
                 )
@@ -1303,10 +1303,6 @@ class CarbonBot(CarbonBotBase):
                     filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
                     print(f"Writing tx_hash hash {tx_hash} to {filename}")
                     with open(f"{self.logging_path}/{filename}", "w") as f:
-
-                        # if isinstance(tx_hash[0], AttributeDict):
-                        #     f.write(str(tx_hash[0]))
-                        # else:
                         for record in tx_hash:
                             f.write("\n")
                             f.write("\n")
@@ -1319,7 +1315,7 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
         except Exception as e:
             self.ConfigObj.logger.error(f"[bot:run:single] {e}")
-            raise
+            raise e
 
     def _ensure_connection(self, tenderly_fork: str):
         """
