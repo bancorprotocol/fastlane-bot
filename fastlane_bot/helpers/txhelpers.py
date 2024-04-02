@@ -75,7 +75,11 @@ class TxHelpers:
             function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
             value = 0
 
-        tx = self._build_transaction(function=function, value=value)
+        try:
+            tx = self._build_transaction(function=function, value=value)
+        except Exception as e:
+            self.cfg.logger.error(f"{e}")
+            return None
 
         if self.use_access_list:
             try:
@@ -155,8 +159,7 @@ class TxHelpers:
         try:
             return function.build_transaction(tx_params)
         except Exception as e:
-            self.cfg.logger.error(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
-            raise e
+            raise Exception(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
 
     def _send_private_transaction(self, raw_tx):
         response = self.cfg.w3.provider.make_request(
