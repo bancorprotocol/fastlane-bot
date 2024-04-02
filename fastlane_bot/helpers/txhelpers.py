@@ -9,6 +9,7 @@ __DATE__ = "01/May/2023"
 
 from _decimal import Decimal
 
+from json import dumps
 from dataclasses import dataclass
 from typing import List, Any, Dict
 
@@ -75,12 +76,13 @@ class TxHelpers:
             value = 0
 
         tx = self._build_transaction(function=function, value=value)
-        if tx is None:
-            return None
 
         if self.use_access_list:
             try:
                 result = self.cfg.w3.eth.create_access_list(tx)
+            except Exception as e:
+                self.cfg.logger.warning(f"create_access_list({dumps(tx, indent=4)}) failed with {e}")
+            else:
                 if tx["gas"] > result["gasUsed"]:
                     tx["gas"] = result["gasUsed"]
                     tx["accessList"] = [
@@ -90,8 +92,6 @@ class TxHelpers:
                         }
                         for access_item in result["accessList"]
                     ]
-            except Exception as e:
-                self.cfg.logger.info(f"create_access_list({tx}) failed with {e}")
 
         tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
@@ -117,11 +117,7 @@ class TxHelpers:
 
         if gas_gain_eth > gas_cost_eth:
             self.cfg.logger.info("Attempting to execute profitable arb transaction")
-            try:
-                tx_hash = self.send_transaction(raw_tx)
-            except Exception as e:
-                self.cfg.logger.info(f"Transaction execution failed with {e}")
-                return None
+            tx_hash = self.send_transaction(raw_tx)
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
         else:
@@ -142,13 +138,12 @@ class TxHelpers:
             if allowance == 0:
                 function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
                 tx = self._build_transaction(function=function, value=0)
-                if tx is not None:
-                    raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
-                    tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
-                    self._wait_for_transaction_receipt(tx_hash)
+                raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+                tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
+                self._wait_for_transaction_receipt(tx_hash)
 
     def _build_transaction(self, function, value):
-        tx_details = {
+        tx_params = {
             "type": 2,
             "from": self.wallet_address,
             "value": value,
@@ -158,10 +153,10 @@ class TxHelpers:
         }
 
         try:
-            return function.build_transaction(tx_details)
+            return function.build_transaction(tx_params)
         except Exception as e:
-            self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
-            return None
+            self.cfg.logger.error(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
+            raise e
 
     def _send_private_transaction(self, raw_tx):
         response = self.cfg.w3.provider.make_request(
@@ -178,4 +173,4 @@ class TxHelpers:
             assert tx_hash == tx_receipt["transactionHash"]
             self.cfg.logger.info(f"Transaction {tx_hash} completed")
         except TimeExhausted as _:
-            self.cfg.logger.info(f"Transaction {tx_hash} timeout (stuck in mempool); moving on")
+            self.cfg.logger.info(f"Transaction {tx_hash} stuck in mempool; moving on")
