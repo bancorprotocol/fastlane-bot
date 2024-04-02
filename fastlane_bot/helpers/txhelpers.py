@@ -36,7 +36,7 @@ class TxHelpers:
     def __post_init__(self):
         self.arb_contract = self.cfg.BANCOR_ARBITRAGE_CONTRACT
         self.use_tenderly = self.cfg.NETWORK == self.cfg.NETWORK_TENDERLY
-        self.use_access_lists = self.cfg.NETWORK in [self.cfg.NETWORK_ETHEREUM]
+        self.use_access_lists = self.cfg.NETWORK  == self.cfg.NETWORK_ETHEREUM
         self.arb_rewards_portion = Decimal(self.cfg.ARB_REWARDS_PPM) / 1_000_000
 
         if self.use_tenderly:
