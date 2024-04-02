@@ -156,8 +156,7 @@ class TxHelpers:
         }
 
         try:
-            tx = function.build_transaction(tx_details)
-            return tx
+            return function.build_transaction(tx_details)
         except Exception as e:
             self.cfg.logger.info(f"Failed building transaction {tx_details}; exception {e}")
             return None
