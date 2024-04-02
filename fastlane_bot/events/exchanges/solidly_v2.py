@@ -11,7 +11,7 @@ from typing import List, Type, Tuple, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_FACTORY_ABI, SOLIDLY_V2_FACTORY_ABI, \
-    VELOCIMETER_V2_POOL_ABI, SCALE_V2_FACTORY_ABI, EQUALIZER_V2_POOL_ABI, CLEOPATRA_V2_POOL_ABI, LYNEX_V2_FACTORY_ABI
+    VELOCIMETER_V2_POOL_ABI, SCALE_V2_FACTORY_ABI, EQUALIZER_V2_POOL_ABI, CLEOPATRA_V2_POOL_ABI, LYNEX_V2_FACTORY_ABI, NILE_V2_FACTORY_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -87,7 +87,7 @@ async def get_fee_5(address: str, contract: Contract, factory_contract: Contract
     """ Function to get fee for a Solidly pool.
 
     This async function fetches the fee for a Solidly pool.
-    Known uses of this function: equalizer_v2, scale_v2
+    Known uses of this function: lynex_v2
 
     Args:
         address: The pool address.
@@ -99,6 +99,22 @@ async def get_fee_5(address: str, contract: Contract, factory_contract: Contract
     """
     return await factory_contract.caller.getFee(await contract.caller.stable())
 
+async def get_fee_6(address: str, contract: Contract, factory_contract: Contract) -> float:
+    """ Function to get fee for a Solidly pool.
+
+    This async function fetches the fee for a Solidly pool.
+    Known uses of this function: nile_v2
+
+    Args:
+        address: The pool address.
+        contract: The pool contract.
+        factory_contract: The factory contract.
+
+    Returns:
+        The pool fee.
+    """
+    return await factory_contract.caller.pairFee(address)
+
 EXCHANGE_INFO = {
     "velocimeter_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
     "equalizer_v2": {"decimals": 4, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_2},
@@ -108,7 +124,7 @@ EXCHANGE_INFO = {
     "cleopatra_v2": {"decimals": 4, "factory_abi": CLEOPATRA_V2_POOL_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_4},
     "stratum_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
     "lynex_v2": {"decimals": 4, "factory_abi": LYNEX_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_5},
-    "nile_v2": {"decimals": 4, "factory_abi": LYNEX_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_5},
+    "nile_v2": {"decimals": 4, "factory_abi": NILE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_6},
 }
 
 @dataclass
