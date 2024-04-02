@@ -121,6 +121,8 @@ SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 CLEOPATRA_V2_NAME = "cleopatra_v2"
 STRATUM_V2_NAME = "stratum_v2"
+LYNEX_V2_NAME = "lynex_v2"
+NILE_V2_NAME = "nile_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
 
@@ -155,6 +157,8 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     SCALE_V2_NAME: "PairCreated",
     CLEOPATRA_V2_NAME: "PairCreated",
     STRATUM_V2_NAME: "PairCreated",
+    LYNEX_V2_NAME: "PairCreated",
+    NILE_V2_NAME: "PairCreated",
 }
 
 dataframe_key = [
