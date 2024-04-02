@@ -12,7 +12,6 @@ from _decimal import Decimal
 from dataclasses import dataclass
 from typing import List, Any, Dict
 
-from alchemy import Network, Alchemy
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
@@ -35,15 +34,19 @@ class TxHelpers:
 
     def __post_init__(self):
         self.arb_contract = self.cfg.BANCOR_ARBITRAGE_CONTRACT
-        self.use_tenderly = self.cfg.NETWORK == self.cfg.NETWORK_TENDERLY
-        self.use_access_list = self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM
         self.arb_rewards_portion = Decimal(self.cfg.ARB_REWARDS_PPM) / 1_000_000
 
-        if self.use_tenderly:
+        if self.cfg.NETWORK == self.cfg.NETWORK_TENDERLY:
             self.wallet_address = self.cfg.BINANCE14_WALLET_ADDRESS
         else:
             self.wallet_address = self.cfg.w3.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address
-            self.alchemy = Alchemy(api_key=self.cfg.WEB3_ALCHEMY_PROJECT_ID, network=Network.ETH_MAINNET, max_retries=3)
+
+        if self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM:
+            self.use_access_list = True
+            self.send_transaction = self._send_private_transaction
+        else:
+            self.use_access_list = False
+            self.send_transaction = self.cfg.w3.eth.send_raw_transaction
 
     def validate_and_submit_transaction(
         self,
@@ -113,10 +116,7 @@ class TxHelpers:
         if gas_gain_eth > gas_cost_eth:
             self.cfg.logger.info("Attempting to execute profitable arb transaction")
             try:
-                if self.use_tenderly:
-                    tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
-                else:
-                    tx_hash = self._send_private_transaction(raw_tx)
+                tx_hash = self.send_transaction(raw_tx)
             except Exception as e:
                 self.cfg.logger.info(f"Transaction execution failed with {e}")
                 return None
@@ -163,7 +163,7 @@ class TxHelpers:
             return None
 
     def _send_private_transaction(self, raw_tx):
-        response = self.alchemy.core.provider.make_request(
+        response = self.cfg.w3.provider.make_request(
             method="eth_sendPrivateTransaction",
             params=[{"tx": raw_tx, "maxBlockNumber": self.cfg.w3.eth.block_number + 10, "preferences": {"fast": True}}],
             method_name="eth_sendPrivateTransaction",
