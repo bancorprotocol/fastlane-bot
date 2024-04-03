@@ -164,7 +164,7 @@ class TxHelpers:
             method_name="eth_sendPrivateTransaction",
             headers={"accept": "application/json", "content-type": "application/json"}
         )
-        return response["result"]
+        return response["result"].hex()
 
     def _wait_for_transaction_receipt(self, tx_hash):
         try:
