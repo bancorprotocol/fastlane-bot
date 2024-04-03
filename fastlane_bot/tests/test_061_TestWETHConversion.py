@@ -160,7 +160,7 @@ ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.i
 # flashloan_tokens = ['WBTC-2c599', 'USDC-eB48', 'LINK-86CA', 'USDT-1ec7']
 
 
-CCm = bot.setup_CCm(None)
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 # -
