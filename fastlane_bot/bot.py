@@ -1218,34 +1218,35 @@ class CarbonBot(CarbonBotBase):
     #         else self.RUN_FLASHLOAN_TOKENS
     #     )
 
-    def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
-        """
-        Setup the CCm. If CCm is None, retrieve and filter curves.
+    # TODO: DELETE
+    # def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
+    #     """
+    #     Setup the CCm. If CCm is None, retrieve and filter curves.
 
-        Parameters
-        ----------
-        CCm: CPCContainer
-            The CPCContainer object
+    #     Parameters
+    #     ----------
+    #     CCm: CPCContainer
+    #         The CPCContainer object
 
-        Returns
-        -------
-        CPCContainer
-            The filtered CPCContainer object
-        """
-        if CCm is None:
-            CCm = self.get_curves()
-            if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
-                filter_out_weth = [
-                    x
-                    for x in CCm
-                    if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
-                    & (
-                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                    )
-                ]
-                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-        return CCm
+    #     Returns
+    #     -------
+    #     CPCContainer
+    #         The filtered CPCContainer object
+    #     """
+    #     if CCm is None:
+    #         CCm = self.get_curves()
+    #         if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
+    #             filter_out_weth = [
+    #                 x
+    #                 for x in CCm
+    #                 if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
+    #                 & (
+    #                     (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
+    #                     or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
+    #                 )
+    #             ]
+    #             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
+    #     return CCm
 
     def run_continuous_mode(
         self,
@@ -1439,7 +1440,8 @@ class CarbonBot(CarbonBotBase):
         
         flashloan_tokens = flashloan_tokens or self.RUN_FLASHLOAN_TOKENS
         
-        CCm = self.setup_CCm(CCm)
+        CCm = CCm or self.get_curves()
+        
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
 
