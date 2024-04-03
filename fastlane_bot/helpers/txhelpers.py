@@ -69,16 +69,16 @@ class TxHelpers:
         )
 
         if self.cfg.SELF_FUND:
-            function = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
-            value = src_amt if src_address == self.cfg.NATIVE_GAS_TOKEN_ADDRESS else 0
+            function_call = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
+            tx_params = self._get_tx_params(src_amt if src_address == self.cfg.NATIVE_GAS_TOKEN_ADDRESS else 0)
         else:
-            function = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
-            value = 0
+            function_call = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
+            tx_params = self._get_tx_params(0)
 
         try:
-            tx = self._build_transaction(function=function, value=value)
+            tx = function_call.build_transaction(tx_params)
         except Exception as e:
-            self.cfg.logger.error(f"{e}")
+            self.cfg.logger.error(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
             return None
 
         if self.use_access_list:
@@ -140,14 +140,14 @@ class TxHelpers:
             allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
             self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
-                function = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
-                tx = self._build_transaction(function=function, value=0)
+                function_call = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
+                tx = function_call.build_transaction(self._get_tx_params(0))
                 raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
                 tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
                 self._wait_for_transaction_receipt(tx_hash)
 
-    def _build_transaction(self, function, value):
-        tx_params = {
+    def _get_tx_params(self, value):
+        return {
             "type": 2,
             "from": self.wallet_address,
             "value": value,
@@ -155,11 +155,6 @@ class TxHelpers:
             "maxFeePerGas": self.cfg.w3.eth.gas_price,
             "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
         }
-
-        try:
-            return function.build_transaction(tx_params)
-        except Exception as e:
-            raise Exception(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
 
     def _send_private_transaction(self, raw_tx):
         response = self.cfg.w3.provider.make_request(
