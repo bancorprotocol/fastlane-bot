@@ -104,7 +104,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.connection.connect_network()
         self.w3 = self.connection.web3
         self.w3_async = self.connection.w3_async
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
@@ -144,7 +143,6 @@ class _ConfigProviderTenderly(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
