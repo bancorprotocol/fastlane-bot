@@ -461,7 +461,7 @@ class CarbonBot(CarbonBotBase):
         randomizer=int,
         data_validator=True,
         replay_mode: bool = False,
-    ) -> Any:
+    ) -> Optional[str]: 
         """
         Runs the bot.
 
@@ -480,7 +480,8 @@ class CarbonBot(CarbonBotBase):
 
         Returns
         -------
-        Transaction hash.
+        Optional[str]
+            Transaction hash or None
 
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
@@ -897,9 +898,15 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         arb_mode: str,
         r: Any
-    ) -> Any: # TODO: Define return type properly (I believe it is the transaction hash as str)
+    ) -> Optional[str]:
         """
-        Handles the trade instructions.
+        Creates and executes the trade instructions
+        
+        This is the workhorse function that chains all the different actions that
+        are necessary to create trade instructions and to ultimately execute them.
+        
+        Execution is done via call to ``tx_helpers.validate_and_submit_transaction``
+        and the return value of this function (the txhash) is returned to the caller.
 
         Parameters
         ----------
@@ -912,8 +919,8 @@ class CarbonBot(CarbonBotBase):
 
         Returns
         -------
-        Any
-            The result.
+        Optional[str]
+            Transaction hash or None
         """
         (
             best_profit,
@@ -1195,7 +1202,7 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str,
         run_data_validator: bool,
         randomizer: int,
-    ):
+    ) -> None:
         """
         Run the bot in continuous mode.
 
@@ -1245,7 +1252,7 @@ class CarbonBot(CarbonBotBase):
         randomizer: int,
         replay_mode: bool = False,
         tenderly_fork: str = None,
-    ):
+    ) -> None:
         """
         Run the bot in single mode.
 
@@ -1351,7 +1358,7 @@ class CarbonBot(CarbonBotBase):
         replay_mode: bool = False,
         tenderly_fork: str = None,
         replay_from_block: int = None,
-    ):
+    ) -> None:
         """
         Runs the bot.
 
@@ -1382,8 +1389,7 @@ class CarbonBot(CarbonBotBase):
 
         Returns
         -------
-        str
-            The transaction hash.
+        None
         """
 
         mode = mode or self.RUN_CONTINUOUS
