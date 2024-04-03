@@ -1182,17 +1182,18 @@ class CarbonBot(CarbonBotBase):
             f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
-    def validate_mode(self, mode: str):
-        """
-        Validate the mode. If the mode is None, set it to RUN_CONTINUOUS.
-        """
-        if mode is None:
-            mode = self.RUN_CONTINUOUS
-        assert mode in [
-            self.RUN_SINGLE,
-            self.RUN_CONTINUOUS,
-        ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
-        return mode
+    # TODO: DELETE
+    # def validate_mode(self, mode: str):
+    #     """
+    #     Validate the mode. If the mode is None, set it to RUN_CONTINUOUS.
+    #     """
+    #     if mode is None:
+    #         mode = self.RUN_CONTINUOUS
+    #     assert mode in [
+    #         self.RUN_SINGLE,
+    #         self.RUN_CONTINUOUS,
+    #     ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
+    #     return mode
 
     # TODO: DELETE
     # def setup_polling_interval(self, polling_interval: int):
@@ -1423,7 +1424,11 @@ class CarbonBot(CarbonBotBase):
             The transaction hash.
         """
 
-        mode = self.validate_mode(mode)
+        mode = mode or self.RUN_CONTINUOUS
+        assert mode in [
+            self.RUN_SINGLE,
+            self.RUN_CONTINUOUS,
+        ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
         
         self.polling_interval = (
                 polling_interval
