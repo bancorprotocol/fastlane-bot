@@ -106,42 +106,19 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.w3_async = self.connection.w3_async
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
+        self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
+            address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
 
-        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM, N.NETWORK_FANTOM, N.NETWORK_MANTLE]:
-            self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-                address=network.CARBON_CONTROLLER_ADDRESS,
-                abi=CARBON_CONTROLLER_ABI,
-            )
-            self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
-                abi=FAST_LANE_CONTRACT_ABI,
-            )
-
-        if network.GAS_ORACLE_ADDRESS:
+        if N.GAS_ORACLE_ADDRESS:
             self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
-                address=network.GAS_ORACLE_ADDRESS,
-                abi=GAS_ORACLE_ABI
+                address=N.GAS_ORACLE_ADDRESS,
+                abi=GAS_ORACLE_ABI,
             )
 
-
-        if network.NETWORK in N.NETWORK_ETHEREUM:
-            self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                abi=BANCOR_V3_NETWORK_INFO_ABI,
-            )
-            self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-
-        else:
-            self.CARBON_CONTROLLER_CONTRACT = None
-            self.ARB_CONTRACT_VERSION = 10
-
-        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
-            try:
-                self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
-            except:
-                self.ARB_REWARDS_PPM = 500_000
-        else:
-            self.ARB_REWARDS_PPM = 500_000
+        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
+        self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
 class _ConfigProviderTenderly(ConfigProvider):
@@ -169,18 +146,16 @@ class _ConfigProviderTenderly(ConfigProvider):
         self.w3 = self.connection.web3
         self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
-            abi=BANCOR_V3_NETWORK_INFO_ABI,
-        )
-        self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-            address=N.CARBON_CONTROLLER_ADDRESS,
-            abi=CARBON_CONTROLLER_ABI,
-        )
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
+
+        if N.GAS_ORACLE_ADDRESS:
+            self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
+                address=N.GAS_ORACLE_ADDRESS,
+                abi=GAS_ORACLE_ABI,
+            )
 
         self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
@@ -214,6 +189,4 @@ class _ConfigProviderUnitTest(ConfigProvider):
         # raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
-        self.BANCOR_NETWORK_INFO_CONTRACT = None
-        self.CARBON_CONTROLLER_CONTRACT = None
         self.BANCOR_ARBITRAGE_CONTRACT = None
