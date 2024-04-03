@@ -120,7 +120,7 @@ class TxHelpers:
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.cfg.logger.info("Attempting to execute profitable arb transaction")
+            self.cfg.logger.info("Executing profitable arb transaction")
             tx_hash = self.send_transaction(raw_tx)
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
