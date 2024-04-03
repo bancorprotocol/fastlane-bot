@@ -56,7 +56,7 @@ class TxHelpers:
         flashloan_struct: List[Dict]
     ) -> Optional[str]:
         """
-        Validates and submits a transaction to the arb contract.
+        This method validates and submits a transaction to the arb contract.
         """
 
         self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
@@ -130,7 +130,7 @@ class TxHelpers:
 
     def check_and_approve_tokens(self, tokens: List):
         """
-        This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+        This method checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
         If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
         :param tokens: the list of tokens to check/approve
         """
@@ -160,7 +160,7 @@ class TxHelpers:
     def _send_private_transaction(self, raw_tx: str) -> str:
         response = self.cfg.w3.provider.make_request(
             method="eth_sendPrivateTransaction",
-            params=[{"tx": raw_tx, "maxBlockNumber": self.cfg.w3.eth.block_number + 10, "preferences": {"fast": True}}],
+            params=[{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10), "preferences": {"fast": True}}],
             method_name="eth_sendPrivateTransaction",
             headers={"accept": "application/json", "content-type": "application/json"}
         )
