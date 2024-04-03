@@ -1432,11 +1432,7 @@ class CarbonBot(CarbonBotBase):
             self.RUN_CONTINUOUS,
         ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
         
-        self.polling_interval = (
-                polling_interval
-                if polling_interval is not None
-                else self.RUN_POLLING_INTERVAL
-        )
+        self.polling_interval = polling_interval or self.RUN_POLLING_INTERVAL
         
         flashloan_tokens = flashloan_tokens or self.RUN_FLASHLOAN_TOKENS
         
