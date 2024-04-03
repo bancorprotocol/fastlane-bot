@@ -141,7 +141,8 @@ class TxHelpers:
             self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
                 function_call = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
-                tx = function_call.build_transaction(self._get_tx_params(0))
+                tx_params = self._get_tx_params(0)
+                tx = function_call.build_transaction(tx_params)
                 raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
                 tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
                 self._wait_for_transaction_receipt(tx_hash)
