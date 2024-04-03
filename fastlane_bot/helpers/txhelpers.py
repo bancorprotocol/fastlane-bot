@@ -137,12 +137,18 @@ class TxHelpers:
         safety_override: bool = False,
         log_object: Dict[str, Any] = None,
         flashloan_struct: List[Dict[str, int or str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[str]:
         """
         Validates and submits a transaction to the arb contract.
 
         Parameters
         ----------
+        TODO: Add parameters
+        
+        Returns
+        -------
+        Optional[str]
+            The transaction hash of the submitted transaction or None
 
         """
 
@@ -473,13 +479,13 @@ class TxHelpers:
         tx_details["value"] = value
         return tx_details
 
-    def submit_regular_transaction(self, signed_tx) -> str:
+    def submit_regular_transaction(self, signed_tx) -> Optional[str]:
         """
         Submits the transaction to the blockchain.
 
         :param signed_tx: the signed transaction to be submitted to the blockchain
 
-        returns: the transaction hash of the submitted transaction
+        :returns: the transaction hash (str) of the submitted transaction (None if timed out)
         """
 
         self.ConfigObj.logger.info(
@@ -488,14 +494,14 @@ class TxHelpers:
 
         return self._submit_transaction(self.web3.eth.send_raw_transaction(signed_tx.rawTransaction))
 
-    def submit_private_transaction(self, signed_tx, block_number: int) -> str:
+    def submit_private_transaction(self, signed_tx, block_number: int) -> Optional[str]:
         """
         Submits the transaction privately through Alchemy -> Flashbots RPC to mitigate frontrunning.
 
         :param signed_tx: the signed transaction to be submitted to the blockchain
         :param block_number: the current block number
 
-        returns: The transaction receipt, or None if the transaction failed
+        :returns: the transaction hash (str) of the submitted transaction (None if timed out)
         """
 
         self.ConfigObj.logger.info(
@@ -528,11 +534,18 @@ class TxHelpers:
             )
             return None
 
-    def _submit_transaction(self, tx_hash) -> str:
+    # TODO: should be renamed to _wait_for_transaction_receipt
+    def _submit_transaction(self, tx_hash) -> Optional[str]:
+        """
+        waits for the transaction receipt
+        
+        :param tx_hash: the transaction hash of the receipt to wait for
+        :returns: the transaction hash (str) of the submitted transaction or None (TimeExhausted)
+        """
         try:
             tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
             assert tx_hash == tx_receipt["transactionHash"]
-            return tx_hash
+            return tx_hash.hex() # HexBytes -> str [TODO-KEVIN: Please check]
         except TimeExhausted as e:
             self.ConfigObj.logger.info(
                 f"[helpers.txhelpers._submit_transaction] Transaction timeout (stuck in mempool); moving on"
