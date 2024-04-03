@@ -1207,15 +1207,16 @@ class CarbonBot(CarbonBotBase):
     #             else self.RUN_POLLING_INTERVAL
     #         )
 
-    def setup_flashloan_tokens(self, flashloan_tokens):
-        """
-        Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
-        """
-        return (
-            flashloan_tokens
-            if flashloan_tokens is not None
-            else self.RUN_FLASHLOAN_TOKENS
-        )
+    # TODO: DELETE
+    # def setup_flashloan_tokens(self, flashloan_tokens):
+    #     """
+    #     Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
+    #     """
+    #     return (
+    #         flashloan_tokens
+    #         if flashloan_tokens is not None
+    #         else self.RUN_FLASHLOAN_TOKENS
+    #     )
 
     def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
         """
@@ -1435,7 +1436,9 @@ class CarbonBot(CarbonBotBase):
                 if polling_interval is not None
                 else self.RUN_POLLING_INTERVAL
         )
-        flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
+        
+        flashloan_tokens = flashloan_tokens or self.RUN_FLASHLOAN_TOKENS
+        
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
