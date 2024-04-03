@@ -1194,16 +1194,17 @@ class CarbonBot(CarbonBotBase):
         ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
         return mode
 
-    def setup_polling_interval(self, polling_interval: int):
-        """
-        Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
-        """
-        if self.polling_interval is None:
-            self.polling_interval = (
-                polling_interval
-                if polling_interval is not None
-                else self.RUN_POLLING_INTERVAL
-            )
+    # TODO: DELETE
+    # def setup_polling_interval(self, polling_interval: int):
+    #     """
+    #     Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
+    #     """
+    #     if self.polling_interval is None:
+    #         self.polling_interval = (
+    #             polling_interval
+    #             if polling_interval is not None
+    #             else self.RUN_POLLING_INTERVAL
+    #         )
 
     def setup_flashloan_tokens(self, flashloan_tokens):
         """
@@ -1423,7 +1424,12 @@ class CarbonBot(CarbonBotBase):
         """
 
         mode = self.validate_mode(mode)
-        self.setup_polling_interval(polling_interval)
+        
+        self.polling_interval = (
+                polling_interval
+                if polling_interval is not None
+                else self.RUN_POLLING_INTERVAL
+        )
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
