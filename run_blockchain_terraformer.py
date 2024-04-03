@@ -85,7 +85,7 @@ ALCHEMY_RPC_LIST = {
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
-    "linea": "https://rpc.linea.build/",
+    "linea": "https://linea.blockpi.network/v1/rpc/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
