@@ -1,8 +1,14 @@
 """
 Submit handler for the Fastlane project.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+TODO: despite the naming of the module, it currently ONLY seems to support Tenderly
+submission, via the ``submit_transaction_tenderly`` function. Either the module should
+be renamed or, better, the code should be consolidated
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.0"
 __DATE__ = "01/May/2023"
@@ -11,6 +17,9 @@ from typing import List, Any, Dict
 from .routehandler import RouteStruct
 from ..data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.config import Config
+
+# TODO: splitting this into two functions does not seem to be particularly useful
+# given how little the wrapping code does
 
 def submit_transaction_tenderly(
     cfg: Config,

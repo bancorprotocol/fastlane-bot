@@ -1,3 +1,15 @@
+"""
+Deals with wrap and unwrap trades (eg WETH <-> ETH) in the route.
+
+Defines the ``add_wrap_or_unwrap_trades_to_route`` method.
+
+TODO: see whether to consolidate this with other objects
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 from typing import List
 from dataclasses import asdict
 from fastlane_bot.config import Config

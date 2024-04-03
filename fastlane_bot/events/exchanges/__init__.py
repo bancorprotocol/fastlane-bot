@@ -1,11 +1,13 @@
-# coding=utf-8
 """
 Contains the exchanges classes
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
-"""
+[DOC-TODO-OPTIONAL-longer description in rst format]
 
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 from fastlane_bot.events.exchanges.bancor_v3 import BancorV3
 from fastlane_bot.events.exchanges.carbon_v1 import CarbonV1
 from fastlane_bot.events.exchanges.factory import ExchangeFactory

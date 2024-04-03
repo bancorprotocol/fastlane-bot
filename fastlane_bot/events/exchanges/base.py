@@ -1,9 +1,14 @@
-# coding=utf-8
 """
-Contains the base class for exchanges. This class is responsible for handling exchanges and updating the state of the pools.
+Contains the base class for exchanges. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for handling exchanges and updating the state of the pools.
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

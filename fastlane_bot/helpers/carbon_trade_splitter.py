@@ -1,3 +1,15 @@
+"""
+Helper function to split Carbon trades into multiple trades, eg if ETH and WETH is involved
+
+Defines the ``split_carbon_trades`` function 
+
+TODO: maybe this should be moved into a slightly bigger context
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 from typing import List
 from json import loads, dumps
 from fastlane_bot.config import Config
