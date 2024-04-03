@@ -1182,71 +1182,6 @@ class CarbonBot(CarbonBotBase):
             f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
-    # TODO: DELETE
-    # def validate_mode(self, mode: str):
-    #     """
-    #     Validate the mode. If the mode is None, set it to RUN_CONTINUOUS.
-    #     """
-    #     if mode is None:
-    #         mode = self.RUN_CONTINUOUS
-    #     assert mode in [
-    #         self.RUN_SINGLE,
-    #         self.RUN_CONTINUOUS,
-    #     ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
-    #     return mode
-
-    # TODO: DELETE
-    # def setup_polling_interval(self, polling_interval: int):
-    #     """
-    #     Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
-    #     """
-    #     if self.polling_interval is None:
-    #         self.polling_interval = (
-    #             polling_interval
-    #             if polling_interval is not None
-    #             else self.RUN_POLLING_INTERVAL
-    #         )
-
-    # TODO: DELETE
-    # def setup_flashloan_tokens(self, flashloan_tokens):
-    #     """
-    #     Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
-    #     """
-    #     return (
-    #         flashloan_tokens
-    #         if flashloan_tokens is not None
-    #         else self.RUN_FLASHLOAN_TOKENS
-    #     )
-
-    # TODO: DELETE
-    # def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
-    #     """
-    #     Setup the CCm. If CCm is None, retrieve and filter curves.
-
-    #     Parameters
-    #     ----------
-    #     CCm: CPCContainer
-    #         The CPCContainer object
-
-    #     Returns
-    #     -------
-    #     CPCContainer
-    #         The filtered CPCContainer object
-    #     """
-    #     if CCm is None:
-    #         CCm = self.get_curves()
-    #         if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
-    #             filter_out_weth = [
-    #                 x
-    #                 for x in CCm
-    #                 if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
-    #                 & (
-    #                     (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-    #                     or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-    #                 )
-    #             ]
-    #             CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-    #     return CCm
 
     def run_continuous_mode(
         self,
@@ -1398,11 +1333,11 @@ class CarbonBot(CarbonBotBase):
         Parameters
         ----------
         flashloan_tokens: List[str]
-            The flashloan tokens (optional; default: self.RUN_FLASHLOAN_TOKENS)
+            The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
         CCm: CPCContainer
-            The complete market data container (optional; default: database via self.get_curves())
+            The complete market data container (optional; default: database via get_curves())
         polling_interval: int
-            the polling interval in seconds (default: 60 via self.RUN_POLLING_INTERVAL)
+            the polling interval in seconds (default: 60 via RUN_POLLING_INTERVAL)
         mode: RN_SINGLE or RUN_CONTINUOUS
             whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
         arb_mode: str
@@ -1427,13 +1362,9 @@ class CarbonBot(CarbonBotBase):
         """
 
         mode = mode or self.RUN_CONTINUOUS
-        
         self.polling_interval = polling_interval or self.RUN_POLLING_INTERVAL
-        
         flashloan_tokens = flashloan_tokens or self.RUN_FLASHLOAN_TOKENS
-        
         CCm = CCm or self.get_curves()
-        
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
 
