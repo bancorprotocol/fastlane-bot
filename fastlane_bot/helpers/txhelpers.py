@@ -11,7 +11,7 @@ from _decimal import Decimal
 
 from json import dumps
 from dataclasses import dataclass
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 from web3.exceptions import TimeExhausted
 
@@ -54,7 +54,7 @@ class TxHelpers:
         expected_profit_usd: Decimal,
         log_object: Dict[str, Any],
         flashloan_struct: List[Dict]
-    ) -> str:
+    ) -> Optional[str]:
         """
         Validates and submits a transaction to the arb contract.
         """
@@ -147,7 +147,7 @@ class TxHelpers:
                 tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
                 self._wait_for_transaction_receipt(tx_hash)
 
-    def _get_tx_params(self, value):
+    def _get_tx_params(self, value: int) -> dict:
         return {
             "type": 2,
             "from": self.wallet_address,
@@ -157,7 +157,7 @@ class TxHelpers:
             "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
         }
 
-    def _send_private_transaction(self, raw_tx):
+    def _send_private_transaction(self, raw_tx: str) -> str:
         response = self.cfg.w3.provider.make_request(
             method="eth_sendPrivateTransaction",
             params=[{"tx": raw_tx, "maxBlockNumber": self.cfg.w3.eth.block_number + 10, "preferences": {"fast": True}}],
@@ -166,7 +166,7 @@ class TxHelpers:
         )
         return response["result"].hex()
 
-    def _wait_for_transaction_receipt(self, tx_hash):
+    def _wait_for_transaction_receipt(self, tx_hash: str):
         try:
             tx_receipt = self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)
             assert tx_hash == tx_receipt["transactionHash"]
