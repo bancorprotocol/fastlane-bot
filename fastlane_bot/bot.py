@@ -119,15 +119,18 @@ class CarbonBotBase:
         if self.ConfigObj is None:
             self.ConfigObj = Config()
 
+        # TODO: self.c, self.C and self.ConfigObj are all the same
         self.c = self.ConfigObj
 
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
 
+        # TODO: Why do we need TxRouteHandlerClass as a parameter?
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler
 
+        # TODO: Why do we need TxHelpersClass as a parameter?
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
         assert issubclass(
@@ -138,7 +141,7 @@ class CarbonBotBase:
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
 
     @property
-    def C(self) -> Any:
+    def C(self) -> Config:
         """
         Convenience method self.ConfigObj
         """
@@ -193,6 +196,7 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
+                # TODO: remove if
                 if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
                     self.ConfigObj.logger.error(
                         f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
@@ -206,12 +210,15 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
                 )
             except Exception as e:
+                # TODO: unexpected Exception should possible raise
                 self.ConfigObj.logger.error(
-                    f"[bot.get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
+                    f"[bot.get_curves] MUST FIX UNEXPECTED ERROR converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
 
         return CPCContainer(curves)
 
+
+# TODO: Why do we need a class hierarchy here?
 
 @dataclass
 class CarbonBot(CarbonBotBase):
@@ -890,7 +897,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         arb_mode: str,
         r: Any
-    ) -> Any:
+    ) -> Any: # TODO: Define return type properly (I believe it is the transaction hash as str)
         """
         Handles the trade instructions.
 
@@ -1182,7 +1189,6 @@ class CarbonBot(CarbonBotBase):
             f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
-
     def run_continuous_mode(
         self,
         flashloan_tokens: List[str],
@@ -1214,10 +1220,20 @@ class CarbonBot(CarbonBotBase):
                     self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
 
                 time.sleep(self.polling_interval)
+        
             except self.NoArbAvailable as e:
+                # TODO: Why is "no arb available" an exception? this is the normal case
+                # in fact, no arb possible should be indicated by tx_hash being None
                 self.ConfigObj.logger.debug(f"[bot:run:continuous] {e}")
             except Exception as e:
+                # TODO: Here we are just squashing all errors; we should have a log which
+                # exceptions we expect here; ideally none -- meaning we should try to weed
+                # them out; if we can't, we should catch and log them separately
+                # There should be a mode where unexpected exceptions terminate the bot;
+                # otherwise they should at least be logged prominently
+                self.ConfigObj.logger.error(f"[bot:run:continuous] ****** UNEXPECTED EXCEPTION -- MUST FIX ******")
                 self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
+                self.ConfigObj.logger.error(f"[bot:run:continuous] ****** END UNEXPECTED EXCEPTION ******")
                 time.sleep(self.polling_interval)
 
     def run_single_mode(
@@ -1250,6 +1266,9 @@ class CarbonBot(CarbonBotBase):
         try:
             if replay_mode:
                 self._ensure_connection(tenderly_fork)
+                # TODO: This changes the state of the object by changing the provider to 
+                # the tenderly fork. This side effect here should be avoided and rather
+                # managed properly
 
             tx_hash = self._run(
                 flashloan_tokens=flashloan_tokens,
@@ -1259,6 +1278,10 @@ class CarbonBot(CarbonBotBase):
                 randomizer=randomizer,
                 replay_mode=replay_mode,
             )
+            # TODO: check the below; the return value of _run should be a tx_hash (it is 
+            # unfortunately indicated as Any, and at one point in the chain as Dict[str])
+            # However -- I can see no instance where tx_hash[0] would be a meaningful value
+            # because tx_hash does not seem to be a list
             if tx_hash and tx_hash[0]:
                 self.ConfigObj.logger.info(
                     f"[bot.run_single_mode] Arbitrage executed [hash={tx_hash}]"
@@ -1267,12 +1290,14 @@ class CarbonBot(CarbonBotBase):
                 # Write the tx hash to a file in the logging_path directory
                 if self.logging_path:
                     filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                    print(f"Writing tx_hash hash {tx_hash} to {filename}")
+                    #print(f"Writing tx_hash hash {tx_hash} to {filename}")
+                    # TODO: either remove or convert to logging
                     with open(f"{self.logging_path}/{filename}", "w") as f:
 
                         # if isinstance(tx_hash[0], AttributeDict):
                         #     f.write(str(tx_hash[0]))
                         # else:
+                        # TODO: tx_hash here is in my view a string so this seems like old code
                         for record in tx_hash:
                             f.write("\n")
                             f.write("\n")
