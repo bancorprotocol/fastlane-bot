@@ -1406,7 +1406,7 @@ class CarbonBot(CarbonBotBase):
         mode: RN_SINGLE or RUN_CONTINUOUS
             whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
         arb_mode: str
-            the arbitrage mode (default: None)
+            the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
             whether to run the data validator (default: False)
         randomizer: int
@@ -1427,10 +1427,6 @@ class CarbonBot(CarbonBotBase):
         """
 
         mode = mode or self.RUN_CONTINUOUS
-        assert mode in [
-            self.RUN_SINGLE,
-            self.RUN_CONTINUOUS,
-        ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
         
         self.polling_interval = polling_interval or self.RUN_POLLING_INTERVAL
         
@@ -1448,11 +1444,14 @@ class CarbonBot(CarbonBotBase):
                 f"[bot.run] Transactions will be required to pass data validation for {arb_mode}"
             )
 
-        if mode == "continuous":
+        if mode == self.RUN_CONTINUOUS:
             self.run_continuous_mode(
-                flashloan_tokens, arb_mode, run_data_validator, randomizer
+                flashloan_tokens, 
+                arb_mode, 
+                run_data_validator, 
+                randomizer,
             )
-        else:
+        elif mode == self.RUN_SINGLE:
             self.run_single_mode(
                 flashloan_tokens,
                 CCm,
@@ -1462,3 +1461,5 @@ class CarbonBot(CarbonBotBase):
                 replay_mode,
                 tenderly_fork,
             )
+        else:
+            raise ValueError(f"Unknown mode {mode} [possible values: RUN_SINGLE, RUN_CONTINUOUS]")
