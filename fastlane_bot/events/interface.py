@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the interface for querying data from the data fetcher module.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass, field
 from typing import List, Any, Dict, Optional

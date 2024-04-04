@@ -1,3 +1,11 @@
+"""
+Defines the ``PoolAndTokens`` class, representing a pool and its tokens in a single object. This is not a database model, but a helper class.
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 

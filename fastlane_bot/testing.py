@@ -1,9 +1,23 @@
 """
 Testing utilities for the fastlane_bot package
 
-USAGE
+This module defines a number of functions that are useful for testing purposes, and
+testing code would typically start with
+```
+from fastlane_bot.testing import *
+...
+```
 
-    from fastlane_bot.testing import *
+It defines the following functions
+- ``iseq``: checks for float equality (within tolerance)
+- ``raises``: allows asserting that an exception is raised
+- ``require``: allows asserting that minimum version requirements are met
+- ``Timer``: allow simple wall-clock-based timing of code execution
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.3"
 __DATE__ = "15/Jan/2024"
@@ -123,11 +137,14 @@ class Timer():
         Timer.t1(func, args, N=100_000)
         Timer.t2(func, arg1, arg2, N=100_000)
         
-    Note: the default value for N can be changed by using a derived class, eg:
+    NOTE: the default value for N can be changed by using a derived class, eg:
         
         class MyTimer(Timer):
             N = 1_000_000
         MyTimer.t(func, *args, *kwargs)
+        
+    WARNING: the timer is based on wall-clock time which may not be appropriate for
+    timing on multi-process systems
     """
     N = 1_000_000
         

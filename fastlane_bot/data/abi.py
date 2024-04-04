@@ -1,8 +1,19 @@
 """
-ABI's for the contracts used in the FastLane project
+ABI's for the EVM contracts interfaced
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+Contains the following ABI's:
+
+- ``FAST_LANE_CONTRACT_ABI``: FastLane arbitrage contract
+- ``ERC20_ABI``: generic ERC20 token contract
+- ``SUSHISWAP_FACTORY_ABI``: Sushiswap factory contract
+- ``SUSHISWAP_ROUTER_ABI``: Sushiswap router contract
+- ``SUSHISWAP_POOLS_ABI``: Sushiswap pools contract
+- other ABIs of exchanges we support
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 FAST_LANE_CONTRACT_ABI = [
