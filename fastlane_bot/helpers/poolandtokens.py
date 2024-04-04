@@ -520,7 +520,6 @@ class PoolAndTokens:
             "tick": self.tick,
             "liquidity": self.liquidity,
         }
-        #feeconst = self.FEE_LOOKUP.get(float(self.fee_float))
         feeconst = self.FEE_LOOKUP.get(int(self.fee)/1e6)
         if feeconst is None:
             raise ValueError(
