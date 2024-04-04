@@ -206,7 +206,7 @@ class TradeInstruction:
         pool = self.pool
         custom_int = 0
         if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
-            custom_int = int(Decimal(pool.fee_float) * Decimal("1000000"))
+            custom_int = int(pool.fee)
         elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
             custom_int = 0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
