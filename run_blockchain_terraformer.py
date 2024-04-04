@@ -61,7 +61,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
-    "linea": 50000
+    "linea": 5000
 }
 
 ALCHEMY_KEY_DICT = {
