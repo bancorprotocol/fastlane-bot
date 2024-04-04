@@ -8,6 +8,8 @@ from joblib import parallel_backend, Parallel, delayed
 from pandas import DataFrame
 from web3.contract import Contract
 
+from fastlane_bot.config.constants import NILE_V3_NAME
+
 load_dotenv()
 import os
 import requests
@@ -61,7 +63,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
-    "linea": 50000
+    "linea": 5000
 }
 
 ALCHEMY_KEY_DICT = {
@@ -466,6 +468,10 @@ def organize_pool_details_uni_v3(
         return None
     pair = pair[:-1]
     fee = pool_data["args"]["fee"]
+    fee_float = float(fee) / 1000000
+    if exchange == NILE_V3_NAME:
+        pool = web3.eth.contract(address=web3.to_checksum_address(pool_address), abi=NILE_V3_POOL_ABI)
+        fee_float = pool.caller.currentFee() / 1000000
 
     description = exchange + " " + pair + " " + str(fee)
 
@@ -478,7 +484,7 @@ def organize_pool_details_uni_v3(
         "pair_name": pair,
         "exchange_name": exchange,
         "fee": fee,
-        "fee_float": float(fee) / 1000000,
+        "fee_float": fee_float,
         "address": pool_address,
         "anchor": "",
         "tkn0_address": token_info["tkn0_address"],
@@ -1182,7 +1188,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             continue
         print(f"********************** Terraforming **********************\nStarting exchange: {exchange_name} from block {from_block}")
 
-        if fork in "uniswap_v2":
+        if fork == UNISWAP_V2_NAME:
             if fee == "TBD":
                 continue
             if fork in SOLIDLY_FORKS:
@@ -1205,7 +1211,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             )
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
-        elif fork in "uniswap_v3":
+        elif fork == UNISWAP_V3_NAME:
             if fee == "TBD":
                 continue
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
@@ -1223,7 +1229,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             )
             m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
-        elif "solidly" in fork:
+        elif fork == SOLIDLY_V2_NAME:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
 
             factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
@@ -1246,7 +1252,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             )
             m_df = m_df.reset_index(drop=True)
             solidly_v2_mapdf = pd.concat([solidly_v2_mapdf, m_df], ignore_index=True)
-        elif "balancer" in fork:
+        elif fork == BALANCER_NAME:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
                 u_df = get_balancer_pools(subgraph_url=subgraph_url, web3=web3)

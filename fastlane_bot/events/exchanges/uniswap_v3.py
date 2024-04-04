@@ -10,8 +10,9 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
+from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, \
+    SECTA_V3_NAME, NILE_V3_NAME
+from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI, NILE_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
@@ -30,7 +31,11 @@ class UniswapV3(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
+        if self.exchange_name in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME]:
+            return PANCAKESWAP_V3_POOL_ABI
+        elif self.exchange_name == NILE_V3_NAME:
+            return NILE_V3_POOL_ABI
+        return UNISWAP_V3_POOL_ABI
 
     @property
     def get_factory_abi(self):
@@ -42,6 +47,9 @@ class UniswapV3(Exchange):
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         fee = await contract.functions.fee().call()
         fee_float = float(fee) / 1e6
+        if self.exchange_name == NILE_V3_NAME:
+            fee_float = await contract.functions.currentFee().call()
+
         return fee, fee_float
 
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
