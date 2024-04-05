@@ -180,7 +180,7 @@ class TxHelpers:
     def _wait_for_transaction_receipt(self, tx_hash: str):
         try:
             tx_receipt = self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)
-            assert tx_hash == tx_receipt["transactionHash"]
+            assert tx_hash == tx_receipt["transactionHash"].hex()
             self.cfg.logger.info(f"Transaction {tx_hash} completed")
         except TimeExhausted as _:
             self.cfg.logger.info(f"Transaction {tx_hash} stuck in mempool; moving on")
