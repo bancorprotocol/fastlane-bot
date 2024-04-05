@@ -51,7 +51,7 @@ class TxHelpers:
             self.send_transaction = self._send_private_transaction
         else:
             self.use_access_list = False
-            self.send_transaction = self.cfg.w3.eth.send_raw_transaction
+            self.send_transaction = self._send_regular_transaction
 
     def validate_and_submit_transaction(
         self,
@@ -165,6 +165,9 @@ class TxHelpers:
             "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
         }
 
+    def _send_regular_transaction(self, raw_tx: str) -> str:
+        return self.cfg.w3.eth.send_raw_transaction(raw_tx).hex()
+
     def _send_private_transaction(self, raw_tx: str) -> str:
         response = self.cfg.w3.provider.make_request(
             method="eth_sendPrivateTransaction",
@@ -172,7 +175,7 @@ class TxHelpers:
             method_name="eth_sendPrivateTransaction",
             headers={"accept": "application/json", "content-type": "application/json"}
         )
-        return response["result"].hex()
+        return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str):
         try:
