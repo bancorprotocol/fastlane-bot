@@ -171,10 +171,9 @@ class TxHelpers:
     def _send_private_transaction(self, raw_tx: str) -> str:
         response = self.cfg.w3.provider.make_request(
             method="eth_sendPrivateTransaction",
-            params=[{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10), "preferences": {"fast": True}}],
-            method_name="eth_sendPrivateTransaction",
-            headers={"accept": "application/json", "content-type": "application/json"}
+            params=[{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10), "preferences": {"fast": True}}]
         )
+        assert "result" in response, f"{response}"
         return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str):
