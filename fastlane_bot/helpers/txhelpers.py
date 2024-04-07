@@ -42,6 +42,7 @@ class TxHelpers:
     cfg: Config
 
     def __post_init__(self):
+        self.chain_id = self.cfg.w3.eth.chain_id
         self.arb_contract = self.cfg.BANCOR_ARBITRAGE_CONTRACT
         self.arb_rewards_portion = Decimal(self.cfg.ARB_REWARDS_PPM) / 1_000_000
         self.wallet_address = self.cfg.w3.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address
@@ -65,6 +66,18 @@ class TxHelpers:
     ) -> Optional[str]:
         """
         This method validates and submits a transaction to the arb contract.
+
+        Args:
+            route_struct: 
+            src_amt: 
+            src_address: 
+            expected_profit_gastkn: 
+            expected_profit_usd: 
+            log_object: 
+            flashloan_struct: 
+
+        Returns:
+            The hash of the transaction if executed, None otherwise.
         """
 
         self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
@@ -77,37 +90,25 @@ class TxHelpers:
         )
 
         if self.cfg.SELF_FUND:
-            function_call = self.arb_contract.functions.fundAndArb(route_struct, src_address, src_amt)
-            tx_params = self._get_tx_params(src_amt if src_address == self.cfg.NATIVE_GAS_TOKEN_ADDRESS else 0)
+            fn_name = "fundAndArb"
+            args = [route_struct, src_address, src_amt]
+            value = src_amt if src_address == self.cfg.NATIVE_GAS_TOKEN_ADDRESS else 0
         else:
-            function_call = self.arb_contract.functions.flashloanAndArbV2(flashloan_struct, route_struct)
-            tx_params = self._get_tx_params(0)
+            fn_name = "flashloanAndArbV2"
+            args = [flashloan_struct, route_struct]
+            value = 0
+
+        tx = self._create_transaction(self.arb_contract, fn_name, args, value)
 
         try:
-            tx = function_call.build_transaction(tx_params)
+            self._update_transaction(tx)
         except Exception as e:
-            self.cfg.logger.error(f"build_transaction({dumps(tx_params, indent=4)}) failed with {e}")
+            self.cfg.logger.info(f"Transaction {dumps(tx, indent=4)}\nGas estimation failed with {e}")
             return None
-
-        if self.use_access_list:
-            try:
-                result = self.cfg.w3.eth.create_access_list(tx)
-            except Exception as e:
-                self.cfg.logger.warning(f"create_access_list({dumps(tx, indent=4)}) failed with {e}")
-            else:
-                if tx["gas"] > result["gasUsed"]:
-                    tx["gas"] = result["gasUsed"]
-                    tx["accessList"] = [
-                        {
-                            "address": access_item["address"],
-                            "storageKeys": [storage_key.hex() for storage_key in access_item["storageKeys"]]
-                        }
-                        for access_item in result["accessList"]
-                    ]
 
         tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
-        raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+        raw_tx = self._sign_transaction(tx)
 
         gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
         if self.cfg.network.GAS_ORACLE_ADDRESS:
@@ -139,8 +140,10 @@ class TxHelpers:
     def check_and_approve_tokens(self, tokens: List):
         """
         This method checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
-        If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
-        :param tokens: the list of tokens to check/approve
+        If they are not already approved, it will submit approvals for each token specified in the given list of tokens.
+
+        Args:
+            tokens: A list of tokens to check/approve
         """
 
         for token_address in [token for token in tokens if token != self.cfg.NATIVE_GAS_TOKEN_ADDRESS]:
@@ -148,22 +151,41 @@ class TxHelpers:
             allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
             self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
-                function_call = token_contract.functions.approve(self.arb_contract.address, MAX_UINT256)
-                tx_params = self._get_tx_params(0)
-                tx = function_call.build_transaction(tx_params)
-                raw_tx = self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
-                tx_hash = self.cfg.w3.eth.send_raw_transaction(raw_tx)
+                tx = self._create_transaction(token_contract, "approve", [self.arb_contract.address, MAX_UINT256], 0)
+                self._update_transaction(tx)
+                raw_tx = self._sign_transaction(tx)
+                tx_hash = self._send_regular_transaction(raw_tx)
                 self._wait_for_transaction_receipt(tx_hash)
 
-    def _get_tx_params(self, value: int) -> dict:
+    def _create_transaction(self, contract, fn_name: str, args: list, value: int) -> dict:
         return {
             "type": 2,
+            "chainId": self.chain_id,
             "from": self.wallet_address,
+            "to": contract.address,
+            "data": contract.encode_abi(fn_name=fn_name, args=args),
             "value": value,
             "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address),
             "maxFeePerGas": self.cfg.w3.eth.gas_price,
             "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
         }
+
+    def _update_transaction(self, tx: dict):
+        tx["gas"] = self.cfg.w3.eth.estimate_gas(tx) # occasionally throws an exception
+        if self.use_access_list:
+            result = self.cfg.w3.eth.create_access_list(tx) # rarely throws an exception
+            if tx["gas"] > result["gasUsed"]:
+                tx["gas"] = result["gasUsed"]
+                tx["accessList"] = [
+                    {
+                        "address": access_item["address"],
+                        "storageKeys": [storage_key.hex() for storage_key in access_item["storageKeys"]]
+                    }
+                    for access_item in result["accessList"]
+                ]
+
+    def _sign_transaction(self, tx: dict) -> str:
+        return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
 
     def _send_regular_transaction(self, raw_tx: str) -> str:
         return self.cfg.w3.eth.send_raw_transaction(raw_tx).hex()
@@ -173,7 +195,7 @@ class TxHelpers:
             method="eth_sendPrivateTransaction",
             params=[{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10), "preferences": {"fast": True}}]
         )
-        assert "result" in response, f"{response}"
+        assert "result" in response, f"Private transaction failed: {dumps(response, indent=4)}"
         return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str):
