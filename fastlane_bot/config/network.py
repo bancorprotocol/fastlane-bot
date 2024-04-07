@@ -266,24 +266,10 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 250, 450, 500, 2500, 3000, 10000]
-    MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
-    DEFAULT_GAS = 950_000
-    DEFAULT_GAS_PRICE = 0
     DEFAULT_GAS_SAFETY_OFFSET = 25_000
-    DEFAULT_POLL_INTERVAL = 12
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500 * 100  # 10 block time deviation
-    DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
     _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
-    DEFAULT_CURVES_DATAFILE = os.path.normpath(
-        f"{_PROJECT_PATH}/carbon/data/curves.csv.gz"
-    )
-    CARBON_STRATEGY_CHUNK_SIZE = 200
     Q96 = Decimal("2") ** Decimal("96")
-    DEFAULT_TIMEOUT = 60
-    CARBON_FEE = Decimal("0.002")
-    BANCOR_V3_FEE = Decimal("0.0")
-    DEFAULT_REWARD_PERCENT = Decimal("0.5")
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
