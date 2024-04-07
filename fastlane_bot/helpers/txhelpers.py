@@ -77,7 +77,7 @@ class TxHelpers:
             flashloan_struct: 
 
         Returns:
-            The hash of the transaction if executed, None otherwise.
+            The hash of the transaction if submitted, None otherwise.
         """
 
         self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
