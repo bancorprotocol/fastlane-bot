@@ -1303,15 +1303,9 @@ class CarbonBot(CarbonBotBase):
                 # Write the tx hash to a file in the logging_path directory
                 if self.logging_path:
                     filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                    print(f"Writing tx_hash hash {tx_hash} to {filename}")
+                    self.ConfigObj.logger.info(f"Writing tx_hash hash {tx_hash} to {filename}")
                     with open(f"{self.logging_path}/{filename}", "w") as f:
-                        for record in tx_hash:
-                            f.write("\n")
-                            f.write("\n")
-                            try:
-                                json.dump(record, f, indent=4)
-                            except:
-                                f.write(str(record))
+                        f.write(tx_hash)
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
