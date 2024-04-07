@@ -160,14 +160,12 @@ class TxHelpers:
     def _create_transaction(self, contract, fn_name: str, args: list, value: int) -> dict:
         return {
             "type": 2,
+            "value": value,
             "chainId": self.chain_id,
             "from": self.wallet_address,
             "to": contract.address,
             "data": contract.encode_abi(fn_name=fn_name, args=args),
-            "value": value,
-            "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address),
-            "maxFeePerGas": self.cfg.w3.eth.gas_price,
-            "maxPriorityFeePerGas": self.cfg.w3.eth.max_priority_fee
+            "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
         }
 
     def _update_transaction(self, tx: dict):
@@ -183,6 +181,8 @@ class TxHelpers:
                     }
                     for access_item in result["accessList"]
                 ]
+        tx["maxFeePerGas"] = self.cfg.w3.eth.gas_price
+        tx["maxPriorityFeePerGas"] = self.cfg.w3.eth.max_priority_fee
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
