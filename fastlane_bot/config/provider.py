@@ -124,7 +124,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=GAS_ORACLE_ABI,
             )
 
-        self.check_version_of_arb_contract()
+        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
@@ -163,7 +163,7 @@ class _ConfigProviderTenderly(ConfigProvider):
                 abi=GAS_ORACLE_ABI,
             )
 
-        self.check_version_of_arb_contract()
+        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
