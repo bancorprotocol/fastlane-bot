@@ -578,8 +578,8 @@ def get_config(
 
     Parameters
     ----------
-    default_min_profit_bnt : int or Decimal
-        The default minimum profit in BNT.
+    default_min_profit_gas_token : int or Decimal
+        The default minimum profit in the gas token.
     limit_bancor3_flashloan_tokens : bool
         Whether to limit the flashloan tokens to Bancor v3 pools.
     loglevel : str
