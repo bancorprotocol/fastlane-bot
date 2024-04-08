@@ -181,8 +181,11 @@ class TxHelpers:
                     }
                     for access_item in result["accessList"]
                 ]
-        tx["maxFeePerGas"] = self.cfg.w3.eth.gas_price
-        tx["maxPriorityFeePerGas"] = self.cfg.w3.eth.max_priority_fee
+        if self.cfg.GAS_STRATEGY:
+            tx.update(self.cfg.GAS_STRATEGY(self.cfg.w3))
+        else:
+            tx["maxFeePerGas"] = self.cfg.w3.eth.gas_price
+            tx["maxPriorityFeePerGas"] = self.cfg.w3.eth.max_priority_fee
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction

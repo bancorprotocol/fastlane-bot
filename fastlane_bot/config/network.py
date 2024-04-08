@@ -293,6 +293,10 @@ class ConfigNetwork(ConfigBase):
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
     IS_NO_FLASHLOAN_AVAILABLE = False
 
+    # HOOKS
+    #######################################################################################
+    GAS_STRATEGY = None
+
     @classmethod
     def new(cls, network=None):
         """
