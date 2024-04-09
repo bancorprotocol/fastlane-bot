@@ -48,7 +48,7 @@ class UniswapV3(Exchange):
         fee = await contract.functions.fee().call()
         fee_float = float(fee) / 1e6
         if self.exchange_name == NILE_V3_NAME:
-            fee_float = await contract.functions.currentFee().call()
+            fee_float = await contract.functions.currentFee().call() / 1e6
 
         return fee, fee_float
 
