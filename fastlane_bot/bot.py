@@ -62,12 +62,10 @@ from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,
     TxHelpers,
-    TxHelpersBase,
     TradeInstruction,
     Univ3Calculator,
     add_wrap_or_unwrap_trades_to_route,
-    split_carbon_trades,
-    submit_transaction_tenderly
+    split_carbon_trades
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
@@ -95,7 +93,7 @@ class CarbonBotBase:
         the database manager.
     TxRouteHandlerClass
         ditto (default: TxRouteHandler).
-    TxHelpersClass: class derived from TxHelpersBase
+    TxHelpersClass:
         ditto (default: TxHelpers).
 
     """
@@ -119,8 +117,6 @@ class CarbonBotBase:
         if self.ConfigObj is None:
             self.ConfigObj = Config()
 
-        self.c = self.ConfigObj
-
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
@@ -129,10 +125,7 @@ class CarbonBotBase:
             self.TxRouteHandlerClass = TxRouteHandler
 
         if self.TxHelpersClass is None:
-            self.TxHelpersClass = TxHelpers(ConfigObj=self.ConfigObj)
-        assert issubclass(
-            self.TxHelpersClass.__class__, TxHelpersBase
-        ), f"TxHelpersClass not derived from TxHelpersBase {self.TxHelpersClass}"
+            self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
@@ -1042,19 +1035,6 @@ class CarbonBot(CarbonBotBase):
 
         route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
-        # Get the cids
-        cids = list({ti["cid"] for ti in best_trade_instructions_dic})
-
-        # Check if the network is tenderly and submit the transaction accordingly
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            return submit_transaction_tenderly(
-                cfg=self.ConfigObj,
-                flashloan_struct=flashloan_struct,
-                route_struct=route_struct_maximized,
-                src_amount=flashloan_amount_wei,
-                src_address=flashloan_token_address,
-            )
-
         # Log the route_struct
         self.handle_logging_for_trade_instructions(
             4,  # The log id
@@ -1065,18 +1045,13 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
-        # Get the tx helpers class
-        tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
-
         # Return the validate and submit transaction
-        return tx_helpers.validate_and_submit_transaction(
+        return self.TxHelpersClass.validate_and_submit_transaction(
             route_struct=route_struct_maximized,
             src_amt=flashloan_amount_wei,
             src_address=flashloan_token_address,
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
-            safety_override=False,
-            verbose=True,
             log_object=log_dict,
             flashloan_struct=flashloan_struct,
         )
@@ -1320,7 +1295,7 @@ class CarbonBot(CarbonBotBase):
                 randomizer=randomizer,
                 replay_mode=replay_mode,
             )
-            if tx_hash and tx_hash[0]:
+            if tx_hash:
                 self.ConfigObj.logger.info(
                     f"[bot.run_single_mode] Arbitrage executed [hash={tx_hash}]"
                 )
@@ -1328,25 +1303,15 @@ class CarbonBot(CarbonBotBase):
                 # Write the tx hash to a file in the logging_path directory
                 if self.logging_path:
                     filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                    print(f"Writing tx_hash hash {tx_hash} to {filename}")
+                    self.ConfigObj.logger.info(f"Writing tx hash {tx_hash} to {filename}")
                     with open(f"{self.logging_path}/{filename}", "w") as f:
-
-                        # if isinstance(tx_hash[0], AttributeDict):
-                        #     f.write(str(tx_hash[0]))
-                        # else:
-                        for record in tx_hash:
-                            f.write("\n")
-                            f.write("\n")
-                            try:
-                                json.dump(record, f, indent=4)
-                            except:
-                                f.write(str(record))
+                        f.write(tx_hash)
 
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
         except Exception as e:
             self.ConfigObj.logger.error(f"[bot:run:single] {e}")
-            raise
+            raise e
 
     def _ensure_connection(self, tenderly_fork: str):
         """
