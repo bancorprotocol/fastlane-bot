@@ -1260,9 +1260,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
     if save_tokens:
         save_token_data(token_dict=token_manager, write_path=write_path)
-    
-    exchange_df['last_updated_block'] = 0
-    exchange_df['cid'] = None
+
     exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
@@ -1271,4 +1269,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
 
 #terraform_blockchain(network_name="mantle", save_tokens=True)
-# terraform_blockchain(network_name="linea", save_tokens=True)
+terraform_blockchain(network_name="linea", save_tokens=True)

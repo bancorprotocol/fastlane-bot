@@ -20,7 +20,7 @@ from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
-    ETHEREUM, METAVAULT_V3_NAME, NILE_V3_NAME
+    ETHEREUM, METAVAULT_V3_NAME
 
 
 @dataclass
@@ -235,7 +235,7 @@ class TxRouteHandler:
 
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
-            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME, METAVAULT_V3_NAME, NILE_V3_NAME]:
+            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME, METAVAULT_V3_NAME]:
                 return '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
                 return '0x0100000000000000000000000000000000000000000000000000000000000000'

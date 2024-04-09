@@ -69,7 +69,7 @@ class TxHelpers:
                 self.get_max_priority_fee_per_gas_alchemy()
                 * self.ConfigObj.DEFAULT_GAS_PRICE_OFFSET
             )
-            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] #TODO
+            if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]
             else 0
         )
 
@@ -439,7 +439,7 @@ class TxHelpers:
         #     max_gas_price = 3
         #     max_priority_fee = 3
 
-        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]: #TODO
+        if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"]:
             tx_details = {
                 "type": "0x2",
                 "maxFeePerGas": max_gas_price,
@@ -657,7 +657,7 @@ class TxHelpers:
             transaction hash
         """
         current_gas_price = self.web3.eth.get_block("pending").get("baseFeePerGas")
-        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0 #TODO
+        max_priority = int(self.get_max_priority_fee_per_gas_alchemy()) if self.ConfigObj.NETWORK in ["ethereum", "coinbase_base"] else 0
 
         token_contract = self.web3.eth.contract(address=token_address, abi=ERC20_ABI)
 
