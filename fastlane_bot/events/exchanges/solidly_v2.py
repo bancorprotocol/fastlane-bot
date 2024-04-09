@@ -115,6 +115,22 @@ async def get_fee_6(address: str, contract: Contract, factory_contract: Contract
     """
     return await factory_contract.caller.pairFee(address)
 
+async def get_fee_7(address: str, contract: Contract, factory_contract: Contract) -> float:
+    """ Function to get fee for a XFAI pool.
+
+    This async function fetches the fee for a XFAI pool.
+    Known uses of this function: xfai
+
+    Args:
+        address: The pool address.
+        contract: The pool contract.
+        factory_contract: The factory contract.
+
+    Returns:
+        The pool fee.
+    """
+    return await 20  # TODO the fee comes from the CORE.getTotalFee()
+
 EXCHANGE_INFO = {
     "velocimeter_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "fee_function": get_fee_1},
     "equalizer_v2": {"decimals": 4, "factory_abi": SCALE_V2_FACTORY_ABI, "fee_function": get_fee_2},
@@ -125,6 +141,7 @@ EXCHANGE_INFO = {
     "stratum_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "fee_function": get_fee_1},
     "lynex_v2": {"decimals": 4, "factory_abi": LYNEX_V2_FACTORY_ABI, "fee_function": get_fee_5},
     "nile_v2": {"decimals": 4, "factory_abi": NILE_V2_FACTORY_ABI, "fee_function": get_fee_6},
+    "xfai": {"decimals": 4, "factory_abi": SOLIDLY_V2_FACTORY_ABI, "fee_function": get_fee_7},
 }
 
 @dataclass
@@ -173,3 +190,5 @@ class SolidlyV2(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.functions.token1().call()
 
+    async def get_xfai_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+        return await contract.functions.poolToken().call()

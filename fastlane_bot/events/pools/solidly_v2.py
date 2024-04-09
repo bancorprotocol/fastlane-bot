@@ -86,9 +86,12 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = contract.caller.getReserves()
-
-        self.is_stable = contract.caller.stable()
+        if self.exchange_name == 'xfai':
+            reserve_balance = contract.caller.getStates()    
+            self.is_stable = False   # not relevant for xfai
+        else: 
+            reserve_balance = contract.caller.getReserves()
+            self.is_stable = contract.caller.stable()
         params = {
 
             "tkn0_balance": reserve_balance[0],
@@ -111,9 +114,12 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = await contract.caller.getReserves()
-
-        self.is_stable = await contract.caller.stable()
+        if self.exchange_name == 'xfai':
+            reserve_balance = await contract.caller.getStates()    
+            self.is_stable = False   # not relevant for xfai
+        else: 
+            reserve_balance = await contract.caller.getReserves()
+            self.is_stable = await contract.caller.stable()
         params = {
 
             "tkn0_balance": reserve_balance[0],

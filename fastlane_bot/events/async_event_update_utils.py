@@ -97,21 +97,26 @@ async def get_token_and_fee(
         The tokens and fee info for the pool
     """
     try:
-        anchor = None
-        tkn0 = await ex.get_tkn0(address, contract, event=event)
-        tkn1 = await ex.get_tkn1(address, contract, event=event)
-        fee = await ex.get_fee(address, contract)
-        if exchange_name == "bancor_v2":
-            anchor = await ex.get_anchor(contract)
-            for i in [0, 1]:
-                connector_token = await ex.get_connector_tokens(contract, i)
-                if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                    break
+        if exchange_name == "xfai":
+            tkn0 = await ex.get_xfai_tkn0(address, contract, event=event)    
+            tkn1 = "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f" # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
+            fee = await ex.get_fee(address, contract)    
+        else:
+            anchor = None
+            tkn0 = await ex.get_tkn0(address, contract, event=event)
+            tkn1 = await ex.get_tkn1(address, contract, event=event)
+            fee = await ex.get_fee(address, contract)
+            if exchange_name == "bancor_v2":
+                anchor = await ex.get_anchor(contract)
+                for i in [0, 1]:
+                    connector_token = await ex.get_connector_tokens(contract, i)
+                    if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                        break
 
-            if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                tkn1 = connector_token
-            elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-                tkn0 = connector_token
+                if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                    tkn1 = connector_token
+                elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                    tkn0 = connector_token
 
         strategy_id = 0 if not ex.is_carbon_v1_fork else str(event["args"]["id"])
         pool_info = {
