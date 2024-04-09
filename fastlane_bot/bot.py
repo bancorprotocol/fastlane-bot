@@ -837,6 +837,19 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions,
         ) = r
 
+        indices = [
+            n for n, x in enumerate(best_trade_instructions_dic)
+            if x['tknin'] not in self.ConfigObj.TAX_TOKENS and x['tknout'] not in self.ConfigObj.TAX_TOKENS
+        ]
+
+        if not indices:
+            self.ConfigObj.logger.info(f"[bot._handle_trade_instructions] only tax tokens detected, discarding.")
+            return None
+
+        best_trade_instructions_dic = [x for n, x in enumerate(best_trade_instructions_dic) if n in indices]
+        best_trade_instructions_df = [x for n, x in enumerate(best_trade_instructions_df) if n in indices]
+        best_trade_instructions = [x for n, x in enumerate(best_trade_instructions) if n in indices]
+
         # Order the trade instructions
         (
             ordered_trade_instructions_dct,
