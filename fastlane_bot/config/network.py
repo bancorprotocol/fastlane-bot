@@ -295,6 +295,7 @@ class ConfigNetwork(ConfigBase):
 
     # HOOKS
     #######################################################################################
+    @staticmethod
     def gas_strategy(web3):
         return {
             "maxFeePerGas": web3.eth.gas_price,
