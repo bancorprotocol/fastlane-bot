@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 from . import selectors as S
 from .base import ConfigBase
-from .constants import CARBON_V1_FORK1_NAME, CARBON_V1_NAME
+from .constants import CARBON_V1_NAME
 load_dotenv()
 
 from decimal import Decimal
@@ -209,7 +209,6 @@ class ConfigNetwork(ConfigBase):
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
     CARBON_V1_NAME = CARBON_V1_NAME
-    CARBON_V1_FORK1_NAME = CARBON_V1_FORK1_NAME
     BANCOR_POL_NAME = "bancor_pol"
     BALANCER_NAME = "balancer"
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
@@ -237,7 +236,7 @@ class ConfigNetwork(ConfigBase):
 
     GAS_ORACLE_ADDRESS = None
 
-    CARBON_V1_FORKS = [CARBON_V1_NAME, CARBON_V1_FORK1_NAME]
+    CARBON_V1_FORKS = []
 
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
