@@ -429,7 +429,14 @@ SOLIDLY_V2_POOL_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
-    }
+    },
+    {
+        "type": "function",
+        "name": "getStates",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256","name": "","type": "uint256"},{"internalType": "uint256","name": "","type": "uint256"}]
+    },
 ]
 
 BANCOR_V2_CONVERTER_ABI = [
