@@ -1,10 +1,32 @@
 # Changelog
 
+## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...HEAD)
+
+- Carbon strategies are duplicated from events [\#521](https://github.com/bancorprotocol/fastlane-bot/issues/521)
+
+## [v3.1.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.4) (2024-04-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.3...v3.1.4)
+
+- GPU token external liquidity not found [\#515](https://github.com/bancorprotocol/fastlane-bot/issues/515)
+
+## [v3.1.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.3) (2024-04-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.2...v3.1.3)
+
+Closed issues
+
+- All files should have doc strings [\#438](https://github.com/bancorprotocol/fastlane-bot/issues/438)
+
 ## [v3.1.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.2) (2024-04-01)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.1...v3.1.2)
 
-- Pool-Type not handled correctly after changing input from None to '' [\#509](https://github.com/bancorprotocol/fastlane-bot/issues/509)
+Merged pull requests
+
+- Fix issue 509 [\#510](https://github.com/bancorprotocol/fastlane-bot/pull/510) ([barakman](https://github.com/barakman))
 
 ## [v3.1.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.1) (2024-03-27)
 
