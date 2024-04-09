@@ -181,7 +181,7 @@ class TxHelpers:
                     }
                     for access_item in result["accessList"]
                 ]
-        tx.update(self.cfg.GAS_STRATEGY(self.cfg.w3))
+        tx.update(self.cfg.gas_strategy(self.cfg.w3))
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction

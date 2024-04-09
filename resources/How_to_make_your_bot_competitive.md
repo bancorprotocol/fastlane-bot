@@ -5,9 +5,9 @@
 Typically only one bot-operator is able to close each arbitrage opportunity, making bot operation competitive in nature. The purpose of this document is to provide ideas on ways to improve your own bot. 
 
 ### Gas Fee Optimization
-The constant `GAS_STRATEGY` (in config/network.py) is designated as a function which allows controlling the gas-strategy.
-This function should take a `Web3` instance as input, and return a dictionary specifying `maxFeePerGas` and `maxPriorityFeePerGas` as output.
-When set to `None`, the bot will use the network's current values (obtained by sending `eth_gasPrice` and `eth_maxPriorityFeePerGas` requests to the node).
+Function `gas_strategy` (in config/network.py) allows you to implement your own gas-strategy.
+It takes a `Web3` instance as input, and it should return a dictionary specifying `maxFeePerGas` and `maxPriorityFeePerGas` as output.
+By default, it returns the network's current values (obtained by sending `eth_gasPrice` and `eth_maxPriorityFeePerGas` requests to the node).
 The tradeoff for each transaction is between the expected execution time and the expected profit.
 Higher values generally reduce the expected execution time, but they also reduce the expected profit.
 
