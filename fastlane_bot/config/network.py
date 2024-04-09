@@ -295,7 +295,11 @@ class ConfigNetwork(ConfigBase):
 
     # HOOKS
     #######################################################################################
-    GAS_STRATEGY = None
+    def GAS_STRATEGY(web3):
+        return {
+            "maxFeePerGas": web3.eth.gas_price,
+            "maxPriorityFeePerGas": web3.eth.max_priority_fee
+        }
 
     @classmethod
     def new(cls, network=None):
