@@ -219,6 +219,7 @@ class ConfigNetwork(ConfigBase):
     SHIBA_V2_NAME = "shiba_v2"
     # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
+    XFAI_NAME = "xfai"
     AERODROME_V3_NAME = "aerodrome_v3"
     ALIENBASE_V2_NAME = "alienbase_v2"
     ALIENBASE_V3_NAME = "alienbase_v3"
@@ -403,10 +404,12 @@ class ConfigNetwork(ConfigBase):
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
         for ex in self.SOLIDLY_V2_FORKS:
-            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
-                self.EXCHANGE_IDS[ex] = 11
-            else:
+            if ex in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
                 self.EXCHANGE_IDS[ex] = 12
+            elif ex == self.XFAI_NAME:
+                self.EXCHANGE_IDS[ex] = 13
+            else:
+                self.EXCHANGE_IDS[ex] = 11
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 
