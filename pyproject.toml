@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "fastlane_bot"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 psutil = "^5.9.6"
 packaging = "21.3"
 requests = "^2.31.0"
