@@ -166,7 +166,10 @@ class CarbonBotBase:
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
-                curves += p.to_cpc()
+                curves += [
+                    curve for curve in p.to_cpc()
+                    if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
+                ]
             except NotImplementedError as e:
                 # Currently not supporting Solidly V2 Stable pools. This will be removed when support is added, but for now the error message is suppressed.
                 if "Stable Solidly V2" in str(e):
@@ -836,19 +839,6 @@ class CarbonBot(CarbonBotBase):
             best_src_token,
             best_trade_instructions,
         ) = r
-
-        indices = [
-            n for n, x in enumerate(best_trade_instructions_dic)
-            if x['tknin'] not in self.ConfigObj.TAX_TOKENS and x['tknout'] not in self.ConfigObj.TAX_TOKENS
-        ]
-
-        if not indices:
-            self.ConfigObj.logger.info(f"[bot._handle_trade_instructions] only tax tokens detected, discarding.")
-            return None
-
-        best_trade_instructions_dic = [x for n, x in enumerate(best_trade_instructions_dic) if n in indices]
-        best_trade_instructions_df = [x for n, x in enumerate(best_trade_instructions_df) if n in indices]
-        best_trade_instructions = [x for n, x in enumerate(best_trade_instructions) if n in indices]
 
         # Order the trade instructions
         (
