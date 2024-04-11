@@ -124,10 +124,8 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=GAS_ORACLE_ABI,
             )
 
-        self.cfg.logger.info(1111111111111111111111111111)
-        self.cfg.logger.info(self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS))
-        self.cfg.logger.info(self.w3.eth.get_code(self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS)))
-        self.cfg.logger.info(1111111111111111111111111111)
+        code = self.w3.eth.get_code(self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS))
+        assert len(code) > 10, f"{N.FASTLANE_CONTRACT_ADDRESS}:\n{code}\n{self.RPC_URL}"
 
         self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
