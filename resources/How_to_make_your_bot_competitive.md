@@ -14,7 +14,7 @@ Higher values generally reduce the expected execution time, but they also reduce
 ### Data Throughput
 Faster data means faster cycles for the arbitrage bot. The easiest way to achieve this is by using a premium plan from a data provider such as Alchemy. 
 
-Another way to achieve this is by running an Ethereum node locally. The bot can be connected to a local Ethereum node fairly easily by changing the RPC_URL in the fastlane_bot/config/providers file.
+Another way to achieve this is by running an Ethereum node locally. The bot can be connected to a local Ethereum node fairly easily by changing `self.RPC_URL` in file `fastlane_bot/config/provider.py`.
 
 ### New Arbitrage Modes
 Currently the bot is geared towards closing pariwise & triangular arbitrage on Bancor V3 & Carbon, but it can easily be generalized for all the exchanges it supports. To do this, you would need to create a new Arb Mode file, and design the combinations that are fed into the Optimizer. A lot of the heavy lifting here is already handled, but there may be a few specific changes you would need to make to get it to work.

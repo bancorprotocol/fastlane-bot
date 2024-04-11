@@ -6,7 +6,7 @@
 
 ### **2. Using a Private Node or Infura with the Fastlane Bot**
 - **Question:** Can a private node or Infura be used with the Fastlane Bot?
-- **Answer:** Yes. The bot can use any RPC. This can be edited in the fastlane_bot/config/providers file - search for: self.RPC_URL.
+- **Answer:** Yes. The bot can use any RPC. Search for `self.RPC_URL` in file `fastlane_bot/config/provider.py`.
 
 ### **3. Arbitraging Specific Tokens using the Fastlane Bot**
 - **Question:** How can I search for arbitrage for specific tokens using the Fastlane Bot?
