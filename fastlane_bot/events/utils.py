@@ -578,8 +578,8 @@ def get_config(
 
     Parameters
     ----------
-    default_min_profit_bnt : int or Decimal
-        The default minimum profit in BNT.
+    default_min_profit_gas_token : int or Decimal
+        The default minimum profit in the gas token.
     limit_bancor3_flashloan_tokens : bool
         Whether to limit the flashloan tokens to Bancor v3 pools.
     loglevel : str
@@ -2001,93 +2001,13 @@ def handle_tokens_csv(mgr, prefix_path, read_only: bool = False):
     )
 
 
-def self_funding_warning_sequence(cfg):
-    """
-    This function initiates a warning sequence if the user has specified to use their own funds.
-
-    :param cfg: the config object
-
-    """
-    cfg.logger.info(
-        f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n"
-    )
-    cfg.logger.info(
-        f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************"
-    )
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 15 seconds")
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 10 seconds")
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 5 seconds")
-    time.sleep(5)
-    cfg.logger.info(
-        f"*********************************************************************************\n\nSelf-funding mode activated."
-    )
-    cfg.logger.info(
-        f"""\n\n
-          _____
-         |A .  | _____
-         | /.\ ||A ^  | _____
-         |(_._)|| / \ ||A _  | _____
-         |  |  || \ / || ( ) ||A_ _ |
-         |____V||  .  ||(_'_)||( v )|
-                |____V||  |  || \ / |
-                       |____V||  .  |
-                              |____V|
-    \n\n"""
-    )
-
-
-def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
-    """
-    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
-    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
-    :param tokens: the list of tokens to check/approve
-    :param cfg: the config object
-    :param tx_helpers: the TxHelpers instantiated class
-
-    returns: List of tokens that have not been approved
-
-    """
-    unapproved_tokens = []
-    for tkn in tokens:
-        if not tx_helpers.check_if_token_approved(token_address=tkn):
-            unapproved_tokens.append(tkn)
-    return unapproved_tokens
-
-
-def check_and_approve_tokens(tokens: List, cfg) -> bool:
+def check_and_approve_tokens(cfg: Config, tokens: List):
     """
     This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
     If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
 
-    :param tokens: the list of tokens to check/approve
     :param cfg: the config object
+    :param tokens: the list of tokens to check/approve
 
     """
-
-    tokens = [tkn for tkn in tokens if tkn != cfg.NATIVE_GAS_TOKEN_ADDRESS]
-
-    self_funding_warning_sequence(cfg=cfg)
-    tx_helpers = TxHelpers(ConfigObj=cfg)
-    unapproved_tokens = find_unapproved_tokens(
-        tokens=tokens, cfg=cfg, tx_helpers=tx_helpers
-    )
-
-    if len(unapproved_tokens) == 0:
-        return True
-
-    for _tkn in unapproved_tokens:
-        tx = tx_helpers.approve_token_for_arb_contract(token_address=_tkn)
-        if tx is not None:
-            continue
-        else:
-            assert (
-                False
-            ), f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
-
-    unapproved_tokens = find_unapproved_tokens(
-        tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers
-    )
-    return len(unapproved_tokens) == 0
+    TxHelpers(cfg=cfg).check_and_approve_tokens(tokens=tokens)
