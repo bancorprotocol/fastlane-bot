@@ -37,7 +37,7 @@ async def get_fee_2(address: str, contract: Contract, factory_contract: Contract
     """ Function to get fee for a Solidly pool.
 
     This async function fetches the fee for a Solidly pool.
-    Known uses of this function: equalizer_v2, scale_v2
+    Known uses of this function: equalizer_v2, scale_v2, archly_v2
 
     Args:
         address: The pool address.
@@ -91,6 +91,7 @@ EXCHANGE_INFO = {
     "scale_v2": {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
     "cleopatra_v2": {"decimals": 4, "factory_abi": CLEOPATRA_V2_POOL_ABI, "pool_abi": EQUALIZER_V2_POOL_ABI, "fee_function": get_fee_4},
     "stratum_v2": {"decimals": 4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": VELOCIMETER_V2_POOL_ABI, "fee_function": get_fee_1},
+    "archly_v2": {"decimals": 4, "factory_abi": SCALE_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "fee_function": get_fee_2},
 }
 
 @dataclass

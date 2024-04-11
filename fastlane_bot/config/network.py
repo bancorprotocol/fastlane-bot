@@ -292,6 +292,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
     NETWORK_MANTLE = S.NETWORK_MANTLE
+    NETWORK_TELOS = S.NETWORK_TELOS
 
     # FLAGS
     #######################################################################################
@@ -321,6 +322,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkFantom(_direct=False)
         elif network == cls.NETWORK_MANTLE:
             return _ConfigNetworkMantle(_direct=False)
+        elif network == cls.NETWORK_TELOS:
+            return _ConfigNetworkTelos(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -725,6 +728,47 @@ class _ConfigNetworkMantle(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8": "WMNT",
         "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkTelos(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_TELOS
+    NETWORK_ID = "40"
+    NETWORK_NAME = "telos"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://mainnet15.telos.net/evm"
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_TELOS")
+
+    GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000" #TODO UPDATE WITH REAL
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+    IS_NO_FLASHLOAN_AVAILABLE = True
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0x0000000000000000000000000000000000000000" #TODO UPDATE WITH REAL
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0x0000000000000000000000000000000000000000" #TODO UPDATE WITH REAL
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E"
+    NATIVE_GAS_TOKEN_SYMBOL = "TLOS"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WTLOS"
+    STABLECOIN_ADDRESS = "0x8D97Cea50351Fb4329d591682b148D43a0C3611b"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "" # could add Symmetric, Velocore or Polaris
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E": "WTLOS",
+        "0x8D97Cea50351Fb4329d591682b148D43a0C3611b": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []

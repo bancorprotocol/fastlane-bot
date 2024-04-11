@@ -31,6 +31,7 @@ OPTIMISM = "optimism"
 BASE = "coinbase_base"
 FANTOM = "fantom"
 MANTLE = "mantle"
+TELOS = "telos"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -49,6 +50,7 @@ coingecko_network_map = {
     "cosmos": "cosmos",
     "kava": "kava",
     "mantle": "mantle",
+    "telos": "telos",
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -60,6 +62,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
+    "telos": 10000000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -71,6 +74,7 @@ ALCHEMY_KEY_DICT = {
     "coinbase_base": "WEB3_ALCHEMY_BASE",
     "fantom": "WEB3_FANTOM",
     "mantle": "WEB3_MANTLE",
+    "telos": "WEB3_TELOS",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -82,6 +86,7 @@ ALCHEMY_RPC_LIST = {
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
+    "telos": "https://mainnet15.telos.net/evm",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -117,8 +122,9 @@ SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 CLEOPATRA_V2_NAME = "cleopatra_v2"
 STRATUM_V2_NAME = "stratum_v2"
+ARCHLY_V2_NAME = 'archly_v2'
 
-SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
+SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME, ARCHLY_V2_NAME]
 
 
 EXCHANGE_IDS = {
@@ -141,6 +147,7 @@ EXCHANGE_IDS = {
     AERODROME_V2_NAME: 12,
     CLEOPATRA_V2_NAME: 12,
     STRATUM_V2_NAME: 12,
+    ARCHLY_V2_NAME: 11, # TODO CONFIRM
 }
 
 EXCHANGE_POOL_CREATION_EVENT_NAMES = {
@@ -151,6 +158,7 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     SCALE_V2_NAME: "PairCreated",
     CLEOPATRA_V2_NAME: "PairCreated",
     STRATUM_V2_NAME: "PairCreated",
+    ARCHLY_V2_NAME: "PairCreated"
 }
 
 dataframe_key = [
@@ -1277,4 +1285,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="mantle", save_tokens=True)
+# terraform_blockchain(network_name="telos", save_tokens=True)
