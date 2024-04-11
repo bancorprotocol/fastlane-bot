@@ -1,20 +1,25 @@
 # Changelog
 
-## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
+## [v3.1.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.5) (2024-04-09)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...v3.1.5)
 
 - Carbon strategies are duplicated from events [\#521](https://github.com/bancorprotocol/fastlane-bot/issues/521)
+
+- Add support for puffs\_penthouse uniswap\_v3 fork [\#524](https://github.com/bancorprotocol/fastlane-bot/pull/524) ([NIXBNT](https://github.com/NIXBNT))
 
 ## [v3.1.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.4) (2024-04-08)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.3...v3.1.4)
 
 - GPU token external liquidity not found [\#515](https://github.com/bancorprotocol/fastlane-bot/issues/515)
+- Hotfix - Carbon strategies duplicated [\#522](https://github.com/bancorprotocol/fastlane-bot/pull/522) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.1.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.3) (2024-04-04)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.2...v3.1.3)
+
+- gpu external sources added to event mapping [\#517](https://github.com/bancorprotocol/fastlane-bot/pull/517) ([NIXBNT](https://github.com/NIXBNT))
 
 Closed issues
 
