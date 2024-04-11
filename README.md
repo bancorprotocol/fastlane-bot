@@ -43,6 +43,8 @@ pip install poetry
 poetry install
 ```
 
+Once the environment is ready, all commands should be prepended with `poetry run` in order to be executed in the corresponding virtual environment. Alternatively, virtual environment can be activated once using `poetry shell`.
+
 ### Legacy Installation (v1.0)
 You can access the legacy version of the Fastlane Arbitrage Bot, which was solely designed to facilitate single triangle arbitrage transactions which both initiate and conclude with BNT on the Bancor V3 exchange, by referring to the following link:
 
