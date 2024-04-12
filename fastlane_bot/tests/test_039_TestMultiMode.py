@@ -139,6 +139,8 @@ arb_mode = "multi"
 def test_test_tax_tokens():
 # ------------------------------------------------------------
     
+    assert any(token.address in cfg.TAX_TOKENS for token in tokens), f"[TestMultiMode], DB does not include any tax tokens"
+    
     for curve in CCm:
         for token in cfg.TAX_TOKENS:
             assert token not in [curve.params['tknx_addr'], curve.params['tkny_addr']], f"[TestMultiMode], curve {curve} includes tax token {token}"
@@ -234,6 +236,9 @@ def test_test_expected_output():
                     else:
                         if trade["tknin"] not in carbon_tkn_in:
                             carbon_wrong_direction_count += 1
+        for ti in best_trade_instructions_dic:
+            for token in cfg.TAX_TOKENS:
+                assert token not in [ti['tknin'], ti['tknout']], f"[TestMultiMode], trade instruction {ti} includes tax token {token}"
     
     assert len(r) >= 27, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
     assert multi_carbon_count > 0, f"[NBTest 039 TestMultiMode] Not finding arbs with multiple Carbon curves."
