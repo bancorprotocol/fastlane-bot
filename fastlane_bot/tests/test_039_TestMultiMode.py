@@ -172,11 +172,12 @@ def test_test_combos_and_tokens():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    
+
+    # subjected to the length of `TAX_TOKENS`    
     assert type(all_tokens) == set, f"[NBTest 039 TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[NBTest 039 TestMultiMode] combos is wrong data type. Expected list, found: {type(combos)}"
     assert len(all_tokens) >= 234, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 234 tokens, found {len(all_tokens)}"
-    assert len(combos) >= 1410, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1410 combos, found {len(combos)}"
+    assert len(combos) >= 1398, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1398 combos, found {len(combos)}"
     # -
     
 
