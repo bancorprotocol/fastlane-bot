@@ -134,6 +134,19 @@ arb_mode = "multi"
 # ------------------------------------------------------------
 # Test      039
 # File      test_039_TestMultiMode.py
+# Segment   Test_TAX_TOKENS
+# ------------------------------------------------------------
+def test_test_tax_tokens():
+# ------------------------------------------------------------
+    
+    for curve in CCm:
+        for token in cfg.TAX_TOKENS:
+            assert token not in [curve.params['tknx_addr'], curve.params['tkny_addr']], f"[TestMultiMode], curve {curve} includes tax token {token}"
+
+
+# ------------------------------------------------------------
+# Test      039
+# File      test_039_TestMultiMode.py
 # Segment   Test_MIN_PROFIT
 # ------------------------------------------------------------
 def test_test_min_profit():
