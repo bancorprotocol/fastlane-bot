@@ -194,10 +194,7 @@ class ConfigNetwork(ConfigBase):
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
-    TAX_TOKENS = [
-        "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
-        "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
-    ]
+    TAX_TOKENS = []
 
     # BNT_KEY = "BNT-FF1C"
     # ETH_KEY = "ETH-EEeE"
@@ -449,6 +446,11 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     NATIVE_GAS_TOKEN_SYMBOL = "ETH"
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    TAX_TOKENS = [
+        "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
+        "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
+    ]
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
