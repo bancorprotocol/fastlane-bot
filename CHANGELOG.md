@@ -2,10 +2,19 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.6...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.7...HEAD)
+
+- WEB3\_ALCHEMY\_BASE, WEB3\_FANTOM and WEB3\_MANTLE are missing in the test-suite configuration [\#520](https://github.com/bancorprotocol/fastlane-bot/issues/520)
+
+- Transaction Creation [\#428](https://github.com/bancorprotocol/fastlane-bot/issues/428)
+
+## [v3.1.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.7) (2024-04-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.6...v3.1.7)
 
 - supernova not found in exchange [\#539](https://github.com/bancorprotocol/fastlane-bot/issues/539)
 - Transactions occasionally revert with error-message `Too little received` [\#383](https://github.com/bancorprotocol/fastlane-bot/issues/383)
+- Hotfix - Fix native token address for Mantle [\#541](https://github.com/bancorprotocol/fastlane-bot/pull/541) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Remove unused code in `submithandler.py` [\#350](https://github.com/bancorprotocol/fastlane-bot/issues/350)
 
@@ -17,6 +26,10 @@ Closed issues
 ## [v3.1.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.6) (2024-04-10)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.5...v3.1.6)
+
+Merged pull requests
+
+- Update fusionx details info [\#525](https://github.com/bancorprotocol/fastlane-bot/pull/525) ([NIXBNT](https://github.com/NIXBNT))
 
 ## [v3.1.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.5) (2024-04-09)
 
