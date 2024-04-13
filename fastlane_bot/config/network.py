@@ -197,7 +197,7 @@ class ConfigNetwork(ConfigBase):
     # ACCOUNTS SECTION
     #######################################################################################
     BINANCE8_WALLET_ADDRESS = "0xF977814e90dA44bFA03b6295A0616a897441aceC"
-    BINANCE14_WALLET_ADDRESS = "0x28c6c06298d514db089934071355e5743bf21d60"
+    BINANCE14_WALLET_ADDRESS = "0x28C6c06298d514Db089934071355E5743bf21d60"
 
     # EXCHANGE IDENTIFIERS SECTION
     #######################################################################################
@@ -256,7 +256,7 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 250, 450, 500, 2500, 3000, 10000]
+    UNIV3_FEE_LIST = [8, 10, 40, 80, 100, 250, 300, 450, 500, 1000, 2500, 3000, 10000]
     MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
     DEFAULT_GAS = 950_000
     DEFAULT_GAS_PRICE = 0
@@ -278,6 +278,7 @@ class ConfigNetwork(ConfigBase):
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
+    IS_INJECT_POA_MIDDLEWARE = False
     # SUNDRY SECTION
     #######################################################################################
     COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
@@ -292,6 +293,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
     NETWORK_MANTLE = S.NETWORK_MANTLE
+    NETWORK_LINEA = S.NETWORK_LINEA
 
     # FLAGS
     #######################################################################################
@@ -321,6 +323,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkFantom(_direct=False)
         elif network == cls.NETWORK_MANTLE:
             return _ConfigNetworkMantle(_direct=False)
+        elif network == cls.NETWORK_LINEA:
+            return _ConfigNetworkLinea(_direct=False)    
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -725,6 +729,42 @@ class _ConfigNetworkMantle(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8": "WMNT",
         "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkLinea(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_LINEA
+    NETWORK_ID = "59144"
+    NETWORK_NAME = "linea"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://linea.blockpi.network/v1/rpc/"
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_LINEA")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = "0x0000000000000000000000000000000000000000" #TODO - UPDATE WITH ACTUAL DEPLOYMENT WHEN THERE IS ONE
+    CARBON_CONTROLLER_VOUCHER = "0x0000000000000000000000000000000000000000" #TODO - UPDATE WITH ACTUAL DEPLOYMENT WHEN THERE IS ONE
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
+    STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
+
+    IS_INJECT_POA_MIDDLEWARE = True
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0x1d0188c4B276A09366D05d6Be06aF61a73bC7535" # velocore
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f": "WETH",
+        "0x176211869ca2b568f2a7d4ee941e073a821ee1ff": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
