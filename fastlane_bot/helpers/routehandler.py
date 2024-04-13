@@ -19,7 +19,8 @@ import pandas as pd
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
-from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, ETHEREUM
+from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
+    ETHEREUM, METAVAULT_V3_NAME
 
 
 @dataclass
@@ -319,7 +320,7 @@ class TxRouteHandler(TxRouteHandlerBase):
 
         assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
-            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME]:
+            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME, METAVAULT_V3_NAME]:
                 custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
                 custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
