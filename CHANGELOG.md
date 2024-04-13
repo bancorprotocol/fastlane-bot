@@ -2,19 +2,42 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.6...HEAD)
+
+- supernova not found in exchange [\#539](https://github.com/bancorprotocol/fastlane-bot/issues/539)
+- Transactions occasionally revert with error-message `Too little received` [\#383](https://github.com/bancorprotocol/fastlane-bot/issues/383)
+
+- Remove unused code in `submithandler.py` [\#350](https://github.com/bancorprotocol/fastlane-bot/issues/350)
+
+Closed issues
+
+- `*args, **kwargs` -\> `argsf1, argsf2`  [\#493](https://github.com/bancorprotocol/fastlane-bot/issues/493)
+- Can get rid of the if '-' in cid [\#466](https://github.com/bancorprotocol/fastlane-bot/issues/466)
+
+## [v3.1.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.6) (2024-04-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.5...v3.1.6)
+
+## [v3.1.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.5) (2024-04-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...v3.1.5)
 
 - Carbon strategies are duplicated from events [\#521](https://github.com/bancorprotocol/fastlane-bot/issues/521)
+
+- Add support for puffs\_penthouse uniswap\_v3 fork [\#524](https://github.com/bancorprotocol/fastlane-bot/pull/524) ([NIXBNT](https://github.com/NIXBNT))
 
 ## [v3.1.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.4) (2024-04-08)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.3...v3.1.4)
 
 - GPU token external liquidity not found [\#515](https://github.com/bancorprotocol/fastlane-bot/issues/515)
+- Hotfix - Carbon strategies duplicated [\#522](https://github.com/bancorprotocol/fastlane-bot/pull/522) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 ## [v3.1.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.3) (2024-04-04)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.2...v3.1.3)
+
+- gpu external sources added to event mapping [\#517](https://github.com/bancorprotocol/fastlane-bot/pull/517) ([NIXBNT](https://github.com/NIXBNT))
 
 Closed issues
 
