@@ -346,9 +346,7 @@ class ConfigNetwork(ConfigBase):
             df=self.network_df, fork_name=S.UNISWAP_V3
         )
         self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY_V2)
-        self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + [
-            "uniswap_v2"
-        ]
+        self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()]
         self.UNI_V3_FORKS = [key for key in self.UNI_V3_ROUTER_MAPPING.keys()]
 
         self.SOLIDLY_V2_ROUTER_MAPPING = get_fork_map(
