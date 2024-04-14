@@ -232,7 +232,7 @@ class MargPOptimizer(CPCArbOptimizer):
                             quantity with target zero; if asdct is True, that same information is
                             returned as dict, including the target token.
                 """
-                p = np.array(p, dtype=np.float64)
+                p = np.array(p, dtype=np.float128)
                 if islog10:
                     p = np.exp(p * np.log(10))
                 assert len(p) == len(tokens_t), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
@@ -370,7 +370,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 # update log prices, prices and determine the criterium...
                 p0log10 = [*plog10]
                 plog10 += dplog10
-                p = np.exp(plog10 * np.log(10))
+                p = np.exp(np.array(plog10 * np.log(10), dtype=np.float128))
                 criterium = np.linalg.norm(dplog10)
                 
                 # ...print out some info if requested...
