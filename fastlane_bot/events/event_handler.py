@@ -1,21 +1,27 @@
-import time
-
 import os
 
-import aiohttp
 import asyncio
 from eth_typing import HexStr
 from eth_utils import event_abi_to_log_topic
 from hexbytes import HexBytes
 from typing import Optional, Dict, Any, Union, cast, List, Type, Set
 from web3 import AsyncWeb3
+from web3.providers import WebsocketProviderV2
 from web3.contract import AsyncContract
 from web3._utils.abi import get_abi_input_types, map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from web3.datastructures import AttributeDict
 from web3.utils import get_abi_input_names
 
-from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V2_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, BANCOR_V2_CONVERTER_ABI, PANCAKESWAP_V3_POOL_ABI, CARBON_CONTROLLER_ABI, SOLIDLY_V2_POOL_ABI
+from fastlane_bot.data.abi import (
+    UNISWAP_V3_POOL_ABI,
+    UNISWAP_V2_POOL_ABI,
+    BANCOR_V3_POOL_COLLECTION_ABI,
+    BANCOR_V2_CONVERTER_ABI,
+    PANCAKESWAP_V3_POOL_ABI,
+    CARBON_CONTROLLER_ABI,
+    SOLIDLY_V2_POOL_ABI
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -82,7 +88,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         If the input object does not match any of the specified types, it is returned as is.
     """
     if isinstance(obj, AttributeDict):
-        return dict(obj)
+        return complex_handler(dict(obj))
     elif isinstance(obj, HexBytes):
         return obj.hex()
     elif isinstance(obj, bytes):
@@ -92,7 +98,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
     elif isinstance(obj, (list, tuple)):
         return [complex_handler(i) for i in obj]
     elif isinstance(obj, set):
-        return list(obj)
+        return complex_handler(list(obj))
     else:
         return obj
 
@@ -130,9 +136,10 @@ class EventLogDecoder:
         Returns:
             Dict[str, Any]: The decoded log data.
         """
-        data = [t[2:] for t in result['topics']]
-        data += [result['data'][2:]]
-        data = "0x" + "".join(data)
+        data = HexBytes("")
+        for t in result['topics']:
+            data += t
+        data += result['data']
         return self.decode_event_input(data)
 
     def decode_event_input(self, data: Union[HexStr, str], name: str = None) -> Dict[str, Any]:
@@ -197,58 +204,10 @@ class EventLogDecoder:
             raise KeyError(f"Event named '{event_name}' was not found in contract ABI.")
 
 
-class Subscription:
-    """Manages a subscription to blockchain events via a WebSocket connection."""
-
-    def __init__(self):
-        """Initializes the Subscription with no active connection."""
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._ws: Optional[aiohttp.client.ClientWebSocketResponse] = None
-
-    async def start(self, url, params):
-        """Starts a WebSocket subscription.
-
-        Args:
-            url (str): The WebSocket URL to connect to.
-            params (List[Any]): Parameters for the subscription.
-        """
-        assert not self._ws
-        self._session = aiohttp.ClientSession()
-        self._ws = await self._session._ws_connect(url)
-
-        await self._ws.send_json({
-            'jsonrpc': '2.0',
-            'id': 2,
-            'method': 'eth_subscribe',
-            'params': params
-        })
-        self._subscription = (await self._ws.receive_json()).get('result')
-        assert self._subscription is not None
-
-    async def get_event(self):
-        """Retrieves an event from the subscription.
-
-                Returns:
-                    Dict[str, Any]: The received event data.
-                """
-        assert self._ws is not None
-        return await self._ws.receive_json()
-
-    async def unsubscribe(self):
-        """Ends the subscription and closes the WebSocket connection."""
-        assert self._ws is not None and self._session is not None
-        await self._ws.send_json(
-            {'jsonrpc': '2.0', 'id': 0, 'method': 'eth_unsubscribe', 'params': [self._subscription]})
-        await self._ws.close()
-        self._ws = None
-        await self._session.close()
-        self._session = None
-
-
 def get_event_name(event):
     for topic in event["topics"]:
         try:
-            return TOPIC_TO_EVENT_NAME[topic]
+            return TOPIC_TO_EVENT_NAME[topic.hex()]
         except KeyError:
             continue
 
@@ -261,8 +220,6 @@ class EventHandler:
                  topic_or_address: str,
                  is_topic: bool,
                  contract: Type[AsyncContract],
-                 websocket_url: str,
-                 timeout_seconds: float = 0.005,
                  ):
         """Initializes the EventHandler.
 
@@ -271,140 +228,49 @@ class EventHandler:
             topic_or_address (str): The topic or address to filter the events.
             is_topic (bool): Flag indicating if the filter is by topic.
             contract (AsyncContract): The contract associated with the events.
-            websocket_url (str): The RPC URL for the WebSocket connection.
         """
-        self.subscription = Subscription()
-        self.w3 = w3
-        self.topic_or_address = topic_or_address
-        self.is_topic = is_topic
-        self.contract = contract
-        self.websocket_url = websocket_url
-        self.decoder = EventLogDecoder(self.contract)
-        self.timeout_seconds = timeout_seconds
+        self._w3 = w3
+        self._topic_or_address = topic_or_address
+        self._is_topic = is_topic
+        self._contract = contract
+        self._decoder = EventLogDecoder(contract)
+        self._latest_event_index = (-1, -1) # (block_number, block_index)
 
-    async def connect_websocket(self):
+    async def subscribe(self):
         """Establishes a WebSocket connection to start listening for events."""
-        if self.is_topic:
-            await self.subscription.start(f'{self.websocket_url}', ['logs', {"topics": [self.topic_or_address]}])
+        if self._is_topic:
+            return await self._w3.eth.subscribe("logs", {"topics": [self._topic_or_address]})
         else:
-            await self.subscription.start(f'{self.websocket_url}', ['logs', {"address": self.topic_or_address}])
+            return await self._w3.eth.subscribe("logs", {"address": self._topic_or_address})
 
-    async def disconnect_websocket(self):
-        """Closes the WebSocket connection."""
-        await self.subscription.unsubscribe()
-
-    async def get_newest_events(self):
-        """Retrieves the newest events from the WebSocket.
-
-        Continuously fetches events from the WebSocket connection until no more new data is ready.
-        It then filters and decodes the events based on the contract's ABI.
-
-        Returns:
-            List[Dict]: A list of the newest decoded events.
-        """
-        events = []
-        while True:
-            try:
-                # Wait for an event with a timeout
-                event = await asyncio.wait_for(self.subscription.get_event(), self.timeout_seconds)
-                #print(event)
-                # print(event['params']['result'])
-            except asyncio.TimeoutError:
-                # Break the loop if a timeout occurs
-                # print("Timeout: No new events within the specified time.")
-                break
-
-            events.append(event['params']['result'])
-        if not events:
-            return []
-        filtered_events = self.newest_event_filter(events)
-
-        for event in filtered_events:
-            event["args"] = self.decoder.decode_log(event)
+    def process_new_event(self, event):
+        block_number = event["blockNumber"]
+        block_index = event["transactionIndex"]
+        if (block_number, block_index) > self._latest_event_index:
+            self._latest_event_index = (block_number, block_index)
+            event = dict(event)
+            event["args"] = self._decoder.decode_log(event)
             event["event"] = get_event_name(event)
-
-        # decoded_events = [event["args"] =  for event in filtered_events]
-        #print(f"*******************decoded_events******************** {filtered_events}")
-        return filtered_events
-
-    @staticmethod
-    def newest_event_filter(events: List[Dict]) -> List:
-        """
-            Filters a list of event dictionaries, returning only the newest event for each unique address.
-
-            This function iterates over a list of event dictionaries, each representing an event with various attributes,
-            including a unique address, block number, and block index. It identifies and retains only the newest event
-            for each unique address based on the block number and, if necessary, the block index. The comparison assumes
-            that both the block number and the block index are provided in hexadecimal format.
-
-            Args:
-                events (List[Dict]): A list of dictionaries, where each dictionary represents an event with at least
-                                     the following keys: 'address', 'blockNumber', and 'transactionIndex'. 'blockNumber' and
-                                     'transactionIndex' should be strings representing hexadecimal numbers.
-
-            Returns:
-                List[Dict]: A list of dictionaries, where each dictionary is the newest event for a unique address
-                            from the input list. The events in the output list are in no specific order relative to
-                            each other.
-
-            Raises:
-                ValueError: If any event dictionary in the input list does not have the required keys ('address',
-                            'blockNumber', 'transactionIndex') or if these keys are not in the expected format.
-
-        event_example = {'address': '0x1529b3ba7462dc38f560a4e38e6a97c07d3293b6',
-                         'topics': ['0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67',
-                                    '0x0000000000000000000000003328f7f4a1d1c57c35df56bbf0c9dcafca309c49',
-                                    '0x0000000000000000000000003328f7f4a1d1c57c35df56bbf0c9dcafca309c49'],
-                         'data': '0x000000000000000000000000000000000000000015526dd54c78ba2370697216ffffffffffffffffffffffffffffffffffffffffffffffffffa6e04cb6a0ff6000000000000000000000000000000000000000000000206d0933f6d8db97168500000000000000000000000000000000000000000000623812b388d42d3d3aa4fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffbfc17',
-                         'blockNumber': '0x129b1fb',
-                         'transactionHash': '0x48a40f76ec729a92c3265a5a3843f43c57e4327a9823c2462347e073442a32a2',
-                         'transactionIndex': '0x0',
-                         'blockHash': '0x1df62332bedb161507e2e019441fe75282a61e699bbdcb0fd98cd47e8cc9f47e',
-                         'logIndex': '0x2', 'removed': False}
-        """
-        event_dict = {}
-
-        for event in events:
-            # Converting block number and block index to integers once and storing them
-            block_number = int(event["blockNumber"], 16)  # Assuming block numbers are in hex
-            block_index = int(event["transactionIndex"], 16)  # Assuming block indexes are in hex
-
-            # Checking if the event's address is already in the dictionary
-            if event["address"] not in event_dict:
-                # Add the event if it's not present
-                event_dict[event["address"]] = event
-                # Storing block number and index in the dictionary for future comparisons
-                event_dict[event["address"]]["block_number"] = block_number
-                event_dict[event["address"]]["block_index"] = block_index
-            else:
-                if block_number > event_dict[event["address"]]["block_number"] or (
-                        block_number == event_dict[event["address"]]["block_number"] and block_index >
-                        event_dict[event["address"]]["block_index"]):
-                    event_dict[event["address"]] = event
-                    event_dict[event["address"]]["block_number"] = block_number
-                    event_dict[event["address"]]["block_index"] = block_index
-
-        return list(event_dict.values())
+            return event
+        else:
+            return None
 
 
-def process_events(events):
-    events = [
-        complex_handler(event)
-        for event in [
-            complex_handler(event)
-            for event in events
-        ]
-    ]
-    return events
+def normalize_events(events):
+    return [complex_handler(event) for event in events]
 
 
 class EventManager:
     event_handlers: List[EventHandler]
 
-    def __init__(self, base_exchanges: List[str], carbon_controller_addresses: List[str], async_web3: AsyncWeb3,
-                 websocket_url: str):
-        self.event_handlers = []  # Initialize the event handlers list
-        self.async_web3 = async_web3
+    def __init__(
+        self,
+        base_exchanges: List[str],
+        carbon_controller_addresses: List[str],
+        w3: AsyncWeb3,
+    ):
+        self._w3 = w3
+        self._event_handlers = []  # Initialize the event handlers list
 
         # Mapping of exchanges to their topics and ABIs
         exchange_mappings = {
@@ -420,82 +286,55 @@ class EventManager:
         for exchange in base_exchanges:
             if exchange in exchange_mappings:
                 topic, abi = exchange_mappings[exchange]
-                self.event_handlers.append(EventHandler(
-                    w3=self.async_web3,
+                self._event_handlers.append(EventHandler(
+                    w3=w3,
                     topic_or_address=topic,
-                    contract=self.async_web3.eth.contract(abi=abi),
+                    contract=w3.eth.contract(abi=abi),
                     is_topic=True,
-                    websocket_url=websocket_url
                 ))
 
         # Handle carbon controller addresses separately
         if carbon_controller_addresses:
             for address in carbon_controller_addresses:
-                self.event_handlers.append(EventHandler(
-                    w3=self.async_web3,
+                self._event_handlers.append(EventHandler(
+                    w3=w3,
                     topic_or_address=address,
-                    contract=self.async_web3.eth.contract(abi=CARBON_CONTROLLER_ABI),
+                    contract=w3.eth.contract(abi=CARBON_CONTROLLER_ABI),
                     is_topic=False,
-                    websocket_url=websocket_url
                 ))
-        #self.connect_websockets()
-
-    def connect_websockets(self):
-        asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(*(handler.connect_websocket() for handler in self.event_handlers)))
-
-    def disconnect_websockets(self):
-        asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(*(handler.disconnect_websocket() for handler in self.event_handlers)))
 
 
-    def get_latest_events(self):
-        all_events = []
+    async def get_latest_events(self):
+        event_handlers_by_sid = {}
+        for handler in self._event_handlers:
+            subscription_id = await handler.subscribe()
+            event_handlers_by_sid[subscription_id] = handler
 
-        all_events = asyncio.get_event_loop().run_until_complete(
-            asyncio.gather(*(handler.get_newest_events() for handler in self.event_handlers)))
-        #print(f"events = {all_events}")
-        # for handler in self.event_handlers:
-        #     events = await handler.get_newest_events()
-        #     all_events.extend(events)
-        all_events = [x for xs in all_events for x in xs]
-        #print(f"events = {all_events}")
-        return process_events(all_events)
+        async for response in self._w3.ws.process_subscriptions():
+            subscription_id = response["subscription"]
+            event = response["result"]
+            event = event_handlers_by_sid[subscription_id].process_new_event(event)
+            if event is not None:
+                yield normalize_events([event])
 
 
-def main():
+async def main():
     """
     This can be used to troubleshoot the event handler.
     """
-    w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(
-        f"https://eth-mainnet.g.alchemy.com/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"))
-
-    URL = f"wss://eth-mainnet.g.alchemy.com/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"
     base_exchanges = ["uniswap_v2", "uniswap_v3", "pancakeswap_v3", "bancor_v2", "bancor_v3"]
     carbon_controller_addresses = ["0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"]
-    event_manager = EventManager(base_exchanges=base_exchanges, carbon_controller_addresses=carbon_controller_addresses,
-                                 async_web3=w3, websocket_url=URL)
-
-    event_manager.connect_websockets()
-
-    # for handler in event_manager.event_handlers:
-    #     await handler.connect_websocket()
-
-    for i in range(30):
-        _start = time.time()
-        events = event_manager.get_latest_events()
-        if events:
-            print(f"***LOOPING **** took {time.time() - _start} seconds. Found {len(events)} events.")
-        time.sleep(2)
-        #await asyncio.sleep(2)
-    print(f"\n\n***MAIN LOOP RETURNED****")
-
-    event_manager.disconnect_websockets()
-
-    # for handler in event_manager.event_handlers:
-    #     await handler.disconnect_websocket()
+    async with AsyncWeb3.persistent_websocket(WebsocketProviderV2(
+        f"wss://eth-mainnet.g.alchemy.com/v2/{os.environ.get('WEB3_ALCHEMY_PROJECT_ID')}"
+    )) as w3:
+        event_manager = EventManager(
+            base_exchanges=base_exchanges,
+            carbon_controller_addresses=carbon_controller_addresses,
+            w3=w3
+        )
+        async for event in event_manager.get_latest_events():
+            print(event)
 
 
-#main()
-
-#asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
