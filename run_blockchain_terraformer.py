@@ -31,6 +31,7 @@ OPTIMISM = "optimism"
 BASE = "coinbase_base"
 FANTOM = "fantom"
 MANTLE = "mantle"
+LINEA = "linea"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -60,6 +61,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
+    "linea": 5000
 }
 
 ALCHEMY_KEY_DICT = {
@@ -71,6 +73,7 @@ ALCHEMY_KEY_DICT = {
     "coinbase_base": "WEB3_ALCHEMY_BASE",
     "fantom": "WEB3_FANTOM",
     "mantle": "WEB3_MANTLE",
+    "linea": "WEB3_LINEA",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -82,6 +85,7 @@ ALCHEMY_RPC_LIST = {
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
+    "linea": "https://linea.blockpi.network/v1/rpc/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -117,6 +121,8 @@ SOLIDLY_V2_NAME = "solidly_v2"
 VELODROME_V2_NAME = "velodrome_v2"
 CLEOPATRA_V2_NAME = "cleopatra_v2"
 STRATUM_V2_NAME = "stratum_v2"
+LYNEX_V2_NAME = "lynex_v2"
+NILE_V2_NAME = "nile_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
 
@@ -151,6 +157,8 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     SCALE_V2_NAME: "PairCreated",
     CLEOPATRA_V2_NAME: "PairCreated",
     STRATUM_V2_NAME: "PairCreated",
+    LYNEX_V2_NAME: "PairCreated",
+    NILE_V2_NAME: "PairCreated",
 }
 
 dataframe_key = [
@@ -1278,3 +1286,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
 
 #terraform_blockchain(network_name="mantle", save_tokens=True)
+#terraform_blockchain(network_name="linea", save_tokens=True)
