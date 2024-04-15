@@ -2,11 +2,20 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.7...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.8...HEAD)
 
 - WEB3\_ALCHEMY\_BASE, WEB3\_FANTOM and WEB3\_MANTLE are missing in the test-suite configuration [\#520](https://github.com/bancorprotocol/fastlane-bot/issues/520)
+- Wrong fee resolution used for Solidly forks [\#403](https://github.com/bancorprotocol/fastlane-bot/issues/403)
+
+## [v3.1.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.8) (2024-04-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.7...v3.1.8)
 
 - Transaction Creation [\#428](https://github.com/bancorprotocol/fastlane-bot/issues/428)
+
+Merged pull requests
+
+- github action support for testing more networks [\#536](https://github.com/bancorprotocol/fastlane-bot/pull/536) ([zavelevsky](https://github.com/zavelevsky))
 
 ## [v3.1.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.7) (2024-04-11)
 
