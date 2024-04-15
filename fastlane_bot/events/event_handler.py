@@ -204,7 +204,15 @@ class EventLogDecoder:
             raise KeyError(f"Event named '{event_name}' was not found in contract ABI.")
 
 
-def get_event_name(event):
+def get_event_name(event: Dict) -> str:
+    """ Gets the event name from the list of known events.
+    Args:
+        event: The event.
+
+    Returns:
+        str: The name of the event from the TOPIC_TO_EVENT_NAME list.
+
+    """
     for topic in event["topics"]:
         try:
             return TOPIC_TO_EVENT_NAME[topic.hex()]
@@ -243,7 +251,16 @@ class EventHandler:
         else:
             return await self._w3.eth.subscribe("logs", {"address": self._topic_or_address})
 
-    def process_new_event(self, event):
+    def process_new_event(self, event: Dict) -> Dict or None:
+        """ Processes events into a standard format.
+
+        Args:
+            event: The dictionary containing the event data.
+
+        Returns:
+            Dict or None: the processed event in a standard format.
+
+        """
         block_number = event["blockNumber"]
         block_index = event["transactionIndex"]
         if (block_number, block_index) > self._latest_event_index:
@@ -256,11 +273,24 @@ class EventHandler:
             return None
 
 
-def normalize_events(events):
+def normalize_events(events: List[Dict]) -> List[Dict]:
+    """
+    Calls the complex handler to process each event.
+
+    Args:
+        events: List[Dict] The list of events in a raw format.
+
+    Returns:
+        List[Dict]: The list of events, processed by the complex_handler.
+
+    """
     return [complex_handler(event) for event in events]
 
 
 class EventManager:
+    """
+    The EventManager is the entry point to create & manage websocket event filters.
+    """
     event_handlers: List[EventHandler]
 
     def __init__(
@@ -269,6 +299,12 @@ class EventManager:
         carbon_controller_addresses: List[str],
         w3: AsyncWeb3,
     ):
+        """ Initializes the EventManager.
+        Args:
+            base_exchanges: The list of base exchanges for which to gather events.
+            carbon_controller_addresses: The list of Carbon Controller addresses for which to gather events.
+            w3: The connected AsyncWeb3 object.
+        """
         self._w3 = w3
         self._event_handlers = []  # Initialize the event handlers list
 
@@ -305,6 +341,11 @@ class EventManager:
 
 
     async def get_latest_events(self):
+        """ Collects latest events from Websocket.
+
+        Returns:
+            List: A list of processed events retrieved from the Websocket.
+        """
         event_handlers_by_sid = {}
         for handler in self._event_handlers:
             subscription_id = await handler.subscribe()
