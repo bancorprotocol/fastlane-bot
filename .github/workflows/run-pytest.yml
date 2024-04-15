@@ -34,6 +34,9 @@ jobs:
         run: |
           echo TENDERLY_FORK=$TENDERLY_FORK > .env
           echo WEB3_ALCHEMY_PROJECT_ID=$WEB3_ALCHEMY_PROJECT_ID >> .env
+          echo WEB3_ALCHEMY_BASE=$WEB3_ALCHEMY_BASE >> .env
+          echo WEB3_FANTOM=$WEB3_FANTOM >> .env
+          echo WEB3_MANTLE=$WEB3_MANTLE >> .env
           echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
           echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
           echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
@@ -41,6 +44,9 @@ jobs:
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
+          WEB3_ALCHEMY_BASE: '${{ secrets.WEB3_ALCHEMY_BASE }}'
+          WEB3_FANTOM: '${{ secrets.WEB3_FANTOM }}'
+          WEB3_MANTLE: '${{ secrets.WEB3_MANTLE }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
           DEFAULT_MIN_PROFIT_BNT: '${{ secrets.DEFAULT_MIN_PROFIT_BNT }}'
           ETH_PRIVATE_KEY_BE_CAREFUL: '${{ secrets.ETH_PRIVATE_KEY_BE_CAREFUL }}'
