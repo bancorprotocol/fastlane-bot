@@ -764,7 +764,7 @@ class _ConfigNetworkTelos(ConfigNetwork):
     STABLECOIN_ADDRESS = "0x8D97Cea50351Fb4329d591682b148D43a0C3611b"
 
     # Balancer
-    BALANCER_VAULT_ADDRESS = "" # could add Symmetric, Velocore or Polaris
+    BALANCER_VAULT_ADDRESS = "0xbccc4b4c6530F82FE309c5E845E50b5E9C89f2AD" # Symmetric V3
 
     CHAIN_FLASHLOAN_TOKENS = {
         "0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E": "WTLOS",
