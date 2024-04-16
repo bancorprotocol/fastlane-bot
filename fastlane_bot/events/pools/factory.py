@@ -72,6 +72,8 @@ class PoolFactory:
             extras['router_address'] = cfg.UNI_V3_ROUTER_MAPPING[exchange_name]
         elif exchange_name in cfg.SOLIDLY_V2_FORKS:
             extras['router_address'] = cfg.SOLIDLY_V2_ROUTER_MAPPING[exchange_name]
+        elif exchange_name in cfg.VELOCORE_V2_FORKS:
+            extras['router_address'] = cfg.VELOCORE_V2_ROUTER_MAPPING[exchange_name]
         elif exchange_name in cfg.CARBON_V1_FORKS:
             extras['router_address'] = cfg.CARBON_CONTROLLER_MAPPING[exchange_name]
         return extras

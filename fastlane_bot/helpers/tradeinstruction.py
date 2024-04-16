@@ -216,7 +216,7 @@ class TradeInstruction:
         custom_int = 0
         if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             custom_int = int(Decimal(pool.fee_float) * Decimal("1000000"))
-        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+        elif self.exchange_name in (self.ConfigObj.SOLIDLY_V2_FORKS + self.ConfigObj.VELOCORE_V2_FORKS):
             custom_int = 0 if pool.pool_type != self.ConfigObj.network.POOL_TYPE_STABLE else 1
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             custom_int = int(pool.anchor, 16)
@@ -233,6 +233,8 @@ class TradeInstruction:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V2_NAME]
         elif self._exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.SOLIDLY_V2_NAME]
+        elif self._exchange_name in self.ConfigObj.VELOCORE_V2_FORKS:
+            return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.VELOCORE_V2_NAME]
         elif self._exchange_name in self.ConfigObj.UNI_V3_FORKS:
             return self.ConfigObj.EXCHANGE_IDS[self.ConfigObj.UNISWAP_V3_NAME]
 

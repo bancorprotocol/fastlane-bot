@@ -87,6 +87,25 @@ def get_factory_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
             fork_map[exchange_name] = factory_address
     return fork_map
 
+def get_ancillary_map(df: pd.DataFrame, fork_names: [str]) -> Dict:
+    """
+    Get a Dict of factory : exchange name
+    :param df: the dataframe containing exchange details
+    :param fork_names: the list of fork names
+
+    returns: Dict containing: factory_address : exchange_name
+
+    """
+    fork_map = {}
+    for row in df.iterrows():
+        exchange_name = row[1]["exchange_name"]
+        fork = row[1]["fork"]
+        ancillary_address = row[1]["ancillary_address"]
+        if fork in fork_names:
+            fork_map[ancillary_address] = exchange_name
+            fork_map[exchange_name] = ancillary_address
+    return fork_map
+
 def get_fee_map(df: pd.DataFrame, fork_name: str) -> Dict:
     """
     Get a Dict of exchange_name : router
@@ -221,6 +240,7 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
+    VELOCORE_V2_NAME = "velocore_v2"
     VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
     # Base Exchanges
@@ -357,6 +377,7 @@ class ConfigNetwork(ConfigBase):
             df=self.network_df, fork_name=S.UNISWAP_V3
         )
         self.SOLIDLY_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.SOLIDLY_V2)
+        self.VELOCORE_FEE_MAPPING = get_fee_map(df=self.network_df, fork_name=S.VELOCORE_V2)
         self.UNI_V2_FORKS = [key for key in self.UNI_V2_ROUTER_MAPPING.keys()] + [
             "uniswap_v2"
         ]
@@ -365,21 +386,27 @@ class ConfigNetwork(ConfigBase):
         self.SOLIDLY_V2_ROUTER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=S.SOLIDLY_V2
         )
+        self.VELOCORE_V2_ROUTER_MAPPING = get_fork_map(
+            df=self.network_df, fork_name=S.VELOCORE_V2
+        )
         self.SOLIDLY_V2_FORKS = [key for key in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
+        self.VELOCORE_V2_FORKS = [key for key in self.VELOCORE_V2_ROUTER_MAPPING.keys()]
         self.CARBON_CONTROLLER_MAPPING = get_fork_map(
             df=self.network_df, fork_name=CARBON_V1_NAME
         )
         self.CARBON_V1_FORKS = [key for key in self.CARBON_CONTROLLER_MAPPING.keys()]
 
-        self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.CARBON_V1_FORKS
-        self.ALL_FORK_NAMES_WITHOUT_CARBON = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS
-        self.FACTORY_MAPPING = get_factory_map(df=self.network_df, fork_names=[S.UNISWAP_V2, S.UNISWAP_V3, S.SOLIDLY_V2])
+        self.ALL_FORK_NAMES = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.VELOCORE_V2_FORKS + self.CARBON_V1_FORKS
+        self.ALL_FORK_NAMES_WITHOUT_CARBON = self.UNI_V2_FORKS + self.UNI_V3_FORKS + self.SOLIDLY_V2_FORKS + self.VELOCORE_V2_FORKS
+        self.FACTORY_MAPPING = get_factory_map(df=self.network_df, fork_names=[S.UNISWAP_V2, S.UNISWAP_V3, S.SOLIDLY_V2, S.VELOCORE_V2])
+        self.ANCILLARY_MAPPING = get_ancillary_map(df=self.network_df, fork_names=[S.VELOCORE_V2])
 
         self.CHAIN_SPECIFIC_EXCHANGES = (
             self.CHAIN_SPECIFIC_EXCHANGES
             + [ex for ex in self.UNI_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.UNI_V3_ROUTER_MAPPING.keys()]
             + [ex for ex in self.SOLIDLY_V2_ROUTER_MAPPING.keys()]
+            + [ex for ex in self.VELOCORE_V2_ROUTER_MAPPING.keys()]
             + [ex for ex in self.CARBON_CONTROLLER_MAPPING.keys()]
             + ["balancer" if self.BALANCER_VAULT_ADDRESS is not None else None]
         )
@@ -397,6 +424,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V2_NAME: 3,
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
+            self.VELOCORE_V2_NAME: 11, # TODO confirm
             self.AERODROME_V2_NAME: 12,
             self.CARBON_V1_NAME: 6,
         }
@@ -406,6 +434,8 @@ class ConfigNetwork(ConfigBase):
             self.EXCHANGE_IDS[ex] = 4
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
+        for ex in self.VELOCORE_V2_FORKS:
+            self.EXCHANGE_IDS[ex] = 11  # TODO confirm
         for ex in self.SOLIDLY_V2_FORKS:
             if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
                 self.EXCHANGE_IDS[ex] = 11
@@ -421,6 +451,8 @@ class ConfigNetwork(ConfigBase):
             exchange_name = "uniswap_v3"
         elif exchange_name in self.SOLIDLY_V2_FORKS:
             exchange_name = "solidly_v2"
+        elif exchange_name in self.VELOCORE_V2_FORKS:
+            exchange_name = "velocore_v2"
         elif exchange_name in self.CARBON_V1_FORKS:
             exchange_name = "carbon_v1"
         return exchange_name

@@ -128,7 +128,7 @@ NILE_V2_NAME = "nile_v2"
 VELOCORE_V2_NAME = "velocore_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
-VELOCORE_FORKS = [VELOCORE_V2_NAME]
+VELOCORE_V2_FORKS = [VELOCORE_V2_NAME]
 
 
 EXCHANGE_IDS = {
@@ -1319,7 +1319,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 continue
             if fork in SOLIDLY_FORKS:
                 continue
-            if fork in VELOCORE_FORKS:
+            if fork in VELOCORE_V2_FORKS:
                 continue
 
             factory_abi = UNISWAP_V2_FACTORY_ABI

@@ -67,8 +67,8 @@ class VelocoreV2(Exchange):
     volatile_fee: float = None
     factory_address: str = None
     factory_contract: AsyncContract = None
+    lens_address: AsyncContract = None
     lens_contract: AsyncContract = None
-    vault_contract: AsyncContract = None
 
     @property
     def fee_float(self):
@@ -87,10 +87,6 @@ class VelocoreV2(Exchange):
     @property
     def get_lens_abi(self):
         return EXCHANGE_INFO[self.exchange_name]["lens_abi"]
-    
-    @property
-    def get_vault_abi(self):
-        return EXCHANGE_INFO[self.exchange_name]["vault_abi"]
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []

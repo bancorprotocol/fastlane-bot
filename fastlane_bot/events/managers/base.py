@@ -17,7 +17,7 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.constants import PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, \
-    SOLIDLY_V2_NAME, FUSIONX_V3_NAME
+    SOLIDLY_V2_NAME, FUSIONX_V3_NAME, VELOCORE_V2_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
@@ -78,9 +78,11 @@ class BaseManager:
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
     factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
+    lens_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    velocore_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     unmapped_uni2_events: List[str] = field(default_factory=list)
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
@@ -130,6 +132,8 @@ class BaseManager:
             self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
             if base_exchange_name in SOLIDLY_V2_NAME:
                 self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
+            if base_exchange_name in VELOCORE_V2_NAME:
+                self.exchanges[exchange_name] = self.handle_velocore_exchanges(exchange=self.exchanges[exchange_name])
 
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
@@ -145,6 +149,25 @@ class BaseManager:
             abi=exchange.get_factory_abi,
         )
         exchange.factory_contract = self.factory_contracts[exchange.exchange_name]
+
+        return exchange
+    
+    def handle_velocore_exchanges(self, exchange):
+        """
+        Handles getting stable & volatile fees for Velocore forks
+        """
+        exchange_name = exchange.exchange_name
+        self.factory_contracts[exchange_name] = self.w3_async.eth.contract(
+            address=self.cfg.FACTORY_MAPPING[exchange_name],
+            abi=exchange.get_factory_abi,
+        )
+        self.lens_contracts[exchange_name] = self.w3_async.eth.contract(
+            address=self.cfg.ANCILLARY_MAPPING[exchange_name],
+            abi=exchange.get_lens_abi,
+        )
+
+        exchange.factory_contract = self.factory_contracts[exchange.exchange_name]
+        exchange.lens_contract = self.lens_contracts[exchange.exchange_name]
 
         return exchange
 
