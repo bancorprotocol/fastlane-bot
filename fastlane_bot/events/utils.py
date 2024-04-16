@@ -1463,7 +1463,7 @@ def set_network_connection_to_tenderly(
     tenderly_uri: str,
     forked_from_block: int = None,
     tenderly_fork_id: str = None,
-) -> Any:
+) -> int:
     """
     Set the network connection to Tenderly.
 
@@ -1482,15 +1482,14 @@ def set_network_connection_to_tenderly(
 
     Returns
     -------
-    Any (Manager object, Any is used to avoid circular import)
-        The manager object.
+    int The block number the Tenderly fork was created from.
 
     """
     assert (
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
     if not tenderly_uri and not tenderly_fork_id:
-        return mgr, forked_from_block
+        return forked_from_block
     elif tenderly_fork_id:
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
         forked_from_block = None
@@ -1514,12 +1513,12 @@ def set_network_connection_to_tenderly(
         f"[events.utils.set_network_connection_to_tenderly] Successfully connected to Tenderly fork at {tenderly_uri}, forked from block: {forked_from_block}"
     )
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
-    return mgr, forked_from_block
+    return forked_from_block
 
 
 def set_network_connection_to_mainnet(
     mgr: Any, use_cached_events: bool, mainnet_uri: str
-) -> Any:
+):
     """
     Set the network connection to Mainnet.
 
@@ -1528,11 +1527,6 @@ def set_network_connection_to_mainnet(
     mgr
     use_cached_events
     mainnet_uri
-
-    Returns
-    -------
-    Any (Manager object, Any is used to avoid circular import)
-        The manager object.
 
     """
 
@@ -1549,7 +1543,6 @@ def set_network_connection_to_mainnet(
         "[events.utils.set_network_connection_to_mainnet] Successfully connected to Mainnet"
     )
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
-    return mgr
 
 
 def handle_limit_pairs_for_replay_mode(
@@ -1598,7 +1591,7 @@ def set_network_to_tenderly_if_replay(
     use_cached_events: bool,
     forked_from_block: int = None,
     tenderly_fork_id: str = None,
-) -> Tuple[Any, str or None, int or None]:
+) -> Tuple[str or None, int or None]:
     """
     Set the network connection to Tenderly if replaying from a block
 
@@ -1623,21 +1616,19 @@ def set_network_to_tenderly_if_replay(
 
     Returns
     -------
-    mgr : Any
-        The manager object
     tenderly_uri : str or None
         The Tenderly URI
     forked_from_block : int or None
         The block number the Tenderly fork was created from.
     """
     if not replay_from_block and not tenderly_fork_id:
-        return mgr, None, None
+        return None, None
 
     elif last_block == 0 and tenderly_fork_id:
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_tenderly_if_replay] Setting network connection to Tenderly idx: {loop_idx}"
         )
-        mgr, forked_from_block = set_network_connection_to_tenderly(
+        forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             tenderly_uri=tenderly_uri,
@@ -1645,21 +1636,21 @@ def set_network_to_tenderly_if_replay(
             tenderly_fork_id=tenderly_fork_id,
         )
         tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
-        return mgr, tenderly_uri, forked_from_block
+        return tenderly_uri, forked_from_block
 
     elif replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
         # Tx must always be submitted from Tenderly when in replay mode
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_tenderly_if_replay] Setting network connection to Tenderly idx: {loop_idx}"
         )
-        mgr, forked_from_block = set_network_connection_to_tenderly(
+        forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             tenderly_uri=tenderly_uri,
             forked_from_block=forked_from_block,
         )
         mgr.cfg.w3.provider.endpoint_uri = tenderly_uri
-        return mgr, tenderly_uri, forked_from_block
+        return tenderly_uri, forked_from_block
 
     else:
         tenderly_uri, forked_from_block = setup_replay_from_block(
@@ -1695,11 +1686,6 @@ def set_network_to_mainnet_if_replay(
     use_cached_events : bool
         Whether to use cached events
 
-    Returns
-    -------
-    mgr : Any
-        The manager object
-
     """
     if (
         (replay_from_block or mgr.tenderly_fork_id)
@@ -1709,12 +1695,11 @@ def set_network_to_mainnet_if_replay(
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_mainnet_if_replay] Setting network connection to Mainnet idx: {loop_idx}"
         )
-        mgr = set_network_connection_to_mainnet(
+        set_network_connection_to_mainnet(
             mgr=mgr,
             use_cached_events=use_cached_events,
             mainnet_uri=mainnet_uri,
         )
-    return mgr
 
 
 def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):

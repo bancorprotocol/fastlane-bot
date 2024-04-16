@@ -349,7 +349,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             )
 
             # Set the network connection to Mainnet if replaying from a block
-            mgr = set_network_to_mainnet_if_replay(
+            set_network_to_mainnet_if_replay(
                 last_block,
                 loop_idx,
                 mainnet_uri,
@@ -393,7 +393,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             loop_idx += 1
 
             # Set the network connection to Tenderly if replaying from a block
-            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+            tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
                 last_block=last_block,
                 loop_idx=loop_idx,
                 mgr=mgr,
