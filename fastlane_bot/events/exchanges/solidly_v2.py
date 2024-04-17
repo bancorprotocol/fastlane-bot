@@ -24,9 +24,6 @@ from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
 
-SYNC_TOPIC = "0xcf2aa50876cdfbb541206f89af0ee78d44a2abf8d328e37fa4917f982149848a"
-
-
 async def _get_fee_1(address: str, contract: Contract, factory_contract: Contract) -> int:
     return await factory_contract.caller.getFee(address)
 
@@ -110,7 +107,7 @@ class SolidlyV2(Exchange):
         return [contract.events.Sync] if self.exchange_initialized else []
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
-        return [Subscription(contract.events.Sync, SYNC_TOPIC)]
+        return [Subscription(contract.events.Sync)]
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         exchange_info = EXCHANGE_INFO[self.exchange_name]

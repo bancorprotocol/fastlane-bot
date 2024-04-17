@@ -23,10 +23,6 @@ from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
 
-TOKEN_TRADED_TOPIC = "0x16ddee9b3f1b2e6f797172fe2cd10a214e749294074e075e451f95aecd0b958c"
-TRADING_ENABLED_TOPIC = "0xae3f48c001771f8e9868e24d47b9e4295b06b1d78072acf96f167074aa3fab64"
-
-
 @dataclass
 class BancorPol(Exchange):
     """
@@ -53,8 +49,8 @@ class BancorPol(Exchange):
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
         return [
-            Subscription(contract.events.TokenTraded, TOKEN_TRADED_TOPIC),
-            Subscription(contract.events.TradingEnabled, TRADING_ENABLED_TOPIC),
+            Subscription(contract.events.TokenTraded),
+            Subscription(contract.events.TradingEnabled),
         ]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:

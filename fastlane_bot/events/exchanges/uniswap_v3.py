@@ -23,9 +23,6 @@ from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
 
-SWAP_TOPIC = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
-
-
 @dataclass
 class UniswapV3(Exchange):
     """
@@ -50,7 +47,7 @@ class UniswapV3(Exchange):
         return [contract.events.Swap] if self.exchange_initialized else []
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
-        return [Subscription(contract.events.Swap, SWAP_TOPIC)]
+        return [Subscription(contract.events.Swap)]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         fee = await contract.caller.fee()

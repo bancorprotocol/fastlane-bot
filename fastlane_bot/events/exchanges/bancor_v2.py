@@ -23,9 +23,6 @@ from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
 
-RATE_UPDATED_TOPIC = "0x77f29993cf2c084e726f7e802da0719d6a0ade3e204badc7a3ffd57ecb768c24"
-
-
 @dataclass
 class BancorV2(Exchange):
     """
@@ -50,7 +47,7 @@ class BancorV2(Exchange):
         return [contract.events.TokenRateUpdate]
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
-        return [Subscription(contract.events.TokenRateUpdate, RATE_UPDATED_TOPIC)]
+        return [Subscription(contract.events.TokenRateUpdate)]
 
     # def async convert_address(self, address: str, contract: Contract) -> str:
     #     return

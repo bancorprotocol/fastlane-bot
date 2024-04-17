@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from web3 import AsyncWeb3
+from web3 import AsyncWeb3, Web3
 from web3.contract.contract import ContractEvent
 
 from ..utils import complex_handler
@@ -19,10 +19,16 @@ class Event:
     block_number: int
 
 
+def _get_event_topic(event):
+    abi = event().abi
+    topic = Web3.keccak(text=f'{abi["name"]}({",".join([arg["type"] for arg in abi["inputs"]])})')
+    return topic.hex()
+
+
 class Subscription:
-    def __init__(self, event: ContractEvent, topic: str):
+    def __init__(self, event: ContractEvent, topic: Optional[str] = None):
         self._event = event
-        self._topic = topic
+        self._topic = _get_event_topic(event) if topic is None else topic
         self._subscription_id = None
         self._latest_event_index = (-1, -1) # (block_number, block_index)
 

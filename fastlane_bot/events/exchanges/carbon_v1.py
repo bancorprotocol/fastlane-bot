@@ -27,9 +27,6 @@ from ..pools.utils import get_pool_cid
 STRATEGY_CREATED_TOPIC = "0xff24554f8ccfe540435cfc8854831f8dcf1cf2068708cfaf46e8b52a4ccc4c8d"
 STRATEGY_UPDATED_TOPIC = "0x720da23a5c920b1d8827ec83c4d3c4d90d9419eadb0036b88cb4c2ffa91aef7d"
 STRATEGY_DELETED_TOPIC = "0x4d5b6e0627ea711d8e9312b6ba56f50e0b51d41816fd6fd38643495ac81d38b6"
-PAIR_FEE_UPDATED_TOPIC = "0x831434d05f3ad5f63be733ea463b2933c70d2162697fd200a22b5d56f5c454b6"
-FEE_UPDATED_TOPIC = "0x66db0986e1156e2e747795714bf0301c7e1c695c149a738cb01bcf5cfead8465"
-PAIR_CREATED_TOPIC = "0x6365c594f5448f79c1cc1e6f661bdbf1d16f2e8f85747e13f8e80f1fd168b7c3"
 
 
 @dataclass
@@ -87,9 +84,9 @@ class CarbonV1(Exchange):
             Subscription(contract.events.StrategyCreated, STRATEGY_CREATED_TOPIC),
             Subscription(contract.events.StrategyUpdated, STRATEGY_UPDATED_TOPIC),
             Subscription(contract.events.StrategyDeleted, STRATEGY_DELETED_TOPIC),
-            Subscription(contract.events.PairTradingFeePPMUpdated, PAIR_FEE_UPDATED_TOPIC),
-            Subscription(contract.events.TradingFeePPMUpdated, FEE_UPDATED_TOPIC),
-            Subscription(contract.events.PairCreated, PAIR_CREATED_TOPIC),
+            Subscription(contract.events.PairTradingFeePPMUpdated),
+            Subscription(contract.events.TradingFeePPMUpdated),
+            Subscription(contract.events.PairCreated),
         ]
 
     async def get_fee(

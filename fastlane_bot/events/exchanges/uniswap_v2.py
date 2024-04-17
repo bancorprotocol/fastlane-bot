@@ -22,9 +22,6 @@ from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
 
-SYNC_TOPIC = "0x1c411e9a96e071241c2f21f7726b17ae89e3cab4c78be50e062b03a9fffbbad1"
-
-
 @dataclass
 class UniswapV2(Exchange):
     """
@@ -54,7 +51,7 @@ class UniswapV2(Exchange):
         return [contract.events.Sync] if self.exchange_initialized else []
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
-        return [Subscription(contract.events.Sync, SYNC_TOPIC)]
+        return [Subscription(contract.events.Sync)]
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         return self.fee, self.fee_float
