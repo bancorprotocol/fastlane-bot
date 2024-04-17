@@ -24,8 +24,8 @@ from typing import List, Any, Dict, Optional
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
+from fastlane_bot.utils import num_format
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.utils import num_format, log_format
 
 MAX_UINT256 = 2 ** 256 - 1
 ETH_RESOLUTION = 10 ** 18
@@ -61,7 +61,6 @@ class TxHelpers:
         src_address: str,
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
-        log_object: Dict[str, Any],
         flashloan_struct: List[Dict]
     ) -> Optional[str]:
         """
@@ -73,7 +72,6 @@ class TxHelpers:
             src_address: 
             expected_profit_gastkn: 
             expected_profit_usd: 
-            log_object: 
             flashloan_struct: 
 
         Returns:
@@ -120,8 +118,6 @@ class TxHelpers:
         gas_gain_eth = self.arb_rewards_portion * expected_profit_gastkn
         gas_gain_usd = self.arb_rewards_portion * expected_profit_usd
 
-        self.cfg.logger.info(log_format(log_name="arb_with_gas", log_data={**log_object, "tx": tx}))
-
         self.cfg.logger.info(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
             f"- Expected cost: {num_format(gas_cost_eth)} GAS token ({num_format(gas_cost_usd)} USD)\n"
@@ -129,7 +125,7 @@ class TxHelpers:
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.cfg.logger.info("Executing profitable arb transaction")
+            self.cfg.logger.info(f"Executing profitable arb transaction: {dumps(tx, indent=4)}")
             tx_hash = self.send_transaction(raw_tx)
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash

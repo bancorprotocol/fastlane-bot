@@ -1052,7 +1052,6 @@ class CarbonBot(CarbonBotBase):
             src_address=flashloan_token_address,
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
-            log_object=log_dict,
             flashloan_struct=flashloan_struct,
         )
 
