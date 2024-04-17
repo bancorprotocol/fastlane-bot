@@ -125,17 +125,16 @@ class TxHelpers:
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.cfg.logger.info(f"Executing profitable arb transaction: {dumps(tx, indent=4)}")
+            self.cfg.logger.info(f"Executing transaction: {dumps(tx, indent=4)}")
             tx_hash = self.send_transaction(raw_tx)
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
-        else:
-            self.cfg.logger.info("Discarding non-profitable arb transaction")
-            return None
+
+        return None
 
     def check_and_approve_tokens(self, tokens: List):
         """
-        This method checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
+        This method checks if tokens have been previously approved from the wallet address to the arb contract.
         If they are not already approved, it will submit approvals for each token specified in the given list of tokens.
 
         Args:
