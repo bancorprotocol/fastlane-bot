@@ -179,7 +179,7 @@ class TxHelpers:
         tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
 
     def _sign_transaction(self, tx: dict) -> str:
-        return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction
+        return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction.hex()
 
     def _send_regular_transaction(self, raw_tx: str) -> str:
         return self.cfg.w3.eth.send_raw_transaction(raw_tx).hex()
@@ -193,8 +193,9 @@ class TxHelpers:
         return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str):
+        self.cfg.logger.info(f"Transaction {tx_hash}; waiting for completion...")
         try:
             tx_receipt = self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)
-            self.cfg.logger.info(f"Transaction {tx_hash} completed: {dumps(tx_receipt, indent=4)}")
+            self.cfg.logger.info(f"Completed with status = {tx_receipt.status} (gas used = {tx_receipt.gasUsed})")
         except TimeExhausted as _:
-            self.cfg.logger.info(f"Transaction {tx_hash} stuck in mempool; moving on")
+            self.cfg.logger.info(f"Stuck in mempool; moving on")
