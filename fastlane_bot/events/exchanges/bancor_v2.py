@@ -14,11 +14,16 @@ Licensed under MIT.
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
+from web3 import AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
+
+
+RATE_UPDATED_TOPIC = "0x77f29993cf2c084e726f7e802da0719d6a0ade3e204badc7a3ffd57ecb768c24"
 
 
 @dataclass
@@ -43,6 +48,9 @@ class BancorV2(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
+
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [Subscription(contract.events.TokenRateUpdate, RATE_UPDATED_TOPIC)]
 
     # def async convert_address(self, address: str, contract: Contract) -> str:
     #     return

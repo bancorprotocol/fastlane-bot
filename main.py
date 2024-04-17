@@ -5,7 +5,6 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-from fastlane_bot.events.event_handler import EventManager
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
@@ -307,16 +306,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
 
-    use_event_handler = True
-
-    if use_event_handler:
-        if mgr.cfg.NETWORK == "ethereum":
-            base_exchanges = ["uniswap_v2", "uniswap_v3", "pancakeswap_v3", "bancor_v2"]
-        else:
-            base_exchanges = ["uniswap_v2", "uniswap_v3", "pancakeswap_v3", "solidly_v2"]
-        event_manager = EventManager(async_web3=mgr.w3_async, base_exchanges=base_exchanges, websocket_url=mgr.cfg.network.WEBSOCKET_URL, carbon_controller_addresses=mgr.cfg.network.CARBON_CONTROLLER_ADDRESS)
-        event_manager.connect_websockets()
-
     while True:
         try:
             # ensure 'last_updated_block' is in pool_data for all pools
@@ -357,41 +346,18 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 args.use_cached_events,
             )
 
-            # Get the events
-            if use_event_handler:
-                # Get the events
-                if loop_idx == 0:
-                    latest_events = (
-                        get_cached_events(mgr, args.logging_path)
-                        if args.use_cached_events
-                        else get_latest_events(
-                            current_block,
-                            mgr,
-                            args.n_jobs,
-                            start_block,
-                            args.cache_latest_only,
-                            args.logging_path,
-                        )
-                    )
-                else:
-                    latest_events = event_manager.get_latest_events()
-                    if not latest_events:
-                        continue
-                    # print(f"latest_events=\n{latest_events}")
-
-            else:
-                latest_events = (
-                    get_cached_events(mgr, args.logging_path)
-                    if args.use_cached_events
-                    else get_latest_events(
-                        current_block,
-                        mgr,
-                        args.n_jobs,
-                        start_block,
-                        args.cache_latest_only,
-                        args.logging_path,
-                    )
+            latest_events = (
+                get_cached_events(mgr, args.logging_path)
+                if args.use_cached_events
+                else get_latest_events(
+                    current_block,
+                    mgr,
+                    args.n_jobs,
+                    start_block,
+                    args.cache_latest_only,
+                    args.logging_path,
                 )
+            )
             iteration_start_time = time.time()
 
             # Update the pools from the latest events

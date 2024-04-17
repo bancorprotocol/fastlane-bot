@@ -31,14 +31,13 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.events.managers.manager import Manager
 
 from fastlane_bot.helpers import TxHelpers
 from fastlane_bot.utils import safe_int
 
 
 def filter_latest_events(
-    mgr: Manager, events: List[List[AttributeDict]]
+    mgr: Any, events: List[List[AttributeDict]]
 ) -> List[AttributeDict]:
     """
     This function filters out the latest events for each pool. Given a nested list of events, it iterates through all events
@@ -138,7 +137,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         If the input object does not match any of the specified types, it is returned as is.
     """
     if isinstance(obj, AttributeDict):
-        return dict(obj)
+        return complex_handler(dict(obj))
     elif isinstance(obj, HexBytes):
         return obj.hex()
     elif isinstance(obj, bytes):
@@ -148,7 +147,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
     elif isinstance(obj, (list, tuple)):
         return [complex_handler(i) for i in obj]
     elif isinstance(obj, set):
-        return list(obj)
+        return complex_handler(list(obj))
     else:
         return obj
 

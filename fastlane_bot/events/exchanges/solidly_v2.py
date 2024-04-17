@@ -19,8 +19,13 @@ from web3.contract import Contract, AsyncContract
 from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_FACTORY_ABI, SOLIDLY_V2_FACTORY_ABI, \
     SCALE_V2_FACTORY_ABI, CLEOPATRA_V2_FACTORY_ABI, LYNEX_V2_FACTORY_ABI, NILE_V2_FACTORY_ABI, \
     XFAI_V0_FACTORY_ABI, XFAI_V0_CORE_ABI, XFAI_V0_POOL_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
+
+
+SYNC_TOPIC = "0xcf2aa50876cdfbb541206f89af0ee78d44a2abf8d328e37fa4917f982149848a"
+
 
 async def _get_fee_1(address: str, contract: Contract, factory_contract: Contract) -> int:
     return await factory_contract.caller.getFee(address)
@@ -103,6 +108,9 @@ class SolidlyV2(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
+
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [Subscription(contract.events.Sync, SYNC_TOPIC)]
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         exchange_info = EXCHANGE_INFO[self.exchange_name]

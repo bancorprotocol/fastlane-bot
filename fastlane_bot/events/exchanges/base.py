@@ -17,7 +17,8 @@ from typing import Dict, List, Type, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
-from fastlane_bot.events.pools.base import Pool
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -95,6 +96,10 @@ class Exchange(ABC):
 
         """
         pass
+
+    @abstractmethod
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        ...
 
     @staticmethod
     @abstractmethod
