@@ -89,7 +89,7 @@ class VelocoreV2(Exchange):
         return EXCHANGE_INFO[self.exchange_name]["lens_abi"]
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
-        return [contract.events.Sync] if self.exchange_initialized else []
+        return [contract.events.Swap] if self.exchange_initialized else []
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         exchange_info = EXCHANGE_INFO[self.exchange_name]

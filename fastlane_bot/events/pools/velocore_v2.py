@@ -51,12 +51,13 @@ class VelocoreV2Pool(Pool):
         cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
-        Check if an event matches the format of a Uniswap v2 event.
+        Check if an event matches the format of a Velocore v2 event.
         """
         event_args = event["args"]
+        # print(event_args)
         return (
-            "reserve0" in event_args
-            and event["address"] in static_pools[f"{exchange_name}_pools"]
+            "delta" in event_args
+            and event_args["pool"] in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
