@@ -101,7 +101,7 @@ class TxHelpers:
         try:
             self._update_transaction(tx)
         except Exception as e:
-            self.cfg.logger.info(f"Transaction {dumps(tx, indent=4)}\nGas estimation failed with {e}")
+            self.cfg.logger.info(f"Transaction {dumps(tx, indent=4)}\nFailed with {e}")
             return None
 
         tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
