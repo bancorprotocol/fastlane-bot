@@ -263,26 +263,6 @@ class CarbonBot(CarbonBotBase):
         tx_in_count = len(src_token_instr)
         return ordered_trade_instructions_dct, tx_in_count
 
-    def _simple_ordering_by_src_token_v2(
-        self, best_trade_instructions_dic, best_src_token
-    ):
-        """
-        Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
-        """
-        if best_trade_instructions_dic is None:
-            raise self.NoArbAvailable(
-                f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}"
-            )
-        trades = [
-            x for x in best_trade_instructions_dic if x["tknin"] == best_src_token
-        ]
-        tx_in_count = len(trades)
-        while len(trades) < len(best_trade_instructions_dic):
-            next_tkn = trades[-1]["tknout"]
-            trades += [x for x in best_trade_instructions_dic if x["tknin"] == next_tkn]
-
-        return trades, tx_in_count
-
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
         For items in the trade_instruction_dic scale the amtin by 0.999 if its the src_token
@@ -342,34 +322,6 @@ class CarbonBot(CarbonBotBase):
             ).strategy_id
             lst.append(ti)
         return lst
-
-    @staticmethod
-    def _check_if_carbon(cid: str):
-        """
-        Checks if the curve is a Carbon curve.
-
-        Returns
-        -------
-        bool
-            Whether the curve is a Carbon curve.
-        """
-
-        if "-" in cid:
-            cid_tkn = cid.split("-")[1]
-            cid = cid.split("-")[0]
-            return True, cid_tkn, cid
-        return False, "", cid
-
-    @staticmethod
-    def _check_if_not_carbon(cid: str):
-        """
-        Checks if the curve is a Carbon curve.
-        Returns
-        -------
-        bool
-            Whether the curve is a Carbon curve.
-        """
-        return "-" not in cid
 
     @dataclass
     class ArbCandidate:
