@@ -1371,26 +1371,6 @@ def get_start_block(
             return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
 
 
-def get_tenderly_block_number(tenderly_fork_id: str) -> int:
-    """
-    Gets the Tenderly block number.
-
-    Parameters
-    ----------
-    tenderly_fork_id : str
-        The Tenderly fork ID.
-
-    Returns
-    -------
-    int
-        The Tenderly block number.
-
-    """
-    provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
-    web3 = Web3(provider)
-    return web3.eth.block_number
-
-
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     """
     Setup a Tenderly fork from a specific block number.
