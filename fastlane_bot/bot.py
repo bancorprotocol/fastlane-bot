@@ -1210,7 +1210,6 @@ class CarbonBot(CarbonBotBase):
         randomizer: int = 0,
         logging_path: str = None,
         replay_mode: bool = False,
-        tenderly_fork: str = None,
         replay_from_block: int = None,
     ):
         """
@@ -1234,8 +1233,6 @@ class CarbonBot(CarbonBotBase):
             the logging path (default: None)
         replay_mode: bool
             whether to run in replay mode (default: False)
-        tenderly_fork: str
-            the Tenderly fork ID (default: None)
         replay_from_block: int
             the block number to start replaying from (default: None)
 
@@ -1252,10 +1249,6 @@ class CarbonBot(CarbonBotBase):
         self.replay_from_block = replay_from_block
 
         try:
-            if replay_mode:
-                tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork}"
-                self.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-                self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
             self._run(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,

@@ -1054,6 +1054,8 @@ def handle_subsequent_iterations(
                 f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
             )
             mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+            bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+            bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
         # Run the bot
         bot.run(
@@ -1064,7 +1066,6 @@ def handle_subsequent_iterations(
             randomizer=randomizer,
             logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
-            tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
             replay_from_block=forked_from_block,
         )
 
