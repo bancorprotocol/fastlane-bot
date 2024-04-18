@@ -216,17 +216,21 @@ class CarbonBot(CarbonBotBase):
     :run:               Runs the bot.
     """
 
-    AM_REGULAR = "regular"
-    AM_SINGLE = "single"
-    AM_TRIANGLE = "triangle"
-    AM_MULTI = "multi"
-    AM_MULTI_TRIANGLE = "multi_triangle"
-    AM_BANCOR_V3 = "bancor_v3"
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
     SCALING_FACTOR = 0.999
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
     BNT_ETH_CID = "0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b"
+
+    ARB_FINDER = {
+        "single": FindArbitrageSinglePairwise,
+        "multi": FindArbitrageMultiPairwise,
+        "triangle": ArbitrageFinderTriangleSingle,
+        "multi_triangle": ArbitrageFinderTriangleMulti,
+        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
+        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
+        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
+    }
 
     def __post_init__(self):
         super().__post_init__()
@@ -401,34 +405,15 @@ class CarbonBot(CarbonBotBase):
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
-    @staticmethod
-    def _get_arb_finder(arb_mode: str) -> Callable:
-        if arb_mode in {"single", "pairwise_single"}:
-            return FindArbitrageSinglePairwise
-        elif arb_mode in {"multi", "pairwise_multi"}:
-            return FindArbitrageMultiPairwise
-        elif arb_mode in {"triangle", "triangle_single"}:
-            return ArbitrageFinderTriangleSingle
-        elif arb_mode in {"multi_triangle", "triangle_multi"}:
-            return ArbitrageFinderTriangleMulti
-        elif arb_mode in {"b3_two_hop"}:
-            return ArbitrageFinderTriangleBancor3TwoHop
-        elif arb_mode in {"multi_pairwise_pol"}:
-            return FindArbitrageMultiPairwisePol
-        elif arb_mode in {"multi_pairwise_all"}:
-            return FindArbitrageMultiPairwiseAll
-
     def _find_arbitrage(
         self,
         flashloan_tokens: List[str],
         CCm: CPCContainer,
-        arb_mode: str = None,
+        arb_mode: str,
         randomizer=int
     ) -> dict:
         random_mode = self.AO_CANDIDATES if randomizer else None
-        arb_mode = self.AM_SINGLE if arb_mode is None else arb_mode
-        arb_finder = self._get_arb_finder(arb_mode)
-        finder = arb_finder(
+        finder = self.ARB_FINDER[arb_mode](
             flashloan_tokens=flashloan_tokens,
             CCm=CCm,
             mode="bothin",
@@ -442,7 +427,7 @@ class CarbonBot(CarbonBotBase):
         flashloan_tokens: List[str],
         CCm: CPCContainer,
         *,
-        arb_mode: str = None,
+        arb_mode: str,
         randomizer=int,
         data_validator=True,
         replay_mode: bool = False,

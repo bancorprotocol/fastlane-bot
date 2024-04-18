@@ -22,12 +22,6 @@ class ArbitrageFinderBase:
     Base class for all arbitrage finder modes
     """
 
-    AM_REGULAR = "regular"
-    AM_SINGLE = "single"
-    AM_TRIANGLE = "triangle"
-    AM_MULTI = "multi"
-    AM_MULTI_TRIANGLE = "multi_triangle"
-    AM_BANCOR_V3 = "bancor_v3"
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
 
