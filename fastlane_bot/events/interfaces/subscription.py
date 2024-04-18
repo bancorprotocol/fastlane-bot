@@ -1,22 +1,10 @@
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from web3 import AsyncWeb3, Web3
 from web3.contract.contract import ContractEvent
 
 from ..utils import complex_handler
-
-
-@dataclass
-class Event:
-    args: Dict[str, Any]
-    event: str
-    log_index: int
-    transaction_index: int
-    transaction_hash: str
-    address: str
-    block_hash: str
-    block_number: int
+from .event import Event
 
 
 def _get_event_topic(event):
@@ -46,8 +34,12 @@ class Subscription:
         else:
             return None
 
-    def _parse_log(self, event) -> Event:
-        event_data = complex_handler(self._event().process_log(event))
+    def _parse_log(self, log) -> Event:
+        try:
+            event_data = complex_handler(self._event().process_log(log))
+        except:
+            print(log)
+            raise
         return Event(
             args=event_data["args"],
             event=event_data["event"],

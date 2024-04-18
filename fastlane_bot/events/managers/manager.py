@@ -18,7 +18,6 @@ from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
-from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
