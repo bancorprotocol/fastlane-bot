@@ -242,9 +242,7 @@ class CarbonBot(CarbonBotBase):
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
         """
         if best_trade_instructions_dic is None:
-            raise self.NoArbAvailable(
-                f"[_simple_ordering_by_src_token] {best_trade_instructions_dic}"
-            )
+            raise self.NoArbAvailable(f"No arb available for token {best_src_token}")
         src_token_instr = [
             x for x in best_trade_instructions_dic if x["tknin"] == best_src_token
         ]
@@ -1210,5 +1208,5 @@ class CarbonBot(CarbonBotBase):
                 randomizer=randomizer,
                 replay_mode=replay_mode,
             )
-        except self.NoArbAvailable as _:
-            self.ConfigObj.logger.info(f"NoArbAvailable")
+        except self.NoArbAvailable as e:
+            self.ConfigObj.logger.info(e)
