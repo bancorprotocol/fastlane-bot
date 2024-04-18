@@ -49,6 +49,7 @@ __DATE__ = "20/June/2023"
 import random
 import time
 import json
+import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
@@ -503,18 +504,16 @@ class CarbonBot(CarbonBotBase):
 
         if tx_hash:
             if tx_receipt:
-                status = "completed"
-                details = {json.dumps(tx_receipt, indent=4)}
+                tx_details = f"{tx_hash} completed: {json.dumps(tx_receipt, indent=4)}"
             else:
-                status = "pending"
-                details = "no receipt"
+                tx_details = f"{tx_hash} pending (no receipt)"
 
-            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {status}: {details}")
+            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_details}")
 
             if self.logging_path:
-                filename = f"{status}_tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                with open(f"{self.logging_path}/{filename}", "w") as f:
-                    f.write(f"{tx_hash}: {details}")
+                filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+                with open(os.path.join(self.logging_path, filename), "w") as f:
+                    f.write(tx_details)
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
         """
