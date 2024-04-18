@@ -125,8 +125,9 @@ class TxHelpers:
         )
 
         if gas_gain_eth > gas_cost_eth:
-            self.cfg.logger.info(f"Executing transaction: {dumps(tx, indent=4)}")
+            self.cfg.logger.info(f"Sending transaction {dumps(tx, indent=4)}")
             tx_hash = self.send_transaction(raw_tx)
+            self.cfg.logger.info(f"Waiting for transaction {tx_hash} receipt")
             self._wait_for_transaction_receipt(tx_hash)
             return tx_hash
 
@@ -193,7 +194,6 @@ class TxHelpers:
         return response["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str):
-        self.cfg.logger.info(f"Transaction {tx_hash}; waiting for completion...")
         try:
             tx_receipt = self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)
             self.cfg.logger.info(f"Completed with status = {tx_receipt.status} (gas used = {tx_receipt.gasUsed})")
