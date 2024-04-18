@@ -667,7 +667,7 @@ class _ConfigNetworkFantom(ConfigNetwork):
     RPC_ENDPOINT = "https://fantom.blockpi.network/v1/rpc/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_FANTOM")
 
-    WEBSOCKET_URL = f"wss://fantom.blockpi.network/v1/rpc//{WEB3_ALCHEMY_PROJECT_ID}/"
+    WEBSOCKET_URL = f"wss://fantom.blockpi.network/v1/ws/{WEB3_ALCHEMY_PROJECT_ID}"
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xFe19CbA3aB1A189B7FC17cAa798Df64Ad2b54d4D"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
