@@ -429,7 +429,7 @@ class CarbonBot(CarbonBotBase):
         *,
         arb_mode: str,
         randomizer=int,
-        data_validator=True,
+        data_validator=False,
         replay_mode: bool = False,
     ):
         """
@@ -462,10 +462,7 @@ class CarbonBot(CarbonBotBase):
         r = self.randomize(arb_opps=r, randomizer=randomizer)
 
         if data_validator:
-            # Add random chance if we should check or not
-            r = self.validate_optimizer_trades(
-                arb_opp=r, arb_mode=arb_mode, arb_finder=finder
-            )
+            r = self.validate_optimizer_trades(arb_opp=r, arb_finder=finder)
             if r is None:
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
@@ -498,7 +495,7 @@ class CarbonBot(CarbonBotBase):
                 with open(os.path.join(self.logging_path, filename), "w") as f:
                     f.write(tx_details)
 
-    def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
+    def validate_optimizer_trades(self, arb_opp, arb_finder):
         """
         Validates arbitrage trade input using equations that account for fees.
         This has limited coverage, but is very effective for the instances it covers.
@@ -507,74 +504,67 @@ class CarbonBot(CarbonBotBase):
         ----------
         arb_opp: tuple
             The tuple containing an arbitrage opportunity found by the Optimizer
-        arb_mode: str
-            The arbitrage mode.
         arb_finder: Any
             The Arb mode class that handles the differences required for each arb route.
-
 
         Returns
         -------
         tuple or None
         """
 
-        if arb_mode == "bancor_v3" or arb_mode == "b3_two_hop":
-            (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = arb_opp
+        (
+            best_profit,
+            best_trade_instructions_df,
+            best_trade_instructions_dic,
+            best_src_token,
+            best_trade_instructions,
+        ) = arb_opp
 
-            (
-                ordered_trade_instructions_dct,
-                tx_in_count,
-            ) = self._simple_ordering_by_src_token(
-                best_trade_instructions_dic, best_src_token
-            )
-            cids = []
-            for pool in ordered_trade_instructions_dct:
-                pool_cid = pool["cid"]
-                if "-0" in pool_cid or "-1" in pool_cid:
-                    self.ConfigObj.logger.debug(
-                        f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
-                        f"Carbon, returning to main flow."
-                    )
-                    return arb_opp
-                cids.append(pool_cid)
-            if len(cids) > 3:
-                self.ConfigObj.logger.warning(
-                    f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
-                    f"to main flow."
+        (
+            ordered_trade_instructions_dct,
+            tx_in_count,
+        ) = self._simple_ordering_by_src_token(
+            best_trade_instructions_dic, best_src_token
+        )
+        cids = []
+        for pool in ordered_trade_instructions_dct:
+            pool_cid = pool["cid"]
+            if "-0" in pool_cid or "-1" in pool_cid:
+                self.ConfigObj.logger.debug(
+                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
+                    f"Carbon, returning to main flow."
                 )
                 return arb_opp
-            max_trade_in = arb_finder.get_optimal_arb_trade_amts(
-                cids=cids, flt=best_src_token
+            cids.append(pool_cid)
+        if len(cids) > 3:
+            self.ConfigObj.logger.warning(
+                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
+                f"to main flow."
             )
-            if max_trade_in is None:
-                return None
-            if type(max_trade_in) != float and type(max_trade_in) != int:
-                return None
-            if max_trade_in < 0.0:
-                return None
-            self.ConfigObj.logger.debug(
-                f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
-            )
-            ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
-
-            best_trade_instructions_dic = ordered_trade_instructions_dct
-        else:
             return arb_opp
+        max_trade_in = arb_finder.get_optimal_arb_trade_amts(
+            cids=cids, flt=best_src_token
+        )
+        if max_trade_in is None:
+            return None
+        if type(max_trade_in) != float and type(max_trade_in) != int:
+            return None
+        if max_trade_in < 0.0:
+            return None
+        self.ConfigObj.logger.debug(
+            f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
+        )
+        ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
-        arb_opp = (
+        best_trade_instructions_dic = ordered_trade_instructions_dct
+
+        return (
             best_profit,
             best_trade_instructions_df,
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
         )
-        return arb_opp
 
     def validate_pool_data(self, arb_opp):
         """
@@ -1260,13 +1250,6 @@ class CarbonBot(CarbonBotBase):
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
-
-        if arb_mode in {"bancor_v3", "b3_two_hop"}:
-            run_data_validator = True
-            # The following logs are used for asserting various pytests, do not remove.
-            self.ConfigObj.logger.debug(
-                f"[bot.run] Transactions will be required to pass data validation for {arb_mode}"
-            )
 
         try:
             if replay_mode:

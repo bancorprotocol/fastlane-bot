@@ -129,113 +129,24 @@ flashloan_tokens = bot.setup_flashloan_tokens(None)
 CCm = bot.setup_CCm(None)
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
-
 
 # ------------------------------------------------------------
 # Test      045
 # File      test_045_Validator.py
-# Segment   Test_MIN_PROFIT
+# Segment   Test_validator
 # ------------------------------------------------------------
-def test_test_min_profit():
+def test_test_validator():
 # ------------------------------------------------------------
-    
-    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestMultiMode], default_min_profit_gas_token must be <= 0.02 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
-    
-
-# ------------------------------------------------------------
-# Test      045
-# File      test_045_Validator.py
-# Segment   Test_validator_in_out
-# ------------------------------------------------------------
-def test_test_validator_in_out():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("multi")
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwise", f"[TestMultiMode] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      045
-# File      test_045_Validator.py
-# Segment   Test_validator_multi
-# ------------------------------------------------------------
-def test_test_validator_multi():
-# ------------------------------------------------------------
-    
-    # +
-    arb_finder = bot._get_arb_finder("multi")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    
-    arb_opp = r[0]
-    
-    validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode="multi", arb_finder=finder)
-    
-    
-    
-    assert arb_opp == validated
-    
-    # -
-    
-
-# ------------------------------------------------------------
-# Test      045
-# File      test_045_Validator.py
-# Segment   Test_validator_single
-# ------------------------------------------------------------
-def test_test_validator_single():
-# ------------------------------------------------------------
-    
-    # +
-    arb_mode="single"
-    arb_finder = bot._get_arb_finder(arb_mode)
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    
-    arb_opp = 111
-    
-    validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-    
-    
-    assert arb_opp == validated
-    # -
-    
-
-# ------------------------------------------------------------
-# Test      045
-# File      test_045_Validator.py
-# Segment   Test_validator_multi_triangle
-# ------------------------------------------------------------
-def test_test_validator_multi_triangle():
-# ------------------------------------------------------------
-    
-    # +
-    arb_mode="multi_triangle"
-    arb_finder = bot._get_arb_finder(arb_mode)
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=bot.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    
-    arb_opp = 1191
-    
-    validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_mode=arb_mode, arb_finder=finder)
-    
-    
-    
-    assert arb_opp == validated
+    for arb_mode in ["single", "multi", "multi_triangle"]:
+        arb_finder = bot._get_arb_finder(arb_mode)
+        finder = arb_finder(
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            mode="bothin",
+            result=bot.AO_CANDIDATES,
+            ConfigObj=bot.ConfigObj,
+        )
+        r = finder.find_arbitrage()
+        arb_opp = r[0]
+        validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder)
+        assert arb_opp == validated
