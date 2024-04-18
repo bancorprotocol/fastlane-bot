@@ -19,7 +19,7 @@ from _decimal import Decimal
 
 from json import loads, dumps
 from dataclasses import dataclass
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Tuple, Optional
 
 from web3.exceptions import TimeExhausted
 
@@ -62,7 +62,7 @@ class TxHelpers:
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
         flashloan_struct: List[Dict]
-    ) -> List[Optional[str], Optional[dict]]:
+    ) -> Tuple[Optional[str], Optional[dict]]:
         """
         This method validates and submits a transaction to the arb contract.
 
