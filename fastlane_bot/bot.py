@@ -361,7 +361,7 @@ class CarbonBot(CarbonBotBase):
         flashloan_tokens: List[str],
         CCm: CPCContainer,
         arb_mode: str,
-        randomizer=int
+        randomizer: int
     ) -> dict:
         random_mode = self.AO_CANDIDATES if randomizer else None
         arb_finder = self._get_arb_finder(arb_mode)(
@@ -379,7 +379,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         *,
         arb_mode: str,
-        randomizer=int,
+        randomizer: int,
         data_validator=False,
         replay_mode: bool = False,
     ):
@@ -623,10 +623,7 @@ class CarbonBot(CarbonBotBase):
             return None
         if len(arb_opps) > 0:
             arb_opps.sort(key=lambda x: x[0], reverse=True)
-            if randomizer < 1:
-                randomizer = 1
-            if len(arb_opps) < randomizer:
-                randomizer = len(arb_opps)
+            randomizer = min(max(randomizer, 1), len(arb_opps))
             top_n_arbs = arb_opps[:randomizer]
             return random.choice(top_n_arbs)
         else:
