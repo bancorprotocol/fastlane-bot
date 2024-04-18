@@ -47,16 +47,13 @@ __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"
 
 import random
-import time
 import json
 import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import Generator, List, Dict, Tuple, Any, Callable
+from typing import Generator, List, Dict, Tuple, Any
 from typing import Optional
-
-from web3 import Web3
 
 import fastlane_bot
 from fastlane_bot.config import Config
