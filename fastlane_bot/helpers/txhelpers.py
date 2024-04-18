@@ -172,13 +172,7 @@ class TxHelpers:
             result = self.cfg.w3.eth.create_access_list(tx) # rarely throws an exception
             if tx["gas"] > result["gasUsed"]:
                 tx["gas"] = result["gasUsed"]
-                tx["accessList"] = [
-                    {
-                        "address": access_item["address"],
-                        "storageKeys": [storage_key.hex() for storage_key in access_item["storageKeys"]]
-                    }
-                    for access_item in result["accessList"]
-                ]
+                tx["accessList"] = loads(self.cfg.w3.to_json(result["accessList"]))
         tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
 
     def _sign_transaction(self, tx: dict) -> str:
