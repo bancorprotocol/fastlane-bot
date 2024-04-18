@@ -23,6 +23,7 @@ from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.utils import get_pool_cid
 from fastlane_bot.events.pools import pool_factory
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -241,13 +242,13 @@ class BaseManager:
         )
         return fee_pairs
 
-    def exchange_name_from_event(self, event: Dict[str, Any]) -> str:
+    def exchange_name_from_event(self, event: Event) -> str:
         """
         Get the exchange name from the event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
 
         Returns
@@ -255,8 +256,8 @@ class BaseManager:
         str
             The exchange name.
         """
-        if 'id' in event['args']:
-            carbon_controller_address = event['address']
+        if 'id' in event.args:
+            carbon_controller_address = event.address
             for ex in self.cfg.CARBON_CONTROLLER_MAPPING:
                 if self.cfg.CARBON_CONTROLLER_MAPPING[ex] == carbon_controller_address:
                     return ex
@@ -270,7 +271,7 @@ class BaseManager:
         return None
 
     def check_forked_exchange_names(
-            self, exchange_name_default: str = None, address: str = None, event: Any = None
+            self, exchange_name_default: str = None, address: str = None, event: Event = None
     ) -> str:
         """
         Check the forked exchange names. If the exchange name is forked (Sushiswap from UniswapV2, etc) return the
@@ -282,7 +283,7 @@ class BaseManager:
             The default exchange name.
         address : str, optional
             The address.
-        event : Any, optional
+        event : Event, optional
             The event.
 
         Returns
@@ -793,11 +794,11 @@ class BaseManager:
         if key != "strategy_id" and (pool_info is None or not pool_info):
             # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
-                address=addr, event=event, block_number=event["blockNumber"]
+                address=addr, event=event, block_number=event.block_number
             )
 
         # if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
-        #     cid = event["args"]["id"] if event is not None else pool_info["strategy_id"]
+        #     cid = event.args["id"] if event is not None else pool_info["strategy_id"]
         #
         #     for pool in self.pool_data:
         #         if pool["cid"] == cid:
@@ -810,14 +811,14 @@ class BaseManager:
         return pool_info
 
     def get_key_and_value(
-            self, event: Dict[str, Any], addr: str, ex_name: str
+            self, event: Event, addr: str, ex_name: str
     ) -> Tuple[str, Any]:
         """
         Get the key and value.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
         addr : str
             The address.
@@ -831,38 +832,38 @@ class BaseManager:
 
         """
         if ex_name == "bancor_pol":
-            return "token", event["args"]["token"]
+            return "token", event.args["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            info = {'exchange_name': ex_name, 'strategy_id': event["args"]["id"]}
+            info = {'exchange_name': ex_name, 'strategy_id': event.args["id"]}
             return "cid", get_pool_cid(info, self.cfg.CARBON_V1_FORKS)
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":
             return ("tkn0_address", "tkn1_address"), (
-                event["args"]["_token1"],
-                event["args"]["_token2"],
+                event.args["_token1"],
+                event.args["_token2"],
             )
         if ex_name == "bancor_v3":
             value = (
-                event["args"]["tkn_address"]
-                if event["args"]["tkn_address"] != self.cfg.BNT_ADDRESS
-                else event["args"]["pool"]
+                event.args["tkn_address"]
+                if event.args["tkn_address"] != self.cfg.BNT_ADDRESS
+                else event.args["pool"]
             )
             return "tkn1_address", value
         raise ValueError(
             f"[managers.base.get_key_and_value] Exchange {ex_name} not supported"
         )
 
-    def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
+    def handle_strategy_deleted(self, event: Event) -> None:
         """
         Handle the strategy deleted event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
         """
-        strategy_id = event["args"]["id"]
+        strategy_id = event.args["id"]
         exchange_name = self.exchange_name_from_event(event)
         cids = [p["cid"] for p in self.pool_data if
                 p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
@@ -901,13 +902,13 @@ class BaseManager:
             The pool key value.
         """
         if key == "cid":
-            return event["args"]["id"]
+            return event.args["id"]
         elif key == "address":
-            return event["address"]
+            return event.address
         elif key == "tkn0_address":
-            return event["args"]["token0"]
+            return event.args["token0"]
         elif key == "tkn1_address":
-            return event["args"]["token1"]
+            return event.args["token1"]
 
     print_events = []
 

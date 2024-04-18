@@ -20,6 +20,7 @@ from web3.contract import Contract
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
+from ..interfaces.event import Event
 from ..interfaces.subscription import Subscription
 from ..pools.utils import get_pool_cid
 
@@ -110,7 +111,7 @@ class CarbonV1(Exchange):
             fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         """
         Get the token0 address from the contract or event.
 
@@ -132,9 +133,9 @@ class CarbonV1(Exchange):
         if event is None:
             return await contract.caller.token0()
         else:
-            return event["args"]["token0"]
+            return event.args["token0"]
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         """
         Get the token1 address from the contract or event.
 
@@ -156,7 +157,7 @@ class CarbonV1(Exchange):
         if event is None:
             return await contract.caller.token1()
         else:
-            return event["args"]["token1"]
+            return event.args["token1"]
 
     def delete_strategy(self, id: str):
         """

@@ -903,8 +903,10 @@ class CarbonBot:
             base_exchanges = ["carbon_v1", "uniswap_v3", "uniswap_v2", "bancor_pol", "bancor_v2", "bancor_v3", "solidly_v2"]
             async with AsyncWeb3.persistent_websocket(WebsocketProviderV2(mgr.cfg.network.WEBSOCKET_URL)) as w3:
                 event_listener = EventListener(manager=mgr, base_exchanges=base_exchanges, w3=w3)
-                async for event in event_listener.pull_block_events():
-                    print(event)
+                async for events in event_listener.pull_block_events():
+                    for event in events:
+                        print(event)
+                        mgr.update_from_event(event)
 
         asyncio.run(inner(self.db.mgr))
 

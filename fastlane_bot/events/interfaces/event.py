@@ -12,4 +12,16 @@ class Event:
     address: str
     block_hash: str
     block_number: int
-    
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            args=data["args"],
+            event=data["event"],
+            log_index=data["logIndex"],
+            transaction_index=data["transactionIndex"],
+            transaction_hash=data["transactionHash"],
+            address=data["address"],
+            block_hash=data["blockHash"],
+            block_number=data["blockNumber"],
+        )

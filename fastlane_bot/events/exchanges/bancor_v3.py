@@ -19,6 +19,7 @@ from web3.contract import Contract
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
+from ..interfaces.event import Event
 from ..interfaces.subscription import Subscription
 
 
@@ -54,12 +55,12 @@ class BancorV3(Exchange):
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         return self.BNT_ADDRESS
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         return (
-            event["args"]["pool"]
-            if event["args"]["pool"] != self.BNT_ADDRESS
-            else event["args"]["tkn_address"]
+            event.args["pool"]
+            if event.args["pool"] != self.BNT_ADDRESS
+            else event.args["tkn_address"]
         )

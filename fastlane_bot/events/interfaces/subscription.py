@@ -40,16 +40,7 @@ class Subscription:
         except:
             print(log)
             raise
-        return Event(
-            args=event_data["args"],
-            event=event_data["event"],
-            log_index=event_data["logIndex"],
-            transaction_index=event_data["transactionIndex"],
-            transaction_hash=event_data["transactionHash"],
-            address=event_data["address"],
-            block_hash=event_data["blockHash"],
-            block_number=event_data["blockNumber"],
-        )
+        return Event.from_dict(event_data)
 
     def _is_event_latest(self, event) -> bool:
         return (event["blockNumber"], event["transactionIndex"]) > self._latest_event_index
