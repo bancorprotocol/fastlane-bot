@@ -52,7 +52,7 @@ import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import Generator, List, Dict, Tuple, Any
+from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
 import fastlane_bot
@@ -402,6 +402,10 @@ class CarbonBot(CarbonBotBase):
             + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
         )
 
+    @classmethod
+    def _get_arb_finder(cls, arb_mode: str) -> Callable:
+        return cls.ARB_FINDER[arb_mode]
+
     def _find_arbitrage(
         self,
         flashloan_tokens: List[str],
@@ -410,14 +414,14 @@ class CarbonBot(CarbonBotBase):
         randomizer=int
     ) -> dict:
         random_mode = self.AO_CANDIDATES if randomizer else None
-        finder = self.ARB_FINDER[arb_mode](
+        arb_finder = self._get_arb_finder(arb_mode)(
             flashloan_tokens=flashloan_tokens,
             CCm=CCm,
             mode="bothin",
             result=random_mode,
             ConfigObj=self.ConfigObj,
         )
-        return {"finder": finder, "r": finder.find_arbitrage()}
+        return {"finder": arb_finder, "r": arb_finder.find_arbitrage()}
 
     def _run(
         self,
