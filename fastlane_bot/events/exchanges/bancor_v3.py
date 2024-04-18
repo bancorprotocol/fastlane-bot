@@ -23,7 +23,7 @@ from ..interfaces.event import Event
 from ..interfaces.subscription import Subscription
 
 
-LIQUIDITY_UPDATED_TOPIC = "0x5c02c2bb2d1d082317eb23916ca27b3e7c294398b60061a2ad54f1c3c018c318"
+LIQUIDITY_UPDATED_TOPIC = "0x6e96dc5343d067ec486a9920e0304c3610ed05c65e45cc029d9b9fe7ecfa7620"
 
 
 @dataclass
