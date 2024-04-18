@@ -177,7 +177,7 @@ def test_test_tokens_and_combos():
     # ### Test_Single_Arb_Finder_vs_run
     
     # +
-    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode)["r"]
+    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=1)["r"]
     arb_finder = bot._get_arb_finder("single")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
