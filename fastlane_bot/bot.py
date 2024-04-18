@@ -447,7 +447,7 @@ class CarbonBot(CarbonBotBase):
         randomizer=int,
         data_validator=True,
         replay_mode: bool = False,
-    ) -> Any:
+    ):
         """
         Runs the bot.
 
@@ -464,17 +464,13 @@ class CarbonBot(CarbonBotBase):
         data_validator: bool
             If extra data validation should be performed
 
-        Returns
-        -------
-        Transaction hash.
-
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
         finder, r = [arbitrage[key] for key in ["finder", "r"]]
 
         if r is None or len(r) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
-            return None
+            return
 
         self.ConfigObj.logger.info(
             f"[bot._run] Found {len(r)} eligible arb opportunities."
@@ -490,7 +486,7 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )
-                return None
+                return
             if replay_mode:
                 pass
             elif self.validate_pool_data(arb_opp=r):
@@ -501,9 +497,24 @@ class CarbonBot(CarbonBotBase):
                 self.ConfigObj.logger.warning(
                     "[bot._run] Data validation failed. Updating pools and restarting."
                 )
-                return None
+                return
 
-        return self._handle_trade_instructions(CCm, arb_mode, r)
+        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r)
+
+        if tx_hash:
+            if tx_receipt:
+                status = "completed"
+                details = {json.dumps(tx_receipt, indent=4)}
+            else:
+                status = "pending"
+                details = "no receipt"
+
+            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {status}: {details}")
+
+            if self.logging_path:
+                filename = f"{status}_tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+                with open(f"{self.logging_path}/{filename}", "w") as f:
+                    f.write(f"{tx_hash}: {details}")
 
     def validate_optimizer_trades(self, arb_opp, arb_mode, arb_finder):
         """
@@ -1238,16 +1249,13 @@ class CarbonBot(CarbonBotBase):
         while True:
             try:
                 CCm = self.get_curves()
-                tx_hash = self._run(
+                self._run(
                     flashloan_tokens,
                     CCm,
                     arb_mode=arb_mode,
                     data_validator=run_data_validator,
                     randomizer=randomizer,
                 )
-                if tx_hash:
-                    self.ConfigObj.logger.info(f"Arbitrage executed [hash={tx_hash}]")
-
                 time.sleep(self.polling_interval)
             except self.NoArbAvailable as e:
                 self.ConfigObj.logger.debug(f"[bot:run:continuous] {e}")
@@ -1286,7 +1294,7 @@ class CarbonBot(CarbonBotBase):
             if replay_mode:
                 self._ensure_connection(tenderly_fork)
 
-            tx_hash = self._run(
+            self._run(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 arb_mode=arb_mode,
@@ -1294,18 +1302,6 @@ class CarbonBot(CarbonBotBase):
                 randomizer=randomizer,
                 replay_mode=replay_mode,
             )
-            if tx_hash:
-                self.ConfigObj.logger.info(
-                    f"[bot.run_single_mode] Arbitrage executed [hash={tx_hash}]"
-                )
-
-                # Write the tx hash to a file in the logging_path directory
-                if self.logging_path:
-                    filename = f"successful_tx_hash_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                    self.ConfigObj.logger.info(f"Writing tx hash {tx_hash} to {filename}")
-                    with open(f"{self.logging_path}/{filename}", "w") as f:
-                        f.write(tx_hash)
-
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
         except Exception as e:

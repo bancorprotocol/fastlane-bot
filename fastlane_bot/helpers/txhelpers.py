@@ -17,7 +17,7 @@ __DATE__ = "01/May/2023"
 
 from _decimal import Decimal
 
-from json import dumps
+from json import loads, dumps
 from dataclasses import dataclass
 from typing import List, Any, Dict, Optional
 
@@ -62,7 +62,7 @@ class TxHelpers:
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
         flashloan_struct: List[Dict]
-    ) -> Optional[str]:
+    ) -> List[Optional[str], Optional[dict]]:
         """
         This method validates and submits a transaction to the arb contract.
 
@@ -76,6 +76,7 @@ class TxHelpers:
 
         Returns:
             The hash of the transaction if submitted, None otherwise.
+            The receipt of the transaction if completed, None otherwise.
         """
 
         self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
@@ -102,7 +103,7 @@ class TxHelpers:
             self._update_transaction(tx)
         except Exception as e:
             self.cfg.logger.info(f"Transaction {dumps(tx, indent=4)}\nFailed with {e}")
-            return None
+            return None, None
 
         tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
@@ -128,10 +129,11 @@ class TxHelpers:
             self.cfg.logger.info(f"Sending transaction {dumps(tx, indent=4)}")
             tx_hash = self.send_transaction(raw_tx)
             self.cfg.logger.info(f"Waiting for transaction {tx_hash} receipt")
-            self._wait_for_transaction_receipt(tx_hash)
-            return tx_hash
+            tx_receipt = self._wait_for_transaction_receipt(tx_hash)
+            self.cfg.logger.info(f"Transaction receipt: {dumps(tx_receipt, indent=4)}")
+            return tx_hash, tx_receipt
 
-        return None
+        return None, None
 
     def check_and_approve_tokens(self, tokens: List):
         """
@@ -193,9 +195,8 @@ class TxHelpers:
         assert "result" in response, f"Private transaction failed: {dumps(response, indent=4)}"
         return response["result"]
 
-    def _wait_for_transaction_receipt(self, tx_hash: str):
+    def _wait_for_transaction_receipt(self, tx_hash: str) -> Optional[dict]:
         try:
-            tx_receipt = self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)
-            self.cfg.logger.info(f"Completed with status = {tx_receipt.status} (gas used = {tx_receipt.gasUsed})")
+            return loads(self.cfg.w3.to_json(self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)))
         except TimeExhausted as _:
-            self.cfg.logger.info(f"Stuck in mempool; moving on")
+            return None
