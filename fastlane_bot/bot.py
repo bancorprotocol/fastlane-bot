@@ -817,7 +817,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer,
         arb_mode: str,
         r: Any
-    ) -> Any:
+    ) -> Tuple[Optional[str], Optional[dict]]:
         """
         Handles the trade instructions.
 
@@ -832,8 +832,8 @@ class CarbonBot(CarbonBotBase):
 
         Returns
         -------
-        Any
-            The result.
+        - The hash of the transaction if submitted, None otherwise.
+        - The receipt of the transaction if completed, None otherwise.
         """
         (
             best_profit,
@@ -927,7 +927,7 @@ class CarbonBot(CarbonBotBase):
             self.ConfigObj.logger.info(
                 f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
-            return None
+            return None, None
 
         # Get the flashloan amount and token address
         flashloan_token_address = fl_token
@@ -979,7 +979,7 @@ class CarbonBot(CarbonBotBase):
             best_trade_instructions_dic=best_trade_instructions_dic,
         )
 
-        # Return the validate and submit transaction
+        # Validate and submit the transaction
         return self.TxHelpersClass.validate_and_submit_transaction(
             route_struct=route_struct_maximized,
             src_amt=flashloan_amount_wei,
