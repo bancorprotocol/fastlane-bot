@@ -1059,7 +1059,6 @@ def handle_subsequent_iterations(
         bot.run(
             polling_interval=polling_interval,
             flashloan_tokens=flashloan_tokens,
-            mode="single",
             arb_mode=arb_mode,
             run_data_validator=run_data_validator,
             randomizer=randomizer,

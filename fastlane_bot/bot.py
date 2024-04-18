@@ -222,8 +222,6 @@ class CarbonBot(CarbonBotBase):
     AM_MULTI = "multi"
     AM_MULTI_TRIANGLE = "multi_triangle"
     AM_BANCOR_V3 = "bancor_v3"
-    RUN_SINGLE = "single"
-    RUN_CONTINUOUS = "continuous"
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
     SCALING_FACTOR = 0.999
     AO_TOKENS = "tokens"
@@ -1166,18 +1164,6 @@ class CarbonBot(CarbonBotBase):
             f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
-    def validate_mode(self, mode: str):
-        """
-        Validate the mode. If the mode is None, set it to RUN_CONTINUOUS.
-        """
-        if mode is None:
-            mode = self.RUN_CONTINUOUS
-        assert mode in [
-            self.RUN_SINGLE,
-            self.RUN_CONTINUOUS,
-        ], f"Unknown mode {mode} [possible values: {self.RUN_SINGLE}, {self.RUN_CONTINUOUS}]"
-        return mode
-
     def setup_polling_interval(self, polling_interval: int):
         """
         Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
@@ -1228,100 +1214,6 @@ class CarbonBot(CarbonBotBase):
                 CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
         return CCm
 
-    def run_continuous_mode(
-        self,
-        flashloan_tokens: List[str],
-        arb_mode: str,
-        run_data_validator: bool,
-        randomizer: int,
-    ):
-        """
-        Run the bot in continuous mode.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens
-        arb_mode: bool
-            The arb mode
-        """
-        while True:
-            try:
-                CCm = self.get_curves()
-                self._run(
-                    flashloan_tokens,
-                    CCm,
-                    arb_mode=arb_mode,
-                    data_validator=run_data_validator,
-                    randomizer=randomizer,
-                )
-                time.sleep(self.polling_interval)
-            except self.NoArbAvailable as e:
-                self.ConfigObj.logger.debug(f"[bot:run:continuous] {e}")
-            except Exception as e:
-                self.ConfigObj.logger.error(f"[bot:run:continuous] {e}")
-                time.sleep(self.polling_interval)
-
-    def run_single_mode(
-        self,
-        flashloan_tokens: List[str],
-        CCm: CPCContainer,
-        arb_mode: str,
-        run_data_validator: bool,
-        randomizer: int,
-        replay_mode: bool = False,
-        tenderly_fork: str = None,
-    ):
-        """
-        Run the bot in single mode.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens
-        CCm: CPCContainer
-            The complete market data container
-        arb_mode: bool
-            The arb mode
-        replay_mode: bool
-            Whether to run in replay mode
-        tenderly_fork: str
-            The Tenderly fork ID
-
-        """
-        try:
-            if replay_mode:
-                self._ensure_connection(tenderly_fork)
-
-            self._run(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                arb_mode=arb_mode,
-                data_validator=run_data_validator,
-                randomizer=randomizer,
-                replay_mode=replay_mode,
-            )
-        except self.NoArbAvailable as e:
-            self.ConfigObj.logger.warning(f"[NoArbAvailable] {e}")
-        except Exception as e:
-            self.ConfigObj.logger.error(f"[bot:run:single] {e}")
-            raise e
-
-    def _ensure_connection(self, tenderly_fork: str):
-        """
-        Ensures connection to Tenderly fork.
-
-        Parameters
-        ----------
-        tenderly_fork: str
-            The Tenderly fork ID
-
-        """
-
-        tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork}"
-        self.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-        self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-
     def get_tokens_in_exchange(
         self,
         exchange_name: str,
@@ -1338,7 +1230,6 @@ class CarbonBot(CarbonBotBase):
         flashloan_tokens: List[str] = None,
         CCm: CPCContainer = None,
         polling_interval: int = None,
-        mode: str = None,
         arb_mode: str = None,
         run_data_validator: bool = False,
         randomizer: int = 0,
@@ -1358,8 +1249,6 @@ class CarbonBot(CarbonBotBase):
             The complete market data container (optional; default: database via self.get_curves())
         polling_interval: int
             the polling interval in seconds (default: 60 via self.RUN_POLLING_INTERVAL)
-        mode: RN_SINGLE or RUN_CONTINUOUS
-            whether to run the bot one-off or continuously (default: RUN_CONTINUOUS)
         arb_mode: str
             the arbitrage mode (default: None)
         run_data_validator: bool
@@ -1381,7 +1270,6 @@ class CarbonBot(CarbonBotBase):
             The transaction hash.
         """
 
-        mode = self.validate_mode(mode)
         self.setup_polling_interval(polling_interval)
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
@@ -1395,17 +1283,18 @@ class CarbonBot(CarbonBotBase):
                 f"[bot.run] Transactions will be required to pass data validation for {arb_mode}"
             )
 
-        if mode == "continuous":
-            self.run_continuous_mode(
-                flashloan_tokens, arb_mode, run_data_validator, randomizer
+        try:
+            if replay_mode:
+                tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork}"
+                self.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+                self.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+            self._run(
+                flashloan_tokens=flashloan_tokens,
+                CCm=CCm,
+                arb_mode=arb_mode,
+                data_validator=run_data_validator,
+                randomizer=randomizer,
+                replay_mode=replay_mode,
             )
-        else:
-            self.run_single_mode(
-                flashloan_tokens,
-                CCm,
-                arb_mode,
-                run_data_validator,
-                randomizer,
-                replay_mode,
-                tenderly_fork,
-            )
+        except self.NoArbAvailable as _:
+            self.ConfigObj.logger.info(f"NoArbAvailable")
