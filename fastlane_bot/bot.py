@@ -434,17 +434,14 @@ class CarbonBot(CarbonBotBase):
         tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r)
 
         if tx_hash:
-            if tx_receipt:
-                tx_details = f"{tx_hash} completed: {json.dumps(tx_receipt, indent=4)}"
-            else:
-                tx_details = f"{tx_hash} pending (no receipt)"
-
-            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_details}")
+            tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
+            tx_details = json.dumps(tx_receipt, indent=4) if tx_receipt else "no receipt"
+            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {tx_status}")
 
             if self.logging_path:
                 filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
                 with open(os.path.join(self.logging_path, filename), "w") as f:
-                    f.write(tx_details)
+                    f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
     def validate_optimizer_trades(self, arb_opp, arb_finder):
         """
