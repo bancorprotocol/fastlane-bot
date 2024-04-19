@@ -48,7 +48,7 @@ class TxHelpers:
         self.wallet_address = self.cfg.w3.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address
 
         if self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM:
-            self.use_access_list = True
+            self.use_access_list = False # TODO: figure out why flashbots is unable to handle this 
             self.send_transaction = self._send_private_transaction
         else:
             self.use_access_list = False
