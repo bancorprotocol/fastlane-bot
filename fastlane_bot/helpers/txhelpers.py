@@ -17,6 +17,7 @@ __DATE__ = "01/May/2023"
 
 from _decimal import Decimal
 
+from requests import post
 from json import loads, dumps
 from dataclasses import dataclass
 from typing import List, Any, Dict, Tuple, Optional
@@ -48,7 +49,7 @@ class TxHelpers:
         self.wallet_address = self.cfg.w3.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address
 
         if self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM:
-            self.use_access_list = False # TODO: figure out why flashbots is unable to handle this 
+            self.use_access_list = False # TODO: figure out why flashbots is unable to handle this
             self.send_transaction = self._send_private_transaction
         else:
             self.use_access_list = False
@@ -182,12 +183,16 @@ class TxHelpers:
         return self.cfg.w3.eth.send_raw_transaction(raw_tx).hex()
 
     def _send_private_transaction(self, raw_tx: str) -> str:
-        response = self.cfg.w3.provider.make_request(
-            method="eth_sendPrivateTransaction",
-            params=[{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10), "preferences": {"fast": True}}]
+        response = post(
+            "https://rpc.flashbots.net/fast",
+            json = {
+                "id": 1,
+                "jsonrpc": "2.0",
+                "method": "eth_sendPrivateTransaction",
+                "params": [{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10)}]
+            }
         )
-        assert "result" in response, f"Private transaction failed: {dumps(response, indent=4)}"
-        return response["result"]
+        return loads(response.text)["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str) -> Optional[dict]:
         try:
