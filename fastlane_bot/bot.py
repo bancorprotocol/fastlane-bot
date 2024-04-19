@@ -166,7 +166,10 @@ class CarbonBotBase:
         for p in pools_and_tokens:
             try:
                 p.ADDRDEC = ADDRDEC
-                curves += p.to_cpc()
+                curves += [
+                    curve for curve in p.to_cpc()
+                    if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
+                ]
             except NotImplementedError as e:
                 # Currently not supporting Solidly V2 Stable pools. This will be removed when support is added, but for now the error message is suppressed.
                 if "Stable Solidly V2" in str(e):

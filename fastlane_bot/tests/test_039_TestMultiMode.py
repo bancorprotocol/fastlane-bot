@@ -134,6 +134,21 @@ arb_mode = "multi"
 # ------------------------------------------------------------
 # Test      039
 # File      test_039_TestMultiMode.py
+# Segment   Test_TAX_TOKENS
+# ------------------------------------------------------------
+def test_test_tax_tokens():
+# ------------------------------------------------------------
+    
+    assert any(token.address in cfg.TAX_TOKENS for token in tokens), f"[TestMultiMode], DB does not include any tax tokens"
+    
+    for curve in CCm:
+        for token in cfg.TAX_TOKENS:
+            assert token not in [curve.params['tknx_addr'], curve.params['tkny_addr']], f"[TestMultiMode], curve {curve} includes tax token {token}"
+
+
+# ------------------------------------------------------------
+# Test      039
+# File      test_039_TestMultiMode.py
 # Segment   Test_MIN_PROFIT
 # ------------------------------------------------------------
 def test_test_min_profit():
@@ -172,11 +187,12 @@ def test_test_combos_and_tokens():
                 ConfigObj=bot.ConfigObj,
             )
     all_tokens, combos = finder2.find_arbitrage()
-    
+
+    # subjected to the length of `TAX_TOKENS`    
     assert type(all_tokens) == set, f"[NBTest 039 TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[NBTest 039 TestMultiMode] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) >= 236, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 236 tokens, found {len(all_tokens)}"
-    assert len(combos) >= 1410, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1410 combos, found {len(combos)}"
+    assert len(all_tokens) >= 234, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 234 tokens, found {len(all_tokens)}"
+    assert len(combos) >= 1398, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1398 combos, found {len(combos)}"
     # -
     
 
@@ -220,6 +236,9 @@ def test_test_expected_output():
                     else:
                         if trade["tknin"] not in carbon_tkn_in:
                             carbon_wrong_direction_count += 1
+        for ti in best_trade_instructions_dic:
+            for token in cfg.TAX_TOKENS:
+                assert token not in [ti['tknin'], ti['tknout']], f"[TestMultiMode], trade instruction {ti} includes tax token {token}"
     
     assert len(r) >= 27, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
     assert multi_carbon_count > 0, f"[NBTest 039 TestMultiMode] Not finding arbs with multiple Carbon curves."
