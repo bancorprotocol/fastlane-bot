@@ -500,16 +500,8 @@ class CarbonBot:
             }
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
-            if fetched_pool is None:
-                self.ConfigObj.logger.error(
-                    f"[bot.validate_pool_data] Could not fetch pool data for {pool_cid}"
-                )
-
-            ex_name = fetched_pool["exchange_name"]
-            self._validate_pool_data_logging(pool_cid, fetched_pool)
-
-            if ex_name == "bancor_v3":
-                self._validate_pool_data_logging(pool_cid, fetched_pool)
+            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_cid: {pool_cid}")
+            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] fetched_pool: {fetched_pool}")
 
             if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
                 if (
@@ -545,7 +537,7 @@ class CarbonBot:
                 or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]
             ):
                 self.ConfigObj.logger.debug(
-                    f"[bot.validate_pool_data] {ex_name} pool not up to date, updating and restarting."
+                    f"[bot.validate_pool_data] {fetched_pool['exchange_name']} pool not up to date, updating and restarting."
                 )
                 return False
 
@@ -570,26 +562,6 @@ class CarbonBot:
             return random.choice(top_n_arbs)
         else:
             return None
-
-    def _validate_pool_data_logging(
-        self, pool_cid: str, fetched_pool: Dict[str, Any]
-    ) -> None:
-        """
-        Logs the pool data validation.
-
-        Parameters
-        ----------
-        pool_cid: str
-            The pool CID.
-        fetched_pool: dict
-            The fetched pool data.
-
-        """
-        self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
-        self.ConfigObj.logger.debug(
-            f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}"
-        )
-        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
 
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
@@ -650,7 +622,7 @@ class CarbonBot:
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
         sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
         best_profit_fl_token = best_profit
@@ -684,7 +656,7 @@ class CarbonBot:
             usd_gastkn_conversion_rate = Decimal("NaN")
 
         best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
         return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
@@ -848,7 +820,7 @@ class CarbonBot:
 
         # Log the best profit
         self.ConfigObj.logger.debug(
-            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
+            f"[bot._handle_trade_instructions] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
         # Use helper function to update the log dict
@@ -863,7 +835,7 @@ class CarbonBot:
 
         # Log the log dict
         self.ConfigObj.logger.info(
-            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
+            f"[bot._handle_trade_instructions] {log_format(log_data=log_dict, log_name='calculated_arb')}"
         )
 
         # Check if the best profit is greater than the minimum profit
@@ -875,7 +847,7 @@ class CarbonBot:
 
         # Log the flashloan amount
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount_wei}"
+            f"[bot._handle_trade_instructions] Flashloan amount: {flashloan_amount_wei}"
         )
 
         # Split Carbon Orders
@@ -911,16 +883,16 @@ class CarbonBot:
 
         # Log the flashloan details
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
+            f"[bot._handle_trade_instructions] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
         )
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan token address: {fl_token}"
+            f"[bot._handle_trade_instructions] Flashloan token address: {fl_token}"
         )
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Route Struct: \n {route_struct_maximized}"
+            f"[bot._handle_trade_instructions] Route Struct: \n {route_struct_maximized}"
         )
         self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
+            f"[bot._handle_trade_instructions] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
         # Validate and submit the transaction
