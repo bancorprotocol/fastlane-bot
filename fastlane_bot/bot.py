@@ -67,7 +67,6 @@ from fastlane_bot.helpers import (
 )
 from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
@@ -89,8 +88,6 @@ class CarbonBot:
     ----------
     db: DatabaseManager
         the database manager.
-    TxRouteHandlerClass
-        ditto (default: TxRouteHandler).
     TxHelpersClass:
         ditto (default: TxHelpers).
 
@@ -100,7 +97,6 @@ class CarbonBot:
     __DATE__ = __DATE__
 
     db: QueryInterface = field(init=False)
-    TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
     ConfigObj: Config = None
     polling_interval: int = None
@@ -132,9 +128,6 @@ class CarbonBot:
         assert (
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
-
-        if self.TxRouteHandlerClass is None:
-            self.TxRouteHandlerClass = TxRouteHandler
 
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
@@ -808,7 +801,7 @@ class CarbonBot:
         )
 
         # Create the tx route handler
-        tx_route_handler = self.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
 

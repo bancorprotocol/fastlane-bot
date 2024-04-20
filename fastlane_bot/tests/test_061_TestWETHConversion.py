@@ -20,6 +20,7 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 
 from fastlane_bot.utils import num_format, log_format
@@ -217,7 +218,7 @@ def test_wrap_unwrap_original():
         )
 
         # Create the tx route handler
-        tx_route_handler = bot.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
 

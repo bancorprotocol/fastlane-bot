@@ -25,10 +25,7 @@ from fastlane_bot.config import Config
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.helpers import (
-    TxRouteHandler,
-    TradeInstruction,
-)
+from fastlane_bot.helpers import TxRouteHandler, TradeInstruction
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -386,7 +383,7 @@ def test_test_precision_using_all_tokens_in_carbon():
         )
     
         # Create the tx route handler
-        tx_route_handler = bot.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
     

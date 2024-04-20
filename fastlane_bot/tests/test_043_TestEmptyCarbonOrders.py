@@ -13,6 +13,7 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
@@ -217,7 +218,7 @@ def test_test_empty_carbon_orders_removed():
     
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
     # print(f"ordered_trade_instructions_objects: {ordered_trade_instructions_objects}")
-    tx_route_handler = bot.TxRouteHandlerClass(
+    tx_route_handler = TxRouteHandler(
                 trade_instructions=ordered_trade_instructions_objects
             )
     agg_trade_instructions = (
