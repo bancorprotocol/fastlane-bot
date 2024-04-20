@@ -21,18 +21,11 @@ def safe_int(value: int or float) -> int:
     return int(value)
 
 
-def num_format(number):
+def num_format(value: int or float) -> str:
     try:
-        return "{0:.4f}".format(number)
-    except Exception as e:
-        return number
-
-
-def num_format_float(number):
-    try:
-        return float("{0:.4f}".format(number))
-    except Exception as e:
-        return number
+        return "{0:.4f}".format(value)
+    except Exception as _:
+        return str(value)
 
 
 def log_format(log_data: dict, log_name: str) -> str:

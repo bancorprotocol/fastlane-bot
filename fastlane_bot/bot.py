@@ -76,7 +76,7 @@ from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .utils import num_format, log_format, num_format_float
+from .utils import num_format, log_format
 
 
 @dataclass
@@ -722,14 +722,14 @@ class CarbonBot:
         flashloans = [
             {
                 "token": fl_token,
-                "amount": num_format_float(calculated_trade_instructions[0].amtin),
-                "profit": num_format_float(flashloan_tkn_profit),
+                "amount": num_format(calculated_trade_instructions[0].amtin),
+                "profit": num_format(flashloan_tkn_profit),
             }
         ]
         log_dict = {
             "type": arb_mode,
-            "profit_gas_token": num_format_float(best_profit_gastkn),
-            "profit_usd": num_format_float(best_profit_usd),
+            "profit_gas_token": num_format(best_profit_gastkn),
+            "profit_usd": num_format(best_profit_usd),
             "flashloan": flashloans,
             "trades": [],
         }
@@ -742,9 +742,9 @@ class CarbonBot:
                     "trade_index": idx,
                     "exchange": trade.exchange_name,
                     "tkn_in": tknin,
-                    "amount_in": num_format_float(trade.amtin),
+                    "amount_in": num_format(trade.amtin),
                     "tkn_out": tknout,
-                    "amt_out": num_format_float(trade.amtout),
+                    "amt_out": num_format(trade.amtout),
                     "cid0": trade.cid[-10:],
                 }
             )
