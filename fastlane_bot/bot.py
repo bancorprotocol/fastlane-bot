@@ -119,11 +119,9 @@ class CarbonBotBase:
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
 
-        # TODO: Why do we need TxRouteHandlerClass as a parameter?
         if self.TxRouteHandlerClass is None:
             self.TxRouteHandlerClass = TxRouteHandler
 
-        # TODO: Why do we need TxHelpersClass as a parameter?
         if self.TxHelpersClass is None:
             self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
 
@@ -131,7 +129,7 @@ class CarbonBotBase:
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
 
     @property
-    def C(self) -> Config:
+    def C(self) -> Any:
         """
         Convenience method self.ConfigObj
         """
@@ -189,7 +187,6 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
-                # TODO: remove if
                 if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
                     self.ConfigObj.logger.error(
                         f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
@@ -210,8 +207,6 @@ class CarbonBotBase:
 
         return CPCContainer(curves)
 
-
-# TODO: Why do we need a class hierarchy here?
 
 @dataclass
 class CarbonBot(CarbonBotBase):
@@ -827,9 +822,6 @@ class CarbonBot(CarbonBotBase):
         This is the workhorse function that chains all the different actions that
         are necessary to create trade instructions and to ultimately execute them.
         
-        Execution is done via call to ``tx_helpers.validate_and_submit_transaction``
-        and the return value of this function (the txhash) is returned to the caller.
-
         Parameters
         ----------
         CCm: CPCContainer
@@ -1171,7 +1163,7 @@ class CarbonBot(CarbonBotBase):
         logging_path: str = None,
         replay_mode: bool = False,
         replay_from_block: int = None,
-    ) -> None:
+    ):
         """
         Runs the bot.
 
@@ -1182,7 +1174,7 @@ class CarbonBot(CarbonBotBase):
         CCm: CPCContainer
             The complete market data container (optional; default: database via get_curves())
         polling_interval: int
-            the polling interval in seconds (default: 60 via self.RUN_POLLING_INTERVAL)
+            the polling interval in seconds (default: 60 via RUN_POLLING_INTERVAL)
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
@@ -1195,10 +1187,6 @@ class CarbonBot(CarbonBotBase):
             whether to run in replay mode (default: False)
         replay_from_block: int
             the block number to start replaying from (default: None)
-
-        Returns
-        -------
-        None
         """
 
         self.setup_polling_interval(polling_interval)
