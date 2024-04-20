@@ -178,7 +178,7 @@ class CarbonBot:
                     f"[bot.get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
                 )
             except Exception as e:
-                # TODO: unexpected Exception should possible raise
+                # TODO: unexpected exception should possibly be raised
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX UNEXPECTED ERROR converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
@@ -660,16 +660,16 @@ class CarbonBot:
         return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
-    def format_calculated_arb(
+    def calculate_arb(
         arb_mode: str,
         best_profit_gastkn: Decimal,
         best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
         fl_token: str,
-    ) -> str:
+    ) -> dict:
         """
-        Formats the calculated arbitrage.
+        Calculate the arbitrage.
 
         Parameters
         ----------
@@ -688,11 +688,11 @@ class CarbonBot:
 
         Returns
         -------
-        str
-            The calculated arbitrage.
+        dict
+            The arbitrage.
         """
 
-        arb = {
+        return {
             "type": arb_mode,
             "profit_gas_token": num_format(best_profit_gastkn),
             "profit_usd": num_format(best_profit_usd),
@@ -716,11 +716,6 @@ class CarbonBot:
                 for idx, trade in enumerate(calculated_trade_instructions)
             ]
         }
-
-        now = datetime.datetime.now()
-        time_ts = str(int(now.timestamp()))
-        time_iso = now.isoformat().split(".")[0]
-        return f"[{time_iso}::{time_ts}] calculated arb = {json.dumps(arb, indent=4)}"
 
     def _handle_trade_instructions(
         self,
@@ -815,7 +810,7 @@ class CarbonBot:
             calculated_trade_instructions
         )
 
-        # Use helper function to calculate profit
+        # Calculate the best profit
         best_profit_fl_token, best_profit_gastkn, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
@@ -825,8 +820,8 @@ class CarbonBot:
             f"[bot._handle_trade_instructions] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
-        # Format the calculate arbitrage
-        calculated_arb = self.format_calculated_arb(
+        # Calculate the arbitrage
+        arb = self.calculate_arb(
             arb_mode,
             best_profit_gastkn,
             best_profit_usd,
@@ -835,9 +830,9 @@ class CarbonBot:
             fl_token_symbol,
         )
 
-        # Log the calculate arbitrage
+        # Log the arbitrage
         self.ConfigObj.logger.info(
-            f"[bot._handle_trade_instructions] {calculated_arb}"
+            f"[bot._handle_trade_instructions] calculated arb: {json.dumps(arb, indent=4)}"
         )
 
         # Check if the best profit is greater than the minimum profit

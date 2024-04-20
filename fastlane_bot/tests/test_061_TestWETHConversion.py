@@ -230,7 +230,6 @@ def test_wrap_unwrap_original():
         )
 
         # Calculate the trade instructions
-        # try:
         calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(trade_instructions=agg_trade_instructions)
 
         # Aggregate multiple Bancor V3 trades into a single trade
@@ -242,31 +241,36 @@ def test_wrap_unwrap_original():
 
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
+        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
 
-        # Use helper function to calculate profit
-        best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
+        # Calculate the best profit
+        best_profit_fl_token, best_profit_gastkn, best_profit_usd = bot.calculate_profit(
             CCm, best_profit, fl_token
         )
 
         # Log the best profit
-        cfg.logger.debug(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
-
-        # Format the calculate arbitrage
-        calculated_arb = bot.format_calculated_arb(
-            arb_mode,
-            best_profit,
-            profit_usd,
-            flashloan_tkn_profit,
-            calculated_trade_instructions,
-            fl_token,
+        cfg.logger.debug(
+            f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
-        # Log the calculate arbitrage
-        cfg.logger.info(calculated_arb)
+        # Calculate the arbitrage
+        arb = bot.calculate_arb(
+            arb_mode,
+            best_profit_gastkn,
+            best_profit_usd,
+            flashloan_tkn_profit,
+            calculated_trade_instructions,
+            fl_token_symbol,
+        )
+
+        # Log the arbitrage
+        cfg.logger.info(
+            f"calculated arb: {json.dumps(arb, indent=4)}"
+        )
 
         # Check if the best profit is greater than the minimum profit
         # if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
