@@ -13,7 +13,6 @@ import datetime
 import glob
 import math
 import os.path
-from _decimal import Decimal
 from dataclasses import dataclass
 
 
@@ -36,25 +35,11 @@ def num_format_float(number):
         return number
 
 
-def log_format(log_data: {}, log_name: str = "new"):
+def log_format(log_data: dict, log_name: str) -> str:
     now = datetime.datetime.now()
-    time_ts = str(int(now.timestamp()))  # timestamp (epoch)
+    time_ts = str(int(now.timestamp()))
     time_iso = now.isoformat().split(".")[0]
-    # print(time_ts)
-    # print(time_iso)
-
-    log_string = f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
-    return log_string
-    # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
-
-
-def convert_decimals(amt: Decimal, n: int) -> Decimal:
-    """
-    Utility function to convert to Decimaling point value of a specific precision.
-    """
-    if amt is None:
-        return Decimal("0")
-    return Decimal(str(amt / (Decimal("10") ** Decimal(str(n)))))
+    return f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
 
 
 @dataclass

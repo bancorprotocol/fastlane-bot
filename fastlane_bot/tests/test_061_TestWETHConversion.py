@@ -253,9 +253,7 @@ def test_wrap_unwrap_original():
         )
 
         # Log the best profit
-        cfg.logger.debug(
-            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
-        )
+        cfg.logger.debug(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}")
 
         # Use helper function to update the log dict
         log_dict = bot.update_log_dict(
@@ -268,9 +266,7 @@ def test_wrap_unwrap_original():
         )
 
         # Log the log dict
-        cfg.logger.info(
-            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
-        )
+        cfg.logger.info(log_format(log_data=log_dict, log_name='calculated_arb'))
 
         # Check if the best profit is greater than the minimum profit
         # if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
@@ -282,9 +278,7 @@ def test_wrap_unwrap_original():
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
 
         # Log the flashloan amount
-        cfg.logger.debug(
-            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount}"
-        )
+        cfg.logger.debug(f"Flashloan amount: {flashloan_amount}")
 
         split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
 
