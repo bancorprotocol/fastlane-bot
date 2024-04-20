@@ -97,7 +97,6 @@ class CarbonBot:
     db: QueryInterface = field(init=False)
     tx_helpers: TxHelpers = None
     ConfigObj: Config = None
-    polling_interval: int = None
 
     SCALING_FACTOR = 0.999
 
@@ -121,10 +120,6 @@ class CarbonBot:
 
         if self.ConfigObj is None:
             self.ConfigObj = Config()
-
-        assert (
-            self.polling_interval is None
-        ), "polling_interval is now a parameter to run"
 
         if self.tx_helpers is None:
             self.tx_helpers = TxHelpers(cfg=self.ConfigObj)
@@ -902,45 +897,6 @@ class CarbonBot:
             flashloan_struct=flashloan_struct,
         )
 
-    def setup_flashloan_tokens(self, flashloan_tokens):
-        """
-        Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
-        """
-        return (
-            flashloan_tokens
-            if flashloan_tokens is not None
-            else self.RUN_FLASHLOAN_TOKENS
-        )
-
-    def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
-        """
-        Setup the CCm. If CCm is None, retrieve and filter curves.
-
-        Parameters
-        ----------
-        CCm: CPCContainer
-            The CPCContainer object
-
-        Returns
-        -------
-        CPCContainer
-            The filtered CPCContainer object
-        """
-        if CCm is None:
-            CCm = self.get_curves()
-            if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
-                filter_out_weth = [
-                    x
-                    for x in CCm
-                    if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
-                    & (
-                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                    )
-                ]
-                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-        return CCm
-
     def get_tokens_in_exchange(
         self,
         exchange_name: str,
@@ -956,7 +912,6 @@ class CarbonBot:
         *,
         flashloan_tokens: List[str] = None,
         CCm: CPCContainer = None,
-        polling_interval: int = None,
         arb_mode: str = None,
         run_data_validator: bool = False,
         randomizer: int = 0,
@@ -973,8 +928,6 @@ class CarbonBot:
             The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
         CCm: CPCContainer
             The complete market data container (optional; default: database via get_curves())
-        polling_interval: int
-            the polling interval in seconds
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
@@ -989,10 +942,10 @@ class CarbonBot:
             the block number to start replaying from (default: None)
         """
 
-        if self.polling_interval is None:
-            self.polling_interval = polling_interval
-        flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
-        CCm = self.setup_CCm(CCm)
+        if flashloan_tokens is None:
+            flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
+        if CCm is None:
+            CCm = self.get_curves()
         self.logging_path = logging_path
         self.replay_from_block = replay_from_block
 
