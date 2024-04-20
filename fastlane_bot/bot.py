@@ -200,8 +200,9 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
                 )
             except Exception as e:
+                # TODO: unexpected Exception should possible raise
                 self.ConfigObj.logger.error(
-                    f"[bot.get_curves] error converting pool to curve {p}\n[ERR={e}]\n\n"
+                    f"[bot.get_curves] MUST FIX UNEXPECTED ERROR converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
 
         return CPCContainer(curves)
@@ -816,8 +817,11 @@ class CarbonBot(CarbonBotBase):
         r: Any
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
-        Handles the trade instructions.
-
+        Creates and executes the trade instructions
+        
+        This is the workhorse function that chains all the different actions that
+        are necessary to create trade instructions and to ultimately execute them.
+        
         Parameters
         ----------
         CCm: CPCContainer
@@ -1166,13 +1170,13 @@ class CarbonBot(CarbonBotBase):
         Parameters
         ----------
         flashloan_tokens: List[str]
-            The flashloan tokens (optional; default: self.RUN_FLASHLOAN_TOKENS)
+            The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
         CCm: CPCContainer
-            The complete market data container (optional; default: database via self.get_curves())
+            The complete market data container (optional; default: database via get_curves())
         polling_interval: int
-            the polling interval in seconds (default: 60 via self.RUN_POLLING_INTERVAL)
+            the polling interval in seconds (default: 60 via RUN_POLLING_INTERVAL)
         arb_mode: str
-            the arbitrage mode (default: None)
+            the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
             whether to run the data validator (default: False)
         randomizer: int
@@ -1183,11 +1187,6 @@ class CarbonBot(CarbonBotBase):
             whether to run in replay mode (default: False)
         replay_from_block: int
             the block number to start replaying from (default: None)
-
-        Returns
-        -------
-        str
-            The transaction hash.
         """
 
         self.setup_polling_interval(polling_interval)
