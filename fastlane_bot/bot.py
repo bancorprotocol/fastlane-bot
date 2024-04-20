@@ -320,6 +320,7 @@ class CarbonBot:
         data_validator=False,
         logging_path: str = None,
         replay_mode: bool = False,
+        replay_from_block: int = None,
     ):
         """
         Runs the bot.
@@ -340,6 +341,8 @@ class CarbonBot:
             the logging path (default: None)
         replay_mode: bool
             whether to run in replay mode (default: False)
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
@@ -373,7 +376,7 @@ class CarbonBot:
                 )
                 return
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r)
+        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
@@ -724,7 +727,8 @@ class CarbonBot:
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any
+        r: Any,
+        replay_from_block: int = None
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
         Creates and executes the trade instructions
@@ -740,6 +744,8 @@ class CarbonBot:
             The arbitrage mode.
         r: Any
             The result.
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         Returns
         -------
@@ -859,7 +865,7 @@ class CarbonBot:
         )
 
         # Get the deadline
-        deadline = self._get_deadline(self.replay_from_block)
+        deadline = self._get_deadline(replay_from_block)
 
         # Get the route struct
         route_struct = [
@@ -951,7 +957,6 @@ class CarbonBot:
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
-        self.replay_from_block = replay_from_block
 
         try:
             self._run(
@@ -962,6 +967,7 @@ class CarbonBot:
                 randomizer=randomizer,
                 logging_path=logging_path,
                 replay_mode=replay_mode,
+                replay_from_block=replay_from_block,
             )
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.info(e)
