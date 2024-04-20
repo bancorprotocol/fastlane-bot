@@ -11,31 +11,15 @@ Licensed under MIT.
 """
 import datetime
 import glob
-import logging
 import math
 import os.path
-import time
 from _decimal import Decimal
 from dataclasses import dataclass
-from hexbytes import HexBytes
-from typing import Tuple, List, Dict, Any
-
-import pandas as pd
-import requests
-from web3 import Web3
-from web3.contract import Contract
-
-from fastlane_bot.config import config as cfg
-from fastlane_bot.data.abi import *
 
 
 def safe_int(value: int or float) -> int:
     assert value == int(value), f"non-integer `float` value {value}"
     return int(value)
-
-
-def int_prefix(string: str) -> int:
-    return int(string[:-len(string.lstrip("0123456789"))])
 
 
 def num_format(number):
@@ -62,38 +46,6 @@ def log_format(log_data: {}, log_name: str = "new"):
     log_string = f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
     return log_string
     # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
-
-
-# Initialize Contracts
-def initialize_contract_with_abi(address: str, abi: List[Any], web3: Web3) -> Contract:
-    """
-    Initialize a contract with an abi
-    :param address:  address of the contract
-    :param abi:  abi of the contract
-    :param web3:  web3 instance
-    :return:  contract instance
-    """
-    return web3.eth.contract(address=address, abi=abi)
-
-
-def initialize_contract_without_abi(address: str, web3):
-    abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={cfg.ETHERSCAN_TOKEN}"
-    abi = json.loads(requests.get(abi_endpoint).text)
-    return web3.eth.contract(address=address, abi=abi["result"])
-
-
-def initialize_contract(web3, address: str, abi=None) -> Contract:
-    """
-    Initialize a contract with an abi
-    :param web3:    web3 instance
-    :param address:  address of the contract
-    :param abi:  abi of the contract
-    :return:  contract instance
-    """
-    if abi is None:
-        return initialize_contract_without_abi(address=address, web3=web3)
-    else:
-        return initialize_contract_with_abi(address=address, abi=abi, web3=web3)
 
 
 def convert_decimals(amt: Decimal, n: int) -> Decimal:

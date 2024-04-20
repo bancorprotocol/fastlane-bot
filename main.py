@@ -164,7 +164,7 @@ def main(args: argparse.Namespace) -> None:
     args.flashloan_tokens = handle_flashloan_tokens(cfg, args.flashloan_tokens, tokens)
 
     if args.self_fund:
-        check_and_approve_tokens(tokens=args.flashloan_tokens, cfg=cfg)
+        check_and_approve_tokens(cfg=cfg, tokens=args.flashloan_tokens)
 
     # Search the logging directory for the latest timestamped folder
     args.logging_path = find_latest_timestamped_folder(args.logging_path)
@@ -349,7 +349,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             )
 
             # Set the network connection to Mainnet if replaying from a block
-            mgr = set_network_to_mainnet_if_replay(
+            set_network_to_mainnet_if_replay(
                 last_block,
                 loop_idx,
                 mainnet_uri,
@@ -393,7 +393,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             loop_idx += 1
 
             # Set the network connection to Tenderly if replaying from a block
-            mgr, tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
+            tenderly_uri, forked_from_block = set_network_to_tenderly_if_replay(
                 last_block=last_block,
                 loop_idx=loop_idx,
                 mgr=mgr,
@@ -725,7 +725,7 @@ if __name__ == "__main__":
         "--blockchain",
         default="ethereum",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base", "fantom", "mantle"],
+        choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea"],
     )
     parser.add_argument(
         "--pool_data_update_frequency",

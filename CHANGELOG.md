@@ -1,10 +1,77 @@
 # Changelog
 
+## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.8...HEAD)
+
+- WEB3\_ALCHEMY\_BASE, WEB3\_FANTOM and WEB3\_MANTLE are missing in the test-suite configuration [\#520](https://github.com/bancorprotocol/fastlane-bot/issues/520)
+- Wrong fee resolution used for Solidly forks [\#403](https://github.com/bancorprotocol/fastlane-bot/issues/403)
+
+## [v3.1.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.8) (2024-04-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.7...v3.1.8)
+
+- Transaction Creation [\#428](https://github.com/bancorprotocol/fastlane-bot/issues/428)
+
+Merged pull requests
+
+- github action support for testing more networks [\#536](https://github.com/bancorprotocol/fastlane-bot/pull/536) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.1.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.7) (2024-04-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.6...v3.1.7)
+
+- supernova not found in exchange [\#539](https://github.com/bancorprotocol/fastlane-bot/issues/539)
+- Transactions occasionally revert with error-message `Too little received` [\#383](https://github.com/bancorprotocol/fastlane-bot/issues/383)
+- Hotfix - Fix native token address for Mantle [\#541](https://github.com/bancorprotocol/fastlane-bot/pull/541) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Remove unused code in `submithandler.py` [\#350](https://github.com/bancorprotocol/fastlane-bot/issues/350)
+
+Closed issues
+
+- `*args, **kwargs` -\> `argsf1, argsf2`  [\#493](https://github.com/bancorprotocol/fastlane-bot/issues/493)
+- Can get rid of the if '-' in cid [\#466](https://github.com/bancorprotocol/fastlane-bot/issues/466)
+
+## [v3.1.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.6) (2024-04-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.5...v3.1.6)
+
+Merged pull requests
+
+- Update fusionx details info [\#525](https://github.com/bancorprotocol/fastlane-bot/pull/525) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v3.1.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.5) (2024-04-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...v3.1.5)
+
+- Carbon strategies are duplicated from events [\#521](https://github.com/bancorprotocol/fastlane-bot/issues/521)
+
+- Add support for puffs\_penthouse uniswap\_v3 fork [\#524](https://github.com/bancorprotocol/fastlane-bot/pull/524) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v3.1.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.4) (2024-04-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.3...v3.1.4)
+
+- GPU token external liquidity not found [\#515](https://github.com/bancorprotocol/fastlane-bot/issues/515)
+- Hotfix - Carbon strategies duplicated [\#522](https://github.com/bancorprotocol/fastlane-bot/pull/522) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.1.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.3) (2024-04-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.2...v3.1.3)
+
+- gpu external sources added to event mapping [\#517](https://github.com/bancorprotocol/fastlane-bot/pull/517) ([NIXBNT](https://github.com/NIXBNT))
+
+Closed issues
+
+- All files should have doc strings [\#438](https://github.com/bancorprotocol/fastlane-bot/issues/438)
+
 ## [v3.1.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.2) (2024-04-01)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.1...v3.1.2)
 
-- Pool-Type not handled correctly after changing input from None to '' [\#509](https://github.com/bancorprotocol/fastlane-bot/issues/509)
+Merged pull requests
+
+- Fix issue 509 [\#510](https://github.com/bancorprotocol/fastlane-bot/pull/510) ([barakman](https://github.com/barakman))
 
 ## [v3.1.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.1) (2024-03-27)
 
