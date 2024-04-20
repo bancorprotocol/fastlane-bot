@@ -174,10 +174,9 @@ class CarbonBot:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
-                if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
-                    self.ConfigObj.logger.error(
-                        f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
-                    )
+                self.ConfigObj.logger.error(
+                    f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+                )
             except p.DoubleInvalidCurveError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
