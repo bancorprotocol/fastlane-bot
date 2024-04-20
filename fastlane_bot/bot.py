@@ -691,37 +691,31 @@ class CarbonBot:
         dict
             The updated log dictionary.
         """
-        flashloans = [
-            {
-                "token": fl_token,
-                "amount": num_format(calculated_trade_instructions[0].amtin),
-                "profit": num_format(flashloan_tkn_profit),
-            }
-        ]
-        log_dict = {
+
+        return {
             "type": arb_mode,
             "profit_gas_token": num_format(best_profit_gastkn),
             "profit_usd": num_format(best_profit_usd),
-            "flashloan": flashloans,
-            "trades": [],
-        }
-
-        for idx, trade in enumerate(calculated_trade_instructions):
-            tknin = {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
-            tknout = {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
-            log_dict["trades"].append(
+            "flashloan": [
+                {
+                    "token": fl_token,
+                    "amount": num_format(calculated_trade_instructions[0].amtin),
+                    "profit": num_format(flashloan_tkn_profit)
+                }
+            ],
+            "trades": [
                 {
                     "trade_index": idx,
                     "exchange": trade.exchange_name,
-                    "tkn_in": tknin,
+                    "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
                     "amount_in": num_format(trade.amtin),
-                    "tkn_out": tknout,
+                    "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
                     "amt_out": num_format(trade.amtout),
-                    "cid0": trade.cid[-10:],
+                    "cid0": trade.cid[-10:]
                 }
-            )
-
-        return log_dict
+                for idx, trade in enumerate(calculated_trade_instructions)
+            ]
+        }
 
     def _handle_trade_instructions(
         self,
