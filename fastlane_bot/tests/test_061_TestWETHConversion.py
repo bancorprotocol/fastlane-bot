@@ -253,9 +253,7 @@ def test_wrap_unwrap_original():
         )
 
         # Log the best profit
-        cfg.logger.debug(
-            f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
-        )
+        cfg.logger.info(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}")
 
         # Calculate the arbitrage
         arb = bot.calculate_arb(
@@ -268,21 +266,13 @@ def test_wrap_unwrap_original():
         )
 
         # Log the arbitrage
-        cfg.logger.info(
-            f"calculated arb: {json.dumps(arb, indent=4)}"
-        )
-
-        # Check if the best profit is greater than the minimum profit
-        # if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
-        #     bot.ConfigObj.logger.info(
-        #         f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {bot.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
-        #     )
+        cfg.logger.info(f"calculated arb: {json.dumps(arb, indent=4)}")
 
         # Get the flashloan amount
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
 
         # Log the flashloan amount
-        cfg.logger.debug(f"Flashloan amount: {flashloan_amount}")
+        cfg.logger.info(f"Flashloan amount: {flashloan_amount}")
 
         split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
 
