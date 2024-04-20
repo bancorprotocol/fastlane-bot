@@ -877,7 +877,7 @@ class CarbonBot:
             trade_instructions=split_calculated_trade_instructions,
         )
 
-        route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
+        maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Log the flashloan details
         self.ConfigObj.logger.debug(
@@ -887,7 +887,7 @@ class CarbonBot:
             f"[bot._handle_trade_instructions] Flashloan token address: {fl_token}"
         )
         self.ConfigObj.logger.debug(
-            f"[bot._handle_trade_instructions] Route Struct: \n {route_struct_maximized}"
+            f"[bot._handle_trade_instructions] Route Struct: \n {route_struct_processed}"
         )
         self.ConfigObj.logger.debug(
             f"[bot._handle_trade_instructions] Trade Instructions: \n {best_trade_instructions_dic}"
@@ -895,7 +895,7 @@ class CarbonBot:
 
         # Validate and submit the transaction
         return self.tx_helpers.validate_and_submit_transaction(
-            route_struct=route_struct_maximized,
+            route_struct=route_struct_processed,
             src_amt=flashloan_amount_wei,
             src_address=fl_token,
             expected_profit_gastkn=best_profit_gastkn,

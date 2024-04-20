@@ -68,19 +68,10 @@ class RouteStruct:
     customData: bytes
 
 
-def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]):
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
-
-    TODO: this function seems to be only used in this module and therefore should
-    be made a private function (_maximize_last_trade_per_tkn); I also would suggest
-    to move it to the TxRouteHandler class, either as static or class method.
-    
     :param route_struct: the route struct object
-
-    Returns:
-    List[RouteStruct] the route struct object with the sourceAmount adjusted to 0 for each last-trade per token.
-
     """
 
     tkns_traded = [route_struct[0]["sourceToken"]]
@@ -98,8 +89,6 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict
             else:
                 route_struct[idx].sourceAmount = 0
                 tkns_traded.append(trade.sourceToken)
-
-    return route_struct
 
 
 @dataclass
