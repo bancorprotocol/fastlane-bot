@@ -99,7 +99,6 @@ class CarbonBot:
     ConfigObj: Config = None
     polling_interval: int = None
 
-    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
     SCALING_FACTOR = 0.999
 
     ARB_FINDER = {
@@ -903,17 +902,6 @@ class CarbonBot:
             flashloan_struct=flashloan_struct,
         )
 
-    def setup_polling_interval(self, polling_interval: int):
-        """
-        Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
-        """
-        if self.polling_interval is None:
-            self.polling_interval = (
-                polling_interval
-                if polling_interval is not None
-                else self.RUN_POLLING_INTERVAL
-            )
-
     def setup_flashloan_tokens(self, flashloan_tokens):
         """
         Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
@@ -986,7 +974,7 @@ class CarbonBot:
         CCm: CPCContainer
             The complete market data container (optional; default: database via get_curves())
         polling_interval: int
-            the polling interval in seconds (default: 60 via RUN_POLLING_INTERVAL)
+            the polling interval in seconds
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
@@ -1001,7 +989,8 @@ class CarbonBot:
             the block number to start replaying from (default: None)
         """
 
-        self.setup_polling_interval(polling_interval)
+        if self.polling_interval is None:
+            self.polling_interval = polling_interval
         flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
         CCm = self.setup_CCm(CCm)
         self.logging_path = logging_path
