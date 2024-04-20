@@ -832,7 +832,7 @@ class CarbonBot:
 
         # Log the arbitrage
         self.ConfigObj.logger.info(
-            f"[bot._handle_trade_instructions] calculated arb: {json.dumps(arb, indent=4)}"
+            f"[bot._handle_trade_instructions] calculated arb: {arb}"
         )
 
         # Check if the best profit is greater than the minimum profit

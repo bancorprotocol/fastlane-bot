@@ -266,7 +266,7 @@ def test_wrap_unwrap_original():
         )
 
         # Log the arbitrage
-        cfg.logger.info(f"calculated arb: {json.dumps(arb, indent=4)}")
+        cfg.logger.info(f"calculated arb: {arb}")
 
         # Get the flashloan amount
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
