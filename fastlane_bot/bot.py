@@ -103,8 +103,6 @@ class CarbonBot:
     TxRouteHandlerClass: any = None
     TxHelpersClass: any = None
     ConfigObj: Config = None
-    usd_gas_limit: int = 150
-    min_profit: int = 60
     polling_interval: int = None
 
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
