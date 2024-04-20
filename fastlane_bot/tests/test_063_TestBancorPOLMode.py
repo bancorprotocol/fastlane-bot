@@ -163,14 +163,14 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
+    all_tokens, combos = finder.find_arbitrage()
     assert type(all_tokens) == set, f"[NBTest 063 TestMultiPairwisePOLMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" in all_tokens, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT address in all_tokens: {(all_tokens)}"
     assert type(combos) == list, f"[NBTest 063 TestMultiPairwisePOLMode] combos is wrong data type. Expected list, found: {type(combos)}"
@@ -193,7 +193,7 @@ def test_test_expected_output():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     

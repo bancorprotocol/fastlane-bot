@@ -107,8 +107,6 @@ class CarbonBot:
 
     RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
     SCALING_FACTOR = 0.999
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
 
     ARB_FINDER = {
         "single": FindArbitrageSinglePairwise,
@@ -316,15 +314,16 @@ class CarbonBot:
         arb_mode: str,
         randomizer: int
     ) -> dict:
-        random_mode = self.AO_CANDIDATES if randomizer else None
-        arb_finder = self._get_arb_finder(arb_mode)(
+        arb_finder = self._get_arb_finder(arb_mode)
+        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
+        finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
             CCm=CCm,
             mode="bothin",
             result=random_mode,
             ConfigObj=self.ConfigObj,
         )
-        return {"finder": arb_finder, "r": arb_finder.find_arbitrage()}
+        return {"finder": finder, "r": finder.find_arbitrage()}
 
     def _run(
         self,

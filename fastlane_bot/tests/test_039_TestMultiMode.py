@@ -179,14 +179,14 @@ def test_test_combos_and_tokens():
     
     # +
     arb_finder = bot._get_arb_finder("multi")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
+    all_tokens, combos = finder.find_arbitrage()
 
     # subjected to the length of `TAX_TOKENS`    
     assert type(all_tokens) == set, f"[NBTest 039 TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
@@ -210,7 +210,7 @@ def test_test_expected_output():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     

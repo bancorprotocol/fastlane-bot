@@ -155,14 +155,14 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
+    all_tokens, combos = finder.find_arbitrage()
     assert type(all_tokens) == set, f"[NBTest_50_TestBancorV2] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[NBTest_50_TestBancorV2] combos is wrong data type. Expected list, found: {type(combos)}"
     assert len(all_tokens) > 100, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
@@ -184,7 +184,7 @@ def test_test_expected_output_bancorv2():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
@@ -207,7 +207,7 @@ def test_test_expected_output_bancorv2():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()

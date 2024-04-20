@@ -177,7 +177,7 @@ def test_test_precision_using_all_tokens_in_carbon():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
