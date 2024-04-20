@@ -81,7 +81,7 @@ from .utils import num_format, log_format, num_format_float
 
 
 @dataclass
-class CarbonBotBase:
+class CarbonBot:
     """
     Base class for the business logic of the bot.
 
@@ -107,6 +107,24 @@ class CarbonBotBase:
     min_profit: int = 60
     polling_interval: int = None
 
+    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
+    SCALING_FACTOR = 0.999
+    AO_TOKENS = "tokens"
+    AO_CANDIDATES = "candidates"
+
+    ARB_FINDER = {
+        "single": FindArbitrageSinglePairwise,
+        "multi": FindArbitrageMultiPairwise,
+        "triangle": ArbitrageFinderTriangleSingle,
+        "multi_triangle": ArbitrageFinderTriangleMulti,
+        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
+        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
+        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
+    }
+
+    class NoArbAvailable(Exception):
+        pass
+
     def __post_init__(self):
         """
         The post init method.
@@ -127,26 +145,6 @@ class CarbonBotBase:
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
-
-    @property
-    def C(self) -> Any:
-        """
-        Convenience method self.ConfigObj
-        """
-        return self.ConfigObj
-
-    @staticmethod
-    def versions():
-        """
-        Returns the versions of the module and its Carbon dependencies.
-        """
-        s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
-        return s
-
-    UDTYPE_FROM_CONTRACTS = "from_contracts"
-    UDTYPE_FROM_EVENTS = "from_events"
 
     def get_curves(self) -> CPCContainer:
         """
@@ -205,38 +203,6 @@ class CarbonBotBase:
                 )
 
         return CPCContainer(curves)
-
-
-@dataclass
-class CarbonBot(CarbonBotBase):
-    """
-    A class that handles the business logic of the bot.
-
-    MAIN ENTRY POINTS
-    :run:               Runs the bot.
-    """
-
-    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
-    SCALING_FACTOR = 0.999
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
-    BNT_ETH_CID = "0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b"
-
-    ARB_FINDER = {
-        "single": FindArbitrageSinglePairwise,
-        "multi": FindArbitrageMultiPairwise,
-        "triangle": ArbitrageFinderTriangleSingle,
-        "multi_triangle": ArbitrageFinderTriangleMulti,
-        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
-        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
-        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
-    }
-
-    def __post_init__(self):
-        super().__post_init__()
-
-    class NoArbAvailable(Exception):
-        pass
 
     def _simple_ordering_by_src_token(
         self, best_trade_instructions_dic, best_src_token
@@ -323,20 +289,6 @@ class CarbonBot(CarbonBotBase):
             ).strategy_id
             lst.append(ti)
         return lst
-
-    @dataclass
-    class ArbCandidate:
-        """
-        The arbitrage candidates.
-        """
-
-        result: any
-        constains_carbon: bool = None
-        best_profit_usd: float = None
-
-        @property
-        def r(self):
-            return self.result
 
     def _get_deadline(self, block_number) -> int:
         """
@@ -901,9 +853,9 @@ class CarbonBot(CarbonBotBase):
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
-        # Log the best trade instructions
-        self.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit_gastkn  # The log id
+        # Log the best profit
+        self.ConfigObj.logger.debug(
+            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
         # Use helper function to update the log dict
@@ -917,7 +869,9 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Log the log dict
-        self.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
+        self.ConfigObj.logger.info(
+            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
+        )
 
         # Check if the best profit is greater than the minimum profit
         if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
@@ -926,13 +880,9 @@ class CarbonBot(CarbonBotBase):
             )
             return None, None
 
-        # Get the flashloan amount and token address
-        flashloan_token_address = fl_token
-
-        # Log the flashloan amount and token address
-        self.handle_logging_for_trade_instructions(
-            3,  # The log id
-            flashloan_amount=flashloan_amount_wei,
+        # Log the flashloan amount
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount_wei}"
         )
 
         # Split Carbon Orders
@@ -966,125 +916,28 @@ class CarbonBot(CarbonBotBase):
 
         route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
-        # Log the route_struct
-        self.handle_logging_for_trade_instructions(
-            4,  # The log id
-            flashloan_amount=flashloan_amount_wei,
-            flashloan_token_symbol=fl_token_symbol,
-            flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct_maximized,
-            best_trade_instructions_dic=best_trade_instructions_dic,
+        # Log the flashloan details
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Flashloan token address: {fl_token}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Route Struct: \n {route_struct_maximized}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
         # Validate and submit the transaction
         return self.TxHelpersClass.validate_and_submit_transaction(
             route_struct=route_struct_maximized,
             src_amt=flashloan_amount_wei,
-            src_address=flashloan_token_address,
+            src_address=fl_token,
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
             flashloan_struct=flashloan_struct,
-        )
-
-    def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
-        """
-        Handles logging for trade instructions based on log_id.
-
-        Parameters
-        ----------
-        log_id : int
-            The ID for log type.
-        **kwargs : dict
-            Additional parameters required for logging.
-
-        Returns
-        -------
-        None
-        """
-        log_actions = {
-            1: self.log_best_profit,
-            2: self.log_calculated_arb,
-            3: self.log_flashloan_amount,
-            4: self.log_flashloan_details,
-        }
-        log_action = log_actions.get(log_id)
-        if log_action:
-            log_action(**kwargs)
-
-    def log_best_profit(self, best_profit: Optional[float] = None):
-        """
-        Logs the best profit.
-
-        Parameters
-        ----------
-        best_profit : Optional[float], optional
-            The best profit, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
-        )
-
-    def log_calculated_arb(self, log_dict: Optional[Dict] = None):
-        """
-        Logs the calculated arbitrage.
-
-        Parameters
-        ----------
-        log_dict : Optional[Dict], optional
-            The dictionary containing log data, by default None
-        """
-        self.ConfigObj.logger.info(
-            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
-        )
-
-    def log_flashloan_amount(self, flashloan_amount: Optional[float] = None):
-        """
-        Logs the flashloan amount.
-
-        Parameters
-        ----------
-        flashloan_amount : Optional[float], optional
-            The flashloan amount, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount}"
-        )
-
-    def log_flashloan_details(
-        self,
-        flashloan_amount: Optional[float] = None,
-        flashloan_token_address: Optional[str] = None,
-        flashloan_token_symbol: Optional[str] = None,
-        route_struct: Optional[List[Dict]] = None,
-        best_trade_instructions_dic: Optional[Dict] = None,
-    ):
-        """
-        Logs the details of flashloan.
-
-        Parameters
-        ----------
-        flashloan_amount : Optional[float], optional
-            The flashloan amount, by default None
-        flashloan_token_symbol : Optional[str], optional
-            The flashloan token symbol, by default None
-        flashloan_token_address : Optional[str], optional
-            The flashloan token address, by default None
-        route_struct : Optional[List[Dict]], optional
-            The route structure, by default None
-        best_trade_instructions_dic : Optional[Dict], optional
-            The dictionary containing the best trade instructions, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan of {flashloan_token_symbol}, amount: {flashloan_amount}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan token address: {flashloan_token_address}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Route Struct: \n {route_struct}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
     def setup_polling_interval(self, polling_interval: int):

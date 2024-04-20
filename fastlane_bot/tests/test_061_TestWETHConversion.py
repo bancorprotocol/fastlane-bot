@@ -22,6 +22,7 @@ from fastlane_bot import Bot
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 
+from fastlane_bot.utils import num_format, log_format
 from fastlane_bot.helpers import add_wrap_or_unwrap_trades_to_route, split_carbon_trades
 from fastlane_bot.events.managers.manager import Manager
 from dataclasses import asdict
@@ -250,9 +251,9 @@ def test_wrap_unwrap_original():
             CCm, best_profit, fl_token
         )
 
-        # Log the best trade instructions
-        bot.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit  # The log id
+        # Log the best profit
+        cfg.logger.debug(
+            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
         )
 
         # Use helper function to update the log dict
@@ -266,7 +267,9 @@ def test_wrap_unwrap_original():
         )
 
         # Log the log dict
-        bot.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
+        cfg.logger.info(
+            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
+        )
 
         # Check if the best profit is greater than the minimum profit
         # if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
@@ -274,16 +277,12 @@ def test_wrap_unwrap_original():
         #         f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {bot.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
         #     )
 
-        # Get the flashloan amount and token address
+        # Get the flashloan amount
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-        flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
-            bot.db.get_token(tkn_address=fl_token).address
-        )
 
-        # Log the flashloan amount and token address
-        bot.handle_logging_for_trade_instructions(
-            3,  # The log id
-            flashloan_amount=flashloan_amount,
+        # Log the flashloan amount
+        cfg.logger.debug(
+            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount}"
         )
 
         split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
