@@ -9,7 +9,6 @@ TODO-MIKE, TODO-KEVIN: check how hard this is
 All rights reserved.
 Licensed under MIT.
 """
-import datetime
 import glob
 import math
 import os.path
@@ -26,13 +25,6 @@ def num_format(value: int or float) -> str:
         return "{0:.4f}".format(value)
     except Exception as _:
         return str(value)
-
-
-def log_format(log_data: dict, log_name: str) -> str:
-    now = datetime.datetime.now()
-    time_ts = str(int(now.timestamp()))
-    time_iso = now.isoformat().split(".")[0]
-    return f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
 
 
 @dataclass

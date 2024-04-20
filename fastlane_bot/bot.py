@@ -75,7 +75,7 @@ from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .utils import num_format, log_format
+from .utils import num_format
 
 
 @dataclass
@@ -660,16 +660,16 @@ class CarbonBot:
         return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
-    def update_log_dict(
+    def format_calculated_arb(
         arb_mode: str,
         best_profit_gastkn: Decimal,
         best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
         fl_token: str,
-    ) -> Dict[str, Any]:
+    ) -> str:
         """
-        Update the log dictionary.
+        Formats the calculated arbitrage.
 
         Parameters
         ----------
@@ -688,11 +688,11 @@ class CarbonBot:
 
         Returns
         -------
-        dict
-            The updated log dictionary.
+        str
+            The calculated arbitrage.
         """
 
-        return {
+        arb = {
             "type": arb_mode,
             "profit_gas_token": num_format(best_profit_gastkn),
             "profit_usd": num_format(best_profit_usd),
@@ -716,6 +716,11 @@ class CarbonBot:
                 for idx, trade in enumerate(calculated_trade_instructions)
             ]
         }
+
+        now = datetime.datetime.now()
+        time_ts = str(int(now.timestamp()))
+        time_iso = now.isoformat().split(".")[0]
+        return f"[{time_iso}::{time_ts}] calculated arb = {json.dumps(arb, indent=4)}"
 
     def _handle_trade_instructions(
         self,
@@ -820,8 +825,8 @@ class CarbonBot:
             f"[bot._handle_trade_instructions] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
-        # Use helper function to update the log dict
-        log_dict = self.update_log_dict(
+        # Format the calculate arbitrage
+        calculated_arb = self.format_calculated_arb(
             arb_mode,
             best_profit_gastkn,
             best_profit_usd,
@@ -830,9 +835,9 @@ class CarbonBot:
             fl_token_symbol,
         )
 
-        # Log the log dict
+        # Log the calculate arbitrage
         self.ConfigObj.logger.info(
-            f"[bot._handle_trade_instructions] {log_format(log_data=log_dict, log_name='calculated_arb')}"
+            f"[bot._handle_trade_instructions] {calculated_arb}"
         )
 
         # Check if the best profit is greater than the minimum profit
