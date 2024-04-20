@@ -55,7 +55,6 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
-import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,
@@ -63,9 +62,9 @@ from fastlane_bot.helpers import (
     TradeInstruction,
     Univ3Calculator,
     add_wrap_or_unwrap_trades_to_route,
-    split_carbon_trades
+    split_carbon_trades,
+    maximize_last_trade_per_tkn
 )
-from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
@@ -86,18 +85,17 @@ class CarbonBot:
 
     Attributes
     ----------
-    db: DatabaseManager
+    db: QueryInterface
         the database manager.
-    TxHelpersClass:
-        ditto (default: TxHelpers).
-
+    tx_helpers: TxHelpers
+        the tx-helpers utility.
     """
 
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
     db: QueryInterface = field(init=False)
-    TxHelpersClass: any = None
+    tx_helpers: TxHelpers = None
     ConfigObj: Config = None
     polling_interval: int = None
 
@@ -129,8 +127,8 @@ class CarbonBot:
             self.polling_interval is None
         ), "polling_interval is now a parameter to run"
 
-        if self.TxHelpersClass is None:
-            self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
+        if self.tx_helpers is None:
+            self.tx_helpers = TxHelpers(cfg=self.ConfigObj)
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
@@ -896,7 +894,7 @@ class CarbonBot:
         )
 
         # Validate and submit the transaction
-        return self.TxHelpersClass.validate_and_submit_transaction(
+        return self.tx_helpers.validate_and_submit_transaction(
             route_struct=route_struct_maximized,
             src_amt=flashloan_amount_wei,
             src_address=fl_token,
