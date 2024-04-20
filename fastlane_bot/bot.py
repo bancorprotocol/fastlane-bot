@@ -318,6 +318,7 @@ class CarbonBot:
         arb_mode: str,
         randomizer: int,
         data_validator=False,
+        logging_path: str = None,
         replay_mode: bool = False,
     ):
         """
@@ -335,6 +336,10 @@ class CarbonBot:
             randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         data_validator: bool
             If extra data validation should be performed
+        logging_path: str
+            the logging path (default: None)
+        replay_mode: bool
+            whether to run in replay mode (default: False)
 
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
@@ -375,9 +380,9 @@ class CarbonBot:
             tx_details = json.dumps(tx_receipt, indent=4) if tx_receipt else "no receipt"
             self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {tx_status}")
 
-            if self.logging_path:
+            if logging_path:
                 filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                with open(os.path.join(self.logging_path, filename), "w") as f:
+                with open(os.path.join(logging_path, filename), "w") as f:
                     f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
     def validate_optimizer_trades(self, arb_opp, arb_finder):
@@ -946,7 +951,6 @@ class CarbonBot:
             flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
         if CCm is None:
             CCm = self.get_curves()
-        self.logging_path = logging_path
         self.replay_from_block = replay_from_block
 
         try:
@@ -956,6 +960,7 @@ class CarbonBot:
                 arb_mode=arb_mode,
                 data_validator=run_data_validator,
                 randomizer=randomizer,
+                logging_path=logging_path,
                 replay_mode=replay_mode,
             )
         except self.NoArbAvailable as e:
