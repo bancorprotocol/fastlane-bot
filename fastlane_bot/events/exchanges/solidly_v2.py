@@ -126,7 +126,7 @@ async def _get_fee_7(address: str, contract: Contract, factory_contract: Contrac
     web3 = contract.web3
     core_address = await contract.functions.getXfaiCore().call()
     core_contract = web3.eth.contract(address=web3.to_checksum_address(core_address), abi=XFAI_V0_CORE_ABI)
-    return await core_contract.functions.lpFee().call()
+    return await core_contract.functions.getTotalFee().call()
 
 async def _get_tkn0_A(contract: Contract) -> str:
     return await contract.functions.token0().call()

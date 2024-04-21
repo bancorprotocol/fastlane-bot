@@ -305,7 +305,7 @@ XFAI_V0_FACTORY_ABI = [
 XFAI_V0_CORE_ABI = [
     {
         "type": "function",
-        "name": "lpFee",
+        "name": "getTotalFee",
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
