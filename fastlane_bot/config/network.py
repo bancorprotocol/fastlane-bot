@@ -225,7 +225,6 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
-    SHIBA_V2_NAME = "shiba_v2"
     AERODROME_V2_NAME = "aerodrome_v2"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
     XFAI_V0_NAME = "xfai_v0"
