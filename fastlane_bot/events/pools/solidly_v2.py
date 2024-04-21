@@ -126,8 +126,8 @@ class SolidlyV2Pool(Pool):
         See base class.
         """
         exchange_info = EXCHANGE_INFO[self.exchange_name]
-        balances = exchange_info["balances"]
-        self.is_stable = exchange_info["is_stable"]
+        balances = exchange_info["balances"](contract)
+        self.is_stable = exchange_info["is_stable"](contract)
         params = {
 
             "tkn0_balance": balances[0],
@@ -152,8 +152,8 @@ class SolidlyV2Pool(Pool):
         See base class.
         """
         exchange_info = EXCHANGE_INFO[self.exchange_name]
-        balances = await exchange_info["async_balances"]
-        self.is_stable = await exchange_info["async_is_stable"]
+        balances = await exchange_info["async_balances"](contract)
+        self.is_stable = await exchange_info["async_is_stable"](contract)
         params = {
 
             "tkn0_balance": balances[0],
