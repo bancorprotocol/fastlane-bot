@@ -50,7 +50,6 @@ from fastlane_bot.events.utils import (
     set_network_to_tenderly_if_replay,
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
-    handle_replay_from_block,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
@@ -94,7 +93,6 @@ def process_arguments(args):
         "increment_time": int,
         "increment_blocks": int,
         "pool_data_update_frequency": int,
-        "version_check_frequency": int,
         "self_fund": is_true,
         "read_only": is_true,
         "is_args_test": is_true,
@@ -118,11 +116,11 @@ def main(args: argparse.Namespace) -> None:
     args = process_arguments(args)
 
     if args.replay_from_block or args.tenderly_fork_id:
-        (
-            args.polling_interval,
-            args.reorg_delay,
-            args.use_cached_events,
-        ) = handle_replay_from_block(args.replay_from_block)
+        if args.replay_from_block:
+            assert args.replay_from_block > 0, "The block number to replay from must be greater than 0."
+        args.polling_interval = 0
+        args.reorg_delay = 0
+        args.use_cached_events = False
 
     # Set config
     loglevel = get_loglevel(args.loglevel)
@@ -227,7 +225,6 @@ def main(args: argparse.Namespace) -> None:
             increment_blocks: {args.increment_blocks}
             pool_data_update_frequency: {args.pool_data_update_frequency}
             prefix_path: {args.prefix_path}
-            version_check_frequency: {args.version_check_frequency}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
 
@@ -455,7 +452,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 arb_mode=args.arb_mode,
                 bot=bot,
                 flashloan_tokens=args.flashloan_tokens,
-                polling_interval=args.polling_interval,
                 randomizer=args.randomizer,
                 run_data_validator=args.run_data_validator,
                 target_tokens=args.target_tokens,
@@ -505,16 +501,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
                 params = [w3.to_hex(args.increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
-            if (
-                    loop_idx % args.version_check_frequency == 0
-                    and args.version_check_frequency != -1
-                    and args.blockchain in "ethereum"
-            ):
-                # Check the version of the deployed arbitrage contract
-                mgr.cfg.provider.check_version_of_arb_contract()
-                mgr.cfg.logger.info(
-                    f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
-                )
+
             if (
                     loop_idx % args.pool_data_update_frequency == 0
                     and args.pool_data_update_frequency != -1
@@ -741,11 +728,6 @@ if __name__ == "__main__":
         "--prefix_path",
         default="",
         help="Prefixes the path to the write folders (used for deployment)",
-    )
-    parser.add_argument(
-        "--version_check_frequency",
-        default=1,
-        help="How frequently pool data should be updated, in main loop iterations.",
     )
     parser.add_argument(
         "--self_fund",

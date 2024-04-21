@@ -37,13 +37,6 @@ FAST_LANE_CONTRACT_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"components": [{"internalType": "uint32", "name": "percentagePPM", "type": "uint32"}, {"internalType": "uint256", "name": "maxAmount", "type": "uint256"}], "internalType": "struct BancorArbitrage.Rewards", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -162,13 +155,6 @@ CARBON_CONTROLLER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -545,13 +531,6 @@ BANCOR_V2_CONVERTER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract IERC20[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -570,13 +549,6 @@ BANCOR_V3_NETWORK_ABI = [
     },
     {
         "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    },
-    {
-        "type": "function",
         "name": "withdrawPOL",
         "stateMutability": "nonpayable",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
@@ -591,13 +563,6 @@ BANCOR_V3_NETWORK_SETTINGS = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -615,13 +580,6 @@ BANCOR_V3_NETWORK_INFO_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}], "internalType": "struct TradingLiquidity", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -657,13 +615,6 @@ BANCOR_V3_POOL_COLLECTION_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -693,13 +644,6 @@ BANCOR_POL_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "internalType": "struct ICarbonPOL.Price", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 

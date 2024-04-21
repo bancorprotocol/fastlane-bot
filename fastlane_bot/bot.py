@@ -55,7 +55,6 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
-import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,
@@ -63,11 +62,10 @@ from fastlane_bot.helpers import (
     TradeInstruction,
     Univ3Calculator,
     add_wrap_or_unwrap_trades_to_route,
-    split_carbon_trades
+    split_carbon_trades,
+    maximize_last_trade_per_tkn
 )
-from fastlane_bot.helpers.routehandler import maximize_last_trade_per_tkn
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
-from fastlane_bot.tools.optimizer import CPCArbOptimizer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
@@ -77,35 +75,43 @@ from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .utils import num_format, log_format, num_format_float
+from .utils import num_format
 
 
 @dataclass
-class CarbonBotBase:
+class CarbonBot:
     """
     Base class for the business logic of the bot.
 
     Attributes
     ----------
-    db: DatabaseManager
+    db: QueryInterface
         the database manager.
-    TxRouteHandlerClass
-        ditto (default: TxRouteHandler).
-    TxHelpersClass:
-        ditto (default: TxHelpers).
-
+    tx_helpers: TxHelpers
+        the tx-helpers utility.
     """
 
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
     db: QueryInterface = field(init=False)
-    TxRouteHandlerClass: any = None
-    TxHelpersClass: any = None
+    tx_helpers: TxHelpers = None
     ConfigObj: Config = None
-    usd_gas_limit: int = 150
-    min_profit: int = 60
-    polling_interval: int = None
+
+    SCALING_FACTOR = 0.999
+
+    ARB_FINDER = {
+        "single": FindArbitrageSinglePairwise,
+        "multi": FindArbitrageMultiPairwise,
+        "triangle": ArbitrageFinderTriangleSingle,
+        "multi_triangle": ArbitrageFinderTriangleMulti,
+        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
+        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
+        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
+    }
+
+    class NoArbAvailable(Exception):
+        pass
 
     def __post_init__(self):
         """
@@ -115,38 +121,11 @@ class CarbonBotBase:
         if self.ConfigObj is None:
             self.ConfigObj = Config()
 
-        assert (
-            self.polling_interval is None
-        ), "polling_interval is now a parameter to run"
-
-        if self.TxRouteHandlerClass is None:
-            self.TxRouteHandlerClass = TxRouteHandler
-
-        if self.TxHelpersClass is None:
-            self.TxHelpersClass = TxHelpers(cfg=self.ConfigObj)
+        if self.tx_helpers is None:
+            self.tx_helpers = TxHelpers(cfg=self.ConfigObj)
 
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
-
-    @property
-    def C(self) -> Any:
-        """
-        Convenience method self.ConfigObj
-        """
-        return self.ConfigObj
-
-    @staticmethod
-    def versions():
-        """
-        Returns the versions of the module and its Carbon dependencies.
-        """
-        s = [f"fastlane_bot v{__VERSION__} ({__DATE__})"]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPC)]
-        s += ["carbon v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer)]
-        return s
-
-    UDTYPE_FROM_CONTRACTS = "from_contracts"
-    UDTYPE_FROM_EVENTS = "from_events"
 
     def get_curves(self) -> CPCContainer:
         """
@@ -171,13 +150,9 @@ class CarbonBotBase:
                     if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
                 ]
             except NotImplementedError as e:
-                # Currently not supporting Solidly V2 Stable pools. This will be removed when support is added, but for now the error message is suppressed.
-                if "Stable Solidly V2" in str(e):
-                    continue
-                else:
-                    self.ConfigObj.logger.error(
-                        f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
-                    )
+                self.ConfigObj.logger.error(
+                    f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
+                )
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
@@ -187,10 +162,9 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX INVALID CURVE {p} [{e}]\n"
                 )
             except TypeError as e:
-                if fastlane_bot.__version__ not in ["3.0.31", "3.0.32"]:
-                    self.ConfigObj.logger.error(
-                        f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
-                    )
+                self.ConfigObj.logger.error(
+                    f"[bot.get_curves] MUST FIX DECIMAL ERROR CURVE {p} [{e}]\n"
+                )
             except p.DoubleInvalidCurveError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX DOUBLE INVALID CURVE {p} [{e}]\n"
@@ -200,44 +174,12 @@ class CarbonBotBase:
                     f"[bot.get_curves] MUST FIX DECIMALS MISSING [{e}]\n"
                 )
             except Exception as e:
-                # TODO: unexpected Exception should possible raise
+                # TODO: unexpected exception should possibly be raised
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] MUST FIX UNEXPECTED ERROR converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
 
         return CPCContainer(curves)
-
-
-@dataclass
-class CarbonBot(CarbonBotBase):
-    """
-    A class that handles the business logic of the bot.
-
-    MAIN ENTRY POINTS
-    :run:               Runs the bot.
-    """
-
-    RUN_POLLING_INTERVAL = 60  # default polling interval in seconds
-    SCALING_FACTOR = 0.999
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
-    BNT_ETH_CID = "0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b"
-
-    ARB_FINDER = {
-        "single": FindArbitrageSinglePairwise,
-        "multi": FindArbitrageMultiPairwise,
-        "triangle": ArbitrageFinderTriangleSingle,
-        "multi_triangle": ArbitrageFinderTriangleMulti,
-        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
-        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
-        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
-    }
-
-    def __post_init__(self):
-        super().__post_init__()
-
-    class NoArbAvailable(Exception):
-        pass
 
     def _simple_ordering_by_src_token(
         self, best_trade_instructions_dic, best_src_token
@@ -325,20 +267,6 @@ class CarbonBot(CarbonBotBase):
             lst.append(ti)
         return lst
 
-    @dataclass
-    class ArbCandidate:
-        """
-        The arbitrage candidates.
-        """
-
-        result: any
-        constains_carbon: bool = None
-        best_profit_usd: float = None
-
-        @property
-        def r(self):
-            return self.result
-
     def _get_deadline(self, block_number) -> int:
         """
         Gets the deadline for a transaction.
@@ -367,15 +295,16 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str,
         randomizer: int
     ) -> dict:
-        random_mode = self.AO_CANDIDATES if randomizer else None
-        arb_finder = self._get_arb_finder(arb_mode)(
+        arb_finder = self._get_arb_finder(arb_mode)
+        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
+        finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
             CCm=CCm,
             mode="bothin",
             result=random_mode,
             ConfigObj=self.ConfigObj,
         )
-        return {"finder": arb_finder, "r": arb_finder.find_arbitrage()}
+        return {"finder": finder, "r": finder.find_arbitrage()}
 
     def _run(
         self,
@@ -385,7 +314,9 @@ class CarbonBot(CarbonBotBase):
         arb_mode: str,
         randomizer: int,
         data_validator=False,
+        logging_path: str = None,
         replay_mode: bool = False,
+        replay_from_block: int = None,
     ):
         """
         Runs the bot.
@@ -402,6 +333,12 @@ class CarbonBot(CarbonBotBase):
             randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         data_validator: bool
             If extra data validation should be performed
+        logging_path: str
+            the logging path (default: None)
+        replay_mode: bool
+            whether to run in replay mode (default: False)
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         """
         arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
@@ -435,16 +372,16 @@ class CarbonBot(CarbonBotBase):
                 )
                 return
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r)
+        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
             tx_details = json.dumps(tx_receipt, indent=4) if tx_receipt else "no receipt"
             self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {tx_status}")
 
-            if self.logging_path:
+            if logging_path:
                 filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                with open(os.path.join(self.logging_path, filename), "w") as f:
+                with open(os.path.join(logging_path, filename), "w") as f:
                     f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
     def validate_optimizer_trades(self, arb_opp, arb_finder):
@@ -559,16 +496,8 @@ class CarbonBot(CarbonBotBase):
             }
 
             fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
-            if fetched_pool is None:
-                self.ConfigObj.logger.error(
-                    f"[bot.validate_pool_data] Could not fetch pool data for {pool_cid}"
-                )
-
-            ex_name = fetched_pool["exchange_name"]
-            self._validate_pool_data_logging(pool_cid, fetched_pool)
-
-            if ex_name == "bancor_v3":
-                self._validate_pool_data_logging(pool_cid, fetched_pool)
+            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_cid: {pool_cid}")
+            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] fetched_pool: {fetched_pool}")
 
             if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
                 if (
@@ -604,7 +533,7 @@ class CarbonBot(CarbonBotBase):
                 or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]
             ):
                 self.ConfigObj.logger.debug(
-                    f"[bot.validate_pool_data] {ex_name} pool not up to date, updating and restarting."
+                    f"[bot.validate_pool_data] {fetched_pool['exchange_name']} pool not up to date, updating and restarting."
                 )
                 return False
 
@@ -620,35 +549,10 @@ class CarbonBot(CarbonBotBase):
             A randomly selected arb opportunity.
 
         """
-        if arb_opps is None:
-            return None
-        if len(arb_opps) > 0:
-            arb_opps.sort(key=lambda x: x[0], reverse=True)
-            randomizer = min(max(randomizer, 1), len(arb_opps))
-            top_n_arbs = arb_opps[:randomizer]
-            return random.choice(top_n_arbs)
-        else:
-            return None
-
-    def _validate_pool_data_logging(
-        self, pool_cid: str, fetched_pool: Dict[str, Any]
-    ) -> None:
-        """
-        Logs the pool data validation.
-
-        Parameters
-        ----------
-        pool_cid: str
-            The pool CID.
-        fetched_pool: dict
-            The fetched pool data.
-
-        """
-        self.ConfigObj.logger.debug(f"[bot.py validate] pool_cid: {pool_cid}")
-        self.ConfigObj.logger.debug(
-            f"[bot.py validate] fetched_pool: {fetched_pool['exchange_name']}"
-        )
-        self.ConfigObj.logger.debug(f"[bot.py validate] fetched_pool: {fetched_pool}")
+        arb_opps.sort(key=lambda x: x[0], reverse=True)
+        randomizer = min(max(randomizer, 1), len(arb_opps))
+        top_n_arbs = arb_opps[:randomizer]
+        return random.choice(top_n_arbs)
 
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
@@ -709,7 +613,7 @@ class CarbonBot(CarbonBotBase):
         Tuple[Decimal, Decimal, Decimal]
             The updated best_profit, flt_per_bnt, and profit_usd.
         """
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
         sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
         best_profit_fl_token = best_profit
@@ -743,20 +647,20 @@ class CarbonBot(CarbonBotBase):
             usd_gastkn_conversion_rate = Decimal("NaN")
 
         best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit_usd] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
         return best_profit_fl_token, best_profit_gastkn, best_profit_usd
 
     @staticmethod
-    def update_log_dict(
+    def calculate_arb(
         arb_mode: str,
         best_profit_gastkn: Decimal,
         best_profit_usd: Decimal,
         flashloan_tkn_profit: Decimal,
         calculated_trade_instructions: List[Any],
         fl_token: str,
-    ) -> Dict[str, Any]:
+    ) -> dict:
         """
-        Update the log dictionary.
+        Calculate the arbitrage.
 
         Parameters
         ----------
@@ -776,45 +680,40 @@ class CarbonBot(CarbonBotBase):
         Returns
         -------
         dict
-            The updated log dictionary.
+            The arbitrage.
         """
-        flashloans = [
-            {
-                "token": fl_token,
-                "amount": num_format_float(calculated_trade_instructions[0].amtin),
-                "profit": num_format_float(flashloan_tkn_profit),
-            }
-        ]
-        log_dict = {
-            "type": arb_mode,
-            "profit_gas_token": num_format_float(best_profit_gastkn),
-            "profit_usd": num_format_float(best_profit_usd),
-            "flashloan": flashloans,
-            "trades": [],
-        }
 
-        for idx, trade in enumerate(calculated_trade_instructions):
-            tknin = {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
-            tknout = {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
-            log_dict["trades"].append(
+        return {
+            "type": arb_mode,
+            "profit_gas_token": num_format(best_profit_gastkn),
+            "profit_usd": num_format(best_profit_usd),
+            "flashloan": [
+                {
+                    "token": fl_token,
+                    "amount": num_format(calculated_trade_instructions[0].amtin),
+                    "profit": num_format(flashloan_tkn_profit)
+                }
+            ],
+            "trades": [
                 {
                     "trade_index": idx,
                     "exchange": trade.exchange_name,
-                    "tkn_in": tknin,
-                    "amount_in": num_format_float(trade.amtin),
-                    "tkn_out": tknout,
-                    "amt_out": num_format_float(trade.amtout),
-                    "cid0": trade.cid[-10:],
+                    "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
+                    "amount_in": num_format(trade.amtin),
+                    "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
+                    "amt_out": num_format(trade.amtout),
+                    "cid0": trade.cid[-10:]
                 }
-            )
-
-        return log_dict
+                for idx, trade in enumerate(calculated_trade_instructions)
+            ]
+        }
 
     def _handle_trade_instructions(
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any
+        r: Any,
+        replay_from_block: int = None
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
         Creates and executes the trade instructions
@@ -830,6 +729,8 @@ class CarbonBot(CarbonBotBase):
             The arbitrage mode.
         r: Any
             The result.
+        replay_from_block: int
+            the block number to start replaying from (default: None)
 
         Returns
         -------
@@ -863,7 +764,7 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Create the tx route handler
-        tx_route_handler = self.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
 
@@ -900,18 +801,18 @@ class CarbonBot(CarbonBotBase):
             calculated_trade_instructions
         )
 
-        # Use helper function to calculate profit
+        # Calculate the best profit
         best_profit_fl_token, best_profit_gastkn, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
-        # Log the best trade instructions
-        self.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit_gastkn  # The log id
+        # Log the best profit
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
         )
 
-        # Use helper function to update the log dict
-        log_dict = self.update_log_dict(
+        # Calculate the arbitrage
+        arb = self.calculate_arb(
             arb_mode,
             best_profit_gastkn,
             best_profit_usd,
@@ -920,8 +821,10 @@ class CarbonBot(CarbonBotBase):
             fl_token_symbol,
         )
 
-        # Log the log dict
-        self.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
+        # Log the arbitrage
+        self.ConfigObj.logger.info(
+            f"[bot._handle_trade_instructions] calculated arb: {arb}"
+        )
 
         # Check if the best profit is greater than the minimum profit
         if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
@@ -930,13 +833,9 @@ class CarbonBot(CarbonBotBase):
             )
             return None, None
 
-        # Get the flashloan amount and token address
-        flashloan_token_address = fl_token
-
-        # Log the flashloan amount and token address
-        self.handle_logging_for_trade_instructions(
-            3,  # The log id
-            flashloan_amount=flashloan_amount_wei,
+        # Log the flashloan amount
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Flashloan amount: {flashloan_amount_wei}"
         )
 
         # Split Carbon Orders
@@ -951,7 +850,7 @@ class CarbonBot(CarbonBotBase):
         )
 
         # Get the deadline
-        deadline = self._get_deadline(self.replay_from_block)
+        deadline = self._get_deadline(replay_from_block)
 
         # Get the route struct
         route_struct = [
@@ -968,178 +867,31 @@ class CarbonBot(CarbonBotBase):
             trade_instructions=split_calculated_trade_instructions,
         )
 
-        route_struct_maximized = maximize_last_trade_per_tkn(route_struct=route_struct_processed)
+        maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
-        # Log the route_struct
-        self.handle_logging_for_trade_instructions(
-            4,  # The log id
-            flashloan_amount=flashloan_amount_wei,
-            flashloan_token_symbol=fl_token_symbol,
-            flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct_maximized,
-            best_trade_instructions_dic=best_trade_instructions_dic,
+        # Log the flashloan details
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Flashloan token address: {fl_token}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Route Struct: \n {route_struct_processed}"
+        )
+        self.ConfigObj.logger.debug(
+            f"[bot._handle_trade_instructions] Trade Instructions: \n {best_trade_instructions_dic}"
         )
 
         # Validate and submit the transaction
-        return self.TxHelpersClass.validate_and_submit_transaction(
-            route_struct=route_struct_maximized,
+        return self.tx_helpers.validate_and_submit_transaction(
+            route_struct=route_struct_processed,
             src_amt=flashloan_amount_wei,
-            src_address=flashloan_token_address,
+            src_address=fl_token,
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
             flashloan_struct=flashloan_struct,
         )
-
-    def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
-        """
-        Handles logging for trade instructions based on log_id.
-
-        Parameters
-        ----------
-        log_id : int
-            The ID for log type.
-        **kwargs : dict
-            Additional parameters required for logging.
-
-        Returns
-        -------
-        None
-        """
-        log_actions = {
-            1: self.log_best_profit,
-            2: self.log_calculated_arb,
-            3: self.log_flashloan_amount,
-            4: self.log_flashloan_details,
-        }
-        log_action = log_actions.get(log_id)
-        if log_action:
-            log_action(**kwargs)
-
-    def log_best_profit(self, best_profit: Optional[float] = None):
-        """
-        Logs the best profit.
-
-        Parameters
-        ----------
-        best_profit : Optional[float], optional
-            The best profit, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_best_profit] Updated best_profit after calculating exact trade numbers: {num_format(best_profit)}"
-        )
-
-    def log_calculated_arb(self, log_dict: Optional[Dict] = None):
-        """
-        Logs the calculated arbitrage.
-
-        Parameters
-        ----------
-        log_dict : Optional[Dict], optional
-            The dictionary containing log data, by default None
-        """
-        self.ConfigObj.logger.info(
-            f"[bot.log_calculated_arb] {log_format(log_data=log_dict, log_name='calculated_arb')}"
-        )
-
-    def log_flashloan_amount(self, flashloan_amount: Optional[float] = None):
-        """
-        Logs the flashloan amount.
-
-        Parameters
-        ----------
-        flashloan_amount : Optional[float], optional
-            The flashloan amount, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_amount] Flashloan amount: {flashloan_amount}"
-        )
-
-    def log_flashloan_details(
-        self,
-        flashloan_amount: Optional[float] = None,
-        flashloan_token_address: Optional[str] = None,
-        flashloan_token_symbol: Optional[str] = None,
-        route_struct: Optional[List[Dict]] = None,
-        best_trade_instructions_dic: Optional[Dict] = None,
-    ):
-        """
-        Logs the details of flashloan.
-
-        Parameters
-        ----------
-        flashloan_amount : Optional[float], optional
-            The flashloan amount, by default None
-        flashloan_token_symbol : Optional[str], optional
-            The flashloan token symbol, by default None
-        flashloan_token_address : Optional[str], optional
-            The flashloan token address, by default None
-        route_struct : Optional[List[Dict]], optional
-            The route structure, by default None
-        best_trade_instructions_dic : Optional[Dict], optional
-            The dictionary containing the best trade instructions, by default None
-        """
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan of {flashloan_token_symbol}, amount: {flashloan_amount}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Flashloan token address: {flashloan_token_address}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Route Struct: \n {route_struct}"
-        )
-        self.ConfigObj.logger.debug(
-            f"[bot.log_flashloan_details] Trade Instructions: \n {best_trade_instructions_dic}"
-        )
-
-    def setup_polling_interval(self, polling_interval: int):
-        """
-        Setup the polling interval. If the polling interval is None, set it to RUN_POLLING_INTERVAL.
-        """
-        if self.polling_interval is None:
-            self.polling_interval = (
-                polling_interval
-                if polling_interval is not None
-                else self.RUN_POLLING_INTERVAL
-            )
-
-    def setup_flashloan_tokens(self, flashloan_tokens):
-        """
-        Setup the flashloan tokens. If flashloan_tokens is None, set it to RUN_FLASHLOAN_TOKENS.
-        """
-        return (
-            flashloan_tokens
-            if flashloan_tokens is not None
-            else self.RUN_FLASHLOAN_TOKENS
-        )
-
-    def setup_CCm(self, CCm: CPCContainer) -> CPCContainer:
-        """
-        Setup the CCm. If CCm is None, retrieve and filter curves.
-
-        Parameters
-        ----------
-        CCm: CPCContainer
-            The CPCContainer object
-
-        Returns
-        -------
-        CPCContainer
-            The filtered CPCContainer object
-        """
-        if CCm is None:
-            CCm = self.get_curves()
-            if self.ConfigObj.ARB_CONTRACT_VERSION < 10:
-                filter_out_weth = [
-                    x
-                    for x in CCm
-                    if (x.params.exchange in self.ConfigObj.CARBON_V1_FORKS)
-                    & (
-                        (x.params.tkny_addr == self.ConfigObj.WETH_ADDRESS)
-                        or (x.params.tknx_addr == self.ConfigObj.WETH_ADDRESS)
-                    )
-                ]
-                CCm = CPCContainer([x for x in CCm if x not in filter_out_weth])
-        return CCm
 
     def get_tokens_in_exchange(
         self,
@@ -1156,7 +908,6 @@ class CarbonBot(CarbonBotBase):
         *,
         flashloan_tokens: List[str] = None,
         CCm: CPCContainer = None,
-        polling_interval: int = None,
         arb_mode: str = None,
         run_data_validator: bool = False,
         randomizer: int = 0,
@@ -1173,8 +924,6 @@ class CarbonBot(CarbonBotBase):
             The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
         CCm: CPCContainer
             The complete market data container (optional; default: database via get_curves())
-        polling_interval: int
-            the polling interval in seconds (default: 60 via RUN_POLLING_INTERVAL)
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)
         run_data_validator: bool
@@ -1189,11 +938,10 @@ class CarbonBot(CarbonBotBase):
             the block number to start replaying from (default: None)
         """
 
-        self.setup_polling_interval(polling_interval)
-        flashloan_tokens = self.setup_flashloan_tokens(flashloan_tokens)
-        CCm = self.setup_CCm(CCm)
-        self.logging_path = logging_path
-        self.replay_from_block = replay_from_block
+        if flashloan_tokens is None:
+            flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
+        if CCm is None:
+            CCm = self.get_curves()
 
         try:
             self._run(
@@ -1202,7 +950,9 @@ class CarbonBot(CarbonBotBase):
                 arb_mode=arb_mode,
                 data_validator=run_data_validator,
                 randomizer=randomizer,
+                logging_path=logging_path,
                 replay_mode=replay_mode,
+                replay_from_block=replay_from_block,
             )
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.info(e)
