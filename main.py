@@ -94,7 +94,6 @@ def process_arguments(args):
         "increment_time": int,
         "increment_blocks": int,
         "pool_data_update_frequency": int,
-        "version_check_frequency": int,
         "self_fund": is_true,
         "read_only": is_true,
         "is_args_test": is_true,
@@ -227,7 +226,6 @@ def main(args: argparse.Namespace) -> None:
             increment_blocks: {args.increment_blocks}
             pool_data_update_frequency: {args.pool_data_update_frequency}
             prefix_path: {args.prefix_path}
-            version_check_frequency: {args.version_check_frequency}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
 
@@ -505,16 +503,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
                 params = [w3.to_hex(args.increment_blocks)]  # number of blocks
                 w3.provider.make_request(method="evm_increaseBlocks", params=params)
-            if (
-                    loop_idx % args.version_check_frequency == 0
-                    and args.version_check_frequency != -1
-                    and args.blockchain in "ethereum"
-            ):
-                # Check the version of the deployed arbitrage contract
-                mgr.cfg.provider.check_version_of_arb_contract()
-                mgr.cfg.logger.info(
-                    f"[main] Checking latest version of Arbitrage Contract. Found version: {mgr.cfg.ARB_CONTRACT_VERSION}"
-                )
+
             if (
                     loop_idx % args.pool_data_update_frequency == 0
                     and args.pool_data_update_frequency != -1
@@ -741,11 +730,6 @@ if __name__ == "__main__":
         "--prefix_path",
         default="",
         help="Prefixes the path to the write folders (used for deployment)",
-    )
-    parser.add_argument(
-        "--version_check_frequency",
-        default=1,
-        help="How frequently pool data should be updated, in main loop iterations.",
     )
     parser.add_argument(
         "--self_fund",
