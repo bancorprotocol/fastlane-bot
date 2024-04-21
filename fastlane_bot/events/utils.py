@@ -991,7 +991,6 @@ def handle_subsequent_iterations(
     arb_mode: str,
     bot: CarbonBot,
     flashloan_tokens: List[str],
-    polling_interval: int,
     randomizer: int,
     run_data_validator: bool,
     target_tokens: List[str] = None,
@@ -1013,8 +1012,6 @@ def handle_subsequent_iterations(
         The bot object.
     flashloan_tokens : List[str]
         A list of flashloan tokens.
-    polling_interval : int
-        The polling interval.
     randomizer : int
         The randomizer.
     run_data_validator : bool
@@ -1059,7 +1056,6 @@ def handle_subsequent_iterations(
 
         # Run the bot
         bot.run(
-            polling_interval=polling_interval,
             flashloan_tokens=flashloan_tokens,
             arb_mode=arb_mode,
             run_data_validator=run_data_validator,
@@ -1802,32 +1798,6 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     return target_token_addresses
 
 
-def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
-    """
-    Handle the replay from block flag.
-
-    Parameters
-    ----------
-    replay_from_block : int
-        The block number to replay from.
-
-    Returns
-    -------
-    polling_interval : int
-        The time interval at which the bot polls for new events.
-
-    """
-    if replay_from_block:
-        assert (
-            replay_from_block > 0
-        ), "The block number to replay from must be greater than 0."
-    reorg_delay = 0
-    use_cached_events = False
-    polling_interval = 0
-    return polling_interval, reorg_delay, use_cached_events
-
-
-# %%
 def get_current_block(
     last_block: int,
     mgr: Any,

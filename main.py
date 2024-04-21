@@ -50,7 +50,6 @@ from fastlane_bot.events.utils import (
     set_network_to_tenderly_if_replay,
     verify_min_bnt_is_respected,
     handle_target_token_addresses,
-    handle_replay_from_block,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
@@ -117,11 +116,11 @@ def main(args: argparse.Namespace) -> None:
     args = process_arguments(args)
 
     if args.replay_from_block or args.tenderly_fork_id:
-        (
-            args.polling_interval,
-            args.reorg_delay,
-            args.use_cached_events,
-        ) = handle_replay_from_block(args.replay_from_block)
+        if args.replay_from_block:
+            assert args.replay_from_block > 0, "The block number to replay from must be greater than 0."
+        args.polling_interval = 0
+        args.reorg_delay = 0
+        args.use_cached_events = False
 
     # Set config
     loglevel = get_loglevel(args.loglevel)
@@ -453,7 +452,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 arb_mode=args.arb_mode,
                 bot=bot,
                 flashloan_tokens=args.flashloan_tokens,
-                polling_interval=args.polling_interval,
                 randomizer=args.randomizer,
                 run_data_validator=args.run_data_validator,
                 target_tokens=args.target_tokens,
