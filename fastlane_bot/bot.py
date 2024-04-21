@@ -553,15 +553,10 @@ class CarbonBot:
             A randomly selected arb opportunity.
 
         """
-        if arb_opps is None:
-            return None
-        if len(arb_opps) > 0:
-            arb_opps.sort(key=lambda x: x[0], reverse=True)
-            randomizer = min(max(randomizer, 1), len(arb_opps))
-            top_n_arbs = arb_opps[:randomizer]
-            return random.choice(top_n_arbs)
-        else:
-            return None
+        arb_opps.sort(key=lambda x: x[0], reverse=True)
+        randomizer = min(max(randomizer, 1), len(arb_opps))
+        top_n_arbs = arb_opps[:randomizer]
+        return random.choice(top_n_arbs)
 
     @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
