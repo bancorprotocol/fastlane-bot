@@ -31,7 +31,6 @@ class BancorPolPool(Pool):
     ONE = 2**48
     contract: Contract = None
     BANCOR_POL_ADDRESS = "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46"
-    ARB_CONTRACT_VERSION = None
 
     @staticmethod
     def unique_key() -> str:

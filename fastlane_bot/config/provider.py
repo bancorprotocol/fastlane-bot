@@ -77,17 +77,8 @@ class ConfigProvider(ConfigBase):
 
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(**kwargs)
-        self.ARB_CONTRACT_VERSION = None
         self.BANCOR_ARBITRAGE_CONTRACT = None
         self.network = network
-
-    def check_version_of_arb_contract(self):
-        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
-            try:
-                self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-            except Exception as e:
-                # Failed to get latest version of arbitrage contract
-                print(f"Failed to get latest version of arbitrage contract due to exception: {e}")
 
 class _ConfigProviderAlchemy(ConfigProvider):
     """
@@ -124,7 +115,6 @@ class _ConfigProviderAlchemy(ConfigProvider):
                 abi=GAS_ORACLE_ABI,
             )
 
-        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
@@ -163,7 +153,6 @@ class _ConfigProviderTenderly(ConfigProvider):
                 abi=GAS_ORACLE_ABI,
             )
 
-        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
         self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
