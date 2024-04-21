@@ -192,7 +192,9 @@ class TxHelpers:
                 "params": [{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10)}]
             }
         )
-        return loads(response.text)["result"]
+        text = loads(response.text)
+        assert "result" in text, dumps(text, indent=4)
+        return text["result"]
 
     def _wait_for_transaction_receipt(self, tx_hash: str) -> Optional[dict]:
         try:
