@@ -125,8 +125,8 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
+flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "single"
@@ -159,36 +159,29 @@ def test_test_tokens_and_combos():
     
     # +
     arb_finder = bot._get_arb_finder("single")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
+    all_tokens, combos = finder.find_arbitrage()
     
     assert type(all_tokens) == set, f"[TestSingleMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[TestSingleMode] combos is wrong data type. Expected list, found: {type(combos)}"
     assert len(all_tokens) > 100, f"[TestSingleMode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
     assert len(combos) > 1000, f"[TestSingleMode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
-    # -
     
-    # ### Test_Single_Arb_Finder_vs_run
-    
-    # +
-    run_full = bot._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode)["r"]
     arb_finder = bot._get_arb_finder("single")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
-    
-    multi_carbon_count = 0
     
     for arb in r:
         (
@@ -198,12 +191,7 @@ def test_test_tokens_and_combos():
                 best_src_token,
                 best_trade_instructions,
             ) = arb
-        if len(best_trade_instructions_dic) > 2:
-            multi_carbon_count += 1
+        assert len(best_trade_instructions_dic) <= 2, "[TestSingleMode] Expected arbs without multiple Carbon curves"
     
-    assert multi_carbon_count == 0, f"[TestSingleMode] Expected arbs without multiple Carbon curves, but found {len(multi_carbon_count)}"
     assert len(r) >= 20, f"[TestSingleMode] Expected at least 20 arbs, found {len(r)}"
-    assert len(r) == len(run_full), f"[TestSingleMode] Expected arbs from .find_arbitrage - {len(r)} - to match _run - {len(run_full)}"
     # -
-    
-    

@@ -1,9 +1,16 @@
 """
-Helpers for the Fastlane project.
+Defines the ``TradeInstruction`` class.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+TODO: check what this class actually does; in the docstring it says
+_A class that handles the conversion of token decimals for the bot._
+which does not seem to be the case.
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.2"
 __DATE__="02/May/2023"
 
@@ -18,6 +25,8 @@ class TradeInstruction:
     """
     A class that handles the conversion of token decimals for the bot.
 
+    TODO: doc string not in line with code
+    
     Parameters
     ----------
     cid: str

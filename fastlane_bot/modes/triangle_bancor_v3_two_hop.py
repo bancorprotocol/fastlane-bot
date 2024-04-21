@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Bancor V3 triangular arbitrage finder mode
+Defines the Bancor V3 triangular arbitrage finder class
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import math
 from typing import Union, List, Tuple, Any, Iterable

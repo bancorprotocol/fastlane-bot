@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the manager class for pools. This class is responsible for handling pools and updating their state.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import List, Dict, Any, Callable, Optional
 
@@ -14,6 +17,7 @@ from fastlane_bot import Config
 from fastlane_bot.events.interface import Pool
 from fastlane_bot.events.managers.base import BaseManager
 from fastlane_bot.events.pools import pool_factory
+from fastlane_bot.events.pools.utils import get_pool_cid
 
 
 class PoolManager(BaseManager):
@@ -282,11 +286,7 @@ class PoolManager(BaseManager):
             pool_info.update(other_args)
 
         # Update cid if necessary
-        unique_id = pool_info["descr"] if pool_info['exchange_name'] not in self.cfg.CARBON_V1_FORKS else (
-            f"{pool_info['exchange_name']} {pool_info['strategy_id']} {pool_info['fee']}"
-        )
-        pool_info["cid"] = self.pool_cid_from_descr(self.web3, unique_id)
-
+        pool_info["cid"] = get_pool_cid(pool_info, self.cfg.CARBON_V1_FORKS)
         # Add pool to exchange if necessary
         pool = self.get_or_init_pool(pool_info)
         assert pool, f"Pool not found in {exchange_name} pools"

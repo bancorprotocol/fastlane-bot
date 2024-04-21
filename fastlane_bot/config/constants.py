@@ -1,8 +1,14 @@
 """
-This file constains the constants used in the fastlane_bot package.
+Hosts a number of constants used throughout the project.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT License.
+TODO: this seems to be a pretty small and random collection of constants. Either
+many more should move here, or they should move elsewhere (note that they probably
+would feel right at home in the Config class).
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 FLASHLOAN_FEE_MAP = {
@@ -20,6 +26,8 @@ AGNI_V3_NAME = "agni_v3"
 FUSIONX_V3_NAME = "fusionx_v3"
 CLEOPATRA_V3_NAME = "cleopatra_v3"
 CARBON_V1_NAME = "carbon_v1"
-CARBON_V1_FORK1_NAME = "altered_carbon"
 VELOCIMETER_V2_NAME = "velocimeter_v2"
 SOLIDLY_V2_NAME = "solidly_v2"
+ECHODEX_V3_NAME = "echodex_v3"
+SECTA_V3_NAME = "secta_v3"
+METAVAULT_V3_NAME = "metavault_v3"

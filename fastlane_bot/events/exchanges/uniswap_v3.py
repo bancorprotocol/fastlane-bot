@@ -1,16 +1,22 @@
-# coding=utf-8
 """
-Contains the exchange class for BancorV3. This class is responsible for handling BancorV3 events and updating the state of the pools.
+Contains the exchange class for UniswapV3. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for handling UniswapV3 events and updating the state of the pools.
+
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
-from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME
+from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
 from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
@@ -30,7 +36,7 @@ class UniswapV3(Exchange):
         self.pools[pool.state["address"]] = pool
 
     def get_abi(self):
-        return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
+        return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
 
     @property
     def get_factory_abi(self):

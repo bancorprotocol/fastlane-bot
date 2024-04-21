@@ -1,5 +1,12 @@
 """
-Fastlane bot configuration object -- selector constants
+Selector constants
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 NETWORK_ETHEREUM = "ethereum"
@@ -10,6 +17,7 @@ NETWORK_ARBITRUM = "arbitrum_one"
 NETWORK_OPTIMISM = "optimism"
 NETWORK_CANTO = "canto"
 NETWORK_FANTOM = "fantom"
+NETWORK_LINEA = "linea"
 NETWORK_MANTLE = "mantle"
 NETWORK_SCROLL = "scroll"
 NETWORK_BSC = "binance_smart_chain"

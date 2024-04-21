@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Multi-pairwise arbitrage finder mode
+Defines the Multi-pairwise arbitrage finder class for Bancor POL
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import List, Any, Tuple, Union, Hashable
 
@@ -17,7 +20,7 @@ from fastlane_bot.tools.cpc import T
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
     """
-    Multi-pairwise arbitrage finder mode.
+    Multi-pairwise arbitrage finder mode for Bancor POL.
     """
 
     arb_mode = "multi_pairwise_pol"

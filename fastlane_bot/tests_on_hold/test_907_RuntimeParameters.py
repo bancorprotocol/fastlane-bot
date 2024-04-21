@@ -48,7 +48,6 @@ def mock_args():
             self.pool_data_update_frequency = -1
             self.use_specific_exchange_for_target_tokens = None
             self.prefix_path = ""
-            self.version_check_frequency = 1
             self.self_fund = 'False'
             self.read_only = 'True'
             self.is_args_test = 'True'

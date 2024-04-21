@@ -1,9 +1,14 @@
-# coding=utf-8
 """
-Contains the factory class for exchanges. This class is responsible for creating exchanges.
+Contains the factory class for exchanges. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for creating exchanges.
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import Dict, Any
 

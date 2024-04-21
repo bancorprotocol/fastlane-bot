@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Single pairwise arbitrage finder mode
+Defines the Single pairwise arbitrage finder class
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from typing import List, Any, Tuple, Union
 

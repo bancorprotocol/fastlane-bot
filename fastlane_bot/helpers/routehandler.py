@@ -1,8 +1,17 @@
 """
 Route handler for the Fastlane project.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+Main classes defined here are
+
+- ``RouteStruct``: represents a single trade route
+- ``TxRouteHandler``: converts trade instructions from the optimizer into routes
+
+It also defines a few helper function that should not be relied upon by external modules,
+even if they happen to be exported.
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.1.1"
 __DATE__ = "02/May/2023"
@@ -19,7 +28,8 @@ import pandas as pd
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from ..tools.cpc import T
-from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, ETHEREUM
+from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
+    ETHEREUM, METAVAULT_V3_NAME
 
 
 @dataclass
@@ -58,15 +68,10 @@ class RouteStruct:
     customData: bytes
 
 
-def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]):
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
-
     :param route_struct: the route struct object
-
-    Returns:
-    List[RouteStruct] the route struct object with the sourceAmount adjusted to 0 for each last-trade per token.
-
     """
 
     tkns_traded = [route_struct[0]["sourceToken"]]
@@ -84,8 +89,6 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict
             else:
                 route_struct[idx].sourceAmount = 0
                 tkns_traded.append(trade.sourceToken)
-
-    return route_struct
 
 
 @dataclass
@@ -111,7 +114,7 @@ class TxRouteHandler:
         if not self.trade_instructions:
             raise ValueError("No trade instructions found.")
         if len(self.trade_instructions) < 2:
-            raise ValueError("Trade instructions must be greater than 1.")
+            raise ValueError("Length of trade instructions must be greater than 1.")
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
 
@@ -234,7 +237,7 @@ class TxRouteHandler:
 
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
             assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
-            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME]:
+            if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME, METAVAULT_V3_NAME]:
                 return '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
                 return '0x0100000000000000000000000000000000000000000000000000000000000000'
@@ -1475,6 +1478,8 @@ class TxRouteHandler:
     def _cid_to_pool(self, cid: str, db: any) -> Pool:
         return db.get_pool(cid=cid)
 
+# TODO: Those functions should probably be private; also -- are they needed at
+# all? Most of them seem to be extremely trivial
 
 def mulUp(a: Decimal, b: Decimal) -> Decimal:
     return a * b

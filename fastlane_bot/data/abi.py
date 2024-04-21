@@ -1,8 +1,19 @@
 """
-ABI's for the contracts used in the FastLane project
+ABI's for the EVM contracts interfaced
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+Contains the following ABI's:
+
+- ``FAST_LANE_CONTRACT_ABI``: FastLane arbitrage contract
+- ``ERC20_ABI``: generic ERC20 token contract
+- ``SUSHISWAP_FACTORY_ABI``: Sushiswap factory contract
+- ``SUSHISWAP_ROUTER_ABI``: Sushiswap router contract
+- ``SUSHISWAP_POOLS_ABI``: Sushiswap pools contract
+- other ABIs of exchanges we support
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 FAST_LANE_CONTRACT_ABI = [
@@ -26,13 +37,6 @@ FAST_LANE_CONTRACT_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"components": [{"internalType": "uint32", "name": "percentagePPM", "type": "uint32"}, {"internalType": "uint256", "name": "maxAmount", "type": "uint256"}], "internalType": "struct BancorArbitrage.Rewards", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -151,13 +155,6 @@ CARBON_CONTROLLER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -242,6 +239,40 @@ CLEOPATRA_V2_FACTORY_ABI = [
         "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
     }
 ]
+
+LYNEX_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "bool", "name": "_stable", "type": "bool"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
+NILE_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "pairFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "_pool", "type": "address"}],
+        "outputs": [{"internalType": "uint256", "name": "fee", "type": "uint256"}]
+    }
+]
+
+PANCAKESWAP_V2_FACTORY_ABI = [{"inputs":[{"internalType":"address","name":"_feeToSetter","type":"address"}],"payable":False,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"token0","type":"address"},{"indexed":True,"internalType":"address","name":"token1","type":"address"},{"indexed":False,"internalType":"address","name":"pair","type":"address"},{"indexed":False,"internalType":"uint256","name":"","type":"uint256"}],"name":"PairCreated","type":"event"},{"constant":True,"inputs":[],"name":"INIT_CODE_PAIR_HASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"allPairs","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"allPairsLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"}],"name":"createPair","outputs":[{"internalType":"address","name":"pair","type":"address"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"feeTo","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"feeToSetter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"getPair","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"_feeTo","type":"address"}],"name":"setFeeTo","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"_feeToSetter","type":"address"}],"name":"setFeeToSetter","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"}]
 
 UNISWAP_V2_POOL_ABI = [
     {
@@ -453,13 +484,6 @@ BANCOR_V2_CONVERTER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract IERC20[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -478,13 +502,6 @@ BANCOR_V3_NETWORK_ABI = [
     },
     {
         "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    },
-    {
-        "type": "function",
         "name": "withdrawPOL",
         "stateMutability": "nonpayable",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
@@ -499,13 +516,6 @@ BANCOR_V3_NETWORK_SETTINGS = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -523,13 +533,6 @@ BANCOR_V3_NETWORK_INFO_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}], "internalType": "struct TradingLiquidity", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -565,13 +568,6 @@ BANCOR_V3_POOL_COLLECTION_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -601,13 +597,6 @@ BANCOR_POL_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "internalType": "struct ICarbonPOL.Price", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 

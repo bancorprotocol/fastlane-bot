@@ -1,6 +1,17 @@
 """
-Fastlane bot configuration object -- main object
+Main configuration and context object
+
+Defines the `Config` class which is the central source of truth for configuration
+and other context of the Fastlane bot.
+
+TODO: rewrite class doc strings in the appropriate format
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 
 __VERSION__ = "1.0"
 __DATE__ = "03/May 2023"
@@ -24,6 +35,8 @@ if TENDERLY_FORK_ID is None:
 class Config():
     """
     Fastlane bot configuration object
+    
+    NOTE: this class should be instantiated using the `new` classmethod, not directly.
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__

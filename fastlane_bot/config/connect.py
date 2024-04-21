@@ -1,16 +1,19 @@
 """
 Networks module for fastlane - used to interact with the blockchain.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+TODO: what does it do exactly and how is it used? (TODO-MIKE or TODO-KEVIN)
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
-
-
 from abc import ABCMeta, ABC
 
 from eth_typing import HexStr
 from hexbytes import HexBytes
 from web3 import Web3, AsyncWeb3
+from web3.middleware import geth_poa_middleware
 from web3.types import TxReceipt
 
 import os
@@ -25,8 +28,6 @@ logger = logging.getLogger(__name__)
 # *******************************************************************************************
 # Singleton
 # *******************************************************************************************
-
-
 class Singleton(ABCMeta):
     """
     Singleton metaclass that enables the creation of a singleton object, as seen in this post:
@@ -43,8 +44,6 @@ class Singleton(ABCMeta):
 # *******************************************************************************************
 # Base Network
 # *******************************************************************************************
-
-
 class NetworkBase(ABC, metaclass=Singleton):
     """
     Base class for all networks - this is a singleton class that is used to interact with the blockchain
@@ -77,6 +76,9 @@ class NetworkBase(ABC, metaclass=Singleton):
         self.nonce = nonce
 
 
+# *******************************************************************************************
+# Ethereum Network
+# *******************************************************************************************
 class EthereumNetwork(NetworkBase):
     """
     Ethereum network class
@@ -155,7 +157,7 @@ class EthereumNetwork(NetworkBase):
         """
         self.nonce += 1
 
-    def connect_network(self):
+    def connect_network(self, inject_poa_middleware):
         """
         Connect to the network
         """
@@ -166,6 +168,10 @@ class EthereumNetwork(NetworkBase):
 
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
+
+        if inject_poa_middleware:
+            self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+            self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
 
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

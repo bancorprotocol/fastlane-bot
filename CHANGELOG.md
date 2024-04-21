@@ -2,22 +2,147 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.32...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.8...HEAD)
+
+- WEB3\_ALCHEMY\_BASE, WEB3\_FANTOM and WEB3\_MANTLE are missing in the test-suite configuration [\#520](https://github.com/bancorprotocol/fastlane-bot/issues/520)
+- Wrong fee resolution used for Solidly forks [\#403](https://github.com/bancorprotocol/fastlane-bot/issues/403)
+
+## [v3.1.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.8) (2024-04-13)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.7...v3.1.8)
+
+- Transaction Creation [\#428](https://github.com/bancorprotocol/fastlane-bot/issues/428)
+
+Merged pull requests
+
+- github action support for testing more networks [\#536](https://github.com/bancorprotocol/fastlane-bot/pull/536) ([zavelevsky](https://github.com/zavelevsky))
+
+## [v3.1.7](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.7) (2024-04-11)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.6...v3.1.7)
+
+- supernova not found in exchange [\#539](https://github.com/bancorprotocol/fastlane-bot/issues/539)
+- Transactions occasionally revert with error-message `Too little received` [\#383](https://github.com/bancorprotocol/fastlane-bot/issues/383)
+- Hotfix - Fix native token address for Mantle [\#541](https://github.com/bancorprotocol/fastlane-bot/pull/541) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Remove unused code in `submithandler.py` [\#350](https://github.com/bancorprotocol/fastlane-bot/issues/350)
+
+Closed issues
+
+- `*args, **kwargs` -\> `argsf1, argsf2`  [\#493](https://github.com/bancorprotocol/fastlane-bot/issues/493)
+- Can get rid of the if '-' in cid [\#466](https://github.com/bancorprotocol/fastlane-bot/issues/466)
+
+## [v3.1.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.6) (2024-04-10)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.5...v3.1.6)
+
+Merged pull requests
+
+- Update fusionx details info [\#525](https://github.com/bancorprotocol/fastlane-bot/pull/525) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v3.1.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.5) (2024-04-09)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.4...v3.1.5)
+
+- Carbon strategies are duplicated from events [\#521](https://github.com/bancorprotocol/fastlane-bot/issues/521)
+
+- Add support for puffs\_penthouse uniswap\_v3 fork [\#524](https://github.com/bancorprotocol/fastlane-bot/pull/524) ([NIXBNT](https://github.com/NIXBNT))
+
+## [v3.1.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.4) (2024-04-08)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.3...v3.1.4)
+
+- GPU token external liquidity not found [\#515](https://github.com/bancorprotocol/fastlane-bot/issues/515)
+- Hotfix - Carbon strategies duplicated [\#522](https://github.com/bancorprotocol/fastlane-bot/pull/522) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+## [v3.1.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.3) (2024-04-04)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.2...v3.1.3)
+
+- gpu external sources added to event mapping [\#517](https://github.com/bancorprotocol/fastlane-bot/pull/517) ([NIXBNT](https://github.com/NIXBNT))
+
+Closed issues
+
+- All files should have doc strings [\#438](https://github.com/bancorprotocol/fastlane-bot/issues/438)
+
+## [v3.1.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.2) (2024-04-01)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.1...v3.1.2)
+
+Merged pull requests
+
+- Fix issue 509 [\#510](https://github.com/bancorprotocol/fastlane-bot/pull/510) ([barakman](https://github.com/barakman))
+
+## [v3.1.1](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.1) (2024-03-27)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.0.32...v3.1.1)
 
 - Cleopatra and Stratum exchanges not handled correctly [\#488](https://github.com/bancorprotocol/fastlane-bot/issues/488)
 - Test files under NBTest [\#448](https://github.com/bancorprotocol/fastlane-bot/issues/448)
 - Mantle gas pricing and tx formatting needs to be handled correctly [\#386](https://github.com/bancorprotocol/fastlane-bot/issues/386)
 - Incorrect Solidly Factory ABI used for scale & equalizer [\#372](https://github.com/bancorprotocol/fastlane-bot/issues/372)
+- Removed Factory address call for Solidly V2 pools [\#495](https://github.com/bancorprotocol/fastlane-bot/pull/495) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Fix for \_get\_layer\_one\_gas\_fee [\#494](https://github.com/bancorprotocol/fastlane-bot/pull/494) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Fix args kwargs usage in build transaction generic [\#492](https://github.com/bancorprotocol/fastlane-bot/pull/492) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- RC mantle bugfix for 'last\_updated\_block' key error [\#490](https://github.com/bancorprotocol/fastlane-bot/pull/490) ([mikewcasale](https://github.com/mikewcasale))
+- bugfix for get\_tokens\_and\_fee issues [\#485](https://github.com/bancorprotocol/fastlane-bot/pull/485) ([mikewcasale](https://github.com/mikewcasale))
+- Restore changes from self funding PR [\#484](https://github.com/bancorprotocol/fastlane-bot/pull/484) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Update static data mantle [\#483](https://github.com/bancorprotocol/fastlane-bot/pull/483) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Change Agni to Pancakeswap fork handling [\#471](https://github.com/bancorprotocol/fastlane-bot/pull/471) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Add missing import to txhelpers [\#452](https://github.com/bancorprotocol/fastlane-bot/pull/452) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Update l1 gas fee logic [\#433](https://github.com/bancorprotocol/fastlane-bot/pull/433) ([mikewcasale](https://github.com/mikewcasale))
+- Fix self funding [\#413](https://github.com/bancorprotocol/fastlane-bot/pull/413) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Fix fee resolution for several solidly forks [\#404](https://github.com/bancorprotocol/fastlane-bot/pull/404) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Bugfix custom rpc [\#388](https://github.com/bancorprotocol/fastlane-bot/pull/388) ([mikewcasale](https://github.com/mikewcasale))
+- Fix handling of Solidly Factory ABI for equalizer & scale [\#373](https://github.com/bancorprotocol/fastlane-bot/pull/373) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Add Support for multiple Carbon deployments per-chain [\#379](https://github.com/bancorprotocol/fastlane-bot/issues/379)
 - Add support for Fantom Network [\#369](https://github.com/bancorprotocol/fastlane-bot/issues/369)
 - python main.py --arb\_mode=b3\_two\_hop --alchemy\_max\_block\_fetch=200 --loglevel=INFO --backdate\_pools=False --polling\_interval=0 --reorg\_delay=0 --run\_data\_validator=False --limit\_bancor3\_flashloan\_tokens=True --randomizer=2 --default\_min\_profit\_gas\_token=0.01 --exchanges=carbon\_v1,bancor\_v3,uniswap\_v3,uniswap\_v2,sushiswap\_v2,balancer,pancakeswap\_v2,pancakeswap\_v3 --flashloan\_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA" [\#367](https://github.com/bancorprotocol/fastlane-bot/issues/367)
 - Minor optimization in multicaller [\#348](https://github.com/bancorprotocol/fastlane-bot/issues/348)
 - Add Handling of Flashloan Fee [\#346](https://github.com/bancorprotocol/fastlane-bot/issues/346)
+- support fusionx v3 on mantle [\#491](https://github.com/bancorprotocol/fastlane-bot/pull/491) ([NIXBNT](https://github.com/NIXBNT))
+- 379 support multiple carbon exchanges per chain [\#449](https://github.com/bancorprotocol/fastlane-bot/pull/449) ([mikewcasale](https://github.com/mikewcasale))
+- Add Exception to indicate when flashloans are not available on a blockchain [\#417](https://github.com/bancorprotocol/fastlane-bot/pull/417) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- 293 reorganize testing infrastructure [\#409](https://github.com/bancorprotocol/fastlane-bot/pull/409) ([mikewcasale](https://github.com/mikewcasale))
+- Update mantle static data [\#406](https://github.com/bancorprotocol/fastlane-bot/pull/406) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- 381 add ability to split native vs wrapped carbon orders [\#390](https://github.com/bancorprotocol/fastlane-bot/pull/390) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Adds support for Mantle blockchain [\#385](https://github.com/bancorprotocol/fastlane-bot/pull/385) ([NIXBNT](https://github.com/NIXBNT))
+- Adds Fantom Support [\#378](https://github.com/bancorprotocol/fastlane-bot/pull/378) ([mikewcasale](https://github.com/mikewcasale))
+- 326 fix production job alert spam time outs [\#328](https://github.com/bancorprotocol/fastlane-bot/pull/328) ([mikewcasale](https://github.com/mikewcasale))
 
 Closed issues
 
 - Fix rate-limit issue [\#375](https://github.com/bancorprotocol/fastlane-bot/issues/375)
+
+Merged pull requests
+
+- Update release-and-pypi-publish.yml [\#503](https://github.com/bancorprotocol/fastlane-bot/pull/503) ([zavelevsky](https://github.com/zavelevsky))
+- touch to trigger release [\#502](https://github.com/bancorprotocol/fastlane-bot/pull/502) ([zavelevsky](https://github.com/zavelevsky))
+- touch to trigger release [\#501](https://github.com/bancorprotocol/fastlane-bot/pull/501) ([zavelevsky](https://github.com/zavelevsky))
+- touch to trigger auto release [\#500](https://github.com/bancorprotocol/fastlane-bot/pull/500) ([zavelevsky](https://github.com/zavelevsky))
+- bumping minor version following mantle support [\#499](https://github.com/bancorprotocol/fastlane-bot/pull/499) ([zavelevsky](https://github.com/zavelevsky))
+- Remove the web3 middleware used for mantle interaction [\#496](https://github.com/bancorprotocol/fastlane-bot/pull/496) ([barakman](https://github.com/barakman))
+- Release candidate, mantle support and more [\#475](https://github.com/bancorprotocol/fastlane-bot/pull/475) ([zavelevsky](https://github.com/zavelevsky))
+- Adds support for Mantle. [\#473](https://github.com/bancorprotocol/fastlane-bot/pull/473) ([mikewcasale](https://github.com/mikewcasale))
+- Change default RPC provider for Mantle [\#470](https://github.com/bancorprotocol/fastlane-bot/pull/470) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Add strategy\_id to terraformer [\#451](https://github.com/bancorprotocol/fastlane-bot/pull/451) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Revert "Delete test\_061\_TestWETHConversion.py" [\#444](https://github.com/bancorprotocol/fastlane-bot/pull/444) ([sklbancor](https://github.com/sklbancor))
+- Add handling for specific Uni V3 exchanges on Mantle [\#436](https://github.com/bancorprotocol/fastlane-bot/pull/436) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Update NBTest\_070\_TestCarbonTradeSplitter.py [\#434](https://github.com/bancorprotocol/fastlane-bot/pull/434) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Revise the PR for issue 381 [\#431](https://github.com/bancorprotocol/fastlane-bot/pull/431) ([barakman](https://github.com/barakman))
+- Declare `async` some of the functions in class `BancorV3` [\#418](https://github.com/bancorprotocol/fastlane-bot/pull/418) ([barakman](https://github.com/barakman))
+- Add L1 gas fee calculation [\#414](https://github.com/bancorprotocol/fastlane-bot/pull/414) ([barakman](https://github.com/barakman))
+- Minor Cleanup [\#405](https://github.com/bancorprotocol/fastlane-bot/pull/405) ([sklbancor](https://github.com/sklbancor))
+- Release candidate - Fantom support [\#391](https://github.com/bancorprotocol/fastlane-bot/pull/391) ([zavelevsky](https://github.com/zavelevsky))
+- merge Develop into RC [\#387](https://github.com/bancorprotocol/fastlane-bot/pull/387) ([mikewcasale](https://github.com/mikewcasale))
+- Update Base static-pool-data [\#382](https://github.com/bancorprotocol/fastlane-bot/pull/382) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- Update main.py [\#380](https://github.com/bancorprotocol/fastlane-bot/pull/380) ([mikewcasale](https://github.com/mikewcasale))
+- Ensure that `usd_gastkn_conversion_rate` is always initialized [\#377](https://github.com/bancorprotocol/fastlane-bot/pull/377) ([barakman](https://github.com/barakman))
+- Remove unused code [\#368](https://github.com/bancorprotocol/fastlane-bot/pull/368) ([barakman](https://github.com/barakman))
+- Simplify and improve event-fetching [\#364](https://github.com/bancorprotocol/fastlane-bot/pull/364) ([barakman](https://github.com/barakman))
+- Creating documentation via Sphinx [\#358](https://github.com/bancorprotocol/fastlane-bot/pull/358) ([sklbancor](https://github.com/sklbancor))
+- 343 remove test stubs [\#344](https://github.com/bancorprotocol/fastlane-bot/pull/344) ([barakman](https://github.com/barakman))
 
 ## [v3.0.32](https://github.com/bancorprotocol/fastlane-bot/tree/v3.0.32) (2024-02-09)
 
