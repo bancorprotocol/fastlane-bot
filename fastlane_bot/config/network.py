@@ -226,21 +226,9 @@ class ConfigNetwork(ConfigBase):
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
     SHIBA_V2_NAME = "shiba_v2"
-    # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
-    AERODROME_V3_NAME = "aerodrome_v3"
-    ALIENBASE_V2_NAME = "alienbase_v2"
-    ALIENBASE_V3_NAME = "alienbase_v3"
-    BASESWAP_V2_NAME = "baseswap_v2"
-    BASESWAP_V3_NAME = "baseswap_v3"
-    SWAPBASED_V2_NAME = "swap_based_v2"
-    # SWAPBASED_V3_NAME = "swap_based_v3" # This uses Algebra DEX
-    SYNTHSWAP_V2_NAME = "synthswap_v2"
-    SYNTHSWAP_V3_NAME = "synthswap_v3"
-    SMARDEX_V2_NAME = "smardex_v2"
-    # SMARDEX_V3_NAME = "smardex_v3" # This uses Algebra DEX
-    VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
+    XFAI_V0_NAME = "xfai_v0"
 
     WRAP_UNWRAP_NAME = "wrap_or_unwrap"
 
@@ -397,6 +385,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
             self.AERODROME_V2_NAME: 12,
+            self.XFAI_V0_NAME: 13,
             self.CARBON_V1_NAME: 6,
         }
         for ex in self.UNI_V2_FORKS:
@@ -406,10 +395,12 @@ class ConfigNetwork(ConfigBase):
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
         for ex in self.SOLIDLY_V2_FORKS:
-            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
-                self.EXCHANGE_IDS[ex] = 11
-            else:
+            if ex in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
                 self.EXCHANGE_IDS[ex] = 12
+            elif ex == self.XFAI_V0_NAME:
+                self.EXCHANGE_IDS[ex] = 13
+            else:
+                self.EXCHANGE_IDS[ex] = 11
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 
