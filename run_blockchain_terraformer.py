@@ -716,7 +716,6 @@ def organize_pool_details_solidly_v2(
     :param web3: the async Web3 object
     returns: dict of pool information
     """
-    skip_pool = False
     if "pool" in pool_data or "pool" in pool_data["args"]:
         pool_address = pool_data["args"]["pool"]
     elif "pair" in pool_data or "pair" in pool_data["args"]:
@@ -727,15 +726,16 @@ def organize_pool_details_solidly_v2(
 
     last_updated_block = pool_data["blockNumber"]
 
-    stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+    if exchange == XFAI_V0_NAME:
+        stable_pool = False
+        tokens = [pool_data["args"]["token"], "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"] # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
+    else:
+        stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+        tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
+
     pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
     fee_str, fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))[0]
 
-
-    tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
-
-    if len(tokens) > 2:
-        return None
     token_info, pair, skip_pool = process_token_details(
         tokens=tokens, token_manager=token_manager, web3=web3
     )
