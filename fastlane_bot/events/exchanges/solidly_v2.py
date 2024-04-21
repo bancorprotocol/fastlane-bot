@@ -123,9 +123,8 @@ async def _get_fee_6(address: str, contract: Contract, factory_contract: Contrac
     return await factory_contract.caller.pairFee(address)
 
 async def _get_fee_7(address: str, contract: Contract, factory_contract: Contract) -> int:
-    web3 = contract.web3
-    core_address = await contract.functions.getXfaiCore().call()
-    core_contract = web3.eth.contract(address=web3.to_checksum_address(core_address), abi=XFAI_V0_CORE_ABI)
+    core_address = factory_contract.w3.to_checksum_address(await factory_contract.functions.getXfaiCore().call())
+    core_contract = factory_contract.w3.eth.contract(address=core_address, abi=XFAI_V0_CORE_ABI)
     return await core_contract.functions.getTotalFee().call()
 
 async def _get_tkn0_A(contract: Contract) -> str:
