@@ -123,7 +123,7 @@ class BancorV2Pool(Pool):
         fee = await contract.caller.conversionFee()
 
         # for i in [0, 1]:
-        #     conv_token = await contract.functions.connectorTokens(i).call()
+        #     conv_token = await contract.caller.connectorTokens(i)
         #     if conv_token != '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
         #
 

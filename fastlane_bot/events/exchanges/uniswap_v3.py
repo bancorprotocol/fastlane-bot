@@ -46,12 +46,12 @@ class UniswapV3(Exchange):
         return [contract.events.Swap] if self.exchange_initialized else []
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        fee = await contract.functions.fee().call()
+        fee = await contract.caller.fee()
         fee_float = float(fee) / 1e6
         return fee, fee_float
 
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return await contract.functions.token0().call()
+        return await contract.caller.token0()
 
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return await contract.functions.token1().call()
+        return await contract.caller.token1()

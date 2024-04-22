@@ -54,8 +54,8 @@ class UniswapV2(Exchange):
 
     @staticmethod
     async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:
-        return await contract.functions.token0().call()
+        return await contract.caller.token0()
 
     @staticmethod
     async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
-        return await contract.functions.token1().call()
+        return await contract.caller.token1()
