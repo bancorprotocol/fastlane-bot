@@ -48,18 +48,14 @@ with open('fastlane_bot/tests/_data/event_test_data.json', 'r') as f:
 
 mocked_contract = Mock()
 
-mocked_contract.caller.token0.return_value = AsyncMock(return_value='token0')
-mocked_contract.caller.token1.return_value = AsyncMock(return_value='token1')
-mocked_contract.caller._token0.return_value = AsyncMock(return_value='token0')
-mocked_contract.caller._token1.return_value = AsyncMock(return_value='token1')
-mocked_contract.caller.conversionFee.return_value = AsyncMock(return_value=3000)
-mocked_contract.caller.fee.return_value = AsyncMock(return_value=3000)
-mocked_contract.caller.tradingFeePPM.return_value = AsyncMock(return_value=2000)
+mocked_contract.caller.token0 = AsyncMock(return_value='token0')
+mocked_contract.caller.token1 = AsyncMock(return_value='token1')
+mocked_contract.caller._token0 = AsyncMock(return_value='token0')
+mocked_contract.caller._token1 = AsyncMock(return_value='token1')
+mocked_contract.caller.conversionFee = AsyncMock(return_value=3000)
+mocked_contract.caller.fee = AsyncMock(return_value=3000)
+mocked_contract.caller.tradingFeePPM = AsyncMock(return_value=2000)
 mocked_contract.caller.getSwapFeePercentage = AsyncMock(return_value="10000000000000000" or 0.01)
-
-
-
-#mocked_contract.caller.getPoolTokens().return_value = 
 
 
 # ------------------------------------------------------------
