@@ -9,6 +9,7 @@ All rights reserved.
 Licensed under MIT.
 """
 from .tradeinstruction import TradeInstruction 
+from .poolandtokens import SolidlyV2StablePoolsNotSupported
 from .routehandler import TxRouteHandler, RouteStruct
 from .txhelpers import TxHelpers
 from .univ3calc import Univ3Calculator
