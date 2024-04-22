@@ -22,104 +22,22 @@ from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_FACTORY_AB
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.base import Pool
 
-
 async def _get_fee_1(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: velocimeter_v2, stratum_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.getFee(address)
 
-
 async def _get_fee_2(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: equalizer_v2, scale_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.getRealFee(address)
 
-
 async def _get_fee_3(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: aerodrome_v2, velodrome_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.getFee(address, await contract.caller.stable())
 
-
 async def _get_fee_4(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: cleopatra_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.getPairFee(address, await contract.caller.stable())
 
 async def _get_fee_5(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: lynex_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.getFee(await contract.caller.stable())
 
 async def _get_fee_6(address: str, contract: Contract, factory_contract: Contract) -> int:
-    """ Function to get fee for a Solidly pool.
-
-    This async function fetches the fee for a Solidly pool.
-    Known uses of this function: nile_v2
-
-    Args:
-        address: The pool address.
-        contract: The pool contract.
-        factory_contract: The factory contract.
-
-    Returns:
-        The pool fee.
-    """
     return await factory_contract.caller.pairFee(address)
 
 async def _get_fee_7(address: str, contract: Contract, factory_contract: Contract) -> int:
