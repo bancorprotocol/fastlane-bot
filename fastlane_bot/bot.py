@@ -495,14 +495,14 @@ class CarbonBot:
                 "tkn1_decimals": current_pool.tkn1_decimals,
             }
 
-            fetched_pool = self.db.mgr.update_from_pool_info(pool_info=pool_info)
+            self.db.mgr.update_from_pool_info(pool_info=pool_info)
             self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_cid: {pool_cid}")
-            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] fetched_pool: {fetched_pool}")
+            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_info: {pool_info}")
 
             if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
                 if (
-                    current_pool.y_0 != fetched_pool["y_0"]
-                    or current_pool.y_1 != fetched_pool["y_1"]
+                    current_pool.y_0 != pool_info["y_0"]
+                    or current_pool.y_1 != pool_info["y_1"]
                 ):
                     self.ConfigObj.logger.debug(
                         "[bot.validate_pool_data] Carbon pool not up to date, updating and restarting."
@@ -512,16 +512,16 @@ class CarbonBot:
                 "balancer",
             ]:
                 for idx, balance in enumerate(current_pool.token_balances):
-                    if balance != fetched_pool[f"tkn{idx}_balance"]:
+                    if balance != pool_info[f"tkn{idx}_balance"]:
                         self.ConfigObj.logger.debug(
                             "[bot.validate_pool_data] Balancer pool not up to date, updating and restarting."
                         )
                         return False
             elif current_pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
                 if (
-                    current_pool.liquidity != fetched_pool["liquidity"]
-                    or current_pool.sqrt_price_q96 != fetched_pool["sqrt_price_q96"]
-                    or current_pool.tick != fetched_pool["tick"]
+                    current_pool.liquidity != pool_info["liquidity"]
+                    or current_pool.sqrt_price_q96 != pool_info["sqrt_price_q96"]
+                    or current_pool.tick != pool_info["tick"]
                 ):
                     self.ConfigObj.logger.debug(
                         "[bot.validate_pool_data] UniV3 pool not up to date, updating and restarting."
@@ -529,11 +529,11 @@ class CarbonBot:
                     return False
 
             elif (
-                current_pool.tkn0_balance != fetched_pool["tkn0_balance"]
-                or current_pool.tkn1_balance != fetched_pool["tkn1_balance"]
+                current_pool.tkn0_balance != pool_info["tkn0_balance"]
+                or current_pool.tkn1_balance != pool_info["tkn1_balance"]
             ):
                 self.ConfigObj.logger.debug(
-                    f"[bot.validate_pool_data] {fetched_pool['exchange_name']} pool not up to date, updating and restarting."
+                    f"[bot.validate_pool_data] {pool_info['exchange_name']} pool not up to date, updating and restarting."
                 )
                 return False
 
