@@ -123,18 +123,18 @@ async def _get_fee_6(address: str, contract: Contract, factory_contract: Contrac
     return await factory_contract.caller.pairFee(address)
 
 async def _get_fee_7(address: str, contract: Contract, factory_contract: Contract) -> int:
-    core_address = factory_contract.w3.to_checksum_address(await factory_contract.functions.getXfaiCore().call())
+    core_address = factory_contract.w3.to_checksum_address(await factory_contract.caller.getXfaiCore())
     core_contract = factory_contract.w3.eth.contract(address=core_address, abi=XFAI_V0_CORE_ABI)
-    return await core_contract.functions.getTotalFee().call()
+    return await core_contract.caller.getTotalFee()
 
 async def _get_tkn0_A(contract: Contract) -> str:
-    return await contract.functions.token0().call()
+    return await contract.caller.token0()
 
 async def _get_tkn1_A(contract: Contract) -> str:
-    return await contract.functions.token1().call()
+    return await contract.caller.token1()
 
 async def _get_tkn0_B(contract: Contract) -> str:
-    return await contract.functions.poolToken().call()
+    return await contract.caller.poolToken()
 
 async def _get_tkn1_B(contract: Contract) -> str:
     return "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f" # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
