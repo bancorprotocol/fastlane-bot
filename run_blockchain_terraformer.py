@@ -19,7 +19,9 @@ from web3 import Web3, AsyncWeb3
 from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
+from fastlane_bot.events.exchanges.velocore_v2 import VelocoreV2
 from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
+from fastlane_bot.events.exchanges.velocore_v2 import EXCHANGE_INFO as VELOCORE_EXCHANGE_INFO
 
 nest_asyncio.apply()
 
@@ -61,7 +63,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
-    "linea": 5000
+    "linea": 10000000,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -85,7 +87,7 @@ ALCHEMY_RPC_LIST = {
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
-    "linea": "https://linea.blockpi.network/v1/rpc/",
+    "linea": "https://rpc.linea.build/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -123,8 +125,10 @@ CLEOPATRA_V2_NAME = "cleopatra_v2"
 STRATUM_V2_NAME = "stratum_v2"
 LYNEX_V2_NAME = "lynex_v2"
 NILE_V2_NAME = "nile_v2"
+VELOCORE_V2_NAME = "velocore_v2"
 
 SOLIDLY_FORKS = [AERODROME_V2_NAME, VELOCIMETER_V2_NAME, SCALE_V2_NAME, VELODROME_V2_NAME, CLEOPATRA_V2_NAME, STRATUM_V2_NAME]
+VELOCORE_V2_FORKS = [VELOCORE_V2_NAME]
 
 
 EXCHANGE_IDS = {
@@ -147,6 +151,7 @@ EXCHANGE_IDS = {
     AERODROME_V2_NAME: 12,
     CLEOPATRA_V2_NAME: 12,
     STRATUM_V2_NAME: 12,
+    VELOCORE_V2_NAME: 11  #TODO to confirm (the swap interface is exactly univ2 )
 }
 
 EXCHANGE_POOL_CREATION_EVENT_NAMES = {
@@ -159,6 +164,7 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     STRATUM_V2_NAME: "PairCreated",
     LYNEX_V2_NAME: "PairCreated",
     NILE_V2_NAME: "PairCreated",
+    VELOCORE_V2_NAME: "PoolCreated",
 }
 
 dataframe_key = [
@@ -769,6 +775,77 @@ def organize_pool_details_solidly_v2(
 
     return pool
 
+def organize_pool_details_velocore_v2(
+        pool_data, token_manager, exchange, exchange_object, web3, async_web3,
+):
+    """
+    This function organizes pool details for Velocore pools.
+
+    :param pool_data: the pool data from the pool creation event
+    :param token_manager: the token lookup dict
+    :param exchange: the exchange name
+    :param factory_contract: the exchange's Factory contract - initialized
+    :param web3: the Web3 object
+    :param web3: the async Web3 object
+    returns: dict of pool information
+    """
+    skip_pool = False
+    if "pool" in pool_data or "pool" in pool_data["args"]:
+        pool_address = pool_data["args"]["pool"]
+    elif "pair" in pool_data or "pair" in pool_data["args"]:
+        pool_address = pool_data["args"]["pair"]
+    else:
+        print(f"COULD NOT FIND KEY IN EVENT for exchange {exchange}: {pool_data}")
+    pool_address = web3.to_checksum_address(pool_address)
+
+    last_updated_block = pool_data["blockNumber"]
+
+    stable_pool = "volatile" # stable pools on Velocore are handled differently and called Wombat pools (out of scope here)
+    pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
+    fee_str, fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))[0]
+
+    tokens = ['0x'+pool_data["args"]["t1"].hex()[-40:],'0x'+pool_data["args"]["t2"].hex()[-40:]]
+    tokens = [x.replace("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f") for x in tokens]  
+    # TODO should be like this .replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS), but watchout for not checksummed NATIVE address
+
+    if len(tokens) > 2:
+        return None
+    token_info, pair, skip_pool = process_token_details(
+        tokens=tokens, token_manager=token_manager, web3=web3
+    )
+    if skip_pool:
+        return None
+    description = exchange + " " + pair
+
+    pool_info = {
+        "cid": pool_address,
+        "strategy_id": 0,
+        "last_updated": "",
+        "last_updated_block": last_updated_block,
+        "descr": description,
+        "pair_name": pair,
+        "exchange_name": exchange,
+        "fee": fee_str,
+        "fee_float": fee_float,
+        "address": pool_address,
+        "anchor": "",
+        "tkn0_address": token_info["tkn0_address"],
+        "tkn1_address": token_info["tkn1_address"],
+        "tkn0_decimals": token_info["tkn0_decimals"],
+        "tkn1_decimals": token_info["tkn1_decimals"],
+        "exchange_id": EXCHANGE_IDS.get(exchange),
+        "tkn0_symbol": token_info["tkn0_symbol"],
+        "tkn1_symbol": token_info["tkn1_symbol"],
+        "timestamp": 0,
+        "tkn0_balance": 0,
+        "tkn1_balance": 0,
+        "exchange": exchange,
+        "pool_type": stable_pool,
+    }
+    pool = {**pool_info, **token_info}
+
+    return pool
+
 
 def _get_events(contract, blockchain: str, exchange: str, start_block: int) -> list:
     end_block = contract.w3.eth.block_number + 1
@@ -917,6 +994,57 @@ def get_solidly_v2_pools(
     # return mapdf
     return df, mapdf
 
+def get_velocore_v2_pools(
+        token_manager: TokenManager,
+        exchange: str,
+        async_factory_contract,
+        factory_contract,
+        lens_contract,
+        async_lens_contract,
+        start_block: int,
+        web3: Web3,
+        async_web3: AsyncWeb3,
+        blockchain: str
+) -> Tuple[DataFrame, DataFrame]:
+    """
+    This function retrieves Velocore pool generation events and organizes them into two Dataframes
+    :param token_manager: the dict containing token information
+    :param factory_contract: the initialized Factory contract
+    :param start_block: the block number from which to start
+    :param web3: the Web3 object
+    :param async_web3: the Async Web3 object
+    :param exchange: the name of the exchange
+    :param default_fee: the fee for the exchange
+    :param blockchain: the blockchain name
+
+    returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
+    """
+    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    velocore_exchange = VelocoreV2(exchange_name=exchange, factory_contract=async_factory_contract, lens_contract=async_lens_contract)
+
+    with parallel_backend(n_jobs=-1, backend="threading"):
+        pools = Parallel(n_jobs=-1)(
+            delayed(organize_pool_details_velocore_v2)(
+                pool_data=pool,
+                token_manager=token_manager,
+                exchange=exchange,
+                exchange_object=velocore_exchange,
+                web3=web3,
+                async_web3=async_web3,
+            )
+            for pool in pool_data
+        )
+    pools = [pool for pool in pools if pool is not None]
+    df = pd.DataFrame(pools, columns=dataframe_key)
+    pool_mapping = [
+        {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
+    ]
+
+    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
+    mapdf = mapdf.reset_index(drop=True)
+    # return mapdf
+    return df, mapdf
+
 
 def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.DataFrame:
     """
@@ -1038,7 +1166,7 @@ def add_to_exchange_ids(exchange: str, fork: str):
     """
     if exchange not in EXCHANGE_IDS:
         platform_id = 0
-        if fork in ["uniswap_v2", "solidly_v1", "solidly_v2"]:
+        if fork in ["uniswap_v2", "solidly_v1", "solidly_v2", "velocore_v2"]:
             platform_id = 3
         elif fork in "uniswap_v3":
             platform_id = 4
@@ -1103,7 +1231,7 @@ def save_token_data(token_dict: TokenManager, write_path: str):
 
 def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
-    This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
+    This function collects all pool creation events for Uniswap V2/V3, Solidly and Velocore pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
     :param web3: the Web3 object
@@ -1152,6 +1280,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         solidly_v2_mapdf = pd.read_csv(
             write_path + "/solidly_v2_event_mappings.csv", index_col=False
         )
+        velocore_v2_mapdf = pd.read_csv(
+            write_path + "/velocore_v2_event_mappings.csv", index_col=False
+        )
 
     if save_tokens:
         save_token_data(token_dict=token_manager, write_path=write_path)
@@ -1163,6 +1294,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         chain = row[1]["chain"]
         fork = row[1]["fork"]
         factory_address = row[1]["factory_address"]
+        lens_address = row[1]["ancillary_address"]
         router_address = row[1]["router_address"]
         fee = row[1]["fee"]
 
@@ -1186,6 +1318,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             if fee == "TBD":
                 continue
             if fork in SOLIDLY_FORKS:
+                continue
+            if fork in VELOCORE_V2_FORKS:
                 continue
 
             factory_abi = UNISWAP_V2_FACTORY_ABI
@@ -1246,6 +1380,41 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             )
             m_df = m_df.reset_index(drop=True)
             solidly_v2_mapdf = pd.concat([solidly_v2_mapdf, m_df], ignore_index=True)
+        elif "velocore" in fork:
+            add_to_exchange_ids(exchange=exchange_name, fork=fork)
+
+            factory_abi = VELOCORE_EXCHANGE_INFO[exchange_name]["factory_abi"]
+            factory_contract = web3.eth.contract(
+                address=factory_address, abi=factory_abi
+            )
+
+            async_factory_contract = async_web3.eth.contract(
+                address=factory_address, abi=factory_abi
+            )
+            lens_abi = VELOCORE_EXCHANGE_INFO[exchange_name]["lens_abi"]
+            lens_contract = web3.eth.contract(
+                address=lens_address, abi=lens_abi
+            )
+
+            async_lens_contract = async_web3.eth.contract(
+                address=lens_address, abi=lens_abi
+            )
+            
+            u_df, m_df = get_velocore_v2_pools(
+                token_manager=token_manager,
+                exchange=exchange_name,
+                factory_contract=factory_contract,
+                async_factory_contract=async_factory_contract,
+                lens_contract=lens_contract,
+                async_lens_contract=async_lens_contract,
+                start_block=from_block,
+                web3=web3,
+                async_web3=async_web3,
+                blockchain=network_name
+            )
+            m_df = m_df.reset_index(drop=True)
+            velocore_v2_mapdf = pd.concat([velocore_v2_mapdf, m_df], ignore_index=True)
+
         elif "balancer" in fork:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
@@ -1265,7 +1434,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     solidly_v2_mapdf.to_csv((write_path + "/solidly_v2_event_mappings.csv"), index=False)
-    return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
+    velocore_v2_mapdf.to_csv((write_path + "/velocore_v2_event_mappings.csv"), index=False)
+    return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf, velocore_v2_mapdf
 
 
 #terraform_blockchain(network_name="mantle", save_tokens=True)

@@ -253,6 +253,7 @@ def main(args: argparse.Namespace) -> None:
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
         solidly_v2_event_mappings,
+        velocore_v2_event_mappings,
     ) = get_static_data(
         cfg, exchanges, args.blockchain, args.static_pool_data_filename, args.read_only
     )
@@ -284,13 +285,14 @@ def main(args: argparse.Namespace) -> None:
         uniswap_v2_event_mappings=uniswap_v2_event_mappings,
         uniswap_v3_event_mappings=uniswap_v3_event_mappings,
         solidly_v2_event_mappings=solidly_v2_event_mappings,
+        velocore_v2_event_mappings=velocore_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=args.replay_from_block,
         target_tokens=target_token_addresses,
         tenderly_fork_id=args.tenderly_fork_id,
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
-        forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS + cfg.SOLIDLY_V2_FORKS,
+        forked_exchanges=cfg.UNI_V2_FORKS + cfg.UNI_V3_FORKS + cfg.SOLIDLY_V2_FORKS + cfg.VELOCORE_V2_FORKS,
         blockchain=args.blockchain,
         prefix_path=args.prefix_path,
         read_only=args.read_only,
@@ -515,6 +517,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     uniswap_v2_event_mappings,
                     uniswap_v3_event_mappings,
                     solidly_v2_event_mappings,
+                    velocore_v2_event_mappings
                 ) = terraform_blockchain(
                     network_name=args.blockchain,
                     web3=mgr.web3,
@@ -528,6 +531,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 )
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
+                )
+                mgr.velocore_v2_event_mappings = dict(
+                    velocore_v2_event_mappings[["address", "exchange"]].values
                 )
             last_block_queried = current_block
 

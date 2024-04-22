@@ -125,7 +125,14 @@ class ContractsManager(BaseManager):
                 for fork in self.cfg.SOLIDLY_V2_FORKS:
                     self.event_contracts[fork] = fork_contract
                     self.pool_contracts[fork] = {}
-
+                    tracker.append(fork)
+            elif exchange_name in self.cfg.VELOCORE_V2_FORKS:
+                fork_contract = self.web3.eth.contract(
+                    abi=self.exchanges[exchange_name].get_abi(),
+                )
+                for fork in self.cfg.VELOCORE_V2_FORKS:
+                    self.event_contracts[fork] = fork_contract
+                    self.pool_contracts[fork] = {}
                     tracker.append(fork)
 
             else:

@@ -53,3 +53,5 @@ BALANCER_VAULT_ADDRESS = "BALANCER_VAULT_ADDRESS"
 UNISWAP_V2 = "uniswap_v2"
 UNISWAP_V3 = "uniswap_v3"
 SOLIDLY_V2 = "solidly_v2"
+VELOCORE_V2 = "velocore_v2"
+

@@ -272,7 +272,7 @@ class PoolAndTokens:
             out = self._carbon_to_cpc()
         elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()
-        elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
+        elif self.exchange_name in (self.ConfigObj.SOLIDLY_V2_FORKS + self.ConfigObj.VELOCORE_V2_FORKS):
             if self.pool_type == "volatile":
                 out = self._other_to_cpc()
             else:

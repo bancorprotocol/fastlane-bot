@@ -56,6 +56,7 @@ class QueryInterface:
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
+    velocore_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     exchanges: List[str] = field(default_factory=list)
     token_list: Dict[str, Any] = None
     pool_data = None
@@ -212,7 +213,7 @@ class QueryInterface:
         keys = []
 
         for ex in self.cfg.ALL_KNOWN_EXCHANGES:
-            if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + ["bancor_v2", "bancor_v3"]:
+            if ex in self.cfg.UNI_V2_FORKS + self.cfg.SOLIDLY_V2_FORKS + self.cfg.VELOCORE_V2_FORKS + ["bancor_v2", "bancor_v3"]:
                 exchanges.append(ex)
                 keys.append(["tkn0_balance"])
             elif ex in self.cfg.UNI_V3_FORKS:

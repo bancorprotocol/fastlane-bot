@@ -299,6 +299,12 @@ def get_static_data(
     solidly_v2_event_mappings = dict(
         solidly_v2_event_mappings_df[["address", "exchange"]].values
     )
+    # Read Velocore v2 event mappings and tokens
+    velocore_v2_filepath = os.path.join(base_path, "velocore_v2_event_mappings.csv")
+    velocore_v2_event_mappings_df = read_csv_file(velocore_v2_filepath)
+    velocore_v2_event_mappings = dict(
+        velocore_v2_event_mappings_df[["address", "exchange"]].values
+    )
 
     tokens_filepath = os.path.join(base_path, "tokens.csv")
     if not os.path.exists(tokens_filepath) and not read_only:
@@ -381,6 +387,7 @@ def get_static_data(
         uniswap_v2_event_mappings,
         uniswap_v3_event_mappings,
         solidly_v2_event_mappings,
+        velocore_v2_event_mappings,
     )
 
 
@@ -446,6 +453,9 @@ def add_fork_exchanges(cfg: Config, exchanges: List) -> List[str]:
     if "solidly_v2_forks" in exchanges:
         exchanges += cfg.SOLIDLY_V2_FORKS
         exchanges.remove("solidly_v2_forks")
+    if "velocore_v2_forks" in exchanges:
+        exchanges += cfg.VELOCORE_V2_FORKS
+        exchanges.remove("velocore_v2_forks")
     if "carbon_v1_forks" in exchanges:
         exchanges += cfg.CARBON_V1_FORKS
         exchanges.remove("carbon_v1_forks")
@@ -1862,8 +1872,14 @@ def handle_static_pools_update(mgr: Any):
             for k, v in mgr.solidly_v2_event_mappings.items()
         ]
     )
+    velocore_v2_event_mappings = pd.DataFrame(
+        [
+            {"address": k, "exchange_name": v}
+            for k, v in mgr.velocore_v2_event_mappings.items()
+        ]
+    )
     all_event_mappings = (
-        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings, solidly_v2_event_mappings])
+        pd.concat([uniswap_v2_event_mappings, uniswap_v3_event_mappings, solidly_v2_event_mappings, velocore_v2_event_mappings])
         .drop_duplicates("address")
         .to_dict(orient="records")
     )
@@ -1873,6 +1889,8 @@ def handle_static_pools_update(mgr: Any):
         mgr.static_pools["uniswap_v3_pools"] = []
     if "solidly_v2_pools" not in mgr.static_pools:
         mgr.static_pools["solidly_v2_pools"] = []
+    if "velocore_v2_pools" not in mgr.static_pools:
+        mgr.static_pools["velocore_v2_pools"] = []
 
     for ex in mgr.forked_exchanges:
         if ex in mgr.exchanges:

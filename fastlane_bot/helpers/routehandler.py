@@ -307,6 +307,8 @@ class TxRouteHandler:
             return self.ConfigObj.UNI_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
             return self.ConfigObj.SOLIDLY_V2_ROUTER_MAPPING[pool.exchange_name]
+        elif pool.exchange_name in self.ConfigObj.VELOCORE_V2_FORKS:
+            return self.ConfigObj.VELOCORE_V2_ROUTER_MAPPING[pool.exchange_name]
         elif pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
             return self.ConfigObj.CARBON_CONTROLLER_ADDRESS
         elif pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
@@ -1264,9 +1266,9 @@ class TxRouteHandler:
             amount_out = self._calc_balancer_output(curve=curve, tkn_in=trade.tknin_address,
                                                     tkn_out=trade.tknout_address, amount_in=amount_in)
 
-        elif curve.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS and curve.pool_type in "stable":
+        elif curve.exchange_name in (self.ConfigObj.SOLIDLY_V2_FORKS + self.ConfigObj.VELOCORE_V2_FORKS) and curve.pool_type in "stable":
             raise ExchangeNotSupportedError(
-                f"[routerhandler.py _solve_trade_output] Solidly V2 stable pools are not yet supported")
+                f"[routerhandler.py _solve_trade_output] Solidly/Velocore V2 stable pools are not yet supported")
         else:
             tkn0_amt, tkn1_amt = (
                 (curve.tkn0_balance, curve.tkn1_balance)
