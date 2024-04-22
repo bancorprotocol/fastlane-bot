@@ -926,7 +926,6 @@ def update_pools_from_contracts(
     mgr: Any,
     n_jobs: int,
     rows_to_update: List[int] or List[Hashable],
-    token_address: bool = False,
     current_block: int = None,
 ) -> None:
     """
@@ -942,8 +941,6 @@ def update_pools_from_contracts(
         A list of rows to update.
     multicall_contract : MultiProviderContractWrapper or web3.contract.Contract
         The multicall contract.
-    token_address : bool, optional
-        Whether to update the token address, by default False
     current_block : int, optional
         The current block number, by default None
 
@@ -952,7 +949,6 @@ def update_pools_from_contracts(
         delayed(mgr.update)(
             pool_info=mgr.pool_data[idx],
             block_number=current_block,
-            token_address=token_address,
         )
         for idx in rows_to_update
     )
