@@ -23,6 +23,9 @@ from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import EncodedOrder
 
 
+class SolidlyV2StablePoolsNotSupported(Exception):
+    pass
+
 @dataclass
 class PoolAndTokens:
     """
@@ -273,7 +276,7 @@ class PoolAndTokens:
             if self.pool_type == "volatile":
                 out = self._other_to_cpc()
             else:
-                raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
+                raise SolidlyV2StablePoolsNotSupported(f"exchange {self.exchange_name}")
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:

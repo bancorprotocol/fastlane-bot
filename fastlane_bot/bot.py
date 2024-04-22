@@ -61,6 +61,7 @@ from fastlane_bot.helpers import (
     TxHelpers,
     TradeInstruction,
     Univ3Calculator,
+    SolidlyV2StablePoolsNotSupported,
     add_wrap_or_unwrap_trades_to_route,
     split_carbon_trades,
     maximize_last_trade_per_tkn
@@ -149,6 +150,10 @@ class CarbonBot:
                     curve for curve in p.to_cpc()
                     if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
                 ]
+            except SolidlyV2StablePoolsNotSupported as e:
+                self.ConfigObj.logger.debug(
+                    f"[bot.get_curves] SolidlyV2StablePoolsNotSupported: {e}\n"
+                )
             except NotImplementedError as e:
                 self.ConfigObj.logger.error(
                     f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
