@@ -61,7 +61,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
-    "linea": 5000
+    "linea": 1000000
 }
 
 ALCHEMY_KEY_DICT = {
@@ -85,7 +85,7 @@ ALCHEMY_RPC_LIST = {
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
-    "linea": "https://linea.blockpi.network/v1/rpc/",
+    "linea": "https://rpc.linea.build/",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
