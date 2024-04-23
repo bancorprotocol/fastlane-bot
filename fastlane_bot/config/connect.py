@@ -157,7 +157,7 @@ class EthereumNetwork(NetworkBase):
         """
         self.nonce += 1
 
-    def connect_network(self, inject_poa_middleware_sync, inject_poa_middleware_async):
+    def connect_network(self, inject_poa_middleware):
         """
         Connect to the network
         """
@@ -169,10 +169,9 @@ class EthereumNetwork(NetworkBase):
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url, request_kwargs={'timeout': 60}))
         self.w3_async = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self.provider_url))
 
-        if inject_poa_middleware_sync:
+        if inject_poa_middleware:
             self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        if inject_poa_middleware_async:
-            self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self.w3_async.middleware_onion.inject(geth_poa_middleware, layer=0)
 
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")

@@ -260,8 +260,7 @@ class ConfigNetwork(ConfigBase):
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
-    IS_INJECT_POA_MIDDLEWARE_SYNC = False
-    IS_INJECT_POA_MIDDLEWARE_ASYNC = False
+    IS_INJECT_POA_MIDDLEWARE = False
     # SUNDRY SECTION
     #######################################################################################
     COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
@@ -763,7 +762,7 @@ class _ConfigNetworkLinea(ConfigNetwork):
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
 
-    IS_INJECT_POA_MIDDLEWARE_SYNC = True
+    IS_INJECT_POA_MIDDLEWARE = True
     # Balancer
     BALANCER_VAULT_ADDRESS = "0x1d0188c4B276A09366D05d6Be06aF61a73bC7535" # velocore
 
