@@ -727,7 +727,7 @@ def organize_pool_details_solidly_v2(
     last_updated_block = pool_data["blockNumber"]
 
     if exchange == XFAI_V0_NAME:
-        stable_pool = False
+        stable_pool = "volatile"
         tokens = [pool_data["args"]["token"], "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"] # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
     else:
         stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
