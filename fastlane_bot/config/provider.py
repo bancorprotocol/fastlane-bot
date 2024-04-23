@@ -100,7 +100,7 @@ class _ConfigProviderAlchemy(ConfigProvider):
             provider_url=self.RPC_URL,
             provider_name="alchemy",
         )
-        self.connection.connect_network(network.IS_INJECT_POA_MIDDLEWARE)
+        self.connection.connect_network(network.IS_INJECT_POA_MIDDLEWARE_SYNC, network.IS_INJECT_POA_MIDDLEWARE_ASYNC)
         self.w3 = self.connection.web3
         self.w3_async = self.connection.w3_async
 
