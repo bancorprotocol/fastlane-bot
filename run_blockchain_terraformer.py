@@ -1104,11 +1104,12 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
-def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [], web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
+    :param skip_exchange_names: the list of exchange names to skip
     :param web3: the Web3 object
     :param async_web3: the async Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
@@ -1163,6 +1164,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
     for row in multichain_df.iterrows():
         exchange_name = row[1]["exchange_name"]
+        if exchange_name in skip_exchange_names:
+            print(f"Terraformer: skipping {exchange_name}")
+            continue
         chain = row[1]["chain"]
         fork = row[1]["fork"]
         factory_address = row[1]["factory_address"]
@@ -1271,5 +1275,8 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="mantle", save_tokens=True)
-#terraform_blockchain(network_name="linea", save_tokens=True)
+#terraform_blockchain(network_name="ethereum", save_tokens=True)
+#terraform_blockchain(network_name="coinbase_base", skip_exchange_names=[SCALE_V2_NAME], save_tokens=True)
+#terraform_blockchain(network_name="fantom", skip_exchange_names=[EQUALIZER_V2_NAME], save_tokens=True)
+#terraform_blockchain(network_name="mantle", skip_exchange_names=[STRATUM_V2_NAME, VELOCIMETER_V2_NAME], save_tokens=True)
+#terraform_blockchain(network_name="linea", skip_exchange_names=[NILE_V2_NAME], save_tokens=True)
