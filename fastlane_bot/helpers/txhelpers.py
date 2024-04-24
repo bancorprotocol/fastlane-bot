@@ -163,7 +163,7 @@ class TxHelpers:
             "chainId": self.chain_id,
             "from": self.wallet_address,
             "to": contract.address,
-            "data": contract.encodeABI(fn_name=fn_name, args=args),
+            "data": contract.encode_abi(fn_name=fn_name, args=args),
             "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
         }
 
