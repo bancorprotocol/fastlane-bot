@@ -15,7 +15,6 @@ import web3
 from eth_abi import decode
 from web3 import Web3
 
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
 
 
@@ -112,7 +111,7 @@ class MultiCaller(ContextManager):
     __VERSION__ = "0.0.2"
 
 
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
+    def __init__(self, contract: web3.contract.Contract,
                  web3: Web3,
                  block_identifier: Any = 'latest', multicall_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
         self._contract_calls: List[Callable] = []

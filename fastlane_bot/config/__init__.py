@@ -14,7 +14,6 @@ Submodules provide the following
 
 - Constants (``constants`` and ``selectors``; various constants)
 - ``MultiCaller`` and related (``multicaller``; TODO: what is this?)
-- ``MultiProviderContractWrapper`` (``multiprovided``; TODO: what is this?)
 - ``NetworkBase`` and ``EthereumNetwork`` (``connect``; network/chain connection code TODO: details)
 - ``Cloaker`` (``cloaker``; deprecated)
 
