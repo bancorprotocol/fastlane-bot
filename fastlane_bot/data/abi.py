@@ -37,13 +37,6 @@ FAST_LANE_CONTRACT_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"components": [{"internalType": "uint32", "name": "percentagePPM", "type": "uint32"}, {"internalType": "uint256", "name": "maxAmount", "type": "uint256"}], "internalType": "struct BancorArbitrage.Rewards", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -162,13 +155,6 @@ CARBON_CONTROLLER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -251,6 +237,64 @@ CLEOPATRA_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
         "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+    }
+]
+
+LYNEX_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "bool", "name": "_stable", "type": "bool"}],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    }
+]
+
+NILE_V2_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PairCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "bool", "name": "stable", "type": "bool"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "pairFee",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "_pool", "type": "address"}],
+        "outputs": [{"internalType": "uint256", "name": "fee", "type": "uint256"}]
+    }
+]
+
+XFAI_V0_FACTORY_ABI = [
+    {
+        "type": "event",
+        "name": "PoolCreated",
+        "anonymous": False,
+        "inputs": [{"indexed": True, "internalType": "address", "name": "token", "type": "address"}, {"indexed": True, "internalType": "address", "name": "pool", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "allPoolsSize", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getXfaiCore",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    }
+]
+
+XFAI_V0_CORE_ABI = [
+    {
+        "type": "function",
+        "name": "getTotalFee",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     }
 ]
 
@@ -423,6 +467,29 @@ SOLIDLY_V2_POOL_ABI = [
     }
 ]
 
+XFAI_V0_POOL_ABI = [
+    {
+        "type": "event",
+        "name": "Sync",
+        "anonymous": False,
+        "inputs": [{"indexed": False, "internalType": "uint256", "name": "reserve0", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "reserve1", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getStates",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}, {"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "poolToken",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    }
+]
+
 BANCOR_V2_CONVERTER_ABI = [
     {
         "type": "event",
@@ -464,13 +531,6 @@ BANCOR_V2_CONVERTER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract IERC20[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -489,13 +549,6 @@ BANCOR_V3_NETWORK_ABI = [
     },
     {
         "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
-    },
-    {
-        "type": "function",
         "name": "withdrawPOL",
         "stateMutability": "nonpayable",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
@@ -510,13 +563,6 @@ BANCOR_V3_NETWORK_SETTINGS = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -534,13 +580,6 @@ BANCOR_V3_NETWORK_INFO_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}], "internalType": "struct TradingLiquidity", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -576,13 +615,6 @@ BANCOR_V3_POOL_COLLECTION_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 
@@ -612,13 +644,6 @@ BANCOR_POL_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "Token", "name": "token", "type": "address"}],
         "outputs": [{"components": [{"internalType": "uint128", "name": "sourceAmount", "type": "uint128"}, {"internalType": "uint128", "name": "targetAmount", "type": "uint128"}], "internalType": "struct ICarbonPOL.Price", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
-        "name": "version",
-        "stateMutability": "pure",
-        "inputs": [],
-        "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}]
     }
 ]
 

@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 
 from . import selectors as S
 from .base import ConfigBase
-from .constants import CARBON_V1_FORK1_NAME, CARBON_V1_NAME
+from .constants import CARBON_V1_NAME
 load_dotenv()
 
 from decimal import Decimal
@@ -193,6 +193,9 @@ class ConfigNetwork(ConfigBase):
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+
+    TAX_TOKENS = []
+
     # BNT_KEY = "BNT-FF1C"
     # ETH_KEY = "ETH-EEeE"
     # WBTC_KEY = "WBTC-c599"
@@ -204,7 +207,7 @@ class ConfigNetwork(ConfigBase):
     # ACCOUNTS SECTION
     #######################################################################################
     BINANCE8_WALLET_ADDRESS = "0xF977814e90dA44bFA03b6295A0616a897441aceC"
-    BINANCE14_WALLET_ADDRESS = "0x28c6c06298d514db089934071355e5743bf21d60"
+    BINANCE14_WALLET_ADDRESS = "0x28C6c06298d514Db089934071355E5743bf21d60"
 
     # EXCHANGE IDENTIFIERS SECTION
     #######################################################################################
@@ -216,35 +219,19 @@ class ConfigNetwork(ConfigBase):
     SUSHISWAP_V2_NAME = "sushiswap_v2"
     SUSHISWAP_V3_NAME = "sushiswap_v3"
     CARBON_V1_NAME = CARBON_V1_NAME
-    CARBON_V1_X2_NAME = CARBON_V1_FORK1_NAME
     BANCOR_POL_NAME = "bancor_pol"
     BALANCER_NAME = "balancer"
     PANCAKESWAP_V2_NAME = "pancakeswap_v2"
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
-    SHIBA_V2_NAME = "shiba_v2"
-    # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
-    AERODROME_V3_NAME = "aerodrome_v3"
-    ALIENBASE_V2_NAME = "alienbase_v2"
-    ALIENBASE_V3_NAME = "alienbase_v3"
-    BASESWAP_V2_NAME = "baseswap_v2"
-    BASESWAP_V3_NAME = "baseswap_v3"
-    SWAPBASED_V2_NAME = "swap_based_v2"
-    # SWAPBASED_V3_NAME = "swap_based_v3" # This uses Algebra DEX
-    SYNTHSWAP_V2_NAME = "synthswap_v2"
-    SYNTHSWAP_V3_NAME = "synthswap_v3"
-    SMARDEX_V2_NAME = "smardex_v2"
-    # SMARDEX_V3_NAME = "smardex_v3" # This uses Algebra DEX
-    VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
+    XFAI_V0_NAME = "xfai_v0"
 
     WRAP_UNWRAP_NAME = "wrap_or_unwrap"
 
     GAS_ORACLE_ADDRESS = None
-
-    CARBON_V1_FORKS = [CARBON_V1_NAME, CARBON_V1_X2_NAME]
 
     MULTICALLABLE_EXCHANGES = [BANCOR_V3_NAME, BANCOR_POL_NAME, BALANCER_NAME]
     # BANCOR POL
@@ -266,28 +253,14 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [80, 100, 250, 450, 500, 2500, 3000, 10000]
-    MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
-    DEFAULT_GAS = 950_000
-    DEFAULT_GAS_PRICE = 0
-    DEFAULT_GAS_PRICE_OFFSET = 1.09
     DEFAULT_GAS_SAFETY_OFFSET = 25_000
-    DEFAULT_POLL_INTERVAL = 12
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500 * 100  # 10 block time deviation
-    DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
     _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
-    DEFAULT_CURVES_DATAFILE = os.path.normpath(
-        f"{_PROJECT_PATH}/carbon/data/curves.csv.gz"
-    )
-    CARBON_STRATEGY_CHUNK_SIZE = 200
     Q96 = Decimal("2") ** Decimal("96")
-    DEFAULT_TIMEOUT = 60
-    CARBON_FEE = Decimal("0.002")
-    BANCOR_V3_FEE = Decimal("0.0")
-    DEFAULT_REWARD_PERCENT = Decimal("0.5")
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
+    IS_INJECT_POA_MIDDLEWARE = False
     # SUNDRY SECTION
     #######################################################################################
     COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
@@ -302,11 +275,23 @@ class ConfigNetwork(ConfigBase):
     NETWORK_OPTIMISM = S.NETWORK_OPTIMISM
     NETWORK_FANTOM = S.NETWORK_FANTOM
     NETWORK_MANTLE = S.NETWORK_MANTLE
+    NETWORK_LINEA = S.NETWORK_LINEA
 
     # FLAGS
     #######################################################################################
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
     IS_NO_FLASHLOAN_AVAILABLE = False
+
+    # HOOKS
+    #######################################################################################
+    @staticmethod
+    def gas_strategy(web3):
+        gas_price = web3.eth.gas_price # send `eth_gasPrice` request
+        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+        return {
+            "maxFeePerGas": gas_price + max_priority_fee,
+            "maxPriorityFeePerGas": max_priority_fee
+        }
 
     @classmethod
     def new(cls, network=None):
@@ -331,6 +316,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkFantom(_direct=False)
         elif network == cls.NETWORK_MANTLE:
             return _ConfigNetworkMantle(_direct=False)
+        elif network == cls.NETWORK_LINEA:
+            return _ConfigNetworkLinea(_direct=False)    
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -397,6 +384,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
             self.AERODROME_V2_NAME: 12,
+            self.XFAI_V0_NAME: 13,
             self.CARBON_V1_NAME: 6,
         }
         for ex in self.UNI_V2_FORKS:
@@ -406,10 +394,12 @@ class ConfigNetwork(ConfigBase):
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
         for ex in self.SOLIDLY_V2_FORKS:
-            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
-                self.EXCHANGE_IDS[ex] = 11
-            else:
+            if ex in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
                 self.EXCHANGE_IDS[ex] = 12
+            elif ex == self.XFAI_V0_NAME:
+                self.EXCHANGE_IDS[ex] = 13
+            else:
+                self.EXCHANGE_IDS[ex] = 11
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 
@@ -446,6 +436,14 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     NATIVE_GAS_TOKEN_SYMBOL = "ETH"
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    TAX_TOKENS = [
+        "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
+        "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
+        "0xf94e7d0710709388bCe3161C32B4eEA56d3f91CC", # DSync
+        "0x1258D60B224c0C5cD888D37bbF31aa5FCFb7e870", # GPU
+        "0x6A7eFF1e2c355AD6eb91BEbB5ded49257F3FED98", # OPSEC
+    ]
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -723,7 +721,7 @@ class _ConfigNetworkMantle(ConfigNetwork):
     # WRAPPED_GAS_TOKEN_KEY = "WETH-0006"
     # STABLECOIN_KEY = "USDC-2913"
 
-    NATIVE_GAS_TOKEN_ADDRESS = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
     WRAPPED_GAS_TOKEN_ADDRESS = "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8"
     NATIVE_GAS_TOKEN_SYMBOL = "MNT"
     WRAPPED_GAS_TOKEN_SYMBOL = "WMNT"
@@ -735,6 +733,46 @@ class _ConfigNetworkMantle(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8": "WMNT",
         "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkLinea(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_LINEA
+    NETWORK_ID = "59144"
+    NETWORK_NAME = "linea"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://linea.blockpi.network/v1/rpc/"
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_LINEA")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = "0x0000000000000000000000000000000000000000" #TODO - UPDATE WITH ACTUAL DEPLOYMENT WHEN THERE IS ONE
+    CARBON_CONTROLLER_VOUCHER = "0x0000000000000000000000000000000000000000" #TODO - UPDATE WITH ACTUAL DEPLOYMENT WHEN THERE IS ONE
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"
+    NATIVE_GAS_TOKEN_SYMBOL = "ETH"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
+    STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
+
+    TAX_TOKENS = [
+        "0x1bE3735Dd0C0Eb229fB11094B6c277192349EBbf", # LUBE
+    ]
+
+    IS_INJECT_POA_MIDDLEWARE = True
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0x1d0188c4B276A09366D05d6Be06aF61a73bC7535" # velocore
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f": "WETH",
+        "0x176211869ca2b568f2a7d4ee941e073a821ee1ff": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []

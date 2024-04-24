@@ -74,7 +74,7 @@ export ETH_PRIVATE_KEY_BE_CAREFUL="0x9c..."
 export WEB3_ALCHEMY_BASE="api_key_here"
 export WEB3_FANTOM="api_key_here"
 export WEB3_MANTLE="api_key_here"
-
+export WEB3_LINEA="api_key_here"
 ```
 **Note:** To use the Fantom public RPC, write "public" in place of the API key.
 
@@ -133,7 +133,6 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
 - **pool_data_update_frequency** (int): The frequency in bot cycles in which the bot will search for new pools. **Recommended not to modify.**
 - **use_specific_exchange_for_target_tokens** (str): This filter will limit pool data to include only tokens contained by the specified exchange. For example "carbon_v1" would limit the scope of pool data to only include pools that have tokens currently traded on Carbon.
 - **prefix_path** (str): An optional file path modification, intended for cloud deployment requirements. **Recommended not to modify.**
-- **version_check_frequency** (int): The frequency (in bot cycles) the bot will check the version of the Fastlane smart contract. Set to -1 to disable. 
 - **self_fund** (bool): **USE AT YOUR OWN RISK** If set to True, the bot will use funds in the user's wallet to execute trades. Note that upon start, the bot will attempt to set an approval for all tokens specified in the flashloan_tokens field. 
 
 

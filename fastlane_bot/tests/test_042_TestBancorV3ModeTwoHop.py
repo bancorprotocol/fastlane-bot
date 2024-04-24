@@ -13,11 +13,11 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
@@ -126,8 +126,8 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
+flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "b3_two_hop"
@@ -192,7 +192,7 @@ def test_test_trade_merge():
     # Convert the trade instructions
     ordered_trade_instructions_objects = bot._convert_trade_instructions(
         ordered_scaled_dcts)
-    tx_route_handler = bot.TxRouteHandlerClass(
+    tx_route_handler = TxRouteHandler(
                 trade_instructions=ordered_trade_instructions_objects
             )
     agg_trade_instructions = (

@@ -23,6 +23,9 @@ from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import EncodedOrder
 
 
+class SolidlyV2StablePoolsNotSupported(Exception):
+    pass
+
 @dataclass
 class PoolAndTokens:
     """
@@ -273,7 +276,7 @@ class PoolAndTokens:
             if self.pool_type == "volatile":
                 out = self._other_to_cpc()
             else:
-                raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
+                raise SolidlyV2StablePoolsNotSupported(f"exchange {self.exchange_name}")
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
@@ -490,11 +493,16 @@ class PoolAndTokens:
         return lst
 
     FEE_LOOKUP = {
+        0.000008: Univ3Calculator.FEE8,
+        0.00001: Univ3Calculator.FEE10,
+        0.00004: Univ3Calculator.FEE40,
         0.00008: Univ3Calculator.FEE80,
         0.0001: Univ3Calculator.FEE100,
         0.00025: Univ3Calculator.FEE250,
+        0.0003: Univ3Calculator.FEE300,
         0.00045: Univ3Calculator.FEE450,
         0.0005: Univ3Calculator.FEE500,
+        0.0010: Univ3Calculator.FEE1000,
         0.0025: Univ3Calculator.FEE2500,
         0.0030: Univ3Calculator.FEE3000,
         0.01: Univ3Calculator.FEE10000,

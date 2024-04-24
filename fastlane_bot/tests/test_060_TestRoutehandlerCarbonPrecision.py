@@ -25,10 +25,7 @@ from fastlane_bot.config import Config
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
-from fastlane_bot.helpers import (
-    TxRouteHandler,
-    TradeInstruction,
-)
+from fastlane_bot.helpers import TxRouteHandler, TradeInstruction
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -150,11 +147,11 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-#flashloan_tokens = bot.setup_flashloan_tokens(None)
+#flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 #flashloan_tokens = ['WBTC-2c599', 'USDC-eB48', 'LINK-86CA', 'USDT-1ec7']
 
 
-CCm = bot.setup_CCm(None)
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 
@@ -177,7 +174,7 @@ def test_test_precision_using_all_tokens_in_carbon():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
@@ -386,7 +383,7 @@ def test_test_precision_using_all_tokens_in_carbon():
         )
     
         # Create the tx route handler
-        tx_route_handler = bot.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
     
