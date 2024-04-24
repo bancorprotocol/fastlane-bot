@@ -168,10 +168,10 @@ class TxHelpers:
         }
 
     def _update_transaction(self, tx: dict):
-        tx["gas"] = self.cfg.w3.eth.estimate_gas(tx) # occasionally throws an exception
+        tx["gas"] = self.cfg.w3.eth.estimate_gas(tx) # may throw an exception
         if self.use_access_list:
-            result = self.cfg.w3.eth.create_access_list(tx) # rarely throws an exception
-            if tx["gas"] > result["gasUsed"]:
+            result = self.cfg.w3.eth.create_access_list(tx) # may return an error
+            if tx["gas"] > result["gasUsed"] and "error" not in result:
                 tx["gas"] = result["gasUsed"]
                 tx["accessList"] = loads(self.cfg.w3.to_json(result["accessList"]))
         tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
