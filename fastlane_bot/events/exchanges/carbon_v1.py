@@ -89,7 +89,7 @@ class CarbonV1(Exchange):
 
         """
         try:
-            fee = await contract.functions.tradingFeePPM().call()
+            fee = await contract.caller.tradingFeePPM()
         except AttributeError:
             fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
@@ -114,7 +114,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return await contract.functions.token0().call()
+            return await contract.caller.token0()
         else:
             return event["args"]["token0"]
 
@@ -138,7 +138,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return await contract.functions.token1().call()
+            return await contract.caller.token1()
         else:
             return event["args"]["token1"]
 

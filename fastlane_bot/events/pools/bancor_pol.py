@@ -117,7 +117,7 @@ class BancorPolPool(Pool):
             )
 
         try:
-            p0, p1 = contract.functions.tokenPrice(tkn0).call()
+            p0, p1 = contract.caller.tokenPrice(tkn0)
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {tkn0}")
 
@@ -172,7 +172,7 @@ class BancorPolPool(Pool):
                 erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
             else:
                 erc20_contract = w3.eth.contract(abi=ERC20_ABI,address=tkn0)
-            return erc20_contract.functions.balanceOf(contract.address).call()
+            return erc20_contract.caller.balanceOf(contract.address)
 
 
     @staticmethod

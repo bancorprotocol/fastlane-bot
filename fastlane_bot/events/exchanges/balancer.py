@@ -52,12 +52,12 @@ class Balancer(Exchange):
         if pool:
             fee, fee_float = pool.state["fee"], pool.state["fee_float"]
         else:
-            fee = await contract.functions.getSwapFeePercentage().call()
+            fee = await contract.caller.getSwapFeePercentage()
             fee_float = float(fee) / 1e18
         return fee, fee_float
 
     async def get_tokens(self, address: str, contract: Contract, event: Any) -> []:
-        pool_balances = await contract.caller.getPoolTokens(address).call()
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         return tokens
 

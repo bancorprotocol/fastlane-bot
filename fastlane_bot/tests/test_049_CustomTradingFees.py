@@ -101,8 +101,8 @@ def test_test_update_from_event_carbon_v1_trading_fee_updated():
     
     mocked_contract = Mock()
     new_mocked_contract = Mock()
-    mocked_contract.functions.tradingFeePPM.return_value.call =  AsyncMock(return_value=prevFeePPM)
-    new_mocked_contract.functions.tradingFeePPM.return_value.call = AsyncMock(return_value=newFeePPM)
+    mocked_contract.caller.tradingFeePPM =  AsyncMock(return_value=prevFeePPM)
+    new_mocked_contract.caller.tradingFeePPM = AsyncMock(return_value=newFeePPM)
     
     @pytest.mark.asyncio
     async def test_update_from_event_carbon_v1_trading_fee_updated():

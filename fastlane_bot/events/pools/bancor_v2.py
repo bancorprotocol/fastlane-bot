@@ -122,16 +122,6 @@ class BancorV2Pool(Pool):
         tkn0_address, tkn1_address = await contract.caller.reserveTokens()
         fee = await contract.caller.conversionFee()
 
-        # for i in [0, 1]:
-        #     conv_token = await contract.functions.connectorTokens(i).call()
-        #     if conv_token != '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
-        #
-
-        # if tkn0_address != self.state["tkn0_address"]:
-        #     print(f"balance is flipped...")
-        #     reserve0c, reserve1c = reserve0, reserve1
-        #     reserve1, reserve0 = reserve0c, reserve1c
-
         params = {
             "fee": fee,
             "fee_float": fee / 1e6,
