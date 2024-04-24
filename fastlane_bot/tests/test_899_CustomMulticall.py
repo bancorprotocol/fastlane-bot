@@ -7,10 +7,6 @@
 # ------------------------------------------------------------
 
 
-
-import json
-
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 import os
 from unittest.mock import Mock, patch
@@ -21,8 +17,7 @@ import time
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.config.multicaller import ContractMethodWrapper
 
-
-import pytest
+from web3 import Web3
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MultiCaller))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ContractMethodWrapper))
@@ -36,15 +31,8 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
-
-CONTRACT_ABI = CARBON_CONTROLLER_ABI
+RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
-CONTRACT_ADDRESS = CARBON_CONTROLLER_ADDRESS
-
-providers = {
-    "mainnet": f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}",
-    "tenderly": "https://rpc.tenderly.co/fork/5f70ee18-8d2f-40d7-8131-58d0c8ff4736",
-}
 
 class MockWeb3:
     class HTTPProvider:
@@ -93,21 +81,21 @@ class MockContract:
 
 start_time = time.time()
 
-contract = MultiProviderContractWrapper(CONTRACT_ABI, CONTRACT_ADDRESS, providers)
+w3 = Web3(Web3.HTTPProvider(RPC_URL, request_kwargs={'timeout': 60}))
+contract = w3.eth.contract(address=CARBON_CONTROLLER_ADDRESS, abi=CARBON_CONTROLLER_ABI)
 
-mainnet_pairs = contract.mainnet.functions.pairs().call()
-tenderly_pairs = contract.tenderly.functions.pairs().call()
+mainnet_pairs = contract.caller.pairs()
 
 if len(mainnet_pairs) > 10:
     mainnet_pairs = mainnet_pairs[:10]
 
-pair_fees_without_multicall = [contract.mainnet.functions.pairTradingFeePPM(pair[0], pair[1]).call() for pair in mainnet_pairs]
+pair_fees_without_multicall = [contract.caller.pairTradingFeePPM(pair[0], pair[1]) for pair in mainnet_pairs]
 
 pair_fees_time_without_multicall = time.time() - start_time
 
 start_time = time.time()
 
-strats_by_pair_without_multicall = [contract.mainnet.functions.strategiesByPair(pair[0], pair[1], 0, 5000).call() for pair in mainnet_pairs]
+strats_by_pair_without_multicall = [contract.caller.strategiesByPair(pair[0], pair[1], 0, 5000) for pair in mainnet_pairs]
 
 strats_by_pair_time_without_multicall = time.time() - start_time
 

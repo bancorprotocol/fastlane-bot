@@ -28,7 +28,6 @@ from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
@@ -939,8 +938,6 @@ def update_pools_from_contracts(
         The number of jobs to run in parallel.
     rows_to_update : List[int]
         A list of rows to update.
-    multicall_contract : MultiProviderContractWrapper or web3.contract.Contract
-        The multicall contract.
     current_block : int, optional
         The current block number, by default None
 

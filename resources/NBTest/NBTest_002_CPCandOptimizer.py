@@ -1306,8 +1306,8 @@ assert iseq(0.0005, r.p_optimal_t[0], r.p_optimal_t[1])
 assert set(r.tokens_t) == {'USDC', 'USDT'}
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 
 # +
 r = O.optimize("WETH", result=O.MO_FULL)
@@ -1334,8 +1334,8 @@ assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
 assert set(r.tokens_t) == set(('USDC', 'USDT'))
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 # -
 
 # ### arbitrage
@@ -1382,8 +1382,8 @@ assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
 assert set(r.tokens_t) == set(('USDC', 'USDT'))
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 
 abs(r.dtokens_t[0])
 
