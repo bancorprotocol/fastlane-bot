@@ -22,17 +22,13 @@ from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EX
 import asyncio
 import nest_asyncio
 import threading
-from typing import Awaitable, TypeVar
-T = TypeVar("T")
 
 def _start_background_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
 _LOOP = asyncio.new_event_loop()
-_LOOP_THREAD = threading.Thread(
-    target=_start_background_loop, args=(_LOOP,), daemon=True
-)
+_LOOP_THREAD = threading.Thread(target=_start_background_loop, args=(_LOOP,), daemon=True)
 _LOOP_THREAD.start()
 
 def asyncio_gather(*futures, return_exceptions=False) -> list:
@@ -41,7 +37,6 @@ def asyncio_gather(*futures, return_exceptions=False) -> list:
     """
     async def gather():
         return await asyncio.gather(*futures, return_exceptions=return_exceptions)
-
     return asyncio.run_coroutine_threadsafe(gather(), loop=_LOOP).result()
 
 nest_asyncio.apply()
