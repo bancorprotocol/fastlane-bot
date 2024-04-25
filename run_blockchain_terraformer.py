@@ -1291,6 +1291,6 @@ def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [],
 #terraform_blockchain(network_name="coinbase_base", skip_exchange_names=[SCALE_V2_NAME], save_tokens=True)
 #terraform_blockchain(network_name="fantom", skip_exchange_names=[EQUALIZER_V2_NAME], save_tokens=True)
 #terraform_blockchain(network_name="mantle", skip_exchange_names=[STRATUM_V2_NAME, VELOCIMETER_V2_NAME], save_tokens=True)
-#terraform_blockchain(network_name="linea", skip_exchange_names=[NILE_V2_NAME], save_tokens=True)
+#terraform_blockchain(network_name="linea", skip_exchange_names=[XFAI_V0_NAME], save_tokens=True)
 
 remove_duplicates()
