@@ -6,7 +6,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from joblib import parallel_backend, Parallel, delayed
 from pandas import DataFrame
-from web3.contract import Contract
+from pathlib import Path
 
 load_dotenv()
 import os
@@ -83,7 +83,7 @@ ALCHEMY_RPC_LIST = {
     "arbitrum_one": "https://arb-mainnet.g.alchemy.com/v2/",
     "optimism": "https://opt-mainnet.g.alchemy.com/v2/",
     "coinbase_base": "https://base-mainnet.g.alchemy.com/v2/",
-    "fantom": "https://fantom-mainnet.blastapi.io/",
+    "fantom": "https://fantom.blockpi.network/v1/rpc/",
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
 }
@@ -1104,6 +1104,18 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
+def remove_duplicates():
+    for path in Path("./").glob('**/*.*'):
+        path_in_str = str(path) # because path is object not string
+        if path_in_str.endswith('.csv'):
+            file_desc = open(path_in_str, 'r')
+            lines = file_desc.readlines()
+            file_desc.close()
+            file_desc = open(path_in_str, 'w')
+            file_desc.writelines(list(dict.fromkeys(lines)))
+            file_desc.close()
+
+
 def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [], web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
@@ -1280,3 +1292,5 @@ def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [],
 #terraform_blockchain(network_name="fantom", skip_exchange_names=[EQUALIZER_V2_NAME], save_tokens=True)
 #terraform_blockchain(network_name="mantle", skip_exchange_names=[STRATUM_V2_NAME, VELOCIMETER_V2_NAME], save_tokens=True)
 #terraform_blockchain(network_name="linea", skip_exchange_names=[NILE_V2_NAME], save_tokens=True)
+
+remove_duplicates()
