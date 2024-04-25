@@ -13,7 +13,7 @@ from abc import ABCMeta, ABC
 from eth_typing import HexStr
 from hexbytes import HexBytes
 from web3 import Web3, AsyncWeb3
-from web3.middleware import geth_poa_middleware
+from web3.middleware import geth_poa_middleware, async_geth_poa_middleware
 from web3.types import TxReceipt
 
 import os
@@ -171,6 +171,7 @@ class EthereumNetwork(NetworkBase):
 
         if inject_poa_middleware:
             self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+            self.w3_async.middleware_onion.inject(async_geth_poa_middleware, layer=0)
 
         logger.info(f"Connected to {self.network_id} network")
         logger.info(f"Connected to {self.web3.provider.endpoint_uri} network")
