@@ -11,8 +11,6 @@ from pathlib import Path
 load_dotenv()
 import os
 import requests
-import asyncio
-import nest_asyncio
 
 from web3 import Web3, AsyncWeb3
 
@@ -20,6 +18,31 @@ from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
 from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
+
+import asyncio
+import nest_asyncio
+import threading
+from typing import Awaitable, TypeVar
+T = TypeVar("T")
+
+def _start_background_loop(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+_LOOP = asyncio.new_event_loop()
+_LOOP_THREAD = threading.Thread(
+    target=_start_background_loop, args=(_LOOP,), daemon=True
+)
+_LOOP_THREAD.start()
+
+def asyncio_gather(*futures, return_exceptions=False) -> list:
+    """
+    A version of asyncio.gather that runs on the internal event loop
+    """
+    async def gather():
+        return await asyncio.gather(*futures, return_exceptions=return_exceptions)
+
+    return asyncio.run_coroutine_threadsafe(gather(), loop=_LOOP).result()
 
 nest_asyncio.apply()
 
@@ -734,7 +757,7 @@ def organize_pool_details_solidly_v2(
         tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
     pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
-    fee_str, fee_float = asyncio.get_event_loop().run_until_complete(asyncio.gather(exchange_object.get_fee(address=pool_address, contract=pool_contract)))[0]
+    fee_str, fee_float = asyncio_gather(exchange_object.get_fee(address=pool_address, contract=pool_contract))[0]
 
     token_info, pair, skip_pool = process_token_details(
         tokens=tokens, token_manager=token_manager, web3=web3
@@ -1116,12 +1139,11 @@ def remove_duplicates():
             file_desc.close()
 
 
-def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [], web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
-    :param skip_exchange_names: the list of exchange names to skip
     :param web3: the Web3 object
     :param async_web3: the async Web3 object
     :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
@@ -1176,9 +1198,6 @@ def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [],
 
     for row in multichain_df.iterrows():
         exchange_name = row[1]["exchange_name"]
-        if exchange_name in skip_exchange_names:
-            print(f"Terraformer: skipping {exchange_name}")
-            continue
         chain = row[1]["chain"]
         fork = row[1]["fork"]
         factory_address = row[1]["factory_address"]
@@ -1288,9 +1307,9 @@ def terraform_blockchain(network_name: str, skip_exchange_names: List[str] = [],
 
 
 #terraform_blockchain(network_name="ethereum", save_tokens=True)
-#terraform_blockchain(network_name="coinbase_base", skip_exchange_names=[SCALE_V2_NAME], save_tokens=True)
-#terraform_blockchain(network_name="fantom", skip_exchange_names=[EQUALIZER_V2_NAME], save_tokens=True)
-#terraform_blockchain(network_name="mantle", skip_exchange_names=[STRATUM_V2_NAME, VELOCIMETER_V2_NAME], save_tokens=True)
-#terraform_blockchain(network_name="linea", skip_exchange_names=[XFAI_V0_NAME], save_tokens=True)
+#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
+#terraform_blockchain(network_name="fantom", save_tokens=True)
+#terraform_blockchain(network_name="mantle", save_tokens=True)
+#terraform_blockchain(network_name="linea", save_tokens=True)
 
 remove_duplicates()
