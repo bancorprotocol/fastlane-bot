@@ -1143,14 +1143,13 @@ def remove_duplicates():
             file_desc.close()
 
 
-def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, start_block: int = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, save_tokens: bool = False):
     """
     This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
 
     :param network_name: the name of the blockchain from which to get data
     :param web3: the Web3 object
     :param async_web3: the async Web3 object
-    :param start_block: the block from which to get data. If this is None, it uses the factory creation block for each exchange.
     """
 
     assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
@@ -1205,24 +1204,16 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         chain = row[1]["chain"]
         fork = row[1]["fork"]
         factory_address = row[1]["factory_address"]
-        router_address = row[1]["router_address"]
         fee = row[1]["fee"]
 
         if row[1]["active"] == "FALSE":
             continue
 
-        if fresh_data and not start_block:
-            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
-        if start_block is None:
-            from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
-        if factory_address is None or type(factory_address) != str:
-            print(
-                f"Terraformer: No factory contract address for exchange: {exchange_name}"
-            )
+        from_block = int(row[1]["start_block"]) if not math.isnan(row[1]["start_block"]) else 0
+        if factory_address is None or type(factory_address) != str or factory_address == "TBD":
+            print(f"No factory contract address for exchange {exchange_name} on {chain}")
             continue
-        elif factory_address == "TBD":
-            continue
-        print(f"********************** Terraforming **********************\nStarting exchange: {exchange_name} from block {from_block}")
+        print(f"*** Terraforming {exchange_name} on {chain} from block {from_block} ***")
 
         if fork in "uniswap_v2":
             if fee == "TBD":
@@ -1310,10 +1301,11 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="ethereum", save_tokens=True)
-#terraform_blockchain(network_name="coinbase_base", save_tokens=True)
-#terraform_blockchain(network_name="fantom", save_tokens=True)
-#terraform_blockchain(network_name="mantle", save_tokens=True)
-#terraform_blockchain(network_name="linea", save_tokens=True)
+#terraform_blockchain(network_name=ETHEREUM, save_tokens=True)
+#terraform_blockchain(network_name=BASE, save_tokens=True)
+#terraform_blockchain(network_name=FANTOM, save_tokens=True)
+#terraform_blockchain(network_name=MANTLE, save_tokens=True)
+#terraform_blockchain(network_name=LINEA, save_tokens=True)
+
 
 remove_duplicates()
