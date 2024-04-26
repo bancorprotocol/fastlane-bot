@@ -800,10 +800,9 @@ def organize_pool_details_solidly_v2(
     return pool
 
 
-def _get_events(contract, blockchain: str, exchange: str, start_block: int) -> list:
-    end_block = contract.w3.eth.block_number + 1
+def _get_events(contract, blockchain: str, exchange: str, start_block: int, end_block: int) -> list:
     chunk_size = BLOCK_CHUNK_SIZE_MAP[blockchain]
-    block_numbers = list(range(start_block, end_block, chunk_size)) + [end_block]
+    block_numbers = list(range(start_block, end_block + 1, chunk_size)) + [end_block + 1]
     event_method = contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs
     events_list = [event_method(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
     return [event for events in events_list for event in events]
@@ -814,6 +813,7 @@ def get_uni_v3_pools(
         exchange: str,
         factory_contract,
         start_block: int,
+        end_block: int,
         web3: Web3,
         blockchain: str
 ) -> Tuple[DataFrame, DataFrame]:
@@ -823,13 +823,14 @@ def get_uni_v3_pools(
     :param token_addr_lookup: the dict containing token information
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
+    :param end_block: the block number at which to end
     :param web3: the Web3 object
     :param exchange: the name of the exchange
     :param blockchain: the blockchain name
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V3_NAME, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V3_NAME, start_block, end_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -858,6 +859,7 @@ def get_uni_v2_pools(
         exchange: str,
         factory_contract,
         start_block: int,
+        end_block: int,
         default_fee: float,
         web3: Web3,
         blockchain: str
@@ -868,13 +870,14 @@ def get_uni_v2_pools(
     :param token_addr_lookup: the dict containing token information
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
+    :param end_block: the block number at which to end
     :param web3: the Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
     :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V2_NAME, start_block)
+    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V2_NAME, start_block, end_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -904,6 +907,7 @@ def get_solidly_v2_pools(
         async_factory_contract,
         factory_contract,
         start_block: int,
+        end_block: int,
         web3: Web3,
         async_web3: AsyncWeb3,
         blockchain: str
@@ -913,6 +917,7 @@ def get_solidly_v2_pools(
     :param token_manager: the dict containing token information
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
+    :param end_block: the block number at which to end
     :param web3: the Web3 object
     :param async_web3: the Async Web3 object
     :param exchange: the name of the exchange
@@ -921,7 +926,7 @@ def get_solidly_v2_pools(
 
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block)
+    pool_data = _get_events(factory_contract, blockchain, exchange, start_block, end_block)
     solidly_exchange = SolidlyV2(exchange_name=exchange, factory_contract=async_factory_contract)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -1079,24 +1084,6 @@ def add_to_exchange_ids(exchange: str, fork: str):
         EXCHANGE_IDS[exchange] = platform_id
 
 
-def get_web3_for_network(network_name: str) -> Tuple[Web3, AsyncWeb3]:
-    """
-    This function gets a web3 object for a specific network. This is meant for use when the terraformer is a standalone script.
-    :param network_name: the name of the blockchain from which to get data
-
-    returns: web3 object
-    """
-    try:
-        alchemy_rpc = ALCHEMY_RPC_LIST[network_name]
-        ALCHEMY_API_KEY = os.environ.get(ALCHEMY_KEY_DICT[network_name])
-    except ValueError:
-        print(
-            f"Terraformer: network {network_name} does not have Alchemy RPC set. Add an RPC to continue"
-        )
-        return None
-    return Web3(Web3.HTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}")), AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(f"{alchemy_rpc}{ALCHEMY_API_KEY}"))
-
-
 def get_last_block_updated(df: pd.DataFrame, exchange: str) -> int:
     """
     This function retrieves the highest block number for relevant exchanges
@@ -1154,19 +1141,15 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
     assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
 
-    if web3 is None:
-        web3, async_web3 = get_web3_for_network(network_name=network_name)
-
-    assert web3.is_connected(), f"Web3 is not connected for network: {network_name}"
+    url = ALCHEMY_RPC_LIST[network_name] + os.environ.get(ALCHEMY_KEY_DICT[network_name])
+    web3 = Web3(Web3.HTTPProvider(url))
+    async_web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(url))
 
     PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")
-    write_path = os.path.normpath(
-        f"{PROJECT_PATH}/fastlane_bot/data/blockchain_data/{network_name}"
-    )
+    write_path = os.path.normpath(f"{PROJECT_PATH}/fastlane_bot/data/blockchain_data/{network_name}")
     path_exists = os.path.exists(write_path)
     data_path = os.path.normpath(write_path + "/static_pool_data.csv")
     data_exists = os.path.exists(data_path)
-    fresh_data = False
     token_manager = get_all_token_details(web3, network=network_name, write_path=write_path)
 
     if not path_exists:
@@ -1176,7 +1159,6 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         univ2_mapdf = pd.DataFrame(columns=["exchange", "address"])
         univ3_mapdf = pd.DataFrame(columns=["exchange", "address"])
         solidly_v2_mapdf = pd.DataFrame(columns=["exchange", "address"])
-        fresh_data = True
     else:
         exchange_df = pd.read_csv(
             write_path + "/static_pool_data.csv",
@@ -1197,9 +1179,9 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     if save_tokens:
         save_token_data(token_dict=token_manager, write_path=write_path)
 
-    multichain_df = get_multichain_addresses(network=network_name)
+    to_block = web3.eth.block_number
 
-    for row in multichain_df.iterrows():
+    for row in get_multichain_addresses(network=network_name).iterrows():
         exchange_name = row[1]["exchange_name"]
         chain = row[1]["chain"]
         fork = row[1]["fork"]
@@ -1213,7 +1195,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
         if factory_address is None or type(factory_address) != str or factory_address == "TBD":
             print(f"No factory contract address for exchange {exchange_name} on {chain}")
             continue
-        print(f"*** Terraforming {exchange_name} on {chain} from block {from_block} ***")
+        print(f"*** Terraforming {chain} / {exchange_name} from block {from_block:,} to block {to_block:,} ***")
 
         if fork in "uniswap_v2":
             if fee == "TBD":
@@ -1233,6 +1215,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 factory_contract=factory_contract,
                 default_fee=fee,
                 start_block=from_block,
+                end_block=to_block,
                 web3=web3,
                 blockchain=network_name
             )
@@ -1251,6 +1234,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 exchange=exchange_name,
                 factory_contract=factory_contract,
                 start_block=from_block,
+                end_block=to_block,
                 web3=web3,
                 blockchain=network_name
             )
@@ -1273,6 +1257,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 factory_contract=factory_contract,
                 async_factory_contract=async_factory_contract,
                 start_block=from_block,
+                end_block=to_block,
                 web3=web3,
                 async_web3=async_web3,
                 blockchain=network_name
