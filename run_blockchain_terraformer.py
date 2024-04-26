@@ -1245,10 +1245,10 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
 
 #terraform_blockchain(network_name=ETHEREUM, save_tokens=True)
-terraform_blockchain(network_name=BASE, save_tokens=True)
+#terraform_blockchain(network_name=BASE, save_tokens=True)
 #terraform_blockchain(network_name=FANTOM, save_tokens=True)
-terraform_blockchain(network_name=MANTLE, save_tokens=True)
-terraform_blockchain(network_name=LINEA, save_tokens=True)
+#terraform_blockchain(network_name=MANTLE, save_tokens=True)
+#terraform_blockchain(network_name=LINEA, save_tokens=True)
 
 
 remove_duplicates()
