@@ -789,14 +789,14 @@ def organize_pool_details_solidly_v2(
 
 
 def get_events(contract, exchange: str, start_block: int, end_block: int) -> list:
-    if (start_block <= end_block):
+    if start_block <= end_block:
         try:
             return contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs(fromBlock=start_block, toBlock=end_block)
         except Exception as e:
             assert "Log" in str(e), str(e)
-            midBlock = (start_block + end_block) // 2
-            arr1 = get_events(contract, exchange, start_block, midBlock)
-            arr2 = get_events(contract, exchange, midBlock + 1, end_block)
+            mid_block = (start_block + end_block) // 2
+            arr1 = get_events(contract, exchange, start_block, mid_block)
+            arr2 = get_events(contract, exchange, mid_block + 1, end_block)
             return arr1 + arr2
     return []
 
@@ -935,26 +935,8 @@ def get_multichain_addresses(network_name: str) -> pd.DataFrame:
     return chain_addresses_df.loc[chain_addresses_df["chain"] == network_name]
 
 
-def get_items_from_exchange(
-    item_names: List[str],
-    exchange_name: str,
-    fork: str,
-    df: pd.DataFrame,
-) -> List[str or float]:
-    df_ex = df[
-        (df["exchange_name"] == exchange_name)
-        & (df["fork"] == fork)
-    ]
-    if len(df_ex.index) == 0:
-        return None
-    items_to_return = []
-    for item in item_names:
-        items_to_return.append(df_ex[item].values[0])
-    return items_to_return
-
-
 # Balancer subgraph query
-query = """
+subgraph_query = """
 {
 pools(
     orderBy: totalLiquidity
@@ -980,26 +962,18 @@ pools(
 
 
 # function to use requests.post to make an API call to the subgraph url
-def run_query(subgraph_query: str, subgraph_url: str) -> dict:
+def run_query(subgraph_url: str) -> dict:
     """
     This function executes the Balancer Subgraph query
-    :param subgraph_query: the Balancer query for the Graph
     :param subgraph_url: the URL of the relevant Balancer subgraph
-
     returns: a JSON object containing pool details
     """
-    # endpoint where you are making the request
-    url = subgraph_url
 
-    request = requests.post(url, json={"query": subgraph_query})
+    request = requests.post(subgraph_url, json={"query": subgraph_query})
     if request.status_code == 200:
         return request.json()
     else:
-        raise Exception(
-            "Query failed. return code is {}.      {}".format(
-                request.status_code, subgraph_query
-            )
-        )
+        raise Exception(f"Query failed with status code {request.status_code}:\n{subgraph_query}")
 
 
 def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
@@ -1009,9 +983,7 @@ def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
     :param subgraph_url: the URL of the Balancer subgraph
     :param web3: the Web3 object
     """
-    pool_data = run_query(subgraph_query=query, subgraph_url=subgraph_url)["data"][
-        "pools"
-    ]
+    pool_data = run_query(subgraph_url=subgraph_url)["data"]["pools"]
 
     token_prices = generate_token_price_map(pool_data=pool_data, web3=web3)
     # print(token_prices)
