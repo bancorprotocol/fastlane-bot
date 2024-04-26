@@ -23,12 +23,12 @@ import asyncio
 import nest_asyncio
 import threading
 
-def _start_background_loop(loop):
+def start_background_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
 _LOOP = asyncio.new_event_loop()
-_LOOP_THREAD = threading.Thread(target=_start_background_loop, args=(_LOOP,), daemon=True)
+_LOOP_THREAD = threading.Thread(target=start_background_loop, args=(_LOOP,), daemon=True)
 _LOOP_THREAD.start()
 
 def asyncio_gather(*futures, return_exceptions=False) -> list:
@@ -68,18 +68,6 @@ coingecko_network_map = {
     "cosmos": "cosmos",
     "kava": "kava",
     "mantle": "mantle",
-}
-
-BLOCK_CHUNK_SIZE_MAP = {
-    "ethereum": 50000,
-    "polygon": 250000,
-    "polygon_zkevm": 500000,
-    "arbitrum_one": 500000,
-    "optimism": 500000,
-    "coinbase_base": 250000,
-    "fantom": 2000,
-    "mantle": 10000000,
-    "linea": 1000000
 }
 
 ALCHEMY_KEY_DICT = {
@@ -800,12 +788,17 @@ def organize_pool_details_solidly_v2(
     return pool
 
 
-def _get_events(contract, blockchain: str, exchange: str, start_block: int, end_block: int) -> list:
-    chunk_size = BLOCK_CHUNK_SIZE_MAP[blockchain]
-    block_numbers = list(range(start_block, end_block + 1, chunk_size)) + [end_block + 1]
-    event_method = contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs
-    events_list = [event_method(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
-    return [event for events in events_list for event in events]
+def get_events(contract, exchange: str, start_block: int, end_block: int) -> list:
+    if (start_block <= end_block):
+        try:
+            return contract.events[EXCHANGE_POOL_CREATION_EVENT_NAMES[exchange]].get_logs(fromBlock=start_block, toBlock=end_block)
+        except Exception as e:
+            assert "Log" in str(e), str(e)
+            midBlock = (start_block + end_block) // 2
+            arr1 = get_events(contract, exchange, start_block, midBlock)
+            arr2 = get_events(contract, exchange, midBlock + 1, end_block)
+            return arr1 + arr2
+    return []
 
 
 def get_uni_v3_pools(
@@ -814,23 +807,19 @@ def get_uni_v3_pools(
         factory_contract,
         start_block: int,
         end_block: int,
-        web3: Web3,
-        blockchain: str
+        web3: Web3
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Uniswap V3 pool generation events and organizes them into two Dataframes
-
     :param token_addr_lookup: the dict containing token information
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
     :param end_block: the block number at which to end
     :param web3: the Web3 object
     :param exchange: the name of the exchange
-    :param blockchain: the blockchain name
-
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V3_NAME, start_block, end_block)
+    pool_data = get_events(factory_contract, UNISWAP_V3_NAME, start_block, end_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -845,13 +834,8 @@ def get_uni_v3_pools(
 
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    pool_mapping = [
-        {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
-    ]
-    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.reset_index(drop=True)
-    # mapdf = mapdf.set_index("exchange")
-    #return mapdf
+    pool_mapping = [{"exchange": pool["exchange"], "address": pool["address"]} for pool in pools]
+    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"]).reset_index(drop=True)
     return df, mapdf
 
 def get_uni_v2_pools(
@@ -861,12 +845,10 @@ def get_uni_v2_pools(
         start_block: int,
         end_block: int,
         default_fee: float,
-        web3: Web3,
-        blockchain: str
+        web3: Web3
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Uniswap V2 pool generation events and organizes them into two Dataframes
-
     :param token_addr_lookup: the dict containing token information
     :param factory_contract: the initialized Factory contract
     :param start_block: the block number from which to start
@@ -874,10 +856,9 @@ def get_uni_v2_pools(
     :param web3: the Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
-    :param blockchain: the blockchain name
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, UNISWAP_V2_NAME, start_block, end_block)
+    pool_data = get_events(factory_contract, UNISWAP_V2_NAME, start_block, end_block)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
         pools = Parallel(n_jobs=-1)(
@@ -890,15 +871,11 @@ def get_uni_v2_pools(
             )
             for pool in pool_data
         )
+
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    pool_mapping = [
-        {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
-    ]
-
-    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.reset_index(drop=True)
-    #return mapdf
+    pool_mapping = [{"exchange": pool["exchange"], "address": pool["address"]} for pool in pools]
+    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"]).reset_index(drop=True)
     return df, mapdf
 
 def get_solidly_v2_pools(
@@ -909,8 +886,7 @@ def get_solidly_v2_pools(
         start_block: int,
         end_block: int,
         web3: Web3,
-        async_web3: AsyncWeb3,
-        blockchain: str
+        async_web3: AsyncWeb3
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function retrieves Solidly pool generation events and organizes them into two Dataframes
@@ -922,11 +898,9 @@ def get_solidly_v2_pools(
     :param async_web3: the Async Web3 object
     :param exchange: the name of the exchange
     :param default_fee: the fee for the exchange
-    :param blockchain: the blockchain name
-
     returns: a tuple containing a Dataframe of pool creation and a Dataframe of Uni V3 pool mappings
     """
-    pool_data = _get_events(factory_contract, blockchain, exchange, start_block, end_block)
+    pool_data = get_events(factory_contract, exchange, start_block, end_block)
     solidly_exchange = SolidlyV2(exchange_name=exchange, factory_contract=async_factory_contract)
 
     with parallel_backend(n_jobs=-1, backend="threading"):
@@ -941,35 +915,24 @@ def get_solidly_v2_pools(
             )
             for pool in pool_data
         )
+
     pools = [pool for pool in pools if pool is not None]
     df = pd.DataFrame(pools, columns=dataframe_key)
-    pool_mapping = [
-        {"exchange": pool["exchange"], "address": pool["address"]} for pool in pools
-    ]
-
-    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"])
-    mapdf = mapdf.reset_index(drop=True)
-    # return mapdf
+    pool_mapping = [{"exchange": pool["exchange"], "address": pool["address"]} for pool in pools]
+    mapdf = pd.DataFrame(pool_mapping, columns=["exchange", "address"]).reset_index(drop=True)
     return df, mapdf
 
 
-def get_multichain_addresses(network: str, exchanges: List[str] = None) -> pd.DataFrame:
+def get_multichain_addresses(network_name: str) -> pd.DataFrame:
     """
     Create dataframe of addresses for the selected network
-    :param network: the network in which to get addresses
-    :param exchanges: (Optional) the list of exchanges for which to get data
+    :param network_name: the name of the network in which to get addresses
     returns:
     A dataframe that contains items from the selected network
     """
-    multichain_address_path = os.path.normpath(
-        "fastlane_bot/data/multichain_addresses.csv"
-    )
+    multichain_address_path = os.path.normpath("fastlane_bot/data/multichain_addresses.csv")
     chain_addresses_df = pd.read_csv(multichain_address_path)
-    network_df = chain_addresses_df.loc[chain_addresses_df["chain"] == network]
-    if exchanges is not None:
-        return network_df.loc[chain_addresses_df["exchange"] in exchanges]
-
-    return network_df
+    return chain_addresses_df.loc[chain_addresses_df["chain"] == network_name]
 
 
 def get_items_from_exchange(
@@ -1139,8 +1102,6 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     :param async_web3: the async Web3 object
     """
 
-    assert network_name in BLOCK_CHUNK_SIZE_MAP.keys(), f"Blockchain: {network_name} not supported. Supported blockchains: {BLOCK_CHUNK_SIZE_MAP.keys()}"
-
     url = ALCHEMY_RPC_LIST[network_name] + os.environ.get(ALCHEMY_KEY_DICT[network_name])
     web3 = Web3(Web3.HTTPProvider(url))
     async_web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(url))
@@ -1181,7 +1142,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
 
     to_block = web3.eth.block_number
 
-    for row in get_multichain_addresses(network=network_name).iterrows():
+    for row in get_multichain_addresses(network_name=network_name).iterrows():
         exchange_name = row[1]["exchange_name"]
         chain = row[1]["chain"]
         fork = row[1]["fork"]
@@ -1216,8 +1177,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 default_fee=fee,
                 start_block=from_block,
                 end_block=to_block,
-                web3=web3,
-                blockchain=network_name
+                web3=web3
             )
             m_df = m_df.reset_index(drop=True)
             univ2_mapdf = pd.concat([univ2_mapdf, m_df], ignore_index=True)
@@ -1235,8 +1195,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 factory_contract=factory_contract,
                 start_block=from_block,
                 end_block=to_block,
-                web3=web3,
-                blockchain=network_name
+                web3=web3
             )
             m_df = m_df.reset_index(drop=True)
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
@@ -1259,8 +1218,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
                 start_block=from_block,
                 end_block=to_block,
                 web3=web3,
-                async_web3=async_web3,
-                blockchain=network_name
+                async_web3=async_web3
             )
             m_df = m_df.reset_index(drop=True)
             solidly_v2_mapdf = pd.concat([solidly_v2_mapdf, m_df], ignore_index=True)
