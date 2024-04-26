@@ -78,15 +78,16 @@ jobs:
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
           ETHERSCAN_TOKEN: '${{ secrets.ETHERSCAN_TOKEN }}'
 
-      - name: Bump version and set output
+      - name: Bump version, update requirements.txt and set output
         if: steps.check.outputs.skip != 'true'
         id: bump_version_and_set_output
         run: |
           poetry version patch
+          poetry export --without-hashes --format=requirements.txt > requirements.txt
           git checkout main
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add fastlane_bot/__init__.py
+          git add pyproject.toml requirements.txt
           git commit -m "Bump version [skip ci]"
 
       - name: Generate changelog
