@@ -86,7 +86,7 @@ jobs:
           git checkout main
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add fastlane_bot/__init__.py
+          git add pyproject.toml
           git commit -m "Bump version [skip ci]"
 
       - name: Generate changelog
