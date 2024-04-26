@@ -467,16 +467,11 @@ def organize_pool_details_uni_v3(
 
     returns: dict of pool information
     """
-    skip_pool = False
     pool_address = pool_data["args"]["pool"]
     pool_address = web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
-    token_info = {}
-    pair = ""
     tick_spacing = pool_data["args"]["tickSpacing"]
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
-    if len(tokens) > 2:
-        return None
     token_info, pair, skip_pool = process_token_details(
         tokens=tokens, token_manager=token_manager, web3=web3
     )
@@ -582,8 +577,6 @@ def organize_pool_details_balancer(
 
     pair = ""
 
-    pool_total_liquidity_usd = 0
-
     for idx, tkn in enumerate(tokens):
         tkn_num = "tkn" + str(idx)
         address = tkn["address"]
@@ -669,18 +662,13 @@ def organize_pool_details_uni_v2(
 
     returns: dict of pool information
     """
-    skip_pool = False
     pool_address = pool_data["args"]["pair"]
     pool_address = web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
-    token_info = {}
-    pair = ""
     if default_fee == "TBD":
         return None
     default_fee = float(default_fee)
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
-    if len(tokens) > 2:
-        return None
     token_info, pair, skip_pool = process_token_details(
         tokens=tokens, token_manager=token_manager, web3=web3
     )
