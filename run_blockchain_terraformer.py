@@ -340,7 +340,7 @@ def get_token_details_from_contract(
             skip_token_list.append(token.lower())
             return None, None
         try:
-            symbol = contract.caller.symbol().remove(os.linesep) or "???"
+            symbol = contract.caller.symbol().replace(os.linesep, "") or "???"
             # attempt to write to csv
             pd.DataFrame(
                 {"token": [token], "symbol": [symbol], "decimals": [decimals]}
