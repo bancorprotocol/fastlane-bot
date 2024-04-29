@@ -6,11 +6,11 @@ import pandas as pd
 from dotenv import load_dotenv
 from joblib import parallel_backend, Parallel, delayed
 from pandas import DataFrame
-from pathlib import Path
 
 load_dotenv()
 import os
 import requests
+import pathlib
 
 from web3 import Web3, AsyncWeb3
 
@@ -1074,25 +1074,12 @@ def save_token_data(token_dict: TokenManager, write_path: str):
     token_df.to_csv(token_path)
 
 
-def remove_duplicates():
-    for path in Path("./").glob('**/*.*'):
-        path_in_str = str(path) # because path is object not string
-        if path_in_str.endswith('.csv'):
-            file_desc = open(path_in_str, 'r')
-            lines = file_desc.readlines()
-            file_desc.close()
-            file_desc = open(path_in_str, 'w')
-            file_desc.writelines(list(dict.fromkeys(lines)))
-            file_desc.close()
-
-
-def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: AsyncWeb3 = None, save_tokens: bool = False):
+def terraform_blockchain(network_name: str):
     """
-    This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network. The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv
+    This function collects all pool creation events for Uniswap V2/V3 and Solidly pools for a given network.
+    The factory addresses for each exchange for which to extract pools must be defined in fastlane_bot/data/multichain_addresses.csv.
 
     :param network_name: the name of the blockchain from which to get data
-    :param web3: the Web3 object
-    :param async_web3: the async Web3 object
     """
 
     url = ALCHEMY_RPC_LIST[network_name] + os.environ.get(ALCHEMY_KEY_DICT[network_name])
@@ -1130,8 +1117,7 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             write_path + "/solidly_v2_event_mappings.csv", index_col=False
         )
 
-    if save_tokens:
-        save_token_data(token_dict=token_manager, write_path=write_path)
+    save_token_data(token_dict=token_manager, write_path=write_path)
 
     to_block = web3.eth.block_number
 
@@ -1230,21 +1216,24 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
             continue
         exchange_df = pd.concat([exchange_df, u_df])
 
-    if save_tokens:
-        save_token_data(token_dict=token_manager, write_path=write_path)
+    save_token_data(token_dict=token_manager, write_path=write_path)
 
     exchange_df.to_csv((write_path + "/static_pool_data.csv"), index=False)
     univ2_mapdf.to_csv((write_path + "/uniswap_v2_event_mappings.csv"), index=False)
     univ3_mapdf.to_csv((write_path + "/uniswap_v3_event_mappings.csv"), index=False)
     solidly_v2_mapdf.to_csv((write_path + "/solidly_v2_event_mappings.csv"), index=False)
-    return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
+
+    for path in pathlib.Path(write_path).glob("**/*.csv"):
+        file_desc = open(f"{path}", "r")
+        lines = file_desc.readlines()
+        file_desc.close()
+        file_desc = open(f"{path}", "w")
+        file_desc.writelines(list(dict.fromkeys(lines)))
+        file_desc.close()
 
 
-#terraform_blockchain(network_name=ETHEREUM, save_tokens=True)
-#terraform_blockchain(network_name=BASE, save_tokens=True)
-#terraform_blockchain(network_name=FANTOM, save_tokens=True)
-#terraform_blockchain(network_name=MANTLE, save_tokens=True)
-#terraform_blockchain(network_name=LINEA, save_tokens=True)
-
-
-remove_duplicates()
+#terraform_blockchain(network_name=ETHEREUM)
+#terraform_blockchain(network_name=BASE)
+#terraform_blockchain(network_name=FANTOM)
+#terraform_blockchain(network_name=MANTLE)
+#terraform_blockchain(network_name=LINEA)
