@@ -798,7 +798,7 @@ def get_events(contract: any, blockchain: str, exchange: str, start_block: int, 
 
 
 def get_events_iterative(get_logs: any, start_block: int, end_block: int, chunk_size: int) -> list:
-    block_numbers = list(range(start_block, end_block, chunk_size)) + [end_block]
+    block_numbers = list(range(start_block, end_block + 1, chunk_size)) + [end_block + 1]
     events_list = [get_logs(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
     return [event for events in events_list for event in events]
 
