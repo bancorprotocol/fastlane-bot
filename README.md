@@ -50,6 +50,12 @@ You can access the legacy version of the Fastlane Arbitrage Bot, which was solel
 
 [github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0](https://github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0)
 
+### Dependencies
+Project depends on `poetry` and `pyproject.toml`. However, in order to preserve backward compatibility, after any change to dependencies, the following command should be run, to update `requirement.txt`
+```
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+```
+
 ### Preparation
 
 The Fastlane Arbitrage Bot needs access to an Ethereum wallet's private key. **THIS KEY IS AT RISK AND SHOULD NOT BE USED ELSEWHERE**. Maintain some ETH in the wallet for gas fees and regularly sweep profits. Supply the private key to the bot using an environment variable, as shown:
