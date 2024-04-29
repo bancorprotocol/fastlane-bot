@@ -14,10 +14,10 @@ import pathlib
 
 from web3 import Web3, AsyncWeb3
 
-from fastlane_bot.data.abi import *
 from fastlane_bot.utils import safe_int
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
 from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
+from fastlane_bot.data.abi import ERC20_ABI, UNISWAP_V2_FACTORY_ABI, UNISWAP_V3_FACTORY_ABI
 
 import asyncio
 import nest_asyncio
