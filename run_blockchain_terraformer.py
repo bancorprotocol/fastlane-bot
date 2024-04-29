@@ -956,8 +956,7 @@ def get_multichain_addresses(network_name: str) -> pd.DataFrame:
     return chain_addresses_df.loc[chain_addresses_df["chain"] == network_name]
 
 
-# Balancer subgraph query
-subgraph_query = """
+balancer_subgraph_query = """
 {
 pools(
     orderBy: totalLiquidity
@@ -982,21 +981,6 @@ pools(
 """
 
 
-# function to use requests.post to make an API call to the subgraph url
-def run_query(subgraph_url: str) -> dict:
-    """
-    This function executes the Balancer Subgraph query
-    :param subgraph_url: the URL of the relevant Balancer subgraph
-    returns: a JSON object containing pool details
-    """
-
-    request = requests.post(subgraph_url, json={"query": subgraph_query})
-    if request.status_code == 200:
-        return request.json()
-    else:
-        raise Exception(f"Query failed with status code {request.status_code}:\n{subgraph_query}")
-
-
 def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
     """
     This function gets Balancer pool details from the Balancer subgraph
@@ -1004,10 +988,11 @@ def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
     :param subgraph_url: the URL of the Balancer subgraph
     :param web3: the Web3 object
     """
-    pool_data = run_query(subgraph_url=subgraph_url)["data"]["pools"]
+    response = requests.post(subgraph_url, json={"query": balancer_subgraph_query})
+    assert response.status_code == 200, f"Balancer subgraph query failed with {response}"
+    pool_data = response.json()["data"]["pools"]
 
     token_prices = generate_token_price_map(pool_data=pool_data, web3=web3)
-    # print(token_prices)
     pools = []
     for pool in pool_data:
         pools.append(
@@ -1208,8 +1193,8 @@ def terraform_blockchain(network_name: str):
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
                 u_df = get_balancer_pools(subgraph_url=subgraph_url, web3=web3)
-            except:
-                print(f"Could not find Balancer subgraph URL for chain: {network_name}")
+            except Exception as e:
+                print(f"Fetching balancer pools for chain {network_name} failed:\n{e}")
                 continue
         else:
             print(f"Fork {fork} for exchange {exchange_name} not in supported forks.")
