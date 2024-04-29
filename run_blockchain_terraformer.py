@@ -799,8 +799,8 @@ def get_events(contract: any, blockchain: str, exchange: str, start_block: int, 
 
 def get_events_iterative(get_logs: any, start_block: int, end_block: int, chunk_size: int) -> list:
     block_numbers = list(range(start_block, end_block + 1, chunk_size)) + [end_block + 1]
-    events_list = [get_logs(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
-    return [event for events in events_list for event in events]
+    event_lists = [get_logs(fromBlock=block_numbers[n-1], toBlock=block_numbers[n]-1) for n in range(1, len(block_numbers))]
+    return [event for event_list in event_lists for event in event_list]
 
 
 def get_events_recursive(get_logs: any, start_block: int, end_block: int) -> list:
@@ -810,9 +810,9 @@ def get_events_recursive(get_logs: any, start_block: int, end_block: int) -> lis
         except Exception as e:
             assert "eth_getLogs" in str(e), str(e)
             mid_block = (start_block + end_block) // 2
-            arr1 = get_events_recursive(get_logs, start_block, mid_block)
-            arr2 = get_events_recursive(get_logs, mid_block + 1, end_block)
-            return arr1 + arr2
+            event_list_1 = get_events_recursive(get_logs, start_block, mid_block)
+            event_list_2 = get_events_recursive(get_logs, mid_block + 1, end_block)
+            return event_list_1 + event_list_2
     return []
 
 
