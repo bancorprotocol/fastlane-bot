@@ -5,8 +5,8 @@ simple representation of a pair of tokens, used by cpc and arbgraph
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "2.1"
-__DATE__ = "18/May/2023"
+__VERSION__ = "2.2"
+__DATE__ = "30/Apr/2024"
 
 from dataclasses import dataclass, field, asdict, InitVar
 
@@ -83,7 +83,7 @@ class SimplePair:
         return self.tknq
 
     NUMERAIRE_TOKENS = {
-        tkn: i
+        tkn: i*10
         for i, tkn in enumerate(
             [
                 "USDC",
