@@ -796,6 +796,8 @@ class _ConfigNetworkSei(ConfigNetwork):
     RPC_ENDPOINT = "https://evm-rpc.arctic-1.seinetwork.io/" # TODO currently Sei devnet
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
+
+    WEBSOCKET_URL = "wss://evm-ws.arctic-1.seinetwork.io"
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C" #TODO - UPDATE WITH Mainnet
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"

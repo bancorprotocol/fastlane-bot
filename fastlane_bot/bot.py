@@ -46,20 +46,14 @@ Licensed under MIT.
 __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"
 
-import asyncio
 import random
 import json
 import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from threading import Thread
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
-
-from web3 import Web3, AsyncWeb3
-from web3.providers import WebsocketProviderV2
-
 
 import fastlane_bot
 from fastlane_bot.config import Config
@@ -896,20 +890,6 @@ class CarbonBot:
         """
         return self.db.get_tokens_from_exchange(exchange_name=exchange_name)
 
-    def run_event_listener(self):
-        async def inner(mgr):
-            from fastlane_bot.events.listener import EventListener
-
-            base_exchanges = ["carbon_v1", "uniswap_v3", "uniswap_v2", "bancor_pol", "bancor_v2", "bancor_v3", "solidly_v2"]
-            async with AsyncWeb3.persistent_websocket(WebsocketProviderV2(mgr.cfg.network.WEBSOCKET_URL)) as w3:
-                event_listener = EventListener(manager=mgr, base_exchanges=base_exchanges, w3=w3)
-                async for events in event_listener.pull_block_events():
-                    for event in events:
-                        print(event)
-                        mgr.update_from_event(event)
-
-        asyncio.run(inner(self.db.mgr))
-
     def run(
         self,
         *,
@@ -963,24 +943,3 @@ class CarbonBot:
             )
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.info(e)
-
-        thread = Thread(target=self.run_event_listener, args=(), daemon=True)
-        thread.start()
-
-        while True:  # TODO: remove
-            ...
-
-        if mode == "continuous":
-            self.run_continuous_mode(
-                flashloan_tokens, arb_mode, run_data_validator, randomizer
-            )
-        else:
-            self.run_single_mode(
-                flashloan_tokens,
-                CCm,
-                arb_mode,
-                run_data_validator,
-                randomizer,
-                replay_mode,
-                tenderly_fork,
-            )

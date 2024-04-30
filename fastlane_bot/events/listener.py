@@ -60,7 +60,7 @@ class EventListener:
                     batch = self._event_buffer.copy()
                     self._event_buffer = []
                     yield batch
-            await asyncio.sleep(min(0.01, self._last_event_ts + self.NEW_EVENT_TIMEOUT - ts))
+            await asyncio.sleep(min(self.NEW_EVENT_TIMEOUT, self._last_event_ts + self.NEW_EVENT_TIMEOUT - ts))
 
     async def _listen(self):
         async for response in self._w3.ws.process_subscriptions():
