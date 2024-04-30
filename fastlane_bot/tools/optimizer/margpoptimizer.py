@@ -22,9 +22,7 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3-b2"
-# MERGING THE CHANGES FROM c4a110c9297abff1f355b03155c1052dcd1bd2fa
-
+__VERSION__ = "5.3-b3"
 __DATE__ = "30/Apr/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
@@ -158,6 +156,7 @@ class MargPOptimizer(CPCArbOptimizer):
         debug_j             ditto, additional debug output (Jacobian)
         debug_dtkn          ditto (d Token)
         debug_dtkn2         ditto (more d Token; requires debug_dtkn)
+        debug_dtknd         ditto, d Token as dict  
         raiseonerror        if True, raise an OptimizationError exception on error
         pstart              starting price for optimization (3)
         ==================  =========================================================================
@@ -187,6 +186,7 @@ class MargPOptimizer(CPCArbOptimizer):
         get    = lambda p, ix: p[ix] if ix is not None else 1       # safe get from tuple
         dxdy_f = lambda r: (np.array(r[0:2]))                       # extract dx, dy from result
         tn     = lambda t: t.split("-")[0]                          # token name, eg WETH-xxxx -> WETH
+        
         
         # epsilons and maxiter
         eps = P("eps") or self.MOEPS
@@ -231,9 +231,12 @@ class MargPOptimizer(CPCArbOptimizer):
             )
         
         # pstart
+        if P("verbose") or P("debug"):
+            print(f"[margp_optimizer] targettkn = {targettkn}")
+        
         pstart = P("pstart")
         if not pstart is None:
-            if P("verbose") or P("debug"):
+            if P("debug"):
                 print(f"[margp_optimizer] using pstart [{len(P('pstart'))} tokens]")
             if isinstance(pstart, pd.DataFrame):
                 try:
@@ -243,9 +246,8 @@ class MargPOptimizer(CPCArbOptimizer):
                 assert isinstance(pstart, dict), f"pstart must be a dict or a data frame [{pstart}]"
             price_estimates_t = tuple(pstart[t] for t in tokens_t)
         else:
-            if P("verbose") or P("debug"):
-                print("[margp_optimizer] calculating price estimates")
             if P("debug"):
+                print("[margp_optimizer] calculating price estimates")
                 print(f"[margp_optimizer] tknq={targettkn}, tknbs={tokens_t}")
             
             try:
@@ -262,7 +264,8 @@ class MargPOptimizer(CPCArbOptimizer):
                 raise
         
         if P("debug"):
-            print("[margp_optimizer] pstart:", price_estimates_t)
+            print("[margp_optimizer] price estimates = ", price_estimates_t)
+        
         if result == self.MO_PSTART:
             df = pd.DataFrame(price_estimates_t, index=tokens_t, columns=[targettkn])
             df.index.name = "tknb"
@@ -270,7 +273,7 @@ class MargPOptimizer(CPCArbOptimizer):
             
         # criterion and norm
         crit = P("crit") or self.MOCRITR
-        assert crit in set((self.MOCRITR, self.MOCRITA)), "crit must be MOCRITR or MOCRITA"
+        assert crit in set((self.MOCRITR, self.MOCRITA)), f"crit must be {self.MOCRITR} or {self.MOCRITA}"
         if crit == self.MOCRITA:
             assert not pstart is None, "pstart must be provided if crit is MOCRITA"
             assert epsaunit in pstart, f"epsaunit {epsaunit} not in pstart {P('pstart')}"
@@ -284,6 +287,9 @@ class MargPOptimizer(CPCArbOptimizer):
         norm = P("norm") or self.MONORML2
         assert norm in set((self.MONORML1, self.MONORML2, self.MONORMLINF)), f"norm must be MONORML1, MONORML2 or MONORMLINF [{norm}]"
         normf = lambda x: np.linalg.norm(x, ord=norm)
+        
+        if P("verbose") or P("debug"):
+            print(f"[margp_optimizer] crit={crit} (eps={eps_used}, unit={eps_unit}, norm=L{norm})")
                 
         ## INNER FUNCTION: CALCULATE THE TARGET FUNCTION
         def dtknfromp_f(p, *, islog10=True, asdct=False, quiet=False):
@@ -305,18 +311,14 @@ class MargPOptimizer(CPCArbOptimizer):
                 p = np.exp(p * np.log(10))
             assert len(p) == len(tokens_t), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
             if P("debug_dtkn") and not quiet:
-                print(f"\n[dtknfromp_f]\n=====================>>>")
-                #print(f"prices={p}")
-                #print(f"tokens={tokens_t}")
-                print( "p   ", ", ".join(f"{x:,.2f}" for x in p))
-                print( "1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
-                print(f"{targettkn} <-", ", ".join(tokens_t))
+                print(f"\n[dtknfromp_f]\ndtkn=================>>>")
+                print(f"{targettkn:6}", ", ".join(tokens_t))
+                print( "p     ", ", ".join(f"{x:,.2f}" for x in p))
+                print( "1/p   ", ", ".join(f"{1/x:,.2f}" for x in p))
             
             # pvec is dict {tkn -> (log) price} for all tokens in p
             pvec = {tkn: p_ for tkn, p_ in zip(tokens_t, p)}
             pvec[targettkn] = 1
-            # if P("debug") and not quiet:
-            #     print(f"pvec={pvec}")
             
             sum_by_tkn = {t: 0 for t in alltokens_s}
             for pair, (tknb, tknq) in zip(pairs, pairs_t):
@@ -330,37 +332,31 @@ class MargPOptimizer(CPCArbOptimizer):
                 #dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
                 dxvecs = (c.dxvecfrompvec_f(pvec) for c in curves)
                 
-                if P("debug_dtkn2") and not quiet:
-                    dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
-                        # TODO: rewrite this using the dxvec
-                        # there is no need to extract dy dx; just iterate over dict
-                        # however not urgent because this is debug code
-                    print(f"\n{c0.pairp} --->>")
-                    print(f"  price={price:,.4f}, 1/price={1/price:,.4f}")
-                    for r, c in zip(dxdy, curves):
-                        s =  f" cid={c.cid[2:6]}{c.cid[-2:]}"
-                        s += f" dx={float(r[0]):15,.3f} {c.tknxp:>5}"
-                        s += f" dy={float(r[1]):15,.3f} {c.tknyp:>5}"
-                        s += f" p={c.p:,.2f} 1/p={1/c.p:,.2f}"
-                        print(s)
-                    print(f"<<--- {c0.pairp}")
+                # if P("debug_dtkn2") and not quiet:
+                #     dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
+                #         # TODO: rewrite this using the dxvec
+                #         # there is no need to extract dy dx; just iterate over dict
+                #         # however not urgent because this is debug code
+                #     print(f"\n{c0.pairp} --->>")
+                #     print(f" price={price:,.4f}, 1/price={1/price:,.4f}")
+                #     for r, c in zip(dxdy, curves):
+                #         s =  f" cid={c.cid[2:6]}{c.cid[-2:]}"
+                #         s += f" dx={float(r[0]):15,.3f} {c.tknxp:>5}"
+                #         s += f" dy={float(r[1]):15,.3f} {c.tknyp:>5}"
+                #         s += f" p={c.p:,.2f} 1/p={1/c.p:,.2f}"
+                #         print(s)
+                #     print(f"<<--- {c0.pairp}")
 
-                # old code from dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
-                # sumdx, sumdy = sum(dxdy)
-                # sum_by_tkn[tknq] += sumdy
-                # sum_by_tkn[tknb] += sumdx
                 for dxvec in dxvecs:
                     for tkn, dx_ in dxvec.items():
                         sum_by_tkn[tkn] += dx_
-
-                # if P("debug") and not quiet:
-                #     print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
 
             result = tuple(sum_by_tkn[t] for t in tokens_t)
             if P("debug_dtkn") and not quiet:
                 print(f"\nsum_by_tkn={sum_by_tkn}")
                 print(f"result={result}")
-                print(f"<<<=====================")
+                print("      >", ", ".join(tokens_t))
+                print(f"<<<=================dtkn")
 
             if asdct:
                 return sum_by_tkn, np.array(result)
@@ -369,41 +365,33 @@ class MargPOptimizer(CPCArbOptimizer):
         ## END INNER FUNCTION
 
         try:
-    
+            
             # setting up the optimization variables (note: we optimize in log space)
             if price_estimates_t is None:
                 raise Exception(f"price estimates not found; try setting pstart")
             p = np.array(price_estimates_t, dtype=float)
             plog10 = np.log10(p)
             if P("verbose") or P("debug"):
-                # dtkn_d, dtkn = dtknfromp_f(plog10, islog10=True, asdct=True)
-                print(f"[margp_optimizer] {targettkn} <-", ", ".join(tokens_t))
-                print( "[margp_optimizer] p_t ", p)
+                print(f"\n[margp_optimizer] {targettkn} <-", ", ".join(tokens_t))
                 print( "[margp_optimizer] p   ", ", ".join(f"{x:,.2f}" for x in p))
                 print( "[margp_optimizer] 1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
-                # print("[margp_optimizer] dtkn", dtkn)
-                # if P("tknd"):
-                #     print("[margp_optimizer] dtkn_d", dtkn_d)
-
+                
             ## MAIN OPTIMIZATION LOOP
             for i in range(maxiter):
 
                 if P("progress"):
-                    print(
-                        f"\n[margp_optimizer] Iteration [{i:2.0f}]: time elapsed: {time.time()-start_time:.2f}s"
-                    )
+                    print(f"\n[margp_optimizer] Iteration [{i:2.0f}]: time elapsed: {time.time()-start_time:.2f}s")
+                
                 # calculate the change in token amounts (also as dict if requested)
-                if P("tknd"):
+                if P("debug_dtknd"):
                     dtkn_d, dtkn = dtknfromp_f(plog10, islog10=True, asdct=True)
                 else:
                     dtkn = dtknfromp_f(plog10, islog10=True, asdct=False)
 
                 # calculate the Jacobian
-                # if P("debug"):
-                #   print("\n[margp_optimizer] calculating Jacobian")
                 
                 J = self.J(dtknfromp_f, plog10, jach=jach)  
-                    # ATTENTION: dtknfromp_f takes log10(p) as input
+                    # ATTENTION: dtknfromp_f takes log10(p) as input by default
                 
                 if P("debug_j"):
                     print("\n[margp_optimizer]\n============= JACOBIAN =============>>>")
@@ -420,8 +408,8 @@ class MargPOptimizer(CPCArbOptimizer):
                         print("\n[margp_optimizer] singular Jacobian, using lstsq instead")
                     
                     dplog10 = np.linalg.lstsq(J, -dtkn, rcond=None)[0]
-                    # https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
-                    # https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
+                        # https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
+                        # https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
                 
                 # update log prices, prices...
                 p0log10 = [*plog10]                 # keep current log prices (deep copy)
@@ -448,11 +436,10 @@ class MargPOptimizer(CPCArbOptimizer):
                         print(f"[margp_optimizer] dtkn={dtkn}")
                         print(f"[margp_optimizer] p={p} {targettkn}")
                         print(f"[margp_optimizer] p={p_in_epsaunit} {epsaunit}")
-                    if P("verbose") or P("debug"):
                         print(f"[margp_optimizer] crit=normf({dtkn*p_in_epsaunit}) = {criterium} {epsaunit}")
-                    
+                
                 # ...print out some info if requested...
-                if P("verbose"):
+                if P("verbose") or P("debug"):
                     print(f"\n[margp_optimizer]\n========== cycle {i} =======>>>")
                     print(f"{targettkn} <-", ", ".join(tokens_t))
                     print("dtkn  ", ", ".join(f"{x:,.3f}" for x in dtkn))
@@ -462,17 +449,11 @@ class MargPOptimizer(CPCArbOptimizer):
                     print("p_t     ", tuple(p), targettkn)
                     print("p       ", ", ".join(f"{x:,.2f}" for x in p))
                     print("1/p     ", ", ".join(f"{1/x:,.2f}" for x in p))
-                    #print("tokens  ", tokens_t)
-                    # print("dtkn", dtkn)
-                    #print("dtkn    ", ", ".join(f"{x:,.3f}" for x in dtkn))
                     print(f"crit     {criterium:.2e} [{eps_unit}; L{norm}], eps={eps_used}, c/e={criterium/eps_used:,.0e}]")
                     
-                    # TODO: DEAL WITH THOSE DEBUG FLAGS
-                    if P("tknd"):
+                    if P("debug_dtknd"):
                         print("dtkn_d  ", dtkn_d)
-                    if P("J"):
-                        print("J      ", J)
-                    
+
                     print(f"<<<========== cycle {i} =======")
 
                 # ...and finally check the criterium (percentage changes this step) for convergence
