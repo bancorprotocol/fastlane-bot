@@ -306,6 +306,14 @@ def run(mgr, args, tenderly_uri=None) -> None:
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
 
+    # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
+    async_handle_initial_iteration(
+        backdate_pools=args.backdate_pools,
+        last_block=last_block,
+        mgr=mgr,
+        start_block=args.replay_from_block,
+    )
+
     while True:
         try:
             # ensure 'last_updated_block' is in pool_data for all pools
@@ -346,22 +354,22 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 args.use_cached_events,
             )
 
-            latest_events = (
-                get_cached_events(mgr, args.logging_path)
-                if args.use_cached_events
-                else get_latest_events(
-                    current_block,
-                    mgr,
-                    args.n_jobs,
-                    start_block,
-                    args.cache_latest_only,
-                    args.logging_path,
-                )
-            )
+            # latest_events = (
+            #     get_cached_events(mgr, args.logging_path)
+            #     if args.use_cached_events
+            #     else get_latest_events(
+            #         current_block,
+            #         mgr,
+            #         args.n_jobs,
+            #         start_block,
+            #         args.cache_latest_only,
+            #         args.logging_path,
+            #     )
+            # )
             iteration_start_time = time.time()
 
             # Update the pools from the latest events
-            update_pools_from_events(args.n_jobs, mgr, latest_events)
+            #update_pools_from_events(args.n_jobs, mgr, latest_events)
 
             # Update new pool events from contracts
             if len(mgr.pools_to_add_from_contracts) > 0:
@@ -386,14 +394,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 tenderly_fork_id=args.tenderly_fork_id,
             )
 
-            # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
-            async_handle_initial_iteration(
-                backdate_pools=args.backdate_pools,
-                current_block=current_block,
-                last_block=last_block,
-                mgr=mgr,
-                start_block=start_block,
-            )
 
             # Run multicall every iteration
             multicall_every_iteration(current_block=current_block, mgr=mgr)

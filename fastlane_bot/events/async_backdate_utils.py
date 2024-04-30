@@ -90,7 +90,6 @@ def async_handle_initial_iteration(
     last_block: int,
     mgr: Any,
     start_block: int,
-    current_block: int,
 ):
     if last_block == 0:
         non_multicall_rows_to_update = mgr.get_rows_to_update(start_block)
@@ -105,7 +104,7 @@ def async_handle_initial_iteration(
             )
 
             mgr.cfg.logger.info(
-                f"Backdating {len(other_pool_rows)} pools from {start_block} to {current_block}"
+                f"Backdating {len(other_pool_rows)} pools from {start_block}"
             )
             start_time = time.time()
             async_backdate_from_contracts(
