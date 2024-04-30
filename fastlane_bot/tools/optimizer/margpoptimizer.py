@@ -22,8 +22,10 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3-b1"
-__DATE__ = "14/Dec/2023"
+__VERSION__ = "5.3-b2"
+# MERGING THE CHANGES FROM c4a110c9297abff1f355b03155c1052dcd1bd2fa
+
+__DATE__ = "30/Apr/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -150,10 +152,12 @@ class MargPOptimizer(CPCArbOptimizer):
         epsaunit            unit for epsa (default: MOEPSAUNIT)
         jach                step size for calculating Jacobian (default: MOJACH)
         maxiter             maximum number of iterations (default: 100)
-        verbose             if True, print some high level output
-        progress            if True, print some basic progress output
-        debug               if True, print some debug output
-        debug2              more debug output
+        progress            if True, print progress output
+        verbose             ditto, high level output
+        debug               ditto, basic debug output
+        debug_j             ditto, additional debug output (Jacobian)
+        debug_dtkn          ditto (d Token)
+        debug_dtkn2         ditto (more d Token; requires debug_dtkn)
         raiseonerror        if True, raise an OptimizationError exception on error
         pstart              starting price for optimization (3)
         ==================  =========================================================================
@@ -300,16 +304,19 @@ class MargPOptimizer(CPCArbOptimizer):
             if islog10:
                 p = np.exp(p * np.log(10))
             assert len(p) == len(tokens_t), f"p and tokens_t have different lengths [{p}, {tokens_t}]"
-            if P("debug") and not quiet:
-                print(f"\n[dtknfromp_f] =====================>>>")
-                print(f"prices={p}")
-                print(f"tokens={tokens_t}")
+            if P("debug_dtkn") and not quiet:
+                print(f"\n[dtknfromp_f]\n=====================>>>")
+                #print(f"prices={p}")
+                #print(f"tokens={tokens_t}")
+                print( "p   ", ", ".join(f"{x:,.2f}" for x in p))
+                print( "1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
+                print(f"{targettkn} <-", ", ".join(tokens_t))
             
             # pvec is dict {tkn -> (log) price} for all tokens in p
             pvec = {tkn: p_ for tkn, p_ in zip(tokens_t, p)}
             pvec[targettkn] = 1
-            if P("debug") and not quiet:
-                print(f"pvec={pvec}")
+            # if P("debug") and not quiet:
+            #     print(f"pvec={pvec}")
             
             sum_by_tkn = {t: 0 for t in alltokens_s}
             for pair, (tknb, tknq) in zip(pairs, pairs_t):
@@ -323,7 +330,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 #dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
                 dxvecs = (c.dxvecfrompvec_f(pvec) for c in curves)
                 
-                if P("debug2") and not quiet:
+                if P("debug_dtkn2") and not quiet:
                     dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
                         # TODO: rewrite this using the dxvec
                         # there is no need to extract dy dx; just iterate over dict
@@ -331,7 +338,7 @@ class MargPOptimizer(CPCArbOptimizer):
                     print(f"\n{c0.pairp} --->>")
                     print(f"  price={price:,.4f}, 1/price={1/price:,.4f}")
                     for r, c in zip(dxdy, curves):
-                        s = f"  cid={c.cid:15}"
+                        s =  f" cid={c.cid[2:6]}{c.cid[-2:]}"
                         s += f" dx={float(r[0]):15,.3f} {c.tknxp:>5}"
                         s += f" dy={float(r[1]):15,.3f} {c.tknyp:>5}"
                         s += f" p={c.p:,.2f} 1/p={1/c.p:,.2f}"
@@ -350,10 +357,10 @@ class MargPOptimizer(CPCArbOptimizer):
                 #     print(f"pair={c0.pairp}, {sumdy:,.4f} {tn(tknq)}, {sumdx:,.4f} {tn(tknb)}, price={price:,.4f} {tn(tknq)} per {tn(tknb)} [{len(curves)} funcs]")
 
             result = tuple(sum_by_tkn[t] for t in tokens_t)
-            if P("debug") and not quiet:
-                print(f"sum_by_tkn={sum_by_tkn}")
+            if P("debug_dtkn") and not quiet:
+                print(f"\nsum_by_tkn={sum_by_tkn}")
                 print(f"result={result}")
-                print(f"<<<===================== [dtknfromp_f]")
+                print(f"<<<=====================")
 
             if asdct:
                 return sum_by_tkn, np.array(result)
@@ -370,9 +377,10 @@ class MargPOptimizer(CPCArbOptimizer):
             plog10 = np.log10(p)
             if P("verbose") or P("debug"):
                 # dtkn_d, dtkn = dtknfromp_f(plog10, islog10=True, asdct=True)
-                print("[margp_optimizer] pe  ", p)
-                print("[margp_optimizer] p   ", ", ".join(f"{x:,.2f}" for x in p))
-                print("[margp_optimizer] 1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
+                print(f"[margp_optimizer] {targettkn} <-", ", ".join(tokens_t))
+                print( "[margp_optimizer] p_t ", p)
+                print( "[margp_optimizer] p   ", ", ".join(f"{x:,.2f}" for x in p))
+                print( "[margp_optimizer] 1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
                 # print("[margp_optimizer] dtkn", dtkn)
                 # if P("tknd"):
                 #     print("[margp_optimizer] dtkn_d", dtkn_d)
@@ -381,8 +389,9 @@ class MargPOptimizer(CPCArbOptimizer):
             for i in range(maxiter):
 
                 if P("progress"):
-                    print(f"Iteration [{i:2.0f}]: time elapsed: {time.time()-start_time:.2f}s")
-
+                    print(
+                        f"\n[margp_optimizer] Iteration [{i:2.0f}]: time elapsed: {time.time()-start_time:.2f}s"
+                    )
                 # calculate the change in token amounts (also as dict if requested)
                 if P("tknd"):
                     dtkn_d, dtkn = dtknfromp_f(plog10, islog10=True, asdct=True)
@@ -391,30 +400,33 @@ class MargPOptimizer(CPCArbOptimizer):
 
                 # calculate the Jacobian
                 # if P("debug"):
-                #     print("\n[margp_optimizer] ============= JACOBIAN =============>>>")
+                #   print("\n[margp_optimizer] calculating Jacobian")
+                
                 J = self.J(dtknfromp_f, plog10, jach=jach)  
                     # ATTENTION: dtknfromp_f takes log10(p) as input
-                if P("debug"):
-                    # print("==== J ====>")
-                    print("\n============= JACOBIAN =============>>>")
+                
+                if P("debug_j"):
+                    print("\n[margp_optimizer]\n============= JACOBIAN =============>>>")
                     print(J)
-                    # print("<=== J =====")
                     print("<<<============= JACOBIAN =============\n")
                 
                 # Update p, dtkn using the Newton-Raphson formula
                 try:
                     dplog10 = np.linalg.solve(J, -dtkn)
+                
                 except np.linalg.LinAlgError:
+                    
                     if P("verbose") or P("debug"):
-                        print("[margp_optimizer] singular Jacobian, using lstsq instead")
+                        print("\n[margp_optimizer] singular Jacobian, using lstsq instead")
+                    
                     dplog10 = np.linalg.lstsq(J, -dtkn, rcond=None)[0]
                     # https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
                     # https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
                 
                 # update log prices, prices...
-                p0log10 = [*plog10]
-                plog10 += dplog10
-                p = np.exp(plog10 * np.log(10))
+                p0log10 = [*plog10]                 # keep current log prices (deep copy)
+                plog10 += dplog10                   # update log prices
+                p = np.exp(plog10 * np.log(10))     # expand log to actual prices
                 
                 # determine the convergence criterium
                 if crit_is_relative:
@@ -441,22 +453,27 @@ class MargPOptimizer(CPCArbOptimizer):
                     
                 # ...print out some info if requested...
                 if P("verbose"):
-                    print(f"\n[margp_optimizer] ========== cycle {i} =======>>>")
-                    print("log p0  ", p0log10)
-                    print("log dp  ", dplog10)
-                    print("log p   ", plog10)
+                    print(f"\n[margp_optimizer]\n========== cycle {i} =======>>>")
+                    print(f"{targettkn} <-", ", ".join(tokens_t))
+                    print("dtkn  ", ", ".join(f"{x:,.3f}" for x in dtkn))
+                    print("log p0", p0log10) # previous log prices
+                    print("d logp", dplog10) # change in log prices
+                    print("log p ", plog10)  # current log prices
                     print("p_t     ", tuple(p), targettkn)
                     print("p       ", ", ".join(f"{x:,.2f}" for x in p))
                     print("1/p     ", ", ".join(f"{1/x:,.2f}" for x in p))
-                    print("tokens  ", tokens_t)
+                    #print("tokens  ", tokens_t)
                     # print("dtkn", dtkn)
-                    print("dtkn    ", ", ".join(f"{x:,.3f}" for x in dtkn))
+                    #print("dtkn    ", ", ".join(f"{x:,.3f}" for x in dtkn))
                     print(f"crit     {criterium:.2e} [{eps_unit}; L{norm}], eps={eps_used}, c/e={criterium/eps_used:,.0e}]")
+                    
+                    # TODO: DEAL WITH THOSE DEBUG FLAGS
                     if P("tknd"):
                         print("dtkn_d  ", dtkn_d)
                     if P("J"):
                         print("J      ", J)
-                    print(f"<<<========== cycle {i} ======= [margp_optimizer]")
+                    
+                    print(f"<<<========== cycle {i} =======")
 
                 # ...and finally check the criterium (percentage changes this step) for convergence
                 if criterium < eps_used:
