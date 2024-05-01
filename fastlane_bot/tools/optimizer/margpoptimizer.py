@@ -22,7 +22,7 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3.1"
+__VERSION__ = "5.3.2"
 __DATE__ = "01/May/2024"
 
 __DATE__ = "30/Apr/2024"
@@ -385,7 +385,48 @@ class MargPOptimizer(CPCArbOptimizer):
                 print(f"\n[margp_optimizer] {targettkn} <-", ", ".join(tokens_t))
                 print( "[margp_optimizer] p   ", ", ".join(f"{x:,.2f}" for x in p))
                 print( "[margp_optimizer] 1/p ", ", ".join(f"{1/x:,.2f}" for x in p))
+            
+            if P("debug_j"):
+                    print("\n[margp_optimizer]\n============= JACOBIAN% =============>>>")
+                    print("tknq", targettkn)
+                    for t in tokens_t:  
+                        print(", ".join([f"d{t}/d%p{tt}" for tt in tokens_t]))
+                    print("<<<============= JACOBIAN% =============\n")
+                    
+            # This outputs the explainer for the Jacobian which is defined as the change in token
+            # flows with respect to change in log10 prices. The prices are all quoted in terms of 
+            # the target token, here referred to as `tknq``. 
+            
+            # The Jacobian is multiplied by $log(1.01)$ to normalize for a 1% change in prices.
+            # In the printout, 
                 
+            #     dUSDP/d%pLINK
+                
+            # corresponds to the change of USDP token amounts (measured in USDP tokens) with respect
+            # to changes in price of LINK vs ETH for a 1% change in price.
+            
+            
+            # For example, take this output here
+            
+            #     [margp_optimizer]
+            #     ============= JACOBIAN% =============>>>
+            #     tknq ETH
+            #     dUSDP/d%pUSDP, dUSDP/d%pLINK
+            #     dLINK/d%pUSDP, dLINK/d%pLINK
+            #     <<<============= JACOBIAN% =============
+
+
+            #     [margp_optimizer]
+            #     ============= JACOBIAN% =============>>>
+            #     [[-1704.90616999    98.21599834]
+            #     [    6.93538284  -121.04274482]]
+            #     <<<============= JACOBIAN% ============= 
+                
+            # It implies the if USDP increase by 1% against ETH (and LINK remains constant
+            # against ETH) then the change in USDP token amounts is -1704.9 USDP tokens
+            # and the change in LINK token amounts is 6.9 LINK tokens.  
+            
+            
             ## MAIN OPTIMIZATION LOOP
             for i in range(maxiter):
 
@@ -404,9 +445,9 @@ class MargPOptimizer(CPCArbOptimizer):
                     # ATTENTION: dtknfromp_f takes log10(p) as input by default
                 
                 if P("debug_j"):
-                    print("\n[margp_optimizer]\n============= JACOBIAN =============>>>")
-                    print(J)
-                    print("<<<============= JACOBIAN =============\n")
+                    print("\n[margp_optimizer]\n============= JACOBIAN% =============>>>")
+                    print(J*np.log10(1.01)) # normalises for 1% change in price
+                    print("<<<============= JACOBIAN% =============\n")
                 
                 # Update p, dtkn using the Newton-Raphson formula
                 try:
