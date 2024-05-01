@@ -35,7 +35,7 @@ class EventListener:
         self._last_event_ts = 0
 
         for exchange_name, exchange in self._manager.exchanges.items():
-            if exchange_name in base_exchanges:
+            if exchange.base_exchange_name in base_exchanges:
                 self._subscriptions += exchange.get_subscriptions(self._manager.event_contracts[exchange_name])
 
     async def pull_block_events(self) -> AsyncGenerator[List[Event], None]:
