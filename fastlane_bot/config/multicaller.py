@@ -154,18 +154,6 @@ class MultiCaller(ContextManager):
             calls_for_aggregate += (_calls_for_aggregate[fn_list])
             output_types_list += (_output_types_list[fn_list])
 
-        _encoded_data = []
-
-        function_keys = _calls_for_aggregate.keys()
-        for fn_list in function_keys:
-            _encoded_data.append(self.web3.eth.contract(
-                abi=MULTICALL_ABI,
-                address=self.MULTICALL_CONTRACT_ADDRESS
-            ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
-
-        if not isinstance(_encoded_data[0], list):
-            raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
-
         encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
@@ -184,7 +172,7 @@ class MultiCaller(ContextManager):
         return_data += [i[1] for i in decoded_data_list if len(i) > 1]
 
         # Handling for Bancor POL - combine results into a Tuple
-        if "tokenPrice" in function_keys and "amountAvailableForTrading" in function_keys:
+        if "tokenPrice" in _calls_for_aggregate and "amountAvailableForTrading" in _calls_for_aggregate:
             new_return = []
             returned_items = int(len(return_data))
             total_pools = int(returned_items / 2)
