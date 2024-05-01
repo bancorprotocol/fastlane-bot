@@ -67,27 +67,15 @@ def run_command(mode):
         f"--arb_mode={mode}",
         "--default_min_profit_gas_token=60",
         "--limit_bancor3_flashloan_tokens=True",
-        # "--use_cached_events=True",
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
         "--timeout=120",
         "--blockchain=ethereum"
     ]
-    subprocess.Popen(cmd)
-        
-    # Wait for the expected log line to appear
+
     expected_log_line = "limiting flashloan_tokens to ["
-    found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
-
-    # Check if the expected log line is in the output
-    if expected_log_line in result.stderr:
-        found = True
-
-    if not found:
-        pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
-
-
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True)
+    assert expected_log_line in result.stderr, result.stderr
 
 
 # ------------------------------------------------------------
