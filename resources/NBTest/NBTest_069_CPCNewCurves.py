@@ -16,15 +16,16 @@
 
 # +
 try:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-    from tools.optimizer import MargPOptimizer
-    import tools.invariants.functions as f
-    from testing import *
-except:
     from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
     from fastlane_bot.tools.optimizer import F, MargPOptimizer
     import fastlane_bot.tools.invariants.functions as f
     from fastlane_bot.testing import *
+
+except:
+    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from tools.optimizer import MargPOptimizer
+    import tools.invariants.functions as f
+    from tools.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))

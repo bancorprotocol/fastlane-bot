@@ -7,20 +7,23 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
-from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
-from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
-from fastlane_bot.testing import *
-# from flbtools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
-# from flbtools.optimizer import MargPOptimizer, PairOptimizer
-# from flbtesting import *
+try:
+    from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
+    from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
+    from fastlane_bot.testing import *
+
+except:
+    from tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
+    from tools.optimizer import MargPOptimizer, PairOptimizer
+    from tools.testing import *
 
 from math import sqrt
 from copy import deepcopy
