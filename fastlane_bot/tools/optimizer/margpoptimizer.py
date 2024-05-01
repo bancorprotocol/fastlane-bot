@@ -22,8 +22,8 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3-b3"
-__DATE__ = "30/Apr/2024"
+__VERSION__ = "5.3"
+__DATE__ = "01/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -212,24 +212,6 @@ class MargPOptimizer(CPCArbOptimizer):
         curves_by_pair = {pair: tuple(c for c in curves_t if c.pair == pair) for pair in pairs }
         pairs_t = tuple(tuple(p.split("/")) for p in pairs)
 
-        # return the inner function if requested
-        # (this may need to move lower)
-        if result == self.MO_DTKNFROMPF:
-            return dtknfromp_f
-
-        # return debug info if requested
-        if result == self.MO_DEBUG:
-            return dict(
-                tokens_t=tokens_t,
-                tokens_ix=tokens_ix,
-                pairs=pairs,
-                sfc=sfc,
-                targettkn=targettkn,
-                pairs_t=pairs_t,
-                crit=dict(crit=P("crit"), eps=eps, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
-                optimizer=self,
-            )
-        
         # pstart
         if P("verbose") or P("debug"):
             print(f"[margp_optimizer] targettkn = {targettkn}")
@@ -363,7 +345,27 @@ class MargPOptimizer(CPCArbOptimizer):
 
             return np.array(result)
         ## END INNER FUNCTION
-
+        
+        # return debug info if requested
+        if result == self.MO_DEBUG:
+            return dict(
+                tokens_t=tokens_t,
+                tokens_ix=tokens_ix,
+                price_estimates_t = price_estimates_t,
+                pairs=pairs,
+                sfc=sfc,
+                targettkn=targettkn,
+                pairs_t=pairs_t,
+                crit=dict(crit=P("crit"), eps=eps, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
+                dtknfromp_f = dtknfromp_f,
+                optimizer=self,
+            )
+        
+        # return the inner function if requested
+        if result == self.MO_DTKNFROMPF:
+            return dtknfromp_f
+        
+        
         try:
             
             # setting up the optimization variables (note: we optimize in log space)
@@ -410,6 +412,15 @@ class MargPOptimizer(CPCArbOptimizer):
                     dplog10 = np.linalg.lstsq(J, -dtkn, rcond=None)[0]
                         # https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
                         # https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
+                
+                # #### TODO: EXPERIMENTAL: ADD A DAMPING FACTOR TO THE JACOBIAN
+                
+                # #dplog10 = np.clip(dplog10, -0.1, 0.1)
+                # nrm = normf(dplog10)
+                # if nrm > 0.1:
+                #     dplog10 /= nrm
+                
+                # #### END EXPERIMENTAL
                 
                 # update log prices, prices...
                 p0log10 = [*plog10]                 # keep current log prices (deep copy)
