@@ -7,16 +7,21 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveBase
-from fastlane_bot.testing import *
+try:
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveBase
+    from fastlane_bot.testing import *
+
+except:
+    from tools.cpc import ConstantProductCurve as CPC, CurveBase
+    from tools.testing import *
 # from flbtools.cpc import ConstantProductCurve as CPC, CurveBase
 # from flbtesting import *
 

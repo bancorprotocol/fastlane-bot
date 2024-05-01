@@ -7,22 +7,29 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
 # from fastlane_bot.config import Config
-# print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Config))
+try:
+    #from fastlane_bot.tools.moo import meh
+    from fastlane_bot.testing import *
 
-from fastlane_bot.testing import *
+except:
+    #from tools.moo import meh
+    from tools.testing import *
+
+# print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(meh))
+
 # plt.style.use('seaborn-dark')
 # plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+# from fastlane_bot import __VERSION__
+# require("2.0", __VERSION__)
 # -
 
 # # TEMPLATE [NBTest000]
