@@ -22,7 +22,7 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3"
+__VERSION__ = "5.3.1"
 __DATE__ = "01/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
@@ -128,13 +128,12 @@ class MargPOptimizer(CPCArbOptimizer):
         ==============  ============================================================
         `result`        returns
         ==============  ============================================================
+        None            alias for MO_FULL (default; use unless you know better)
+        MO_FULL         full result
+        MO_MINIMAL      minimal result (omitting some big fields)
         MO_DEBUG        a number of items useful for debugging
         MO_PSTART       price estimates (as dataframe)
-        MO_PE           alias for MO_ESTPRICE
         MO_DTKNFROMPF   the function calculating dtokens from p
-        MO_MINIMAL      minimal result (omitting some big fields)
-        MO_FULL         full result
-        None            alias for MO_FULL
         ==============  ============================================================
         
         
@@ -157,6 +156,7 @@ class MargPOptimizer(CPCArbOptimizer):
         debug_dtkn          ditto (d Token)
         debug_dtkn2         ditto (more d Token; requires debug_dtkn)
         debug_dtknd         ditto, d Token as dict  
+        debug_pe            ditto, price estimates  
         raiseonerror        if True, raise an OptimizationError exception on error
         pstart              starting price for optimization (3)
         ==================  =========================================================================
@@ -226,7 +226,10 @@ class MargPOptimizer(CPCArbOptimizer):
                 except Exception as e:
                     raise Exception(f"error while converting dataframe pstart to dict: {e}", pstart, targettkn)
                 assert isinstance(pstart, dict), f"pstart must be a dict or a data frame [{pstart}]"
-            price_estimates_t = tuple(pstart[t] for t in tokens_t)
+            try: 
+                price_estimates_t = tuple(pstart[t] for t in tokens_t)
+            except KeyError as e:
+                raise Exception(f"pstart does not contain all required tokens [{e}; pstart={pstart}, tokens_t={tokens_t}]")
         else:
             if P("debug"):
                 print("[margp_optimizer] calculating price estimates")
@@ -236,14 +239,15 @@ class MargPOptimizer(CPCArbOptimizer):
                 price_estimates_t = self.price_estimates(
                     tknq=targettkn, 
                     tknbs=tokens_t, 
-                    verbose=P("debug"),
+                    verbose=P("debug_pe"),
                     triangulate=True,
                 )
             except Exception as e:
                 if P("verbose") or P("debug"):
                     print(f"[margp_optimizer] error calculating price estimates: [{e}]")
                 price_estimates_t = None
-                raise
+                if not result in [self.MO_PSTART, self.MO_DEBUG]:
+                    raise
         
         if P("debug"):
             print("[margp_optimizer] price estimates = ", price_estimates_t)
@@ -255,9 +259,9 @@ class MargPOptimizer(CPCArbOptimizer):
             
         # criterion and norm
         crit = P("crit") or self.MOCRITR
-        assert crit in set((self.MOCRITR, self.MOCRITA)), f"crit must be {self.MOCRITR} or {self.MOCRITA}"
+        assert crit in set((self.MOCRITR, self.MOCRITA)), f"crit must be self.MOCRITR or self.MOCRITA"
         if crit == self.MOCRITA:
-            assert not pstart is None, "pstart must be provided if crit is MOCRITA"
+            assert not pstart is None, "pstart must be provided if crit is self.MOCRITA"
             assert epsaunit in pstart, f"epsaunit {epsaunit} not in pstart {P('pstart')}"
             p_targettkn_per_epsaunit = pstart[epsaunit]/pstart[targettkn]
             if P("debug"):
@@ -303,16 +307,18 @@ class MargPOptimizer(CPCArbOptimizer):
             pvec[targettkn] = 1
             
             sum_by_tkn = {t: 0 for t in alltokens_s}
-            for pair, (tknb, tknq) in zip(pairs, pairs_t):
-                if get(p, tokens_ix.get(tknq)) > 0:
-                    price = get(p, tokens_ix.get(tknb)) / get(p, tokens_ix.get(tknq))
-                else:
-                    #print(f"[dtknfromp_f] warning: price for {pair} is unknown, using 1 instead")
-                    price = 1
-                curves = curves_by_pair[pair]
-                c0 = curves[0]
+            for pair in pairs:
+                #for pair, (tknb, tknq) in zip(pairs, pairs_t):
+                # if get(p, tokens_ix.get(tknq)) > 0:
+                #     price = get(p, tokens_ix.get(tknb)) / get(p, tokens_ix.get(tknq))
+                # else:
+                #     #print(f"[dtknfromp_f] warning: price for {pair} is unknown, using 1 instead")
+                #     price = 1
+                #curves = curves_by_pair[pair]
+                # c0 = curves[0]
                 #dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
-                dxvecs = (c.dxvecfrompvec_f(pvec) for c in curves)
+                
+                dxvecs = (c.dxvecfrompvec_f(pvec) for c in curves_by_pair[pair])
                 
                 # if P("debug_dtkn2") and not quiet:
                 #     dxdy = tuple(dxdy_f(c.dxdyfromp_f(price)) for c in curves)
