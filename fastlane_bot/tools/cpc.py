@@ -8,9 +8,9 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.5"
-__DATE__ = "22/Apr/2023"
-
+__VERSION__ = "3.6"
+__DATE__ = "02/May/2024"
+ 
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
 from . import tokenscale as ts
@@ -1089,7 +1089,7 @@ class ConstantProductCurve(CurveBase):
 
             # validation
             if not pa/pb - 1 >= minrw*0.99:
-                raise cls.CPCValidationError(f"pa +> pb required ({pa}, {pb}, {pa/pb-1}, {minrw})")
+                raise cls.CPCValidationError(f"pa > pb required ({pa}, {pb}, {pa/pb-1}, {minrw})")
 
             # finally set A, B
             A = sqrt(pa) - sqrt(pb)
@@ -1823,6 +1823,14 @@ class CPCContainer:
         """returns list of dictionaries representing the curves"""
         return [c.asdict() for c in self.curves]
     asdicts = as_dicts # legacy name
+    
+    def as_json(self):
+        """as_dicts as JSON string"""
+        return json.dumps(self.as_dicts())
+    
+    def as_repr(self):
+        """returns a string representation of the container"""
+        return ",\n".join([repr(c) for c in self.curves])+","
     
     def as_df(self):
         """returns pandas dataframe representing the curves"""
