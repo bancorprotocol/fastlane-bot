@@ -7,24 +7,31 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
-import fastlane_bot.tools.arbgraphs as ag
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+try:
+    import fastlane_bot.tools.arbgraphs as ag
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from fastlane_bot.testing import *
+
+except:
+    import tools.arbgraphs as ag
+    from tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from tools.testing import *
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ag.ArbGraph))
 
-from fastlane_bot.testing import *
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require("2.0", __VERSION__)
+# from fastlane_bot import __VERSION__
+# require("2.0", __VERSION__)
 # -
 
 # # Graph Code [NBTest065]
