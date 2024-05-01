@@ -351,7 +351,7 @@ def run_event_listener(mgr):
                                 )
                                 _run_async_update_with_retries(mgr, current_block=current_block)
                                 mgr.pools_to_add_from_contracts = []
-            except websockets.exceptions.ConnectionClosed:
+            except websockets.exceptions.ConnectionClosedError:
                 logger.info("Websocket connection lost. Reconnecting ...")
                 await asyncio.sleep(1)
 
