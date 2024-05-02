@@ -44,20 +44,14 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.1"
-__DATE__ = "15/Sep/2023"
+__VERSION__ = "5.2"
+__DATE__ = "02/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
 import numpy as np
+import sys
 
-try:
-    import cvxpy as cp
-except:
-    # if cvxpy is not installed on the system then the convex optimization methods will not work
-    # however, the (superior) marginal price based methods will still work and we do not want to
-    # force installation of an otherwise unused package onto the user's system
-    cp = None
 
 import time
 import math
@@ -754,6 +748,57 @@ class CPCArbOptimizer(OptimizerBase):
         """
         return self.curve_container.plot(*args, **kwargs)
 
+    DC_DEFAULT = True
+    DC_JSON = "json"
+    DC_DICTS = "dicts"
+    DC_DF = "df"
+    DC_CONSTR = "constr"
+    
+    def dump_curves(self, mode=DC_DEFAULT, *, dest=None):
+        """
+        dumps the curves to stdout
+
+        :mode:      dump mode, determining format (see below)
+        :dest:      `stdout` (default), `stderr`, or an open file handle (1)
+        
+        ===============  ===================================
+        `mode`           meaning 
+        ===============  ===================================
+        DC_DEFAULT       default mode (DC_CONSTR)
+        DC_JSON          JSON format
+        DC_DICTS         dict format
+        DC_DF            dataframe format
+        DC_CONSTR        curve constructor format
+        ===============  ===================================
+        
+        NOTE 1. the file must be open for writing; it will not be closed; the code below
+        allows capturing the output in a string
+        
+            from io import StringIO
+            out = StringIO()
+            O.dump_curves(dest=out)
+            result = out.getvalue()
+        """
+        dest = dest or "stdout"
+        if isinstance(dest, str):
+            dest = dest.lower()
+            if dest == "stdout": f = sys.stdout
+            elif dest == "stderr": f = sys.stderr
+        else:
+            f = dest
+        
+        if mode == self.DC_DEFAULT: mode = self.DC_CONSTR
+        if mode == self.DC_JSON:
+            print(self.curves.as_json(), file=f)
+        elif mode == self.DC_DICTS:
+            print(self.curves.as_dicts(), file=f)
+        elif mode == self.DC_DF:
+            print(self.curves.as_df(), file=f)
+        elif mode == self.DC_CONSTR:
+            print(self.curves.as_repr(), file=f)
+        else:
+            raise ValueError(f"unknown mode {mode}")
+        
     def format(self, *args, **kwargs):
         """
         convenience for self.curve_container.format()

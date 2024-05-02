@@ -17,11 +17,11 @@
 # +
 try:
     from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, cp, time
+    from fastlane_bot.tools.optimizer import CPCArbOptimizer, time
     from fastlane_bot.testing import *
 except:
     from tools.cpc import ConstantProductCurve as CPC, CPCContainer
-    from tools.optimizer import CPCArbOptimizer, cp, time
+    from tools.optimizer import CPCArbOptimizer, time
     from tools.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
