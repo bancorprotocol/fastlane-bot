@@ -403,6 +403,14 @@ class PoolAndTokens:
         allow to omit yint (in which case it is set to y, but this does not make
         a difference for the result)
         """
+        def calculate_parameters(y: Decimal, pa: Decimal, pb: Decimal, pm: Decimal, n: Decimal):
+            H = pa.sqrt() ** n
+            L = pb.sqrt() ** n
+            M = pm.sqrt() ** n
+            A = H - L
+            B = L
+            z = y * (H - L) / (M - L) if M > L else y
+            return z
 
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
         lst = []
@@ -523,14 +531,14 @@ class PoolAndTokens:
                 
                 # modify the y_int based on the new geomean to the limit of y    #TODO check that this math is correct
                 typed_args0 = strategy_typed_args[0]
-                new_yint0 = typed_args0['y'] * (typed_args0['pa'] - typed_args0['pb']) / ((1/geomean_p_marg) - typed_args0['pb'])  #this geomean is flipped because we flippend the pmarg from order 0
+                new_yint0 = calculate_parameters(y=typed_args0['y'], pa=typed_args0['pa'], pb=typed_args0['pb'], pm=(1/geomean_p_marg), n=1)
                 if new_yint0 < typed_args0['y']:
                     new_yint0 = typed_args0['y']
-                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] First order: typed_args0['yint'], new_yint0, , typed_args0['y']: {typed_args0['yint'], new_yint0, typed_args0['y']}")
+                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] First order: typed_args0['yint'], new_yint0, typed_args0['y']: {typed_args0['yint'], new_yint0, typed_args0['y']}")
                 typed_args0['yint'] = new_yint0
 
                 typed_args1 = strategy_typed_args[1]
-                new_yint1 = typed_args1['y'] * (typed_args1['pa'] - typed_args1['pb']) / (geomean_p_marg - typed_args1['pb'])
+                new_yint1 = calculate_parameters(y=typed_args1['y'], pa=typed_args1['pa'], pb=typed_args1['pb'], pm=(geomean_p_marg), n=1)
                 if new_yint1 < typed_args1['y']:
                     new_yint1 = typed_args1['y']
                 self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] Second order: typed_args1['yint'], new_yint1, typed_args1['y']: {typed_args1['yint'], new_yint1, typed_args1['y']} \n")
