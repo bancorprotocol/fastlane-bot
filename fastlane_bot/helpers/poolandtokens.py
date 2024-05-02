@@ -407,6 +407,7 @@ class PoolAndTokens:
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
         lst = []
         errors = []
+        strategy_typed_args = []
         for i in [0, 1]:
 
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
@@ -450,6 +451,7 @@ class PoolAndTokens:
             decimal_converter = decimal_converter(i)
 
             p_start = Decimal(encoded_order.p_start) * decimal_converter
+            p_marg = Decimal(encoded_order.p_marg) * decimal_converter
             p_end = Decimal(encoded_order.p_end) * decimal_converter
             yint = Decimal(yint) / (
                 Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
@@ -457,6 +459,11 @@ class PoolAndTokens:
             y = Decimal(y) / (
                 Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
             )
+            is_limit_order = p_start==p_end
+
+            # if (p_marg!=p_start) and (p_marg!=p_end):
+            #     self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] p_start, p_marg, p_end:, {p_start, p_marg, p_end}")
+            # assert (round(p_start,6)<=round(p_marg,6)<=round(p_end,6)) or (round(p_start,6)>=round(p_marg,6)>=round(p_end,6)), f"WARNING {p_start, p_marg, p_end}"
 
             tkny = 1 if i == 0 else 0
             typed_args = {
@@ -466,7 +473,9 @@ class PoolAndTokens:
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
+                "p_marg": p_marg,  # deleted later since not supported by from_carbon()
                 "pa": p_start,
+                "is_limit_order": is_limit_order, # deleted later since not supported by from_carbon()
                 "tkny": self.pair_name.split("/")[tkny].replace(
                     self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
                 ),
@@ -476,6 +485,67 @@ class PoolAndTokens:
                 "descr": self.descr,
                 "params": self._params,
             }
+
+            strategy_typed_args += [typed_args]
+
+        #### MODIFICATION LOGIC HERE >>>>>
+        # Only overlapping strategies are selected for modification
+        if len(strategy_typed_args) == 2:
+            
+            is_overlapping = False
+            pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
+
+            # evaluate that the marginal prices are within the pmarg_threshold
+            pmarg0, pmarg1 = [x['p_marg'] for x in strategy_typed_args]
+            pmarg0_inv = 1/pmarg0  # one of the orders must be flipped since prices are always dy/dx - but must flip same geomean_pmarg later
+            percent_component = pmarg_threshold * max(pmarg0_inv, pmarg1)
+            percent_component_met = abs(pmarg0_inv - pmarg1) <= percent_component
+
+            # overlapping strategies by defintion cannot have A=0 i.e. there must be no limit orders
+            no_limit_orders = (strategy_typed_args[0]['is_limit_order'] == False) and (strategy_typed_args[1]['is_limit_order'] == False)
+
+            # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
+            prices_overlap = (strategy_typed_args[1]['pa']>(1/strategy_typed_args[0]['pa'])>strategy_typed_args[1]['pb']) # or (1/strategy_typed_args[0]['pa']<(strategy_typed_args[1]['pb']))
+            
+            # if (percent_component_met and no_limit_orders) and not prices_overlap:
+            #     print(percent_component_met, no_limit_orders, prices_overlap)
+            #     print(strategy_typed_args)
+
+            # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
+            is_overlapping = percent_component_met and no_limit_orders and prices_overlap
+
+            if is_overlapping:
+                # print(strategy_typed_args)
+                # calculate the geometric mean
+                geomean_p_marg = Decimal.sqrt(pmarg0_inv * pmarg1)
+                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] These cids are identified as overlapping: {[x['cid'] for x in strategy_typed_args]}")
+                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] pmarg0_inv, pmarg1, geomean_p_marg: {pmarg0_inv, pmarg1, geomean_p_marg}")
+                
+                # modify the y_int based on the new geomean to the limit of y    #TODO check that this math is correct
+                typed_args0 = strategy_typed_args[0]
+                new_yint0 = typed_args0['y'] * (typed_args0['pa'] - typed_args0['pb']) / ((1/geomean_p_marg) - typed_args0['pb'])  #this geomean is flipped because we flippend the pmarg from order 0
+                if new_yint0 < typed_args0['y']:
+                    new_yint0 = typed_args0['y']
+                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] First order: typed_args0['yint'], new_yint0, , typed_args0['y']: {typed_args0['yint'], new_yint0, typed_args0['y']}")
+                typed_args0['yint'] = new_yint0
+
+                typed_args1 = strategy_typed_args[1]
+                new_yint1 = typed_args1['y'] * (typed_args1['pa'] - typed_args1['pb']) / (geomean_p_marg - typed_args1['pb'])
+                if new_yint1 < typed_args1['y']:
+                    new_yint1 = typed_args1['y']
+                self.ConfigObj.logger.debug(f"[poolandtokens.py, _carbon_to_cpc] Second order: typed_args1['yint'], new_yint1, typed_args1['y']: {typed_args1['yint'], new_yint1, typed_args1['y']} \n")
+                typed_args1['yint'] = new_yint1
+
+                # repack the strateg_typed_args
+                strategy_typed_args = [typed_args0, typed_args1]
+
+
+        #### <<<<< MODIFICATION LOGIC HERE
+
+        for typed_args in strategy_typed_args:
+            # delete new args that arent supported by from_carbon()
+            del typed_args["p_marg"]
+            del typed_args["is_limit_order"]
             try:
                 if typed_args["y"] > 0:
                     lst.append(
