@@ -90,38 +90,28 @@ class CPCArbOptimizer(OptimizerBase):
     intermediate class for CPC arbitrage optimization
 
     :curves:         the CPCContainer object (or the curves therein) the optimizer is using
-
-    NOTE
-    the old argument name `curve_container` is still supported but deprecated
     """
 
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
-    def __init__(self, curves=None, *, curve_container=None):
-        if not curve_container is None:
-            if not curves is None:
-                raise ValueError(
-                    "must not uses curves and curve_container at the same time"
-                )
-            curves = curve_container
+    def __init__(self, curves=None):
         if curves is None:
             raise ValueError("must provide curves")
         if not isinstance(curves, CPCContainer):
-            curve_container = CPCContainer(curves)
-        self._curve_container = curves
+            curves = CPCContainer(curves)
+        self._curves = curves
 
     @property
-    def curve_container(self):
+    def curves(self):
         """the curve container (CPCContainer)"""
-        return self._curve_container
+        return self._curves
 
-    CC = curve_container
-    curves = curve_container
-
+    CC = curves
+    
     @property
     def tokens(self):
-        return self.curve_container.tokens
+        return self.curves.tokens
 
     @dataclass
     class SelfFinancingConstraints(DCBase):
@@ -241,12 +231,12 @@ class CPCArbOptimizer(OptimizerBase):
 
     def SFC(self, **data):
         """alias for SelfFinancingConstraints.new"""
-        return self.SelfFinancingConstraints.new(self.curve_container.tokens(), **data)
+        return self.SelfFinancingConstraints.new(self.curves.tokens(), **data)
 
     def SFCd(self, data_dct):
         """alias for SelfFinancingConstraints.new, with data as a dict"""
         return self.SelfFinancingConstraints.new(
-            self.curve_container.tokens(), **data_dct
+            self.curves.tokens(), **data_dct
         )
 
     def SFCa(self, targettkn):
@@ -269,7 +259,7 @@ class CPCArbOptimizer(OptimizerBase):
 
         see help(CPCContainer.price_estimate) for details
         """
-        return self.curve_container.price_estimates(tknqs=[tknq], tknbs=tknbs, **kwargs)
+        return self.curves.price_estimates(tknqs=[tknq], tknbs=tknbs, **kwargs)
 
     @dataclass
     class TradeInstruction(DCBase):
@@ -731,7 +721,7 @@ class CPCArbOptimizer(OptimizerBase):
             else:
                 print("[adjust_curves] dxvals is None")
                 return None
-        curves = self.curve_container
+        curves = self.curves
         try:
             newcurves = [
                 c.execute(dx=dx, verbose=verbose, ignorebounds=True)
@@ -748,16 +738,16 @@ class CPCArbOptimizer(OptimizerBase):
 
     def plot(self, *args, **kwargs):
         """
-        convenience for self.curve_container.plot()
+        convenience for self.curves.plot()
 
         see help(CPCContainer.plot) for details
         """
-        return self.curve_container.plot(*args, **kwargs)
+        return self.curves.plot(*args, **kwargs)
 
     def format(self, *args, **kwargs):
         """
-        convenience for self.curve_container.format()
+        convenience for self.curves.format()
 
         see help(CPCContainer.format) for details
         """
-        return self.curve_container.format(*args, **kwargs)
+        return self.curves.format(*args, **kwargs)
