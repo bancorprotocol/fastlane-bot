@@ -422,9 +422,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             if any(pool["exchange_name"] != mgr.cfg.BANCOR_POL_NAME for pool in mgr.pool_data):
                 mgr.cfg.logger.debug("[main] State has changed")
             else:
-                mgr.cfg.logger.warning(
-                    "[main] State has not changed, this may indicate an error"
-                )
+                mgr.cfg.logger.warning("[main] State has not changed, this may indicate an error")
 
             # Verify that the minimum profit in BNT is respected
             verify_min_bnt_is_respected(bot=bot, mgr=mgr)
