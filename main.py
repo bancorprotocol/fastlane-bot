@@ -47,7 +47,6 @@ from fastlane_bot.events.utils import (
     get_start_block,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
-    verify_min_bnt_is_respected,
     handle_target_token_addresses,
     get_current_block,
     handle_tenderly_event_exchanges,
@@ -417,15 +416,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
             # Re-initialize the bot
             bot = init_bot(mgr)
-
-            # Verify that the state has changed
-            if any(pool["exchange_name"] != mgr.cfg.BANCOR_POL_NAME for pool in mgr.pool_data):
-                mgr.cfg.logger.debug("[main] State has changed")
-            else:
-                mgr.cfg.logger.warning("[main] State has not changed, this may indicate an error")
-
-            # Verify that the minimum profit in BNT is respected
-            verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
             if args.use_specific_exchange_for_target_tokens is not None:
                 target_tokens = bot.get_tokens_in_exchange(
