@@ -22,8 +22,8 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.3.2"
-__DATE__ = "01/May/2024"
+__VERSION__ = "5.4"
+__DATE__ = "02/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -142,6 +142,7 @@ class MargPOptimizer(CPCArbOptimizer):
         ==================  =========================================================================
         parameter           meaning
         ==================  =========================================================================
+        pstart              starting price for optimization (3)
         crit                criterion: MOCRITR (relative; default) or MOCRITA (absolute)
         norm                norm for convergence crit (MONORML1, MONORML2, MONORMLINF)
         eps                 relative convergence threshold (default: MOEPS)
@@ -156,9 +157,9 @@ class MargPOptimizer(CPCArbOptimizer):
         debug_dtkn          ditto (d Token)
         debug_dtkn2         ditto (more d Token; requires debug_dtkn)
         debug_dtknd         ditto, d Token as dict  
-        debug_pe            ditto, price estimates  
+        debug_pe            ditto, price estimates
+        debug_curves        dump curves to stdout (takes DC_XXX constants)
         raiseonerror        if True, raise an OptimizationError exception on error
-        pstart              starting price for optimization (3)
         ==================  =========================================================================
     
         NOTE 1: this optimizer uses the marginal price method, ie it solves the equation
@@ -211,6 +212,14 @@ class MargPOptimizer(CPCArbOptimizer):
         pairs = self.curve_container.pairs(standardize=False)
         curves_by_pair = {pair: tuple(c for c in curves_t if c.pair == pair) for pair in pairs }
         pairs_t = tuple(tuple(p.split("/")) for p in pairs)
+
+        # dump curves if requested
+        if P("debug_curves"):
+            print("\n[margp_optimizer]\n================ CURVES ================>>>")
+            print("[")
+            self.dump_curves(mode=P("dump_curves"))
+            print("]")
+            print("<<<<<================ CURVES ================\n")
 
         # pstart
         if P("verbose") or P("debug"):
@@ -470,7 +479,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 # #### END EXPERIMENTAL
                 
                 # update log prices, prices...
-                p0log10 = [*plog10]                 # keep current log prices (deep copy)
+                p0log10 = [*plog10]                 # remember current log prices (deep copy)
                 plog10 += dplog10                   # update log prices
                 p = np.exp(plog10 * np.log(10))     # expand log to actual prices
                 
