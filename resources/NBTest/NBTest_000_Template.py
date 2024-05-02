@@ -15,7 +15,6 @@
 # ---
 
 # +
-# from fastlane_bot.config import Config
 try:
     #from fastlane_bot.tools.moo import meh
     from fastlane_bot.testing import *
