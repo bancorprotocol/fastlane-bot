@@ -1059,36 +1059,6 @@ def handle_subsequent_iterations(
         )
 
 
-def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mgr: Any):
-    """
-    Verifies that the state has changed.
-
-    Parameters
-    ----------
-    bot : CarbonBot
-        The bot object.
-    initial_state : Dict[str, Any]
-        The initial state.
-    mgr : Any
-        The manager object.
-
-    """
-    # Compare the initial state to the final state, and update the state if it has changed
-    final_state = mgr.pool_data.copy()
-    final_state_bancor_pol = [
-        final_state[i]
-        for i in range(len(final_state))
-        if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
-    ]
-    # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-    if initial_state != final_state_bancor_pol:
-        mgr.cfg.logger.debug("[events.utils.verify_state_changed] State has changed...")
-    else:
-        mgr.cfg.logger.warning(
-            "[events.utils.verify_state_changed] State has not changed... This may indicate an error"
-        )
-
-
 def handle_duplicates(mgr: Any):
     """
     Handles the duplicates in the pool data.
@@ -1103,29 +1073,6 @@ def handle_duplicates(mgr: Any):
     mgr.deduplicate_pool_data()
     cids = [pool["cid"] for pool in mgr.pool_data]
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
-
-
-def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
-    """
-    Handles the initial iteration of the bot.
-
-    Parameters
-    ----------
-    mgr : Any
-        The manager object.
-    exchange : str
-        The exchange for which to get pools
-
-    Returns
-    -------
-    List[Any]
-        A list of pools for the specified exchange.
-    """
-    return [
-        idx
-        for idx, pool in enumerate(mgr.pool_data)
-        if pool["exchange_name"] == exchange
-    ]
 
 
 def handle_initial_iteration(
