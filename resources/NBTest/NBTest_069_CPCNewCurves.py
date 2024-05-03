@@ -16,13 +16,13 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
     from fastlane_bot.tools.optimizer import F, MargPOptimizer
     import fastlane_bot.tools.invariants.functions as f
     from fastlane_bot.testing import *
 
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
     from tools.optimizer import MargPOptimizer
     import tools.invariants.functions as f
     from tools.testing import *
@@ -326,7 +326,7 @@ plt.show()
 
 # We start with three curves: two "USD/ETH" at 2000 and 2100 respectively but that unfortunately use different USD references (USDC and USDT) and one Solidly stable swap with USDC/USDT
 
-CC = CPCContainer()
+CC = CurveContainer()
 CC += [CPC.from_pk(pair="WETH/USDC", cid="buyeth",  p=2000, k=2000)]
 CC += [CPC.from_pk(pair="WETH/USDT", cid="selleth", p=2100, k=2100)]
 CC += [CPC.from_solidly(pair="USDC/USDT", x=10000, y=10000, cid="solidly")]
@@ -346,7 +346,7 @@ CC1.plot()
 
 # ## Optimizer
 
-CC = CPCContainer()
+CC = CurveContainer()
 CC += [CPC.from_pk(pair="WETH/USDC", cid="buyeth",  p=2000, k=2000)]
 CC += [CPC.from_pk(pair="WETH/USDT", cid="selleth", p=2100, k=2100)]
 CC += [CPC.from_solidly(pair="USDC/USDT", x=10000, y=10000, cid="solidly")]
@@ -385,4 +385,4 @@ c0.p/c1.p*c2.p
 assert iseq(c0.p/c1.p-1, 1-c2.p, eps=1e-3)  # price ratio of ETH curves equals USDC/USDT price
 assert iseq(c0.p/c1.p*c2.p, 1)              # circular exchange is unity
 
-
+1

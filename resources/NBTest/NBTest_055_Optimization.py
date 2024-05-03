@@ -16,18 +16,18 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
+    from fastlane_bot.tools.cpc import CurveContainer, ConstantProductCurve as CPC, CurveBase
     from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
     from fastlane_bot.testing import *
 
 except:
-    from tools.cpc import CPCContainer, ConstantProductCurve as CPC, CurveBase
+    from tools.cpc import CurveContainer, ConstantProductCurve as CPC, CurveBase
     from tools.optimizer import MargPOptimizer, PairOptimizer
     from tools.testing import *
 
 from math import sqrt
 from copy import deepcopy
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveContainer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
@@ -40,7 +40,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 
 # # Optimization Methods [NBTest055]
 
-# Note: using an existing CPCContainer object `CC`, the curves can be extracted as dict using the command below
+# Note: using an existing CurveContainer object `CC`, the curves can be extracted as dict using the command below
 #
 #     CURVES = [c.asdict() for c in CC]
 #     
@@ -130,7 +130,7 @@ CURVES = [
    'blocklud': 18121689,
    'L': 1241711.5250151888}}
 ]
-CC = CPCContainer.from_dicts(CURVES)
+CC = CurveContainer.from_dicts(CURVES)
 # -
 # Those are starting prices consistent with those curves.
 
@@ -146,13 +146,13 @@ PRICE0
 # This curve set contains an additional constant product curve that removes the no-man's land between the levered curves and where gradient descent therefore converges
 
 cnorm = CPC.from_pk(p=PRICE0, k=PRICE0*CC[0].x, pair="WETH/DAI", cid="normalizer")
-CCn = CPCContainer([c for c in CC]+[cnorm])
+CCn = CurveContainer([c for c in CC]+[cnorm])
 
 # ### `CCul` (simple unlevered curves)
 #
 # This is a very simple set of unlevered curver where convergence should never be a problem.
 
-CCul = CPCContainer([
+CCul = CurveContainer([
     CPC.from_pk(p=1500, k=1500*100, pair="WETH/DAI", cid="c1500"),
     CPC.from_pk(p=1600, k=1600*100, pair="WETH/DAI", cid="c1600")
 ])
@@ -162,7 +162,7 @@ CCul = CPCContainer([
 # We are generating asymmetric curves that have an arbitrage opportunity. `CCas2` is a single pair that exhibits the arbitrage, `CCas3` requires triangle optimization.
 
 ETA25, ETA75 = 1/3, 3
-CCas2 = CPCContainer([
+CCas2 = CurveContainer([
     CPC.from_xyal(x=10, y=2000/ETA25*10, alpha=0.25, pair="WETH/DAI", cid="c2000-0.25"),
     CPC.from_xyal(x=10, y=2500/ETA75*10, alpha=0.75, pair="WETH/DAI", cid="c2500-0.75"),
 ])
@@ -513,5 +513,5 @@ CCas2.plot()
 # +
 #CCas3.plot()
 # -
-
+1
 

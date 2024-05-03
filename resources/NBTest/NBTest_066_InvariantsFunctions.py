@@ -990,3 +990,5 @@ assert iseq(1, fn1(1), fn1.f(1))
 assert iseq(-1, -fn1.p(1), fn1.df_dx(1))
 assert iseq(2, -fn1.pp(1))
 fn1(1), -fn1.p(1), -fn1.pp(1)
+
+1
