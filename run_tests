@@ -1,9 +1,0 @@
-#!/bin/bash
-cd "$(dirname "$0")"
-
-pwd
-
-pytest fastlane_bot/tests -v $1
-
-
-
