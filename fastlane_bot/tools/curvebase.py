@@ -1,11 +1,13 @@
 """
 Abstract base class providing the ``Optimizer`` interface for a generic AMM curve
 
-
 ---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
+__VERSION__ = "1.0"
+__DATE__ = "23/Jan/2024"
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict, InitVar
 
@@ -42,8 +44,10 @@ class DAttrDict:
     
 class CurveBase(ABC):
     """
-    base class for representing a generic curve in the context of the optimizer
+    abstract base class for representing a generic curve in the context of the optimizer
     """
+    __VERSION__ = __VERSION__
+    __DATE__ = __DATE__
     
     @abstractmethod
     def dxvecfrompvec_f(self, pvec, *, ignorebounds=False):
