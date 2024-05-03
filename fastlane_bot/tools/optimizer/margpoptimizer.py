@@ -13,7 +13,7 @@ desired boundary conditions.
 
 This method employs a Newton-Raphson algorithm to solve the
 aforementioned goal seek problem.
-
+ 
 ---
 This module is still subject to active research, and
 comments and suggestions are welcome. The corresponding
@@ -22,8 +22,8 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.4"
-__DATE__ = "02/May/2024"
+__VERSION__ = "5.4+dev01"
+__DATE__ = "04/May/2024"
 
 __DATE__ = "30/Apr/2024"
 
@@ -113,13 +113,14 @@ class MargPOptimizer(CPCArbOptimizer):
         """the Linf norm of a vector x"""
         return np.linalg.norm(x, ord=np.inf)
 
-    def optimize(self, sfc=None, result=None, *, params=None):
+    def optimize(self, sfc=None, *, pstart=None, result=None, params=None):
         """
         optimal transactions across all curves in the optimizer, extracting targettkn (1)
 
         :sfc:               the self financing constraint to use (2)
-        :result:            the result type (see MO_XXX constants below)
-        :params:            dict of parameters (see table below)
+        :pstart:            dict or tuple of starting price for optimization (3) 
+        :result:            the result type (see MO_XXX constants below) (4)
+        :params:            dict of optional parameters (see table below) (4)
 
 
         :returns:           MargpOptimizerResult on the default path, others depending on the
@@ -170,11 +171,15 @@ class MargPOptimizer(CPCArbOptimizer):
 
         NOTE 2: at the moment only the trivial self-financing constraint is allowed, ie the one that
         only specifies the target token, and where all other constraints are zero; if sfc is
-        a string then this is interpreted as the target token
+        a string then this is interpreted as the target token and this currently the expected use
         
-        NOTE 3: can be provided either as dict {tkn:p, ...}, or as df as price estimate as 
+        NOTE 3: `pstart` can be provided either as dict {tkn:p, ...}, or as df as price estimate as 
         returned by MO_PSTART; excess tokens can be provided but all required tokens 
         must be present
+        
+        NOTE 4: In production use, the `result` parameter should always be set to None to ensure
+        that the default pathway is taken. Similarly, the `params` dict should be empty, except
+        possibly for the `debug` related options in case of debug needs, and for testing
         """
         start_time = time.time()
         
