@@ -57,7 +57,7 @@ import time
 import math
 import numbers
 import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer, Pair
+from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer, Pair
 from sys import float_info
 
 from .dcbase import DCBase
@@ -83,7 +83,7 @@ class CPCArbOptimizer(OptimizerBase):
     """
     intermediate class for CPC arbitrage optimization
 
-    :curves:         the CPCContainer object (or the curves therein) the optimizer is using
+    :curves:         the CurveContainer object (or the curves therein) the optimizer is using
 
     NOTE
     the old argument name `curve_container` is still supported but deprecated
@@ -101,13 +101,13 @@ class CPCArbOptimizer(OptimizerBase):
             curves = curve_container
         if curves is None:
             raise ValueError("must provide curves")
-        if not isinstance(curves, CPCContainer):
-            curve_container = CPCContainer(curves)
+        if not isinstance(curves, CurveContainer):
+            curve_container = CurveContainer(curves)
         self._curve_container = curves
 
     @property
     def curve_container(self):
-        """the curve container (CPCContainer)"""
+        """the curve container (CurveContainer)"""
         return self._curve_container
 
     CC = curve_container
@@ -256,12 +256,12 @@ class CPCArbOptimizer(OptimizerBase):
 
     def price_estimates(self, *, tknq, tknbs, **kwargs):
         """
-        convenience function to access CPCContainer.price_estimates
+        convenience function to access CurveContainer.price_estimates
 
         :tknq:      can only be a single token
         :tknbs:     list of tokens
 
-        see help(CPCContainer.price_estimate) for details
+        see help(CurveContainer.price_estimate) for details
         """
         return self.curve_container.price_estimates(tknqs=[tknq], tknbs=tknbs, **kwargs)
 
@@ -564,7 +564,7 @@ class CPCArbOptimizer(OptimizerBase):
         """
         results of the marginal price optimizer
 
-        :curves:        curve objects underlying the optimization (as CPCContainer)
+        :curves:        curve objects underlying the optimization (as CurveContainer)
         :targetkn:      target token (=profit token) of the optimization
         :p_optimal_t:   optimal price vector (as tuple)
         :dtokens:       change in token amounts (as dict)
@@ -731,7 +731,7 @@ class CPCArbOptimizer(OptimizerBase):
                 c.execute(dx=dx, verbose=verbose, ignorebounds=True)
                 for c, dx in zip(curves, dxvals)
             ]
-            return CPCContainer(newcurves)
+            return CurveContainer(newcurves)
         except Exception as e:
             if raiseonerror:
                 raise e
@@ -744,7 +744,7 @@ class CPCArbOptimizer(OptimizerBase):
         """
         convenience for self.curve_container.plot()
 
-        see help(CPCContainer.plot) for details
+        see help(CurveContainer.plot) for details
         """
         return self.curve_container.plot(*args, **kwargs)
 
@@ -803,6 +803,6 @@ class CPCArbOptimizer(OptimizerBase):
         """
         convenience for self.curve_container.format()
 
-        see help(CPCContainer.format) for details
+        see help(CurveContainer.format) for details
         """
         return self.curve_container.format(*args, **kwargs)
