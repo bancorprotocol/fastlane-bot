@@ -16,12 +16,12 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import CurveBase, ConstantProductCurve as CPC, CPCContainer
+    from fastlane_bot.tools.cpc import CurveBase, ConstantProductCurve as CPC, CurveContainer
     from fastlane_bot.tools.optimizer import MargPOptimizer
     from fastlane_bot.testing import *
 
 except:
-    from tools.cpc import CurveBase, ConstantProductCurve as CPC, CPCContainer
+    from tools.cpc import CurveBase, ConstantProductCurve as CPC, CurveContainer
     from tools.optimizer import MargPOptimizer
     from tools.testing import *
 
@@ -33,7 +33,7 @@ import math as m
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveBase))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveContainer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 
 #plt.style.use('seaborn-dark')
@@ -279,7 +279,7 @@ assert iseq(c2.y/c2.x, pa_)
 
 kwargs = dict(pair="LINK/USDC", descr="des", cid="cid", fee=0.005, params=p)
 
-c = CPC.from_univ2(x=10, y=20, **kwargs)
+c = CPC.from_univ2(liq_tknb=10, liq_tknq=20, **kwargs)
 assert iseq(c.x, 10)
 assert iseq(c.y, 20)
 assert iseq(c.k, c.x*c.y)
@@ -289,26 +289,116 @@ assert c.cid == kwargs["cid"]
 assert c.fee == kwargs["fee"]
 assert c.params == kwargs["params"]
 
-c1 = CPC.from_univ2(x=c.x, k=c.k, **kwargs)
+c1 = CPC.from_univ2(liq_tknb=c.x, k=c.k, **kwargs)
 assert iseq(c1.x, c.x)
 assert iseq(c1.y, c.y)
 assert iseq(c1.k, c.k)
 
-c2 = CPC.from_univ2(y=c.y, k=c.k, **kwargs)
+c2 = CPC.from_univ2(liq_tknq=c.y, k=c.k, **kwargs)
 assert iseq(c2.x, c.x)
 assert iseq(c2.y, c.y)
 assert iseq(c2.k, c.k)
 
 # #### Uniswap v3 constructor
 
-raises(CPC.from_univ2, y=10, **kwargs)
+# +
+# TODO
+# -
 
-# ### CurveContainer CPCContainer
+# ### CurveContainer
 #
 # A `CurveContainer` (legacy name: `CPCContainer`) is a container object for curve objects (`CurveBase` derivatives)
 
+# +
+# TODO
+# -
+
 # ## MargPOptimizer
 
-pass
+CC = CurveContainer([
+    CPC.from_pk(pair="LINK/USDC", p=10, k = 10*250_000**2, cid="c10"),
+    CPC.from_pk(pair="LINK/USDC", p=12, k = 10*250_000**2, cid="c12"),
+])
+pstart = dict(LINK=10.3, USDC=1)
+
+# ### Running the optimizer
+
+O = MargPOptimizer(CC)
+r = O.optimize("USDC")
+assert not r.is_error
+assert r.errormsg is None
+assert iseq(r.result, -10868.538042440545)
+assert iseq(r.p_optimal_t[0], 10.931723975214778)
+assert r.method == 'margp'
+assert r.targettkn == "USDC"
+assert r.time > 0
+r
+
+# #### pstart
+
+# pstart must be a kwarg if provided
+
+assert raises(O.optimize, "USDC", pstart)
+assert not raises(O.optimize, "USDC")
+assert not raises(O.optimize, "USDC", pstart=pstart)
+raises(O.optimize, "USDC", pstart)
+
+r1 = O.optimize("USDC", pstart=pstart)
+assert iseq(r.result, r1.result, eps=1e-3)
+assert iseq(r.p_optimal_t[0], r1.p_optimal_t[0], eps=1e-3)
+r1
+
+assert raises(O.optimize, "USDC", pstart=pstart, params=dict(pstart=pstart))
+raises(O.optimize, "USDC", pstart=pstart, params=dict(pstart=pstart))
+
+# ### Trade instructions
+
+O = MargPOptimizer(CC)
+r = O.optimize("USDC")
+assert len(r.trade_instructions()) == 2
+assert r.trade_instructions() == r.trade_instructions(O.TIF_OBJECTS) 
+
+ti = r.trade_instructions(O.TIF_OBJECTS)
+assert len(ti) == 2
+assert isinstance(ti[0], O.TradeInstruction)
+assert set(tin.cid for tin in ti) == {"c10", "c12"}
+assert set(tin.tknin for tin in ti) == {"USDC", "LINK"}
+assert set(tin.tknout for tin in ti) == {"USDC", "LINK"}
+ti
+
+ti0 = [tin for tin in ti if tin.cid=="c10"][0]
+assert ti0.cid == "c10"
+assert ti0.tknin == "USDC"
+assert iseq(ti0.amtin, 113872.12474169489)
+assert ti0.tknout == "LINK"
+assert iseq(ti0.amtout, -10891.133853090403)
+assert ti0.error is None
+ti0
+
+ti = r.trade_instructions(O.TIF_DFRAW)
+assert len(ti) == 2
+assert set(ti.index) == {'c10', 'c12'}
+assert set(ti.pair) == {'LINK/USDC'}
+assert set(ti.pairp) == {'LINK/USDC'}
+assert set(ti.tknin) == {'LINK', 'USDC'}
+assert set(ti.tknout) == {'LINK', 'USDC'}
+ti
+
+ti0 = ti.loc["c10"]
+assert ti0["pair"] == "LINK/USDC"
+assert ti0["pairp"] == "LINK/USDC"
+assert ti0["tknin"] == "USDC"
+assert iseq(ti0["USDC"], 113872.124742)
+assert ti0["tknout"] == "LINK"
+assert iseq(ti0["LINK"], -10891.133853)
+ti0
+
+r.trade_instructions(O.TIF_DF8)
+
+r.trade_instructions(O.TIF_DFAGGR)
+
+r.trade_instructions(O.TIF_DFPG)
+
+1
 
 
