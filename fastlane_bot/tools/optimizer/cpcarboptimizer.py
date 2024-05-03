@@ -45,7 +45,7 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 Licensed under MIT
 """
 __VERSION__ = "5.2"
-__DATE__ = "02/May/2024"
+__DATE__ = "03/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
@@ -72,7 +72,7 @@ TIF_OBJECTS = "objects"
 TIF_DICTS = "dicts"
 TIF_DFRAW = "dfraw"
 TIF_DF = TIF_DFRAW
-TIFDF8 = "df8"
+TIF_DF8 = "df8"
 TIF_DFAGGR = "dfaggr"
 TIF_DFAGGR8 = "dfaggr8"
 TIF_DFPG = "dfgain"
@@ -488,7 +488,7 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DFAGGR = TIF_DFAGGR
         TIF_DFAGGR8 = TIF_DFAGGR8
         TIF_DF = TIF_DF
-        TIF_DF8 = TIFDF8
+        TIF_DF8 = TIF_DF8
         TIF_DFPG = TIF_DFPG
         TIF_DFPG8 = TIF_DFPG8
 
@@ -553,7 +553,7 @@ class CPCArbOptimizer(OptimizerBase):
     TIF_DFAGGR = TIF_DFAGGR
     TIF_DFAGGR8 = TIF_DFAGGR8
     TIF_DF = TIF_DF
-    TIF_DF8 = TIFDF8
+    TIF_DF8 = TIF_DF8
     TIF_DFPG = TIF_DFPG
     TIF_DFPG8 = TIF_DFPG8
 
@@ -583,7 +583,7 @@ class CPCArbOptimizer(OptimizerBase):
         TIF_DFAGGR = TIF_DFAGGR
         TIF_DFAGGR8 = TIF_DFAGGR8
         TIF_DF = TIF_DF
-        TIF_DF8 = TIFDF8
+        TIF_DF8 = TIF_DF8
         TIF_DFPG = TIF_DFPG
         TIF_DFPG8 = TIF_DFPG8
 
