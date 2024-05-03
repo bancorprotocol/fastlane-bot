@@ -7,19 +7,19 @@ optimization library -- optimizer base module
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.1"
-__DATE__ = "20/Sep/2023"
+__VERSION__ = "5.1.1"
+__DATE__ = "04/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 from abc import ABC, abstractmethod, abstractproperty
-import pandas as pd
+#import pandas as pd
 import numpy as np
 
 import time
-import math
-import numbers
+#import math
+#import numbers
 import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
+#from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
 from sys import float_info
 from .dcbase import DCBase
 
