@@ -8,7 +8,7 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.6+dev02"
+__VERSION__ = "4.0-alpha02"
 __DATE__ = "04/May/2024"
 
 from dataclasses import dataclass, field, asdict, InitVar
@@ -34,7 +34,7 @@ AD = DAttrDict
 
 # FN = "20230411-curves.csv"
 # df = pd.read_csv(FN)
-# CCm = CPCContainer.from_df(df, tokenscale=ts.TokenScale1Data)
+# CCm = CurveContainer.from_df(df, tokenscale=ts.TokenScale1Data)
 # tp = {t.split("-")[0]:t for t in CCm.tokens()}
 # {t:tp.get(t) for t in T}
 # for k,v in {t:tp.get(t) for t in T}.items():
@@ -1778,7 +1778,7 @@ class CPCContainer:
 
         if self.tokenscale is None:
             self.tokenscale = self.TOKENSCALE
-        # print("[CPCContainer] tokenscale =", self.tokenscale)
+        # print("[CurveContainer] tokenscale =", self.tokenscale)
 
         # ensure that the curves are in a list (they can be provided as any
         # iterable, e.g. a generator); also unwraps CPCInverter objects
@@ -2630,7 +2630,7 @@ class CPCContainer:
         """
         # NOTE: this code is relatively slow to compute, on the order of a few seconds
         # for go through the entire token list; the likely reason is that it keeps reestablishing
-        # the CPCContainer objects whenever price_estimate is called; there may be a way to
+        # the CurveContainer objects whenever price_estimate is called; there may be a way to
         # speed this up by smartly computing the container objects once and storing them 
         # in a dictionary the is then passed to price_estimate.
         start_time = time.time()
@@ -2865,7 +2865,7 @@ class CPCContainer:
         """
         returns the results in the given (printable) format
 
-        see help(CPCContainer.print_formatted) for details
+        see help(CurveContainer.print_formatted) for details
         """
         assert len(self.curves) > 0, "no curves to print"
         s = "\n".join(c.format(formatid=formatid) for c in self.curves)
@@ -3100,7 +3100,5 @@ class CPCInverter:
         )
         return CPCInverter(curve)
 
-    # TOKENS_NOETH=TOKENS_NOETH
-    # TOKENIDS=TOKENIDS
 
 
