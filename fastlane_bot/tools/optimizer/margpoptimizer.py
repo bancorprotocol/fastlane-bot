@@ -23,6 +23,9 @@ author is Stefan Loesch <stefan@bancor.network>
 Licensed under MIT
 """
 __VERSION__ = "6.0-alpha02"
+    # TODO FOR VERSION 6
+    # REMOVE CPCContainer alias for CurveContainer
+    
 __DATE__ = "04/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
@@ -30,14 +33,10 @@ import pandas as pd
 import numpy as np
 
 import time
-# import math
-# import numbers
-# import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
-#from sys import float_info
 
-from .dcbase import DCBase
-from .base import OptimizerBase
+#from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
+#from .dcbase import DCBase
+#from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
 
 class MargPOptimizer(CPCArbOptimizer):
@@ -61,7 +60,7 @@ class MargPOptimizer(CPCArbOptimizer):
         :x:     a vector x=(x1..xn) as np.array
         :jach:  the h value for the derivative (Jacobian) calculation (default: cls.MOJACH)
         """
-        h = cls.MOJACH if jach is None else jach
+        h = cls.MO_JACH if jach is None else jach
         n = len(x)
         y = func(x, quiet=True)
         jac = np.zeros((n, n))
@@ -71,7 +70,7 @@ class MargPOptimizer(CPCArbOptimizer):
             jac[:, j] = (func(x_plus, quiet=True) - y) / Dxj
         return jac
     J = jacobian
-    MOJACH = 1e-5
+    MO_JACH = 1e-5
 
     
     MO_DEBUG = "debug"
@@ -90,7 +89,7 @@ class MargPOptimizer(CPCArbOptimizer):
     MONORML2 = 2            # L2 norm (Euclidean distance)
     MONORMLINF = np.inf     # L-infinity norm (maximum absolute value)
     
-    MOMAXITER = 50          
+    MO_MAXITER = 50          
     
     class OptimizationError(Exception): pass
     class ConvergenceError(OptimizationError): pass
@@ -171,7 +170,7 @@ class MargPOptimizer(CPCArbOptimizer):
         only specifies the target token, and where all other constraints are zero; if sfc is
         a string then this is interpreted as the target token and this currently the expected use
         
-        NOTE 3: `pstart` can be provided either as dict {tkn:p, ...}, or as df as price estimate as 
+        NOTE 3: ``pstart`` can be provided either as dict {tkn:p, ...}, or as df as price estimate as 
         returned by MO_PSTART; excess tokens can be provided but all required tokens 
         must be present
         
