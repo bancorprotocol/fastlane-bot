@@ -80,7 +80,8 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 0,
     "fantom": 5000,
     "mantle": 0,
-    "linea": 0
+    "linea": 0,
+    "sei": 0,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -1072,10 +1073,10 @@ def terraform_blockchain(network_name: str):
         file_desc.writelines(list(dict.fromkeys(lines)))
         file_desc.close()
 
-#terraform_blockchain(network_name="sei", save_tokens=True)
 
 #terraform_blockchain(network_name=ETHEREUM)
 #terraform_blockchain(network_name=BASE)
 #terraform_blockchain(network_name=FANTOM)
 #terraform_blockchain(network_name=MANTLE)
 #terraform_blockchain(network_name=LINEA)
+#terraform_blockchain(network_name=SEI)
