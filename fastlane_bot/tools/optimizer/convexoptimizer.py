@@ -14,8 +14,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.0.1"
-__DATE__ = "23/Jan/2024"
+__VERSION__ = "5.0.2"
+__DATE__ = "03/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 #import pandas as pd
@@ -25,7 +25,7 @@ import time
 # import math
 import numbers
 # import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CPCContainer
+from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
 # from sys import float_info
 
 try:
@@ -162,8 +162,8 @@ class ConvexOptimizer(CPCArbOptimizer):
 
         token_table: dict = None
         sfc: any = field(repr=False, default=None)  # SelfFinancingConstraints
-        curves: CPCContainer = field(repr=False, default=None)
-        # curves_new: CPCContainer = field(repr=False,  default=None)
+        curves: CurveContainer = field(repr=False, default=None)
+        # curves_new: CurveContainer = field(repr=False,  default=None)
         # dx: cp.Variable = field(repr=False, default=None)
         # dy: cp.Variable = field(repr=False, default=None)
         dx: InitVar
