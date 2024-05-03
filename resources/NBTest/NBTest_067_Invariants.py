@@ -256,4 +256,4 @@ plt.title("Swap curves for different values of k")
 plt.legend()
 plt.grid()
 
-
+1

@@ -617,6 +617,4 @@ plt.xlabel("Price [dy/dx]")
 plt.ylabel("Token balance y [native units]")
 plt.show()
 
-
-
-
+1

@@ -17,12 +17,12 @@
 # +
 try:
     import fastlane_bot.tools.arbgraphs as ag
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer
     from fastlane_bot.testing import *
 
 except:
     import tools.arbgraphs as ag
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from tools.cpc import ConstantProductCurve as CPC, CurveContainer
     from tools.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -553,9 +553,9 @@ assert edges2[0].p_outperin == np.mean([e.p_outperin for e in edges])
 
 # ## Interaction with CPC
 
-c1  = CPC.from_univ2(x_tknb=1, y_tknq=2000, pair="ETH/USDC", fee=0, cid="1", descr="UniV2")
-c2  = CPC.from_univ2(x_tknb=1, y_tknq=10000, pair="WBTC/USDC", fee=0, cid="2", descr="UniV2")
-c3  = CPC.from_univ2(x_tknb=1, y_tknq=5, pair="WBTC/ETH", fee=0, cid="3", descr="UniV2")
+c1  = CPC.from_univ2(liq_tknb=1, liq_tknq=2000, pair="ETH/USDC", fee=0, cid="1", descr="UniV2")
+c2  = CPC.from_univ2(liq_tknb=1, liq_tknq=10000, pair="WBTC/USDC", fee=0, cid="2", descr="UniV2")
+c3  = CPC.from_univ2(liq_tknb=1, liq_tknq=5, pair="WBTC/ETH", fee=0, cid="3", descr="UniV2")
 assert c1.p == 2000
 assert c2.p == 10000
 assert c3.p == 5
@@ -575,7 +575,7 @@ AG.add_edges_cpc(c for c in [c1, c2, c3])
 #_=AG.plot()
 
 AG = ag.ArbGraph()
-CC = CPCContainer([c1,c2,c3])
+CC = CurveContainer([c1,c2,c3])
 AG.add_edges_cpc(CC)
 #_=AG.plot()
 
@@ -589,7 +589,7 @@ try:
     df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
     df = pd.read_csv("fastlane_bot/tests/_data/NBTEST_002_Curves.csv.gz")
-CC0 = CPCContainer.from_df(df)
+CC0 = CurveContainer.from_df(df)
 print("Num curves:", len(CC0))
 print("Num pairs:", len(CC0.pairs()))
 print("Num tokens:", len(CC0.tokens()))
@@ -794,11 +794,4 @@ for cycle in AG.cycles():
 assert raises(AG.price, AG.nodes[0], AG.nodes[1])
 raises(AG.price, AG.nodes[0], AG.nodes[1])
 
-
-
-
-
-
-
-
-
+1
