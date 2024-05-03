@@ -243,6 +243,4 @@ assert v.elements[2] == elements[2]
 assert v.coeffs[4] == 5
 assert v.items[6] == ('g', 7)
 
-
-
-
+1

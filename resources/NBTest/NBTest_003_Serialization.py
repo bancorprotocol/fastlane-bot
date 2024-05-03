@@ -16,11 +16,11 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer
     from fastlane_bot.tools.optimizer import CPCArbOptimizer, time
     from fastlane_bot.testing import *
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer
+    from tools.cpc import ConstantProductCurve as CPC, CurveContainer
     from tools.optimizer import CPCArbOptimizer, time
     from tools.testing import *
 
@@ -48,7 +48,7 @@ pass
 #     CPC.from_xy(x=1, y=2400, pair="ETH/USDC"),
 # ]
 # # note: the below is a bit icky as the same curve objects are added multiple times
-# CC = CPCContainer(curves*N)
+# CC = CurveContainer(curves*N)
 # O = CPCArbOptimizer(CC)
 # O.CC.asdf()
 
@@ -77,9 +77,9 @@ pass
 # - $x_a = x$ and $y_a = y$ because there is no leverage on the curves.
 #
 
-c  = CPC.from_univ2(x_tknb=100, y_tknq=100, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
-c2 = CPC.from_univ2(x_tknb=100, k=10000, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
-c3 = CPC.from_univ2(y_tknq=100, k=10000, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
+c  = CPC.from_univ2(liq_tknb=100, liq_tknq=100, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
+c2 = CPC.from_univ2(liq_tknb=100, k=10000, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
+c3 = CPC.from_univ2(liq_tknq=100, k=10000, pair="TKNB/TKNQ", fee=0, cid="1", descr="UniV2")
 assert c.k == 10000
 assert c.x == 100
 assert c.y == 100
@@ -108,15 +108,15 @@ assert c.asdict() == {
     'params': {}
 }
 
-assert not raises(CPC.from_univ2, x_tknb=100, y_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, y_tknq=100, k=10, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, y_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
+assert not raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, k=10, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknb=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
 assert raises(CPC.from_univ2, k=10, pair="TKNB/TKNQ", fee=0, cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, y_tknq=100, fee=0, cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, y_tknq=100, pair="TKNB/TKNQ", cid=1, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, y_tknq=100, pair="TKNB/TKNQ", fee=0, descr="UniV2")
-assert raises(CPC.from_univ2, x_tknb=100, y_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1)
+assert raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, fee=0, cid=1, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, pair="TKNB/TKNQ", cid=1, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, pair="TKNB/TKNQ", fee=0, descr="UniV2")
+assert raises(CPC.from_univ2, liq_tknb=100, liq_tknq=100, pair="TKNB/TKNQ", fee=0, cid=1)
 
 # ### Uniswap v3
 #
@@ -233,12 +233,12 @@ assert not raises(CPC.from_carbon, yint=1, y=1, pa=3100, pb=2900, pair="ETH/USDC
 # ## Charts [NOTEST]
 
 curves_uni =[
-    CPC.from_univ2(x_tknb=1, y_tknq=2000, pair="ETH/USDC", fee=0.001, cid="U2/1", descr="UniV2"),
-    CPC.from_univ2(x_tknb=2, y_tknq=4020, pair="ETH/USDC", fee=0.001, cid="U2/2", descr="UniV2"),
+    CPC.from_univ2(liq_tknb=1, liq_tknq=2000, pair="ETH/USDC", fee=0.001, cid="U2/1", descr="UniV2"),
+    CPC.from_univ2(liq_tknb=2, liq_tknq=4020, pair="ETH/USDC", fee=0.001, cid="U2/2", descr="UniV2"),
     CPC.from_univ3(Pmarg=2000, uniL=100, uniPa=1800, uniPb=2200, pair="ETH/USDC", fee=0, cid="U3/1", descr="UniV3"),
     CPC.from_univ3(Pmarg=2010, uniL=75,  uniPa=1800, uniPb=2200, pair="ETH/USDC", fee=0, cid="U3/1", descr="UniV3"),
 ]
-CC = CPCContainer(curves_uni)
+CC = CurveContainer(curves_uni)
 
 curves_carbon = [
     CPC.from_carbon(yint=3000, y=3000, pa=3500, pb=2500, pair="ETH/USDC", tkny="USDC", fee=0, cid="C1", descr="Carbon", isdydx=True),
@@ -251,15 +251,15 @@ curves_carbon = [
 ]
 
 curves = curves_uni + curves_carbon
-CC = CPCContainer(curves)
+CC = CurveContainer(curves)
 CC.plot(params=CC.Params())
 
 # ## Serializing curves
 #
-# The `CPCContainer` and `ConstantProductCurve` objects do not strictly have methods that would allow for serialization. However, they allow conversion from an to datatypes that are easily serialized. 
+# The `CurveContainer` and `ConstantProductCurve` objects do not strictly have methods that would allow for serialization. However, they allow conversion from an to datatypes that are easily serialized. 
 #
 # - on the `ConstantProductCurve` level there is `asdict()` and `from_dicts(.)`
-# - on the `CPCContainer` level there is also `asdf()` and `from_df(.)`, allowing conversion from and to pandas dataframes
+# - on the `CurveContainer` level there is also `asdf()` and `from_df(.)`, allowing conversion from and to pandas dataframes
 #
 # Recommended serialization is either dict to json via the `json` library, or any of the serialization methods inherent in dataframes, notably also pickling (Excel formates are not recommended as they are slow and heavy).
 #
@@ -267,22 +267,22 @@ CC.plot(params=CC.Params())
 #
 
 curves = [
-    CPC.from_univ2(x_tknb=1, y_tknq=2000, pair="ETH/USDC", fee=0.001, cid="1", descr="UniV2", params={"meh":1}),
-    CPC.from_univ2(x_tknb=2, y_tknq=4020, pair="ETH/USDC", fee=0.001, cid="2", descr="UniV2"),
-    CPC.from_univ2(x_tknb=1, y_tknq=1970, pair="ETH/USDC", fee=0.001, cid="3", descr="UniV2"),
+    CPC.from_univ2(liq_tknb=1, liq_tknq=2000, pair="ETH/USDC", fee=0.001, cid="1", descr="UniV2", params={"meh":1}),
+    CPC.from_univ2(liq_tknb=2, liq_tknq=4020, pair="ETH/USDC", fee=0.001, cid="2", descr="UniV2"),
+    CPC.from_univ2(liq_tknb=1, liq_tknq=1970, pair="ETH/USDC", fee=0.001, cid="3", descr="UniV2"),
 ]
 
 c0 = curves[0]
 assert c0.params.__class__.__name__ == "AttrDict"
 assert c0.params == {'meh': 1}
 
-CC = CPCContainer(curves)
-assert raises(CPCContainer, [1,2,3])
+CC = CurveContainer(curves)
+assert raises(CurveContainer, [1,2,3])
 assert len(CC.curves) == len(curves)
 assert len(CC.asdicts()) == len(CC.curves)
-assert CPCContainer.from_dicts(CC.asdicts()) == CC
+assert CurveContainer.from_dicts(CC.asdicts()) == CC
 ccjson = json.dumps(CC.asdicts())
-assert CPCContainer.from_dicts(json.loads(ccjson)) == CC
+assert CurveContainer.from_dicts(json.loads(ccjson)) == CC
 CC
 
 df = CC.asdf()
@@ -290,32 +290,32 @@ assert len(df) == 3
 assert tuple(df.reset_index().columns) == ('cid', 'k', 'x', 'x_act', 'y_act', 'alpha',
                                            'pair', 'fee', 'descr', 'constr', 'params')
 assert tuple(df["k"]) == (2000, 8040, 1970)
-assert CPCContainer.from_df(df) == CC
+assert CurveContainer.from_df(df) == CC
 df
 
 # ## Saving curves [NOTEST]
 #
-# Most serialization methods we use go via the a pandas DataFram object. To create a dataframe we use the `asdf()` method, and to instantiate curve container from a dataframe we use `CPCContainer.from_df(df)`.
+# Most serialization methods we use go via the a pandas DataFram object. To create a dataframe we use the `asdf()` method, and to instantiate curve container from a dataframe we use `CurveContainer.from_df(df)`.
 
 N=5000
 curves = [
-    CPC.from_univ2(x_tknb=1, y_tknq=2000, pair="ETH/USDC", fee=0.001, cid=1, descr="UniV2"),
-    CPC.from_univ2(x_tknb=2, y_tknq=4020, pair="ETH/USDC", fee=0.001, cid=2, descr="UniV2"),
-    CPC.from_univ2(x_tknb=1, y_tknq=1970, pair="ETH/USDC", fee=0.001, cid=3, descr="UniV2"),
+    CPC.from_univ2(liq_tknb=1, liq_tknq=2000, pair="ETH/USDC", fee=0.001, cid=1, descr="UniV2"),
+    CPC.from_univ2(liq_tknb=2, liq_tknq=4020, pair="ETH/USDC", fee=0.001, cid=2, descr="UniV2"),
+    CPC.from_univ2(liq_tknb=1, liq_tknq=1970, pair="ETH/USDC", fee=0.001, cid=3, descr="UniV2"),
 ]
-CC = CPCContainer(curves*N)
+CC = CurveContainer(curves*N)
 df = CC.asdf()
 #CC
 
 # ### Formats
 # #### json
 #
-# Using `json.dumps(.)` the list of dicts returned by `asdicts()` can be converted to json, and then saved as a textfile. When loaded back, the text can be expanded into json using `json.loads(.)` and the new object can be instantiated using `CPCContainer.from_dicts(dicts)`.
+# Using `json.dumps(.)` the list of dicts returned by `asdicts()` can be converted to json, and then saved as a textfile. When loaded back, the text can be expanded into json using `json.loads(.)` and the new object can be instantiated using `CurveContainer.from_dicts(dicts)`.
 
 start_time = time.time()
 cc_json = json.dumps(CC.asdicts())
 print("len", len(cc_json))
-CC2 = CPCContainer.from_dicts(json.loads(cc_json))
+CC2 = CurveContainer.from_dicts(json.loads(cc_json))
 assert CC == CC2
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 #CC2
@@ -327,7 +327,7 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 start_time = time.time()
 df.to_csv(".curves.csv")
 df_csv = pd.read_csv(".curves.csv")
-assert CPCContainer.from_df(df_csv) == CC
+assert CurveContainer.from_df(df_csv) == CC
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 df_csv[:3]
 
@@ -338,7 +338,7 @@ df_csv[:3]
 start_time = time.time()
 df.to_csv(".curves.tsv", sep="\t")
 df_tsv = pd.read_csv(".curves.tsv", sep="\t")
-assert CPCContainer.from_df(df_tsv) == CC
+assert CurveContainer.from_df(df_tsv) == CC
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 
 # #### compressed csv
@@ -348,7 +348,7 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 start_time = time.time()
 df.to_csv(".curves.csv.gz", compression = "gzip")
 df_csv = pd.read_csv(".curves.csv.gz")
-assert CPCContainer.from_df(df_csv) == CC
+assert CurveContainer.from_df(df_csv) == CC
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 
 
@@ -360,7 +360,7 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 # start_time = time.time()
 # df.to_excel(".curves.xlsx")
 # df_xlsx = pd.read_excel(".curves.xlsx")
-# assert CPCContainer.from_df(df_xlsx) == CC
+# assert CurveContainer.from_df(df_xlsx) == CC
 # print(f"elapsed time: {time.time()-start_time:.2f}s")
 # df_xlsx[:3]
 # -
@@ -372,7 +372,7 @@ print(f"elapsed time: {time.time()-start_time:.2f}s")
 start_time = time.time()
 df.to_pickle(".curves.pkl")
 df_pickle = pd.read_pickle(".curves.pkl")
-assert CPCContainer.from_df(df_pickle) == CC
+assert CurveContainer.from_df(df_pickle) == CC
 print(f"elapsed time: {time.time()-start_time:.2f}s")
 df_pickle[:3]
 
@@ -393,12 +393,4 @@ df_pickle[:3]
 print(f"                         {len(cc_json)}              .curves.json", )
 # !ls -l .curves*
 
-
-
-
-
-
-
-
-
-
+1

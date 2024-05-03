@@ -16,13 +16,13 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
     from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
     from fastlane_bot.tools.analyzer import CPCAnalyzer
     from fastlane_bot.testing import *
 
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
     from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
     from tools.analyzer import CPCAnalyzer
     from tools.testing import *
@@ -47,7 +47,7 @@ try:
     market_df = pd.read_csv("_data/NBTEST_002_Curves.csv.gz")
 except:
     market_df = pd.read_csv("fastlane_bot/tests/_data/NBTEST_002_Curves.csv.gz")
-CCmarket = CPCContainer.from_df(market_df)
+CCmarket = CurveContainer.from_df(market_df)
 
 # ## description
 
@@ -136,7 +136,7 @@ assert pairo.primary_tknq == "USDC"
 
 c1 = CPC.from_pk(pair="USDC/WETH", p=1, k=100)
 c2 = CPC.from_pk(pair="WETH/USDC", p=1, k=100)
-CC = CPCContainer([c1,c2])
+CC = CurveContainer([c1,c2])
 assert c1.pairo.primary == 'WETH/USDC'
 assert c2.pairo.primary == 'WETH/USDC'
 assert c1.primary == c1.pairo.primary
@@ -229,7 +229,7 @@ assert c5.buysell(verbose=False, withprice=True) == ('b', 1900.9999999999998)
 assert c5.buysell() == "b"
 
 # univ2 (tknb=2000 USDC, tknq=1 ETH)
-c6 = CPC.from_univ2(pair="USDC/WETH", x_tknb=2000, y_tknq=1, cid="", fee=0, descr="")
+c6 = CPC.from_univ2(pair="USDC/WETH", liq_tknb=2000, liq_tknq=1, cid="", fee=0, descr="")
 assert c6.pair == "USDC/WETH"
 assert c6.primary == "WETH/USDC"
 assert c6.pairo.isprimary == False
@@ -239,7 +239,7 @@ assert c6.buysell(verbose=False, withprice=True) == ('bs', 2000.)
 assert c6.buysell() == "bs"
 
 # univ2 (tknq=2000 USDC, tknb=1 ETH)
-c7 = CPC.from_univ2(pair="WETH/USDC", x_tknb=1, y_tknq=2000, cid="", fee=0, descr="")
+c7 = CPC.from_univ2(pair="WETH/USDC", liq_tknb=1, liq_tknq=2000, cid="", fee=0, descr="")
 assert c7.pair == "WETH/USDC"
 assert c7.primary == "WETH/USDC"
 assert c7.pairo.isprimary == True
@@ -264,12 +264,12 @@ assert c.P("b", "meh") == "meh"
 pair = "USDC/WETH"
 c  = [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="univ3", foo=1)) for _ in range(5)]
 c += [CPC.from_pk(pair=pair, p=1, k=100, params=dict(exchange="carbv1", foo=2)) for _ in range(15)]
-CC = CPCContainer(c)
+CC = CurveContainer(c)
 assert len(CC)==20
 
 
-assert type(CC.byparams(exchange="meh")) == CPCContainer
-assert type(CC.byparams(exchange="meh", _ascc=True)) == CPCContainer
+assert type(CC.byparams(exchange="meh")) == CurveContainer
+assert type(CC.byparams(exchange="meh", _ascc=True)) == CurveContainer
 assert type(CC.byparams(exchange="meh", _ascc=False)) == tuple
 assert type(CC.byparams(exchange="meh", _asgenerator=True)).__name__ == "generator"
 assert type(CC.byparams(exchange="meh", _ascc=True,  _asgenerator=True)).__name__ == "generator"
@@ -346,7 +346,7 @@ assert c1.itm([c2,c2], aggr=False) == (itm0(bs1, bs2), itm0(bs1, bs2))
 c1  = CPC.from_carbon(pair="WETH/USDC", tkny="USDC", yint=10, y=10, pb=2000, pa=2001, isdydx=False)
 c2  = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=1500, pa=1499, isdydx=False)
 c2b = CPC.from_carbon(pair="WETH/USDC", tkny="WETH", yint=10, y=10, pb=2500, pa=2499, isdydx=False)
-CC = CPCContainer([c1,c2,c2b])
+CC = CurveContainer([c1,c2,c2b])
 assert c1.itm(c2) == True
 assert c1.itm(c2b) == False
 assert c1.itm([c2,c2b], aggr=False) == (True, False)
@@ -397,7 +397,7 @@ assert c.tvl("WETH", mult=2000) == 4000
 
 # ## estimate prices
 
-CC = CPCContainer()
+CC = CurveContainer()
 CC += [CPC.from_univ3(pair="WETH/USDC", cid="uv3", fee=0, descr="",
                      uniPa=2000, uniPb=2010, Pmarg=2005, uniL=10*m.sqrt(2000))]
 CC += [CPC.from_pk(pair="WETH/USDC", cid="uv2", fee=0, descr="",
@@ -466,7 +466,7 @@ assert iseq(r[1],  28351.08150121)
 
 # ## triangle estimates
 
-CC = CPCContainer()
+CC = CurveContainer()
 CC += [CPC.from_univ3(pair=f"{T.WETH}/{T.USDC}", cid="uv3-1", fee=0, descr="",
                      uniPa=2000, uniPb=2002, Pmarg=2001, uniL=10*m.sqrt(2000))]
 CC += [CPC.from_univ3(pair=f"{T.WBTC}/{T.USDC}", cid="uv3-2", fee=0, descr="",
@@ -520,7 +520,7 @@ assert iseq(r[0], 10)
 # ## price estimates in optimizer
 
 prices = {"USDC":1, "LINK": 5, "AAVE": 100, "MKR": 500, "WETH": 2000, "WBTC": 20000}
-CCfm, ctr = CPCContainer(), 0
+CCfm, ctr = CurveContainer(), 0
 for tknb, pb in prices.items():
     for tknq, pq in prices.items():
         if pb>pq:
@@ -617,7 +617,7 @@ assert iseq("1", 1) == False
 # ## New CPC features in v2
 
 # +
-p = CPCContainer.Pair("ETH/USDC")
+p = CurveContainer.Pair("ETH/USDC")
 assert str(p) == "ETH/USDC"
 assert p.pair == str(p)
 assert p.tknx == "ETH"
@@ -625,7 +625,7 @@ assert p.tkny == "USDC"
 assert p.tknb == "ETH"
 assert p.tknq == "USDC"
 
-pp = CPCContainer.Pair.wrap(["ETH/USDC", "WBTC/ETH"])
+pp = CurveContainer.Pair.wrap(["ETH/USDC", "WBTC/ETH"])
 assert len(pp) == 2
 assert pp[0].pair == "ETH/USDC"
 assert pp[1].pair == "WBTC/ETH"
@@ -633,13 +633,13 @@ assert pp[0].unwrap(pp) == ('ETH/USDC', 'WBTC/ETH')
 # -
 
 pairs = ["A", "B", "C"]
-assert CPCContainer.pairset(", ".join(pairs)) == set(pairs)
-assert CPCContainer.pairset(pairs) == set(pairs)
-assert CPCContainer.pairset(tuple(pairs)) == set(pairs)
-assert CPCContainer.pairset(p for p in pairs) == set(pairs)
+assert CurveContainer.pairset(", ".join(pairs)) == set(pairs)
+assert CurveContainer.pairset(pairs) == set(pairs)
+assert CurveContainer.pairset(tuple(pairs)) == set(pairs)
+assert CurveContainer.pairset(p for p in pairs) == set(pairs)
 
 pairs = [f"{a}/{b}" for a in ["ETH", "USDC", "DAI"] for b in ["DAI", "WBTC", "LINK", "ETH"] if a!=b]
-CC = CPCContainer()
+CC = CurveContainer()
 fp = lambda **cond: CC.filter_pairs(pairs=pairs, **cond)
 assert fp(bothin="ETH, USDC, DAI") == {'DAI/ETH', 'ETH/DAI', 'USDC/DAI', 'USDC/ETH'}
 assert fp(onein="WBTC") == {'DAI/WBTC', 'ETH/WBTC', 'USDC/WBTC'}
@@ -652,7 +652,7 @@ assert fp(tknbnotin="WBTC, ETH, DAI") == {'USDC/DAI', 'USDC/ETH', 'USDC/LINK', '
 assert fp(notin_0="WBTC", notin_1="DAI") == fp(notin="WBTC, DAI")
 assert fp(onein = "ETH") == fp(anyall=CC.FP_ANY, tknbin="ETH", tknqin="ETH")
 
-P = CPCContainer.Pair
+P = CurveContainer.Pair
 ETHUSDC = P("WETH/USDC")
 USDCETH = P(ETHUSDC.pairr)
 assert ETHUSDC.pair == "WETH/USDC"
@@ -682,7 +682,7 @@ assert P("XYZ/USDT").isprimary
 #     df = pd.read_csv("../nbtest_data/NBTEST_002_Curves.csv.gz")
 # except:
 #     df = pd.read_csv("fastlane_bot/tests/nbtest_data/NBTEST_002_Curves.csv.gz")
-CC = CPCContainer.from_df(market_df)
+CC = CurveContainer.from_df(market_df)
 assert len(CC) == 459
 assert len(CC) == len(market_df)
 assert len(CC.pairs()) == 326
@@ -1062,10 +1062,10 @@ assert iseq(p,p2)
 
 # ## simple_optimizer
 
-CC = CPCContainer(CPC.from_pk(p=2000+i*10, k=10*20000, pair=f"ETH/USDC") for i in range(11))
+CC = CurveContainer(CPC.from_pk(p=2000+i*10, k=10*20000, pair=f"ETH/USDC") for i in range(11))
 c0 = CC.curves[0]
 c1 = CC.curves[-1]
-CC0 = CPCContainer([c0])
+CC0 = CurveContainer([c0])
 assert len(CC) == 11
 assert iseq([c.p for c in CC][-1], 2100)
 assert len(CC0) == 1
@@ -1122,7 +1122,7 @@ assert len(r.curves) == len(CC)
 #     assert r.dxdyfromp_valx_f(p) < r.dxdy_valx
 #     assert r.dxdyfromp_valy_f(p) < r.dxdy_valy
 
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+CC_ex = CurveContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
 # CC.plot()
 # CC_ex.plot()
 prices = [c.p for c in CC]
@@ -1151,8 +1151,8 @@ assert iseq(float(r),sum(r.dyvalues))
 #
 # note: `O.optimize()` without `targettkn='...'` is the globalmax result!
 
-CCr = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"ETH/USDC") for i in range(11))
-CCi = CPCContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"USDC/ETH") for i in range(11))
+CCr = CurveContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"ETH/USDC") for i in range(11))
+CCi = CurveContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"USDC/ETH") for i in range(11))
 CC  = CCr.bycids()
 assert len(CC) == len(CCr)
 CC += CCi
@@ -1171,7 +1171,7 @@ assert iseq(r.result, 3.292239037185821)
 #CC.plot()
 # -
 
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+CC_ex = CurveContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
 # CC.plot()
 # CC_ex.plot()
 
@@ -1269,7 +1269,7 @@ tildf
 
 # ### no arbitrage possible
 
-CCa = CPCContainer()
+CCa = CurveContainer()
 CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
 CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
 CCa += CPC.from_pk(pair="USDC/USDT", p=1.0, k=200000*200000, cid="c2")
@@ -1352,7 +1352,7 @@ assert r.is_error == False
 
 # ### arbitrage
 
-CCa = CPCContainer()
+CCa = CurveContainer()
 CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
 CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
 CCa += CPC.from_pk(pair="USDC/USDT", p=1.2, k=200000*200000, cid="c2")
@@ -1438,10 +1438,10 @@ help(r.trade_instructions)
 
 # ## simple_optimizer demo [NOTEST]
 
-CC = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+i*10000), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
+CC = CurveContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+i*10000), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
 #O = CPCArbOptimizer(CC)
 c0 = CC.curves[0]
-CC0 = CPCContainer([c0])
+CC0 = CurveContainer([c0])
 O = PairOptimizer(CC)
 O0 = PairOptimizer(CC0)
 funcvx = O.optimize(result=O.SO_DXDYVALXFUNC)
@@ -1467,13 +1467,13 @@ plt.show()
 r = O.optimize()
 #print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
 
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+CC_ex = CurveContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
 CC.plot()
 CC_ex.plot()
 
 # ## MargP Optimizer Demo [NOTEST]
 
-CCa = CPCContainer()
+CCa = CurveContainer()
 CCa += CPC.from_pk(pair="WETH/USDC", p=2000, k=10*20000, cid="c0")
 CCa += CPC.from_pk(pair="WETH/USDT", p=2000, k=10*20000, cid="c1")
 CCa += CPC.from_pk(pair="USDC/USDT", p=1.2, k=20000*20000, cid="c2")
@@ -1492,8 +1492,8 @@ CCa1.plot()
 
 # ## Optimizer plus inverted curves [NOTEST]
 
-CCr = CPCContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
-CCi = CPCContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"{T.USDC}/{T.ETH}") for i in range(11))
+CCr = CurveContainer(CPC.from_pk(p=2000+i*100, k=10*(20000+10000*i), pair=f"{T.ETH}/{T.USDC}") for i in range(11))
+CCi = CurveContainer(CPC.from_pk(p=1/(2050+i*100), k=10*(20000+10000*i), pair=f"{T.USDC}/{T.ETH}") for i in range(11))
 CC  = CCr.bycids()
 assert len(CC) == len(CCr)
 CC += CCi
@@ -1503,7 +1503,7 @@ CC.plot()
 O = PairOptimizer(CC)
 r = O.optimize()
 #print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
-CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+CC_ex = CurveContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
 prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
 print("prices post arb:", prices_ex)
 print("stdev", np.std(prices_ex))
@@ -1515,8 +1515,8 @@ CC_ex.plot()
 N = 10
 
 # +
-CCc, CCm, ctr = CPCContainer(), CPCContainer(), 0
-U, U1 = CPCContainer.u, CPCContainer.u1
+CCc, CCm, ctr = CurveContainer(), CurveContainer(), 0
+U, U1 = CurveContainer.u, CurveContainer.u1
 tknb, tknq = T.ETH, T.USDC
 pb, pq = 2000, 1
 pair = f"{tknb}/{tknq}"
@@ -1541,7 +1541,7 @@ CC.plot()
 # O = CPCArbOptimizer(CC)
 # r = O.simple_optimizer()
 # print(f"Arbitrage gains: {-r.valx:.4f} {r.tknxp} [time={r.time:.4f}s]")
-# CC_ex = CPCContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
+# CC_ex = CurveContainer(c.execute(dx=dx) for c, dx in zip(r.curves, r.dxvalues))
 # prices_ex = [c.pairo.primary_price(c.p) for c in CC_ex]
 # print("prices post arb:", prices_ex)
 # print("stdev", np.std(prices_ex))
@@ -1555,7 +1555,7 @@ r.dxvalues
 
 c1 = CPC.from_pkpp(p=95, k=100*10000, p_min=90, p_max=110, pair=f"{T.ETH}/{T.USDC}")
 c2 = CPC.from_pkpp(p=105, k=90*10000, p_min=90, p_max=110, pair=f"{T.ETH}/{T.USDC}")
-CC = CPCContainer([c1,c2])
+CC = CurveContainer([c1,c2])
 CC.plot()
 
 a = lambda x: np.array(x)
@@ -1763,12 +1763,4 @@ for c in curves:
 # plt.xlim((-50,50))
 plt.grid()
 # -
-
-
-
-
-
-
-
-
-
+1

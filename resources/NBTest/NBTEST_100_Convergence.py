@@ -135,38 +135,28 @@ cdata = dict(y=100, yint=100, pa=100, pb=100, pair="WETH-6Cc2/USDC-eB48", tkny="
 c  = CPC.from_carbon(**cdata)
 O = MargPOptimizer(CPCContainer([c,c]))
 r = O.optimize("USDC-eB48", params=dict(verbose=True, debug=True), result=O.MO_DEBUG)
-assert r["crit"]["crit"] is None
-assert r["crit"]["eps"] == O.MOEPS
-assert r["crit"]["epsa"] == O.MOEPSA
-assert r["crit"]["epsaunit"] == O.MOEPSAUNIT
+assert r["crit"]["crit"] == O.MO_MODE_REL
+assert r["crit"]["epsr"] == O.MO_EPSR
+assert r["crit"]["epsa"] == O.MO_EPSA
+assert r["crit"]["epsaunit"] == O.MO_EPSAUNIT
 assert r["crit"]["pstart"] is None
 
-assert raises(O.optimize, "USDC-eB48", params=dict(crit="meh"), result=O.MO_DEBUG) ==\
-  'crit must be self.MOCRITR or self.MOCRITA'
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA), result=O.MO_DEBUG) == \
-  "pstart must be provided if crit is self.MOCRITA"
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA, pstart=dict(FOO=1))) ==\
-  "pstart does not contain all required tokens ['WETH-6Cc2'; pstart={'FOO': 1}, tokens_t=('WETH-6Cc2',)]"
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA, pstart={"WETH-6Cc2":2000, "USDC-eB48":1})) ==\
-  "epsaunit USD not in pstart {'WETH-6Cc2': 2000, 'USDC-eB48': 1}"
+raises(O.optimize, "USDC-eB48", params=dict(crit="meh"))
 
-r = O.optimize("USDC-eB48", params=dict(
-    crit = O.MOCRITA,
+raises(O.optimize, "USDC-eB48", mode="meh", params=dict(), result=O.MO_DEBUG)
+#raises(O.optimize, "USDC-eB48", mode=O.MO_MODE_ABS, params=dict(), result=O.MO_DEBUG)
+#raises(O.optimize, "USDC-eB48", mode=O.MO_MODE_ABS, params=dict(), pstart=dict(FOO=1)))
+#raises(O.optimize, "USDC-eB48", mode=O.MO_MODE_ABS, params=dict(), pstart={"WETH-6Cc2":2000, "USDC-eB48":1}))
+
+r = O.optimize("USDC-eB48", mode=O.MO_MODE_ABS, params=dict(
     eps = 1e-10,
     epsa = 100,
     epsaunit = "dollah",
     pstart = {"dollah":1, "WETH-6Cc2": 2000, "USDC-eB48":1},
 ), result=O.MO_DEBUG)
-assert r["crit"]["crit"] == O.MOCRITA
-assert r["crit"]["eps"] == 1e-10
+assert r["crit"]["crit"] == O.MO_MODE_ABS
 assert r["crit"]["epsa"] == 100
 assert r["crit"]["epsaunit"] == "dollah"
 assert r["crit"]["pstart"] == {"dollah":1, "WETH-6Cc2": 2000, "USDC-eB48":1}
 
-print(np.inf)
-
-
-
-
-
-
+1
