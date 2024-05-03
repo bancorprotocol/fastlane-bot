@@ -411,6 +411,12 @@ class PoolAndTokens:
             B = L
             z = y * (H - L) / (M - L) if M > L else y
             return z
+        
+        def check_overlap(pa0, pb0, pa1, pb1):
+            min0, max0 = sorted([pa0, pb0]) 
+            min1, max1 = sorted([1 / pa1, 1 / pb1]) 
+            prices_overlap = max(min0, min1) < min(max0, max1)
+            return prices_overlap 
 
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
         lst = []
@@ -513,8 +519,7 @@ class PoolAndTokens:
             no_limit_orders = (strategy_typed_args[0]['is_limit_order'] == False) and (strategy_typed_args[1]['is_limit_order'] == False)
 
             # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
-            prices_overlap = (strategy_typed_args[1]['pa']>(1/strategy_typed_args[0]['pa'])>strategy_typed_args[1]['pb']) # or (1/strategy_typed_args[0]['pa']<(strategy_typed_args[1]['pb']))
-            
+            prices_overlap = check_overlap(strategy_typed_args[0]['pa'], strategy_typed_args[0]['pb'], strategy_typed_args[1]['pa'], strategy_typed_args[1]['pb'])
             # if (percent_component_met and no_limit_orders) and not prices_overlap:
             #     print(percent_component_met, no_limit_orders, prices_overlap)
             #     print(strategy_typed_args)
