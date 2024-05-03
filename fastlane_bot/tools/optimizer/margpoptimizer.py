@@ -13,7 +13,7 @@ desired boundary conditions.
 
 This method employs a Newton-Raphson algorithm to solve the
 aforementioned goal seek problem.
- 
+
 ---
 This module is still subject to active research, and
 comments and suggestions are welcome. The corresponding
@@ -22,7 +22,7 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.4+dev01"
+__VERSION__ = "6.0-alpha02"
 __DATE__ = "04/May/2024"
 
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
