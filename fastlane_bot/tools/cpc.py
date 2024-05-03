@@ -8,9 +8,9 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "3.6"
-__DATE__ = "02/May/2024"
- 
+__VERSION__ = "3.6+dev02"
+__DATE__ = "04/May/2024"
+
 from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
 from . import tokenscale as ts
@@ -26,7 +26,7 @@ import collections as cl
 from sys import float_info
 from hashlib import md5 as digest
 import time
-from .cpcbase import CurveBase, AttrDict, DAttrDict, dataclass_
+from .curvebase import CurveBase, AttrDict, DAttrDict, dataclass_
 
 
 AD = DAttrDict
@@ -507,6 +507,7 @@ class ConstantProductCurve(CurveBase):
         cls,
         k,
         x,
+        *,
         x_act=None,
         y_act=None,
         pair=None,
@@ -534,6 +535,7 @@ class ConstantProductCurve(CurveBase):
         cls,
         k,
         y,
+        *,
         x_act=None,
         y_act=None,
         pair=None,
@@ -561,6 +563,7 @@ class ConstantProductCurve(CurveBase):
         cls,
         x,
         y,
+        *,
         x_act=None,
         y_act=None,
         pair=None,
@@ -635,6 +638,7 @@ class ConstantProductCurve(CurveBase):
         cls,
         p,
         k,
+        *,
         x_act=None,
         y_act=None,
         pair=None,
@@ -718,11 +722,11 @@ class ConstantProductCurve(CurveBase):
         k,
         p_min=None,
         p_max=None,
+        *,
         pair=None,
         cid=None,
         fee=None,
         descr=None,
-        *,
         constr=None,
         params=None,
     ):
@@ -752,8 +756,9 @@ class ConstantProductCurve(CurveBase):
     @classmethod
     def from_univ2(
         cls,
-        x_tknb=None,
-        y_tknq=None,
+        *,
+        x=None,
+        y=None,
         k=None,
         pair=None,
         fee=None,
@@ -764,16 +769,13 @@ class ConstantProductCurve(CurveBase):
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
 
-        :x_tknb:    current pool liquidity in token x (base token of the pair) (1)
-        :y_tknq:    current pool liquidity in token y (quote token of the pair) (1)
-        :k:         uniswap liquidity parameter (k = xy)*
+        :x:         current pool liquidity in token x (base token of the pair) (1)
+        :x:         current pool liquidity in token y (quote token of the pair) (1)
+        :k:         uniswap liquidity parameter k = xy (1)
 
         NOTE 1: exactly one of k,x,y must be None; all other parameters must not be None;
         a reminder that x is TKNB and y is TKNQ
         """
-        x = x_tknb
-        y = y_tknq
-
         assert not pair is None, "pair must not be None"
         assert not cid is None, "cid must not be None"
         assert not descr is None, "descr must not be None"
@@ -988,9 +990,9 @@ class ConstantProductCurve(CurveBase):
     @classmethod
     def from_carbon(
         cls,
+        *,
         yint=None,
         y=None,
-        *,
         pa=None,
         pb=None,
         A=None,
@@ -1007,7 +1009,7 @@ class ConstantProductCurve(CurveBase):
         """
         constructor: from a single Carbon order (see class docstring for other parameters) (1)
 
-        :yint:      current pool y-intercept (2)
+        :yint:      current pool y-intercept (also known as z)
         :y:         current pool liquidity in token y
         :pa:        carbon price range left bound (higher price in dy/dx)
         :pb:        carbon price range right bound (lower price in dy/dx)
@@ -1021,24 +1023,15 @@ class ConstantProductCurve(CurveBase):
         must be given but not both; we do not correct for incorrect assignment of
         pa and pb, so if pa <= pb IN THE DY/DX DIRECTION, MEANING THAT THE NUMBERS
         ENTERED MAY SHOW THE OPPOSITE RELATIONSHIP, then an exception will be raised
-
-        NOTE 2: that the result does not depend on yint, and for the time being we
-        allow to omit yint (in which case it is set to y, but this does not make
-        a difference for the result)
         """
         assert not yint is None, "yint must not be None"
         assert not y is None, "y must not be None"
         assert not pair is None, "pair must not be None"
         assert not tkny is None, "tkny must not be None"
-        # assert not fee is None, "fee must not be None"
-        # assert not cid is None, "cid must not be None"
-        # assert not descr is None, "descr must not be None"
         
         if minrw is None:
             minrw = cls.CARBON_MIN_RANGEWIDTH
         
-        # if yint is None:
-        #     yint = y
         assert y <= yint, "y must be <= yint"
         assert y >= 0, "y must be >= 0"
 
