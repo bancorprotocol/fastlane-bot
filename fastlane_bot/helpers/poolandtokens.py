@@ -493,6 +493,7 @@ class PoolAndTokens:
         return lst
 
     FEE_LOOKUP = {
+        0.000001: Univ3Calculator.FEE1,
         0.000008: Univ3Calculator.FEE8,
         0.00001: Univ3Calculator.FEE10,
         0.00004: Univ3Calculator.FEE40,

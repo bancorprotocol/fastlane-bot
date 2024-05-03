@@ -810,7 +810,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     BALANCER_VAULT_ADDRESS = "0x7ccBebeb88696f9c8b061f1112Bb970158e29cA5" # # TODO Jellyswap on devnet
 
     CHAIN_FLASHLOAN_TOKENS = {
-        "0x26841a0A5D958B128209F4ea9a1DD7E61558c330": "WSEI", #TODO confirm for Mainnet
+        "0x57eE725BEeB991c70c53f9642f36755EC6eb2139": "WSEI", #TODO confirm for Mainnet
         "0xace5f7Ea93439Af39b46d2748fA1aC19951c8d7C": "USDC", #TODO confirm for Mainnet
     }
     # Add any exchanges unique to the chain here
