@@ -32,6 +32,7 @@ BASE = "coinbase_base"
 FANTOM = "fantom"
 MANTLE = "mantle"
 LINEA = "linea"
+SEI = "sei"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -50,6 +51,7 @@ coingecko_network_map = {
     "cosmos": "cosmos",
     "kava": "kava",
     "mantle": "mantle",
+    "sei": "sei",
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -61,7 +63,8 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 250000,
     "fantom": 2000,
     "mantle": 10000000,
-    "linea": 1000000
+    "linea": 1000000,
+    "sei": 10000,  #TODO untested this could be more
 }
 
 ALCHEMY_KEY_DICT = {
@@ -74,6 +77,7 @@ ALCHEMY_KEY_DICT = {
     "fantom": "WEB3_FANTOM",
     "mantle": "WEB3_MANTLE",
     "linea": "WEB3_LINEA",
+    "sei": "WEB3_SEI",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -86,6 +90,7 @@ ALCHEMY_RPC_LIST = {
     "fantom": "https://fantom-mainnet.blastapi.io/",
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
+    "sei": "https://evm-rpc.arctic-1.seinetwork.io/", # TODO update with mainnet
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -97,6 +102,7 @@ BALANCER_SUBGRAPH_CHAIN_URL = {
     "coinbase_base": "https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest",
     "avalanche": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2",
     "fantom": "https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx",
+    "sei": "" # TODO add Jellyswap
 
 }
 
@@ -1271,5 +1277,4 @@ def terraform_blockchain(network_name: str, web3: Web3 = None, async_web3: Async
     return exchange_df, univ2_mapdf, univ3_mapdf, solidly_v2_mapdf
 
 
-#terraform_blockchain(network_name="mantle", save_tokens=True)
-#terraform_blockchain(network_name="linea", save_tokens=True)
+#terraform_blockchain(network_name="sei", save_tokens=True)
