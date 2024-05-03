@@ -109,14 +109,9 @@ class TxRouteHandler:
     trade_instructions: List[TradeInstruction]
 
     def __post_init__(self):
-        self.contains_carbon = True
-        self.ConfigObj = self.trade_instructions[0].ConfigObj
-        if not self.trade_instructions:
-            raise ValueError("No trade instructions found.")
         if len(self.trade_instructions) < 2:
             raise ValueError("Length of trade instructions must be greater than 1.")
-        if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
-            self.contains_carbon = False
+        self.ConfigObj = self.trade_instructions[0].ConfigObj
 
     @staticmethod
     def custom_data_encoder(
