@@ -50,7 +50,7 @@ def find_main_py():
             cwd = new_cwd
        
        
-def run_command(arb_mode, expected_log_line):
+def run_command(arb_mode):
     
     # Find the correct path to main.py
     main_script_path = find_main_py()
@@ -70,20 +70,10 @@ def run_command(arb_mode, expected_log_line):
         "--flashloan_tokens='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C,0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD'",
         "--blockchain=ethereum"
     ]
-    subprocess.Popen(cmd)
-        
-    # Wait for the expected log line to appear
-    found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=20)
 
-    # Check if the expected log line is in the output
-    if expected_log_line in result.stderr or expected_log_line in result.stdout:
-        found = True
-
-    if not found:
-        pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
-
-
+    expected_log_line = """Flashloan tokens are set as: ["'0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", 'ETH', "0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD'"]"""
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True)
+    assert expected_log_line in result.stderr, result.stderr
 
 
 # ------------------------------------------------------------
@@ -94,10 +84,4 @@ def run_command(arb_mode, expected_log_line):
 def test_test_flashloan_tokens_is_respected():
 # ------------------------------------------------------------
     
-    expected_log_line = """Flashloan tokens are set as: ["'0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C", 'ETH', "0xAa6E8127831c9DE45ae56bB1b0d4D4Da6e5665BD'"]"""
-    arb_mode = "multi"
-    run_command(arb_mode=arb_mode, expected_log_line=expected_log_line)
-    
-    
-    
-    
+    run_command("multi")
