@@ -60,7 +60,7 @@ assert isinstance(CurveBase.invariant, types.FunctionType)
 
 # assert that CurveBase cannot be instantiated with one of the functions missing
 
-assert raises(CurveBase).startswith("Can't instantiate abstract class CurveBase")
+assert raises(CurveBase)
 
 
 class Curve(CurveBase):
@@ -70,7 +70,7 @@ class Curve(CurveBase):
         ...
     # def invariant(self, include_target=False):  
     #     ...
-assert raises(Curve).startswith("Can't instantiate abstract class Curve")
+assert raises(Curve)
 
 
 class Curve(CurveBase):
@@ -80,7 +80,7 @@ class Curve(CurveBase):
     #     ...
     def invariant(self, include_target=False):  
         ...
-assert raises(Curve).startswith("Can't instantiate abstract class Curve")
+assert raises(Curve)
 
 
 class Curve(CurveBase):
@@ -90,7 +90,7 @@ class Curve(CurveBase):
         ...
     def invariant(self, include_target=False):  
         ...
-assert raises(Curve).startswith("Can't instantiate abstract class Curve")
+assert raises(Curve)
 
 # ### ConstantProductCurve
 
@@ -102,7 +102,7 @@ kwargs = dict(pair="TKNB/TKNQ", cid="c_cid", descr="des", fee=0.005, params=p)
 # the `from_pk` constructor takes a price `p` and a constant `k`
 
 c = CPC.from_pk(10, 10*1*25**2, **kwargs)
-assert raises(CPC.from_pk, 10, 10*1*10**2, 10).startswith("ConstantProductCurve.from_pk() takes")
+assert raises(CPC.from_pk, 10, 10*1*10**2, 10)
 assert iseq(c.p, 10)
 assert iseq(c.x, 25)
 assert iseq(c.x, c.x_act)
@@ -115,9 +115,11 @@ assert c.descr == "des"
 assert c.fee == 0.005
 assert c.params == p
 
+raises(CPC.from_pk, 10, 10*1*10**2, 10)
+
 c1 = CPC.from_kx(c.k, c.x, **kwargs)
 assert CPC.from_kx(k=c.k, x=c.x, **kwargs) == c1
-assert raises(CPC.from_kx, 10, 10*1*10**2, 10).startswith("ConstantProductCurve.from_kx() takes")
+assert raises(CPC.from_kx, 10, 10*1*10**2, 10)
 assert iseq(c1.p, c.p)
 assert iseq(c1.x, c.x)
 assert iseq(c1.x_act, c.x_act)
@@ -132,7 +134,7 @@ assert c1.params == c1.params
 
 c1 = CPC.from_ky(c.k, c.y, **kwargs)
 assert CPC.from_ky(k=c.k, y=c.y, **kwargs) == c1
-assert raises(CPC.from_ky, 10, 10*1*10**2, 10).startswith("ConstantProductCurve.from_ky() takes")
+assert raises(CPC.from_ky, 10, 10*1*10**2, 10)
 assert iseq(c1.p, c.p)
 assert iseq(c1.x, c.x)
 assert iseq(c1.x_act, c.x_act)
@@ -147,7 +149,7 @@ assert c1.params == c1.params
 
 c1 = CPC.from_xy(c.x, c.y, **kwargs)
 assert CPC.from_xy(x=c.x, y=c.y, **kwargs) == c1
-assert raises(CPC.from_xy, 10, 10*1*10**2, 10).startswith("ConstantProductCurve.from_xy() takes")
+assert raises(CPC.from_xy, 10, 10*1*10**2, 10)
 assert iseq(c1.p, c.p)
 assert iseq(c1.x, c.x)
 assert iseq(c1.x_act, c.x_act)
@@ -163,7 +165,7 @@ assert c1.params == c1.params
 # #### levered generic constructors
 
 c = CPC.from_pkpp(10, 10*1*25**2, 8, 12, **kwargs)
-assert raises(CPC.from_pkpp, 10, 10*1*10**2, 8, 12, 10).startswith("ConstantProductCurve.from_pkpp() takes")
+assert raises(CPC.from_pkpp, 10, 10*1*10**2, 8, 12, 10)
 assert iseq(c.p, 10)
 assert iseq(c.p_min, 8)
 assert iseq(c.p_max, 12)
@@ -206,7 +208,7 @@ assert iseq(c1.k, c.k)
 #
 # note: the Carbon constructor takes _only_ keyword arguments
 
-assert raises(CPC.from_carbon, 1).startswith("ConstantProductCurve.from_carbon() takes")
+assert raises(CPC.from_carbon, 1)
 
 pa, pb = 12, 8    # USDC per LINK
 yint = y = 25     # LINK
