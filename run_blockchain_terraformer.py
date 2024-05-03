@@ -73,16 +73,15 @@ coingecko_network_map = {
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
-    "ethereum": 50000,
-    "polygon": 250000,
-    "polygon_zkevm": 500000,
-    "arbitrum_one": 500000,
-    "optimism": 500000,
-    "coinbase_base": 250000,
-    "fantom": 2000,
-    "mantle": 10000000,
-    "linea": 1000000,
-    "sei": 10000,  #TODO untested this could be more
+    "ethereum": 0,
+    "polygon": 0,
+    "polygon_zkevm": 0,
+    "arbitrum_one": 0,
+    "optimism": 0,
+    "coinbase_base": 0,
+    "fantom": 5000,
+    "mantle": 0,
+    "linea": 0
 }
 
 ALCHEMY_KEY_DICT = {
