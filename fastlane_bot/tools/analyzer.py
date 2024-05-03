@@ -1,5 +1,5 @@
 """
-analyzing CPC / CPCContainer based collections
+analyzing CPC / CurveContainer based collections
 
 ---
 (c) Copyright Bprotocol foundation 2023. 
@@ -8,11 +8,11 @@ Licensed under MIT
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
 """
-__VERSION__ = "1.5"
-__DATE__ = "18/May/2023"
+__VERSION__ = "1.5.1"
+__DATE__ = "04/May/2024"
 
 from typing import Any
-from .cpc import ConstantProductCurve as CPC, CPCContainer, T, Pair
+from .cpc import ConstantProductCurve as CPC, CurveContainer, T, Pair
 from .optimizer import CPCArbOptimizer
 
 from dataclasses import dataclass, field, asdict, astuple, fields, InitVar
@@ -51,17 +51,17 @@ class _DCBase:
 @dataclass
 class CPCAnalyzer(_DCBase):
     """
-    various analytics functions around a CPCContainer object
+    various analytics functions around a CurveContainer object
     """
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
     
-    CC: CPCContainer = field(default=None)
+    CC: CurveContainer = field(default=None)
     
     def __post_init__(self):
         if self.CC is None:
-            self.CC = CPCContainer()
-        assert isinstance(self.CC, CPCContainer), "CC must be a CPCContainer object"
+            self.CC = CurveContainer()
+        assert isinstance(self.CC, CurveContainer), "CC must be a CurveContainer object"
     
     def pairs(self):
         """alias for CC.pairs(standardize=True)"""
@@ -80,7 +80,7 @@ class CPCAnalyzer(_DCBase):
         result = [c for c in self.CC if c.P("exchange")=="carbon_v1"]
         if not ascc:
             return result
-        return CPCContainer(result)
+        return CurveContainer(result)
     
     def tokens(self):
         """all tokens in the curves"""
@@ -313,7 +313,7 @@ class CPCAnalyzer(_DCBase):
         CC_crb  = self.curvesc(ascc=True).bypairs(pair)
         
         # the extended list of pairs (universe: tokens of the pair + triangulation tokens)
-        d["xpairs"] = self.CC.filter_pairs(bothin=f"{d.tknb}, {d.tknq}, {CPCContainer.TRIANGTOKENS}")
+        d["xpairs"] = self.CC.filter_pairs(bothin=f"{d.tknb}, {d.tknq}, {CurveContainer.TRIANGTOKENS}")
         
         # all non-Carbon curves associated with the extended list of pairs 
         CCx_noc = self.CC.bypairs(d.xpairs).byparams(exchange="carbon_v1", _inv=True)
