@@ -1754,7 +1754,7 @@ class ConstantProductCurve(CurveBase):
 
 
 @dataclass
-class CPCContainer:
+class CurveContainer:
     """
     container for ConstantProductCurve objects (use += to add items)
 
@@ -2872,7 +2872,7 @@ class CPCContainer:
         if heading:
             s = f"{self.curves[0].format(heading=True, formatid=formatid)}\n{s}"
         return s
-
+CPCContainer = CurveContainer
 
 class AF:
     """aggregator functions (for pivot tables)"""
