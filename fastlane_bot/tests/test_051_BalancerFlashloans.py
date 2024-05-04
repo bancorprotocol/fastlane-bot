@@ -271,5 +271,5 @@ def test_test_extract_flashloan_tokens():
     flashloan_tokens = route_handler._extract_flashloan_tokens(instructions2)
     
     assert len(flashloan_tokens.keys()) == 2
-    assert flashloan_tokens['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
+    assert flashloan_tokens['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
     # -
