@@ -12,7 +12,7 @@ __VERSION__ = "2.2"
 __DATE__ = "09/May/2023"
 
 from dataclasses import dataclass, field, asdict, astuple, InitVar
-from .simplepair import SimplePair as Pair
+from .curves.simplepair import SimplePair as Pair
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
