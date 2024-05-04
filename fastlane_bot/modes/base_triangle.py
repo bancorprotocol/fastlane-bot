@@ -15,7 +15,7 @@ from typing import List, Any, Tuple, Union
 import pandas as pd
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
-from fastlane_bot.tools.cpc import T
+from fastlane_bot.tools.curves import T
 
 
 class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
