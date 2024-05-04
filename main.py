@@ -8,7 +8,7 @@ Licensed under MIT
 
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
-from fastlane_bot.tools.cpc import T
+from fastlane_bot.tools.curves import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
 

@@ -13,7 +13,7 @@ import itertools
 from typing import List, Tuple, Any, Union
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.curves import CurveContainer
 
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
@@ -30,14 +30,14 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
 
     @staticmethod
     def get_combos(
-        CCm: CPCContainer, flashloan_tokens: List[str]
+        CCm: CurveContainer, flashloan_tokens: List[str]
     ) -> Tuple[List[Any], List[Any]]:
         """
         Get combos for pairwise arbitrage
 
         Parameters
         ----------
-        CCm : CPCContainer
+        CCm : CurveContainer
             Container for all the curves
         flashloan_tokens : list
             List of flashloan tokens

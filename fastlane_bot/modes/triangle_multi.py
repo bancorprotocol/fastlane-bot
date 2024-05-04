@@ -11,7 +11,7 @@ Licensed under MIT.
 from typing import List, Any, Tuple, Union
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.curves import CurveContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer
 
 
@@ -40,7 +40,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
         for src_token, miniverse in combos:
             try:
                 r = None
-                CC_cc = CPCContainer(miniverse)
+                CC_cc = CurveContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
                 #try:
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)

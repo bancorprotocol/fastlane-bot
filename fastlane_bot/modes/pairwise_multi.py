@@ -13,7 +13,7 @@ from typing import List, Any, Tuple, Union, Hashable
 import pandas as pd
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.curves import CurveContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
 
 
@@ -161,7 +161,7 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         """
         Run main flow to find arbitrage.
         """
-        CC_cc = CPCContainer(curves)
+        CC_cc = CurveContainer(curves)
         O = PairOptimizer(CC_cc)
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p

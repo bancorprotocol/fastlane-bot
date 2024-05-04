@@ -12,7 +12,7 @@
 This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools.curves import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.testing import *
 from fastlane_bot.config.network import *
