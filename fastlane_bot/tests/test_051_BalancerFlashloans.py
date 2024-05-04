@@ -264,95 +264,12 @@ def test_test_extract_flashloan_tokens():
         exchange_override = 'carbon_v1'
     )
     
-    ti9 = TradeInstruction(
-        cid='4083388403051261561560495289181218537544',
-        tknin='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        amtin=5,
-        tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        amtout=10000,
-        ConfigObj=cfg,
-        db = db,
-        tknin_dec_override =  18,
-        tknout_dec_override = 6,
-        tknin_addr_override = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        tknout_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        exchange_override = 'bancor_v3'
-    )
-    
-    ti10 = TradeInstruction(
-        cid='4083388403051261561560495289181218537544',
-        tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        amtin=10000,
-        tknout='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        amtout=5.7,
-        ConfigObj=cfg,
-        db = db,
-        tknout_dec_override =  6,
-        tknin_dec_override = 18,
-        tknout_addr_override = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        tknin_addr_override = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-        exchange_override = 'carbon_v1'
-    )
-    
-    ti11 = TradeInstruction(
-        cid='4083388403051261561560495289181218537544',
-        tknin='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-        amtin=50000,
-        tknout='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        amtout=20000,
-        ConfigObj=cfg,
-        db = db,
-        tknin_dec_override =  18,
-        tknout_dec_override = 6,
-        tknin_addr_override = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-        tknout_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        exchange_override = 'bancor_v3'
-    )
-    
-    ti12 = TradeInstruction(
-        cid='4083388403051261561560495289181218537544',
-        tknin='0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        amtin=20000,
-        tknout='0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-        amtout=50115,
-        ConfigObj=cfg,
-        db = db,
-        tknout_dec_override =  6,
-        tknin_dec_override = 18,
-        tknout_addr_override = '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C',
-        tknin_addr_override = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-        exchange_override = 'carbon_v1'
-    )
     instructions = [ti1, ti2]
     instructions2 = [ti3, ti4, ti5, ti6, ti7, ti8]
-    instructions3 = [ti3, ti4, ti5, ti6, ti7, ti8, ti9, ti10, ti11, ti12]
     
     route_handler = TxRouteHandler(instructions)
-    route_handler2 = TxRouteHandler(instructions2)
-    route_handler3 = TxRouteHandler(instructions3)
+    flashloan_tokens = route_handler._extract_flashloan_tokens(instructions2)
     
-    
-    flashloan_tokens = route_handler._extract_flashloan_tokens(instructions)
-    flashloan_tokens2 = route_handler._extract_flashloan_tokens(instructions2)
-    flashloan_tokens3 = route_handler._extract_flashloan_tokens(instructions3)
-    
-    
-    flashloan_struct = route_handler._get_flashloan_struct(instructions2)
-    flashloan_struct2 = route_handler._get_flashloan_struct(instructions3)
-    
-    
-    flash_struct3 = route_handler.generate_flashloan_struct(instructions3)
-    assert len(flashloan_tokens2.keys()) == 2
-    assert flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
-    #assert flashloan_tokens2['0xdAC17F958D2ee523a2206206994597C13D831ec7']["flash_amt"] == 2000000000, f"expected flashloan amount of 2000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
-    # assert len(flash_struct3) == 3, f"[Advanced Routing NBTest044] wrong number of flash tokens length, expected 3, got {len(flash_struct3)}"
-    # assert flash_struct3[0]['platformId'] == 2, f"[Balancer Flashloan Support [NBTest049]] wrong platformId, expected 2, got {flash_struct3[0]['platformId']}"
-    # assert flash_struct3[1]['platformId'] == 2, f"[Balancer Flashloan Support [NBTest049]] wrong platformId, expected 2, got {flash_struct3[1]['platformId']}"
-    # assert flash_struct3[2]['platformId'] == 7, f"[Balancer Flashloan Support [NBTest049]] wrong platformId, expected 7, got {flash_struct3[2]['platformId']}"
-    
-    # for flashloan in flash_struct3:
-    #     assert len(flashloan['sourceTokens']) == len(flashloan['sourceAmounts']), f"[Balancer Flashloan Support [NBTest049]] number of source tokens does not match source amounts, tkns: {len(flashloan['sourceTokens'])} amts: {len(flashloan['sourceAmounts'])}"
+    assert len(flashloan_tokens.keys()) == 2
+    assert flashloan_tokens['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']["flash_amt"] == 5000000000, f"expected flashloan amount of 5000000000, found {flashloan_tokens2['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48']['flash_amt']}"
     # -
-    
-    
-    

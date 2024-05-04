@@ -317,54 +317,31 @@ class TxRouteHandler:
         :return:
             list
         """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
+        is_FL_NATIVE_permitted = self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_ETHEREUM
 
-    def _get_flashloan_platform_id(self, tkn: str) -> int:
-        """
-        Returns the platform ID to take the flashloan from
-        :param tkn: str
-
-        :return:
-            int
-        """
-
-        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
-            return 7
-
-        # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
-                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
-                   self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
-            return 2
+        if trade_instructions_objects[0].tknin_is_native and not is_FL_NATIVE_permitted:
+            source_token = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        elif trade_instructions_objects[0].tknin_is_native and is_FL_NATIVE_permitted:
+            source_token = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif trade_instructions_objects[0].tknin_is_wrapped:
+            source_token = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
         else:
-            return 7
+            source_token = trade_instructions_objects[0].tknin_address
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
-        """
-        Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
-        :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
-        """
-        flash_tokens = self._extract_single_flashloan_token(trade_instructions=trade_instructions_objects)
-        flashloans = []
-        balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
-        has_balancer = False
+        platformId = 2 if self.ConfigObj.NETWORK in ["ethereum", "tenderly"] and source_token in [
+            self.ConfigObj.BNT_ADDRESS,
+            self.ConfigObj.ETH_ADDRESS,
+            self.ConfigObj.WBTC_ADDRESS,
+            self.ConfigObj.LINK_ADDRESS
+        ] else 7
 
-        for tkn in flash_tokens.keys():
-            platform_id = self._get_flashloan_platform_id(tkn)
-            source_token = flash_tokens[tkn]["tkn"]
-            source_amounts = abs(flash_tokens[tkn]["flash_amt"])
-            if platform_id == 7:
-                has_balancer = True
-                balancer["sourceTokens"].append(source_token)
-                balancer["sourceAmounts"].append(source_amounts)
-            else:
-                source_token = self.wrapped_gas_token_to_native(source_token)
-                flashloans.append(
-                    {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]})
-        if has_balancer:
-            flashloans.append(balancer)
-
-        return flashloans
+        return [
+            {
+                "platformId": platformId,
+                "sourceTokens": [self.wrapped_gas_token_to_native(source_token)],
+                "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+            }
+        ]
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
