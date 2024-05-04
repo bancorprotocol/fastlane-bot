@@ -13,9 +13,9 @@ from typing import List, Any, Tuple, Union, Hashable
 import pandas as pd
 import itertools
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.curves import CurveContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
-from fastlane_bot.tools.cpc import T
+from fastlane_bot.tools.curves import T
 
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
@@ -152,7 +152,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
         Run main flow to find arbitrage.
         """
-        CC_cc = CPCContainer(curves)
+        CC_cc = CurveContainer(curves)
         O = PairOptimizer(CC_cc)
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
@@ -174,14 +174,14 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         return new_curves
 
     def get_combos_pol(self,
-        CCm: CPCContainer, flashloan_tokens: List[str]
+        CCm: CurveContainer, flashloan_tokens: List[str]
     ) -> Tuple[List[Any], List[Any]]:
         """
         Get combos for pairwise arbitrage specific to Bancor POL
 
         Parameters
         ----------
-        CCm : CPCContainer
+        CCm : CurveContainer
             Container for all the curves
         flashloan_tokens : list
             List of flashloan tokens
