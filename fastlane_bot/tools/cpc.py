@@ -505,8 +505,8 @@ class ConstantProductCurve(CurveBase):
     def from_univ2(
         cls,
         *,
-        x=None,
-        y=None,
+        liq_tknb=None,
+        liq_tknq=None,
         k=None,
         pair=None,
         fee=None,
@@ -517,28 +517,30 @@ class ConstantProductCurve(CurveBase):
         """
         constructor: from Uniswap V2 pool (see class docstring for other parameters)
 
-        :x:         current pool liquidity in token x (base token of the pair) (1)
-        :x:         current pool liquidity in token y (quote token of the pair) (1)
-        :k:         uniswap liquidity parameter k = xy (1)
+        :liq_tknb:      current pool liquidity in tknb (base token of the pair; "x") (1)
+        :liq_tknq:      current pool liquidity in tknq (quote token of the pair; "y") (1)
+        :k:             uniswap liquidity parameter k = xy (1)
 
-        NOTE 1: exactly one of k,x,y must be None; all other parameters must not be None;
-        a reminder that x is TKNB and y is TKNQ
+        NOTE 1: exactly one of k, liq_tknb, liq_tknq must be None; all other parameters 
+        must not be None; a reminder that x is TKNB and y is TKNQ and pair is "TKNB/TKNQ"
         """
         assert not pair is None, "pair must not be None"
         assert not cid is None, "cid must not be None"
         assert not descr is None, "descr must not be None"
         assert not fee is None, "fee must not be None"
 
+        x = liq_tknb
+        y = liq_tknq
         if k is None:
-            assert x is not None and y is not None, "k is None, so x,y must not"
+            assert x is not None and y is not None, "k is not provided, so both liquidities must be"
             k = x * y
         elif x is None:
-            assert y is not None, "x is None, so y must not"
+            assert y is not None, "k is provided, so must provide exactly one liquidity"
             x = k / y
         elif y is None:
             y = k / x
         else:
-            assert False, "exactly one of k,x,y must be None"
+            assert False, "exactly one of k and the liquidities must be None"
 
         return cls(
             k=k,
