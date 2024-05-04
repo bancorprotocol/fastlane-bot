@@ -14,12 +14,13 @@
 # ---
 
 # +
+from tools.curves import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
+from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
+from tools.analyzer import CPCAnalyzer
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-from tools.analyzer import CPCAnalyzer
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
@@ -100,7 +101,7 @@ curves_as_dicts = [{'k': 4.3078885616238194e+24,
    'tkny_addr': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
    'blocklud': 18758413}}]
 
-CC = CPCContainer.from_dicts(curves_as_dicts)
+CC = CurveContainer.from_dicts(curves_as_dicts)
 len(CC), len(curves_as_dicts)
 
 # ## Analyzis and visualization
@@ -250,8 +251,8 @@ r
 # -
 
 pstart = {'WETH-6Cc2': 2373.231732603511, 'THOR-8044': 0.36299996370000637, 'USDC-eB48': 1, "USD": 1}
-params = dict(crit=O.MOCRITA, norm=O.MONORMLINF, epsa=10, epsaunit="USD", pstart=pstart)
-r = O.optimize("USDC-eB48", params=dict(verbose=False, debug=False, **params))
+params = dict(norm=O.MO_NORMLINF, epsa=10, epsaunit="USD", pstart=pstart)
+r = O.optimize("USDC-eB48", mode=O.MO_MODE_ABS, params=dict(verbose=False, debug=False, **params))
 #r = O.optimize("USDC-eB48", params=dict(verbose=True, debug=True, **params))
 r
 
@@ -263,7 +264,7 @@ c0 = CC[0]
 c0b = CPC.from_xy(x=c0.x, y=c0.y, pair=c0.pair)
 c0b
 
-CCb = CPCContainer.from_dicts(curves_as_dicts[1:])
+CCb = CurveContainer.from_dicts(curves_as_dicts[1:])
 CCb += c0b
 CCb.plot()
 
@@ -282,122 +283,9 @@ r.dtokens
 # -
 
 pstart = {'WETH-6Cc2': 2373.231732603511, 'THOR-8044': 0.36299996370000637, 'USDC-eB48': 1, "USD": 1}
-params = dict(crit=O.MOCRITA, norm=O.MONORMLINF, epsa=10, epsaunit="USD", pstart=pstart)
-r = O.optimize("USDC-eB48", params=dict(verbose=False, debug=False))
+params = dict(norm=O.MO_NORMLINF, epsa=10, epsaunit="USD")
+r = O.optimize("USDC-eB48", mode=O.MO_MODE_ABS, pstart=pstart, params=dict(verbose=False, debug=False))
 #O.optimize("USDC-eB48", params=dict(verbose=True, debug=True, **params))
 r
 
-
-# ## Unit tests
-
-# +
-def iseq(arg0, *args, eps=1e-6):
-    """checks whether all arguments are equal to arg0, within tolerance eps if numeric"""
-    if not args:
-        raise ValueError("Must provide at least one arg", args)
-    try:
-        arg0+1
-        isnumeric = True
-    except:
-        isnumeric = False
-    #if isinstance(arg0, int) or isinstance(arg0, float):
-    if isnumeric:
-        # numeric testing
-        if arg0 == 0:
-            for arg in args:
-                if abs(arg) > eps: 
-                    return False
-                return True
-        for arg in args:
-            if abs(arg/arg0-1) > eps:
-                return False
-            return True
-    else:
-        for arg in args:
-            if not arg == arg0:
-                return False
-        return True
-
-def raises(func, *args, **kwargs):
-    """
-    returns exception message if func(*args, **kwargs) raises, else False
-
-    USAGE
-
-        assert raises(func, 1, 3, three=3), "func(1, 2, three=3) should raise"
-    """
-    try:
-        func(*args, **kwargs)
-        return False
-    except Exception as e:
-        return str(e)
-
-
-# -
-
-# ### CPC min range width functionality
-
-cdata = dict(y=100, yint=100, pa=100, pb=100, pair="WETH-6Cc2/USDC-eB48", tkny="USDC-eB48")
-c  = CPC.from_carbon(**cdata)
-c2 = CPC.from_carbon(**cdata, minrw=1e-2)
-c4 = CPC.from_carbon(**cdata, minrw=1e-4)
-c6 = CPC.from_carbon(**cdata, minrw=1e-6)
-c
-
-assert c2.params.minrw==0.01
-assert c4.params.minrw==0.0001
-assert c6.params.minrw==0.000001
-assert c.params.minrw==0.000001
-
-assert iseq(c2.p**2/100**2, 1.01)
-assert iseq(c4.p**2/100**2, 1.0001)
-assert iseq(c6.p**2/100**2, 1.000001)
-assert iseq(c.p, c6.p)
-
-assert iseq(c2.p-100, 0.49875621120, eps=1e-3)
-assert iseq(c4.p-100, 0.00499987500, eps=1e-3)
-assert iseq(c6.p-100, 0.00004999875, eps=1e-3)
-assert iseq((c2.p-100)/(c4.p-100), 99.75373596136635, eps=1e-4)
-assert iseq((c4.p-100)/(c6.p-100), 99.99752507444194, eps=1e-4)
-
-# ### margpoptimizer absolute convergence
-
-cdata = dict(y=100, yint=100, pa=100, pb=100, pair="WETH-6Cc2/USDC-eB48", tkny="USDC-eB48")
-c  = CPC.from_carbon(**cdata)
-O = MargPOptimizer(CPCContainer([c,c]))
-r = O.optimize("USDC-eB48", params=dict(verbose=True, debug=True), result=O.MO_DEBUG)
-assert r["crit"]["crit"] is None
-assert r["crit"]["eps"] == O.MOEPS
-assert r["crit"]["epsa"] == O.MOEPSA
-assert r["crit"]["epsaunit"] == O.MOEPSAUNIT
-assert r["crit"]["pstart"] is None
-
-assert raises(O.optimize, "USDC-eB48", params=dict(crit="meh"), result=O.MO_DEBUG) ==\
-  'crit must be self.MOCRITR or self.MOCRITA'
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA), result=O.MO_DEBUG) == \
-  "pstart must be provided if crit is self.MOCRITA"
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA, pstart=dict(FOO=1))) ==\
-  "pstart does not contain all required tokens ['WETH-6Cc2'; pstart={'FOO': 1}, tokens_t=('WETH-6Cc2',)]"
-assert raises(O.optimize, "USDC-eB48", params=dict(crit=O.MOCRITA, pstart={"WETH-6Cc2":2000, "USDC-eB48":1})) ==\
-  "epsaunit USD not in pstart {'WETH-6Cc2': 2000, 'USDC-eB48': 1}"
-
-r = O.optimize("USDC-eB48", params=dict(
-    crit = O.MOCRITA,
-    eps = 1e-10,
-    epsa = 100,
-    epsaunit = "dollah",
-    pstart = {"dollah":1, "WETH-6Cc2": 2000, "USDC-eB48":1},
-), result=O.MO_DEBUG)
-assert r["crit"]["crit"] == O.MOCRITA
-assert r["crit"]["eps"] == 1e-10
-assert r["crit"]["epsa"] == 100
-assert r["crit"]["epsaunit"] == "dollah"
-assert r["crit"]["pstart"] == {"dollah":1, "WETH-6Cc2": 2000, "USDC-eB48":1}
-
-print(np.inf)
-
-
-
-
-
-
+1

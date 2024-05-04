@@ -14,21 +14,15 @@
 # ---
 
 # +
-try:
-    from fastlane_bot.tools.simplepair import SimplePair
-    from fastlane_bot.tools.cpc import ConstantProductCurve, CPCContainer
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, PairOptimizer, MargPOptimizer
-except:
-    from tools.simplepair import SimplePair
-    from tools.cpc import ConstantProductCurve, CPCContainer
-    from tools.optimizer import CPCArbOptimizer, PairOptimizer, MargPOptimizer
+from tools.curves import ConstantProductCurve, CurveContainer, SimplePair
+from tools.optimizer import CPCArbOptimizer, PairOptimizer, MargPOptimizer
 CPC = ConstantProductCurve
 
 import pandas as pd
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimplePair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveContainer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
@@ -47,7 +41,7 @@ CurvesRaw1 = [
     ConstantProductCurve(k=56087178.30932376, x=131.6236694086859, x_act=0, y_act=15920.776548455418, alpha=0.5, pair='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/0x8E870D67F660D95d5be530380D0eC0bd388289E1', cid='0x6cc4b198ec4cf17fdced081b5611279be73e200711238068b5340e606ba86646-0', fee=2000, descr='carbon_v1 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 15920.776548455418, 'yint': 32755.67010983316, 'A': 4.373757425036729, 'B': 54.77225575051648, 'pa': 3498.2508745627138, 'pb': 2999.9999999999854}),
     ConstantProductCurve(k=56059148.73497429, x=426117.72306081816, x_act=0, y_act=5.0, alpha=0.5, pair='0x8E870D67F660D95d5be530380D0eC0bd388289E1/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', cid='0x6cc4b198ec4cf17fdced081b5611279be73e200711238068b5340e606ba86646-1', fee=2000, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 5.0, 'yint': 10.106093048875099, 'A': 0.0013497708452092638, 'B': 0.016903085094568837, 'pa': 0.0003331667499582927, 'pb': 0.0002857142857142352})
 ]
-CCRaw1 = CPCContainer(CurvesRaw1)
+CCRaw1 = CurveContainer(CurvesRaw1)
 
 # `CurvesRaw2` is a modified curve set designed to address the problem. On those the algo should converge without issue.
 
@@ -58,7 +52,7 @@ CurvesRaw2 = [
     ConstantProductCurve(k=55713831.26523774, x=131.16846526787972, x_act=0, y_act=15920.776548455418, alpha=0.5, pair='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/0x8E870D67F660D95d5be530380D0eC0bd388289E1', cid='0xd53681c4f9860ae4353eda47246af69840efbc971f62fa2e30a8426145345f0b-0', fee=2000.0, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 18, 'tkny_dec': 18, 'tknx_addr': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'tkny_addr': '0x8E870D67F660D95d5be530380D0eC0bd388289E1', 'blocklud': 19764263, 'y': 15920.776548455418, 'yint': 32646.46821984497, 'A': 4.373757425036729, 'B': 54.77225575051648, 'pa': 3498.2508745627138, 'pb': 2999.9999999999854, 'minrw': 1e-06}), 
     ConstantProductCurve(k=55692277.270269215, x=424668.0260493125, x_act=0, y_act=5.0, alpha=0.5, pair='0x8E870D67F660D95d5be530380D0eC0bd388289E1/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', cid='0xd53681c4f9860ae4353eda47246af69840efbc971f62fa2e30a8426145345f0b-1', fee=2000.0, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'tknx_dec': 18, 'tkny_dec': 18, 'tknx_addr': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 'tkny_addr': '0x8E870D67F660D95d5be530380D0eC0bd388289E1', 'blocklud': 19764263, 'y': 5.0, 'yint': 10.072969792409115, 'A': 0.0013497708452092638, 'B': 0.016903085094568837, 'pa': 0.0003331667499582927, 'pb': 0.0002857142857142352, 'minrw': 1e-06})
 ]
-CCRaw2 = CPCContainer(CurvesRaw2)
+CCRaw2 = CurveContainer(CurvesRaw2)
 
 # ### >> Enter prices
 
@@ -120,8 +114,8 @@ def replace_tokens(dct):
     return dct
 
 
-CC1 = CPCContainer.from_dicts([replace_tokens(d) for d in CCRaw1.asdicts()])
-CC2 = CPCContainer.from_dicts([replace_tokens(d) for d in CCRaw2.asdicts()])
+CC1 = CurveContainer.from_dicts([replace_tokens(d) for d in CCRaw1.asdicts()])
+CC2 = CurveContainer.from_dicts([replace_tokens(d) for d in CCRaw2.asdicts()])
 PRICES = {TOKENS[addr]:price for addr, price in PRICES_RAW.items()}
 TARGET_TOKEN = TOKENS[TARGET_TOKEN_RAW]
 PRICES
