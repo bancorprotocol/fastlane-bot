@@ -308,7 +308,7 @@ class TxRouteHandler:
         else:
             return pool.tkn0_address
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List[Dict]:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
         :param trade_instructions_objects: a list of TradeInstruction objects
