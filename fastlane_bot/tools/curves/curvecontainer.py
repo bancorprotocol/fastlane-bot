@@ -21,9 +21,11 @@ from .params import Params
 import itertools as it
 import collections as cl
 from sys import float_info
-from hashlib import md5 as digest
+#from hashlib import md5 as digest
 import time
 from .curvebase import CurveBase, AttrDict, DAttrDict, dataclass_
+from .cpc import ConstantProductCurve, T
+from .cpcinverter import CPCInverter
 
 
 AD = DAttrDict
@@ -1147,6 +1149,5 @@ class CurveContainer:
         if heading:
             s = f"{self.curves[0].format(heading=True, formatid=formatid)}\n{s}"
         return s
-CPCContainer = CurveContainer
 
 

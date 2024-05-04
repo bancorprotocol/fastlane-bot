@@ -8,22 +8,23 @@ Licensed under MIT
 __VERSION__ = "4.0-beta1"
 __DATE__ = "04/May/2024"
 
-from dataclasses import dataclass, field, asdict, InitVar
+#from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
 from . import tokenscale as ts
-import random
+#import random
 from math import sqrt
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import json
 from matplotlib import pyplot as plt
-from .params import Params
-import itertools as it
-import collections as cl
-from sys import float_info
+#from .params import Params
+#import itertools as it
+#import collections as cl
+#from sys import float_info
 from hashlib import md5 as digest
-import time
+#import time
 from .curvebase import CurveBase, AttrDict, DAttrDict, dataclass_
+from dataclasses import field, asdict
 
 
 AD = DAttrDict

@@ -7,7 +7,8 @@ those dataclasses, notably ``asdict``, ``astuple`` and ``fields``.
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
+#from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
+from dataclasses import fields, asdict, astuple
 
 
 class DCBase:
