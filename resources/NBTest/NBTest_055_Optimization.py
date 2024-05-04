@@ -16,14 +16,14 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import CurveContainer, ConstantProductCurve as CPC, CurveBase
-    from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
-    from fastlane_bot.testing import *
+    from tools import CurveContainer, ConstantProductCurve as CPC, CurveBase
+    from tools import MargPOptimizer, PairOptimizer
+    from tools.testing import *
 
 except:
-    from tools.cpc import CurveContainer, ConstantProductCurve as CPC, CurveBase
-    from tools.optimizer import MargPOptimizer, PairOptimizer
-    from tools.testing import *
+    from fastlane_bot.tools import CurveContainer, ConstantProductCurve as CPC, CurveBase
+    from fastlane_bot.tools import MargPOptimizer, PairOptimizer
+    from fastlane_bot.testing import *
 
 from math import sqrt
 from copy import deepcopy

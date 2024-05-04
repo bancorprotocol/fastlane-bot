@@ -16,18 +16,20 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, time
-    from fastlane_bot.testing import *
-except:
-    from tools.cpc import ConstantProductCurve as CPC, CurveContainer
-    from tools.optimizer import CPCArbOptimizer, time
+    from tools import ConstantProductCurve as CPC, CurveContainer
+    from tools.optimizer import CPCArbOptimizer
     from tools.testing import *
 
+except:
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
+    from fastlane_bot.tools.optimizer import CPCArbOptimizer
+    from fastlane_bot.tools.testing import *
+    
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 
 import json
+import time
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 # from fastlane_bot import __VERSION__
