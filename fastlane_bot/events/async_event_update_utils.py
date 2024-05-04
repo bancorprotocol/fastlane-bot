@@ -213,7 +213,7 @@ def _get_new_pool_data(
     for pool in mgr.pool_data:
         all_keys.update(pool.keys())
     if "last_updated_block" not in all_keys:
-        all_keys.update("last_updated_block")
+        all_keys.update(["last_updated_block"])
     pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
