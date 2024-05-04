@@ -373,22 +373,6 @@ class TxRouteHandler:
         else:
             return tkn
 
-    def get_arb_contract_args(
-            self, trade_instructions: List[TradeInstruction], deadline: int
-    ) -> Tuple[List[RouteStruct], int]:
-        """
-        Gets the arguments needed to instantiate the `ArbContract` class.
-
-        Returns
-        -------
-        List[Any]
-            The arguments needed to instantiate the `ArbContract` class.
-        """
-        route_struct = self.get_route_structs(
-            trade_instructions=trade_instructions, deadline=deadline
-        )
-        return route_struct
-
     @staticmethod
     def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
         return [
