@@ -16,21 +16,22 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, MargPOptimizer, PairOptimizer
-    from fastlane_bot.testing import *
-
+    from tools import ConstantProductCurve as CPC, CurveContainer
+    from tools import MargPOptimizer, PairOptimizer
+    from tools.testing import *
+    
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer
-    from tools.optimizer import CPCArbOptimizer, MargPOptimizer, PairOptimizer
-    from testing import *
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
+    from fastlane_bot.tools import MargPOptimizer, PairOptimizer
+    from fastlane_bot.tools.testing import *
+
+
 ConstantProductCurve = CPC
 
 from io import StringIO
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
+print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveContainer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 
@@ -51,9 +52,9 @@ Curves = [
     ConstantProductCurve(k=56059148.73497429, x=426117.72306081816, x_act=0, y_act=5.0, alpha=0.5, pair='USDP/ETH', cid='0x6cc4b198ec4cf17fdced081b5611279be73e200711238068b5340e606ba86646-1', fee=2000, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 5.0, 'yint': 10.106093048875099, 'A': 0.0013497708452092638, 'B': 0.016903085094568837, 'pa': 0.0003331667499582927, 'pb': 0.0002857142857142352}),
 ]
 
-CC1 = CPCContainer(Curves[0:1])
-CC2 = CPCContainer(Curves[0:2])
-CC6 = CPCContainer(Curves)
+CC1 = CurveContainer(Curves[0:1])
+CC2 = CurveContainer(Curves[0:2])
+CC6 = CurveContainer(Curves)
 
 O1 = MargPOptimizer(CC1)
 O2 = MargPOptimizer(CC2)

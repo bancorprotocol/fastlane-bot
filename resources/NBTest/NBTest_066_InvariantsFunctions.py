@@ -15,14 +15,14 @@
 
 # +
 try:
-    import fastlane_bot.tools.invariants.functions as f
-    from fastlane_bot.tools.invariants.kernel import Kernel
-    from fastlane_bot.testing import *
-
-except:
     import tools.invariants.functions as f
     from tools.invariants.kernel import Kernel
     from testing import *
+    
+except:
+    import fastlane_bot.tools.invariants.functions as f
+    from fastlane_bot.tools.invariants.kernel import Kernel
+    from fastlane_bot.testing import *
 
 import numpy as np
 import math as m

@@ -15,16 +15,22 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-    from fastlane_bot.tools.analyzer import CPCAnalyzer
-    from fastlane_bot.testing import *
+    from tools import ConstantProductCurve as CPC, CurveContainer
+    from tools.curves import T, CPCInverter, Pair
+    from tools import MargPOptimizer, PairOptimizer
+    from tools.optimizer import CPCArbOptimizer, F
+    from tools.analyzer import CPCAnalyzer
+    from tools.testing import *    
+    
+    
 
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-    from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-    from tools.analyzer import CPCAnalyzer
-    from tools.testing import *
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
+    from fastlane_bot.tools.curve import T, CPCInverter, Pair
+    from fastlane_bot.tools import MargPOptimizer, PairOptimizer
+    from fastlane_bot.tools.optimizer import CPCArbOptimizer, F
+    from fastlane_bot.tools.analyzer import CPCAnalyzer
+    from fastlane_bot.tools.testing import *   
 
 
 import numpy as np
@@ -101,7 +107,7 @@ curves_as_dicts = [{'k': 4.3078885616238194e+24,
    'tkny_addr': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
    'blocklud': 18758413}}]
 
-CC = CPCContainer.from_dicts(curves_as_dicts)
+CC = CurveContainer.from_dicts(curves_as_dicts)
 len(CC), len(curves_as_dicts)
 
 # ### CPC min range width functionality
@@ -133,7 +139,7 @@ assert iseq((c4.p-100)/(c6.p-100), 99.99752507444194, eps=1e-4)
 
 cdata = dict(y=100, yint=100, pa=100, pb=100, pair="WETH-6Cc2/USDC-eB48", tkny="USDC-eB48")
 c  = CPC.from_carbon(**cdata)
-O = MargPOptimizer(CPCContainer([c,c]))
+O = MargPOptimizer(CurveContainer([c,c]))
 r = O.optimize("USDC-eB48", params=dict(verbose=True, debug=True), result=O.MO_DEBUG)
 assert r["crit"]["crit"] == O.MO_MODE_REL
 assert r["crit"]["epsr"] == O.MO_EPSR
