@@ -373,36 +373,6 @@ class TxRouteHandler:
         else:
             return tkn
 
-    def _extract_single_flashloan_token(self, trade_instructions: List[TradeInstruction]) -> Dict:
-        """
-        Generate a flashloan tokens and amounts.
-        :param trade_instructions: A list of trade instruction objects
-        """
-
-        is_FL_NATIVE_permitted = False
-        if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_ETHEREUM]:
-            is_FL_NATIVE_permitted = True
-
-        if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
-            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-            self.ConfigObj.logger.info(
-                f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
-        elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
-            tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        elif trade_instructions[0].tknin_is_wrapped:
-            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-        else:
-            tknin_address = trade_instructions[0].tknin_address
-        flash_tokens = {
-            tknin_address:
-                {
-                    "tkn": tknin_address,
-                    "flash_amt": trade_instructions[0].amtin_wei,
-                    "decimals": trade_instructions[0].tknin_decimals}
-        }
-
-        return flash_tokens
-
     def get_arb_contract_args(
             self, trade_instructions: List[TradeInstruction], deadline: int
     ) -> Tuple[List[RouteStruct], int]:
