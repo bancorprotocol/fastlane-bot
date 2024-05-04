@@ -80,14 +80,14 @@ class MargPOptimizer(CPCArbOptimizer):
     MO_MINIMAL = "minimal"
     MO_FULL = "full"
 
-    MOCRITR = "rel"         # relative convergence criterion used
-    MOCRITA = "abs"         # ditto absolute
-    MOEPS = 1e-6            # relative convergence threshold
-    MOEPSAUNIT = "USD"      # absolute convergence unit
-    MOEPSA = 1              # absolute convergence threshold (unit: MOCAUNIT)
-    MONORML1 = 1            # L1 norm (sum of absolute values)
-    MONORML2 = 2            # L2 norm (Euclidean distance)
-    MONORMLINF = np.inf     # L-infinity norm (maximum absolute value)
+    MO_CRITR = "rel"         # relative convergence criterion used
+    MO_CRITA = "abs"         # ditto absolute
+    MO_EPSR = 1e-6           # relative convergence threshold
+    MO_EPSAUNIT = "USD"      # absolute convergence unit
+    MO_EPSA = 1              # absolute convergence threshold (unit: MOCAUNIT)
+    MO_NORML1 = 1            # L1 norm (sum of absolute values)
+    MO_NORML2 = 2            # L2 norm (Euclidean distance)
+    MO_NORMLINF = np.inf     # L-infinity norm (maximum absolute value)
     
     MO_MAXITER = 50          
     
@@ -142,12 +142,11 @@ class MargPOptimizer(CPCArbOptimizer):
         ==================  =========================================================================
         parameter           meaning
         ==================  =========================================================================
-        pstart              starting price for optimization (3)
-        crit                criterion: MOCRITR (relative; default) or MOCRITA (absolute)
-        norm                norm for convergence crit (MONORML1, MONORML2, MONORMLINF)
-        eps                 relative convergence threshold (default: MOEPS)
-        epsa                absolute convergence threshold (default: MOEPSA)
-        epsaunit            unit for epsa (default: MOEPSAUNIT)
+        crit                criterion: MO_CRITR (relative; default) or MO_CRITA (absolute)
+        norm                norm for convergence crit (MO_NORML1, MO_NORML2, MO_NORMLINF)
+        eps                 relative convergence threshold (default: MO_EPSR)
+        epsa                absolute convergence threshold (default: MO_EPSA)
+        epsaunit            unit for epsa (default: MO_EPSAUNIT)
         jach                step size for calculating Jacobian (default: MOJACH)
         maxiter             maximum number of iterations (default: 100)
         progress            if True, print progress output
@@ -194,11 +193,11 @@ class MargPOptimizer(CPCArbOptimizer):
         
         
         # epsilons and maxiter
-        eps = P("eps") or self.MOEPS
-        epsa = P("epsa") or self.MOEPSA
-        epsaunit = P("epsaunit") or self.MOEPSAUNIT
-        jach = P("jach") or self.MOJACH
-        maxiter = P("maxiter") or self.MOMAXITER
+        epsr = P("epsr") or self.MO_EPSR
+        epsa = P("epsa") or self.MO_EPSA
+        epsaunit = P("epsaunit") or self.MO_EPSAUNIT
+        jach = P("jach") or self.MO_JACH
+        maxiter = P("maxiter") or self.MO_MAXITER
         
         # curves, tokens and pairs
         curves_t = self.curve_container
@@ -271,20 +270,20 @@ class MargPOptimizer(CPCArbOptimizer):
             return df
             
         # criterion and norm
-        crit = P("crit") or self.MOCRITR
-        assert crit in set((self.MOCRITR, self.MOCRITA)), f"crit must be self.MOCRITR or self.MOCRITA"
-        if crit == self.MOCRITA:
-            assert not pstart is None, "pstart must be provided if crit is self.MOCRITA"
+        crit = P("crit") or self.MO_CRITR
+        assert crit in set((self.MO_CRITR, self.MO_CRITA)), f"crit must be {self.MO_CRITR} or {self.MO_CRITA}"
+        if crit == self.MO_CRITA:
+            assert not pstart is None, "pstart must be provided if crit is MO_CRITA"
             assert epsaunit in pstart, f"epsaunit {epsaunit} not in pstart {P('pstart')}"
             p_targettkn_per_epsaunit = pstart[epsaunit]/pstart[targettkn]
             if P("debug"):
                 print(f"[margp_optimizer] 1 epsaunit [{epsaunit}] = {p_targettkn_per_epsaunit:,.4f} target [{targettkn}]")
-        crit_is_relative = crit == self.MOCRITR
-        eps_used = eps if crit_is_relative else epsa
+        crit_is_relative = crit == self.MO_CRITR
+        eps_used = epsr if crit_is_relative else epsa
         eps_unit = 1 if crit_is_relative else epsaunit
         
-        norm = P("norm") or self.MONORML2
-        assert norm in set((self.MONORML1, self.MONORML2, self.MONORMLINF)), f"norm must be MONORML1, MONORML2 or MONORMLINF [{norm}]"
+        norm = P("norm") or self.MO_NORML2
+        assert norm in set((self.MO_NORML1, self.MO_NORML2, self.MO_NORMLINF)), f"norm must be MO_NORML1, MO_NORML2 or MO_NORMLINF [{norm}]"
         normf = lambda x: np.linalg.norm(x, ord=norm)
         
         if P("verbose") or P("debug"):
@@ -375,7 +374,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 sfc=sfc,
                 targettkn=targettkn,
                 pairs_t=pairs_t,
-                crit=dict(crit=P("crit"), eps=eps, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
+                crit=dict(crit=P("crit"), epsr=epsr, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
                 dtknfromp_f = dtknfromp_f,
                 optimizer=self,
             )
