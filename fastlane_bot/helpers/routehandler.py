@@ -403,37 +403,6 @@ class TxRouteHandler:
 
         return flash_tokens
 
-    def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
-        """
-        Generate a list of the flashloan tokens and amounts.
-        :param trade_instructions: A list of trade instruction objects
-        """
-        token_change = {}
-        flash_tokens = {}
-        for trade in trade_instructions:
-            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
-            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
-
-            token_change[tknin_address] = {"tkn": tknin_address, "amtin": 0, "amtout": 0, "balance": 0}
-            token_change[tknout_address] = {"tkn": tknout_address, "amtin": 0, "amtout": 0, "balance": 0}
-
-        for trade in trade_instructions:
-            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
-            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
-
-            token_change[tknin_address]["amtin"] = token_change[tknin_address]["amtin"] + trade.amtin_wei
-            token_change[tknin_address]["balance"] = token_change[tknin_address]["balance"] - trade.amtin_wei
-            token_change[tknout_address]["amtout"] = token_change[tknout_address]["amtout"] + trade.amtout_wei
-            token_change[tknout_address]["balance"] = token_change[tknout_address]["balance"] + trade.amtout_wei
-
-            if token_change[tknin_address]["balance"] < 0:
-                flash_tokens[tknin_address] = {"tkn": trade._tknin_address,
-                                               "flash_amt": token_change[tknin_address]["amtin"],
-                                               "decimals": trade.tknin_decimals}
-
-        return flash_tokens
-
-
     def get_arb_contract_args(
             self, trade_instructions: List[TradeInstruction], deadline: int
     ) -> Tuple[List[RouteStruct], int]:
