@@ -25,7 +25,7 @@ import time
 # import numbers
 # import pickle
 #from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
-from ..cpc import CPCInverter
+from ..curves import CPCInverter
 #from sys import float_info
 
 from .dcbase import DCBase

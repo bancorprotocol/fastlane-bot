@@ -25,7 +25,8 @@ import time
 # import math
 import numbers
 # import pickle
-from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
+#from ..curves import ConstantProductCurve as CPC, CPCInverter, CurveContainer
+from ..curves import CurveContainer
 # from sys import float_info
 
 try:

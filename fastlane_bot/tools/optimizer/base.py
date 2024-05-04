@@ -10,8 +10,9 @@ Licensed under MIT
 __VERSION__ = "5.1.1"
 __DATE__ = "04/May/2024"
 
-from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
-from abc import ABC, abstractmethod, abstractproperty
+#from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
+from dataclasses import dataclass, InitVar
+from abc import ABC, abstractmethod
 #import pandas as pd
 import numpy as np
 
@@ -20,7 +21,7 @@ import time
 #import numbers
 import pickle
 #from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
-from sys import float_info
+#from sys import float_info
 from .dcbase import DCBase
 
 class OptimizerBase(ABC):
@@ -35,7 +36,8 @@ class OptimizerBase(ABC):
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
     
-    @abstractproperty
+    @property
+    @abstractmethod
     def kind(self):
         """
         returns the kind of optimizer (as str)
@@ -96,7 +98,8 @@ class OptimizerBase(ABC):
         #     """problem status"""
         #     raise NotImplementedError("must be implemented in derived class")
         
-        @abstractproperty
+        @property
+        @abstractmethod
         def status(self):
             """problem status"""
             pass
@@ -106,7 +109,8 @@ class OptimizerBase(ABC):
         #     """True if problem status is not OPTIMAL"""
         #     raise NotImplementedError("must be implemented in derived class")
         
-        @abstractproperty
+        @property
+        @abstractmethod
         def is_error(self):
             """True if problem status is not OPTIMAL"""
             pass
@@ -115,7 +119,8 @@ class OptimizerBase(ABC):
         #     """detailed error analysis"""
         #     raise NotImplementedError("must be implemented in derived class")
 
-        @abstractproperty
+        @property
+        @abstractmethod
         def detailed_error(self):
             """detailed error analysis"""
             pass
