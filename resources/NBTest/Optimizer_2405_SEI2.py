@@ -14,14 +14,8 @@
 # ---
 
 # +
-try:
-    from fastlane_bot.tools.simplepair import SimplePair
-    from fastlane_bot.tools.cpc import ConstantProductCurve, CPCContainer
-    from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer
-except:
-    from tools.simplepair import SimplePair
-    from tools.cpc import ConstantProductCurve, CPCContainer
-    from tools.optimizer import PairOptimizer, MargPOptimizer
+from tools.curves import ConstantProductCurve, CurveContainer, SimplePair
+from tools.optimizer import CPCArbOptimizer, PairOptimizer, MargPOptimizer
 CPC = ConstantProductCurve
 
 import pandas as pd
@@ -29,7 +23,7 @@ import math as m
 
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(SimplePair))
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
-#print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCContainer))
+#print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CurveContainer))
 #print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 # -
@@ -65,7 +59,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 #     ConstantProductCurve(k=56087178.30932376, x=131.6236694086859, x_act=0, y_act=15920.776548455418, alpha=0.5, pair='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x8E870D67F660D95d5be530380D0eC0bd388289E1', cid='0x6cc4b198ec4cf17fdced081b5611279be73e200711238068b5340e606ba86646-0', fee=2000, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 15920.776548455418, 'yint': 32755.67010983316, 'A': 4.373757425036729, 'B': 54.77225575051648, 'pa': 3498.2508745627138, 'pb': 2999.9999999999854}),
 #     ConstantProductCurve(k=56059148.73497429, x=426117.72306081816, x_act=0, y_act=5.0, alpha=0.5, pair='0x8E870D67F660D95d5be530380D0eC0bd388289E1/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', cid='0x6cc4b198ec4cf17fdced081b5611279be73e200711238068b5340e606ba86646-1', fee=2000, descr='carbon_v1 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 5.0, 'yint': 10.106093048875099, 'A': 0.0013497708452092638, 'B': 0.016903085094568837, 'pa': 0.0003331667499582927, 'pb': 0.0002857142857142352})
 # ]
-# CCRaw = CPCContainer(CurvesRaw)
+# CCRaw = CurveContainer(CurvesRaw)
 # -
 
 CurvesRaw = [
@@ -74,7 +68,7 @@ CurvesRaw = [
     CPC.from_pk(p= 230,  k=1*230*(100**2),  cid="ETH/LINK", pair='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x514910771AF9Ca656af840dff83E8264EcF986CA', ), 
     CPC.from_pk(p=3220,  k=1*3220*(100**2), cid="ETH/USDP", pair='0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/0x8E870D67F660D95d5be530380D0eC0bd388289E1', ), 
 ]
-CCRaw = CPCContainer(CurvesRaw)
+CCRaw = CurveContainer(CurvesRaw)
 
 help(ConstantProductCurve.from_pk)
 
@@ -176,7 +170,7 @@ def cid0(c):
 
 # If this fails this probably means that one of the tokens has not been defined above
 
-CC = CPCContainer.from_dicts([replace_tokens(d) for d in CCRaw.asdicts()])
+CC = CurveContainer.from_dicts([replace_tokens(d) for d in CCRaw.asdicts()])
 PRICES = {TOKENS[addr]:price for addr, price in PRICES_RAW.items()}
 TARGET_TOKEN = TOKENS[TARGET_TOKEN_RAW]
 PRICES
