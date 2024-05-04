@@ -16,13 +16,13 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveBase
+    from tools import ConstantProductCurve as CPC, CurveBase
+    from tools.testing import *
+except:
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveBase
     from fastlane_bot.testing import *
 
-except:
-    from tools.cpc import ConstantProductCurve as CPC, CurveBase
-    from tools.testing import *
-# from flbtools.cpc import ConstantProductCurve as CPC, CurveBase
+# from flbtools.curves import ConstantProductCurve as CPC, CurveBase
 # from flbtesting import *
 
 from math import sqrt

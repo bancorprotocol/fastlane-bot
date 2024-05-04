@@ -16,15 +16,17 @@
 
 # +
 try:
-    import fastlane_bot.tools.arbgraphs as ag
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer
-    from fastlane_bot.testing import *
-
-except:
+    from tools import ConstantProductCurve as CPC, CurveContainer
     import tools.arbgraphs as ag
-    from tools.cpc import ConstantProductCurve as CPC, CurveContainer
     from tools.testing import *
 
+
+except:
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
+    import fastlane_bot.tools.arbgraphs as ag
+    from fastlane_bot.testing import *
+
+    
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ag.ArbGraph))
 

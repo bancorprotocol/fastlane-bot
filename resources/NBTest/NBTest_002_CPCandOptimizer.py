@@ -16,16 +16,20 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
-    from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-    from fastlane_bot.tools.analyzer import CPCAnalyzer
-    from fastlane_bot.testing import *
-
-except:
-    from tools.cpc import ConstantProductCurve as CPC, CurveContainer, T, CPCInverter, Pair
-    from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
+    from tools import ConstantProductCurve as CPC, CurveContainer
+    from tools.curves import T, CPCInverter, Pair
+    from tools import MargPOptimizer, PairOptimizer
+    from tools.optimizer import CPCArbOptimizer, F 
     from tools.analyzer import CPCAnalyzer
     from tools.testing import *
+    
+except:
+    from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
+    from fastlane_bot.tools.curves import T, CPCInverter, Pair
+    from fastlane_bot.tools import MargPOptimizer, PairOptimizer
+    from fastlane_bot.tools.optimizer import CPCArbOptimizer, F 
+    from fastlane_bot.tools.analyzer import CPCAnalyzer
+    from fastlane_bot.tools.testing import *
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))

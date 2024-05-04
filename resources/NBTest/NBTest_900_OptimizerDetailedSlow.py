@@ -16,23 +16,21 @@
 
 # +
 try:
-    from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer, Pair
-    from fastlane_bot.tools.analyzer import CPCAnalyzer
-    from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
-    from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
-    from fastlane_bot.tools.arbgraphs import ArbGraph
-    from fastlane_bot.tools.cpc import AttrDict
-    from fastlane_bot.testing import *
-
-except:
-    from tools.cpc import ConstantProductCurve as CPC, CurveContainer, Pair
+    from tools.curves import ConstantProductCurve as CPC, CurveContainer, Pair, AttrDict
+    from tools.arbgraphs import ArbGraph
     from tools.analyzer import CPCAnalyzer
     from tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
     from tools.optimizer import OptimizerBase, CPCArbOptimizer
-    from tools.arbgraphs import ArbGraph
-    from tools.cpc import AttrDict
     from tools.testing import *
+
+except:
+    from fastlane_bot.tools.curves import ConstantProductCurve as CPC, CurveContainer, Pair, AttrDict
+    from fastlane_bot.tools.arbgraphs import ArbGraph
+    from fastlane_bot.tools.analyzer import CPCAnalyzer
+    from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
+    from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
+    from fastlane_bot.tools.testing import *    
+
     
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCAnalyzer))
@@ -786,3 +784,5 @@ r.trade_instructions(ti_format=O.TIF_DFAGGR)
 dfti2 = r.trade_instructions(ti_format=O.TIF_DFPG8)
 print(f"Total gain: {sum(dfti2['gain_ttkn']):.4f}", targettkn)
 dfti2
+
+1
