@@ -16,12 +16,13 @@
 
 # +
 try:
-    #from fastlane_bot.tools.moo import meh
-    from fastlane_bot.testing import *
-
-except:
     #from tools.moo import meh
     from tools.testing import *
+
+except:
+    #from fastlane_bot.tools.moo import meh
+    from fastlane_bot.tools.testing import *
+
 
 # print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(meh))
 

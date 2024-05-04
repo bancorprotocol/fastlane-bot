@@ -10,7 +10,7 @@
 
 try:
     from fastlane_bot import Bot, Config, ConfigDB, ConfigNetwork, ConfigProvider
-    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CurveContainer, Pair
     from fastlane_bot.tools.analyzer import CPCAnalyzer
     from fastlane_bot.tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
     from fastlane_bot.tools.optimizer import OptimizerBase, CPCArbOptimizer
@@ -19,7 +19,7 @@ try:
     from fastlane_bot.testing import *
 
 except:
-    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, Pair
+    from tools.cpc import ConstantProductCurve as CPC, CurveContainer, Pair
     from tools.analyzer import CPCAnalyzer
     from tools.optimizer import PairOptimizer, MargPOptimizer, ConvexOptimizer
     from tools.optimizer import OptimizerBase, CPCArbOptimizer
@@ -70,9 +70,9 @@ T = AttrDict(
 
 
 try:
-    CCm = CPCContainer.from_df(pd.read_csv("_data/NBTest_006.csv.gz"))
+    CCm = CurveContainer.from_df(pd.read_csv("_data/NBTest_006.csv.gz"))
 except:
-    CCm = CPCContainer.from_df(pd.read_csv("fastlane_bot/tests/_data/NBTest_006.csv.gz"))
+    CCm = CurveContainer.from_df(pd.read_csv("fastlane_bot/tests/_data/NBTest_006.csv.gz"))
 
 CCu3    = CCm.byparams(exchange="uniswap_v3")
 CCu2    = CCm.byparams(exchange="uniswap_v2")

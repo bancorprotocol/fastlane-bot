@@ -16,14 +16,14 @@
 
 # +
 try:
-    from fastlane_bot.tools.cpc import CurveBase, ConstantProductCurve as CPC, CurveContainer
-    from fastlane_bot.tools.optimizer import MargPOptimizer
-    from fastlane_bot.testing import *
+    from tools import CurveBase, ConstantProductCurve as CPC, CurveContainer
+    from tools import MargPOptimizer
+    from tools.testing import *
 
 except:
-    from tools.cpc import CurveBase, ConstantProductCurve as CPC, CurveContainer
-    from tools.optimizer import MargPOptimizer
-    from tools.testing import *
+    from fastlane_bot.tools.curves import CurveBase, ConstantProductCurve as CPC, CurveContainer
+    from fastlane_bot.tools.optimizer import MargPOptimizer
+    from fastlane_bot.testing import *
 
 ConstantProductCurve = CPC
 
@@ -400,5 +400,3 @@ r.trade_instructions(O.TIF_DFAGGR)
 r.trade_instructions(O.TIF_DFPG)
 
 1
-
-
