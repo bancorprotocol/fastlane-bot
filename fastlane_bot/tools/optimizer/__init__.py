@@ -57,7 +57,8 @@ author is Stefan Loesch <stefan@bancor.network>
 Licensed under MIT.
 """
 
-from .cpcarboptimizer import *
+from .base import OptimizerBase
+from .cpcarboptimizer import CPCArbOptimizer, F
 from .pairoptimizer import PairOptimizer
 from .margpoptimizer import MargPOptimizer
 from .convexoptimizer import ConvexOptimizer
