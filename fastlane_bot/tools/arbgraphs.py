@@ -12,7 +12,8 @@ __VERSION__ = "2.2"
 __DATE__ = "09/May/2023"
 
 from dataclasses import dataclass, field, asdict, astuple, InitVar
-from .curves.simplepair import SimplePair as Pair
+#from .curves.simplepair import SimplePair as Pair
+from .curves import Pair
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1257,7 +1258,7 @@ class ArbGraph(_DCBase):
         :curves:    specifies one or multiple curves, depending on the type:
                     :CPC:           a single curve of type ConstantProductCurve is added*
                     :iterable:      multiple curves of type CPC are added (1)
-                    :CPCContainer:  all curves in the container are added (1)
+                    :CurveContainer:  all curves in the container are added (1)
         :uid:       unique id of the edge; should only be provided for singles curves
 
         NOTE1: specifically the way the algo works AT THEM MOMENT (but don't rely on this),

@@ -12,7 +12,7 @@ __VERSION__ = "1.5.1"
 __DATE__ = "04/May/2024"
 
 from typing import Any
-from .cpc import ConstantProductCurve as CPC, CurveContainer, T, Pair
+from .curves import ConstantProductCurve as CPC, CurveContainer, T, Pair
 from .optimizer import CPCArbOptimizer
 
 from dataclasses import dataclass, field, asdict, astuple, fields, InitVar
