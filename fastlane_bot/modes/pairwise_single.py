@@ -13,7 +13,7 @@ from typing import List, Any, Tuple, Union
 from tqdm.contrib import itertools
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools.cpc import CPCContainer
+from fastlane_bot.tools.curves import CurveContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
 
 
@@ -60,7 +60,7 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                 continue
 
             for curve_combo in curve_combos:
-                CC_cc = CPCContainer(curve_combo)
+                CC_cc = CurveContainer(curve_combo)
                 O = PairOptimizer(CC_cc)
                 src_token = tkn1
                 try:
