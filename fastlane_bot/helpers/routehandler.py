@@ -17,7 +17,6 @@ __VERSION__ = "1.1.1"
 __DATE__ = "02/May/2023"
 
 import decimal
-import math
 from _decimal import Decimal
 from dataclasses import dataclass
 from typing import List, Any, Dict, Tuple
@@ -793,10 +792,10 @@ class TxRouteHandler:
         """
         amount_in = amount_in * (Decimal(str(1)) - fee)
 
-        price_next = Decimal(str(math.floor((
-                int(liquidity * self.ConfigObj.Q96 * sqrt_price)
-                / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
-        ))
+        price_next = Decimal(
+            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+            // int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)
+        )
         amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
 
         return Decimal(amount_out / decimal_tkn1_modifier)
