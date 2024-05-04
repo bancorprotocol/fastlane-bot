@@ -262,17 +262,12 @@ class TxRouteHandler:
 
         assert not deadline is None, "deadline cannot be None"
 
-        pools = [
-            self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
-            for trade_instruction in trade_instructions
-        ]
-
         return [
             self._to_route_struct(
                 min_target_amount=trade_instruction.amtout_wei,
                 deadline=deadline,
                 target_address=trade_instruction.get_real_tkn_out,
-                custom_address=self.get_custom_address(pool),
+                custom_address=self.get_custom_address(trade_instruction.db.get_pool(cid=trade_instruction.cid)),
                 platform_id=trade_instruction.platform_id,
                 customInt=trade_instruction.custom_int,
                 customData=trade_instruction.custom_data,
@@ -280,7 +275,7 @@ class TxRouteHandler:
                 source_amount=trade_instruction.amtin_wei,
                 exchange_name=trade_instruction.exchange_name,
             )
-            for trade_instruction, pool in zip(trade_instructions, pools)
+            for trade_instruction in trade_instructions
         ]
 
     def get_custom_address(
@@ -1367,9 +1362,6 @@ class TxRouteHandler:
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
         return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
-
-    def _cid_to_pool(self, cid: str, db: any) -> Pool:
-        return db.get_pool(cid=cid)
 
 # TODO: Those functions should probably be private; also -- are they needed at
 # all? Most of them seem to be extremely trivial
