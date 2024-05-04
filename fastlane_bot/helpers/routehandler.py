@@ -327,20 +327,30 @@ class TxRouteHandler:
         else:
             source_token = trade_instructions_objects[0].tknin_address
 
-        platformId = 2 if self.ConfigObj.NETWORK in ["ethereum", "tenderly"] and source_token in [
+        if self.ConfigObj.NETWORK in [
+            self.ConfigObj.NETWORK_ETHEREUM,
+            self.ConfigObj.NETWORK_TENDERLY
+        ] and source_token in [
             self.ConfigObj.BNT_ADDRESS,
             self.ConfigObj.ETH_ADDRESS,
             self.ConfigObj.WBTC_ADDRESS,
             self.ConfigObj.LINK_ADDRESS
-        ] else 7
-
-        return [
-            {
-                "platformId": platformId,
-                "sourceTokens": [self.wrapped_gas_token_to_native(source_token)],
-                "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
-            }
-        ]
+        ]:
+            return [
+                {
+                    "platformId": 2,
+                    "sourceTokens": [self.wrapped_gas_token_to_native(source_token)],
+                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+                }
+            ]
+        else:
+            return [
+                {
+                    "platformId": 7,
+                    "sourceTokens": [source_token],
+                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+                }
+            ]
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
@@ -349,29 +359,18 @@ class TxRouteHandler:
             The token address
         returns: str
             The token address, converted to wrapped gas token if the input was the native gas token
-
         """
         return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
 
     def wrapped_gas_token_to_native(self, tkn: str):
         """
-        Checks if a Token is a wrapped gas token and converts it to the native gas token.
-
-        This is only relevant on the Ethereum network
-
-        :param tkn: the token address
-
-        returns:
-        the token address
+        This function returns the native gas token address if the input token is the wrapped gas token, otherwise it returns the input token address.
+        :param tkn: str
+            The token address
+        returns: str
+            The token address, converted to native gas token if the input was the wrapped gas token
         """
-
-        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
-            return tkn
-
-        if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        else:
-            return tkn
+        return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn
 
     @staticmethod
     def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
