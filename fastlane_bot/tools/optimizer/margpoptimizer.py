@@ -22,7 +22,7 @@ author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "6.0-alpha02"
+__VERSION__ = "6.0-beta01"
     # TODO FOR VERSION 6
     # REMOVE CPCContainer alias for CurveContainer
     
@@ -72,8 +72,6 @@ class MargPOptimizer(CPCArbOptimizer):
             jac[:, j] = (func(x_plus, quiet=True) - y) / Dxj
         return jac
     J = jacobian
-    MO_JACH = 1e-5
-
     
     MO_DEBUG = "debug"
     MO_PSTART = "pstart"
@@ -81,17 +79,19 @@ class MargPOptimizer(CPCArbOptimizer):
     MO_DTKNFROMPF = "dtknfrompf"
     MO_MINIMAL = "minimal"
     MO_FULL = "full"
-
-    MO_CRITR = "rel"         # relative convergence criterion used
-    MO_CRITA = "abs"         # ditto absolute
-    MO_EPSR = 1e-6           # relative convergence threshold
-    MO_EPSAUNIT = "USD"      # absolute convergence unit
-    MO_EPSA = 1              # absolute convergence threshold (unit: MOCAUNIT)
+    
+    MO_MODE_REL = "rel"      # relative convergence criterion used
+    MO_MODE_ABS = "abs"      # ditto absolute
     MO_NORML1 = 1            # L1 norm (sum of absolute values)
     MO_NORML2 = 2            # L2 norm (Euclidean distance)
     MO_NORMLINF = np.inf     # L-infinity norm (maximum absolute value)
     
-    MO_MAXITER = 50          
+    MO_JACH = 1e-5           # default step size for calculating Jacobian
+    MO_MAXITER = 50          # maximum number of iterations
+    MO_EPSR = 1e-6           # relative convergence threshold
+    MO_EPSA = 1              # absolute convergence threshold (unit: MOCAUNIT)
+    MO_EPSAUNIT = "USD"      # absolute convergence unit
+    
     
     class OptimizationError(Exception): pass
     class ConvergenceError(OptimizationError): pass
@@ -112,12 +112,14 @@ class MargPOptimizer(CPCArbOptimizer):
         """the Linf norm of a vector x"""
         return np.linalg.norm(x, ord=np.inf)
 
-    def optimize(self, sfc=None, *, pstart=None, result=None, params=None):
+    def optimize(self, sfc=None, *, pstart=None, mode=None, result=None, params=None):
         """
         optimal transactions across all curves in the optimizer, extracting targettkn (1)
 
         :sfc:               the self financing constraint to use (2)
-        :pstart:            dict or tuple of starting price for optimization (3) 
+        :pstart:            dict or tuple of starting price for optimization (3)
+        :mode:              mode of operation (MO_MODE_REL for relative convergence, or 
+                            MO_MODE_ABS for absolute)
         :result:            the result type (see MO_XXX constants below) (4)
         :params:            dict of optional parameters (see table below) (4)
 
@@ -144,13 +146,12 @@ class MargPOptimizer(CPCArbOptimizer):
         ==================  =========================================================================
         parameter           meaning
         ==================  =========================================================================
-        crit                criterion: MO_CRITR (relative; default) or MO_CRITA (absolute)
-        norm                norm for convergence crit (MO_NORML1, MO_NORML2, MO_NORMLINF)
-        eps                 relative convergence threshold (default: MO_EPSR)
+        jach                step size for calculating Jacobian (default: MO_JACH)
+        maxiter             maximum number of iterations (default: 100)
+        epsr                relative convergence threshold (default: MO_EPSR)
         epsa                absolute convergence threshold (default: MO_EPSA)
         epsaunit            unit for epsa (default: MO_EPSAUNIT)
-        jach                step size for calculating Jacobian (default: MOJACH)
-        maxiter             maximum number of iterations (default: 100)
+        norm                norm for convergence crit (MO_NORML1, MO_NORML2, MO_NORMLINF)
         progress            if True, print progress output
         verbose             ditto, high level output
         debug               ditto, basic debug output
@@ -177,7 +178,7 @@ class MargPOptimizer(CPCArbOptimizer):
         
         NOTE 4: In production use, the `result` parameter should always be set to None to ensure
         that the default pathway is taken. Similarly, the `params` dict should be empty, except
-        possibly for the `debug` related options in case of debug needs, and for testing
+        for the `debug` related options for debug output
         """
         start_time = time.time()
         
@@ -189,9 +190,9 @@ class MargPOptimizer(CPCArbOptimizer):
         
         # lambdas
         P      = lambda item: params.get(item, None) if params is not None else None
-        get    = lambda p, ix: p[ix] if ix is not None else 1       # safe get from tuple
-        dxdy_f = lambda r: (np.array(r[0:2]))                       # extract dx, dy from result
-        tn     = lambda t: t.split("-")[0]                          # token name, eg WETH-xxxx -> WETH
+        #get     = lambda p, ix: p[ix] if ix is not None else 1       # safe get from tuple
+        # dxdy_f = lambda r: (np.array(r[0:2]))                       # extract dx, dy from result
+        # tn     = lambda t: t.split("-")[0]                          # token name, eg WETH-xxxx -> WETH
         
         
         # epsilons and maxiter
@@ -226,11 +227,18 @@ class MargPOptimizer(CPCArbOptimizer):
             print("]")
             print("<<<<<================ CURVES ================\n")
 
-        # pstart
         if P("verbose") or P("debug"):
             print(f"[margp_optimizer] targettkn = {targettkn}")
         
-        pstart = P("pstart")
+        # legacy paramters handling (pstart, crit)
+        if not pstart is None:
+            assert P("pstart") is None, "pstart must not be in params dict if pstart is provided as argument"
+        else:
+            pstart = P("pstart")
+            if not P("pstart") is None:
+                print(f"[margp_optimizer] WARNING - providing `pstart` as parameter is deprecated; use `pstart` variable instead")
+
+        # pstart
         if not pstart is None:
             if P("debug"):
                 print(f"[margp_optimizer] using pstart [{len(P('pstart'))} tokens]")
@@ -272,15 +280,16 @@ class MargPOptimizer(CPCArbOptimizer):
             return df
             
         # criterion and norm
-        crit = P("crit") or self.MO_CRITR
-        assert crit in set((self.MO_CRITR, self.MO_CRITA)), f"crit must be {self.MO_CRITR} or {self.MO_CRITA}"
-        if crit == self.MO_CRITA:
-            assert not pstart is None, "pstart must be provided if crit is MO_CRITA"
+        assert P("crit") is None, "crit must not be in params dict; use `mode`"
+        crit = mode or self.MO_MODE_REL
+        assert crit in set((self.MO_MODE_REL, self.MO_MODE_ABS)), f"crit must be {self.MO_MODE_REL} or {self.MO_MODE_ABS}"
+        if crit == self.MO_MODE_ABS:
+            assert not pstart is None, "pstart must be provided if crit is MO_MODE_ABS"
             assert epsaunit in pstart, f"epsaunit {epsaunit} not in pstart {P('pstart')}"
             p_targettkn_per_epsaunit = pstart[epsaunit]/pstart[targettkn]
             if P("debug"):
                 print(f"[margp_optimizer] 1 epsaunit [{epsaunit}] = {p_targettkn_per_epsaunit:,.4f} target [{targettkn}]")
-        crit_is_relative = crit == self.MO_CRITR
+        crit_is_relative = crit == self.MO_MODE_REL
         eps_used = epsr if crit_is_relative else epsa
         eps_unit = 1 if crit_is_relative else epsaunit
         
@@ -376,7 +385,7 @@ class MargPOptimizer(CPCArbOptimizer):
                 sfc=sfc,
                 targettkn=targettkn,
                 pairs_t=pairs_t,
-                crit=dict(crit=P("crit"), epsr=epsr, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
+                crit=dict(crit=crit, epsr=epsr, epsa=epsa, epsaunit=epsaunit, pstart=P("pstart")),
                 dtknfromp_f = dtknfromp_f,
                 optimizer=self,
             )
