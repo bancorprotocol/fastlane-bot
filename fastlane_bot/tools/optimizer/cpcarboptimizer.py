@@ -95,7 +95,7 @@ class CPCArbOptimizer(OptimizerBase):
         if curves is None:
             raise ValueError("must provide curves")
         if not isinstance(curves, CurveContainer):
-            curve_container = CurveContainer(curves)
+            curves = CurveContainer(curves)
         self._curve_container = curves
 
     @property
