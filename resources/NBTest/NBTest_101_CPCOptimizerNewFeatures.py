@@ -123,6 +123,13 @@ assert rl[0].startswith("ConstantProductCurve(k=27518385")
 
 rl[0]
 
+# ## CPCArbOptimizer bugfix
+# https://github.com/bancorprotocol/fastlane-bot/pull/614
+
+curves = [CPC.from_pk(p, 100) for p in range(20,30)]
+O = MargPOptimizer(curves)
+assert isinstance(O.curves, CurveContainer)
+
 # ## MargPOptimizer
 
 pass
