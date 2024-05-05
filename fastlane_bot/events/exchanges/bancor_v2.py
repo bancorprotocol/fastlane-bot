@@ -77,3 +77,9 @@ class BancorV2(Exchange):
 
     async def get_anchor(self, contract: Contract) -> str:
         return await contract.caller.anchor()
+
+    def get_pool_function(self, factory_contract: Contract):
+        """
+        This function is unused for Bancor V2.
+        """
+        pass

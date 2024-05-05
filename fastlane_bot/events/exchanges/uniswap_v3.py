@@ -14,7 +14,7 @@ Licensed under MIT.
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
-from web3.contract import Contract
+from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
 from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
@@ -59,3 +59,16 @@ class UniswapV3(Exchange):
 
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.token1()
+
+    def get_pool_function(self, factory_contract: Contract):
+        """ Function to get pools from Factory.
+            This function is intended to be used with a Multicall. It fetches pools from a Uniswap V3 fork Factory contract.
+
+            Args:
+                factory_contract: The factory contract.
+
+            Returns:
+                The function.
+
+            """
+        return factory_contract.functions.getPool

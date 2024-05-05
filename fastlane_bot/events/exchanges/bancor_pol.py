@@ -63,6 +63,12 @@ class BancorPol(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         return self.ETH_ADDRESS if event.args["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
 
+    def get_pool_function(self, factory_contract: Contract):
+        """
+        This function is unused for Bancor POL.
+        """
+        pass
+
     def save_strategy(
         self,
         token: str,

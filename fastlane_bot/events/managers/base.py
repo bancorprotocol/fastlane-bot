@@ -17,7 +17,7 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.constants import PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, \
-    SOLIDLY_V2_NAME, FUSIONX_V3_NAME
+    SOLIDLY_V2_NAME, FUSIONX_V3_NAME, UNISWAP_V2_NAME, UNISWAP_V3_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
@@ -78,6 +78,7 @@ class BaseManager:
     token_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
+    sync_factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
@@ -129,8 +130,10 @@ class BaseManager:
                 self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
 
             self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
-            if base_exchange_name in SOLIDLY_V2_NAME:
+            if base_exchange_name == SOLIDLY_V2_NAME:
                 self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
+            if base_exchange_name in [SOLIDLY_V2_NAME, UNISWAP_V2_NAME, UNISWAP_V3_NAME]:
+                self.exchanges[exchange_name] = self.initialize_factory_contract(exchange=self.exchanges[exchange_name])
 
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
@@ -149,6 +152,18 @@ class BaseManager:
 
         return exchange
 
+    def initialize_factory_contract(self, exchange):
+        """
+        Initialize factory contract for exchange.
+        """
+        exchange_name = exchange.exchange_name
+        self.sync_factory_contracts[exchange_name] = self.web3.eth.contract(
+            address=self.cfg.FACTORY_MAPPING[exchange_name],
+            abi=exchange.get_factory_abi,
+        )
+        exchange.sync_factory_contract = self.sync_factory_contracts[exchange.exchange_name]
+
+        return exchange
     @property
     def fee_pairs(self) -> Dict:
         """

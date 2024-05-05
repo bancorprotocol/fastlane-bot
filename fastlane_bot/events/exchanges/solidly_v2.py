@@ -59,17 +59,70 @@ async def _get_tkn0_B(contract: Contract) -> str:
 async def _get_tkn1_B(contract: Contract) -> str:
     return "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f" # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
 
+
+def _get_pool_function_1(factory_contract):
+    """ Function to get pools from Factory.
+    This function is intended to be used with a Multicall. It fetches pools from a Solidly fork Factory contract.
+
+    Args:
+        factory_contract: The factory contract.
+
+    Returns:
+        The function.
+
+    """
+    return factory_contract.functions.getPair
+def _get_pool_function_2(factory_contract):
+    """ Function to get pools from Factory.
+        This function is intended to be used with a Multicall. It fetches pools from a Solidly fork Factory contract.
+
+        Args:
+            factory_contract: The factory contract.
+
+        Returns:
+            The function.
+
+        """
+    return factory_contract.functions.getPool
+
+
+def _get_pool_args_1(tkn0, tkn1, stable):
+    """ Function to manage args input to get pools from Factory.
+
+    Args:
+        tkn0: The first token address.
+        tkn1: The second token address.
+        stable: (bool) If True, indicates a stable pool. If False, indicates a Volatile pool.
+    Returns:
+        The function returns the arguments necessary to get pool addresses from the factory contract.
+
+    """
+    return tkn0, tkn1, stable
+
+def _get_pool_args_2(tkn0, tkn1, stable):
+    """ Function to manage args input to get pools from Factory.
+
+    Args:
+        tkn0: The first token address.
+        tkn1: The second token address.
+        stable: (bool) If True, indicates a stable pool. If False, indicates a Volatile pool.
+    Returns:
+        The function returns the arguments necessary to get pool addresses from the factory contract.
+
+    """
+    return tkn0
+
 EXCHANGE_INFO = {
-    "velocimeter_v2": {"decimals":  4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_1, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "equalizer_v2"  : {"decimals":  4, "factory_abi": SCALE_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_2, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "aerodrome_v2"  : {"decimals":  4, "factory_abi": SOLIDLY_V2_FACTORY_ABI    , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_3, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "velodrome_v2"  : {"decimals":  4, "factory_abi": SOLIDLY_V2_FACTORY_ABI    , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_3, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "scale_v2"      : {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_2, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "cleopatra_v2"  : {"decimals":  4, "factory_abi": CLEOPATRA_V2_FACTORY_ABI  , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_4, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "stratum_v2"    : {"decimals":  4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_1, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "lynex_v2"      : {"decimals":  4, "factory_abi": LYNEX_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_5, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "nile_v2"       : {"decimals":  4, "factory_abi": NILE_V2_FACTORY_ABI       , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_6, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A},
-    "xfai_v0"       : {"decimals":  4, "factory_abi": XFAI_V0_FACTORY_ABI       , "pool_abi": XFAI_V0_POOL_ABI   , "get_fee": _get_fee_7, "get_tkn0": _get_tkn0_B, "get_tkn1": _get_tkn1_B},
+    "velocimeter_v2": {"decimals":  4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_1, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "equalizer_v2"  : {"decimals":  4, "factory_abi": SCALE_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_2, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "aerodrome_v2"  : {"decimals":  4, "factory_abi": SOLIDLY_V2_FACTORY_ABI    , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_3, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_2, "get_pool_args": _get_pool_args_1},
+    "velodrome_v2"  : {"decimals":  4, "factory_abi": SOLIDLY_V2_FACTORY_ABI    , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_3, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_2, "get_pool_args": _get_pool_args_1},
+    "scale_v2"      : {"decimals": 18, "factory_abi": SCALE_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_2, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "cleopatra_v2"  : {"decimals":  4, "factory_abi": CLEOPATRA_V2_FACTORY_ABI  , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_4, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "stratum_v2"    : {"decimals":  4, "factory_abi": VELOCIMETER_V2_FACTORY_ABI, "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_1, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "lynex_v2"      : {"decimals":  4, "factory_abi": LYNEX_V2_FACTORY_ABI      , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_5, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "nile_v2"       : {"decimals":  4, "factory_abi": NILE_V2_FACTORY_ABI       , "pool_abi": SOLIDLY_V2_POOL_ABI, "get_fee": _get_fee_6, "get_tkn0": _get_tkn0_A, "get_tkn1": _get_tkn1_A, "get_pool_function": _get_pool_function_1, "get_pool_args": _get_pool_args_1},
+    "xfai_v0"       : {"decimals":  4, "factory_abi": XFAI_V0_FACTORY_ABI       , "pool_abi": XFAI_V0_POOL_ABI   , "get_fee": _get_fee_7, "get_tkn0": _get_tkn0_B, "get_tkn1": _get_tkn1_B, "get_pool_function": _get_pool_function_2, "get_pool_args": _get_pool_args_2},
 }
 
 @dataclass
@@ -120,3 +173,9 @@ class SolidlyV2(Exchange):
 
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await EXCHANGE_INFO[self.exchange_name]["get_tkn1"](contract)
+
+    def get_pool_function(self, factory_contract):
+        return EXCHANGE_INFO[self.exchange_name]["get_pool_function"](factory_contract)
+
+    def get_pool_args(self, tkn0, tkn1, stable):
+        return EXCHANGE_INFO[self.exchange_name]["get_pool_args"](tkn0, tkn1, stable)

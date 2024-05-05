@@ -30,6 +30,7 @@ class Exchange(ABC):
     exchange_name: str
     base_exchange_name: str = ''
     pools: Dict[str, Pool] = field(default_factory=dict)
+    sync_factory_contract: Contract = None
 
     __VERSION__ = "0.0.3"
     __DATE__ = "2024-03-20"
@@ -119,6 +120,14 @@ class Exchange(ABC):
         float
             The fee of the exchange
 
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_pool_function(contract: Contract, *args):
+        """
+        Returns the Factory contract function used to fetch liquidity pools.
         """
         pass
 

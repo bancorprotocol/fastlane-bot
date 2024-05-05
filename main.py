@@ -8,6 +8,7 @@ Licensed under MIT
 from fastlane_bot.events.event_gatherer import EventGatherer
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
+from fastlane_bot.pool_finder import PoolFinder
 from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
@@ -224,6 +225,7 @@ def main(args: argparse.Namespace) -> None:
             prefix_path: {args.prefix_path}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
+            pool_finder: {args.pool_finder}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -303,6 +305,10 @@ def run(mgr, args, tenderly_uri=None) -> None:
     handle_static_pools_update(mgr)
 
     event_gatherer = EventGatherer(w3=mgr.w3_async, exchanges=mgr.exchanges, event_contracts=mgr.event_contracts)
+
+    pool_finder = PoolFinder(uni_v2_forks=mgr.cfg.network.UNI_V2_FORKS, uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS, solidly_v2_forks=mgr.cfg.network.SOLIDLY_V2_FORKS, carbon_forks=mgr.cfg.network.CARBON_V1_FORKS, flashloan_tokens=args.flashloan_tokens) if args.pool_finder != -1 else None
+    if pool_finder:
+        pool_finder.init_exchanges(exchanges=mgr.exchanges, web3=mgr.web3, multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS)
 
     while True:
         try:
@@ -513,6 +519,12 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
+            if args.pool_finder != -1 and (loop_idx % args.pool_finder == 0 or loop_idx == 1):
+                uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
+                mgr.uniswap_v2_event_mappings.update(uni_v2)
+                mgr.uniswap_v3_event_mappings.update(uni_v3)
+                mgr.solidly_v2_event_mappings.update(solidly_v2)
+
             last_block_queried = current_block
 
             total_iteration_time += time.time() - iteration_start_time
@@ -669,7 +681,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--blockchain",
-        default="ethereum",
+        default="coinbase_base",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
         choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea", "sei"],
     )
@@ -709,6 +721,11 @@ if __name__ == "__main__":
         "--rpc_url",
         default=None,
         help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
+    )
+    parser.add_argument(
+        "--pool_finder",
+        default=100,
+        help="If not -1, searches for pools that can service Carbon strategies that do not have viable routes.",
     )
 
     # Process the arguments
