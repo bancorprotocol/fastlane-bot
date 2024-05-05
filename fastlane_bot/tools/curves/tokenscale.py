@@ -10,7 +10,7 @@ NOTE: this class is not part of the Bancor Simulator API, and breaking changes m
 __VERSION__ = "1.0"
 __DATE__ = "07/Apr/2022"
 
-from dataclasses import dataclass, field, asdict, InitVar
+from dataclasses import dataclass, field
 
 
 class TokenScaleBase:

@@ -4,6 +4,13 @@ Testing utilities for the fastlane_bot package
 USAGE
 
     from fastlane_bot.testing import *
+
+NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
+changes even in minor version updates. Use at your own risk.
+
+---
+(c) Copyright Bprotocol foundation 2023. 
+Licensed under MIT
 """
 __VERSION__ = "1.3"
 __DATE__ = "15/Jan/2024"

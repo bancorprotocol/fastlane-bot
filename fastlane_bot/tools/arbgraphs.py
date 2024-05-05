@@ -4,21 +4,18 @@ objects for encapsulating arbitrage-related graphs
 ---
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
-
-NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
-changes even in minor version updates. Use at your own risk.
 """
 __VERSION__ = "2.2"
 __DATE__ = "09/May/2023"
 
-from dataclasses import dataclass, field, asdict, astuple, InitVar
-#from .curves.simplepair import SimplePair as Pair
-from .curves import Pair
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import math
+
+from dataclasses import dataclass, field, asdict, InitVar
+from .curves import Pair
 
 EPS = 1e-9
 

@@ -6,21 +6,9 @@ adaptor class inverting the pair of a ConstantProductCurve
 Licensed under MIT
 """
 from dataclasses import dataclass
-#from dataclasses import field, asdict, InitVar
-from .simplepair import SimplePair as Pair
-#from . import tokenscale as ts
-#import random
-#from math import sqrt
-#import numpy as np
-#import pandas as pd
-#import json
-#from matplotlib import pyplot as plt
-#from .params import Params
-#import itertools as it
-#import collections as cl
-#from sys import float_info
-##from hashlib import md5 as digest
 import time
+
+from .simplepair import SimplePair as Pair
 from .curvebase import DAttrDict
 from .cpc import ConstantProductCurve
 

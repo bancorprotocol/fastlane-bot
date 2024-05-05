@@ -8,7 +8,7 @@ Licensed under MIT
 __VERSION__ = "2.2"
 __DATE__ = "30/Apr/2024"
 
-from dataclasses import dataclass, field, asdict, InitVar
+from dataclasses import dataclass, field, InitVar
 
 
 @dataclass
