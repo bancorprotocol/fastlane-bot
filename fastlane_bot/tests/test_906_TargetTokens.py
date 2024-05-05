@@ -29,7 +29,7 @@ require("3.0", __VERSION__)
 
 
 
-from fastlane_bot.tools import T
+from fastlane_bot.tools.curves import T
 
 
 def find_main_py():
