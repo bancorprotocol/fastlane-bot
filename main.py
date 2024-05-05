@@ -42,13 +42,11 @@ from fastlane_bot.events.utils import (
     init_bot,
     get_cached_events,
     handle_subsequent_iterations,
-    verify_state_changed,
     handle_duplicates,
     get_latest_events,
     get_start_block,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
-    verify_min_bnt_is_respected,
     handle_target_token_addresses,
     get_current_block,
     handle_tenderly_event_exchanges,
@@ -310,17 +308,10 @@ def run(mgr, args, tenderly_uri=None) -> None:
     handle_static_pools_update(mgr)
     while True:
         try:
-            # Save initial state of pool data to assert whether it has changed
-            initial_state = mgr.pool_data.copy()
-
             # ensure 'last_updated_block' is in pool_data for all pools
-            for idx, pool in enumerate(mgr.pool_data):
+            for pool in mgr.pool_data:
                 if "last_updated_block" not in pool:
                     pool["last_updated_block"] = last_block_queried
-                    mgr.pool_data[idx] = pool
-                if not pool["last_updated_block"]:
-                    pool["last_updated_block"] = last_block_queried
-                    mgr.pool_data[idx] = pool
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block, replay_from_block = get_start_block(
@@ -425,12 +416,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
             # Re-initialize the bot
             bot = init_bot(mgr)
-
-            # Verify that the state has changed
-            verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
-
-            # Verify that the minimum profit in BNT is respected
-            verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
             if args.use_specific_exchange_for_target_tokens is not None:
                 target_tokens = bot.get_tokens_in_exchange(
