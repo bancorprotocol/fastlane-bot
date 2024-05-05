@@ -16,7 +16,7 @@ from dataclasses import asdict
 from fastlane_bot import Bot
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 from fastlane_bot.helpers import maximize_last_trade_per_tkn
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))

@@ -20,6 +20,7 @@ Pair = SimplePair
 from .curves import CurveBase
 from .curves import ConstantProductCurve
 from .curves import CurveContainer
+from .curves import T
 
 from .optimizer import MargPOptimizer
 from .optimizer import PairOptimizer
