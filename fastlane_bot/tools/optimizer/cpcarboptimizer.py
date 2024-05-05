@@ -47,25 +47,15 @@ Licensed under MIT
 __VERSION__ = "5.2"
 __DATE__ = "03/May/2024"
 
-#from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 from dataclasses import dataclass, field, InitVar
 import pandas as pd
 import numpy as np
 import sys
-
-
-#import time
 import math
-#import numbers
-#import pickle
-#from ..curves import ConstantProductCurve as CPC, CPCInverter, CurveContainer, Pair
+
 from ..curves import CurveContainer, Pair
-
-#from sys import float_info
-
 from .dcbase import DCBase
 from .base import OptimizerBase
-
 
 FORMATTER = lambda x: "" if ((abs(x) < 1e-10) or math.isnan(x)) else f"{x:,.2f}"
 
