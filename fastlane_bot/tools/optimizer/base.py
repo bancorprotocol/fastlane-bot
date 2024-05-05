@@ -10,18 +10,12 @@ Licensed under MIT
 __VERSION__ = "5.1.1"
 __DATE__ = "04/May/2024"
 
-#from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
-from dataclasses import dataclass, InitVar
 from abc import ABC, abstractmethod
-#import pandas as pd
 import numpy as np
-
 import time
-#import math
-#import numbers
 import pickle
-#from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
-#from sys import float_info
+
+from dataclasses import dataclass, InitVar
 from .dcbase import DCBase
 
 class OptimizerBase(ABC):

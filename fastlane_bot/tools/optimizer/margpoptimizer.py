@@ -23,9 +23,6 @@ author is Stefan Loesch <stefan@bancor.network>
 Licensed under MIT
 """
 __VERSION__ = "6.0-beta01"
-    # TODO FOR VERSION 6
-    # REMOVE CPCContainer alias for CurveContainer
-    
 __DATE__ = "04/May/2024"
 
 __DATE__ = "30/Apr/2024"
@@ -33,12 +30,8 @@ __DATE__ = "30/Apr/2024"
 from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
 import pandas as pd
 import numpy as np
-
 import time
 
-#from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
-#from .dcbase import DCBase
-#from .base import OptimizerBase
 from .cpcarboptimizer import CPCArbOptimizer
 
 class MargPOptimizer(CPCArbOptimizer):

@@ -8,24 +8,23 @@ Licensed under MIT
 __VERSION__ = "4.0-beta1"
 __DATE__ = "04/May/2024"
 
-from dataclasses import dataclass, field, asdict, InitVar
 from .simplepair import SimplePair as Pair
 from . import tokenscale as ts
+from .params import Params
+from .curvebase import DAttrDict
+from .cpc import ConstantProductCurve, T
+from .cpcinverter import CPCInverter
+
+from dataclasses import dataclass, field
 import random
 from math import sqrt
 import numpy as np
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
-from .params import Params
 import itertools as it
 import collections as cl
-from sys import float_info
-#from hashlib import md5 as digest
 import time
-from .curvebase import CurveBase, AttrDict, DAttrDict, dataclass_
-from .cpc import ConstantProductCurve, T
-from .cpcinverter import CPCInverter
 
 
 AD = DAttrDict
