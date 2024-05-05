@@ -73,21 +73,12 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]):
     :param route_struct: the route struct object
     """
 
-    tkns_traded = [route_struct[0]["sourceToken"]]
+    tkns_traded = set([route_struct[0]["sourceToken"]])
     for j, trade in enumerate(reversed(route_struct)):
         idx = len(route_struct) - 1 - j
-        if type(trade) == dict:
-            if trade["sourceToken"] in tkns_traded:
-                continue
-            else:
-                route_struct[idx]["sourceAmount"] = 0
-                tkns_traded.append(trade["sourceToken"])
-        elif type(trade) == RouteStruct:
-            if trade.sourceToken in tkns_traded:
-                continue
-            else:
-                route_struct[idx].sourceAmount = 0
-                tkns_traded.append(trade.sourceToken)
+        if trade["sourceToken"] not in tkns_traded:
+            tkns_traded.add(trade["sourceToken"])
+            route_struct[idx]["sourceAmount"] = 0
 
 
 @dataclass
