@@ -12,7 +12,7 @@
 This module contains the tests which ensure the the flashloan_tokens parameter is respected when using the b3_two_hop and bancor_v3 arb modes.
 """
 from fastlane_bot import Bot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 import subprocess, os, sys
 import pytest
