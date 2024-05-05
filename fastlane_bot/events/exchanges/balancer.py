@@ -88,3 +88,9 @@ class Balancer(Exchange):
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[index]
+
+    def get_pool_function(self, factory_contract: Contract):
+        """
+        This function is unused for Carbon.
+        """
+        pass

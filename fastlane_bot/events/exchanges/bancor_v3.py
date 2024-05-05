@@ -64,3 +64,8 @@ class BancorV3(Exchange):
             if event.args["pool"] != self.BNT_ADDRESS
             else event.args["tkn_address"]
         )
+    def get_pool_function(self, factory_contract: Contract):
+        """
+        This function is unused for Bancor V3.
+        """
+        pass
