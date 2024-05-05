@@ -1209,5 +1209,5 @@ def terraform_blockchain(network_name: str):
 #terraform_blockchain(network_name=ETHEREUM)
 #terraform_blockchain(network_name=BASE)
 #terraform_blockchain(network_name=FANTOM)
-#terraform_blockchain(network_name=MANTLE)
-#terraform_blockchain(network_name=LINEA)
+terraform_blockchain(network_name=MANTLE)
+terraform_blockchain(network_name=LINEA)
