@@ -37,7 +37,6 @@ class Params:
 
 
     """
-
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 

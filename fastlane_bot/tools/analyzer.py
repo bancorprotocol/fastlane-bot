@@ -2,19 +2,17 @@
 analyzing CPC / CurveContainer based collections
 
 ---
-(c) Copyright Bprotocol foundation 2023. 
-Licensed under MIT
 
 NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
 changes even in minor version updates. Use at your own risk.
+
+(c) Copyright Bprotocol foundation 2023. 
+Licensed under MIT
 """
 __VERSION__ = "1.5.1"
 __DATE__ = "04/May/2024"
 
 from typing import Any
-from .curves import ConstantProductCurve as CPC, CurveContainer, T, Pair
-from .optimizer import CPCArbOptimizer
-
 from dataclasses import dataclass, field, asdict, astuple, fields, InitVar
 import math as m
 import numpy as np
@@ -22,6 +20,8 @@ import pandas as pd
 import itertools as it
 import collections as cl
 
+from .curves import ConstantProductCurve as CPC, CurveContainer, T, Pair
+from .optimizer import CPCArbOptimizer
 
 class AttrDict(dict):
     """

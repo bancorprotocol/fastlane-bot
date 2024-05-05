@@ -17,17 +17,15 @@ Licensed under MIT
 __VERSION__ = "5.0.2"
 __DATE__ = "03/May/2024"
 
-from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
-#import pandas as pd
-import numpy as np
-
-import time
-# import math
-import numbers
-# import pickle
-#from ..curves import ConstantProductCurve as CPC, CPCInverter, CurveContainer
+from dataclasses import dataclass, field, InitVar
 from ..curves import CurveContainer
-# from sys import float_info
+from .dcbase import DCBase
+from .base import OptimizerBase
+from .cpcarboptimizer import CPCArbOptimizer
+
+import numpy as np
+import time
+import numbers
 
 try:
     import cvxpy as cp
@@ -38,9 +36,6 @@ except:
     from types import SimpleNamespace
     cp = SimpleNamespace(Variable=0, ECOS=0, SCS=0, OSQP=0, CVXOPT=0, CBC=0)
     
-from .dcbase import DCBase
-from .base import OptimizerBase
-from .cpcarboptimizer import CPCArbOptimizer
 
 
 @dataclass

@@ -16,20 +16,10 @@ Licensed under MIT
 __VERSION__ = "6.0.2"
 __DATE__ = "03/May/2024"
 
-#from dataclasses import dataclass, field, fields, asdict, astuple, InitVar
-#import pandas as pd
 import numpy as np
-
 import time
-# import math
-# import numbers
-# import pickle
-#from ..cpc import ConstantProductCurve as CPC, CPCInverter, CurveContainer
-from ..curves import CPCInverter
-#from sys import float_info
 
-from .dcbase import DCBase
-from .base import OptimizerBase
+from ..curves import CPCInverter
 from .cpcarboptimizer import CPCArbOptimizer
 
 class PairOptimizer(CPCArbOptimizer):
