@@ -44,8 +44,8 @@ The corresponding author is Stefan Loesch <stefan@bancor.network>
 (c) Copyright Bprotocol foundation 2023. 
 Licensed under MIT
 """
-__VERSION__ = "5.2"
-__DATE__ = "03/May/2024"
+__VERSION__ = "6.0-beta1"
+__DATE__ = "05/May/2024"
 
 from dataclasses import dataclass, field, InitVar
 import pandas as pd
@@ -85,15 +85,7 @@ class CPCArbOptimizer(OptimizerBase):
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
-    def __init__(self, curves=None, *, curve_container=None):
-        if not curve_container is None:
-            if not curves is None:
-                raise ValueError(
-                    "must not uses curves and curve_container at the same time"
-                )
-            curves = curve_container
-        if curves is None:
-            raise ValueError("must provide curves")
+    def __init__(self, curves):
         if not isinstance(curves, CurveContainer):
             curves = CurveContainer(curves)
         self._curve_container = curves
