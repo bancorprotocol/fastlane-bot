@@ -245,3 +245,8 @@ class CarbonV1(Exchange):
             block_number=block_number,
         )
 
+    def get_pool_function(self, factory_contract: Contract):
+        """
+        This function is unused for Carbon.
+        """
+        pass

@@ -36,7 +36,7 @@ class Pool(ABC):
     __DATE__ = "2023-07-03"
 
     state: Dict[str, Any] = field(default_factory=dict)
-
+    factory_contract = None
     @classmethod
     @abstractmethod
     def event_matches_format(

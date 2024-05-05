@@ -26,6 +26,23 @@ from fastlane_bot.utils import EncodedOrder
 class SolidlyV2StablePoolsNotSupported(Exception):
     pass
 
+FEE_LOOKUP = {
+        0.000001: Univ3Calculator.FEE1,
+        0.000008: Univ3Calculator.FEE8,
+        0.00001: Univ3Calculator.FEE10,
+        0.00004: Univ3Calculator.FEE40,
+        0.00008: Univ3Calculator.FEE80,
+        0.0001: Univ3Calculator.FEE100,
+        0.00025: Univ3Calculator.FEE250,
+        0.0003: Univ3Calculator.FEE300,
+        0.00045: Univ3Calculator.FEE450,
+        0.0005: Univ3Calculator.FEE500,
+        0.0010: Univ3Calculator.FEE1000,
+        0.0025: Univ3Calculator.FEE2500,
+        0.0030: Univ3Calculator.FEE3000,
+        0.01: Univ3Calculator.FEE10000,
+    }
+
 @dataclass
 class PoolAndTokens:
     """
@@ -559,22 +576,7 @@ class PoolAndTokens:
 
         return lst
 
-    FEE_LOOKUP = {
-        0.000001: Univ3Calculator.FEE1,
-        0.000008: Univ3Calculator.FEE8,
-        0.00001: Univ3Calculator.FEE10,
-        0.00004: Univ3Calculator.FEE40,
-        0.00008: Univ3Calculator.FEE80,
-        0.0001: Univ3Calculator.FEE100,
-        0.00025: Univ3Calculator.FEE250,
-        0.0003: Univ3Calculator.FEE300,
-        0.00045: Univ3Calculator.FEE450,
-        0.0005: Univ3Calculator.FEE500,
-        0.0010: Univ3Calculator.FEE1000,
-        0.0025: Univ3Calculator.FEE2500,
-        0.0030: Univ3Calculator.FEE3000,
-        0.01: Univ3Calculator.FEE10000,
-    }
+
 
     def _univ3_to_cpc(self) -> List[Any]:
         """
@@ -599,10 +601,10 @@ class PoolAndTokens:
             "tick": self.tick,
             "liquidity": self.liquidity,
         }
-        feeconst = self.FEE_LOOKUP.get(float(self.fee_float))
+        feeconst = FEE_LOOKUP.get(float(self.fee_float))
         if feeconst is None:
             raise ValueError(
-                f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{self.FEE_LOOKUP}]]"
+                f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{FEE_LOOKUP}]]"
             )
         uni3 = Univ3Calculator.from_dict(args, feeconst, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()

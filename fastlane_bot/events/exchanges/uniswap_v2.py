@@ -32,7 +32,6 @@ class UniswapV2(Exchange):
     fee: str = None
     router_address: str = None
     exchange_initialized: bool = False
-
     @property
     def fee_float(self):
         return float(self.fee)
@@ -63,3 +62,16 @@ class UniswapV2(Exchange):
     @staticmethod
     async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.caller.token1()
+
+    def get_pool_function(self, factory_contract: Contract):
+        """ Function to get pools from Factory.
+            This function is intended to be used with a Multicall. It fetches pools from a Uniswap V2 fork Factory contract.
+
+            Args:
+                factory_contract: The factory contract.
+
+            Returns:
+                The function.
+
+            """
+        return factory_contract.functions.getPair
