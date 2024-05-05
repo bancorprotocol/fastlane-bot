@@ -17,7 +17,7 @@ from fastlane_bot import Bot, Config
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools import ConstantProductCurve as CPC
 import asyncio
 from unittest.mock import AsyncMock
 import nest_asyncio
