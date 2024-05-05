@@ -19,7 +19,7 @@ from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.pools.utils import get_pool_cid
 
 Base = None
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))

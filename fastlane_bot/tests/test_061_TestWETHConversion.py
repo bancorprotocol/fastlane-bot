@@ -28,7 +28,7 @@ from fastlane_bot.helpers import add_wrap_or_unwrap_trades_to_route, split_carbo
 from fastlane_bot.events.managers.manager import Manager
 from dataclasses import asdict
 from fastlane_bot.config import Config
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
+from fastlane_bot.tools import ConstantProductCurve as CPC
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
 import math

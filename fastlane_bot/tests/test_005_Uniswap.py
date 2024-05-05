@@ -8,7 +8,7 @@
 
 
 
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
+from fastlane_bot.tools import ConstantProductCurve as CPC
 from fastlane_bot.helpers.univ3calc import Univ3Calculator as U3
 from dataclasses import dataclass, asdict
 
