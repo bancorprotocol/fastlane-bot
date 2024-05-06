@@ -83,6 +83,7 @@ jobs:
         id: bump_version_and_set_output
         run: |
           poetry version patch
+          echo new_version=$(poetry version | cut -d' ' -f2) >> $GITHUB_OUTPUT
           git checkout main
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
