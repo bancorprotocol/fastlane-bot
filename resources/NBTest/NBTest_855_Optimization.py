@@ -38,7 +38,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 # require("3.0", __VERSION__)
 # -
 
-# # Optimization Methods [NBTest055]
+# # Optimization Methods [NBTest855, ex 055]
 
 # Note: using an existing CurveContainer object `CC`, the curves can be extracted as dict using the command below
 #

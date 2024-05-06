@@ -35,7 +35,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(f.Function))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Kernel))
 # -
 
-# # AMM Functions  (Invariants Module; NBTest068)
+# # AMM Functions  (Invariants Module; NBTest868, ex 068)
 
 
 # ## Constant product style AMMs [NOTEST]

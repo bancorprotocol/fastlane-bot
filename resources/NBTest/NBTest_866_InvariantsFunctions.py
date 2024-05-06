@@ -34,7 +34,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(f.Function))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Kernel))
 # -
 
-# # Functions (Invariants Module; NBTest066)
+# # Functions (Invariants Module; NBTest866, ex 066)
 
 # ## Functions
 
