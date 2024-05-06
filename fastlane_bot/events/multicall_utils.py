@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 This is the multicaller utils module.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from decimal import Decimal
 from typing import Dict, Any
@@ -170,8 +173,7 @@ def multicall_fn(exchange: str, mc: Any, mgr: Any, multicall_contract: Any, pool
         mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
     elif exchange == "bancor_pol":
         mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
-        if mgr.cfg.ARB_CONTRACT_VERSION >= 10:
-            mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
+        mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
     elif exchange in mgr.cfg.CARBON_V1_FORKS:
         mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
     elif exchange == 'balancer':

@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-This is the multicaller module.
+This is the multicaller module. TODO: BETTER NAME
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+TODO-MIKE: What exactly does this do and is it a bona fide config module?
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from functools import partial
 from typing import List, Callable, ContextManager, Any, Dict
@@ -12,7 +15,6 @@ import web3
 from eth_abi import decode
 from web3 import Web3
 
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import MULTICALL_ABI
 
 
@@ -109,7 +111,7 @@ class MultiCaller(ContextManager):
     __VERSION__ = "0.0.2"
 
 
-    def __init__(self, contract: MultiProviderContractWrapper or web3.contract.Contract,
+    def __init__(self, contract: web3.contract.Contract,
                  web3: Web3,
                  block_identifier: Any = 'latest', multicall_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"):
         self._contract_calls: List[Callable] = []
@@ -152,18 +154,6 @@ class MultiCaller(ContextManager):
             calls_for_aggregate += (_calls_for_aggregate[fn_list])
             output_types_list += (_output_types_list[fn_list])
 
-        _encoded_data = []
-
-        function_keys = _calls_for_aggregate.keys()
-        for fn_list in function_keys:
-            _encoded_data.append(self.web3.eth.contract(
-                abi=MULTICALL_ABI,
-                address=self.MULTICALL_CONTRACT_ADDRESS
-            ).functions.aggregate(_calls_for_aggregate[fn_list]).call(block_identifier=self.block_identifier))
-
-        if not isinstance(_encoded_data[0], list):
-            raise TypeError(f"Expected encoded_data to be a list, got {type(_encoded_data[0])} instead.")
-
         encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
@@ -182,7 +172,7 @@ class MultiCaller(ContextManager):
         return_data += [i[1] for i in decoded_data_list if len(i) > 1]
 
         # Handling for Bancor POL - combine results into a Tuple
-        if "tokenPrice" in function_keys and "amountAvailableForTrading" in function_keys:
+        if "tokenPrice" in _calls_for_aggregate and "amountAvailableForTrading" in _calls_for_aggregate:
             new_return = []
             returned_items = int(len(return_data))
             total_pools = int(returned_items / 2)

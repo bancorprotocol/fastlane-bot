@@ -1,12 +1,17 @@
 """
-translating Uniswap v3 contract values
+parsing Uniswap v3 contract values
 
-(c) Copyright Bprotocol foundation 2023. 
-Licensed under MIT
+This class converts internal Uniswap v3 contract values into values that make sense
+from a financial perspective, either in Wei or in token units. It also allows to
+convert Uniswap v3 contract parameters into generic constant product curve parameters
+that are suitable for our ``CPC`` class.
 
-NOTE: this class is not part of the API of the Carbon protocol, and you must expect breaking
-changes even in minor version updates. Use at your own risk.
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.4.1" 
 __DATE__ = "25/Jul/2023"
 
@@ -19,6 +24,7 @@ class Univ3Calculator():
     __VERSION__ = __VERSION__
     __DATE__ = __DATE__
 
+    FEE1        = 1
     FEE8        = 8
     FEE10       = 10
     FEE40       = 40
@@ -34,6 +40,7 @@ class Univ3Calculator():
     FEE10000    = 10000
 
     TICKSZ = {
+        FEE1: 1,
         FEE8: 1,
         FEE10: 1,
         FEE40: 8,
@@ -131,6 +138,7 @@ class Univ3Calculator():
         super().__setattr__('liquidity', int(self.liquidity)) 
         super().__setattr__('fee_const', int(self.fee_const)) 
         assert self.fee_const in {
+            self.FEE1,
             self.FEE8,
             self.FEE10,
             self.FEE40,
@@ -144,7 +152,7 @@ class Univ3Calculator():
             self.FEE2500,
             self.FEE3000,
             self.FEE10000,
-        }, "fee not one of the FEEXXX constants {self.fee_const}"
+        }, f"fee not one of the FEEXXX constants {self.fee_const}"
         assert not self.tkn0dec is None, "tkn0dec is None"
         assert not self.tkn1dec is None, "tkn1dec is None"
 

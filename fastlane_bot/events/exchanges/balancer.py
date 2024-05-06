@@ -1,9 +1,15 @@
-# coding=utf-8
 """
-Contains the exchange class for Balancer weighted pools. This class is responsible for handling Balancer exchanges and updating the state of the pools.
+Contains the exchange class for Balancer Weighted Pools. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for handling Balancer Weighted Pools events and updating the state of the pools.
+
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
@@ -46,12 +52,12 @@ class Balancer(Exchange):
         if pool:
             fee, fee_float = pool.state["fee"], pool.state["fee_float"]
         else:
-            fee = await contract.functions.getSwapFeePercentage().call()
+            fee = await contract.caller.getSwapFeePercentage()
             fee_float = float(fee) / 1e18
         return fee, fee_float
 
     async def get_tokens(self, address: str, contract: Contract, event: Any) -> []:
-        pool_balances = await contract.caller.getPoolTokens(address).call()
+        pool_balances = await contract.caller.getPoolTokens(address)
         tokens = pool_balances[0]
         return tokens
 

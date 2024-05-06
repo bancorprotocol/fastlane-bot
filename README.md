@@ -39,54 +39,22 @@ Clone the repo from Bancor's GitHub and install:
 ```bash
 git clone https://github.com/bancorprotocol/fastlane-bot
 cd fastlane-bot
-pip install -r requirements.txt
-python setup.py install
+pip install poetry
+poetry install
 ```
 
-Here are the added instructions for Mac users with an Apple Silicon chip:
-
-### Installation for Mac users with Apple Silicon chip
-
-Due to the architectural differences of the Apple Silicon chip, some Python packages may not install correctly using the standard method. Follow the instructions below to create a compatible conda environment, and then install Fastlane Arbitrage Bot:
-
-1. Install Miniforge tailored for Apple Silicon from [here](https://github.com/conda-forge/miniforge#miniforge3).
-
-```bash
-# to install miniforge
-wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-bash Miniforge3-MacOSX-arm64.sh
-```
-
-Follow the terminal prompts to ensure conda is installed and initialized.
-
-2. Create a new conda environment using the correct architecture:
-
-```bash
-conda create -n fastlane_bot_env python=3.9
-conda activate fastlane_bot_env
-```
-
-3. Clone the repo from GitHub:
-
-```bash
-git clone https://github.com/bancorprotocol/fastlane-bot
-cd fastlane-bot
-```
-
-3. Now, install Fastlane Arbitrage Bot by using the provided bash scrip `apple-silicon-install.sh`:
-
-```bash
-./apple-silicon-install.sh
-```
-
-Please note that due to potential compatibility issues with the new Apple Silicon chip, some packages may still fail to install correctly. If you encounter any issues, please report them to the package maintainers.
-
-[sim]:https://github.com/bancorprotocol/carbon-simulator
+Once the environment is ready, all commands should be prepended with `poetry run` in order to be executed in the corresponding virtual environment. Alternatively, virtual environment can be activated once using `poetry shell`.
 
 ### Legacy Installation (v1.0)
 You can access the legacy version of the Fastlane Arbitrage Bot, which was solely designed to facilitate single triangle arbitrage transactions which both initiate and conclude with BNT on the Bancor V3 exchange, by referring to the following link:
 
 [github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0](https://github.com/bancorprotocol/fastlane-bot/releases/tag/v1.0)
+
+### Dependencies
+Project depends on `poetry` and `pyproject.toml`. However, in order to preserve backward compatibility, after any change to dependencies, the following command should be run, to update `requirement.txt`
+```
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+```
 
 ### Preparation
 
@@ -123,7 +91,7 @@ export WEB3_LINEA="api_key_here"
 After installation, run the bot with default parameters using the command:
 
 ```bash
-python main.py 
+poetry run python main.py 
 ```
 
 ### Configuration Options
@@ -171,14 +139,13 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
 - **pool_data_update_frequency** (int): The frequency in bot cycles in which the bot will search for new pools. **Recommended not to modify.**
 - **use_specific_exchange_for_target_tokens** (str): This filter will limit pool data to include only tokens contained by the specified exchange. For example "carbon_v1" would limit the scope of pool data to only include pools that have tokens currently traded on Carbon.
 - **prefix_path** (str): An optional file path modification, intended for cloud deployment requirements. **Recommended not to modify.**
-- **version_check_frequency** (int): The frequency (in bot cycles) the bot will check the version of the Fastlane smart contract. Set to -1 to disable. 
 - **self_fund** (bool): **USE AT YOUR OWN RISK** If set to True, the bot will use funds in the user's wallet to execute trades. Note that upon start, the bot will attempt to set an approval for all tokens specified in the flashloan_tokens field. 
 
 
 Specify options in the command line. For example:
 
 ```bash
-python main.py --arb_mode=multi --polling_interval=12 --reorg_delay=10 --loglevel=INFO
+poetry run python main.py --arb_mode=multi --polling_interval=12 --reorg_delay=10 --loglevel=INFO
 ```
 
 ## Troubleshooting
@@ -186,7 +153,7 @@ python main.py --arb_mode=multi --polling_interval=12 --reorg_delay=10 --logleve
 If you encounter import errors or `ModuleNotFound` exceptions, try:
 
 ```bash
-python <absolute_path>/main.py
+poetry run python <absolute_path>/main.py
 ```
 
 ## Change Log
@@ -204,18 +171,18 @@ The following examples are command-line inputs that start the bot with different
 #### Bancor V3-focused arbitrage
 
 ```commandline
-python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --limit_bancor3_flashloan_tokens=True --randomizer=2 --default_min_profit_gas_token=0.01 --exchanges=carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA"
+poetry run python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --limit_bancor3_flashloan_tokens=True --randomizer=2 --default_min_profit_gas_token=0.01 --exchanges=carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA"
 ```
 
 #### Carbon-focused pairwise arbitrage
 ```commandline
-python main.py --arb_mode=multi --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
 #### Unfocused pairwise arbitrage
 ```commandline
-python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
 #### Triangular Carbon-focused arbitrage
 ```commandline
-python main.py --arb_mode=multi_triangle --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_triangle --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```

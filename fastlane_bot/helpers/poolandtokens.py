@@ -1,3 +1,11 @@
+"""
+Defines the ``PoolAndTokens`` class, representing a pool and its tokens in a single object. This is not a database model, but a helper class.
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 
@@ -14,6 +22,9 @@ from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import EncodedOrder
 
+
+class SolidlyV2StablePoolsNotSupported(Exception):
+    pass
 
 @dataclass
 class PoolAndTokens:
@@ -265,7 +276,7 @@ class PoolAndTokens:
             if self.pool_type == "volatile":
                 out = self._other_to_cpc()
             else:
-                raise NotImplementedError(f"Stable Solidly V2 pools for exchange {self.exchange_name} not yet implemented.")
+                raise SolidlyV2StablePoolsNotSupported(f"exchange {self.exchange_name}")
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
@@ -482,6 +493,7 @@ class PoolAndTokens:
         return lst
 
     FEE_LOOKUP = {
+        0.000001: Univ3Calculator.FEE1,
         0.000008: Univ3Calculator.FEE8,
         0.00001: Univ3Calculator.FEE10,
         0.00004: Univ3Calculator.FEE40,

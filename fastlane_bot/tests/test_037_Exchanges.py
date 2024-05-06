@@ -14,9 +14,8 @@ from fastlane_bot import Bot
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
-from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, SUSHISWAP_POOLS_ABI, \
-    BANCOR_V3_POOL_COLLECTION_ABI, \
-    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V2_POOL_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI, VELOCIMETER_V2_POOL_ABI
+from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
+    CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI
 
 from unittest.mock import Mock
 import nest_asyncio
@@ -49,18 +48,14 @@ with open('fastlane_bot/tests/_data/event_test_data.json', 'r') as f:
 
 mocked_contract = Mock()
 
-mocked_contract.functions.token0.return_value.call = AsyncMock(return_value='token0')
-mocked_contract.functions.token1.return_value.call = AsyncMock(return_value='token1')
-mocked_contract.functions._token0.return_value.call = AsyncMock(return_value='token0')
-mocked_contract.functions._token1.return_value.call = AsyncMock(return_value='token1')
-mocked_contract.functions.conversionFee.return_value.call = AsyncMock(return_value=3000)
-mocked_contract.functions.fee.return_value.call = AsyncMock(return_value=3000)
-mocked_contract.functions.tradingFeePPM.return_value.call = AsyncMock(return_value=2000)
-mocked_contract.functions.getSwapFeePercentage.call = AsyncMock(return_value="10000000000000000" or 0.01)
-
-
-
-#mocked_contract.functions.getPoolTokens().call().return_value = 
+mocked_contract.caller.token0 = AsyncMock(return_value='token0')
+mocked_contract.caller.token1 = AsyncMock(return_value='token1')
+mocked_contract.caller._token0 = AsyncMock(return_value='token0')
+mocked_contract.caller._token1 = AsyncMock(return_value='token1')
+mocked_contract.caller.conversionFee = AsyncMock(return_value=3000)
+mocked_contract.caller.fee = AsyncMock(return_value=3000)
+mocked_contract.caller.tradingFeePPM = AsyncMock(return_value=2000)
+mocked_contract.caller.getSwapFeePercentage = AsyncMock(return_value="10000000000000000" or 0.01)
 
 
 # ------------------------------------------------------------
@@ -77,7 +72,7 @@ def test_test_balancer_exchange():
     async def test_balancer_exchange():
         assert (balancer_exchange.get_abi() == BALANCER_VAULT_ABI)
         #assert (await balancer_exchange.get_fee('', mocked_contract) == ("10000000000000000", 0.01))
-        #assert (await balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.functions.token0().call())
+        #assert (await balancer_exchange.get_tokens('', mocked_contract, {}) == mocked_contract.caller.token0())
     # Run the test in an event loop
     asyncio.run(test_balancer_exchange())
     
@@ -97,9 +92,9 @@ def test_test_solidly_v2_exchange():
     
     @pytest.mark.asyncio
     async def test_solidly_v2_exchange():
-        assert (solidly_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
+        assert (solidly_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
         #assert (await solidly_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await solidly_v2_exchange.get_fee('', mocked_contract)}"
-        assert (await solidly_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+        assert (await solidly_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.caller.token0())
         assert (solidly_v2_exchange.router_address == "jeffs_router")
     
     # Run the test in an event loop
@@ -122,9 +117,9 @@ def test_test_solidly_v2_exchange_fork():
     async def test_uniswap_v2_exchange():
         assert (velocimeter_v2_exchange.exchange_name in "velocimeter_v2"), f"Wrong exchange name. Expected velocimeter_v2, got {velocimeter_v2_exchange.exchange_name}"
         assert (velocimeter_v2_exchange.base_exchange_name in "solidly_v2"), f"Wrong base exchange name. Expected solidly_v2, got {velocimeter_v2_exchange.base_exchange_name}"    
-        assert (velocimeter_v2_exchange.get_abi() == VELOCIMETER_V2_POOL_ABI)
+        assert (velocimeter_v2_exchange.get_abi() == SOLIDLY_V2_POOL_ABI)
         #assert (await velocimeter_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await velocimeter_v2_exchange.get_fee('', mocked_contract)}"
-        assert (await velocimeter_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+        assert (await velocimeter_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.caller.token0())
         assert (velocimeter_v2_exchange.router_address == "jjs_router")
     
     # Run the test in an event loop
@@ -149,7 +144,7 @@ def test_test_uniswap_v2_exchange():
     async def test_uniswap_v2_exchange():
         assert (uniswap_v2_exchange.get_abi() == UNISWAP_V2_POOL_ABI)
         assert (await uniswap_v2_exchange.get_fee('', mocked_contract) == ('0.003', 0.003)), f"{await uniswap_v2_exchange.get_fee('', mocked_contract)}"
-        assert (await uniswap_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+        assert (await uniswap_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.caller.token0())
         assert (uniswap_v2_exchange.router_address == "bobs_router")
     
     # Run the test in an event loop
@@ -174,9 +169,9 @@ def test_test_uniswap_v2_exchange_fork():
     async def test_uniswap_v2_exchange_fork():
         assert (pancake_v2_exchange.exchange_name in "pancakeswap_v2"), f"Wrong exchange name. Expected pancakeswap_v2, got {pancake_v2_exchange.exchange_name}"
         assert (pancake_v2_exchange.base_exchange_name in "uniswap_v2"), f"Wrong base exchange name. Expected uniswap_v2, got {pancake_v2_exchange.base_exchange_name}"    
-        assert (pancake_v2_exchange.get_abi() == PANCAKESWAP_V2_POOL_ABI)
+        assert (pancake_v2_exchange.get_abi() == UNISWAP_V2_POOL_ABI)
         assert (await pancake_v2_exchange.get_fee('', mocked_contract) == ('0.0025', 0.0025)), f"{await uniswap_v2_exchange.get_fee('', mocked_contract)}"
-        assert (await pancake_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.functions.token0().call())
+        assert (await pancake_v2_exchange.get_tkn0('', mocked_contract, None) == await mocked_contract.caller.token0())
         assert (pancake_v2_exchange.router_address == "freds_router")
     
     # Run the test in an event loop
@@ -198,8 +193,8 @@ def test_test_uniswap_v3_exchange():
     @pytest.mark.asyncio
     async def test_uniswap_v3_exchange():
         assert (uniswap_v3_exchange.get_abi() == UNISWAP_V3_POOL_ABI)
-        assert (await uniswap_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.functions.fee().call(), (float(await mocked_contract.functions.fee().call()) / 1000000.0)))
-        assert (await uniswap_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.functions.token0().call())
+        assert (await uniswap_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.caller.fee(), (float(await mocked_contract.caller.fee()) / 1000000.0)))
+        assert (await uniswap_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.caller.token0())
         assert (uniswap_v3_exchange.router_address == "bobs_router")
     # Run the test in an event loop
     asyncio.run(test_uniswap_v3_exchange())
@@ -222,8 +217,8 @@ def test_test_uniswap_v3_exchange_fork():
         assert (pancake_v3_exchange.exchange_name in "pancakeswap_v3"), f"Wrong exchange name. Expected pancakeswap_v3, got {pancake_v3_exchange.exchange_name}"
         assert (pancake_v3_exchange.base_exchange_name in "uniswap_v3"), f"Wrong base exchange name. Expected uniswap_v3, got {pancake_v3_exchange.base_exchange_name}"    
         assert (pancake_v3_exchange.get_abi() == PANCAKESWAP_V3_POOL_ABI)
-        assert (await pancake_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.functions.fee().call(), (float(await mocked_contract.functions.fee().call()) / 1000000.0)))
-        assert (await pancake_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.functions.token0().call())
+        assert (await pancake_v3_exchange.get_fee('', mocked_contract) == (await mocked_contract.caller.fee(), (float(await mocked_contract.caller.fee()) / 1000000.0)))
+        assert (await pancake_v3_exchange.get_tkn0('', mocked_contract, {}) == await mocked_contract.caller.token0())
         assert (pancake_v3_exchange.router_address == "bobs_router")
     # Run the test in an event loop
     asyncio.run(test_uniswap_v3_exchange())

@@ -1,27 +1,18 @@
 """
-Utility functions for FastLane project
+Various utility functions
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+NOTE: Those functions would more naturally fit in `helpers` 
+TODO-MIKE, TODO-KEVIN: check how hard this is
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
-import datetime
 import glob
-import logging
 import math
 import os.path
-import time
-from _decimal import Decimal
 from dataclasses import dataclass
-from hexbytes import HexBytes
-from typing import Tuple, List, Dict, Any
-
-import pandas as pd
-import requests
-from web3 import Web3
-from web3.contract import Contract
-
-from fastlane_bot.config import config as cfg
-from fastlane_bot.data.abi import *
 
 
 def safe_int(value: int or float) -> int:
@@ -29,75 +20,11 @@ def safe_int(value: int or float) -> int:
     return int(value)
 
 
-def int_prefix(string: str) -> int:
-    return int(string[:-len(string.lstrip("0123456789"))])
-
-
-def num_format(number):
+def num_format(value: int or float) -> str:
     try:
-        return "{0:.4f}".format(number)
-    except Exception as e:
-        return number
-
-
-def num_format_float(number):
-    try:
-        return float("{0:.4f}".format(number))
-    except Exception as e:
-        return number
-
-
-def log_format(log_data: {}, log_name: str = "new"):
-    now = datetime.datetime.now()
-    time_ts = str(int(now.timestamp()))  # timestamp (epoch)
-    time_iso = now.isoformat().split(".")[0]
-    # print(time_ts)
-    # print(time_iso)
-
-    log_string = f"[{time_iso}::{time_ts}] |{log_name}| == {log_data}"
-    return log_string
-    # return "\n".join("[{" + time_iso + "}::{" + time_ts + "}] |" + log_name + "| == {d}\n".format(d=(log_data)))
-
-
-# Initialize Contracts
-def initialize_contract_with_abi(address: str, abi: List[Any], web3: Web3) -> Contract:
-    """
-    Initialize a contract with an abi
-    :param address:  address of the contract
-    :param abi:  abi of the contract
-    :param web3:  web3 instance
-    :return:  contract instance
-    """
-    return web3.eth.contract(address=address, abi=abi)
-
-
-def initialize_contract_without_abi(address: str, web3):
-    abi_endpoint = f"https://api.etherscan.io/api?module=contract&action=getabi&address={address}&apikey={cfg.ETHERSCAN_TOKEN}"
-    abi = json.loads(requests.get(abi_endpoint).text)
-    return web3.eth.contract(address=address, abi=abi["result"])
-
-
-def initialize_contract(web3, address: str, abi=None) -> Contract:
-    """
-    Initialize a contract with an abi
-    :param web3:    web3 instance
-    :param address:  address of the contract
-    :param abi:  abi of the contract
-    :return:  contract instance
-    """
-    if abi is None:
-        return initialize_contract_without_abi(address=address, web3=web3)
-    else:
-        return initialize_contract_with_abi(address=address, abi=abi, web3=web3)
-
-
-def convert_decimals(amt: Decimal, n: int) -> Decimal:
-    """
-    Utility function to convert to Decimaling point value of a specific precision.
-    """
-    if amt is None:
-        return Decimal("0")
-    return Decimal(str(amt / (Decimal("10") ** Decimal(str(n)))))
+        return "{0:.4f}".format(value)
+    except Exception as _:
+        return str(value)
 
 
 @dataclass
@@ -282,15 +209,3 @@ def find_latest_timestamped_folder(logging_path=None):
 
     list_of_folders.sort(reverse=True)  # Sort the folders in descending order
     return list_of_folders[0]  # The first one is the latest
-
-
-def count_bytes(data: HexBytes) -> (int, int):
-    """
-    This function counts the number of zero and non-zero bytes in a given input data.
-    :param data: HexBytes
-    returns Tuple(int, int):
-        The zero & non zero count of bytes in the input
-    """
-    zero_bytes = len([byte for byte in data if byte == 0])
-    non_zero_bytes = len(data) - zero_bytes
-    return zero_bytes, non_zero_bytes

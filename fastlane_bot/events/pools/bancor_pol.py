@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Contains the exchange class for BancorV3. This class is responsible for handling BancorV3 events and updating the state of the pools.
+[DOC-TODO-short description of what the file does, max 80 chars]
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, List
@@ -28,7 +31,6 @@ class BancorPolPool(Pool):
     ONE = 2**48
     contract: Contract = None
     BANCOR_POL_ADDRESS = "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46"
-    ARB_CONTRACT_VERSION = None
 
     @staticmethod
     def unique_key() -> str:
@@ -115,7 +117,7 @@ class BancorPolPool(Pool):
             )
 
         try:
-            p0, p1 = contract.functions.tokenPrice(tkn0).call()
+            p0, p1 = contract.caller.tokenPrice(tkn0)
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {tkn0}")
 
@@ -170,7 +172,7 @@ class BancorPolPool(Pool):
                 erc20_contract = w3_tenderly.eth.contract(abi=ERC20_ABI, address=tkn0)
             else:
                 erc20_contract = w3.eth.contract(abi=ERC20_ABI,address=tkn0)
-            return erc20_contract.functions.balanceOf(contract.address).call()
+            return erc20_contract.caller.balanceOf(contract.address)
 
 
     @staticmethod

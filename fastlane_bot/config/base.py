@@ -1,6 +1,15 @@
 """
-Base configuration class for the fastlane_bot application.
+Configuration base class
+
+Defines `ConfigBase` which is the base class for the individual configuration classes
+in this module.
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "1.1"
 __DATE__ = "30/Apr 2023"
 

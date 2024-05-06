@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Contains the pool class for Carbon v1. This class is responsible for handling Carbon v1 pools and updating the state of the pools.
+[DOC-TODO-short description of what the file does, max 80 chars]
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, Tuple, List
@@ -139,10 +142,7 @@ class CarbonV1Pool(Pool):
         """
         See base class.
         """
-        try:
-            strategy = contract.caller.strategy(int(self.state["strategy_id"]))
-        except AttributeError:
-            strategy = contract.functions.strategy(int(self.state["strategy_id"])).call()
+        strategy = contract.caller.strategy(int(self.state["strategy_id"]))
 
         fake_event = {
             "args": {

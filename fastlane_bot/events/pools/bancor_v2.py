@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Contains the pool class for bancor v2. This class is responsible for handling bancor v2 pools and updating the state of the pools.
+[DOC-TODO-short description of what the file does, max 80 chars]
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, List
@@ -118,16 +121,6 @@ class BancorV2Pool(Pool):
         reserve0, reserve1 = await contract.caller.reserveBalances()
         tkn0_address, tkn1_address = await contract.caller.reserveTokens()
         fee = await contract.caller.conversionFee()
-
-        # for i in [0, 1]:
-        #     conv_token = await contract.functions.connectorTokens(i).call()
-        #     if conv_token != '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C':
-        #
-
-        # if tkn0_address != self.state["tkn0_address"]:
-        #     print(f"balance is flipped...")
-        #     reserve0c, reserve1c = reserve0, reserve1
-        #     reserve1, reserve0 = reserve0c, reserve1c
 
         params = {
             "fee": fee,

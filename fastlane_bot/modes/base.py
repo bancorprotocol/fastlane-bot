@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Base class for all arbitrage finder modes
+Defines the base class for all arbitrage finder modes
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import abc
 from typing import Any, Tuple, Dict, List, Union
@@ -19,12 +22,6 @@ class ArbitrageFinderBase:
     Base class for all arbitrage finder modes
     """
 
-    AM_REGULAR = "regular"
-    AM_SINGLE = "single"
-    AM_TRIANGLE = "triangle"
-    AM_MULTI = "multi"
-    AM_MULTI_TRIANGLE = "multi_triangle"
-    AM_BANCOR_V3 = "bancor_v3"
     AO_TOKENS = "tokens"
     AO_CANDIDATES = "candidates"
 

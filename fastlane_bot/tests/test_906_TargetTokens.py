@@ -74,21 +74,10 @@ def run_command(mode):
         f"--target_tokens={T.WETH},{T.DAI}",
         "--blockchain=ethereum"
     ]
-    subprocess.Popen(cmd)
-        
-    # Wait for the expected log line to appear
+
     expected_log_line = "Limiting pools by target_tokens. Removed "
-    found = False
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True, timeout=180)
-
-    # Check if the expected log line is in the output
-    if expected_log_line in result.stderr:
-        found = True
-
-    if not found:
-        pytest.fail("Expected log line was not found within 1 minute")  # If we reach this point, the test has failed
-
-
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True)
+    assert expected_log_line in result.stderr, result.stderr
 
 
 # ------------------------------------------------------------

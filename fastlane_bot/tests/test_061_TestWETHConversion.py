@@ -20,8 +20,10 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot
 from fastlane_bot.bot import CarbonBot
+from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 
+from fastlane_bot.utils import num_format
 from fastlane_bot.helpers import add_wrap_or_unwrap_trades_to_route, split_carbon_trades
 from fastlane_bot.events.managers.manager import Manager
 from dataclasses import asdict
@@ -156,11 +158,11 @@ bot.db.remove_zero_liquidity_pools()
 # bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-# flashloan_tokens = bot.setup_flashloan_tokens(None)
+# flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 # flashloan_tokens = ['WBTC-2c599', 'USDC-eB48', 'LINK-86CA', 'USDT-1ec7']
 
 
-CCm = bot.setup_CCm(None)
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 # -
@@ -177,7 +179,7 @@ finder = arb_finder(
     flashloan_tokens=flashloan_tokens,
     CCm=CCm,
     mode="bothin",
-    result=bot.AO_CANDIDATES,
+    result=arb_finder.AO_CANDIDATES,
     ConfigObj=bot.ConfigObj,
 )
 r = finder.find_arbitrage()
@@ -216,7 +218,7 @@ def test_wrap_unwrap_original():
         )
 
         # Create the tx route handler
-        tx_route_handler = bot.TxRouteHandlerClass(
+        tx_route_handler = TxRouteHandler(
             trade_instructions=ordered_trade_instructions_objects
         )
 
@@ -228,7 +230,6 @@ def test_wrap_unwrap_original():
         )
 
         # Calculate the trade instructions
-        # try:
         calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(trade_instructions=agg_trade_instructions)
 
         # Aggregate multiple Bancor V3 trades into a single trade
@@ -240,51 +241,38 @@ def test_wrap_unwrap_original():
 
         # Get the flashloan token
         fl_token = calculated_trade_instructions[0].tknin_address
+        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
 
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
 
-        # Use helper function to calculate profit
-        best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
+        # Calculate the best profit
+        best_profit_fl_token, best_profit_gastkn, best_profit_usd = bot.calculate_profit(
             CCm, best_profit, fl_token
         )
 
-        # Log the best trade instructions
-        bot.handle_logging_for_trade_instructions(
-            1, best_profit=best_profit  # The log id
-        )
+        # Log the best profit
+        cfg.logger.info(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}")
 
-        # Use helper function to update the log dict
-        log_dict = bot.update_log_dict(
+        # Calculate the arbitrage
+        arb = bot.calculate_arb(
             arb_mode,
-            best_profit,
-            profit_usd,
+            best_profit_gastkn,
+            best_profit_usd,
             flashloan_tkn_profit,
             calculated_trade_instructions,
-            fl_token,
+            fl_token_symbol,
         )
 
-        # Log the log dict
-        bot.handle_logging_for_trade_instructions(2, log_dict=log_dict)  # The log id
+        # Log the arbitrage
+        cfg.logger.info(f"calculated arb: {arb}")
 
-        # Check if the best profit is greater than the minimum profit
-        # if best_profit < bot.ConfigObj.DEFAULT_MIN_PROFIT:
-        #     bot.ConfigObj.logger.info(
-        #         f"Opportunity with profit: {num_format(best_profit)} does not meet minimum profit: {bot.ConfigObj.DEFAULT_MIN_PROFIT}, discarding."
-        #     )
-
-        # Get the flashloan amount and token address
+        # Get the flashloan amount
         flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-        flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
-            bot.db.get_token(tkn_address=fl_token).address
-        )
 
-        # Log the flashloan amount and token address
-        bot.handle_logging_for_trade_instructions(
-            3,  # The log id
-            flashloan_amount=flashloan_amount,
-        )
+        # Log the flashloan amount
+        cfg.logger.info(f"Flashloan amount: {flashloan_amount}")
 
         split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
 

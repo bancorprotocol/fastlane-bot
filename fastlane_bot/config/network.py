@@ -1,5 +1,12 @@
 """
-Fastlane bot config -- network
+Network configuration (defines the ``ConfigNetwork`` class)
+
+Used to configure the network for the fastlane bot.
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.0.3-RESTRICTED"
 __DATE__ = "02/May 2023"
@@ -186,6 +193,9 @@ class ConfigNetwork(ConfigBase):
     BNT_ADDRESS = "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+
+    TAX_TOKENS = []
+
     # BNT_KEY = "BNT-FF1C"
     # ETH_KEY = "ETH-EEeE"
     # WBTC_KEY = "WBTC-c599"
@@ -215,22 +225,9 @@ class ConfigNetwork(ConfigBase):
     PANCAKESWAP_V3_NAME = "pancakeswap_v3"
     SOLIDLY_V2_NAME = "solidly_v2"
     VELODROME_V2_NAME = "velodrome_v2"
-    SHIBA_V2_NAME = "shiba_v2"
-    # Base Exchanges
     AERODROME_V2_NAME = "aerodrome_v2"
-    AERODROME_V3_NAME = "aerodrome_v3"
-    ALIENBASE_V2_NAME = "alienbase_v2"
-    ALIENBASE_V3_NAME = "alienbase_v3"
-    BASESWAP_V2_NAME = "baseswap_v2"
-    BASESWAP_V3_NAME = "baseswap_v3"
-    SWAPBASED_V2_NAME = "swap_based_v2"
-    # SWAPBASED_V3_NAME = "swap_based_v3" # This uses Algebra DEX
-    SYNTHSWAP_V2_NAME = "synthswap_v2"
-    SYNTHSWAP_V3_NAME = "synthswap_v3"
-    SMARDEX_V2_NAME = "smardex_v2"
-    # SMARDEX_V3_NAME = "smardex_v3" # This uses Algebra DEX
-    VELOCIMETER_V1_NAME = "velocimeter_v1"
     VELOCIMETER_V2_NAME = "velocimeter_v2"
+    XFAI_V0_NAME = "xfai_v0"
 
     WRAP_UNWRAP_NAME = "wrap_or_unwrap"
 
@@ -256,25 +253,10 @@ class ConfigNetwork(ConfigBase):
 
     # DEFAULT VALUES SECTION
     #######################################################################################
-    UNIV3_FEE_LIST = [8, 10, 40, 80, 100, 250, 300, 450, 500, 1000, 2500, 3000, 10000]
-    MIN_BNT_LIQUIDITY = 2_000_000_000_000_000_000
-    DEFAULT_GAS = 950_000
-    DEFAULT_GAS_PRICE = 0
-    DEFAULT_GAS_PRICE_OFFSET = 1.09
     DEFAULT_GAS_SAFETY_OFFSET = 25_000
-    DEFAULT_POLL_INTERVAL = 12
     DEFAULT_BLOCKTIME_DEVIATION = 13 * 500 * 100  # 10 block time deviation
-    DEFAULT_MAX_SLIPPAGE = Decimal("1")  # 1%
     _PROJECT_PATH = os.path.normpath(f"{os.getcwd()}")  # TODO: FIX THIS
-    DEFAULT_CURVES_DATAFILE = os.path.normpath(
-        f"{_PROJECT_PATH}/carbon/data/curves.csv.gz"
-    )
-    CARBON_STRATEGY_CHUNK_SIZE = 200
     Q96 = Decimal("2") ** Decimal("96")
-    DEFAULT_TIMEOUT = 60
-    CARBON_FEE = Decimal("0.002")
-    BANCOR_V3_FEE = Decimal("0.0")
-    DEFAULT_REWARD_PERCENT = Decimal("0.5")
     LIMIT_BANCOR3_FLASHLOAN_TOKENS = True
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
@@ -299,6 +281,17 @@ class ConfigNetwork(ConfigBase):
     #######################################################################################
     GAS_TKN_IN_FLASHLOAN_TOKENS = None
     IS_NO_FLASHLOAN_AVAILABLE = False
+
+    # HOOKS
+    #######################################################################################
+    @staticmethod
+    def gas_strategy(web3):
+        gas_price = web3.eth.gas_price # send `eth_gasPrice` request
+        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+        return {
+            "maxFeePerGas": gas_price + max_priority_fee,
+            "maxPriorityFeePerGas": max_priority_fee
+        }
 
     @classmethod
     def new(cls, network=None):
@@ -391,6 +384,7 @@ class ConfigNetwork(ConfigBase):
             self.UNISWAP_V3_NAME: 4,
             self.SOLIDLY_V2_NAME: 11,
             self.AERODROME_V2_NAME: 12,
+            self.XFAI_V0_NAME: 13,
             self.CARBON_V1_NAME: 6,
         }
         for ex in self.UNI_V2_FORKS:
@@ -400,10 +394,12 @@ class ConfigNetwork(ConfigBase):
         for ex in self.CARBON_V1_FORKS:
             self.EXCHANGE_IDS[ex] = 6
         for ex in self.SOLIDLY_V2_FORKS:
-            if ex not in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
-                self.EXCHANGE_IDS[ex] = 11
-            else:
+            if ex in [self.AERODROME_V2_NAME, self.VELODROME_V2_NAME]:
                 self.EXCHANGE_IDS[ex] = 12
+            elif ex == self.XFAI_V0_NAME:
+                self.EXCHANGE_IDS[ex] = 13
+            else:
+                self.EXCHANGE_IDS[ex] = 11
         self.SUPPORTED_EXCHANGES = list(self.EXCHANGE_IDS)
 
 
@@ -440,6 +436,14 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     NATIVE_GAS_TOKEN_SYMBOL = "ETH"
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    TAX_TOKENS = [
+        "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
+        "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
+        "0xf94e7d0710709388bCe3161C32B4eEA56d3f91CC", # DSync
+        "0x1258D60B224c0C5cD888D37bbF31aa5FCFb7e870", # GPU
+        "0x6A7eFF1e2c355AD6eb91BEbB5ded49257F3FED98", # OPSEC
+    ]
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -757,6 +761,10 @@ class _ConfigNetworkLinea(ConfigNetwork):
     NATIVE_GAS_TOKEN_SYMBOL = "ETH"
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
+
+    TAX_TOKENS = [
+        "0x1bE3735Dd0C0Eb229fB11094B6c277192349EBbf", # LUBE
+    ]
 
     IS_INJECT_POA_MIDDLEWARE = True
     # Balancer

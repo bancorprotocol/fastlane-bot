@@ -13,16 +13,12 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-import pytest
 import math
 import json
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -128,11 +124,26 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
+flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi"
+
+
+# ------------------------------------------------------------
+# Test      039
+# File      test_039_TestMultiMode.py
+# Segment   Test_TAX_TOKENS
+# ------------------------------------------------------------
+def test_test_tax_tokens():
+# ------------------------------------------------------------
+    
+    assert any(token.address in cfg.TAX_TOKENS for token in tokens), f"[TestMultiMode], DB does not include any tax tokens"
+    
+    for curve in CCm:
+        for token in cfg.TAX_TOKENS:
+            assert token not in [curve.params['tknx_addr'], curve.params['tkny_addr']], f"[TestMultiMode], curve {curve} includes tax token {token}"
 
 
 # ------------------------------------------------------------
@@ -168,19 +179,20 @@ def test_test_combos_and_tokens():
     
     # +
     arb_finder = bot._get_arb_finder("multi")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
-    
+    all_tokens, combos = finder.find_arbitrage()
+
+    # subjected to the length of `TAX_TOKENS`    
     assert type(all_tokens) == set, f"[NBTest 039 TestMultiMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[NBTest 039 TestMultiMode] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) >= 236, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 236 tokens, found {len(all_tokens)}"
-    assert len(combos) >= 1410, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1410 combos, found {len(combos)}"
+    assert len(all_tokens) >= 234, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 234 tokens, found {len(all_tokens)}"
+    assert len(combos) >= 1398, f"[NBTest 039 TestMultiMode] Using wrong dataset, expected at least 1398 combos, found {len(combos)}"
     # -
     
 
@@ -198,7 +210,7 @@ def test_test_expected_output():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     
@@ -224,6 +236,9 @@ def test_test_expected_output():
                     else:
                         if trade["tknin"] not in carbon_tkn_in:
                             carbon_wrong_direction_count += 1
+        for ti in best_trade_instructions_dic:
+            for token in cfg.TAX_TOKENS:
+                assert token not in [ti['tknin'], ti['tknout']], f"[TestMultiMode], trade instruction {ti} includes tax token {token}"
     
     assert len(r) >= 27, f"[NBTest 039 TestMultiMode] Expected at least 27 arbs, found {len(r)}"
     assert multi_carbon_count > 0, f"[NBTest 039 TestMultiMode] Not finding arbs with multiple Carbon curves."

@@ -1,5 +1,12 @@
 """
-Fastlane bot configuration object -- selector constants
+Selector constants
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 
 NETWORK_ETHEREUM = "ethereum"

@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -15,13 +15,14 @@
 
 # +
 try:
-    import tools.invariants.functions as f
-    from tools.invariants.kernel import Kernel
-    from testing import *
-except:
     import fastlane_bot.tools.invariants.functions as f
     from fastlane_bot.tools.invariants.kernel import Kernel
     from fastlane_bot.testing import *
+
+except:
+    import tools.invariants.functions as f
+    from tools.invariants.kernel import Kernel
+    from testing import *
 
 import numpy as np
 import math as m
@@ -33,7 +34,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(f.Function))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Kernel))
 # -
 
-# # Functions and integration kernels
+# # Functions (Invariants Module; NBTest066)
 
 # ## Functions
 
@@ -328,21 +329,80 @@ assert raises(lambda: f1v+f2v)
 assert raises(lambda: f1v-f2v)
 # -
 
-# ### integration
+# ### convenience methods
+#
+
+fv = f.FunctionVector(
+    {
+        f.QuadraticFunction(a=1, b=2): 1,
+        f.HyperbolaFunction(k=100, x0=2): 1,
+        f.TrigFunction(phase=0.5): 1,
+    }, 
+    kernel=knl
+)
+
+# #### params
+
+assert isinstance(fv.params(as_dict=True), dict)
+assert len(fv.params()) == len(fv)
+fv.params(as_dict=True)
+
+assert fv.params() == fv.params(as_dict=False)
+assert not fv.params(as_dict=False) == fv.params(as_dict=True)
+assert len(fv.params(as_dict=False)) == len(fv)
+assert list(fv.params(as_dict=True).values()) == fv.params(as_dict=False)
+assert fv.params(as_dict=False)[1] == {'k': 100, 'x0': 2, 'y0': 0, '_classname': 'HyperbolaFunction'}
+assert fv.params(as_dict=False, classname=False)[2] == {'amp': 1, 'omega': 1, 'phase': 0.5}
+fv.params(as_dict=False)
+
+assert fv.params(index=2) == fv.params(2)
+assert isinstance(fv.params(index=2, as_dict=True), dict)
+assert isinstance(fv.params(index=2, as_dict=False), dict)
+assert fv.params(index=2, as_dict=False) != fv.params(index=2, as_dict=True)
+assert fv.params(index=2) == {'amp': 1, 'omega': 1, 'phase': 0.5, '_classname': 'TrigFunction'}
+assert fv.params(index=2, classname=False) == {'amp': 1, 'omega': 1, 'phase': 0.5}
+fv.params(index=2)
+
+# #### update
+
+assert raises(fv.update, [1,2,3]) == 'update with list of params not implemented yet'
+assert raises(fv.update, [1,2,3], index=1) == 'index and key must be None if params is a list'
+assert raises(fv.update, [1,2,3], 1) == 'index and key must be None if params is a list'
+assert raises(fv.update, [1,2,3], key=1) == 'index and key must be None if params is a list'
+assert raises(fv.update, dict()) == 'exactly one of index or key must be given'
+assert raises(fv.update, dict(), index=1, key=1) == "can't give both index and key"
+assert raises(fv.update, dict(), key=1) == "key not implemented yet"
+params = fv.params()
+fv.params()
+
+fv_1 = fv.update(dict(c=3), 0)
+params1 = fv_1.params()
+assert params[0] != params1[0] 
+assert params[1:] == params1[1:]
+assert params1[0] == {'a': 1, 'b': 2, 'c': 3, '_classname': 'QuadraticFunction'}
+assert params1[0]["c"] == 3
+assert params1[0]["a"] == params[0]["a"]
+assert params1[0]["b"] == params[0]["b"]
+assert params1[0]["_classname"] == params[0]["_classname"]
+params1
+
+# ### integration and norms
+
+# #### high level
+
+f1,f2
 
 f1v = f.FunctionVector({f1: 1}, kernel=knl)
-f2v = f.FunctionVector({f2: 1}, kernel=knl)
-#f1v.kernel, f2v.kernel
-
-knl = f1v.kernel
+f2v = f1v.wrap(f2)
+f1v.plot(show=False, label="f1")
+f2v.plot(show=False, label="f2")
+fv=f1v+f2v
+fv.plot(show=False, label="f1+f2")
+plt.legend()
+print(f1v.kernel)
+plt.show()
 assert f1v.kernel == f2v.kernel
 assert f1v.kernel == fv.kernel
-x_v = np.linspace(knl.x_min, knl.x_max)
-plt.plot(x_v, [f1v(xx) for xx in x_v], label="f1")
-plt.plot(x_v, [f2v(xx) for xx in x_v], label="f2")
-plt.plot(x_v, [fv(xx) for xx in x_v], label="f=f1+f2")
-plt.grid()
-plt.show()
 
 # +
 assert iseq(f1v.integrate(), 13+1)
@@ -357,20 +417,79 @@ assert iseq(fv.integrate(), 18)
 
 f2v.integrate()
 
+# #### quantification
+
+kernel = f.Kernel(x_min=0, x_max=1)
+qf_v = f.QuadraticFunction(c=1).wrap(kernel)
+qf2_v = f.QuadraticFunction(c=2).wrap(kernel)
+qfl_v = f.QuadraticFunction(b=1).wrap(kernel)
+qfq_v = f.QuadraticFunction(a=1).wrap(kernel)
+qfl1_v = qfl_v + qf_v
+qflm_v = 2*qfl_v - qf_v
+qf_v.plot(show=False)
+qf2_v.plot(show=False)
+qfl_v.plot(show=False)
+qfq_v.plot(show=False)
+qfl1_v.plot(show=False)
+qflm_v.plot(show=False)
+#plt.ylim(-1,None)
+
+# +
+# f(x) = 1 => Int = 1, Norm2 = 1
+assert qf_v.integrate() == 1
+assert qf_v.norm2() == 1
+assert qf_v.norm1() == 1
+assert qf_v.norm() == 1
+
+# f(x) = 2 => Int = 2, Norm2 = 4
+assert qf2_v.integrate() == 2
+assert qf2_v.norm2() == 4
+assert qf2_v.norm1() == 2
+assert qf2_v.norm() == 2
+
+# f(x) = x => Int = 1/2, Norm2 = 1/3
+assert qfl_v.integrate() == 1/2
+assert iseq(qfl_v.norm2(), qfq_v.integrate())
+assert iseq(qfl_v.norm2(), 1/3, eps=1e-3)
+assert iseq(qfl_v.norm1(), 1/2, eps=1e-3)
+assert iseq(qfl_v.norm(), m.sqrt(qfl_v.norm2()))
+
+# f(x) = x^2 => Int = 1/3, Norm2 = 1/5
+assert iseq(qfq_v.integrate(), 1/3, eps=1e-3)
+assert iseq(qfq_v.norm2(), 1/5, eps=1e-3)
+assert iseq(qfq_v.norm1(), 1/3, eps=1e-3)
+assert iseq(qfq_v.norm(), m.sqrt(qfq_v.norm2()))
+
+# f(x) = 1 + x ==> Int = 1.5, Norm2 = 2 1/3
+assert iseq(qfl1_v.integrate(), 1.5)
+assert iseq(qfl1_v.integrate(), qfl_v.integrate() + qf_v.integrate())
+assert iseq(qfl1_v.norm2(), 2+1/3, eps=1e-3)
+    # (1+x)^2 = x^2 + 2x + 1 => 1/3 x^3 + x^2 + x = 2 1/3 
+assert iseq(qfl1_v.norm1(), 1.5, eps=1e-3)
+assert iseq(qfl1_v.norm(), m.sqrt(qfl1_v.norm2()))
+
+# f(x) = 1 - 2x => Int = 0, Norm1 = 1/2, Norm2 = 1/3
+assert iseq(0, qflm_v.integrate(), eps=1e-3)
+assert iseq(qflm_v.norm2(), 1/3, eps=1e-3)
+    # x - 2/3 x^3 = 1/3
+assert iseq(qflm_v.norm1(), 1/2, eps=1e-3)
+assert iseq(qflm_v.norm(), m.sqrt(qflm_v.norm2()))
+# -
+
 # ### goal seek and minimize
 
 f1 = f.QuadraticFunction(a=1, c=-4)
-f1v = f.FunctionVector({f1: 1})
+f1v = f.FunctionVector().wrap(f1)
 x_v = np.linspace(-2.5, 2.5, 100)
 y1_v = [f1(xx) for xx in x_v]
 plt.plot(x_v, y1_v, label="f")
 #plt.legend()
 plt.grid()
 
-assert iseq(f1v.goalseek(0, x0=1), 2)
-assert iseq(f1v.goalseek(0, x0=-1), -2)
-assert iseq(f1v.goalseek(-3, x0=1), 1)
-assert iseq(f1v.goalseek(-3, x0=-1), -1)
+assert iseq(f1v.goalseek(target=0, x0=1), 2)
+assert iseq(f1v.goalseek(target=0, x0=-1), -2)
+assert iseq(f1v.goalseek(target=-3, x0=1), 1)
+assert iseq(f1v.goalseek(target=-3, x0=-1), -1)
 assert iseq(0, f1v.minimize1(x0=5), eps=1e-3)
 f1v.minimize1(x0=5)
 
@@ -382,9 +501,9 @@ plt.plot(x_v, y2_v, label="f")
 #plt.legend()
 plt.grid()
 
-assert iseq(f2v.goalseek(5), 0.8685170919424989, eps=1e-4)
+assert iseq(f2v.goalseek(target=5), 0.8685170919424989, eps=1e-4)
 assert iseq(f2v.minimize1(), -0.3332480000000852, eps=1e-4)
-f2v.goalseek(5), f2v.minimize1()
+f2v.goalseek(target=5), f2v.minimize1()
 
 # ## Restricted and apply kernel
 #
@@ -474,10 +593,12 @@ diff1 = (f0v-f1v).norm()
 diff2 = (f0v-f2v).norm()
 assert iseq( (f0v-f1v).norm2(), (f0v-f1v).norm()**2)
 assert iseq( (f0v-f2v).norm2(), (f0v-f2v).norm()**2)
-assert iseq(f1v.distance2(f0), (f0v-f1v).norm2())
-assert iseq(f2v.distance2(f0), (f0v-f2v).norm2())
-assert iseq(f1v.distance(f0), (f0v-f1v).norm())
-assert iseq(f2v.distance(f0), (f0v-f2v).norm())
+assert iseq(f1v.dist2_L2(f0), (f0v-f1v).norm2())
+assert iseq(f2v.dist2_L2(f0), (f0v-f2v).norm2())
+assert iseq(f1v.dist_L2(f0), (f0v-f1v).norm())
+assert iseq(f2v.dist_L2(f0), (f0v-f2v).norm())
+assert iseq(f1v.dist_L1(f0), (f0v-f1v).norm1())
+assert iseq(f2v.dist_L1(f0), (f0v-f2v).norm1())
 
 # plot
 f0v.plot(show=False, label="f0 [target function]")
@@ -485,6 +606,126 @@ f1v.plot(show=False, label=f"f1 [match 1]: dist={diff1:.2f}")
 f2v.plot(show=False, label=f"f2 [match 2]: dist={diff2:.2f}")
 plt.legend()
 plt.show()
+# -
+
+# ### norm and curve distance on price functions
+#
+# Note: what we call a _price function_ is simply the negative first derivative, assuming the functions are swap function
+
+# +
+fv_t = f.FunctionVector(kernel=Kernel(x_min=0, x_max=1, kernel=Kernel.FLAT))
+fn1_fv = fv_t.wrap(f.QuadraticFunction(c=1))  # f(x) = 1
+fn2_fv = fv_t.wrap(f.QuadraticFunction(c=1, b=-1)) # f(x) = 1-x
+null_f = lambda x: 0
+half_f = lambda x: 0.5
+one_f = lambda x: 1
+fn1_fv.plot(label="fn1(x)=1", linewidth=3)
+fn2_fv.plot(label="fn2(x)=1-x")
+fn1_fv.plot(func=fn1_fv.p, label="fn1.p(x)=0")
+fn2_fv.plot(func=fn2_fv.p, linestyle="--", color="#faa", label="fn2.p(x)=1")
+
+plt.legend()
+plt.show()
+# -
+
+# #### norm
+
+# +
+# method-level equality
+# ... on self.f
+assert fn1_fv.norm2_L2 == fn1_fv.norm2 
+assert fn1_fv.norm_L2 == fn1_fv.norm
+assert fn1_fv.norm_L1 == fn1_fv.norm1 
+# ... on self.p
+assert fn1_fv.normp2_L2 == fn1_fv.normp2 
+assert fn1_fv.normp_L2 == fn1_fv.normp
+assert fn1_fv.normp_L1 == fn1_fv.normp1 
+
+# checking values fn1
+# ... on self.f
+assert fn1_fv.norm2_L2() == 1
+assert fn1_fv.norm_L2() == 1
+assert fn1_fv.norm_L1() == 1
+# ... on self.p
+assert fn1_fv.normp2_L2() == 0
+assert fn1_fv.normp_L2() == 0
+assert fn1_fv.normp_L1() == 0
+
+# # checking values fn2
+# # ... on self.f
+assert iseq(1/3, fn2_fv.norm2_L2(), eps=1e-4)
+assert iseq(m.sqrt(1/3), fn2_fv.norm_L2(), eps=1e-4)
+assert iseq(1/2, fn2_fv.norm_L1(), eps=1e-4)
+# # ... on self.p
+assert iseq(1, fn2_fv.normp2_L2(), eps=1e-4)
+assert iseq(1, fn2_fv.normp_L2(), eps=1e-4)
+assert iseq(1, fn2_fv.normp_L1(), eps=1e-4)
+# -
+
+# #### distance
+
+# +
+# checking values fn1 vs null_f [1-0]
+# ... on self.f
+assert fn1_fv.dist2_L2(func=null_f) == 1
+assert fn1_fv.dist_L2(func=null_f) == 1
+assert fn1_fv.dist_L1(func=null_f) == 1
+# ... on self.p
+assert fn1_fv.distp2_L2(func=null_f) == 0
+assert fn1_fv.distp_L2(func=null_f) == 0
+assert fn1_fv.distp_L1(func=null_f) == 0
+
+# # checking values fn2 vs null_f [1-x-0]
+# # ... on self.f
+assert iseq(1/3, fn2_fv.dist2_L2(func=null_f), eps=1e-4)
+assert iseq(m.sqrt(1/3), fn2_fv.dist_L2(func=null_f), eps=1e-4)
+assert iseq(1/2, fn2_fv.dist_L1(func=null_f), eps=1e-4)
+# # ... on self.p
+assert iseq(1, fn2_fv.distp2_L2(func=null_f), eps=1e-4)
+assert iseq(1, fn2_fv.distp_L2(func=null_f), eps=1e-4)
+assert iseq(1, fn2_fv.distp_L1(func=null_f), eps=1e-4)
+
+# +
+# checking values fn1 vs one_f [1-1]
+# ... on self.f
+assert fn1_fv.dist2_L2(func=one_f) == 0
+assert fn1_fv.dist_L2(func=one_f) == 0
+assert fn1_fv.dist_L1(func=one_f) == 0
+# ... on self.p
+assert fn1_fv.distp2_L2(func=one_f) == 1
+assert fn1_fv.distp_L2(func=one_f) == 1
+assert fn1_fv.distp_L1(func=one_f) == 1
+
+# # checking values fn2 vs one_f [1-x-1]
+# # ... on self.f
+assert iseq(1/3, fn2_fv.dist2_L2(func=one_f), eps=1e-4)
+assert iseq(m.sqrt(1/3), fn2_fv.dist_L2(func=one_f), eps=1e-4)
+assert iseq(1/2, fn2_fv.dist_L1(func=one_f), eps=1e-4)
+# # ... on self.p
+assert iseq(0, fn2_fv.distp2_L2(func=one_f), eps=1e-4)
+assert iseq(0, fn2_fv.distp_L2(func=one_f), eps=1e-4)
+assert iseq(0, fn2_fv.distp_L1(func=one_f), eps=1e-4)
+
+# +
+# checking values fn1 vs half_f [1-0.5=0.5]
+# ... on self.f
+assert fn1_fv.dist2_L2(func=half_f) == 0.25
+assert fn1_fv.dist_L2(func=half_f) == 0.5
+assert fn1_fv.dist_L1(func=half_f) == 0.5
+# ... on self.p
+assert fn1_fv.distp2_L2(func=half_f) == 0.25
+assert fn1_fv.distp_L2(func=half_f) == 0.5
+assert fn1_fv.distp_L1(func=half_f) == 0.5
+
+# # checking values fn2 vs half_f [1-x-0.5=0.5-x]
+# # ... on self.f
+assert iseq(1/12, fn2_fv.dist2_L2(func=half_f), eps=1e-3)        #int_0..1 (0.5-x)^2 = 1/12
+assert iseq(m.sqrt(1/12), fn2_fv.dist_L2(func=half_f), eps=1e-3)
+assert iseq(1/4, fn2_fv.dist_L1(func=half_f), eps=1e-4)
+# # ... on self.p
+assert iseq(0.25, fn2_fv.distp2_L2(func=half_f), eps=1e-4)
+assert iseq(0.5, fn2_fv.distp_L2(func=half_f), eps=1e-4)
+assert iseq(0.5, fn2_fv.distp_L1(func=half_f), eps=1e-4)
 # -
 
 # ### curve fitting
@@ -566,4 +807,186 @@ assert np.array_equal(e_i(1,5), np.array([0., 1., 0., 0., 0.]))
 assert e_k("b", dict(a=1, b=2, c=3)) == {'a': 0, 'b': 1, 'c': 0}
 assert bump(dict(a=1, b=2, c=3), "b", 0.25) == {'a': 1, 'b': 2.25, 'c': 3}
 
+# ## Sundry tests
 
+fmt = f.core.fmt
+dct = {"a": 1.234578, "b": 2.3456789}
+lst = list(dct.values())
+assert fmt(dct) == {'a': 1.2346, 'b': 2.3457}
+assert fmt(lst) == [1.2346, 2.3457]
+assert fmt(dct, ".2f") == {'a': 1.23, 'b': 2.35}
+assert fmt(lst, ".2f") == [1.23, 2.35]
+assert fmt(lst, ".2f", as_float=False) == ['1.23', '2.35']
+fmt(lst, ".2f")
+
+# ## Function examples [NOTEST]
+
+# ### QuadraticFunction
+
+fn1 = f.Quadratic(a=1, b=2, c=3)
+print(fn1.params())
+fn2 = fn1.update(b=3, c=4)
+diff2 = lambda x: (fn1(x)-fn2(x))**2
+fn1.plot(-5,5, label="fn1")
+fn2.plot(-5,5, label="fn2")
+fn2.plot(-5,5, func=diff2, label="(fn1-fn2)^2")
+fn2.plot(-5,5, func=fn2.p, label="-fn2'")
+fn2.plot(-5,5, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2)
+print(f"fn1 = fn2 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ### PowerlawFunction
+
+fn1 = f.Powerlaw()
+print(fn1.params())
+fn2 = fn1.update(x0=0.5)
+fn3 = fn2.update(alpha=-1.5)
+diff2 = lambda x: (fn3(x)-fn1(x))**2
+fn1.plot(1,3, label="fn1")
+fn2.plot(1,3, label="fn2")
+fn3.plot(1,3, label="fn3")
+fn2.plot(1,3, func=diff2, label="(fn3-fn1)^2")
+fn2.plot(1,3, func=fn2.p, label="-fn2'")
+fn2.plot(2,3, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2)
+print(f"fn1 = fn3 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ### TrigFunction
+
+fn1 = f.Trig()
+print(fn1.params())
+fn2 = fn1.update(omega=1.2)
+fn3 = fn2.update(phase=-0.1)
+diff2 = lambda x: (fn3(x)-fn1(x))**2
+fn1.plot(1,3, label="fn1")
+fn2.plot(1,3, label="fn2")
+fn3.plot(1,3, label="fn3")
+fn2.plot(1,3, func=diff2, label="(fn3-fn1)^2")
+#fn2.plot(1,3, func=fn2.p, label="-fn2'")
+#fn2.plot(1,3, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2, x0=1.5)
+print(f"fn1 = fn3 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ### ExpFunction
+
+fn1 = f.Exp()
+print(fn1.params())
+fn2 = fn1.update(k=1.2)
+fn3 = fn2.update(x0=0.1)
+diff2 = lambda x: (fn3(x)-fn1(x))**2
+fn1.plot(0, 2, label="fn1")
+fn2.plot(0, 2, label="fn2")
+fn3.plot(0, 2, label="fn3")
+fn2.plot(0, 2, func=diff2, label="(fn3-fn1)^2")
+fn2.plot(0, 2, func=fn2.p, label="-fn2'")
+fn2.plot(0, 2, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2, x0=1.5)
+print(f"fn1 = fn3 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ### LogFunction
+
+fn1 = f.Log()
+print(fn1.params())
+fn2 = fn1.update(base=fn1.E)
+fn3 = fn2.update(x0=0.1)
+diff2 = lambda x: (fn3(x)-fn1(x))**2
+fn1.plot(1, 5, label="fn1")
+fn2.plot(1, 5, label="fn2")
+fn3.plot(1, 5, label="fn3")
+fn2.plot(1, 5, func=diff2, label="(fn3-fn1)^2")
+fn2.plot(1, 5, func=fn2.p, label="-fn2'")
+fn2.plot(1, 5, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2, x0=1.5)
+print(f"fn1 = fn3 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ### HyperbolaFunction
+
+fn1 = f.Hyperbola()
+print(fn1.params())
+fn2 = fn1.update(k=1.2)
+fn3 = fn2.update(x0=-0.5)
+diff2 = lambda x: (fn3(x)-fn1(x))**2
+fn1.plot(0.5, 3, label="fn1")
+fn2.plot(0.5, 3, label="fn2")
+fn3.plot(0.5, 3, label="fn3")
+fn2.plot(0.5, 3, func=diff2, label="(fn3-fn1)^2")
+fn2.plot(0.5, 3, func=fn2.p, label="-fn2'")
+fn2.plot(1.5, 3, func=fn2.pp, label="-fn2''")
+plt.legend()
+x0 = f.goalseek(func=diff2, x0=1.5)
+print(f"fn1 = fn3 @ ({x0:.2f}, {fn1(x0):.2f})")
+plt.show()
+
+# ## Function examples
+#
+# _shortened version of the [NOTEST] section above, removing the charts_
+
+fn1 = f.Quadratic(a=1, b=2, c=3)
+assert f.Quadratic is f.QuadraticFunction
+assert fn1.params() == {'a': 1, 'b': 2, 'c': 3}
+fn2 = fn1.update(b=0)
+assert fn2.params() == {'a': 1, 'b': 0, 'c': 3}
+assert iseq(fn1(1), 6, fn1.f(1))
+assert iseq(-fn1.p(1), 4, fn1.df_dx(1))
+assert iseq(-fn1.pp(1), 2)
+fn1(1), -fn1.p(1), -fn1.pp(1)
+
+fn1 = f.Powerlaw()
+assert f.Powerlaw is f.PowerlawFunction
+assert fn1.params() == {'N': 1, 'alpha': -1, 'x0': 0}
+fn2 = fn1.update(alpha=-2)
+assert fn2.params() == {'N': 1, 'alpha': -2, 'x0': 0}
+assert iseq(fn1(1), 1, fn1.f(1))
+assert iseq(-fn1.p(1), -1, fn1.df_dx(1))
+assert iseq(-fn1.pp(1), 2)
+fn1(1), -fn1.p(1), -fn1.pp(1)
+
+fn1 = f.Trig()
+assert f.Trig is f.TrigFunction
+assert fn1.params() == {'amp': 1, 'omega': 1, 'phase': 0}
+fn2 = fn1.update(amp=-2)
+assert fn2.params() == {'amp': -2, 'omega': 1, 'phase': 0}
+assert iseq(0, fn1(1), fn1.f(1))
+assert iseq(-fn1.PI, -fn1.p(1), fn1.df_dx(1))
+assert iseq(0, -fn1.pp(1))
+fn1(1), -fn1.p(1), -fn1.pp(1)
+
+fn1 = f.Exp(k=2)
+assert f.Exp is f.ExpFunction
+assert fn1.params() == {'N': 1, 'k': 2, 'x0': 0}
+fn2 = fn1.update(k=-2)
+assert fn2.params() == {'N': 1, 'k': -2, 'x0': 0}
+assert iseq(fn1.E**2, fn1(1), fn1.f(1))
+assert iseq(2*fn1.E**2, -fn1.p(1), fn1.df_dx(1))
+assert iseq(4*fn1.E**2, -fn1.pp(1))
+fn1(1), -fn1.p(1), -fn1.pp(1)
+
+fn1 = f.Log()
+assert f.Log is f.LogFunction
+assert fn1.params() == {'base': 10, 'N': 1, 'x0': 0}
+fn2 = fn1.update(base=fn1.E)
+assert fn2.params() == {'base': fn1.E, 'N': 1, 'x0': 0}
+assert iseq(0, fn1(1), fn1.f(1))
+assert iseq(0.4342944833508522, -fn1.p(1), fn1.df_dx(1))
+assert iseq(-0.4342944840747152, -fn1.pp(1))
+fn1(1), -fn1.p(1), -fn1.pp(1)
+
+fn1 = f.Hyperbola()
+assert f.Hyperbola is f.HyperbolaFunction
+assert fn1.params() == {'k': 1, 'x0': 0, 'y0': 0}
+fn2 = fn1.update(x0=1)
+assert fn2.params() == {'k': 1, 'x0': 1, 'y0': 0}
+assert iseq(1, fn1(1), fn1.f(1))
+assert iseq(-1, -fn1.p(1), fn1.df_dx(1))
+assert iseq(2, -fn1.pp(1))
+fn1(1), -fn1.p(1), -fn1.pp(1)

@@ -1,8 +1,17 @@
 """
 Route handler for the Fastlane project.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+Main classes defined here are
+
+- ``RouteStruct``: represents a single trade route
+- ``TxRouteHandler``: converts trade instructions from the optimizer into routes
+
+It also defines a few helper function that should not be relied upon by external modules,
+even if they happen to be exported.
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 __VERSION__ = "1.1.1"
 __DATE__ = "02/May/2023"
@@ -10,7 +19,7 @@ __DATE__ = "02/May/2023"
 import decimal
 import math
 from _decimal import Decimal
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List, Any, Dict, Tuple
 
 import eth_abi
@@ -48,19 +57,7 @@ class RouteStruct:
         The custom data abi-encoded. Required for trades on Carbon. (abi-encoded)
     """
 
-    XCID_BANCOR_V2 = 0
-    XCID_BANCOR_V3 = 1
-    XCID_UNISWAP_V2 = 2
-    XCID_UNISWAP_V3 = 3
-    XCID_SUSHISWAP_V2 = 4
-    XCID_SUSHISWAP_V1 = 5
-    XCID_CARBON_V1 = 6
-    XCID_BALANCER = 7
-    XCID_CARBON_POL = 8
-    XCID_PANCAKESWAP_V2 = 9
-    XCID_PANCAKESWAP_V3 = 10
-
-    platformId: int  # TODO: WHY IS THIS AN INT?
+    platformId: int
     sourceToken: str
     targetToken: str
     sourceAmount: int
@@ -69,24 +66,12 @@ class RouteStruct:
     customAddress: str
     customInt: int
     customData: bytes
-    # ConfigObj: Config
 
 
-@dataclass
-class TxRouteHandlerBase:
-    __VERSION__ = __VERSION__
-    __DATE__ = __DATE__
-
-
-def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]):
     """
     Sets the source amount of the last trade to 0 per-token, ensuring that all tokens held will be used in the last trade.
-
     :param route_struct: the route struct object
-
-    Returns:
-    List[RouteStruct] the route struct object with the sourceAmount adjusted to 0 for each last-trade per token.
-
     """
 
     tkns_traded = [route_struct[0]["sourceToken"]]
@@ -105,13 +90,11 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]) -> List[Dict
                 route_struct[idx].sourceAmount = 0
                 tkns_traded.append(trade.sourceToken)
 
-    return route_struct
-
 
 @dataclass
-class TxRouteHandler(TxRouteHandlerBase):
+class TxRouteHandler:
     """
-    A class that handles the routing of the bot. Takes the `trade_instructions` and converts them into the variables needed to instantiate the `TxSubmitHandler` class.
+    A class that handles the routing of the bot by converting trade instructions into routes.
 
     Parameters
     ----------
@@ -125,44 +108,15 @@ class TxRouteHandler(TxRouteHandlerBase):
 
     trade_instructions: List[TradeInstruction]
 
-    @property
-    def exchange_ids(self) -> List[int]:
-        """
-        Returns
-        """
-        return [trade.platform_id for trade in self.trade_instructions]
-
     def __post_init__(self):
         self.contains_carbon = True
-        self._validate_trade_instructions()
         self.ConfigObj = self.trade_instructions[0].ConfigObj
-
-    def _validate_trade_instructions(self):
-        """
-        Validates the trade instructions.
-        """
         if not self.trade_instructions:
             raise ValueError("No trade instructions found.")
         if len(self.trade_instructions) < 2:
-            raise ValueError("Trade instructions must be greater than 1.")
+            raise ValueError("Length of trade instructions must be greater than 1.")
         if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
             self.contains_carbon = False
-
-    def is_wrapped_gas_token(self, address: str) -> bool:
-        """
-        Checks if the address is WETH.
-
-        Parameters
-        ----------
-        address: str
-            The address.
-
-        Returns
-        -------
-        bool
-            Whether the address is WETH.
-        """
-        return address.lower() == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS.lower()
 
     @staticmethod
     def custom_data_encoder(
@@ -205,60 +159,25 @@ class TxRouteHandler(TxRouteHandlerBase):
                 agg_trade_instructions[i] = instr
         return agg_trade_instructions
 
-    @staticmethod
-    def _abi_encode_data(
-            idx_of_carbon_trades: List[int],
-            trade_instructions: List[TradeInstruction],
-    ) -> bytes:
-        """
-        Gets the custom data abi-encoded. Required for trades on Carbon. (abi-encoded)
-
-        Parameters
-        ----------
-        idx_of_carbon_trades: List[int]
-            The indices of the trades that are on Carbon.
-        trade_instructions: List[TradeInstruction]
-            The trade instructions.
-
-        """
-        trade_actions_dic = [
-            {
-                "strategyId": int(trade_instructions[idx].strategy_id),
-                "amount": math.floor(trade_instructions[idx].amtin_wei),
-            }
-            for idx in idx_of_carbon_trades
-        ]
-
-        types = ["uint256", "uint128"]
-        values = [32, len(trade_actions_dic)] + [
-            value
-            for data in trade_actions_dic
-            for value in (data["strategyId"], data["amount"])
-        ]
-        all_types = ["uint32", "uint32"] + types * len(trade_actions_dic)
-        return eth_abi.encode(all_types, values)
-
-    def to_route_struct(
+    def _to_route_struct(
             self,
-            min_target_amount: Decimal,
+            min_target_amount: int,
             deadline: int,
             target_address: str,
             platform_id: int,
-            custom_address: str = None,
-            customData: Any = None,
-            override_min_target_amount: bool = True,
-            customInt: int = None,
-            source_token: str = None,
-            source_amount: Decimal = None,
-            exchange_name: str = None,
-
+            custom_address: str,
+            customData: Any,
+            customInt: int,
+            source_token: str,
+            source_amount:int,
+            exchange_name: str
     ) -> RouteStruct:
         """
-        Converts the trade instructions into the variables needed to instantiate the `TxSubmitHandler` class.
+        Converts trade instructions into routes.
 
         Parameters
         ----------
-        min_target_amount: Decimal
+        min_target_amount: int
             The minimum target amount.
         deadline: int
             The deadline.
@@ -286,22 +205,25 @@ class TxRouteHandler(TxRouteHandlerBase):
         """
         target_address = self.ConfigObj.w3.to_checksum_address(target_address)
         source_token = self.ConfigObj.w3.to_checksum_address(source_token)
-        customData = self.handle_custom_data_extras(platform_id=platform_id, custom_data=customData,
-                                                    exchange_name=exchange_name)
+        customData = self._handle_custom_data_extras(
+            platform_id=platform_id,
+            custom_data=customData,
+            exchange_name=exchange_name
+        )
 
         return RouteStruct(
             platformId=platform_id,
             targetToken=target_address,
             sourceToken=source_token,
-            sourceAmount=int(source_amount),
-            minTargetAmount=int(min_target_amount),
+            sourceAmount=source_amount,
+            minTargetAmount=min_target_amount,
             deadline=deadline,
             customAddress=custom_address,
             customInt=customInt,
             customData=customData,
         )
 
-    def handle_custom_data_extras(self, platform_id: int, custom_data: bytes, exchange_name: str):
+    def _handle_custom_data_extras(self, platform_id: int, custom_data: bytes, exchange_name: str):
         """
         This function toggles between Uniswap V3 routers used by the Fast Lane contract. This is input in the customData field.
 
@@ -313,24 +235,18 @@ class TxRouteHandler(TxRouteHandlerBase):
             custom_data: bytes
         """
 
-        if platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
-                self.ConfigObj.network.UNISWAP_V3_NAME) and platform_id != self.ConfigObj.network.EXCHANGE_IDS.get(
-            self.ConfigObj.network.AERODROME_V2_NAME):
-            return custom_data
-
-        assert custom_data in "0x", f"[routehandler.py handle_uni_v3_router_switch] Expected the custom data field to contain '0x', but it contained {custom_data}. This function may need to be updated."
         if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.UNISWAP_V3_NAME):
+            assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
             if self.ConfigObj.network.NETWORK == ETHEREUM or exchange_name in [PANCAKESWAP_V3_NAME, BUTTER_V3_NAME, AGNI_V3_NAME, CLEOPATRA_V3_NAME, METAVAULT_V3_NAME]:
-                custom_data = '0x0000000000000000000000000000000000000000000000000000000000000000'
+                return '0x0000000000000000000000000000000000000000000000000000000000000000'
             else:
-                custom_data = '0x0100000000000000000000000000000000000000000000000000000000000000'
-        elif platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
-            custom_data = '0x' + eth_abi.encode(['address'],
-                                                [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
+                return '0x0100000000000000000000000000000000000000000000000000000000000000'
+
+        if platform_id == self.ConfigObj.network.EXCHANGE_IDS.get(self.ConfigObj.network.AERODROME_V2_NAME):
+            assert custom_data == "0x", f"[routehandler.py _handle_custom_data_extras] attempt to override input custom_data {custom_data}"
+            return '0x' + eth_abi.encode(['address'], [self.ConfigObj.network.FACTORY_MAPPING[exchange_name]]).hex()
 
         return custom_data
-
-
 
     def get_route_structs(
             self, trade_instructions: List[TradeInstruction] = None, deadline: int = None
@@ -356,26 +272,21 @@ class TxRouteHandler(TxRouteHandlerBase):
             self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
             for trade_instruction in trade_instructions
         ]
-        try:
-            fee_float = [pools[idx].fee_float for idx, _ in enumerate(trade_instructions)]
-        except:
-            fee_float = [0 for idx, _ in enumerate(trade_instructions)]
 
         return [
-            self.to_route_struct(
-                min_target_amount=Decimal(str(trade_instructions[idx].amtout_wei)),
+            self._to_route_struct(
+                min_target_amount=trade_instruction.amtout_wei,
                 deadline=deadline,
-                target_address=trade_instructions[idx].get_real_tkn_out,
-                custom_address=self.get_custom_address(pool=pools[idx]),
-                platform_id=trade_instructions[idx].platform_id,
-                customInt=trade_instructions[idx].custom_int,
-                customData=trade_instructions[idx].custom_data,
-                override_min_target_amount=True,
-                source_token=trade_instructions[idx].get_real_tkn_in,
-                source_amount=Decimal(str(trade_instructions[idx].amtin_wei)),
-                exchange_name=trade_instructions[idx].exchange_name,
+                target_address=trade_instruction.get_real_tkn_out,
+                custom_address=self.get_custom_address(pool),
+                platform_id=trade_instruction.platform_id,
+                customInt=trade_instruction.custom_int,
+                customData=trade_instruction.custom_data,
+                source_token=trade_instruction.get_real_tkn_in,
+                source_amount=trade_instruction.amtin_wei,
+                exchange_name=trade_instruction.exchange_name,
             )
-            for idx, instructions in enumerate(trade_instructions)
+            for trade_instruction, pool in zip(trade_instructions, pools)
         ]
 
     def get_custom_address(
@@ -719,75 +630,6 @@ class TxRouteHandler(TxRouteHandlerBase):
             agg_trade_instructions += [TradeInstruction(**new_trade_instructions_carbons[i])]
         return agg_trade_instructions
 
-    @staticmethod
-    def _find_tradematches(trade_instructions):
-        factor_high = 1.00001
-        factor_low = 0.99999
-
-        listti = []
-        for instr in trade_instructions:
-            listti += [
-                {
-                    "cid": instr.cid,
-                    "strategy_id": instr.strategy_id,
-                    "tknin": instr.tknin,
-                    "amtin": instr.amtin,
-                    "tknout": instr.tknout,
-                    "amtout": instr.amtout,
-                }
-            ]
-        df = pd.DataFrame.from_dict(listti)
-        df["matchedout"] = None
-        df["matchedin"] = None
-
-        for i in df.index:
-            for j in df.index:
-                if i != j:
-                    if df.tknin[i] == df.tknout[j] and (
-                            (df.amtin[i] <= -df.amtout[j] * factor_high)
-                            & (df.amtin[i] >= -df.amtout[j] * factor_low)
-                    ):
-                        df.loc[i, "matchedin"] = j
-                    if df.tknout[i] == df.tknin[j] and (
-                            (df.amtout[i] >= -df.amtin[j] * factor_high)
-                            & (df.amtout[i] <= -df.amtin[j] * factor_low)
-                    ):
-                        df.loc[i, "matchedout"] = j
-
-        pos = df[df.matchedin.isna()].index.values[0]
-        route = [pos]
-        ismatchedin = True
-
-        if pos is None:
-            return trade_instructions
-
-        while len(route) < len(df.index):
-            pos = df.loc[pos, "matchedout"]
-            route.append(pos)
-            ismatchedin = not ismatchedin
-
-        trade_instructions = [trade_instructions[i] for i in route if i is not None]
-        return trade_instructions
-
-    def _determine_trade_route(
-            self, trade_instructions: List[TradeInstruction]
-    ) -> List[int]:
-        """
-        Refactored determine trade route.
-
-        Parameters
-        ----------
-        trade_instructions: Dict[str, Any]
-            The trade instructions.
-
-        Returns
-        -------
-        List[int]
-            The route index.
-        """
-        data = self._match_trade(trade_instructions)
-        return self._extract_route_index(data)
-
     def _extract_route_index(self, data: List[Any]) -> List[int]:
         """
         Refactored extract index.
@@ -876,53 +718,6 @@ class TxRouteHandler(TxRouteHandlerBase):
                 if (x.amtin <= -amount * factor_high)
                    & (x.amtin >= -amount * factor_low)
             ]
-
-    def _match_trade(self, trade_instructions: List[TradeInstruction]) -> List[Any]:
-        """
-        Refactored match trade.
-
-        Parameters
-        ----------
-        trade_instructions: Dict[str, Any]
-            The trade instructions.
-
-        Returns
-        -------
-        List[Any]
-            The potential routes.
-        """
-        potential_route = []
-        for i in range(len(trade_instructions)):
-            trade = trade_instructions[i]
-            tkn_matches = self._find_match_for_tkn(
-                trade_instructions, trade.tknin, "tknin"
-            )
-            amt_matches = self._find_match_for_amount(
-                trade_instructions, trade.amtout, "amtout"
-            )
-            if tkn_matches == amt_matches:
-                potential_route += [(i, tkn_matches)]
-        return potential_route
-
-    def _reorder_trade_instructions(
-            self, trade_instructions: List[TradeInstruction], new_route: List[int]
-    ) -> List[TradeInstruction]:
-        """
-        Refactored reorder trade instructions.
-
-        Parameters
-        ----------
-        trade_instructions_dic: List[Dict[str, str]]
-            The trade instructions.
-        new_route: List[int]
-            The new route.
-
-        Returns
-        -------
-        List[Dict[str, str]]
-            The reordered trade instructions.
-        """
-        return [trade_instructions[i] for i in new_route]
 
     def _calc_amount0(
             self,
@@ -1683,6 +1478,8 @@ class TxRouteHandler(TxRouteHandlerBase):
     def _cid_to_pool(self, cid: str, db: any) -> Pool:
         return db.get_pool(cid=cid)
 
+# TODO: Those functions should probably be private; also -- are they needed at
+# all? Most of them seem to be extremely trivial
 
 def mulUp(a: Decimal, b: Decimal) -> Decimal:
     return a * b

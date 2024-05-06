@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -15,16 +15,18 @@
 
 # +
 try:
-    import tools.invariants.vector as dv
-    from testing import *
-except:
     import fastlane_bot.tools.invariants.vector as dv
     from fastlane_bot.testing import *
+
+except:
+    import tools.invariants.vector as dv
+    from tools.testing import *
+
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(dv.DictVector))
 # -
 
-# # Dict Vectors (Invariants Module)
+# # Dict Vectors (Invariants Module; NBTest065)
 
 # ## Basic dict vector functions
 
@@ -228,6 +230,18 @@ vb = dv.V({bar1a: 3})
 assert va == vb
 assert not va is vb
 # -
+# items, elements and coeffs
+
+
+elements = [el for el in "abcdefghijklmnop"]
+v = dv.DictVector({el:n+1 for n, el in enumerate(elements)})
+assert dv.DictVector.elements is dv.DictVector.el
+assert v.elements == elements
+assert v.coeffs == [n+1 for n in range(len(elements))]
+assert v.items == list(zip(v.elements, v.coeffs))
+assert v.elements[2] == elements[2]
+assert v.coeffs[4] == 5
+assert v.items[6] == ('g', 7)
 
 
 

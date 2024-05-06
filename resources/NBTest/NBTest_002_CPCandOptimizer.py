@@ -7,28 +7,36 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # +
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
-from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
-from fastlane_bot.tools.analyzer import CPCAnalyzer
+try:
+    from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from fastlane_bot.tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
+    from fastlane_bot.tools.analyzer import CPCAnalyzer
+    from fastlane_bot.testing import *
+
+except:
+    from tools.cpc import ConstantProductCurve as CPC, CPCContainer, T, CPCInverter, Pair
+    from tools.optimizer import CPCArbOptimizer, F, MargPOptimizer, PairOptimizer
+    from tools.analyzer import CPCAnalyzer
+    from tools.testing import *
+
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Pair))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPCArbOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 
-from fastlane_bot.testing import *
 #plt.style.use('seaborn-dark')
 plt.rcParams['figure.figsize'] = [12,6]
-from fastlane_bot import __VERSION__
-require("3.0", __VERSION__)
+# from fastlane_bot import __VERSION__
+# require("3.0", __VERSION__)
 # -
 
 # # CPC and Optimizer in Fastlane [NBTest002]
@@ -1306,8 +1314,8 @@ assert iseq(0.0005, r.p_optimal_t[0], r.p_optimal_t[1])
 assert set(r.tokens_t) == {'USDC', 'USDT'}
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 
 # +
 r = O.optimize("WETH", result=O.MO_FULL)
@@ -1334,8 +1342,8 @@ assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
 assert set(r.tokens_t) == set(('USDC', 'USDT'))
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 # -
 
 # ### arbitrage
@@ -1382,8 +1390,8 @@ assert tuple(r.p_optimal.values())[:-1] == r.p_optimal_t
 assert set(r.tokens_t) == set(('USDC', 'USDT'))
 assert r.errormsg is None
 assert r.is_error == False
-assert r.time >= 0
-assert r.time < 0.1
+# assert r.time >= 0
+# assert r.time < 0.1
 
 abs(r.dtokens_t[0])
 

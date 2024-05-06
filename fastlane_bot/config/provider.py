@@ -1,6 +1,14 @@
 """
-Fastlane bot config -- provider
+Provider configuration (provides the ``ConfigProvider`` class)
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
+
 __VERSION__ = "0.9.1"
 __DATE__ = "30/Apr 2023"
 
@@ -69,17 +77,8 @@ class ConfigProvider(ConfigBase):
 
     def __init__(self, network: ConfigNetwork, **kwargs):
         super().__init__(**kwargs)
-        self.ARB_CONTRACT_VERSION = None
         self.BANCOR_ARBITRAGE_CONTRACT = None
         self.network = network
-
-    def check_version_of_arb_contract(self):
-        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
-            try:
-                self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-            except Exception as e:
-                # Failed to get latest version of arbitrage contract
-                print(f"Failed to get latest version of arbitrage contract due to exception: {e}")
 
 class _ConfigProviderAlchemy(ConfigProvider):
     """
@@ -104,51 +103,19 @@ class _ConfigProviderAlchemy(ConfigProvider):
         self.connection.connect_network(network.IS_INJECT_POA_MIDDLEWARE)
         self.w3 = self.connection.web3
         self.w3_async = self.connection.w3_async
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
+        self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
+            address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
+            abi=FAST_LANE_CONTRACT_ABI,
+        )
 
-        if network.NETWORK in [N.NETWORK_BASE, N.NETWORK_ETHEREUM, N.NETWORK_FANTOM, N.NETWORK_MANTLE, N.NETWORK_LINEA]:
-            self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-                address=network.CARBON_CONTROLLER_ADDRESS,
-                abi=CARBON_CONTROLLER_ABI,
-            )
-            self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
-                address=self.w3.to_checksum_address(network.FASTLANE_CONTRACT_ADDRESS),
-                abi=FAST_LANE_CONTRACT_ABI,
-            )
-
-        if network.GAS_ORACLE_ADDRESS:
-            self.GAS_ORACLE_CONTRACT = self.w3_async.eth.contract(
-                address=network.GAS_ORACLE_ADDRESS,
-                abi=GAS_ORACLE_ABI
+        if N.GAS_ORACLE_ADDRESS:
+            self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
+                address=N.GAS_ORACLE_ADDRESS,
+                abi=GAS_ORACLE_ABI,
             )
 
-
-        if network.NETWORK in N.NETWORK_ETHEREUM:
-            self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-                address=network.BANCOR_V3_NETWORK_INFO_ADDRESS,
-                abi=BANCOR_V3_NETWORK_INFO_ABI,
-            )
-            self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
-
-        else:
-            self.CARBON_CONTROLLER_CONTRACT = None
-            self.ARB_CONTRACT_VERSION = 10
-
-        if self.BANCOR_ARBITRAGE_CONTRACT is not None:
-            try:
-                (
-                    reward_percent,
-                    max_profit,
-                ) = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
-                self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-                self.ARB_MAX_PROFIT = 1000000  # This is no longer used
-            except:
-                self.ARB_REWARD_PERCENTAGE = "0.5"
-        else:
-            self.ARB_REWARD_PERCENTAGE = "0.5"
-
-        self.EXPECTED_GAS_MODIFIER = "0.85"
+        self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
 class _ConfigProviderTenderly(ConfigProvider):
@@ -174,26 +141,19 @@ class _ConfigProviderTenderly(ConfigProvider):
         )
         self.connection.connect_network()
         self.w3 = self.connection.web3
-        self.LOCAL_ACCOUNT = self.w3.eth.account.from_key(ETH_PRIVATE_KEY_BE_CAREFUL)
 
-        self.BANCOR_NETWORK_INFO_CONTRACT = self.w3.eth.contract(
-            address=N.BANCOR_V3_NETWORK_INFO_ADDRESS,
-            abi=BANCOR_V3_NETWORK_INFO_ABI,
-        )
-        self.CARBON_CONTROLLER_CONTRACT = self.w3.eth.contract(
-            address=N.CARBON_CONTROLLER_ADDRESS,
-            abi=CARBON_CONTROLLER_ABI,
-        )
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(
             address=self.w3.to_checksum_address(N.FASTLANE_CONTRACT_ADDRESS),
             abi=FAST_LANE_CONTRACT_ABI,
         )
-        self.ARB_CONTRACT_VERSION = self.BANCOR_ARBITRAGE_CONTRACT.caller.version()
 
-        reward_percent, max_profit = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()
+        if N.GAS_ORACLE_ADDRESS:
+            self.GAS_ORACLE_CONTRACT = self.w3.eth.contract(
+                address=N.GAS_ORACLE_ADDRESS,
+                abi=GAS_ORACLE_ABI,
+            )
 
-        self.ARB_REWARD_PERCENTAGE = str(int(reward_percent) / 1000000)
-        self.ARB_MAX_PROFIT = str(int(max_profit) / (10**18))
+        self.ARB_REWARDS_PPM = self.BANCOR_ARBITRAGE_CONTRACT.caller.rewards()[0]
 
 
 class _ConfigProviderInfura(ConfigProvider):
@@ -224,6 +184,4 @@ class _ConfigProviderUnitTest(ConfigProvider):
         # raise NotImplementedError("Infura not implemented")
         self.connection = None
         self.w3 = None
-        self.BANCOR_NETWORK_INFO_CONTRACT = None
-        self.CARBON_CONTROLLER_CONTRACT = None
         self.BANCOR_ARBITRAGE_CONTRACT = None

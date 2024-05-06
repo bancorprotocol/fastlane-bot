@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -15,18 +15,19 @@
 
 # +
 try:
-    import tools.invariants.functions as f
-    from tools.invariants.invariant import Invariant
-    from tools.invariants.bancor import BancorInvariant, BancorSwapFunction
-    from tools.invariants.solidly import SolidlyInvariant, SolidlySwapFunction
-    from testing import *
-except:
     import fastlane_bot.tools.invariants.functions as f
     from fastlane_bot.tools.invariants.invariant import Invariant
     from fastlane_bot.tools.invariants.bancor import BancorInvariant, BancorSwapFunction
     from fastlane_bot.tools.invariants.solidly import SolidlyInvariant, SolidlySwapFunction
     from fastlane_bot.testing import *
-    
+
+except:
+    import tools.invariants.functions as f
+    from tools.invariants.invariant import Invariant
+    from tools.invariants.bancor import BancorInvariant, BancorSwapFunction
+    from tools.invariants.solidly import SolidlyInvariant, SolidlySwapFunction
+    from tools.testing import *
+
 import numpy as np
 import math as m
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(f.Function))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(BancorInvariant))
 # -
 
-# # Invariants Module
+# # Invariants (Invariants Module; NBTest067)
 
 # ## General invariants
 

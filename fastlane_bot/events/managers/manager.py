@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the manager class for events. This class is responsible for handling events and updating the state of the pools.
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import random
 import time
@@ -65,31 +68,16 @@ class Manager(PoolManager, EventManager, ContractsManager):
         )
         self.update_pool_data(pool_info, data)
 
-    # def handle_pair_created(self, event: Dict[str, Any]):
-    #     """
-    #     Handle the pair created event by updating the fee pairs and pool info for the given pair.
-    #
-    #     Parameters
-    #     ----------
-    #     event : Dict[str, Any]
-    #         The event.
-    #
-    #     """
-    #     for exchange_name in self.cfg.CARBON_V1_FORKS:
-    #         if exchange_name in self.exchanges:
-    #             fee_pairs = self.set_carbon_v1_fee_pairs()
-    #             self.fee_pairs[exchange_name].update(fee_pairs)
-
     def update_from_pool_info(
-            self, pool_info: Optional[Dict[str, Any]] = None, current_block: int = None
-    ) -> Dict[str, Any]:
+            self, pool_info: Dict[str, Any], current_block: int = None
+    ):
         """
         Update the pool info.
 
         Parameters
         ----------
-        pool_info : Optional[Dict[str, Any]], optional
-            The pool info, by default None.
+        pool_info : Dict[str, Any]
+            The pool info.
         current_block : int, optional
             The current block, by default None.
         """
@@ -98,7 +86,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
                     type(pool_info["last_updated_block"]) == int
                     and pool_info["last_updated_block"] == current_block
             ):
-                return pool_info
+                return
         else:
             pool_info["last_updated_block"] = current_block
 
@@ -141,77 +129,10 @@ class Manager(PoolManager, EventManager, ContractsManager):
             if pool["cid"] == pool_info["cid"]:
                 self.pool_data[idx] = pool_info
                 break
-        return pool_info
-
-    def update_from_contract(
-            self,
-            address: str = None,
-            contract: Optional[Contract] = None,
-            pool_info: Optional[Dict[str, Any]] = None,
-            block_number: int = None,
-    ) -> Dict[str, Any]:
-        """
-        Update the state from the contract (instead of events).
-
-        Parameters
-        ----------
-        address : str, optional
-            The address, by default None.
-        contract : Optional[Contract], optional
-            The contract, by default None.
-        pool_info : Optional[Dict[str, Any]], optional
-            The pool info, by default None.
-        block_number : int, optional
-            The block number, by default None.
-
-        Returns
-        -------
-        Dict[str, Any]
-            The pool info.
-        """
-        # if pool_info:
-        #     address = pool_info["address"]
-        #
-        # addr = self.web3.to_checksum_address(address)
-        #
-        # if not pool_info:
-        #     for pool in self.pool_data:
-        #         if pool["address"] == addr:
-        #             pool_info = pool
-        #             break
-        #
-        # pool_info = self.validate_pool_info(addr=addr, pool_info=pool_info)
-        # if not pool_info:
-        #     return
-        #
-        # pool_info["descr"] = self.pool_descr_from_info(pool_info)
-        # pool_info["last_updated_block"] = block_number
-        # if contract is None:
-        #     contract = self.pool_contracts[pool_info["exchange_name"]].get(
-        #         pool_info["address"],
-        #         self.web3.eth.contract(
-        #             address=pool_info["address"],
-        #             abi=self.exchanges[pool_info["exchange_name"]].get_abi(),
-        #         ),
-        #     )
-        # pool = self.get_or_init_pool(pool_info)
-        # params = pool.update_from_contract(
-        #     contract,
-        #     tenderly_fork_id=self.tenderly_fork_id,
-        #     w3_tenderly=self.w3_tenderly,
-        #     w3=self.web3,
-        # )
-        # for key, value in params.items():
-        #     pool_info[key] = value
-        return pool_info
 
     def update(
             self,
-            event: Dict[str, Any] = None,
-            address: str = None,
-            token_address: bool = False,
             pool_info: Dict[str, Any] = None,
-            contract: Contract = None,
             block_number: int = None,
     ) -> None:
         """
@@ -219,64 +140,28 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
         Parameters
         ----------
-        event : Dict[str, Any], optional
-            The event, by default None.
-        address : str, optional
-            The address, by default None.
-        token_address: str, optional
-            If the balance should be updated using an ERC20 contract.
         pool_info : Dict[str, Any], optional
             The pool info, by default None.
-        contract : Contract, optional
-            The contract, by default None.
         block_number : int, optional
             The block number, by default None.
-
-
-        Raises
-        ------
-        Exception
-            If the alchemy rate limit is hit.
-            If no event or pool info is provided.
-            If the pool info is invalid.
         """
 
         while True:
             try:
-                if event:
-                    self.update_from_event(event=event)
-                elif address:
-                    self.update_from_contract(
-                        address, contract, block_number=block_number
-                    )
-                elif pool_info:
+                if pool_info:
                     self.update_from_pool_info(
                         pool_info=pool_info, current_block=block_number
                     )
-                else:
-                    self.cfg.logger.debug(
-                        f"No event or pool info provided {event} {address} {contract}"
-                    )
-                    break
                 break
             except Exception as e:
                 if "Too Many Requests for url" in str(e):
                     time.sleep(random.random())
-                    return self.update(
-                        event,
-                        address,
-                        token_address,
-                        pool_info,
-                        contract,
-                        block_number,
-                    )
                 elif "format_name" not in str(e):
-                    self.cfg.logger.error(f"Error updating pool: {e} {address} {event}")
+                    self.cfg.logger.error(f"Error updating pool: {e}")
                     if "ERC721:" not in str(e):
                         raise e
                     break
                 else:
-                    rate_limiter = 0.1 + 0.9 * random.random()
                     time.sleep(random.random())
 
     def handle_pair_trading_fee_updated(
@@ -368,7 +253,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             addr = self.web3.to_checksum_address(event["address"])
             ex_name = self.exchange_name_from_event(event)
             if not ex_name:
-                self.cfg.logger.warning("[run_async_update_with_retries] ex_name not found from event")
+                self.cfg.logger.warning("[update_remaining_pools] ex_name not found from event")
                 continue
 
             key, key_value = self.get_key_and_value(event, addr, ex_name)

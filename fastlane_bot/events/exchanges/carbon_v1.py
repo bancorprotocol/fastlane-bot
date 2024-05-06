@@ -1,9 +1,15 @@
-# coding=utf-8
 """
-Contains the exchange class for CarbonV1. This class is responsible for handling CarbonV1 events and updating the state of the pools.
+Contains the exchange class for CarbonV1. 
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+This class is responsible for handling CarbonV1 events and updating the state of the pools.
+
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any, Dict, Callable
@@ -83,7 +89,7 @@ class CarbonV1(Exchange):
 
         """
         try:
-            fee = await contract.functions.tradingFeePPM().call()
+            fee = await contract.caller.tradingFeePPM()
         except AttributeError:
             fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
@@ -108,7 +114,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return await contract.functions.token0().call()
+            return await contract.caller.token0()
         else:
             return event["args"]["token0"]
 
@@ -132,7 +138,7 @@ class CarbonV1(Exchange):
 
         """
         if event is None:
-            return await contract.functions.token1().call()
+            return await contract.caller.token1()
         else:
             return event["args"]["token1"]
 

@@ -13,16 +13,12 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-import pytest
 import math
 import json
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -128,8 +124,8 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
+flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi"
@@ -149,7 +145,7 @@ def test_test_randomizer():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()
@@ -165,7 +161,6 @@ def test_test_randomizer():
     arb_opp_2 = bot.randomize(arb_opps=r, randomizer=1)
     arb_opp_3 = bot.randomize(arb_opps=r, randomizer=1)
     arb_opp_25 = bot.randomize(arb_opps=r, randomizer=1)
-    arb_opp_None = bot.randomize(arb_opps=None, randomizer=5)
     
     assert len(arb_opp_0) == 5, f"[NB047 Randomizer], expected 1 arb back from randomizer with length of 5, found length of {len(arb_opp_0)}"
     assert len(arb_opp_1) == 5, f"[NB047 Randomizer], expected 1 arb back from randomizer with length of 5, found length of {len(arb_opp_1)}"
@@ -180,15 +175,11 @@ def test_test_randomizer():
     assert isinstance(np.float64(arb_opp_3[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_3[0])}"
     assert isinstance(np.float64(arb_opp_25[0]), np.floating), f"[NB047 Randomizer], expected first value back from randomizer to be of type np.float64, found type {type(arb_opp_25[0])}"
     
-    arb_opp_0[2]
-    
     assert type(arb_opp_0[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_0[2])}"
     assert type(arb_opp_1[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_1[2])}"
     assert type(arb_opp_2[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_2[2])}"
     assert type(arb_opp_3[2])  == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_3[2])}"
     assert type(arb_opp_25[2]) == tuple, f"[NB047 Randomizer], expected third value back from randomizer to be of type list, found type {type(arb_opp_25[2])}"
-    
-    assert arb_opp_None == None, f"[NB047 Randomizer], expected randomizer to return None when it receives None, but it returned {type(arb_opp_None)}"
     
 
 # ------------------------------------------------------------

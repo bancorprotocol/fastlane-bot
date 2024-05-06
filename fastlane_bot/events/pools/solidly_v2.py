@@ -1,9 +1,12 @@
-# coding=utf-8
 """
-Contains the pool class for Uniswap v2. This class is responsible for handling Uniswap v2 pools and updating the state of the pools.
+[DOC-TODO-short description of what the file does, max 80 chars]
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, List
@@ -13,6 +16,42 @@ from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
 
+def _balances_A(contract: Contract) -> List[int]:
+    return contract.caller.getReserves()
+
+async def _async_balances_A(contract: Contract) -> List[int]:
+    return await contract.caller.getReserves()
+
+def _balances_B(contract: Contract) -> List[int]:
+    return contract.caller.getStates()
+
+async def _async_balances_B(contract: Contract) -> List[int]:
+    return await contract.caller.getStates()
+
+def _is_stable_A(contract: Contract) -> bool:
+    return contract.caller.stable()
+
+async def _async_is_stable_A(contract: Contract) -> bool:
+    return await contract.caller.stable()
+
+def _is_stable_B(contract: Contract) -> bool:
+    return False
+
+async def _async_is_stable_B(contract: Contract) -> bool:
+    return False
+
+EXCHANGE_INFO = {
+    "velocimeter_v2": {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "equalizer_v2"  : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "aerodrome_v2"  : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "velodrome_v2"  : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "scale_v2"      : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "cleopatra_v2"  : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "stratum_v2"    : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "lynex_v2"      : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "nile_v2"       : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
+    "xfai_v0"       : {"balances": _balances_B, "async_balances": _async_balances_B, "is_stable": _is_stable_B, "async_is_stable": _async_is_stable_B},
+}
 
 @dataclass
 class SolidlyV2Pool(Pool):
@@ -86,13 +125,13 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = contract.caller.getReserves()
-
-        self.is_stable = contract.caller.stable()
+        exchange_info = EXCHANGE_INFO[self.exchange_name]
+        balances = exchange_info["balances"](contract)
+        self.is_stable = exchange_info["is_stable"](contract)
         params = {
 
-            "tkn0_balance": reserve_balance[0],
-            "tkn1_balance": reserve_balance[1],
+            "tkn0_balance": balances[0],
+            "tkn1_balance": balances[1],
             "exchange_name": self.exchange_name,
             "router": self.router_address,
             "pool_type": self.pool_type,
@@ -100,6 +139,7 @@ class SolidlyV2Pool(Pool):
         for key, value in params.items():
             self.state[key] = value
         return params
+
     async def async_update_from_contract(
         self,
         contract: Contract,
@@ -111,13 +151,13 @@ class SolidlyV2Pool(Pool):
         """
         See base class.
         """
-        reserve_balance = await contract.caller.getReserves()
-
-        self.is_stable = await contract.caller.stable()
+        exchange_info = EXCHANGE_INFO[self.exchange_name]
+        balances = await exchange_info["async_balances"](contract)
+        self.is_stable = await exchange_info["async_is_stable"](contract)
         params = {
 
-            "tkn0_balance": reserve_balance[0],
-            "tkn1_balance": reserve_balance[1],
+            "tkn0_balance": balances[0],
+            "tkn1_balance": balances[1],
             "exchange_name": self.exchange_name,
             "router": self.router_address,
             "pool_type": self.pool_type,

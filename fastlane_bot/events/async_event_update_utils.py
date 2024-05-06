@@ -1,7 +1,17 @@
+"""
+[DOC-TODO-short description of what the file does, max 80 chars]
+
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
+"""
 import asyncio
 import os
 import time
-from dataclasses import dataclass
+
 from glob import glob
 from typing import Any, List, Dict, Tuple, Type, Callable
 
@@ -21,7 +31,7 @@ from fastlane_bot.events.pools.utils import get_pool_cid
 nest_asyncio.apply()
 
 
-async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
+async def _get_missing_tkn(mgr: Any, contract: AsyncContract, tkn: str) -> pd.DataFrame:
     """
     This function uses the contract object to get the token info for a given token.
 
@@ -52,7 +62,7 @@ async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
             ]
         )
     except Exception as e:
-        cfg.logger.error(f"Failed to get token info for {tkn} {e}")
+        mgr.cfg.logger.error(f"Failed to get token info for {tkn} {e}")
         df = pd.DataFrame(
             [
                 {
@@ -65,7 +75,7 @@ async def get_missing_tkn(contract: AsyncContract, tkn: str) -> pd.DataFrame:
     return df
 
 
-async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
+async def _get_missing_tkns(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
     """
     This function uses the contract object to get the token info for a given token.
 
@@ -75,15 +85,11 @@ async def main_get_missing_tkn(c: List[Dict[str, Any]]) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The token info
     """
-    vals = await asyncio.wait_for(
-        asyncio.gather(*[get_missing_tkn(**args) for args in c]), timeout=20 * 60
-    )
+    vals = await asyncio.wait_for(asyncio.gather(*[_get_missing_tkn(mgr, **args) for args in c]), timeout = 20 * 60)
     return pd.concat(vals)
 
 
-async def get_token_and_fee(
-        exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any
-):
+async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any):
     """
     This function uses the exchange object to get the tokens and fee for a given pool.
 
@@ -105,12 +111,12 @@ async def get_token_and_fee(
             anchor = await ex.get_anchor(contract)
             for i in [0, 1]:
                 connector_token = await ex.get_connector_tokens(contract, i)
-                if connector_token != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                if connector_token != mgr.cfg.BNT_ADDRESS:
                     break
 
-            if tkn0 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+            if tkn0 == mgr.cfg.BNT_ADDRESS:
                 tkn1 = connector_token
-            elif tkn1 == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+            elif tkn1 == mgr.cfg.BNT_ADDRESS:
                 tkn0 = connector_token
 
         strategy_id = 0 if not ex.is_carbon_v1_fork else str(event["args"]["id"])
@@ -127,19 +133,15 @@ async def get_token_and_fee(
         cid = get_pool_cid(pool_info, carbon_v1_forks=carbon_v1_forks)
         return exchange_name, address, tkn0, tkn1, fee, cid, strategy_id, anchor
     except Exception as e:
-        cfg.logger.info(
-            f"Failed to get tokens and fee for {address} {exchange_name} {e}"
-        )
+        mgr.cfg.logger.info(f"Failed to get tokens and fee for {address} {exchange_name} {e}")
         return exchange_name, address, None, None, None, None, None, anchor
 
 
-async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
+async def _get_tokens_and_fees(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
     """
-    This function uses the asyncio gather function to call the get_token_and_fee function for a list of pools.
+    This function uses the asyncio gather function to call the _get_token_and_fee function for a list of pools.
     """
-    vals = await asyncio.wait_for(
-        asyncio.gather(*[get_token_and_fee(**args) for args in c]), timeout=20 * 60
-    )
+    vals = await asyncio.wait_for(asyncio.gather(*[_get_token_and_fee(mgr, **args) for args in c]), timeout = 20 * 60)
     return pd.DataFrame(
         vals,
         columns=[
@@ -155,19 +157,9 @@ async def main_get_tokens_and_fee(c: List[Dict[str, Any]]) -> pd.DataFrame:
     )
 
 
-def pair_name(
-        t0_symbol: str,
-        tkn0_address: str,
-        t1_symbol: str,
-        tkn1_address: str,
-        key_digits: int = 4,
-) -> str:
-    return f"{t0_symbol}-{tkn0_address[-key_digits:]}/{t1_symbol}-{tkn1_address[-key_digits:]}"
-
-
-def get_pool_info(
-        pool: pd.Series,
+def _get_pool_info(
         mgr: Any,
+        pool: pd.Series,
         current_block: int,
         tkn0: Dict[str, Any],
         tkn1: Dict[str, Any],
@@ -207,65 +199,9 @@ def get_pool_info(
     return pool_info
 
 
-def sanitize_token_symbol(token_symbol: str, token_address: str, read_only: bool) -> str:
-    """
-    This function ensures token symbols are compatible with the bot's data structures.
-    If a symbol is not compatible with Dataframes or CSVs, this function will return the token's address.
-
-    :param token_symbol: the token's symbol
-    :param token_address: the token's address
-    :param read_only: bool indicating whether the bot is running in read_only mode
-
-    returns: str
-    """
-    sanitization_path = os.path.normpath("fastlane_bot/data/data_sanitization_center/sanitary_data.csv")
-    try:
-        if not read_only:
-            token_pd = pd.DataFrame([{"symbol": token_symbol}], columns=["symbol"])
-            token_pd.to_csv(sanitization_path)
-        return token_symbol
-    except Exception:
-        return token_address
-
-
-def add_token_info(
-        pool_info: Dict[str, Any], tkn0: Dict[str, Any], tkn1: Dict[str, Any], read_only: bool
-) -> Dict[str, Any]:
-    print(f"called add_token_info")
-    tkn0_symbol = tkn0["symbol"].replace("/", "_").replace("-", "_")
-    tkn1_symbol = tkn1["symbol"].replace("/", "_").replace("-", "_")
-    tkn0_symbol = sanitize_token_symbol(token_symbol=tkn0_symbol, token_address=tkn0["address"], read_only=read_only)
-    tkn1_symbol = sanitize_token_symbol(token_symbol=tkn1_symbol, token_address=tkn1["address"], read_only=read_only)
-    tkn0["symbol"] = tkn0_symbol
-    tkn1["symbol"] = tkn1_symbol
-
-    pool_info["tkn0_symbol"] = tkn0_symbol
-    pool_info["tkn0_decimals"] = tkn0["decimals"]
-    pool_info["tkn1_symbol"] = tkn1_symbol
-    pool_info["tkn1_decimals"] = tkn1["decimals"]
-    pool_info["pair_name"] = tkn0["address"] + "/" + tkn1["address"]
-
-    if len(pool_info["pair_name"].split("/")) != 2:
-        raise Exception(f"pair_name is not valid for {pool_info}")
-    return pool_info
-
-
-def add_missing_keys(
-        pool_info: Dict[str, Any], pool_data_keys: frozenset, keys: List[str]
-) -> Dict[str, Any]:
-    for key in pool_data_keys:
-        if key in pool_info:
-            if key in keys and (pool_info[key] is None or str(pool_info[key]) == "nan"):
-                pool_info[key] = 0
-        else:
-            pool_info[key] = 0 if key in keys else None
-    return pool_info
-
-
-def get_new_pool_data(
-        current_block: int,
-        keys: List[str],
+def _get_new_pool_data(
         mgr: Any,
+        current_block: int,
         tokens_and_fee_df: pd.DataFrame,
         tokens_df: pd.DataFrame,
 ) -> List[Dict]:
@@ -290,12 +226,12 @@ def get_new_pool_data(
             continue
         tkn0["address"] = pool["tkn0_address"]
         tkn1["address"] = pool["tkn1_address"]
-        pool_info = get_pool_info(pool, mgr, current_block, tkn0, tkn1, pool_data_keys)
+        pool_info = _get_pool_info(mgr, pool, current_block, tkn0, tkn1, pool_data_keys)
         new_pool_data.append(pool_info)
     return new_pool_data
 
 
-def get_token_contracts(
+def _get_token_contracts(
         mgr: Any, tokens_and_fee_df: pd.DataFrame
 ) -> Tuple[
     List[Dict[str, Type[AsyncContract] or AsyncContract or Any] or None or Any],
@@ -323,34 +259,34 @@ def get_token_contracts(
         if tkn is not None and str(tkn) != "nan"
     )
     mgr.cfg.logger.debug(
-        f"[async_event_update_utils.get_token_contracts] successful token contracts: {len(contracts) - len(failed_contracts)} of {len(contracts)} "
+        f"[async_event_update_utils._get_token_contracts] successful token contracts: {len(contracts) - len(failed_contracts)} of {len(contracts)} "
     )
     return contracts, tokens_df
 
 
-def process_contract_chunks(
+def _process_contract_chunks(
+        mgr: Any,
         base_filename: str,
         chunks: List[Any],
         dirname: str,
         filename: str,
         subset: List[str],
         func: Callable,
-        df_combined: pd.DataFrame = None,
-        read_only: bool = False,
+        df_combined: pd.DataFrame = None
 ) -> pd.DataFrame:
     lst = []
     # write chunks to csv
     for idx, chunk in enumerate(chunks):
         loop = asyncio.get_event_loop()
-        df = loop.run_until_complete(func(chunk))
-        if not read_only:
+        df = loop.run_until_complete(func(mgr, chunk))
+        if not mgr.read_only:
             df.to_csv(f"{dirname}/{base_filename}{idx}.csv", index=False)
         else:
             lst.append(df)
 
     filepaths = glob(f"{dirname}/*.csv")
 
-    if not read_only:
+    if not mgr.read_only:
         # concatenate and deduplicate
 
         if filepaths:
@@ -366,7 +302,7 @@ def process_contract_chunks(
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
+                    mgr.cfg.logger.error(f"Failed to remove {filepath} {e}??? This is spooky...")
     else:
         if lst:
             dfs = pd.concat(lst)
@@ -379,7 +315,7 @@ def process_contract_chunks(
     return df_combined
 
 
-def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
+def _get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
     for add, en, event, key, value in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
@@ -398,19 +334,9 @@ def get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     return contracts
 
 
-def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path):
-    global cfg
-    cfg = mgr.cfg
-    carbon_v1_forks = cfg.CARBON_V1_FORKS
+def async_update_pools_from_contracts(mgr: Any, current_block: int):
     dirname = "temp"
-    keys = [
-        "liquidity",
-        "tkn0_balance",
-        "tkn1_balance",
-        "y_0",
-        "y_1",
-        "liquidity",
-    ]
+
     if not mgr.read_only:
         if not os.path.exists(dirname):
             os.mkdir(dirname)
@@ -426,30 +352,28 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     ]
 
     # split contracts into chunks of 1000
-    contracts = get_pool_contracts(mgr)
+    contracts = _get_pool_contracts(mgr)
     chunks = get_contract_chunks(contracts)
-    tokens_and_fee_df = process_contract_chunks(
+    tokens_and_fee_df = _process_contract_chunks(
+        mgr=mgr,
         base_filename="tokens_and_fee_df_",
         chunks=chunks,
         dirname=dirname,
         filename="tokens_and_fee_df.csv",
         subset=["exchange_name", "address", "cid", "strategy_id", "tkn0_address", "tkn1_address"],
-        func=main_get_tokens_and_fee,
-        read_only=mgr.read_only,
+        func=_get_tokens_and_fees
     )
 
-    contracts, tokens_df = get_token_contracts(mgr, tokens_and_fee_df)
-    tokens_df = process_contract_chunks(
+    contracts, tokens_df = _get_token_contracts(mgr, tokens_and_fee_df)
+    tokens_df = _process_contract_chunks(
+        mgr=mgr,
         base_filename="missing_tokens_df_",
         chunks=get_contract_chunks(contracts),
         dirname=dirname,
         filename="missing_tokens_df.csv",
         subset=["address"],
-        func=main_get_missing_tkn,
-        df_combined=pd.read_csv(
-            f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv"
-        ),
-        read_only=mgr.read_only,
+        func=_get_missing_tkns,
+        df_combined=pd.read_csv(f"fastlane_bot/data/blockchain_data/{mgr.blockchain}/tokens.csv")
     )
     tokens_df["symbol"] = (
         tokens_df["symbol"]
@@ -466,8 +390,8 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int, logging_path
     )
     tokens_df = tokens_df.drop_duplicates(subset=["address"])
 
-    new_pool_data = get_new_pool_data(
-        current_block, keys, mgr, tokens_and_fee_df, tokens_df
+    new_pool_data = _get_new_pool_data(
+        mgr, current_block, tokens_and_fee_df, tokens_df
     )
 
     new_pool_data_df = pd.DataFrame(new_pool_data).sort_values(

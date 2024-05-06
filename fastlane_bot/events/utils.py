@@ -1,9 +1,12 @@
-# coding=utf-8
 """
 Contains the utils functions for events
 
-(c) Copyright Bprotocol foundation 2023.
-Licensed under MIT
+[DOC-TODO-OPTIONAL-longer description in rst format]
+
+---
+(c) Copyright Bprotocol foundation 2023-24.
+All rights reserved.
+Licensed under MIT.
 """
 import base64
 import json
@@ -25,7 +28,6 @@ from web3.datastructures import AttributeDict
 
 from fastlane_bot import Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.config.multiprovider import MultiProviderContractWrapper
 from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
@@ -575,8 +577,8 @@ def get_config(
 
     Parameters
     ----------
-    default_min_profit_bnt : int or Decimal
-        The default minimum profit in BNT.
+    default_min_profit_gas_token : int or Decimal
+        The default minimum profit in the gas token.
     limit_bancor3_flashloan_tokens : bool
         Whether to limit the flashloan tokens to Bancor v3 pools.
     loglevel : str
@@ -912,9 +914,7 @@ def init_bot(mgr: Any) -> CarbonBot:
     )
     bot = CarbonBot(ConfigObj=mgr.cfg)
     bot.db = db
-    # bot.TxSubmitHandler.ConfigObj = mgr.cfg
-    # bot.TxSubmitHandler.ConfigObj.w3 = mgr.cfg.w3
-    # bot.TxSubmitHandler.ConfigObj.w3 = mgr.cfg.w3
+
     assert isinstance(
         bot.db, QueryInterface
     ), "QueryInterface not initialized correctly"
@@ -925,7 +925,6 @@ def update_pools_from_contracts(
     mgr: Any,
     n_jobs: int,
     rows_to_update: List[int] or List[Hashable],
-    token_address: bool = False,
     current_block: int = None,
 ) -> None:
     """
@@ -939,10 +938,6 @@ def update_pools_from_contracts(
         The number of jobs to run in parallel.
     rows_to_update : List[int]
         A list of rows to update.
-    multicall_contract : MultiProviderContractWrapper or web3.contract.Contract
-        The multicall contract.
-    token_address : bool, optional
-        Whether to update the token address, by default False
     current_block : int, optional
         The current block number, by default None
 
@@ -951,7 +946,6 @@ def update_pools_from_contracts(
         delayed(mgr.update)(
             pool_info=mgr.pool_data[idx],
             block_number=current_block,
-            token_address=token_address,
         )
         for idx in rows_to_update
     )
@@ -990,7 +984,6 @@ def handle_subsequent_iterations(
     arb_mode: str,
     bot: CarbonBot,
     flashloan_tokens: List[str],
-    polling_interval: int,
     randomizer: int,
     run_data_validator: bool,
     target_tokens: List[str] = None,
@@ -1012,8 +1005,6 @@ def handle_subsequent_iterations(
         The bot object.
     flashloan_tokens : List[str]
         A list of flashloan tokens.
-    polling_interval : int
-        The polling interval.
     randomizer : int
         The randomizer.
     run_data_validator : bool
@@ -1053,18 +1044,17 @@ def handle_subsequent_iterations(
                 f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
             )
             mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+            bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+            bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
 
         # Run the bot
         bot.run(
-            polling_interval=polling_interval,
             flashloan_tokens=flashloan_tokens,
-            mode="single",
             arb_mode=arb_mode,
             run_data_validator=run_data_validator,
             randomizer=randomizer,
             logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
-            tenderly_fork=tenderly_uri.split("/")[-1] if tenderly_uri else None,
             replay_from_block=forked_from_block,
         )
 
@@ -1371,26 +1361,6 @@ def get_start_block(
             return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
 
 
-def get_tenderly_block_number(tenderly_fork_id: str) -> int:
-    """
-    Gets the Tenderly block number.
-
-    Parameters
-    ----------
-    tenderly_fork_id : str
-        The Tenderly fork ID.
-
-    Returns
-    -------
-    int
-        The Tenderly block number.
-
-    """
-    provider = Web3.HTTPProvider(f"https://rpc.tenderly.co/fork/{tenderly_fork_id}")
-    web3 = Web3(provider)
-    return web3.eth.block_number
-
-
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
     """
     Setup a Tenderly fork from a specific block number.
@@ -1462,7 +1432,7 @@ def set_network_connection_to_tenderly(
     tenderly_uri: str,
     forked_from_block: int = None,
     tenderly_fork_id: str = None,
-) -> Any:
+) -> int:
     """
     Set the network connection to Tenderly.
 
@@ -1481,15 +1451,14 @@ def set_network_connection_to_tenderly(
 
     Returns
     -------
-    Any (Manager object, Any is used to avoid circular import)
-        The manager object.
+    int The block number the Tenderly fork was created from.
 
     """
     assert (
         not use_cached_events
     ), "Cannot replay from block and use cached events at the same time"
     if not tenderly_uri and not tenderly_fork_id:
-        return mgr, forked_from_block
+        return forked_from_block
     elif tenderly_fork_id:
         tenderly_uri = f"https://rpc.tenderly.co/fork/{tenderly_fork_id}"
         forked_from_block = None
@@ -1513,12 +1482,12 @@ def set_network_connection_to_tenderly(
         f"[events.utils.set_network_connection_to_tenderly] Successfully connected to Tenderly fork at {tenderly_uri}, forked from block: {forked_from_block}"
     )
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_TENDERLY
-    return mgr, forked_from_block
+    return forked_from_block
 
 
 def set_network_connection_to_mainnet(
     mgr: Any, use_cached_events: bool, mainnet_uri: str
-) -> Any:
+):
     """
     Set the network connection to Mainnet.
 
@@ -1527,11 +1496,6 @@ def set_network_connection_to_mainnet(
     mgr
     use_cached_events
     mainnet_uri
-
-    Returns
-    -------
-    Any (Manager object, Any is used to avoid circular import)
-        The manager object.
 
     """
 
@@ -1548,7 +1512,6 @@ def set_network_connection_to_mainnet(
         "[events.utils.set_network_connection_to_mainnet] Successfully connected to Mainnet"
     )
     mgr.cfg.NETWORK = mgr.cfg.NETWORK_MAINNET
-    return mgr
 
 
 def handle_limit_pairs_for_replay_mode(
@@ -1597,7 +1560,7 @@ def set_network_to_tenderly_if_replay(
     use_cached_events: bool,
     forked_from_block: int = None,
     tenderly_fork_id: str = None,
-) -> Tuple[Any, str or None, int or None]:
+) -> Tuple[str or None, int or None]:
     """
     Set the network connection to Tenderly if replaying from a block
 
@@ -1622,21 +1585,19 @@ def set_network_to_tenderly_if_replay(
 
     Returns
     -------
-    mgr : Any
-        The manager object
     tenderly_uri : str or None
         The Tenderly URI
     forked_from_block : int or None
         The block number the Tenderly fork was created from.
     """
     if not replay_from_block and not tenderly_fork_id:
-        return mgr, None, None
+        return None, None
 
     elif last_block == 0 and tenderly_fork_id:
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_tenderly_if_replay] Setting network connection to Tenderly idx: {loop_idx}"
         )
-        mgr, forked_from_block = set_network_connection_to_tenderly(
+        forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             tenderly_uri=tenderly_uri,
@@ -1644,21 +1605,21 @@ def set_network_to_tenderly_if_replay(
             tenderly_fork_id=tenderly_fork_id,
         )
         tenderly_uri = mgr.cfg.w3.provider.endpoint_uri
-        return mgr, tenderly_uri, forked_from_block
+        return tenderly_uri, forked_from_block
 
     elif replay_from_block and loop_idx > 0 and mgr.cfg.NETWORK != "tenderly":
         # Tx must always be submitted from Tenderly when in replay mode
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_tenderly_if_replay] Setting network connection to Tenderly idx: {loop_idx}"
         )
-        mgr, forked_from_block = set_network_connection_to_tenderly(
+        forked_from_block = set_network_connection_to_tenderly(
             mgr=mgr,
             use_cached_events=use_cached_events,
             tenderly_uri=tenderly_uri,
             forked_from_block=forked_from_block,
         )
         mgr.cfg.w3.provider.endpoint_uri = tenderly_uri
-        return mgr, tenderly_uri, forked_from_block
+        return tenderly_uri, forked_from_block
 
     else:
         tenderly_uri, forked_from_block = setup_replay_from_block(
@@ -1694,11 +1655,6 @@ def set_network_to_mainnet_if_replay(
     use_cached_events : bool
         Whether to use cached events
 
-    Returns
-    -------
-    mgr : Any
-        The manager object
-
     """
     if (
         (replay_from_block or mgr.tenderly_fork_id)
@@ -1708,12 +1664,11 @@ def set_network_to_mainnet_if_replay(
         mgr.cfg.logger.info(
             f"[events.utils.set_network_to_mainnet_if_replay] Setting network connection to Mainnet idx: {loop_idx}"
         )
-        mgr = set_network_connection_to_mainnet(
+        set_network_connection_to_mainnet(
             mgr=mgr,
             use_cached_events=use_cached_events,
             mainnet_uri=mainnet_uri,
         )
-    return mgr
 
 
 def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):
@@ -1836,32 +1791,6 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     return target_token_addresses
 
 
-def handle_replay_from_block(replay_from_block: int) -> (int, int, bool):
-    """
-    Handle the replay from block flag.
-
-    Parameters
-    ----------
-    replay_from_block : int
-        The block number to replay from.
-
-    Returns
-    -------
-    polling_interval : int
-        The time interval at which the bot polls for new events.
-
-    """
-    if replay_from_block:
-        assert (
-            replay_from_block > 0
-        ), "The block number to replay from must be greater than 0."
-    reorg_delay = 0
-    use_cached_events = False
-    polling_interval = 0
-    return polling_interval, reorg_delay, use_cached_events
-
-
-# %%
 def get_current_block(
     last_block: int,
     mgr: Any,
@@ -2000,93 +1929,13 @@ def handle_tokens_csv(mgr, prefix_path, read_only: bool = False):
     )
 
 
-def self_funding_warning_sequence(cfg):
-    """
-    This function initiates a warning sequence if the user has specified to use their own funds.
-
-    :param cfg: the config object
-
-    """
-    cfg.logger.info(
-        f"\n\n*********************************************************************************\n*********************************   WARNING   *********************************\n\n"
-    )
-    cfg.logger.info(
-        f"Arbitrage bot is set to use its own funds instead of using Flashloans.\n\n*****   This could put your funds at risk.    ******\nIf you did not mean to use this mode, cancel the bot now.\n\nOtherwise, the bot will submit token approvals IRRESPECTIVE OF CURRENT GAS PRICE for each token specified in Flashloan tokens.\n\n*********************************************************************************"
-    )
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 15 seconds")
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 10 seconds")
-    time.sleep(5)
-    cfg.logger.info(f"Submitting approvals in 5 seconds")
-    time.sleep(5)
-    cfg.logger.info(
-        f"*********************************************************************************\n\nSelf-funding mode activated."
-    )
-    cfg.logger.info(
-        f"""\n\n
-          _____
-         |A .  | _____
-         | /.\ ||A ^  | _____
-         |(_._)|| / \ ||A _  | _____
-         |  |  || \ / || ( ) ||A_ _ |
-         |____V||  .  ||(_'_)||( v )|
-                |____V||  |  || \ / |
-                       |____V||  .  |
-                              |____V|
-    \n\n"""
-    )
-
-
-def find_unapproved_tokens(tokens: List, cfg, tx_helpers) -> List:
-    """
-    This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
-    If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
-    :param tokens: the list of tokens to check/approve
-    :param cfg: the config object
-    :param tx_helpers: the TxHelpers instantiated class
-
-    returns: List of tokens that have not been approved
-
-    """
-    unapproved_tokens = []
-    for tkn in tokens:
-        if not tx_helpers.check_if_token_approved(token_address=tkn):
-            unapproved_tokens.append(tkn)
-    return unapproved_tokens
-
-
-def check_and_approve_tokens(tokens: List, cfg) -> bool:
+def check_and_approve_tokens(cfg: Config, tokens: List):
     """
     This function checks if tokens have been previously approved from the wallet address to the Arbitrage contract.
     If they are not already approved, it will submit approvals for each token specified in Flashloan tokens.
 
-    :param tokens: the list of tokens to check/approve
     :param cfg: the config object
+    :param tokens: the list of tokens to check/approve
 
     """
-
-    tokens = [tkn for tkn in tokens if tkn != cfg.NATIVE_GAS_TOKEN_ADDRESS]
-
-    self_funding_warning_sequence(cfg=cfg)
-    tx_helpers = TxHelpers(ConfigObj=cfg)
-    unapproved_tokens = find_unapproved_tokens(
-        tokens=tokens, cfg=cfg, tx_helpers=tx_helpers
-    )
-
-    if len(unapproved_tokens) == 0:
-        return True
-
-    for _tkn in unapproved_tokens:
-        tx = tx_helpers.approve_token_for_arb_contract(token_address=_tkn)
-        if tx is not None:
-            continue
-        else:
-            assert (
-                False
-            ), f"Failed to approve token: {_tkn}. This can be fixed by approving manually, or restarting the bot to try again."
-
-    unapproved_tokens = find_unapproved_tokens(
-        tokens=unapproved_tokens, cfg=cfg, tx_helpers=tx_helpers
-    )
-    return len(unapproved_tokens) == 0
+    TxHelpers(cfg=cfg).check_and_approve_tokens(tokens=tokens)

@@ -13,16 +13,12 @@ This module contains the tests for the exchanges classes
 """
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.helpers.poolandtokens import PoolAndTokens
-from fastlane_bot.helpers import TradeInstruction, TxReceiptHandler, TxRouteHandler, TxSubmitHandler, TxHelpers, TxHelper
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-import pytest
 import math
 import json
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
@@ -128,8 +124,8 @@ bot.db.remove_zero_liquidity_pools()
 bot.db.remove_unsupported_exchanges()
 tokens = bot.db.get_tokens()
 ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens if not math.isnan(t.decimals)}
-flashloan_tokens = bot.setup_flashloan_tokens(None)
-CCm = bot.setup_CCm(None)
+flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
+CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
 arb_mode = "multi_pairwise_all"
@@ -168,14 +164,14 @@ def test_test_combos_and_tokens():
     
     # +
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder2 = arb_finder(
+    finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_TOKENS,
+                result=arb_finder.AO_TOKENS,
                 ConfigObj=bot.ConfigObj,
             )
-    all_tokens, combos = finder2.find_arbitrage()
+    all_tokens, combos = finder.find_arbitrage()
     
     assert type(all_tokens) == set, f"[NBTest64 TestMultiPairwiseAll Mode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
     assert type(combos) == list, f"[NBTest64 TestMultiPairwiseAll Mode] combos is wrong data type. Expected list, found: {type(combos)}"
@@ -198,7 +194,7 @@ def test_test_expected_output():
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 mode="bothin",
-                result=bot.AO_CANDIDATES,
+                result=arb_finder.AO_CANDIDATES,
                 ConfigObj=bot.ConfigObj,
             )
     r = finder.find_arbitrage()

@@ -28,8 +28,8 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jupytext pytest pytest-mock
-          pip install -r requirements.txt --force-reinstall
+          pip install poetry
+          poetry install
       - name: Run Tests
         run: |
           echo TENDERLY_FORK=$TENDERLY_FORK > .env
@@ -40,7 +40,7 @@ jobs:
           echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
           echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
           echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
-          cd resources/NBTest;ln -s ../../fastlane_bot fastlane_bot;cd ..;cd ..;./run_tests
+          cd resources/NBTest;ln -s ../../fastlane_bot fastlane_bot;cd ..;cd ..; poetry run ./run_tests
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'
