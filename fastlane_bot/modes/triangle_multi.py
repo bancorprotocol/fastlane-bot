@@ -44,7 +44,7 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
                 O = MargPOptimizer(CC_cc)
                 #try:
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True
+                r = O.optimize(src_token, pstart=pstart, params=dict()) #debug=True, debug2=True
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 if len(trade_instructions_dic) < 3:
                     # Failed to converge

@@ -65,7 +65,7 @@ class FindArbitrageSinglePairwise(ArbitrageFinderPairwiseBase):
                 src_token = tkn1
                 try:
                     pstart = {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}
-                    r = O.optimize(src_token, params=dict(pstart=pstart))
+                    r = O.optimize(src_token)
                     profit_src = -r.result
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)

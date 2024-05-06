@@ -280,7 +280,7 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         O = MargPOptimizer(CC_cc)
         pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
         # Perform the optimization
-        r = O.optimize(src_token, params=dict(pstart=pstart))
+        r = O.optimize(src_token, pstart=pstart, params=dict())
 
         # Get the profit in the source token
         profit_src = -r.result
