@@ -128,6 +128,24 @@ typing-extensions = "*"
 web3 = "*"
 
 [[package]]
+name = "arb-optimizer"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.dependencies]
+matplotlib = "^3.7.1"
+networkx = "^3.0"
+pandas = "^1.5.2"
+
+[package.source]
+type = "directory"
+url = "arb-optimizer"
+
+[[package]]
 name = "async-timeout"
 version = "4.0.3"
 description = "Timeout context manager for asyncio programs"
@@ -3243,4 +3261,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "149e85dd34f992c56480d1882a25ed437269561fb0a0cb2f7d567d4eb7248c5f"
+content-hash = "922dbcef49580ec7d58b61a226f86171283b9063c80b9238fbc30e00cc652ca0"

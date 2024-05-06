@@ -12,8 +12,9 @@ from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
 
+from arb_optimizer import CurveContainer, PairOptimizer
+
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools import CurveContainer, PairOptimizer
 
 
 class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):

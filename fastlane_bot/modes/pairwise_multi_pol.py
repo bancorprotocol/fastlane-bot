@@ -8,13 +8,15 @@ Defines the Multi-pairwise arbitrage finder class for Bancor POL
 All rights reserved.
 Licensed under MIT.
 """
+import itertools
 from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
-import itertools
+
+from arb_optimizer import CurveContainer, PairOptimizer
+from arb_optimizer.curves import T
+
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools import CurveContainer, PairOptimizer
-from fastlane_bot.tools.curves import T
 
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
