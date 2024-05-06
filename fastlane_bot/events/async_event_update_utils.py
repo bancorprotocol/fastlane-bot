@@ -212,8 +212,6 @@ def _get_new_pool_data(
     all_keys = set()
     for pool in mgr.pool_data:
         all_keys.update(pool.keys())
-    if "last_updated_block" not in all_keys:
-        all_keys.update(["last_updated_block"])
     pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
@@ -394,6 +392,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
         mgr, current_block, tokens_and_fee_df, tokens_df
     )
 
+    if len(new_pool_data) == 0:
+        mgr.cfg.logger.info("No pools found in contracts")
+        return
+
     new_pool_data_df = pd.DataFrame(new_pool_data).sort_values(
         "last_updated_block", ascending=False
     )
@@ -409,6 +411,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
             "tkn1_decimals",
         ]
     )
+
+    if new_pool_data_df.empty:
+        mgr.cfg.logger.info("No valid pools found in contracts")
+        return
 
     new_pool_data_df["descr"] = (
             new_pool_data_df["exchange_name"]
