@@ -368,8 +368,8 @@ class PoolAndTokens:
 
         # create a typed-dictionary of the arguments
         typed_args = {
-            "x_tknb": tkn0_balance,
-            "y_tknq": tkn1_balance,
+            "liq_tknb": tkn0_balance,
+            "liq_tknq": tkn1_balance,
             "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
             "fee": self.fee,
             "cid": self.cid,
