@@ -224,6 +224,7 @@ class MargPOptimizer(CPCArbOptimizer):
         if not pstart is None:
             assert P("pstart") is None, "pstart must not be in params dict if pstart is provided as argument"
         else:
+            assert P("pstart") is None, "pstart must now be provided as argument pstart=..., not as parameter"
             pstart = P("pstart")
             if not P("pstart") is None:
                 print(f"[margp_optimizer] WARNING - providing `pstart` as parameter is deprecated; use `pstart` variable instead")
