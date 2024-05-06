@@ -244,23 +244,3 @@ class Manager(PoolManager, EventManager, ContractsManager):
                         pool["fee_float"] = pool["fee"] / 1e6
                         pool["descr"] = self.pool_descr_from_info(pool)
                         self.pool_data[idx] = pool
-
-
-    def update_remaining_pools(self):
-        remaining_pools = []
-        all_events = [pool[2] for pool in self.pools_to_add_from_contracts]
-        for event in all_events:
-            addr = self.web3.to_checksum_address(event["address"])
-            ex_name = self.exchange_name_from_event(event)
-            if not ex_name:
-                self.cfg.logger.warning("[update_remaining_pools] ex_name not found from event")
-                continue
-
-            key, key_value = self.get_key_and_value(event, addr, ex_name)
-            pool_info = self.get_pool_info(key, key_value, ex_name)
-
-            if not pool_info:
-                remaining_pools.append((addr, ex_name, event, key, key_value))
-
-        random.shuffle(remaining_pools)
-        self.pools_to_add_from_contracts = remaining_pools
