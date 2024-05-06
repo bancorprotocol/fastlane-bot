@@ -103,6 +103,9 @@ def test_organize_pool_details_balancer_strategy_id():
         "swapFee": "0.003"
     }
 
+    web3 = MagicMock()
+    web3.to_checksum_address.side_effect = lambda x: x  # Mock checksum address to return the same value
+
     # Call the function
     pool_info = organize_pool_details_balancer(pool_data)
 
