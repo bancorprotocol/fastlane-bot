@@ -55,7 +55,7 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
-from arb_optimizer import ConstantProductCurve as CPC
+from arb_optimizer import CurveContainer, ConstantProductCurve as CPC
 
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
