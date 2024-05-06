@@ -13,8 +13,7 @@ from typing import List, Any, Tuple, Union, Hashable
 import pandas as pd
 import itertools
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools.curves import CurveContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
+from fastlane_bot.tools import CurveContainer, PairOptimizer
 from fastlane_bot.tools.curves import T
 
 

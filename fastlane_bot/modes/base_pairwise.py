@@ -13,7 +13,7 @@ import itertools
 from typing import List, Tuple, Any, Union
 
 from fastlane_bot.modes.base import ArbitrageFinderBase
-from fastlane_bot.tools.curves import CurveContainer
+from fastlane_bot.tools import CurveContainer
 
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
