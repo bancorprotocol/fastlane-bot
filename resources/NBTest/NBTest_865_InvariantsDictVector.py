@@ -26,7 +26,7 @@ except:
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(dv.DictVector))
 # -
 
-# # Dict Vectors (Invariants Module; NBTest065)
+# # Dict Vectors (Invariants Module; NBTest865, ex 065)
 
 # ## Basic dict vector functions
 

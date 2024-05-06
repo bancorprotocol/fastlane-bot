@@ -36,7 +36,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 # require("2.0", __VERSION__)
 # -
 
-# # Serialization [NBTest003]
+# # Serialization [NBTest803, ex003]
 
 # ## Optimizer pickling [NOTEST]
 

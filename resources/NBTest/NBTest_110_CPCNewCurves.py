@@ -38,7 +38,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 # require("3.0", __VERSION__)
 # -
 
-# # CPC-Only incl new curves [NBTest069]
+# # CPC-Only incl new curves [NBTest110, ex069]
 #
 # Note: the core CPC tests are in NBTest 002
 
