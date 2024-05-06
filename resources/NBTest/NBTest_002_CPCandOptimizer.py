@@ -543,9 +543,9 @@ assert len(df) == len(prices)-1
 assert df.columns[0] == tknq
 assert df.index.name == "tknb"
 assert rd == {k:v/prices[tknq] for k,v in prices.items() if k!=tknq}
-df2 = O.margp_optimizer(tknq, result=O.MO_PSTART, params=dict(pstart=df))
+df2 = O.margp_optimizer(tknq, pstart=df, result=O.MO_PSTART)
 assert np.all(df == df2)
-df2 = O.margp_optimizer(tknq, result=O.MO_PSTART, params=dict(pstart=rd))
+df2 = O.margp_optimizer(tknq, pstart=rd, result=O.MO_PSTART)
 assert np.all(df == df2)
 df
 

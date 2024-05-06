@@ -278,7 +278,7 @@ v
 O = MargPOptimizer(curves=CCas2)
 assert len(O.curves) == len(CCas2)
 
-r = O.optimize("WETH", params={"pstart": {"WETH": 2400, "DAI": 1}})
+r = O.optimize("WETH", pstart={"WETH": 2400, "DAI": 1})
 assert r.error is None
 assert r.method == "margp"
 assert r.targettkn == "WETH"
