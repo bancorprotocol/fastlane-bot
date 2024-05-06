@@ -102,15 +102,9 @@ def test_organize_pool_details_balancer_strategy_id():
         ],
         "swapFee": "0.003"
     }
-    token_prices = {
-        "0x456": {"usd": "1"},
-        "0x789": {"usd": "2"}
-    }
-    web3 = MagicMock()
-    web3.to_checksum_address.side_effect = lambda x: x  # Mock checksum address to return the same value
 
     # Call the function
-    pool_info = organize_pool_details_balancer(pool_data, token_prices, web3)
+    pool_info = organize_pool_details_balancer(pool_data)
 
     # Check the 'strategy_id' in the output
     assert "strategy_id" in pool_info
