@@ -43,7 +43,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 # require("3.0", __VERSION__)
 # -
 
-# # CPC and Optimizer in Fastlane [NBTest002]
+# # CPC and Optimizer in Fastlane [NBTest802, ex002]
 #
 # Note: more optimizer tests in NBTest 055
 
