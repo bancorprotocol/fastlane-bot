@@ -36,7 +36,7 @@ plt.rcParams['figure.figsize'] = [12,6]
 # require("2.0", __VERSION__)
 # -
 
-# # Graph Code [NBTest065]
+# # Graph Code [NBTest804, ex004]
 
 # ## ArbGraphs test and demo
 
