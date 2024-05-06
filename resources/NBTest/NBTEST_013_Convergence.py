@@ -46,7 +46,7 @@ plt.style.use('seaborn-v0_8-dark')
 plt.rcParams['figure.figsize'] = [12,6]
 # -
 
-# # Optimizer Testing Convergence Changes [NBTest 100]
+# # Optimizer Testing Convergence Changes [NBTest013, ex 100]
 
 # ## THOR related Tests
 #
