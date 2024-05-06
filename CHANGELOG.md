@@ -2,10 +2,39 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.8...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.9...HEAD)
+
+- \_encoded\_data\[0\] index error [\#584](https://github.com/bancorprotocol/fastlane-bot/issues/584)
+- last\_updated\_block error when mgr.pool\_data is empty [\#583](https://github.com/bancorprotocol/fastlane-bot/issues/583)
+- Tests 048, 903 and 906 are broken [\#579](https://github.com/bancorprotocol/fastlane-bot/issues/579)
+- The terraformer script is malfunctioning [\#577](https://github.com/bancorprotocol/fastlane-bot/issues/577)
+- Key `last_updated_block` not found in dictionary [\#564](https://github.com/bancorprotocol/fastlane-bot/issues/564)
+- Erroneous trade instructions possibly not filtered out [\#554](https://github.com/bancorprotocol/fastlane-bot/issues/554)
+- Optimzer test fails randomly [\#472](https://github.com/bancorprotocol/fastlane-bot/issues/472)
+
+- Solidly V2 stable pools not supported [\#566](https://github.com/bancorprotocol/fastlane-bot/issues/566)
+- Fix test 900 [\#562](https://github.com/bancorprotocol/fastlane-bot/issues/562)
+- Get rid of checking arb-contract version [\#555](https://github.com/bancorprotocol/fastlane-bot/issues/555)
+- Move all one-time initialization outside of the main loop [\#549](https://github.com/bancorprotocol/fastlane-bot/issues/549)
+
+Closed issues
+
+- Main Loop Function / Exception Handling [\#489](https://github.com/bancorprotocol/fastlane-bot/issues/489)
+
+## [v3.1.9](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.9) (2024-04-15)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.8...v3.1.9)
 
 - WEB3\_ALCHEMY\_BASE, WEB3\_FANTOM and WEB3\_MANTLE are missing in the test-suite configuration [\#520](https://github.com/bancorprotocol/fastlane-bot/issues/520)
 - Wrong fee resolution used for Solidly forks [\#403](https://github.com/bancorprotocol/fastlane-bot/issues/403)
+- Restore exchanges to multichain addresses [\#548](https://github.com/bancorprotocol/fastlane-bot/pull/548) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+- Update static data mapping files [\#530](https://github.com/bancorprotocol/fastlane-bot/pull/530) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Merged pull requests
+
+- Release candidate - Linea support and static data [\#547](https://github.com/bancorprotocol/fastlane-bot/pull/547) ([zavelevsky](https://github.com/zavelevsky))
+- Add linea support - hotfix [\#535](https://github.com/bancorprotocol/fastlane-bot/pull/535) ([zavelevsky](https://github.com/zavelevsky))
 
 ## [v3.1.8](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.8) (2024-04-13)
 
