@@ -11,8 +11,7 @@ Licensed under MIT.
 from typing import Union, List, Tuple, Any
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.curves import CurveContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer
+from fastlane_bot.tools import CurveContainer, MargPOptimizer
 
 
 class ArbitrageFinderTriangleSingle(ArbitrageFinderTriangleBase):

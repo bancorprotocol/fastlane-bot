@@ -12,8 +12,8 @@ import math
 from typing import Union, List, Tuple, Any, Iterable
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.curves import CurveContainer, T, ConstantProductCurve
-from fastlane_bot.tools.optimizer import MargPOptimizer
+from fastlane_bot.tools.curves import T
+from fastlane_bot.tools import CurveContainer, MargPOptimizer, ConstantProductCurve
 
 
 class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):

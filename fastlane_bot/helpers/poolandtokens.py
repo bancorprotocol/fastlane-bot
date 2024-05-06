@@ -19,7 +19,7 @@ from fastlane_bot.config import Config
 
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
-from fastlane_bot.tools.curves import ConstantProductCurve
+from fastlane_bot.tools import ConstantProductCurve
 from fastlane_bot.utils import EncodedOrder
 
 
