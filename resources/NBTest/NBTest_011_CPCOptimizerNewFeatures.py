@@ -41,7 +41,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(PairOptimizer))
 # require("3.0", __VERSION__)
 # -
 
-# # CPC and Optimizer New Features [NBTest101]
+# # CPC and Optimizer New Features [NBTest011, ex 101]
 
 Curves = [
     ConstantProductCurve(k=27518385.40998667, x=1272.2926367501436, x_act=0, y_act=2000.9999995236503, alpha=0.5, pair='LINK/USDP', cid='0x425d5d4ad7243f88d9f4cde8da52863b45af1f64e05bede1299909bcaa6c52d1-0', fee=2000, descr='carbon_v1 0x514910771AF9Ca656af840dff83E8264EcF986CA\\/0x8E870D67F660D95d5be530380D0eC0bd388289E1 2000', constr='carb', params={'exchange': 'carbon_v1', 'y': 2000.9999995236503, 'yint': 2000.9999995236503, 'A': 0.38144823884371704, 'B': 3.7416573867739373, 'pa': 16.99999999999995, 'pb': 13.99999999999997}),
