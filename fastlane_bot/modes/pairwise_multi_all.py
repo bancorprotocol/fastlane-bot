@@ -13,7 +13,7 @@ from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
 
-from arb_optimizer import PairOptimizer
+from arb_optimizer import CurveContainer, PairOptimizer
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 
