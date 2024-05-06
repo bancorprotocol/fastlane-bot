@@ -55,6 +55,8 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,
@@ -66,7 +68,6 @@ from fastlane_bot.helpers import (
     split_carbon_trades,
     maximize_last_trade_per_tkn
 )
-from fastlane_bot.tools import ConstantProductCurve as CPC, CurveContainer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise

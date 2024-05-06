@@ -12,8 +12,9 @@ import abc
 import itertools
 from typing import List, Tuple, Any, Union
 
+from arb_optimizer import CurveContainer
+
 from fastlane_bot.modes.base import ArbitrageFinderBase
-from fastlane_bot.tools import CurveContainer
 
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):

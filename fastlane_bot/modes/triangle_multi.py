@@ -10,8 +10,9 @@ Licensed under MIT.
 """
 from typing import List, Any, Tuple, Union
 
+from arb_optimizer import CurveContainer, MargPOptimizer
+
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools import CurveContainer, MargPOptimizer
 
 
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):

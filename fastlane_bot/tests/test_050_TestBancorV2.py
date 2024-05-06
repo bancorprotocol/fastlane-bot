@@ -11,6 +11,9 @@
 """
 This module contains the tests for the exchanges classes
 """
+from arb_optimizer import ConstantProductCurve as CPC
+from arb_optimizer.curves import T
+
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.helpers import TxRouteHandler
@@ -19,8 +22,6 @@ from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-from fastlane_bot.tools import ConstantProductCurve as CPC
-from fastlane_bot.tools.curves import T
 from dataclasses import asdict
 import math
 import json
