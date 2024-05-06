@@ -426,8 +426,7 @@ def generate_token_price_map(pool_data: Dict, web3: Web3) -> Dict:
     token_prices = {}
 
     for pool in pool_data:
-        tokens = pool["tokens"]
-        for tkn in tokens:
+        for tkn in pool["tokens"]:
             address = web3.to_checksum_address(tkn["address"])
             if address in skip_token_list:
                 continue
