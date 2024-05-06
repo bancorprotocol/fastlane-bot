@@ -166,7 +166,7 @@ class FindArbitrageMultiPairwise(ArbitrageFinderPairwiseBase):
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
         }  # this intentionally selects the non_carbon curve
-        r = O.optimize(src_token, params=dict(pstart=pstart))
+        r = O.optimize(src_token, params=dict())
         profit_src = -r.result
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df
