@@ -255,13 +255,12 @@ dataframe_key = [
 skip_token_list = set(["0xaD67F7a72BA2ca971390B2a1dD907303bD577a4F"])
 
 
-def get_all_token_details(web3: Web3, network: str, write_path: str) -> dict:
+def get_all_token_details(network: str, write_path: str) -> dict:
     """
     This function collects the number of decimals and symbol of a token, and formats it for use in a dataframe.
-    :param web3: the Web3 reference
     :param network: the network name
 
-    :returns: Dict
+    :returns: the token lookup table
     """
 
     token_path = os.path.join(write_path, "tokens.csv")
@@ -283,9 +282,9 @@ def get_all_token_details(web3: Web3, network: str, write_path: str) -> dict:
                                                        "decimals": 18, "symbol": "ETH"}
     } if network in ["ethereum", "coinbase_base", "arbitrum_one", "optimism"] else {}
     for token in response:
-        address = web3.to_checksum_address(token.get("address"))
-        symbol = token.get("symbol")
-        decimals = token.get("decimals")
+        address = Web3.to_checksum_address(token["address"])
+        symbol = token["symbol"]
+        decimals = token["decimals"]
         try:
             # try to write to csv
             pd.DataFrame(
@@ -350,7 +349,7 @@ def get_token_details(
 
     Returns: a Tuple containing the token symbol & decimals, or None, None if the contract call failed.
     """
-    tkn = web3.to_checksum_address(tkn)
+    tkn = Web3.to_checksum_address(tkn)
     if tkn in token_manager:
         symbol = token_manager[tkn]["symbol"]
         decimal = token_manager[tkn]["decimals"]
@@ -378,68 +377,9 @@ def fix_missing_symbols(symbol: str, addr: str) -> str:
         return symbol
 
 
-def get_token_prices_coingecko(token_list: Dict) -> Dict:
-    """
-    :param token_list: the list of tokens for which to fetch prices
-
-    Returns token prices using Coingecko API
-    """
-
-    max_size = 100
-    tkn_addresses = list(token_list.keys())
-    tkn_sublists = [
-        tkn_addresses[x: x + max_size] for x in range(0, len(tkn_addresses), max_size)
-    ]
-
-    for tkn_sublist in tkn_sublists:
-        tokens = ",".join(tkn_sublist)
-        url = f"https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses={tokens}&vs_currencies=USD&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false"
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            if data is not None:
-                prices = []
-                for tkn in data.keys():
-                    try:
-                        prices.append((tkn, data[tkn]["usd"]))
-                    except KeyError:
-                        prices.append((tkn, 0))
-                        continue
-
-                for tkn in prices:
-                    for tkn_addrs in token_list.keys():
-                        if tkn[0].lower() == tkn_addrs.lower():
-                            token_list[tkn_addrs]["usd"] = float(tkn[1])
-    return token_list
-
-
-def generate_token_price_map(pool_data: Dict, web3: Web3) -> Dict:
-    """
-    This function retrieves token prices from Coingecko
-    :param pool_data: list of pools
-    :param web3: the Web3 object
-
-    returns: a dict containing token prices
-
-    """
-    token_prices = {}
-
-    for pool in pool_data:
-        for tkn in pool["tokens"]:
-            address = web3.to_checksum_address(tkn["address"])
-            if address in skip_token_list:
-                continue
-            symbol = fix_missing_symbols(addr=address, symbol=tkn["symbol"])
-            token_prices[address] = {"tokenSymbol": symbol, "usd": None}
-
-    token_prices = get_token_prices_coingecko(token_list=token_prices)
-    return token_prices
-
-
 def organize_pool_details_uni_v3(
-        pool_data: Dict, token_manager: dict, exchange: str, web3: Web3
-) -> Dict:
+        pool_data: dict, token_manager: dict, exchange: str, web3: Web3
+) -> dict:
     """
     This function organizes pool details for Uni V3 pools.
     :param pool_data: the pool data from the pool creation event
@@ -450,7 +390,7 @@ def organize_pool_details_uni_v3(
     returns: dict of pool information
     """
     pool_address = pool_data["args"]["pool"]
-    pool_address = web3.to_checksum_address(pool_address)
+    pool_address = Web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
     tick_spacing = pool_data["args"]["tickSpacing"]
     tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
@@ -478,7 +418,7 @@ def organize_pool_details_uni_v3(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get("uniswap_v3"),
+        "exchange_id": EXCHANGE_IDS["uniswap_v3"],
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -509,7 +449,7 @@ def process_token_details(
     token_info = {}
     addresses = []
     for idx, tkn in enumerate(tokens):
-        address = web3.to_checksum_address(tkn)
+        address = Web3.to_checksum_address(tkn)
 
         if address in skip_token_list:
             return None, None, True
@@ -529,15 +469,10 @@ def process_token_details(
     return token_info, "/".join(addresses), False
 
 
-def organize_pool_details_balancer(
-        pool_data: Dict, token_prices: Dict, web3: Web3, min_usd: int = 100000
-):
+def organize_pool_details_balancer(pool_data: dict) -> dict:
     """
     This function organizes pool details for Uni V3 pools.
     :param pool_data: the pool data from the pool creation event
-    :param token_prices: the token prices
-    :param web3: the Web3 object
-    :param min_usd: the minimum pool balance in USD to include the pool
 
     returns: dict of pool information
     """
@@ -548,15 +483,9 @@ def organize_pool_details_balancer(
     addresses = []
 
     for idx, tkn in enumerate(pool_data["tokens"]):
-        address = web3.to_checksum_address(tkn["address"])
+        address = Web3.to_checksum_address(tkn["address"])
         if address in skip_token_list:
             return None
-
-        # Currently unused - this gets the pool balance, but is only usable accurately on Mainnet
-        # balance = float(tkn["balance"])
-        # tkn_price = 0 if token_prices[address]["usd"] is None else float(token_prices[address]["usd"])
-        # tkn_val_usd = balance * tkn_price
-        # pool_total_liquidity_usd += tkn_val_usd
 
         token_info[f"tkn{idx}_address"] = address
         token_info[f"tkn{idx}_symbol"] = fix_missing_symbols(addr=address, symbol=tkn["symbol"])
@@ -579,7 +508,7 @@ def organize_pool_details_balancer(
         "exchange_name": "balancer",
         "fee": float(fee) * 10 ** 18,
         "fee_float": float(fee),
-        "address": web3.to_checksum_address(pool_data["address"]),
+        "address": Web3.to_checksum_address(pool_data["address"]),
         "anchor": pool_data["id"],
         "tkn0_address": token_info["tkn0_address"],
         "tkn1_address": token_info["tkn1_address"],
@@ -616,7 +545,7 @@ def organize_pool_details_uni_v2(
     returns: dict of pool information
     """
     pool_address = pool_data["args"]["pair"]
-    pool_address = web3.to_checksum_address(pool_address)
+    pool_address = Web3.to_checksum_address(pool_address)
     last_updated_block = pool_data["blockNumber"]
     if default_fee == "TBD":
         return None
@@ -644,7 +573,7 @@ def organize_pool_details_uni_v2(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get("uniswap_v2"),
+        "exchange_id": EXCHANGE_IDS["uniswap_v2"],
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -667,7 +596,7 @@ def organize_pool_details_solidly_v2(
     :param exchange: the exchange name
     :param factory_contract: the exchange's Factory contract - initialized
     :param web3: the Web3 object
-    :param web3: the async Web3 object
+    :param async_web3: the Async Web3 object
     returns: dict of pool information
     """
     if "pool" in pool_data or "pool" in pool_data["args"]:
@@ -676,7 +605,7 @@ def organize_pool_details_solidly_v2(
         pool_address = pool_data["args"]["pair"]
     else:
         print(f"COULD NOT FIND KEY IN EVENT for exchange {exchange}: {pool_data}")
-    pool_address = web3.to_checksum_address(pool_address)
+    pool_address = Web3.to_checksum_address(pool_address)
 
     last_updated_block = pool_data["blockNumber"]
 
@@ -712,7 +641,7 @@ def organize_pool_details_solidly_v2(
         "tkn1_address": token_info["tkn1_address"],
         "tkn0_decimals": token_info["tkn0_decimals"],
         "tkn1_decimals": token_info["tkn1_decimals"],
-        "exchange_id": EXCHANGE_IDS.get(exchange),
+        "exchange_id": EXCHANGE_IDS[exchange],
         "tkn0_symbol": token_info["tkn0_symbol"],
         "tkn1_symbol": token_info["tkn1_symbol"],
         "timestamp": 0,
@@ -918,28 +847,18 @@ pools(
 """
 
 
-def get_balancer_pools(subgraph_url: str, web3: Web3) -> pd.DataFrame:
+def get_balancer_pools(subgraph_url: str) -> pd.DataFrame:
     """
     This function gets Balancer pool details from the Balancer subgraph
 
     :param subgraph_url: the URL of the Balancer subgraph
-    :param web3: the Web3 object
     """
     response = requests.post(subgraph_url, json={"query": balancer_subgraph_query})
     assert response.status_code == 200, f"Balancer subgraph query failed with {response}"
-    pool_data = response.json()["data"]["pools"]
+    pool_data_list = response.json()["data"]["pools"]
 
-    token_prices = generate_token_price_map(pool_data=pool_data, web3=web3)
-    pools = []
-    for pool in pool_data:
-        pools.append(
-            organize_pool_details_balancer(
-                pool_data=pool, token_prices=token_prices, web3=web3
-            )
-        )
-    pools = [pool for pool in pools if pool is not None]
-    df = pd.DataFrame(pools, columns=dataframe_key)
-    return df
+    pools = [organize_pool_details_balancer(pool_data) for pool_data in pool_data_list]
+    return pd.DataFrame([pool for pool in pools if pool is not None], columns=dataframe_key)
 
 
 def add_to_exchange_ids(exchange: str, fork: str):
@@ -1008,7 +927,7 @@ def terraform_blockchain(network_name: str):
     path_exists = os.path.exists(write_path)
     data_path = os.path.normpath(write_path + "/static_pool_data.csv")
     data_exists = os.path.exists(data_path)
-    token_manager = get_all_token_details(web3, network=network_name, write_path=write_path)
+    token_manager = get_all_token_details(network=network_name, write_path=write_path)
 
     if not path_exists:
         os.makedirs(write_path)
@@ -1124,7 +1043,7 @@ def terraform_blockchain(network_name: str):
         elif "balancer" in fork:
             try:
                 subgraph_url = BALANCER_SUBGRAPH_CHAIN_URL[network_name]
-                u_df = get_balancer_pools(subgraph_url=subgraph_url, web3=web3)
+                u_df = get_balancer_pools(subgraph_url=subgraph_url)
             except Exception as e:
                 print(f"Fetching balancer pools for chain {network_name} failed:\n{e}")
                 continue
