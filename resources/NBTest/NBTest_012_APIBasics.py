@@ -42,7 +42,7 @@ print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MargPOptimizer))
 # require("3.0", __VERSION__)
 # -
 
-# # API Basics [NBTest102]
+# # API Basics [NBTest012, ex 102]
 #
 # This notebook describes API features of the Optimizer library. Everything contained in this notebook's tests here should be considered stable, and breaking changes will only ever happen a major version number increases
 
