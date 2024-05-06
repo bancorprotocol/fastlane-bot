@@ -182,29 +182,12 @@ class EncodedOrder:
 
     @property
     def p_marg(self):
+        A = self.decodeFloat(int(self.A))
+        B = self.decodeFloat(int(self.B))
         if self.y == self.z:
-            # try:
-            new_method = self.decodeRate(self.decodeFloat(int(self.B)) + self.decodeFloat(int(self.A)))
-            # except:
-            #     print(self.B, self.A)
-            #     print(type(self.B), type(self.A))
-            #     print(self.decodeFloat(int(self.B)) + self.decodeFloat(int(self.A)))
-            # print(new_method, self.p_start)
-            assert new_method == self.p_start, f"{new_method}, {self.p_start} **************************************"
-            return self.p_start
-        elif self.y == 0:
-            return self.p_end
-        # return 0
+            return self.decodeRate(B + A)
         else:
-            return self.decodeRate(self.decodeFloat(int(self.B)) + (self.decodeFloat(int(self.A)) * self.y/self.z))
-
-        # raise NotImplementedError("p_marg not implemented for non-full / empty orders")
-        # A = self.decodeFloat(self.A)
-        # B = self.decodeFloat(self.B)
-        # return self.decode(B + A * self.y / self.z) ** 2
-        # # https://github.com/bancorprotocol/carbon-simulator/blob/beta/benchmark/core/trade/impl.py
-        # # 'marginalRate' : decodeRate(B + A if y == z else B + A * y / z),
-
+            return self.decodeRate(B + A * self.y/self.z)
 
 def find_latest_timestamped_folder(logging_path=None):
     """
