@@ -1716,6 +1716,27 @@ def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens:
     return target_token_addresses
 
 
+def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
+    """
+    Verifies that the bot respects the min profit. Used for testing.
+
+    Parameters
+    ----------
+    bot : CarbonBot
+        The bot object.
+    mgr : Any
+        The manager object.
+
+    """
+    # Verify MIN_PROFIT_BNT is set and respected
+    assert (
+        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
+        == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
+    ), "bot failed to update min profit"
+    mgr.cfg.logger.debug(
+        "[events.utils.verify_min_bnt_is_respected] Bot successfully updated min profit"
+    )
+
 def get_current_block(
     last_block: int,
     mgr: Any,
