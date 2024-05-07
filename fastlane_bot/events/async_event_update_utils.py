@@ -442,22 +442,26 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
 
-    all_pools_df = (
-        pd.DataFrame(mgr.pool_data)
-        .sort_values("last_updated_block", ascending=False)
-        .drop_duplicates(subset=["cid"])
-        .set_index("cid")
-    )
+    if len(mgr.pool_data) > 0:
+        all_pools_df = (
+            pd.DataFrame(mgr.pool_data)
+            .sort_values("last_updated_block", ascending=False)
+            .drop_duplicates(subset=["cid"])
+            .set_index("cid")
+        )
 
-    new_pool_data_df = new_pool_data_df[all_pools_df.columns]
+        new_pool_data_df = new_pool_data_df[all_pools_df.columns]
 
-    # add new_pool_data to pool_data, ensuring no duplicates
-    all_pools_df.update(new_pool_data_df, overwrite=True)
+        # add new_pool_data to pool_data, ensuring no duplicates
+        all_pools_df.update(new_pool_data_df, overwrite=True)
 
-    new_pool_data_df = new_pool_data_df[
-        ~new_pool_data_df.index.isin(all_pools_df.index)
-    ]
-    all_pools_df = pd.concat([all_pools_df, new_pool_data_df])
+        new_pool_data_df = new_pool_data_df[
+            ~new_pool_data_df.index.isin(all_pools_df.index)
+        ]
+        all_pools_df = pd.concat([all_pools_df, new_pool_data_df])
+    else:
+        all_pools_df = new_pool_data_df
+
     all_pools_df[["tkn0_decimals", "tkn1_decimals"]] = (
         all_pools_df[["tkn0_decimals", "tkn1_decimals"]].fillna(0).astype(int)
     )
