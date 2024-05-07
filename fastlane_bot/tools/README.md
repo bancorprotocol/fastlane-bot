@@ -1,1 +1,0 @@
-The difference between the `tools` and the `helpers` module is that the modules in `tools` can be imported from within the Carbon library, whilst those in helpers can not. Neither of the modules is part of the official Carbon API and may change at any time.

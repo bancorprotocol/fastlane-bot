@@ -11,11 +11,11 @@
 """
 This module contains the tests for the exchanges classes
 """
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.helpers import TxRouteHandler
-from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
@@ -255,7 +255,7 @@ def test_test_get_optimal_arb_trade_amts():
     assert first_check_pools[2].cid == pool_cids[2], f"[test_bancor_v3_two_hop] Validation, wrong third pool, expected CID: 0xb1d8cd62f75016872495dae3e19d96e364767e7d674488392029d15cdbcd7b34, got CID: {first_check_pools[2].cid}"
     assert(len(first_check_pools) == 3), f"[test_bancor_v3_two_hop] Validation expected 3 pools, got {len(first_check_pools)}"
     for pool in first_check_pools:
-        assert type(pool) == ConstantProductCurve, f"[test_bancor_v3_two_hop] Validation pool type mismatch, got {type(pool)} expected ConstantProductCurve"
+        assert type(pool) == CPC, f"[test_bancor_v3_two_hop] Validation pool type mismatch, got {type(pool)} expected ConstantProductCurve"
         assert pool.cid in pool_cids, f"[test_bancor_v3_two_hop] Validation missing pool.cid {pool.cid} in {pool_cids}"
     
     optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, 'DAI-1d0F')

@@ -13,9 +13,6 @@ from typing import Any, Tuple, Dict, List, Union
 from _decimal import Decimal
 import pandas as pd
 
-from fastlane_bot.tools.cpc import T
-from fastlane_bot.utils import num_format
-
 
 class ArbitrageFinderBase:
     """

@@ -15,7 +15,9 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -40,7 +42,7 @@ jobs:
           echo ETHERSCAN_TOKEN=$ETHERSCAN_TOKEN >> .env
           echo DEFAULT_MIN_PROFIT_BNT=$DEFAULT_MIN_PROFIT_BNT >> .env
           echo ETH_PRIVATE_KEY_BE_CAREFUL=$ETH_PRIVATE_KEY_BE_CAREFUL >> .env
-          cd resources/NBTest;ln -s ../../fastlane_bot fastlane_bot;cd ..;cd ..; poetry run ./run_tests
+          make test
         env:
           TENDERLY_FORK: '${{ secrets.TENDERLY_FORK }}'
           WEB3_ALCHEMY_PROJECT_ID: '${{ secrets.WEB3_ALCHEMY_PROJECT_ID }}'

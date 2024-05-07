@@ -1,1 +1,0 @@
-Searching for main.py in /Users/mikewcasale/Documents/GitHub/bancorprotocol/fastlane-bot/resources/NBTest

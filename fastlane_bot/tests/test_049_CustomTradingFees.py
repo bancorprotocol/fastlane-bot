@@ -13,12 +13,13 @@ from unittest.mock import Mock, patch, call
 import pytest
 from unittest.mock import MagicMock
 
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot, Config
 from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 import asyncio
 from unittest.mock import AsyncMock
 import nest_asyncio

@@ -15,11 +15,12 @@ from _decimal import Decimal
 from dataclasses import dataclass
 from typing import Dict, Any, List, Union
 
+from arb_optimizer import ConstantProductCurve
+
 from fastlane_bot.config import Config
 
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
-from fastlane_bot.tools.cpc import ConstantProductCurve
 from fastlane_bot.utils import EncodedOrder
 
 
@@ -385,8 +386,8 @@ class PoolAndTokens:
 
         # create a typed-dictionary of the arguments
         typed_args = {
-            "x_tknb": tkn0_balance,
-            "y_tknq": tkn1_balance,
+            "liq_tknb": tkn0_balance,
+            "liq_tknq": tkn1_balance,
             "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
             "fee": self.fee,
             "cid": self.cid,
