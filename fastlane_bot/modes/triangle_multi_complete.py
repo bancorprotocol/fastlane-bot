@@ -35,19 +35,13 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
         )
 
         for src_token, miniverse in combos:
-            # print(miniverse)
-            self.ConfigObj.logger.debug(f"{[x.cid for x in miniverse]}")
             try:
                 r = None
                 CC_cc = CPCContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
-                #try:
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                # print(pstart)
                 r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True, verbose=True
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                # trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                # print(trade_instructions_df)
                 if len(trade_instructions_dic) < 3:
                     # Failed to converge
                     continue
@@ -100,14 +94,12 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
         pstart = {}
         for tkn0 in tkn0list:
             try:
-                price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
+                pstart[tkn0] = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
             except:
                 try:
-                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
+                    pstart[tkn0] = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
                 except Exception as e:
-                    print(str(e))
-                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
-            pstart[tkn0]=price
+                    self.ConfigObj.logger.info(f"[pstart build] {tkn0} not supported. w {tkn1} {e}")
         pstart[tkn1] = 1
         return pstart
 
