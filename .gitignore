@@ -73,3 +73,5 @@ logs/*
 missing_tokens_df.csv
 tokens_and_fee_df.csv
 fastlane_bot/tests/nbtest/*
+
+.python-version

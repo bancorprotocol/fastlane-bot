@@ -27,6 +27,7 @@ from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
 from fastlane_bot.events.pools.utils import get_pool_cid
+from .interfaces.event import Event
 
 nest_asyncio.apply()
 
@@ -89,7 +90,7 @@ async def _get_missing_tkns(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.concat(vals)
 
 
-async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any):
+async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Event):
     """
     This function uses the exchange object to get the tokens and fee for a given pool.
 
@@ -97,7 +98,7 @@ async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str
         ex(Any): The exchange object
         address(str): The pool address
         contract(AsyncContract): The contract object
-        event(Any): The event object
+        event(Event): The event object
 
     Returns:
         The tokens and fee info for the pool
@@ -119,7 +120,7 @@ async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str
             elif tkn1 == mgr.cfg.BNT_ADDRESS:
                 tkn0 = connector_token
 
-        strategy_id = 0 if not ex.is_carbon_v1_fork else str(event["args"]["id"])
+        strategy_id = 0 if not ex.is_carbon_v1_fork else str(event.args["id"])
         pool_info = {
             "exchange_name": exchange_name,
             "address": address,
@@ -319,7 +320,7 @@ def _get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
         exchange_name = mgr.exchange_name_from_event(event)
         ex = mgr.exchanges[exchange_name]
         abi = ex.get_abi()
-        address = event["address"]
+        address = event.address
         contracts.append(
             {
                 "exchange_name": exchange_name,

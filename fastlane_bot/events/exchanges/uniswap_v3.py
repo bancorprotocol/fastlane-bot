@@ -18,8 +18,9 @@ from web3.contract import Contract
 
 from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
 from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -44,6 +45,9 @@ class UniswapV3(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap] if self.exchange_initialized else []
+
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [Subscription(contract.events.Swap)]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         fee = await contract.caller.fee()
