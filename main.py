@@ -48,6 +48,7 @@ from fastlane_bot.events.utils import (
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
     handle_target_token_addresses,
+    verify_min_bnt_is_respected,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
