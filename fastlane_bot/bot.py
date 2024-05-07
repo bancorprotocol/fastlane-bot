@@ -55,6 +55,7 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
+import fastlane_bot
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,

@@ -5,6 +5,9 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
+import asyncio
+import logging
+import websockets
 
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
@@ -14,11 +17,13 @@ check_version_requirements(required_version="6.11.0", package_name="web3")
 
 import os, sys
 import time
+from threading import Lock, Thread
 from traceback import format_exc
 
 import pandas as pd
 from dotenv import load_dotenv
-from web3 import Web3, HTTPProvider
+from web3 import AsyncWeb3, Web3, HTTPProvider
+from web3.providers import WebsocketProviderV2
 
 from fastlane_bot import __version__ as bot_version
 from fastlane_bot.events.async_backdate_utils import (
@@ -60,6 +65,12 @@ from run_blockchain_terraformer import terraform_blockchain
 import argparse
 
 load_dotenv()
+
+
+logger = logging.getLogger(__name__)
+
+
+pool_data_lock = Lock()
 
 
 def process_arguments(args):
@@ -297,15 +308,63 @@ def main(args: argparse.Namespace) -> None:
     # Add initial pool data to the manager
     add_initial_pool_data(cfg, mgr, args.n_jobs)
 
+    handle_static_pools_update(mgr)
+
+    # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
+    async_handle_initial_iteration(
+        backdate_pools=args.backdate_pools,
+        last_block=0,
+        mgr=mgr,
+        start_block=mgr.web3.eth.block_number if args.replay_from_block is None else args.replay_from_block,
+    )
+
+    thread = Thread(target=run_event_listener, args=(mgr,), daemon=True)
+    thread.start()
+
     # Run the main loop
     run(mgr, args)
+
+
+def run_event_listener(mgr):
+    async def inner(mgr):
+        from fastlane_bot.events.listener import EventListener
+
+        base_exchanges = ["carbon_v1", "uniswap_v3", "uniswap_v2", "bancor_pol", "bancor_v2", "bancor_v3", "solidly_v2"]
+        while True:
+            try:
+                async with AsyncWeb3.persistent_websocket(WebsocketProviderV2(mgr.cfg.network.WEBSOCKET_URL)) as w3:
+                    event_listener = EventListener(manager=mgr, base_exchanges=base_exchanges, w3=w3)
+                    async for events in event_listener.pull_block_events():
+                        with pool_data_lock:
+                            for event in events:
+                                print(event)
+                                mgr.update_from_event(event)
+
+                        with pool_data_lock:
+                            current_block = mgr.web3.eth.block_number
+
+                            # Update new pool events from contracts
+                            if len(mgr.pools_to_add_from_contracts) > 0:
+                                mgr.cfg.logger.info(
+                                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
+                                    f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
+                                )
+                                _run_async_update_with_retries(mgr, current_block=current_block)
+                                mgr.pools_to_add_from_contracts = []
+            except websockets.exceptions.ConnectionClosedError:
+                logger.info("Websocket connection lost. Reconnecting ...")
+                mgr.cfg.logger.info("Websocket connection lost. Reconnecting ...")
+                print("Websocket connection lost. Reconnecting ...")
+                await asyncio.sleep(1)
+
+    asyncio.run(inner(mgr))
 
 
 def run(mgr, args, tenderly_uri=None) -> None:
     loop_idx = last_block = last_block_queried = total_iteration_time = 0
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
-    handle_static_pools_update(mgr)
+
     while True:
         try:
             # ensure 'last_updated_block' is in pool_data for all pools
@@ -332,9 +391,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
             )
 
             # Log the current start, end and last block
-            mgr.cfg.logger.info(
-                f"Fetching events from {start_block} to {current_block}... {last_block}"
-            )
+            # mgr.cfg.logger.info(
+            #     f"Fetching events from {start_block} to {current_block}... {last_block}"
+            # )
 
             # Set the network connection to Mainnet if replaying from a block
             set_network_to_mainnet_if_replay(
@@ -346,32 +405,22 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 args.use_cached_events,
             )
 
-            # Get the events
-            latest_events = (
-                get_cached_events(mgr, args.logging_path)
-                if args.use_cached_events
-                else get_latest_events(
-                    current_block,
-                    mgr,
-                    args.n_jobs,
-                    start_block,
-                    args.cache_latest_only,
-                    args.logging_path,
-                )
-            )
+            # latest_events = (
+            #     get_cached_events(mgr, args.logging_path)
+            #     if args.use_cached_events
+            #     else get_latest_events(
+            #         current_block,
+            #         mgr,
+            #         args.n_jobs,
+            #         start_block,
+            #         args.cache_latest_only,
+            #         args.logging_path,
+            #     )
+            # )
             iteration_start_time = time.time()
 
             # Update the pools from the latest events
-            update_pools_from_events(args.n_jobs, mgr, latest_events)
-
-            # Update new pool events from contracts
-            if len(mgr.pools_to_add_from_contracts) > 0:
-                mgr.cfg.logger.info(
-                    f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
-                    f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
-                )
-                async_update_pools_from_contracts(mgr, current_block=current_block)
-                mgr.pools_to_add_from_contracts = []
+            #update_pools_from_events(args.n_jobs, mgr, latest_events)
 
             # Increment the loop index
             loop_idx += 1
@@ -387,14 +436,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 tenderly_fork_id=args.tenderly_fork_id,
             )
 
-            # Handle the initial iteration (backdate pools, update pools from contracts, etc.)
-            async_handle_initial_iteration(
-                backdate_pools=args.backdate_pools,
-                current_block=current_block,
-                last_block=last_block,
-                mgr=mgr,
-                start_block=start_block,
-            )
 
             # Run multicall every iteration
             multicall_every_iteration(current_block=current_block, mgr=mgr)
@@ -417,32 +458,39 @@ def run(mgr, args, tenderly_uri=None) -> None:
             # Re-initialize the bot
             bot = init_bot(mgr)
 
-            if args.use_specific_exchange_for_target_tokens is not None:
-                target_tokens = bot.get_tokens_in_exchange(
-                    exchange_name=args.use_specific_exchange_for_target_tokens
-                )
-                mgr.cfg.logger.info(
-                    f"[main] Using only tokens in: {args.use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
-                )
+            with pool_data_lock:
+                # Verify that the state has changed
+                verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
 
-            if not mgr.read_only:
-                handle_tokens_csv(mgr, mgr.prefix_path)
+                # Verify that the minimum profit in BNT is respected
+                # verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
-            # Handle subsequent iterations
-            handle_subsequent_iterations(
-                arb_mode=args.arb_mode,
-                bot=bot,
-                flashloan_tokens=args.flashloan_tokens,
-                randomizer=args.randomizer,
-                run_data_validator=args.run_data_validator,
-                target_tokens=args.target_tokens,
-                loop_idx=loop_idx,
-                logging_path=args.logging_path,
-                replay_from_block=replay_from_block,
-                tenderly_uri=tenderly_uri,
-                mgr=mgr,
-                forked_from_block=forked_from_block,
-            )
+                if args.use_specific_exchange_for_target_tokens is not None:
+                    target_tokens = bot.get_tokens_in_exchange(
+                        exchange_name=args.use_specific_exchange_for_target_tokens
+                    )
+                    mgr.cfg.logger.info(
+                        f"[main] Using only tokens in: {args.use_specific_exchange_for_target_tokens}, found {len(target_tokens)} tokens"
+                    )
+
+                if not mgr.read_only:
+                    handle_tokens_csv(mgr, mgr.prefix_path)
+
+                # Handle subsequent iterations
+                handle_subsequent_iterations(
+                    arb_mode=args.arb_mode,
+                    bot=bot,
+                    flashloan_tokens=args.flashloan_tokens,
+                    randomizer=args.randomizer,
+                    run_data_validator=args.run_data_validator,
+                    target_tokens=args.target_tokens,
+                    loop_idx=loop_idx,
+                    logging_path=args.logging_path,
+                    replay_from_block=replay_from_block,
+                    tenderly_uri=tenderly_uri,
+                    mgr=mgr,
+                    forked_from_block=forked_from_block,
+                )
 
             # Sleep for the polling interval
             if not replay_from_block and args.polling_interval > 0:

@@ -429,6 +429,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     RPC_ENDPOINT = "https://eth-mainnet.alchemyapi.io/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
+    WEBSOCKET_URL = f"wss://eth-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_PROJECT_ID}"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
@@ -622,6 +623,7 @@ class _ConfigNetworkBase(ConfigNetwork):
     RPC_ENDPOINT = "https://base-mainnet.g.alchemy.com/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_BASE")
 
+    WEBSOCKET_URL = f"wss://base-mainnet.g.alchemy.com/v2/{WEB3_ALCHEMY_PROJECT_ID}"
     GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"  # source: https://docs.optimism.io/builders/tools/build/oracles#gas-oracle
     network_df = get_multichain_addresses(network="coinbase_base")
     FASTLANE_CONTRACT_ADDRESS = "0x2AE2404cD44c830d278f51f053a08F54b3756e1c"
@@ -665,6 +667,7 @@ class _ConfigNetworkFantom(ConfigNetwork):
     RPC_ENDPOINT = "https://fantom.blockpi.network/v1/rpc/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_FANTOM")
 
+    WEBSOCKET_URL = f"wss://fantom.blockpi.network/v1/ws/{WEB3_ALCHEMY_PROJECT_ID}"
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xFe19CbA3aB1A189B7FC17cAa798Df64Ad2b54d4D"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
@@ -708,6 +711,7 @@ class _ConfigNetworkMantle(ConfigNetwork):
     RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=mantle&dkey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_MANTLE")
 
+    WEBSOCKET_URL = f"wss://lb.drpc.org/ogws?network=mantle&dkey={WEB3_ALCHEMY_PROJECT_ID}"
     GAS_ORACLE_ADDRESS = "0x420000000000000000000000000000000000000F"
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C"
@@ -792,6 +796,8 @@ class _ConfigNetworkSei(ConfigNetwork):
     RPC_ENDPOINT = "https://evm-rpc.arctic-1.seinetwork.io/" # TODO currently Sei devnet
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
+
+    WEBSOCKET_URL = "wss://evm-ws.arctic-1.seinetwork.io"
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC7Dd38e64822108446872c5C2105308058c5C55C" #TODO - UPDATE WITH Mainnet
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"

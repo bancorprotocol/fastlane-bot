@@ -17,8 +17,9 @@ from typing import List, Type, Tuple, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V2_FACTORY_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -48,6 +49,9 @@ class UniswapV2(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
+
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [Subscription(contract.events.Sync)]
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         return self.fee, self.fee_float
