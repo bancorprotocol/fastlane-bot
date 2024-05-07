@@ -5,12 +5,11 @@
 # test id       = 005
 # test comment  = Uniswap
 # ------------------------------------------------------------
-
-
-
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
-from fastlane_bot.helpers.univ3calc import Univ3Calculator as U3
 from dataclasses import dataclass, asdict
+
+from arb_optimizer import ConstantProductCurve as CPC
+
+from fastlane_bot.helpers.univ3calc import Univ3Calculator as U3
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(U3))

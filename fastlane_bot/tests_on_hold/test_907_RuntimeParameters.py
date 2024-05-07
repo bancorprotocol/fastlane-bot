@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from fastlane_bot.tools.cpc import T
+from arb_optimizer.curves import T
 from main import main  # adjust import according to your script's location and name
 
 @pytest.fixture

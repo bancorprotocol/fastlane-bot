@@ -11,9 +11,10 @@
 """
 This module contains the tests for the exchanges classes
 """
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager

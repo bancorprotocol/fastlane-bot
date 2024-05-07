@@ -55,6 +55,8 @@ from datetime import datetime
 from typing import Generator, List, Dict, Tuple, Any, Callable
 from typing import Optional
 
+from arb_optimizer import CurveContainer, ConstantProductCurve as CPC
+
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
     TxRouteHandler,
@@ -66,7 +68,6 @@ from fastlane_bot.helpers import (
     split_carbon_trades,
     maximize_last_trade_per_tkn
 )
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
 from .modes.pairwise_multi import FindArbitrageMultiPairwise
@@ -128,13 +129,13 @@ class CarbonBot:
         self.db = QueryInterface(ConfigObj=self.ConfigObj)
         self.RUN_FLASHLOAN_TOKENS = [*self.ConfigObj.CHAIN_FLASHLOAN_TOKENS.values()]
 
-    def get_curves(self) -> CPCContainer:
+    def get_curves(self) -> CurveContainer:
         """
         Gets the curves from the database.
 
         Returns
         -------
-        CPCContainer
+        CurveContainer
             The container of curves.
         """
         self.db.refresh_pool_data()
@@ -184,7 +185,7 @@ class CarbonBot:
                     f"[bot.get_curves] MUST FIX UNEXPECTED ERROR converting pool to curve {p}\n[ERR={e}]\n\n"
                 )
 
-        return CPCContainer(curves)
+        return CurveContainer(curves)
 
     def _simple_ordering_by_src_token(
         self, best_trade_instructions_dic, best_src_token
@@ -277,7 +278,7 @@ class CarbonBot:
     def _find_arbitrage(
         self,
         flashloan_tokens: List[str],
-        CCm: CPCContainer,
+        CCm: CurveContainer,
         arb_mode: str,
         randomizer: int
     ) -> dict:
@@ -295,7 +296,7 @@ class CarbonBot:
     def _run(
         self,
         flashloan_tokens: List[str],
-        CCm: CPCContainer,
+        CCm: CurveContainer,
         *,
         arb_mode: str,
         randomizer: int,
@@ -311,7 +312,7 @@ class CarbonBot:
         ----------
         flashloan_tokens: List[str]
             The tokens to flashloan.
-        CCm: CPCContainer
+        CCm: CurveContainer
             The container.
         arb_mode: str
             The arbitrage mode.
@@ -575,7 +576,7 @@ class CarbonBot:
 
     def calculate_profit(
         self,
-        CCm: CPCContainer,
+        CCm: CurveContainer,
         best_profit: Decimal,
         fl_token: str,
         flashloan_fee_amt: int = 0,
@@ -585,7 +586,7 @@ class CarbonBot:
 
         Parameters
         ----------
-        CCm: CPCContainer
+        CCm: CurveContainer
             The container.
         best_profit: Decimal
             The best profit.
@@ -696,7 +697,7 @@ class CarbonBot:
 
     def _handle_trade_instructions(
         self,
-        CCm: CPCContainer,
+        CCm: CurveContainer,
         arb_mode: str,
         r: Any,
         replay_from_block: int = None
@@ -709,7 +710,7 @@ class CarbonBot:
         
         Parameters
         ----------
-        CCm: CPCContainer
+        CCm: CurveContainer
             The container.
         arb_mode: str
             The arbitrage mode.
@@ -893,7 +894,7 @@ class CarbonBot:
         self,
         *,
         flashloan_tokens: List[str] = None,
-        CCm: CPCContainer = None,
+        CCm: CurveContainer = None,
         arb_mode: str = None,
         run_data_validator: bool = False,
         randomizer: int = 0,
@@ -908,7 +909,7 @@ class CarbonBot:
         ----------
         flashloan_tokens: List[str]
             The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
-        CCm: CPCContainer
+        CCm: CurveContainer
             The complete market data container (optional; default: database via get_curves())
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)

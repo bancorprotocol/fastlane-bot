@@ -11,9 +11,10 @@ Licensed under MIT.
 import math
 from typing import Union, List, Tuple, Any, Iterable
 
+from arb_optimizer.curves import T
+from arb_optimizer import CurveContainer, MargPOptimizer, ConstantProductCurve
+
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer, T, ConstantProductCurve
-from fastlane_bot.tools.optimizer import MargPOptimizer
 
 
 class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
@@ -139,7 +140,7 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             fee = fee / 1000000
         return fee
 
-    def get_exact_pools(self, cids: List[str]) -> List[CPCContainer]:
+    def get_exact_pools(self, cids: List[str]) -> List[CurveContainer]:
         """
         Gets the specific pools that will be used for calculations. It does this inefficiently to preserve the order.
 
@@ -276,11 +277,11 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         """
 
         # Instantiate the container and optimizer objects
-        CC_cc = CPCContainer(miniverse)
+        CC_cc = CurveContainer(miniverse)
         O = MargPOptimizer(CC_cc)
         pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
         # Perform the optimization
-        r = O.optimize(src_token, params=dict(pstart=pstart))
+        r = O.optimize(src_token, pstart=pstart, params=dict())
 
         # Get the profit in the source token
         profit_src = -r.result

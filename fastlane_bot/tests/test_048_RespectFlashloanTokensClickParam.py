@@ -11,8 +11,9 @@
 """
 This module contains the tests which ensure that the flashloan tokens click parameters are respected.
 """
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 import subprocess, os, sys
 import pytest

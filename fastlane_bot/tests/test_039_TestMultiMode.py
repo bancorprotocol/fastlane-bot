@@ -11,9 +11,10 @@
 """
 This module contains the tests for the exchanges classes
 """
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot, Config
 from fastlane_bot.bot import CarbonBot
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
@@ -140,6 +141,7 @@ def test_test_tax_tokens():
 # ------------------------------------------------------------
     
     assert any(token.address in cfg.TAX_TOKENS for token in tokens), f"[TestMultiMode], DB does not include any tax tokens"
+    assert len(CCm) == 516, f"[NBTest 039 TestMultiMode] Expected 516 curves, found {len(CCm)}"
     
     for curve in CCm:
         for token in cfg.TAX_TOKENS:
@@ -178,6 +180,7 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     # +
+    assert len(CCm) == 516, f"[NBTest 039 TestMultiMode] Expected 516 curves, found {len(CCm)}"
     arb_finder = bot._get_arb_finder("multi")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
@@ -205,6 +208,7 @@ def test_test_expected_output():
 # ------------------------------------------------------------
     
     # +
+    assert len(CCm) == 516, f"[NBTest 039 TestMultiMode] Expected 516 curves, found {len(CCm)}"
     arb_finder = bot._get_arb_finder("multi")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
