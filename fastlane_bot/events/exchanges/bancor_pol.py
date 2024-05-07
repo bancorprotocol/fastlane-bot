@@ -17,9 +17,11 @@ from typing import List, Type, Tuple, Any, Dict, Callable
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BANCOR_POL_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
 from fastlane_bot import Config
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.event import Event
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -46,14 +48,20 @@ class BancorPol(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenTraded, contract.events.TradingEnabled]
 
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [
+            Subscription(contract.events.TokenTraded),
+            Subscription(contract.events.TradingEnabled),
+        ]
+
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
-        return event["args"]["token"]
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
+        return event.args["token"]
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
-        return self.ETH_ADDRESS if event["args"]["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
+        return self.ETH_ADDRESS if event.args["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
 
     def save_strategy(
         self,

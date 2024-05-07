@@ -14,11 +14,14 @@ Licensed under MIT.
 from dataclasses import dataclass
 from typing import List, Type, Tuple, Any
 
+from web3 import AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.event import Event
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -44,6 +47,9 @@ class BancorV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
 
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return [Subscription(contract.events.TokenRateUpdate)]
+
     # def async convert_address(self, address: str, contract: Contract) -> str:
     #     return
 
@@ -59,15 +65,15 @@ class BancorV2(Exchange):
             fee_float = float(fee) / 1e6
         return fee, fee_float
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         if event:
-            return event["args"]["_token1"]
-        return await contract.caller.reserveTokens()[0]
+            return event.args["_token1"]
+        return await contract.functions.reserveTokens()[0]
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         if event:
-            return event["args"]["_token2"]
-        return await contract.caller.reserveTokens()[1]
+            return event.args["_token2"]
+        return await contract.functions.reserveTokens()[1]
 
     async def get_anchor(self, contract: Contract) -> str:
         return await contract.caller.anchor()
