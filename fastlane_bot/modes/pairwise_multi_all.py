@@ -67,8 +67,8 @@ class FindArbitrageMultiPairwiseAll(ArbitrageFinderPairwiseBase):
                 if len(base_direction_two) > 0:
                     curve_combos += [[curve] + base_direction_two for curve in not_carbon_curves]
 
-            if len(carbon_curves) >= 2:
-                curve_combos += [carbon_curves]
+                if len(carbon_curves) >= 2:
+                    curve_combos += [carbon_curves]
 
             for curve_combo in curve_combos:
                 src_token = tkn1
