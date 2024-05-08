@@ -193,7 +193,7 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
 
         """
 
-        gas_tokens = [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]
+        gas_tokens = [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]
 
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
         bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in gas_tokens])
