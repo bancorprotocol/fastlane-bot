@@ -49,10 +49,10 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
 
         """
         all_tokens = CCm.tokens()
-        # flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
+        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens)
+            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
             # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1
