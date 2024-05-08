@@ -1,5 +1,5 @@
 test:
-	poetry run pytest fastlane_bot/tests -v $1
+	poetry run pytest fastlane_bot/tests/$(subset)
 
 pull:
 	git pull --recurse-submodules
