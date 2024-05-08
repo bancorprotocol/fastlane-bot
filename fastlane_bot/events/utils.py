@@ -34,6 +34,7 @@ from fastlane_bot.events.interface import QueryInterface
 
 from fastlane_bot.helpers import TxHelpers
 from fastlane_bot.utils import safe_int
+from .event_gatherer import EventGatherer
 from .interfaces.event import Event
 
 
@@ -1164,6 +1165,7 @@ def get_latest_events(
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
+    event_gatherer: EventGatherer
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -1201,15 +1203,8 @@ def get_latest_events(
             f"[events.utils.get_latest_events] tenderly_events: {len(tenderly_events)}"
         )
 
-    # Get all event filters, events, and flatten them
-    events = [
-        Event.from_dict(complex_handler(event))
-        for events in get_all_events(
-            n_jobs,
-            get_event_filters(n_jobs, mgr, start_block, current_block),
-        )
-        for event in events
-    ]
+    # Get all events
+    events = event_gatherer.get_all_events(from_block=start_block, to_block=current_block)
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
