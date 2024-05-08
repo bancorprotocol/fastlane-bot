@@ -12,9 +12,8 @@
 This module contains the tests for the exchanges classes
 """
 from arb_optimizer import ConstantProductCurve as CPC
-from arb_optimizer.curves import T
 
-from fastlane_bot import Bot, Config
+from fastlane_bot import Bot, Config, ConfigNetwork
 from fastlane_bot.bot import CarbonBot
 from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
@@ -277,8 +276,8 @@ def test_test_expected_output_bancorv2():
     fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
-    if fl_token == T.WETH:
-        fl_token = T.NATIVE_ETH
+    if fl_token == ConfigNetwork.WETH_ADDRESS:
+        fl_token = ConfigNetwork.ETH_ADDRESS
     
     best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
     

@@ -12,10 +12,6 @@ import abc
 import itertools
 from typing import List, Any, Tuple, Union
 
-import pandas as pd
-
-from arb_optimizer.curves import T
-
 from fastlane_bot.modes.base import ArbitrageFinderBase
 
 
@@ -176,51 +172,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         )
         return combos
 
-    @staticmethod
-    def get_mono_direction_carbon_curves(
-        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
-    ) -> List[Any]:
-        """
-        Get mono direction carbon curves for triangular arbitrage
-
-        Parameters
-        ----------
-        miniverse : list
-            List of miniverses
-        token_in : str
-            Token in
-        trade_instructions_df : DataFrame
-            Trade instructions dataframe
-
-        Returns
-        -------
-        mono_direction_carbon_curves : list
-            List of mono direction carbon curves
-
-        """
-
-        if token_in is None:
-            columns = trade_instructions_df.columns
-            check_nan = trade_instructions_df.copy().fillna(0)
-            first_bancor_v3_pool = check_nan.iloc[0]
-            second_bancor_v3_pool = check_nan.iloc[1]
-
-            for idx, token in enumerate(columns):
-                if token == T.BNT:
-                    continue
-                if first_bancor_v3_pool[token] < 0:
-                    token_in = token
-                    break
-                if second_bancor_v3_pool[token] < 0:
-                    token_in = token
-                    break
-
-        wrong_direction_cids = []
-        for idx, row in trade_instructions_df.iterrows():
-            if (row[token_in] < 0) and ("-0" in idx or "-1" in idx):
-                wrong_direction_cids.append(idx)
-
-        return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
     def build_pstart(self, CCm, tkn0list, tkn1):
         tkn0list = [x for x in tkn0list if x not in [tkn1]]
         pstart = {}

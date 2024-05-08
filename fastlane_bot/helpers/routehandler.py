@@ -24,8 +24,6 @@ from typing import List, Any, Dict, Tuple
 import eth_abi
 import pandas as pd
 
-from arb_optimizer.curves import T
-
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
