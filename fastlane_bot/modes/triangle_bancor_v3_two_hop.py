@@ -331,12 +331,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
                 continue
 
             bancor_v3_curve_0 = (
-                self.CCm.bypairs(f"{self.ConfigObj.BNT}/{tkn0}")
+                self.CCm.bypairs(f"{self.ConfigObj.network.BNT_ADDRESS}/{tkn0}")
                 .byparams(exchange="bancor_v3")
                 .curves
             )
             bancor_v3_curve_1 = (
-                self.CCm.bypairs(f"{self.ConfigObj.BNT}/{tkn1}")
+                self.CCm.bypairs(f"{self.ConfigObj.network.BNT_ADDRESS}/{tkn1}")
                 .byparams(exchange="bancor_v3")
                 .curves
             )
