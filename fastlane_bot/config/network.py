@@ -246,11 +246,6 @@ class ConfigNetwork(ConfigBase):
     CARBON_STRATEGY_UPDATED = f"{CARBON_V1_NAME}_StrategyUpdated"
     CARBON_TOKENS_TRADED = f"{CARBON_V1_NAME}_TokensTraded"
 
-    # POOL IDENTIFIERS SECTION
-    #######################################################################################
-    POOL_TYPE_STABLE = "stable"
-    POOL_TYPE_VOLATILE = "volatile"
-
     # DEFAULT VALUES SECTION
     #######################################################################################
     DEFAULT_GAS_SAFETY_OFFSET = 25_000
