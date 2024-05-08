@@ -175,9 +175,10 @@ class PoolFinder:
             pair = (pool["tkn0_address"], pool["tkn1_address"])
             frozen_pair = frozenset(pair)
 
-            if pool["exchange_name"] in carbon_forks and frozen_pair not in self.carbon_pairs_seen:
-                carbon_pairs.add(pair)
-                self.carbon_pairs_seen.add(frozen_pair)
+            if pool["exchange_name"] in carbon_forks:
+                if frozen_pair not in self.carbon_pairs_seen:
+                    carbon_pairs.add(pair)
+                    self.carbon_pairs_seen.add(frozen_pair)
             else:
                 other_pairs.add(pair)
 
@@ -206,7 +207,7 @@ class PoolFinder:
         return unsupported_triangles
 
     @staticmethod
-    def _find_unsupported_pairs(flashloan_tokens: List[str], carbon_pairs: set, external_pairs: set):
+    def _find_unsupported_pairs(flashloan_tokens: List[str], carbon_pairs: List[Tuple], external_pairs: set):
         """
         Determines which carbon pairs are unsupported based on the lack of token support and non-existence in external pairs.
 

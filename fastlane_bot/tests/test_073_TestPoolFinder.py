@@ -4,7 +4,7 @@ from fastlane_bot.pool_finder import PoolFinder
 def test_find_unsupported_pairs():
     flashloan_tokens = ['TokenA', 'TokenB']
     carbon_pairs = [('TokenA', 'TokenC'), ('TokenC', 'TokenD'), ('TokenB', 'TokenE')]
-    external_pairs = [('TokenA', 'TokenB'), ('TokenC', 'TokenE')]
+    external_pairs = {frozenset(('TokenA', 'TokenB')), frozenset(('TokenC', 'TokenE'))}
     # Expected result
     # ('TokenA', 'TokenC') is supported by flashloan_tokens but not in external_pairs
     # ('TokenC', 'TokenD') is unsupported by flashloan_tokens and not in external_pairs
@@ -20,7 +20,7 @@ def test_find_unsupported_pairs():
 def test_find_unsupported_triangles():
     flashloan_tokens = ['TokenA', 'TokenB']
     carbon_pairs = [('TokenA', 'TokenC'), ('TokenC', 'TokenD'), ('TokenB', 'TokenE')]
-    external_pairs = {('TokenA', 'TokenC'), ('TokenA', 'TokenD')}
+    external_pairs = {frozenset(('TokenA', 'TokenC')), frozenset(('TokenA', 'TokenD'))}
     # Expected result
     # ('TokenA', 'TokenC') is unsupported by triangles
     # ('TokenC', 'TokenD') is supported by triangles
@@ -31,7 +31,8 @@ def test_find_unsupported_triangles():
     result = PoolFinder._find_unsupported_triangles(flashloan_tokens, carbon_pairs, external_pairs)
 
     # Check that the function returns the correct list of unsupported pairs
-    assert sorted(result) == sorted(expected_result)
+    assert len(expected_result) == len(result)
+    assert sorted(expected_result) == sorted(result)
 
 
 def test_extract_pairs():
@@ -53,7 +54,7 @@ def test_extract_pairs():
     expected_carbon_pairs = {frozenset(('WBTC', 'BNT')), frozenset(('WETH', 'USDC'))}
     expected_other_pairs = {frozenset(('WETH', 'USDT')), frozenset(('USDC', 'WBTC'))}
     #expected_carbon_pairs = [('WBTC', 'BNT'), ('WETH', 'USDC')]
-    pool_finder = PoolFinder(uni_v2_exchanges, uni_v3_exchanges, solidly_v2_exchanges, carbon_forks, flashloan_tokens)
+    pool_finder = PoolFinder(uni_v2_forks=uni_v2_exchanges, uni_v3_forks=uni_v3_exchanges, solidly_v2_forks=solidly_v2_exchanges, carbon_forks=carbon_forks, flashloan_tokens=flashloan_tokens)
 
     # Call the function with test data
     carbon_pairs, other_pairs = pool_finder._extract_pairs(pools, carbon_forks)
@@ -62,7 +63,7 @@ def test_extract_pairs():
     assert frozenset(carbon_pairs[0]) in expected_carbon_pairs
     assert frozenset(carbon_pairs[1]) in expected_carbon_pairs
     for _pair in other_pairs:
-        assert _pair in expected_other_pairs
+        assert frozenset(_pair) in expected_other_pairs
     #assert other_pairs == expected_other_pairs
     assert len(carbon_pairs) == 2
     assert len(other_pairs) == 2
