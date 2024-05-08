@@ -11,7 +11,6 @@ Licensed under MIT.
 import math
 from typing import Union, List, Tuple, Any, Iterable
 
-from arb_optimizer.curves import T
 from arb_optimizer import CurveContainer, MargPOptimizer, ConstantProductCurve
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
@@ -332,12 +331,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
                 continue
 
             bancor_v3_curve_0 = (
-                self.CCm.bypairs(f"{T.BNT}/{tkn0}")
+                self.CCm.bypairs(f"{self.ConfigObj.BNT}/{tkn0}")
                 .byparams(exchange="bancor_v3")
                 .curves
             )
             bancor_v3_curve_1 = (
-                self.CCm.bypairs(f"{T.BNT}/{tkn1}")
+                self.CCm.bypairs(f"{self.ConfigObj.BNT}/{tkn1}")
                 .byparams(exchange="bancor_v3")
                 .curves
             )

@@ -12,10 +12,6 @@ import abc
 import itertools
 from typing import List, Any, Tuple, Union
 
-import pandas as pd
-
-from arb_optimizer.curves import T
-
 from fastlane_bot.modes.base import ArbitrageFinderBase
 
 def sort_pairs(pairs):

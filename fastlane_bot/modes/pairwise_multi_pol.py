@@ -14,7 +14,6 @@ from typing import List, Any, Tuple, Union, Hashable
 import pandas as pd
 
 from arb_optimizer import CurveContainer, PairOptimizer
-from arb_optimizer.curves import T
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 
@@ -194,12 +193,14 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
 
         """
 
+        gas_tokens = [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]
+
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
-        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]])
+        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in gas_tokens])
 
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, [T.ETH, T.WETH])
+            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, gas_tokens)
             # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1

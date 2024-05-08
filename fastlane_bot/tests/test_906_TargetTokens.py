@@ -15,9 +15,8 @@ import os
 import subprocess
 
 from arb_optimizer import ConstantProductCurve as CPC
-from arb_optimizer.curves import T
 
-from fastlane_bot import Bot
+from fastlane_bot import Bot, ConfigNetwork
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
@@ -70,7 +69,7 @@ def run_command(mode):
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
         "--timeout=120",
-        f"--target_tokens={T.WETH},{T.DAI}",
+        f"--target_tokens={ConfigNetwork.WETH_ADDRESS},{ConfigNetwork.DAI_ADDRESS}",
         "--blockchain=ethereum"
     ]
 
