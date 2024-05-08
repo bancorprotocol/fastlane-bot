@@ -15,7 +15,6 @@ from web3 import Web3, AsyncWeb3
 
 from fastlane_bot.utils import safe_int
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
-from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
 from fastlane_bot.data.abi import ERC20_ABI, UNISWAP_V2_FACTORY_ABI, UNISWAP_V3_FACTORY_ABI
 
 import asyncio
@@ -1024,8 +1023,9 @@ def terraform_blockchain(network_name: str):
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
+            solidly_exchange = SolidlyV2(exchange_name=exchange_name)
+            factory_abi = solidly_exchange.get_factory_abi
 
-            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
