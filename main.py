@@ -47,7 +47,6 @@ from fastlane_bot.events.utils import (
     get_start_block,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
-    handle_target_token_addresses,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
@@ -255,10 +254,6 @@ def main(args: argparse.Namespace) -> None:
         cfg, exchanges, args.blockchain, args.static_pool_data_filename, args.read_only
     )
 
-    target_token_addresses = handle_target_token_addresses(
-        static_pool_data, args.target_tokens
-    )
-
     # Break if timeout is hit to test the bot flags
     if args.timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
@@ -284,7 +279,7 @@ def main(args: argparse.Namespace) -> None:
         solidly_v2_event_mappings=solidly_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=args.replay_from_block,
-        target_tokens=target_token_addresses,
+        target_tokens=args.target_tokens,
         tenderly_fork_id=args.tenderly_fork_id,
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
