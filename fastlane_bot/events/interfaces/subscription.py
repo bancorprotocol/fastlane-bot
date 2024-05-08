@@ -27,14 +27,11 @@ class Subscription:
     def subscription_id(self):
         return self._subscription_id
 
-    def process_log(self, log) -> Optional[Event]:
-        if self._is_event_latest(log):
-            self._latest_event_index = (log["blockNumber"], log["transactionIndex"])
-            return self._parse_log(log)
-        else:
-            return None
+    @property
+    def get_topic(self):
+        return self._topic
 
-    def _parse_log(self, log) -> Event:
+    def parse_log(self, log) -> Event:
         try:
             event_data = complex_handler(self._event().process_log(log))
         except:
@@ -42,5 +39,4 @@ class Subscription:
             raise
         return Event.from_dict(event_data)
 
-    def _is_event_latest(self, event) -> bool:
-        return (event["blockNumber"], event["transactionIndex"]) > self._latest_event_index
+

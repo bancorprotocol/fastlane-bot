@@ -5,7 +5,7 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-
+from fastlane_bot.events.event_gatherer import EventGatherer
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.tools.cpc import T
@@ -301,6 +301,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
+
+    event_gatherer = EventGatherer(w3=mgr.w3_async, exchanges=mgr.exchanges, event_contracts=mgr.event_contracts)
+
     while True:
         try:
             # ensure 'last_updated_block' is in pool_data for all pools
@@ -352,6 +355,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     start_block,
                     args.cache_latest_only,
                     args.logging_path,
+                    event_gatherer
                 )
             )
             iteration_start_time = time.time()
