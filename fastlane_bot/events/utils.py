@@ -1678,44 +1678,6 @@ def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
 
     return forks_to_keep
 
-
-def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens: List):
-    """
-    Get the addresses of the target tokens.
-
-    Parameters
-    ----------
-    static_pool_data : pd.DataFrame
-        The static pool data.
-    target_tokens : List
-        The target tokens.
-
-    Returns
-    -------
-    List
-        The addresses of the target tokens.
-
-    """
-    # Get the addresses of the target tokens
-    target_token_addresses = []
-    if target_tokens:
-        for token in target_tokens:
-            target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn0_address"] == token][
-                    "tkn0_address"
-                ].tolist()
-            )
-            target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn1_address"] == token][
-                    "tkn1_address"
-                ].tolist()
-            )
-    target_token_addresses = list(set(target_token_addresses))
-    return target_token_addresses
-
-
 def get_current_block(
     last_block: int,
     mgr: Any,
