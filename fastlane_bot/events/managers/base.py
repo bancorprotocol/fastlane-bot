@@ -552,22 +552,18 @@ class BaseManager:
             web3=self.web3
         )
 
-        with multicaller as mc:
-            for pair in pairs:
-                try:
-                    # Loading the strategies for each pair without executing the calls yet
-                    mc.add_call(
-                        carbon_controller.functions.strategiesByPair,
-                        pair[0],
-                        pair[1],
-                        pair[2],
-                        pair[3],
-                    )
-                except ValueError:
-                    print(f"Error fetching strategiesByPair {pair}")
+        for pair in pairs:
+            # Loading the strategies for each pair without executing the calls yet
+            multicaller.add_call(
+                carbon_controller.functions.strategiesByPair,
+                pair[0],
+                pair[1],
+                pair[2],
+                pair[3],
+            )
 
-            # Fetch strategies for each pair from the CarbonController contract object
-            strategies_by_pair = mc.multicall()
+        # Fetch strategies for each pair from the CarbonController contract object
+        strategies_by_pair = multicaller.multicall()
 
         self.carbon_inititalized[exchange_name] = True
 
@@ -692,11 +688,10 @@ class BaseManager:
             web3=self.web3
         )
 
-        with multicaller as mc:
-            for pair in all_pairs:
-                mc.add_call(
-                    carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
-                )
+        for pair in all_pairs:
+            multicaller.add_call(
+                carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
+            )
 
         return multicaller.multicall()
 

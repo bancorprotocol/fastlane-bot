@@ -141,64 +141,30 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
 
     """
     multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block, web3=mgr.web3, multicall_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
-    with multicaller as mc:
-        for row in rows_to_update:
-            pool_info = mgr.pool_data[row]
-            pool_info["last_updated_block"] = current_block
-            # Function to be defined elsewhere based on what each exchange type needs
-            multicall_fn(exchange, mc, mgr, multicall_contract, pool_info)
-        result_list = mc.multicall()
-    process_results_for_multicall(exchange, rows_to_update, result_list, mgr)
 
+    for row in rows_to_update:
+        pool_info = mgr.pool_data[row]
+        pool_info["last_updated_block"] = current_block
+        if exchange == "bancor_v3":
+            multicaller.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
+        elif exchange == "bancor_pol":
+            multicaller.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
+            multicaller.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
+        elif exchange in mgr.cfg.CARBON_V1_FORKS:
+            multicaller.add_call(multicall_contract.functions.strategy, pool_info["cid"])
+        elif exchange == 'balancer':
+            multicaller.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
+        else:
+            raise ValueError(f"Exchange {exchange} not supported")
 
-def multicall_fn(exchange: str, mc: Any, mgr: Any, multicall_contract: Any, pool_info: Dict[str, Any]) -> None:
-    """
-    Function to be defined elsewhere based on what each exchange type needs.
+    result_list = multicaller.multicall()
 
-    Parameters
-    ----------
-    exchange : str
-        Name of the exchange.
-    mc : Any
-        The multicaller.
-    mgr : Any
-        Manager object containing configuration and pool data.
-    multicall_contract : Any
-        The multicall contract.
-    pool_info : Dict
-        The pool info.
+    # Handling for Bancor POL - combine results into a list of tuples
+    if exchange == "bancor_pol":
+        assert len(result_list) % 2 == 0, f"[multicall_helper] odd number of results for Bancor POL {len(result_list)}"
+        total_pools = len(result_list) // 2
+        result_list = [(result_list[idx][0], result_list[idx][1], result_list[idx + total_pools]) for idx in range(total_pools)]
 
-    """
-    if exchange == "bancor_v3":
-        mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
-    elif exchange == "bancor_pol":
-        mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
-        mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
-    elif exchange in mgr.cfg.CARBON_V1_FORKS:
-        mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
-    elif exchange == 'balancer':
-        mc.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
-    else:
-        raise ValueError(f"Exchange {exchange} not supported.")
-
-
-def process_results_for_multicall(exchange: str, rows_to_update: List, result_list: List, mgr: Any) -> None:
-    """
-    Process the results for multicall.
-
-    Parameters
-    ----------
-    exchange : str
-        Name of the exchange.
-    rows_to_update : List
-        List of rows to update.
-    result_list : List
-        List of results.
-    mgr : Any
-        Manager object containing configuration and pool data.
-
-
-    """
     for row, result in zip(rows_to_update, result_list):
         pool_info = mgr.pool_data[row]
         params = extract_params_for_multicall(exchange, result, pool_info, mgr)

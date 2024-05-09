@@ -167,16 +167,4 @@ class MultiCaller(ContextManager):
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]
         return_data += [i[1] for i in decoded_data_list if len(i) > 1]
 
-        # Handling for Bancor POL - combine results into a Tuple
-        if "tokenPrice" in _calls_for_aggregate and "amountAvailableForTrading" in _calls_for_aggregate:
-            new_return = []
-            returned_items = int(len(return_data))
-            total_pools = int(returned_items / 2)
-            assert returned_items % 2 == 0, f"[multicaller.py multicall] non-even number of returned calls for Bancor POL {returned_items}"
-            total_pools = int(total_pools)
-
-            for idx in range(total_pools):
-                new_return.append((return_data[idx][0], return_data[idx][1], return_data[idx + total_pools]))
-            return_data = new_return
-
         return return_data
