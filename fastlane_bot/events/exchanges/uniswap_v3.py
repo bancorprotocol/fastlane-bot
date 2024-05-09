@@ -17,6 +17,7 @@ from typing import List, Type, Tuple, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import UNISWAP_V3_POOL_ABI, UNISWAP_V3_FACTORY_ABI, PANCAKESWAP_V3_POOL_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -60,15 +61,5 @@ class UniswapV3(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.token1()
 
-    def get_pool_function(self, factory_contract: Contract):
-        """ Function to get pools from Factory.
-            This function is intended to be used with a Multicall. It fetches pools from a Uniswap V3 fork Factory contract.
-
-            Args:
-                factory_contract: The factory contract.
-
-            Returns:
-                The function.
-
-            """
-        return factory_contract.functions.getPool
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2, fee):
+        mc.add_call(self.sync_factory_contract.functions.getPool, addr1, addr2, fee)
