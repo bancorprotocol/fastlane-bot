@@ -692,7 +692,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--blockchain",
-        default="coinbase_base",
+        default="ethereum",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
         choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea", "sei"],
     )
