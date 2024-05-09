@@ -520,7 +520,10 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
             if args.pool_finder != -1 and (loop_idx % args.pool_finder == 0 or loop_idx == 1):
+                mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
                 uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
+                result = f"Added {len(uni_v2) + len(uni_v3) + len(solidly_v2)} pools." if (uni_v2 or uni_v3 or solidly_v2) else f"No pools added."
+                mgr.cfg.logger.info(result)
                 mgr.uniswap_v2_event_mappings.update(uni_v2)
                 mgr.uniswap_v3_event_mappings.update(uni_v3)
                 mgr.solidly_v2_event_mappings.update(solidly_v2)

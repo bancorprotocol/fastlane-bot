@@ -103,22 +103,27 @@ class PoolFinder:
                            get_pool_function method if it encounters a problem.
             """
         pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self.flashloan_tokens]
-
+        chunk_size = 400
+        # Create the list of chunks
+        chunked_pairs = [pairs[i:i + chunk_size] for i in range(0, len(pairs), chunk_size)]
         result_list = {}
+
         for ex_name, ex_data in self.multicallers.items():
             mc = ex_data["multicaller"]
             ex = ex_data["exchange"]
-            with mc:
-                for pair in pairs:
-                    if ex.base_exchange_name == UNISWAP_V2_NAME:
-                        mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1])
-                    elif ex.base_exchange_name == UNISWAP_V3_NAME:
-                        for fee in self.uni_v3_fee_tiers[ex.exchange_name]:
-                            mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1], fee)
-                    elif ex.base_exchange_name == SOLIDLY_V2_NAME:
-                        mc.add_call(ex.get_pool_function(ex.sync_factory_contract), *ex.get_pool_args(pair[0], pair[1], False))
-                results = mc.multicall()
-                result_list[ex.exchange_name] = [mc.web3.to_checksum_address(addr) for addr in results if addr != ZERO_ADDRESS]
+            for pair_chunk in chunked_pairs:
+                with mc:
+                    for pair in pair_chunk:
+                        if ex.base_exchange_name == UNISWAP_V2_NAME:
+                            mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1])
+                        elif ex.base_exchange_name == UNISWAP_V3_NAME:
+                            for fee in self.uni_v3_fee_tiers[ex.exchange_name]:
+                                mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1], fee)
+                        elif ex.base_exchange_name == SOLIDLY_V2_NAME:
+                            mc.add_call(ex.get_pool_function(ex.sync_factory_contract), *ex.get_pool_args(pair[0], pair[1], False))
+                    results = mc.multicall()
+                    mc._contract_calls = []
+                    result_list[ex.exchange_name] = [mc.web3.to_checksum_address(addr) for addr in results if addr != ZERO_ADDRESS]
         return result_list
 
     @staticmethod
