@@ -678,7 +678,7 @@ MULTICALL_ABI = [
         "type": "function",
         "name": "aggregate",
         "stateMutability": "view",
-        "inputs": [{"components": [{"internalType": "address", "name": "target", "type": "address"}, {"internalType": "bytes", "name": "callData", "type": "bytes"}], "internalType": "struct Multicall2.Call[]", "name": "calls", "type": "tuple[]"}],
+        "inputs": [{"components": [{"internalType": "address", "name": "target", "type": "address"}, {"internalType": "bytes", "name": "callData", "type": "bytes"}], "internalType": "struct Multicall3.Call[]", "name": "calls", "type": "tuple[]"}],
         "outputs": [{"internalType": "uint256", "name": "blockNumber", "type": "uint256"}, {"internalType": "bytes[]", "name": "returnData", "type": "bytes[]"}]
     }
 ]
