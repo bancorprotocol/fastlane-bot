@@ -66,7 +66,7 @@ class ExchangeFactory:
 
         base_exchange_name = cfg.network.exchange_name_base_from_fork(exchange_name=key)
         if base_exchange_name in [SOLIDLY_V2_NAME, UNISWAP_V2_NAME, UNISWAP_V3_NAME]:
-            exchange.factory_contract = self.w3_async.eth.contract(
+            exchange.factory_contract = cfg.w3_async.eth.contract(
                 address=cfg.FACTORY_MAPPING[key],
                 abi=exchange.factory_abi,
             )
