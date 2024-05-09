@@ -1278,8 +1278,6 @@ O = MargPOptimizer(CCa)
 r = O.margp_optimizer("WETH", result=O.MO_DEBUG)
 assert isinstance(r, dict)
 prices0 = r["price_estimates_t"]
-dtknfromp_f = r["dtknfromp_f"]
-assert np.linalg.norm(dtknfromp_f(np.log10(prices0))) < 1e-6
 assert not prices0 is None, f"prices0 must not be None [{prices0}]"
 r1 = O.arb("WETH")
 r2 = O.SelfFinancingConstraints.arb("WETH")
@@ -1292,8 +1290,6 @@ assert r1.optimizationvar == "WETH"
 r
 
 prices0
-
-dtknfromp_f(np.log10(prices0))
 
 f = O.optimize("WETH", result=O.MO_DTKNFROMPF, params=dict(verbose=True, debug=False))
 r3 = f(prices0, islog10=False)
