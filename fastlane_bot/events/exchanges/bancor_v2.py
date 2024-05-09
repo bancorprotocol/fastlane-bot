@@ -17,6 +17,7 @@ from typing import List, Type, Tuple, Any
 from web3 import AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -78,8 +79,8 @@ class BancorV2(Exchange):
     async def get_anchor(self, contract: Contract) -> str:
         return await contract.caller.anchor()
 
-    def get_pool_function(self, factory_contract: Contract):
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
         """
-        This function is unused for Bancor V2.
+        This function is unused for Carbon.
         """
         raise NotImplementedError

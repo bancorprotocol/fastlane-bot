@@ -3,6 +3,7 @@ from typing import Any, Tuple
 
 from web3.contract import Contract, AsyncContract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import XFAI_V0_POOL_ABI, XFAI_V0_FACTORY_ABI
 from .base import SolidlyV2
 
@@ -32,5 +33,5 @@ class XFaiV2(SolidlyV2):
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
 
-    def get_pool_function(self, factory_contract):
-        return factory_contract.functions.getPool
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
+        mc.add_call(self.sync_factory_contract.functions.getPool, addr1)

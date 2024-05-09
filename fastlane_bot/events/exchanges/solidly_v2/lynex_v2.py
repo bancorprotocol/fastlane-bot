@@ -17,6 +17,3 @@ class LynexV2(SolidlyV2):
         fee = await self.factory_contract.caller.getFee(await contract.caller.stable())
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
-
-    def get_pool_function(self, factory_contract):
-        return factory_contract.functions.getPair
