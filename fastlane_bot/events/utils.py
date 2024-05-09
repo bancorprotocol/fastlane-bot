@@ -637,10 +637,6 @@ def get_config(
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
-        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
-        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
-    )
     return cfg
 
 

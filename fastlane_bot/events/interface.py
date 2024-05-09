@@ -492,9 +492,8 @@ class QueryInterface:
                     token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
                 except AttributeError:
                     pass
-        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
-            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
+        token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+        token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
 
     def populate_tokens(self):
