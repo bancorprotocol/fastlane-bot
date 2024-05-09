@@ -64,19 +64,13 @@ class SolidlyV2(Exchange):
         return await contract.caller.token1()
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.sync_factory_contract.functions.getPair, addr1, addr2, True)
-
-    def get_pool_args(self, tkn0, tkn1, stable):
-        return tkn0, tkn1, stable
+        mc.add_call(self.factory_contract.functions.getPair, addr1, addr2, True)
 
     @property
     @abstractmethod
-    def get_factory_abi(self):
+    def factory_abi(self):
         ...
     
     @abstractmethod
     async def get_fee(self, address: str, contract: Contract, factory_contract: Contract):
-        ...
-
-    def get_pool_function(self, factory_contract):
         ...

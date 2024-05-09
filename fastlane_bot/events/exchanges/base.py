@@ -31,7 +31,7 @@ class Exchange(ABC):
     exchange_name: str
     base_exchange_name: str = ''
     pools: Dict[str, Pool] = field(default_factory=dict)
-    sync_factory_contract: Contract = None
+    factory_contract: Contract = None
 
     __VERSION__ = "0.0.3"
     __DATE__ = "2024-03-20"
@@ -195,7 +195,7 @@ class Exchange(ABC):
         return self.pools[key] if key in self.pools else None
 
     @abstractmethod
-    def get_factory_abi(self):
+    def factory_abi(self):
         """
                 Get the ABI of the exchange's Factory contract
 

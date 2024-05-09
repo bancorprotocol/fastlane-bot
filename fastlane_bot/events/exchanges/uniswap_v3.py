@@ -41,7 +41,7 @@ class UniswapV3(Exchange):
         return UNISWAP_V3_POOL_ABI if self.exchange_name not in [PANCAKESWAP_V3_NAME, AGNI_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME] else PANCAKESWAP_V3_POOL_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return UNISWAP_V3_FACTORY_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
@@ -62,4 +62,4 @@ class UniswapV3(Exchange):
         return await contract.caller.token1()
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2, fee):
-        mc.add_call(self.sync_factory_contract.functions.getPool, addr1, addr2, fee)
+        mc.add_call(self.factory_contract.functions.getPool, addr1, addr2, fee)

@@ -95,7 +95,7 @@ class PoolFinder:
             Raises:
                 Exception: An exception could be raised from the multicall operation depending on the
                            implementation specifics of the multicall context manager or the exchange's
-                           get_pool_function method if it encounters a problem.
+                           get_pool_with_multicall method if it encounters a problem.
             """
         pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self._flashloan_tokens]
         chunk_size = 400
@@ -105,7 +105,7 @@ class PoolFinder:
 
         for exchange in self._exchanges:
             for pair_chunk in chunked_pairs:
-                mc = MultiCaller(contract=exchange.sync_factory_contract, web3=self._web3, multicall_address=self._multicall_address)
+                mc = MultiCaller(contract=exchange.factory_contract, web3=self._web3, multicall_address=self._multicall_address)
                 for pair in pair_chunk:
                     if exchange.base_exchange_name in [UNISWAP_V2_NAME, SOLIDLY_V2_NAME]:
                         exchange.get_pool_with_multicall(mc, pair[0], pair[1])
