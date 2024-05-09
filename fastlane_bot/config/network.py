@@ -280,7 +280,6 @@ class ConfigNetwork(ConfigBase):
 
     # FLAGS
     #######################################################################################
-    GAS_TKN_IN_FLASHLOAN_TOKENS = None
     IS_NO_FLASHLOAN_AVAILABLE = False
 
     # HOOKS
