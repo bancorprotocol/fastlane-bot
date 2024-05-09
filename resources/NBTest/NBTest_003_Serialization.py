@@ -19,6 +19,7 @@ try:
     from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
     from fastlane_bot.tools.optimizer import CPCArbOptimizer, cp, time
     from fastlane_bot.testing import *
+
 except:
     from tools.cpc import ConstantProductCurve as CPC, CPCContainer
     from tools.optimizer import CPCArbOptimizer, cp, time
@@ -204,16 +205,7 @@ assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, pair="ETH/USDC", t
 assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, A=100, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
 assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, B=100, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
 assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, A=100, B=100, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
-#assert raises(CPC.from_carbon, yint=1, y=1, pb=1800, pa=2200, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
-
-# TODO
-
-# +
-#assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, pair="ETH/USDC", tkny="ETH", cid="1", descr="Carbon", isdydx=False)
-#assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, pair="ETH/USDC", tkny="ETH", fee=0, descr="Carbon", isdydx=False)
-#assert raises(CPC.from_carbon, yint=1, y=1, pa=1800, pb=2200, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", isdydx=False)
-#assert raises(CPC.from_carbon, yint=1, y=1, pb=1800, pa=2200, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
-# -
+assert raises(CPC.from_carbon, yint=1, y=1, pb=1800, pa=2200, pair="ETH/USDC", tkny="ETH", fee=0, cid="1", descr="Carbon", isdydx=False)
 
 assert not raises(CPC.from_carbon, yint=1, y=1, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 assert raises(CPC.from_carbon, yint=1, y=1, A=1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=False)
@@ -222,13 +214,7 @@ assert raises(CPC.from_carbon, yint=1, y=1, pb=1000, A=1/10, B=m.sqrt(1/2000), p
 assert raises(CPC.from_carbon, yint=1, y=1, A=-1/10, B=m.sqrt(1/2000), pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 
 assert not raises(CPC.from_carbon, yint=1, y=1, pa=3100, pb=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
-#assert raises(CPC.from_carbon, yint=1, y=1, pb=3100, pa=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
-
-# TODO
-
-# +
-#assert raises(CPC.from_carbon, yint=1, y=1, pb=3100, pa=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
-# -
+assert raises(CPC.from_carbon, yint=1, y=1, pb=3100, pa=2900, pair="ETH/USDC", tkny="USDC", fee=0, cid="2", descr="Carbon", isdydx=True)
 
 # ## Charts [NOTEST]
 
@@ -392,8 +378,6 @@ df_pickle[:3]
 #print(f"{len(df_xlsx)} curves")
 print(f"                         {len(cc_json)}              .curves.json", )
 # !ls -l .curves*
-
-
 
 
 
