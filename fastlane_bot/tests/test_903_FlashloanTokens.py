@@ -70,7 +70,8 @@ def run_command(mode):
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
         "--timeout=120",
-        "--blockchain=ethereum"
+        "--blockchain=ethereum",
+        "--exchanges=carbon_v1,bancor_v3,bancor_v2,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
     ]
 
     expected_log_line = "limiting flashloan_tokens to ["

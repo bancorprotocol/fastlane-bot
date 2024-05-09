@@ -72,7 +72,8 @@ def run_command(mode):
         "--logging_path=fastlane_bot/data/",
         "--timeout=120",
         f"--target_tokens={T.WETH},{T.DAI}",
-        "--blockchain=ethereum"
+        "--blockchain=ethereum",
+        "--exchanges=carbon_v1,bancor_v3,bancor_v2,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
     ]
 
     expected_log_line = "Limiting pools by target_tokens. Removed "
