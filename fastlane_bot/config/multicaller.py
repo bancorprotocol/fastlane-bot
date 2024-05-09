@@ -157,15 +157,11 @@ class MultiCaller(ContextManager):
         encoded_data = self.web3.eth.contract(
             abi=MULTICALL_ABI,
             address=self.MULTICALL_CONTRACT_ADDRESS
-        ).functions.aggregate(calls_for_aggregate).call(block_identifier=self.block_identifier)
+        ).functions.tryAggregate(True, calls_for_aggregate).call(block_identifier=self.block_identifier)
 
-        if not isinstance(encoded_data, list):
-            raise TypeError(f"Expected encoded_data to be a list, got {type(encoded_data)} instead.")
-
-        encoded_data = encoded_data[1]
         decoded_data_list = []
         for output_types, encoded_output in zip(output_types_list, encoded_data):
-            decoded_data = decode(output_types, encoded_output)
+            decoded_data = decode(output_types, encoded_output[1])
             decoded_data_list.append(decoded_data)
 
         return_data = [i[0] for i in decoded_data_list if len(i) == 1]
