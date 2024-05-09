@@ -3,6 +3,7 @@ from typing import Tuple
 
 from web3.contract import AsyncContract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import SOLIDLY_V2_FACTORY_ABI
 from .base import SolidlyV2
 
@@ -18,5 +19,5 @@ class VelodromeV2(SolidlyV2):
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
 
-    def get_pool_function(self, factory_contract):
-        return factory_contract.functions.getPool
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
+        mc.add_call(self.sync_factory_contract.functions.getPool, addr1, addr2, True)

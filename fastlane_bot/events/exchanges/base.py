@@ -17,6 +17,7 @@ from typing import Dict, List, Type, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
+from fastlane_bot.config.multicaller import MultiCaller
 from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
@@ -123,13 +124,12 @@ class Exchange(ABC):
         """
         pass
 
-    @staticmethod
     @abstractmethod
-    def get_pool_function(contract: Contract, *args):
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2, *args):
         """
         Returns the Factory contract function used to fetch liquidity pools.
         """
-        pass
+        ...
 
     @staticmethod
     @abstractmethod
