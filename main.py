@@ -306,9 +306,17 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
     event_gatherer = EventGatherer(w3=mgr.w3_async, exchanges=mgr.exchanges, event_contracts=mgr.event_contracts)
 
-    pool_finder = PoolFinder(uni_v2_forks=mgr.cfg.network.UNI_V2_FORKS, uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS, solidly_v2_forks=mgr.cfg.network.SOLIDLY_V2_FORKS, carbon_forks=mgr.cfg.network.CARBON_V1_FORKS, flashloan_tokens=args.flashloan_tokens) if args.pool_finder != -1 else None
-    if pool_finder:
-        pool_finder.init_exchanges(exchanges=mgr.exchanges, web3=mgr.web3, multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS)
+    if args.pool_finder != -1:
+        pool_finder = PoolFinder(
+            carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
+            uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS,
+            flashloan_tokens=args.flashloan_tokens,
+            exchanges=mgr.exchanges,
+            web3=mgr.web3,
+            multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS
+        )
+    else:
+        pool_finder = None
 
     while True:
         try:
@@ -519,7 +527,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
-            if args.pool_finder != -1 and (loop_idx % args.pool_finder == 0 or loop_idx == 1):
+            if pool_finder is not None and (loop_idx % args.pool_finder == 0 or loop_idx == 1):
                 mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
                 uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
                 result = f"Added {len(uni_v2) + len(uni_v3) + len(solidly_v2)} pools." if (uni_v2 or uni_v3 or solidly_v2) else f"No pools added."

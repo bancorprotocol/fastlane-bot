@@ -18,31 +18,24 @@ class PoolFinder:
     """A class that provides methods to find unsupported carbon pairs and triangles
         within a given set of flashloan tokens and external pairs.
     """
+    def __init__(
+        self,
+        carbon_forks: List[str],
+        uni_v3_forks: List[str],
+        flashloan_tokens: List[str],
+        exchanges: List[Exchange],
+        web3: Any,
+        multicall_address: str
+    ):
+        self._carbon_forks = carbon_forks
+        self._uni_v3_forks = uni_v3_forks
+        self._flashloan_tokens = flashloan_tokens
+        self._uni_v3_fee_tiers = defaultdict(set)
+        self._carbon_pairs_seen = set()
 
-    multicallers = []
-
-    def __init__(self, uni_v2_forks: List[str], uni_v3_forks: List[str], solidly_v2_forks: List[str], carbon_forks: List[str], flashloan_tokens: List[str]):
-        self.uni_v2_forks = uni_v2_forks
-        self.uni_v3_forks = uni_v3_forks
-        self.solidly_v2_forks = solidly_v2_forks
-        self.carbon_forks = carbon_forks
-        self.flashloan_tokens = flashloan_tokens
-        self.uni_v3_fee_tiers = defaultdict(set)
-        self.carbon_pairs_seen = set()
-
-    def init_exchanges(self, exchanges: List[Exchange], web3: Any, multicall_address: str):
-        """ This function initializes multicallers that will be used for each exchange.
-
-        The function is separated from the main __init__ function to enable easier testing.
-
-        Args:
-            exchanges (List[Exchange]): List of exchange objects for which to make multicalls.
-            web3 (Web3): Web3 object
-            multicall_address (str): The address of the multicall contract.
-
-
-        """
-        self.multicallers = {ex_name: {"multicaller": MultiCaller(contract=exchange.sync_factory_contract, web3=web3, multicall_address=multicall_address), "exchange": exchange} for ex_name, exchange in exchanges.items() if ex_name in self.uni_v2_forks + self.uni_v3_forks + self.solidly_v2_forks}
+        self._exchanges = list(filter(lambda e: e.base_exchange_name in [UNISWAP_V2_NAME, UNISWAP_V3_NAME, SOLIDLY_V2_NAME], exchanges.values()))
+        self._web3 = web3
+        self._multicall_address = multicall_address
 
     def extract_univ3_fee_tiers(self, pools: List[Dict[str, Any]]):
         """
@@ -54,8 +47,8 @@ class PoolFinder:
         This function updates the 'uni_v3_fee_tiers' dictionary where each exchange name is mapped to a set of unique fees.
         """
         for pool in pools:
-            if pool["exchange_name"] in self.uni_v3_forks:
-                self.uni_v3_fee_tiers[pool["exchange_name"]].add(int(pool["fee"]))
+            if pool["exchange_name"] in self._uni_v3_forks:
+                self._uni_v3_fee_tiers[pool["exchange_name"]].add(int(pool["fee"]))
 
 
     def get_pools_for_unsupported_pairs(self, pools: List[Dict[str, Any]], arb_mode: str):
@@ -72,14 +65,16 @@ class PoolFinder:
                   and Solidly V2 forks), each associated with their specific supporting pools based on the unsupported
                   configurations identified.
         """
-        carbon_pairs, other_pairs = self._extract_pairs(pools=pools, carbon_forks=self.carbon_forks)
+        carbon_pairs, other_pairs = self._extract_pairs(pools=pools)
         if not carbon_pairs:
             return [], [], []
-        self.extract_univ3_fee_tiers(pools)
-        func = PoolFinder._find_unsupported_triangles if arb_mode in ["triangle", "multi_triangle"] else PoolFinder._find_unsupported_pairs
-        unsupported = func(self.flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
-        supporting_pools = self._find_pools(unsupported)
-        return self._sort_exchange_pools(supporting_pools, self.uni_v2_forks, self.uni_v3_forks, self.solidly_v2_forks)
+        self.extract_univ3_fee_tiers(pools)  # TODO: these should be configured per exchange
+        if arb_mode in ["triangle", "multi_triangle"]:
+            unsupported_pairs = PoolFinder._find_unsupported_triangles(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
+        else:
+            unsupported_pairs = PoolFinder._find_unsupported_pairs(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
+        missing_pools = self._find_pools(unsupported_pairs)
+        return missing_pools[UNISWAP_V2_NAME], missing_pools[UNISWAP_V3_NAME], missing_pools[SOLIDLY_V2_NAME]
 
 
     def _find_pools(self, unsupported_pairs: List[Tuple]) -> Dict[str, List[str]]:
@@ -102,72 +97,40 @@ class PoolFinder:
                            implementation specifics of the multicall context manager or the exchange's
                            get_pool_function method if it encounters a problem.
             """
-        pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self.flashloan_tokens]
+        pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self._flashloan_tokens]
         chunk_size = 400
         # Create the list of chunks
         chunked_pairs = [pairs[i:i + chunk_size] for i in range(0, len(pairs), chunk_size)]
-        result_list = {}
+        result = defaultdict(dict)
 
-        for ex_name, ex_data in self.multicallers.items():
-            mc = ex_data["multicaller"]
-            ex = ex_data["exchange"]
+        for exchange in self._exchanges:
             for pair_chunk in chunked_pairs:
-                with mc:
-                    for pair in pair_chunk:
-                        if ex.base_exchange_name == UNISWAP_V2_NAME:
-                            mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1])
-                        elif ex.base_exchange_name == UNISWAP_V3_NAME:
-                            for fee in self.uni_v3_fee_tiers[ex.exchange_name]:
-                                mc.add_call(ex.get_pool_function(ex.sync_factory_contract), pair[0], pair[1], fee)
-                        elif ex.base_exchange_name == SOLIDLY_V2_NAME:
-                            mc.add_call(ex.get_pool_function(ex.sync_factory_contract), *ex.get_pool_args(pair[0], pair[1], False))
-                    results = mc.multicall()
-                    mc._contract_calls = []
-                    result_list[ex.exchange_name] = [mc.web3.to_checksum_address(addr) for addr in results if addr != ZERO_ADDRESS]
-        return result_list
-
-    @staticmethod
-    def _sort_exchange_pools(ex_pools: Dict, uni_v2_forks: List[str], uni_v3_forks: List[str], solidly_v2_forks: List[str]):
-        """
-        Categorizes pools based on the type of exchange they belong to into separate dictionaries.
-
-        Args:
-            ex_pools (List[Dict]): A list of dictionary where keys are exchange names and values are lists of pool addresses.
-
-        Returns:
-            Tuple[Dict, Dict, Dict]: Three dictionaries categorizing pool addresses into Uniswap V2 forks,
-                                     Uniswap V3 forks, and Solidly V2 forks.
-        """
-        # Initialize separate dictionaries for each type of exchange fork
-        uni_v2_pools = {}
-        uni_v3_pools = {}
-        solidly_v2_pools = {}
-
-        # Assign pools to the appropriate category based on the exchange type
-        for ex_name, pools in ex_pools.items():
-            if ex_name in uni_v2_forks:
-                target_pools = uni_v2_pools
-            elif ex_name in uni_v3_forks:
-                target_pools = uni_v3_pools
-            elif ex_name in solidly_v2_forks:
-                target_pools = solidly_v2_pools
-            else:
-                continue  # Skip exchanges that do not match any known category
-
-            for addr in pools:
-                target_pools[addr] = ex_name  # Map pool address to exchange name
-
-        return uni_v2_pools, uni_v3_pools, solidly_v2_pools
+                mc = MultiCaller(contract=exchange.sync_factory_contract, web3=self._web3, multicall_address=self._multicall_address)
+                for pair in pair_chunk:
+                    if exchange.base_exchange_name == UNISWAP_V2_NAME:
+                        mc.add_call(exchange.get_pool_function(exchange.sync_factory_contract), pair[0], pair[1])
+                    elif exchange.base_exchange_name == UNISWAP_V3_NAME:
+                        for fee in self._uni_v3_fee_tiers[exchange.exchange_name]:
+                            mc.add_call(exchange.get_pool_function(exchange.sync_factory_contract), pair[0], pair[1], fee)
+                    elif exchange.base_exchange_name == SOLIDLY_V2_NAME:
+                        mc.add_call(exchange.get_pool_function(exchange.sync_factory_contract), *exchange.get_pool_args(pair[0], pair[1], False))
+                response = mc.multicall()
+                result[exchange.base_exchange_name] = {
+                    mc.web3.to_checksum_address(addr): exchange.exchange_name
+                    for addr
+                    in response
+                    if addr != ZERO_ADDRESS
+                }
+        return result
 
 
-    def _extract_pairs(self, pools: List[Dict[str, Any]], carbon_forks: List[str]) -> (List, set):
+    def _extract_pairs(self, pools: List[Dict[str, Any]]) -> Tuple[List, set]:
         """
         Extracts unique, order-insensitive pairs of tokens from pools, categorizing them
         into carbon pairs and other pairs based on the exchange's presence in carbon_forks.
 
         Args:
             pools (List[Dict[str, Any]]): List of pool dictionaries containing token addresses and exchange names.
-            carbon_forks (List[str]): List of exchange names categorized under carbon forks.
 
         Returns:
             tuple: Two sets of unique token pairs, one for carbon forks and one for other exchanges.
@@ -178,12 +141,12 @@ class PoolFinder:
         for pool in pools:
             # Create a frozenset for each pair to ensure the pair is treated as order-insensitive
             pair = (pool["tkn0_address"], pool["tkn1_address"])
-            frozen_pair = frozenset(pair)
 
-            if pool["exchange_name"] in carbon_forks:
-                if frozen_pair not in self.carbon_pairs_seen:
+            if pool["exchange_name"] in self._carbon_forks:
+                frozen_pair = frozenset(pair)
+                if frozen_pair not in self._carbon_pairs_seen:
                     carbon_pairs.add(pair)
-                    self.carbon_pairs_seen.add(frozen_pair)
+                    self._carbon_pairs_seen.add(frozen_pair)
             else:
                 other_pairs.add(pair)
 
@@ -229,11 +192,7 @@ class PoolFinder:
             tkn0, tkn1 = pair[0], pair[1]
             if (tkn0 not in flashloan_tokens and tkn1 not in flashloan_tokens):
                 unsupported_pairs.append(pair)
-                continue
-            if pair not in external_pairs:
+            elif pair not in external_pairs:
                 unsupported_pairs.append(pair)
 
         return unsupported_pairs
-
-
-

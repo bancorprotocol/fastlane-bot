@@ -67,7 +67,7 @@ class BancorPol(Exchange):
         """
         This function is unused for Bancor POL.
         """
-        pass
+        raise NotImplementedError
 
     def save_strategy(
         self,

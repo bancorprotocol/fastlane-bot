@@ -91,6 +91,6 @@ class Balancer(Exchange):
 
     def get_pool_function(self, factory_contract: Contract):
         """
-        This function is unused for Carbon.
+        This function is unused for Balancer.
         """
-        pass
+        raise NotImplementedError
