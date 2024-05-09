@@ -43,7 +43,7 @@ class BancorV3(Exchange):
         return BANCOR_V3_POOL_COLLECTION_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor V3
         return BANCOR_V3_POOL_COLLECTION_ABI
 

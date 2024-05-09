@@ -1024,7 +1024,7 @@ def terraform_blockchain(network_name: str):
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
             solidly_exchange = SolidlyV2(exchange_name=exchange_name)
-            factory_abi = solidly_exchange.get_factory_abi
+            factory_abi = solidly_exchange.factory_abi
 
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi

@@ -38,7 +38,7 @@ class UniswapV2(Exchange):
         return float(self.fee)
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return UNISWAP_V2_FACTORY_ABI
 
     def add_pool(self, pool: Pool):
@@ -65,4 +65,4 @@ class UniswapV2(Exchange):
         return await contract.caller.token1()
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.sync_factory_contract.functions.getPair, addr1, addr2)
+        mc.add_call(self.factory_contract.functions.getPair, addr1, addr2)

@@ -68,7 +68,7 @@ class CarbonV1(Exchange):
         return CARBON_CONTROLLER_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return CARBON_CONTROLLER_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
