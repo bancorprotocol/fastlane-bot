@@ -28,7 +28,7 @@ class Subscription:
         return self._subscription_id
 
     @property
-    def get_topic(self):
+    def topic(self):
         return self._topic
 
     def parse_log(self, log) -> Event:
