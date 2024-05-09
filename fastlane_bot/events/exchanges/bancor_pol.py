@@ -42,7 +42,7 @@ class BancorPol(Exchange):
         return BANCOR_POL_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor POL
         return BANCOR_POL_ABI
 

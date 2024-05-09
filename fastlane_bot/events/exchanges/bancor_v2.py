@@ -41,7 +41,7 @@ class BancorV2(Exchange):
         return BANCOR_V2_CONVERTER_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor V2
         return BANCOR_V2_CONVERTER_ABI
 

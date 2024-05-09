@@ -10,7 +10,7 @@ from .base import SolidlyV2
 @dataclass
 class LynexV2(SolidlyV2):
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return LYNEX_V2_FACTORY_ABI
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:

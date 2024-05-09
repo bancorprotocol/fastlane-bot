@@ -39,7 +39,7 @@ class Balancer(Exchange):
         return BALANCER_VAULT_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Balancer
         return BALANCER_VAULT_ABI
 

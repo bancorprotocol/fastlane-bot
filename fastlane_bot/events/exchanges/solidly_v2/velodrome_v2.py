@@ -11,7 +11,7 @@ from .base import SolidlyV2
 @dataclass
 class VelodromeV2(SolidlyV2):
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return SOLIDLY_V2_FACTORY_ABI
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
@@ -20,4 +20,4 @@ class VelodromeV2(SolidlyV2):
         return str(fee_float), fee_float
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.sync_factory_contract.functions.getPool, addr1, addr2, True)
+        mc.add_call(self.factory_contract.functions.getPool, addr1, addr2, True)

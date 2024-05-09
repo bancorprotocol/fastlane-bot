@@ -19,11 +19,8 @@ class XFaiV2(SolidlyV2):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f" # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
 
-    def get_pool_args(self, tkn0, tkn1, stable):
-        return tkn0
-
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):  # TODO: change to staticmethod
         return XFAI_V0_FACTORY_ABI
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
@@ -34,4 +31,4 @@ class XFaiV2(SolidlyV2):
         return str(fee_float), fee_float
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.sync_factory_contract.functions.getPool, addr1)
+        mc.add_call(self.factory_contract.functions.getPool, addr1)
