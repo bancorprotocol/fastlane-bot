@@ -164,6 +164,7 @@ class BaseManager:
         exchange.sync_factory_contract = self.sync_factory_contracts[exchange.exchange_name]
 
         return exchange
+
     @property
     def fee_pairs(self) -> Dict:
         """
