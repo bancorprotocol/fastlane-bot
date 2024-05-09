@@ -82,4 +82,4 @@ class BancorV2(Exchange):
         """
         This function is unused for Bancor V2.
         """
-        pass
+        raise NotImplementedError

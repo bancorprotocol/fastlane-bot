@@ -249,4 +249,4 @@ class CarbonV1(Exchange):
         """
         This function is unused for Carbon.
         """
-        pass
+        raise NotImplementedError
