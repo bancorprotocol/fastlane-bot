@@ -30,9 +30,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
         if candidates is None:
             candidates = []
 
-        combos = self.get_comprehensive_triangles(
-            self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode
-        )
+        combos = self.get_comprehensive_triangles(self.flashloan_tokens, self.CCm)
 
         for src_token, miniverse in combos:
             try:
