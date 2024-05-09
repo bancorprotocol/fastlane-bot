@@ -233,7 +233,6 @@ def get_tkn_symbols(flashloan_tokens, tokens: pd.DataFrame) -> List:
 
     returns: list
     """
-    flashloan_tokens = flashloan_tokens.split(",")
     flashloan_tkn_symbols = []
     for tkn in flashloan_tokens:
         flashloan_tkn_symbols.append(get_tkn_symbol(tkn_address=tkn, tokens=tokens))
@@ -505,6 +504,7 @@ def handle_target_tokens(
             target_tokens = flashloan_tokens
         else:
             target_tokens = target_tokens.split(",")
+            target_tokens = [cfg.w3.to_checksum_address(x) for x in target_tokens]
             # target_tokens = [
             #     QueryInterface.cleanup_token_key(token) for token in target_tokens
             # ]
@@ -542,8 +542,9 @@ def handle_flashloan_tokens(
     List[str]
         A list of flashloan tokens to fetch data for.
     """
-    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
     flashloan_tokens = flashloan_tokens.split(",")
+    flashloan_tokens = [cfg.w3.to_checksum_address(x) for x in flashloan_tokens]
+    flt_symbols = get_tkn_symbols(flashloan_tokens=flashloan_tokens, tokens=tokens)
     unique_tokens = len(tokens["address"].unique())
     cfg.logger.info(f"unique_tokens: {unique_tokens}")
 
@@ -638,8 +639,8 @@ def get_config(
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
     cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
-        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
-        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
+        cfg.NATIVE_GAS_TOKEN_ADDRESS.lower() in flashloan_tokens.lower()
+        or cfg.WRAPPED_GAS_TOKEN_ADDRESS.lower() in flashloan_tokens.lower()
     )
     return cfg
 
