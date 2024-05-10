@@ -58,7 +58,7 @@ class BancorPolPool(Pool):
 
         """
         event_args = event["args"]
-        return "token" in event_args and "token0" not in event_args
+        return ("token" in event_args) and ("token0" not in event_args) and (event_args['token'] == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 
     def update_from_event(
         self, event_args: Dict[str, Any], data: Dict[str, Any]
