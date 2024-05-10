@@ -546,6 +546,7 @@ class BaseManager:
 
         """
         multicaller = MultiCaller(
+            web3=self.web3,
             target_contract=carbon_controller,
             multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
@@ -674,6 +675,7 @@ class BaseManager:
 
         """
         multicaller = MultiCaller(
+            web3=self.web3,
             target_contract=carbon_controller,
             multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )

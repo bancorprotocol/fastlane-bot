@@ -6,7 +6,7 @@ MultiCaller class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import Callable, ContextManager, Any, List, Dict
+from typing import Callable, Any, List, Dict
 
 from eth_abi import decode
 
@@ -36,27 +36,18 @@ def collapse_if_tuple(abi: Dict[str, Any]) -> str:
     return abi["type"]
 
 
-class MultiCaller(ContextManager):
+class MultiCaller:
     """
     Context manager for multicalls.
     """
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
-    def __init__(self, target_contract: Any, multicall_contract_address: str):
-        self.multicall_contract = target_contract.w3.eth.contract(
-            abi=MULTICALL_ABI,
-            address=multicall_contract_address
-        )
+    def __init__(self, web3: Any, target_contract: Any, multicall_contract_address: str):
+        self.multicall_contract = web3.eth.contract(abi=MULTICALL_ABI, address=multicall_contract_address)
         self.target_contract = target_contract
         self.contract_calls: List[Callable] = []
         self.output_types_list: List[List[str]] = []
-
-    def __enter__(self) -> 'MultiCaller':
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
 
     def add_call(self, call: Callable):
         self.contract_calls.append({

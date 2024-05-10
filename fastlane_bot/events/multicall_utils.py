@@ -12,10 +12,7 @@ from decimal import Decimal
 from typing import Dict, Any
 from typing import List, Tuple
 
-import web3.exceptions
-
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.pools import CarbonV1Pool
 from fastlane_bot.events.pools.base import Pool
 
@@ -141,6 +138,7 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
 
     """
     multicaller = MultiCaller(
+        web3=mgr.web3,
         target_contract=target_contract,
         multicall_contract_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS
     )

@@ -32,9 +32,9 @@ RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
 MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
 
-w3 = Web3(Web3.HTTPProvider(RPC_URL))
-contract = w3.eth.contract(address=CARBON_CONTROLLER_ADDRESS, abi=CARBON_CONTROLLER_ABI)
-multicaller = MultiCaller(target_contract=contract, multicall_contract_address=MULTICALL_CONTRACT_ADDRESS)
+web3 = Web3(Web3.HTTPProvider(RPC_URL))
+contract = web3.eth.contract(address=CARBON_CONTROLLER_ADDRESS, abi=CARBON_CONTROLLER_ABI)
+multicaller = MultiCaller(web3=web3, target_contract=contract, multicall_contract_address=MULTICALL_CONTRACT_ADDRESS)
 
 # ------------------------------------------------------------
 # Test      899
@@ -53,7 +53,7 @@ def test_test_multi_caller():
     for func in funcs:
         multicaller.add_call(func)
 
-    block_number = w3.eth.get_block('latest').number
+    block_number = web3.eth.get_block('latest').number
 
     sc_calls = [func.call(block_identifier=block_number) for func in funcs]
     mc_calls = multicaller.run_calls(block_identifier=block_number)
