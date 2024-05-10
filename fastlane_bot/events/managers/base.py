@@ -673,7 +673,7 @@ class BaseManager:
         multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
         for pair in all_pairs:
-            multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
+            multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(pair[0], pair[1]))
 
         return multicaller.run_calls(self.replay_from_block or "latest")
 
