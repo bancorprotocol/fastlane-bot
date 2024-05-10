@@ -15,12 +15,10 @@ from dotenv import load_dotenv
 load_dotenv()
 import time
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.config.multicaller import ContractMethodWrapper
 
 from web3 import Web3
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MultiCaller))
-print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(ContractMethodWrapper))
 
 
 from fastlane_bot.testing import *
@@ -33,6 +31,22 @@ require("3.0", __VERSION__)
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
 CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
+
+
+class ContractMethodWrapper:
+    """
+    Wraps a contract method to be used with multicall.
+    """
+
+    def __init__(self, original_method, multicaller):
+        self.original_method = original_method
+        self.multicaller = multicaller
+
+    def __call__(self, *args, **kwargs):
+        contract_call = self.original_method(*args, **kwargs)
+        self.multicaller.add_call(contract_call)
+        return contract_call
+
 
 class MockWeb3:
     class HTTPProvider:

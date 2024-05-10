@@ -86,23 +86,6 @@ def get_output_types_from_abi(abi: List[Dict[str, Any]], function_name: str) -> 
     raise ValueError(f"No function named {function_name} found in ABI.")
 
 
-class ContractMethodWrapper:
-    """
-    Wraps a contract method to be used with multicall.
-    """
-    __DATE__ = "2022-09-26"
-    __VERSION__ = "0.0.2"
-
-    def __init__(self, original_method, multicaller):
-        self.original_method = original_method
-        self.multicaller = multicaller
-
-    def __call__(self, *args, **kwargs):
-        contract_call = self.original_method(*args, **kwargs)
-        self.multicaller.add_call(contract_call)
-        return contract_call
-
-
 class MultiCaller(ContextManager):
     """
     Context manager for multicalls.
