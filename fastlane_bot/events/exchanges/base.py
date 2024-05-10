@@ -17,6 +17,7 @@ from typing import Dict, List, Type, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
+from fastlane_bot.config.multicaller import MultiCaller
 from ..pools.base import Pool
 from ..interfaces.subscription import Subscription
 
@@ -30,6 +31,7 @@ class Exchange(ABC):
     exchange_name: str
     base_exchange_name: str = ''
     pools: Dict[str, Pool] = field(default_factory=dict)
+    factory_contract: Contract = None
 
     __VERSION__ = "0.0.3"
     __DATE__ = "2024-03-20"
@@ -122,6 +124,13 @@ class Exchange(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2, *args):
+        """
+        Returns the Factory contract function used to fetch liquidity pools.
+        """
+        ...
+
     @staticmethod
     @abstractmethod
     async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:
@@ -186,7 +195,7 @@ class Exchange(ABC):
         return self.pools[key] if key in self.pools else None
 
     @abstractmethod
-    def get_factory_abi(self):
+    def factory_abi(self):
         """
                 Get the ABI of the exchange's Factory contract
 

@@ -19,6 +19,8 @@ FLASHLOAN_FEE_MAP = {
 }
 
 ETHEREUM = "ethereum"
+UNISWAP_V2_NAME = "uniswap_v2"
+UNISWAP_V3_NAME = "uniswap_v3"
 PANCAKESWAP_V2_NAME = "pancakeswap_v2"
 PANCAKESWAP_V3_NAME = "pancakeswap_v3"
 BUTTER_V3_NAME = "butter_v3"
@@ -31,3 +33,4 @@ SOLIDLY_V2_NAME = "solidly_v2"
 ECHODEX_V3_NAME = "echodex_v3"
 SECTA_V3_NAME = "secta_v3"
 METAVAULT_V3_NAME = "metavault_v3"
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

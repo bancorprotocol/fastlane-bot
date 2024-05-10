@@ -16,6 +16,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BALANCER_VAULT_ABI, BALANCER_POOL_ABI_V1
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -38,7 +39,7 @@ class Balancer(Exchange):
         return BALANCER_VAULT_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Balancer
         return BALANCER_VAULT_ABI
 
@@ -88,3 +89,9 @@ class Balancer(Exchange):
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[index]
+
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
+        """
+        This function is unused for Carbon.
+        """
+        raise NotImplementedError

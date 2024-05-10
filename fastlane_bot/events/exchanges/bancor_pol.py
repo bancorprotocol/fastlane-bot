@@ -16,6 +16,7 @@ from typing import List, Type, Tuple, Any, Dict, Callable
 
 from web3.contract import Contract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot import Config
 from ..exchanges.base import Exchange
@@ -41,7 +42,7 @@ class BancorPol(Exchange):
         return BANCOR_POL_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor POL
         return BANCOR_POL_ABI
 
@@ -62,6 +63,12 @@ class BancorPol(Exchange):
 
     async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         return self.ETH_ADDRESS if event.args["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
+
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
+        """
+        This function is unused for Carbon.
+        """
+        raise NotImplementedError
 
     def save_strategy(
         self,

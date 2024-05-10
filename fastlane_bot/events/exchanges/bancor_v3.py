@@ -16,6 +16,7 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract
 
+from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -42,7 +43,7 @@ class BancorV3(Exchange):
         return BANCOR_V3_POOL_COLLECTION_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor V3
         return BANCOR_V3_POOL_COLLECTION_ABI
 
@@ -64,3 +65,9 @@ class BancorV3(Exchange):
             if event.args["pool"] != self.BNT_ADDRESS
             else event.args["tkn_address"]
         )
+
+    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
+        """
+        This function is unused for Carbon.
+        """
+        raise NotImplementedError
