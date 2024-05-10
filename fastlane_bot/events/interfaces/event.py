@@ -1,27 +1,27 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 @dataclass
 class Event:
     args: Dict[str, Any]
     event: str
-    log_index: int
-    transaction_index: int
-    transaction_hash: str
-    address: str
-    block_hash: str
-    block_number: int
+    log_index: Optional[int]
+    transaction_index: Optional[int]
+    transaction_hash: Optional[str]
+    address: Optional[str]
+    block_hash: Optional[str]
+    block_number: Optional[int]
 
     @classmethod
     def from_dict(cls, data):
         return cls(
             args=data["args"],
             event=data["event"],
-            log_index=data["logIndex"],
-            transaction_index=data["transactionIndex"],
-            transaction_hash=data["transactionHash"],
-            address=data["address"],
-            block_hash=data["blockHash"],
-            block_number=data["blockNumber"],
+            log_index=data.get("logIndex", None),
+            transaction_index=data.get("transactionIndex", None),
+            transaction_hash=data.get("transactionHash", None),
+            address=data.get("address", None),
+            block_hash=data.get("blockHash", None),
+            block_number=data.get("blockNumber", None),
         )
