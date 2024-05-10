@@ -12,6 +12,7 @@ from web3.datastructures import AttributeDict
 from web3.types import HexBytes
 
 from fastlane_bot import Bot
+from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
 from fastlane_bot.events.utils import filter_latest_events, complex_handler
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -47,10 +48,10 @@ class MockManager():
         return 'uniswap_v2'
 mocked_mgr = MockManager()
 
-event1 = AttributeDict({'args': {'reserve0': 100, 'reserve1': 100}, 'event': 'Sync', 'address': '0xabc', 'blockNumber': 5, 'transactionIndex': 0, 'logIndex': 0})
-event2 = AttributeDict({'args': {'reserve0': 200, 'reserve1': 200}, 'event': 'Sync', 'address': '0xabc', 'blockNumber': 10, 'transactionIndex': 1, 'logIndex': 1})
-event3 = AttributeDict({'args': {'reserve0': 300, 'reserve1': 300}, 'event': 'Sync', 'address': '0xdef', 'blockNumber': 7, 'transactionIndex': 1, 'logIndex': 1})
-mock_events = [[event1, event2, event3]]
+event1 = Event.from_dict({'args': {'reserve0': 100, 'reserve1': 100}, 'event': 'Sync', 'address': '0xabc', 'blockNumber': 5, 'transactionIndex': 0, 'logIndex': 0, 'transactionHash': '', 'blockHash': ''})
+event2 = Event.from_dict({'args': {'reserve0': 200, 'reserve1': 200}, 'event': 'Sync', 'address': '0xabc', 'blockNumber': 10, 'transactionIndex': 1, 'logIndex': 1, 'transactionHash': '', 'blockHash': ''})
+event3 = Event.from_dict({'args': {'reserve0': 300, 'reserve1': 300}, 'event': 'Sync', 'address': '0xdef', 'blockNumber': 7, 'transactionIndex': 1, 'logIndex': 1, 'transactionHash': '', 'blockHash': ''})
+mock_events = [event1, event2, event3]
 
 
 # ------------------------------------------------------------
@@ -62,9 +63,9 @@ def test_test_filter_latest_events():
 # ------------------------------------------------------------
     
     result = filter_latest_events(mocked_mgr, mock_events)
-    assert (len(result) == len({event['address'] for event in result}))
-    pool_address = result[0]['address']
-    pool_events = [event for event in mock_events[0] if (event['address'] == pool_address)]
+    assert (len(result) == len({event.address for event in result}))
+    pool_address = result[0].address
+    pool_events = [event for event in mock_events if (event.address == pool_address)]
     
 
 # ------------------------------------------------------------
