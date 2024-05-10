@@ -58,7 +58,7 @@ class BancorPolPool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        event_args = event["args"]
+        event_args = event.args
         return ("token" in event_args) and ("token0" not in event_args) and (event_args['token'] == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 
     def update_from_event(
