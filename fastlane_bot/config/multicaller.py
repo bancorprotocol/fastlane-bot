@@ -43,20 +43,14 @@ class MultiCaller:
     __DATE__ = "2022-09-26"
     __VERSION__ = "0.0.2"
 
-    def __init__(self, web3: Any, target_contract: Any, multicall_contract_address: str):
+    def __init__(self, web3: Any, multicall_contract_address: str):
         self.multicall_contract = web3.eth.contract(abi=MULTICALL_ABI, address=multicall_contract_address)
-        self.target_contract = target_contract
         self.contract_calls: List[Callable] = []
         self.output_types_list: List[List[str]] = []
 
     def add_call(self, call: Callable):
-        self.contract_calls.append({
-            'target': self.target_contract.address,
-            'callData': call._encode_transaction_data()
-        })
-        self.output_types_list.append([
-            collapse_if_tuple(item) for item in call.abi['outputs']
-        ])
+        self.contract_calls.append({'target': call.address, 'callData': call._encode_transaction_data()})
+        self.output_types_list.append([collapse_if_tuple(item) for item in call.abi['outputs']])
 
     def run_calls(self, block_identifier: Any = 'latest') -> List[Any]:
         encoded_data = self.multicall_contract.functions.tryAggregate(

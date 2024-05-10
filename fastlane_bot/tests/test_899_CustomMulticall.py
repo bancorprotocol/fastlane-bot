@@ -29,12 +29,12 @@ require("3.0", __VERSION__)
 
 WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 RPC_URL = f"https://eth-mainnet.alchemyapi.io/v2/{WEB3_ALCHEMY_PROJECT_ID}"
-CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
 MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
 
 web3 = Web3(Web3.HTTPProvider(RPC_URL))
-contract = web3.eth.contract(address=CARBON_CONTROLLER_ADDRESS, abi=CARBON_CONTROLLER_ABI)
-multicaller = MultiCaller(web3=web3, target_contract=contract, multicall_contract_address=MULTICALL_CONTRACT_ADDRESS)
+multicaller = MultiCaller(web3, MULTICALL_CONTRACT_ADDRESS)
+carbon_contract = web3.eth.contract(address=CARBON_CONTROLLER_ADDRESS, abi=CARBON_CONTROLLER_ABI)
 
 # ------------------------------------------------------------
 # Test      899
@@ -45,9 +45,9 @@ def test_test_multi_caller():
 # ------------------------------------------------------------
     
     # +
-    pairs = contract.caller.pairs()[:10]
-    fee_funcs = [contract.functions.pairTradingFeePPM(pair[0], pair[1]) for pair in pairs]
-    strat_funcs = [contract.functions.strategiesByPair(pair[0], pair[1], 0, 5000) for pair in pairs]
+    pairs = carbon_contract.caller.pairs()[:10]
+    fee_funcs = [carbon_contract.functions.pairTradingFeePPM(pair[0], pair[1]) for pair in pairs]
+    strat_funcs = [carbon_contract.functions.strategiesByPair(pair[0], pair[1], 0, 5000) for pair in pairs]
     funcs = fee_funcs + strat_funcs
 
     for func in funcs:

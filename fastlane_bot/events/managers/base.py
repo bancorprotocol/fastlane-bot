@@ -545,11 +545,7 @@ class BaseManager:
             The strategies.
 
         """
-        multicaller = MultiCaller(
-            web3=self.web3,
-            target_contract=carbon_controller,
-            multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
         for pair in pairs:
             # Loading the strategies for each pair without executing the calls yet
@@ -674,11 +670,7 @@ class BaseManager:
             The fees by pair.
 
         """
-        multicaller = MultiCaller(
-            web3=self.web3,
-            target_contract=carbon_controller,
-            multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
         for pair in all_pairs:
             multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
