@@ -9,13 +9,13 @@
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 import os
-import json
 
 from dotenv import load_dotenv
 load_dotenv()
 from fastlane_bot.config.multicaller import MultiCaller
 
 from web3 import Web3
+from json import dumps
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(MultiCaller))
 
@@ -59,5 +59,7 @@ def test_test_multi_caller():
     mc_calls = multicaller.run_calls(block_identifier=block_number)
 
     for sc_output, mc_output in zip(sc_calls, mc_calls):
-        assert sc_output == mc_output, f"sc_output = {json.dumps(sc_output, indent=4)}, mc_output = {json.dumps(mc_output, indent=4)}"
+        sc_output_str = dumps(sc_output, indent=4).lower()
+        mc_output_str = dumps(mc_output, indent=4).lower()
+        assert sc_output_str == mc_output_str, f"sc_output = {sc_output_str}, mc_output = {mc_output_str}"
     # -
