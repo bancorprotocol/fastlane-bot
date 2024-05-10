@@ -36,7 +36,7 @@ class EventGatherer:
         for exchange_name, exchange in exchanges.items():
             subscriptions = exchange.get_subscriptions(event_contracts[exchange_name])
             for sub in subscriptions:
-                if sub.get_topic not in unique_topics:
+                if sub.topic not in unique_topics:
                     unique_topics.add(sub.topic)
                     self._subscriptions.append(sub)
 
