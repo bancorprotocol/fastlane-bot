@@ -14,6 +14,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastlane_bot import Bot, Config
+from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 Base = None
@@ -77,7 +78,7 @@ def test_test_update_from_event_carbon_v1_pair_create():
 
     assert (event['args']['token0'], event['args']['token1']) not in manager.fee_pairs[exchange_name]
 
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
 
     assert (event['args']['token0'], event['args']['token1']) in manager.fee_pairs[exchange_name]
     
@@ -112,7 +113,7 @@ def test_test_update_from_event_carbon_v1_trading_fee_updated():
         # find all pools with fee==prevFeePPM
         prev_default_pools = [idx for idx, pool in enumerate(manager.pool_data) if pool['fee'] == prevFeePPM]
         
-        manager.update_from_event(event)
+        manager.update_from_event(Event.from_dict(event))
     
         for idx in prev_default_pools:
             assert manager.pool_data[idx]['fee'] == newFeePPM

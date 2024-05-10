@@ -17,8 +17,9 @@ from typing import List, Type, Tuple, Any
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BALANCER_VAULT_ABI, BALANCER_POOL_ABI_V1
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -46,6 +47,9 @@ class Balancer(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.AuthorizerChanged]
+
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        return []
 
     async def get_fee(self, pool_id: str, contract: Contract) -> Tuple[str, float]:
         pool = self.get_pool(pool_id)

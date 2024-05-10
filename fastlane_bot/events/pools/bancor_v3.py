@@ -15,6 +15,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -34,14 +35,14 @@ class BancorV3Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Bancor v3 event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event arguments.
 
         Returns
@@ -50,20 +51,19 @@ class BancorV3Pool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        event_args = event["args"]
+        event_args = event.args
         return "pool" in event_args
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         See base class.
         """
-        event_args = event_args["args"]
-        if event_args["tkn_address"] == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
-            data["tkn0_balance"] = event_args["newLiquidity"]
+        if event.args["tkn_address"] == "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+            data["tkn0_balance"] = event.args["newLiquidity"]
         else:
-            data["tkn1_balance"] = event_args["newLiquidity"]
+            data["tkn1_balance"] = event.args["newLiquidity"]
 
         for key, value in data.items():
             self.state[key] = value
