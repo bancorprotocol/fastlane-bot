@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Dict
 
 import asyncio
 import nest_asyncio
@@ -21,8 +22,8 @@ class EventGatherer:
     def __init__(
         self,
         w3: AsyncWeb3,
-        exchanges: dict[str, Exchange],
-        event_contracts: dict[str, Contract],
+        exchanges: Dict[str, Exchange],
+        event_contracts: Dict[str, Contract],
     ):
         """ Initializes the EventManager.
         Args:
