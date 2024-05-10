@@ -38,5 +38,3 @@ class Subscription:
             print(log)
             raise
         return Event.from_dict(event_data)
-
-
