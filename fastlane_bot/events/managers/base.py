@@ -546,24 +546,16 @@ class BaseManager:
 
         """
         multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            target_contract=carbon_controller,
+            multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         for pair in pairs:
             # Loading the strategies for each pair without executing the calls yet
-            multicaller.add_call(
-                carbon_controller.functions.strategiesByPair,
-                pair[0],
-                pair[1],
-                pair[2],
-                pair[3],
-            )
+            multicaller.add_call(carbon_controller.functions.strategiesByPair(*pair))
 
         # Fetch strategies for each pair from the CarbonController contract object
-        strategies_by_pair = multicaller.multicall()
+        strategies_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
 
         self.carbon_inititalized[exchange_name] = True
 
@@ -682,18 +674,14 @@ class BaseManager:
 
         """
         multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
+            target_contract=carbon_controller,
+            multicall_contract_address=self.cfg.MULTICALL_CONTRACT_ADDRESS
         )
 
         for pair in all_pairs:
-            multicaller.add_call(
-                carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
-            )
+            multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
 
-        return multicaller.multicall()
+        return multicaller.run_calls(self.replay_from_block or "latest")
 
     def get_tkn_symbol_and_decimals(
             self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str

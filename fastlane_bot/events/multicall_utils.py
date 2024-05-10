@@ -122,7 +122,7 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
     ]
 
 
-def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: Any, mgr: Any, current_block: int):
+def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, mgr: Any, current_block: int):
     """
     Helper function for multicall.
 
@@ -132,36 +132,38 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
         Name of the exchange.
     rows_to_update : List
         List of rows to update.
-    multicall_contract : Any
-        The multicall contract.
+    target_contract : Any
+        The target contract.
     mgr : Any
         Manager object containing configuration and pool data.
     current_block : int
         The current block.
 
     """
-    multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block, web3=mgr.web3, multicall_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
+    multicaller = MultiCaller(
+        target_contract=target_contract,
+        multicall_contract_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS
+    )
 
     for row in rows_to_update:
         pool_info = mgr.pool_data[row]
         pool_info["last_updated_block"] = current_block
         if exchange == "bancor_v3":
-            multicaller.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
+            multicaller.add_call(target_contract.functions.tradingLiquidity(pool_info["tkn1_address"]))
         elif exchange == "bancor_pol":
-            multicaller.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
-            multicaller.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
+            multicaller.add_call(target_contract.functions.tokenPrice(pool_info["tkn0_address"]))
+            multicaller.add_call(target_contract.functions.amountAvailableForTrading(pool_info["tkn0_address"]))
         elif exchange in mgr.cfg.CARBON_V1_FORKS:
-            multicaller.add_call(multicall_contract.functions.strategy, pool_info["cid"])
+            multicaller.add_call(target_contract.functions.strategy(pool_info["cid"]))
         elif exchange == 'balancer':
-            multicaller.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
+            multicaller.add_call(target_contract.functions.getPoolTokens(pool_info["anchor"]))
         else:
             raise ValueError(f"Exchange {exchange} not supported")
 
-    result_list = multicaller.multicall()
+    result_list = multicaller.run_calls(current_block)
 
     # Handling for Bancor POL - combine results into a list of tuples
     if exchange == "bancor_pol":
-        assert len(result_list) % 2 == 0, f"[multicall_helper] odd number of results for Bancor POL {len(result_list)}"
         total_pools = len(result_list) // 2
         result_list = [(result_list[idx][0], result_list[idx][1], result_list[idx + total_pools]) for idx in range(total_pools)]
 
@@ -377,6 +379,6 @@ def multicall_every_iteration(current_block: int, mgr: Any):
     ]
 
     for idx, exchange in enumerate(multicallable_exchanges):
-        multicall_contract = get_multicall_contract_for_exchange(mgr, exchange)
+        target_contract = get_multicall_contract_for_exchange(mgr, exchange)
         rows_to_update = multicallable_pool_rows[idx]
-        multicall_helper(exchange, rows_to_update, multicall_contract, mgr, current_block)
+        multicall_helper(exchange, rows_to_update, target_contract, mgr, current_block)
