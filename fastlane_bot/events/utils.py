@@ -34,7 +34,6 @@ from fastlane_bot.events.interface import QueryInterface
 
 from fastlane_bot.helpers import TxHelpers
 from fastlane_bot.utils import safe_int
-from .event_gatherer import EventGatherer
 from .interfaces.event import Event
 
 
@@ -1165,7 +1164,7 @@ def get_latest_events(
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
-    event_gatherer: EventGatherer
+    event_gatherer: "EventGatherer"
 ) -> List[Any]:
     """
     Gets the latest events.
