@@ -11,6 +11,7 @@
 import json
 
 from fastlane_bot import Bot
+from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.exchanges.balancer import Balancer
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
@@ -261,7 +262,7 @@ def test_test_bancor_v2_exchange():
     async def test_bancor_v2_exchange():
         assert (bancor_v2_exchange.get_abi() == BANCOR_V2_CONVERTER_ABI)
         assert (await bancor_v2_exchange.get_fee('', mocked_contract) == (3000, 0.003))
-        assert (await bancor_v2_exchange.get_tkn0('', mocked_contract, setup_data['bancor_v2_event']) == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
+        assert (await bancor_v2_exchange.get_tkn0('', mocked_contract, Event.from_dict(setup_data['bancor_v2_event'])) == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
         
     # Run the test in an event loop
     asyncio.run(test_bancor_v2_exchange())
@@ -283,7 +284,7 @@ def test_test_carbon_v1_exchange_update():
     async def test_carbon_v1_exchange_update():
         assert (carbon_v1_exchange.get_abi() == CARBON_CONTROLLER_ABI)
         assert (await carbon_v1_exchange.get_fee('', mocked_contract) == ('2000', 0.002))
-        assert (await carbon_v1_exchange.get_tkn0('', mocked_contract, setup_data['carbon_v1_event_update']) == setup_data['carbon_v1_event_update']['args']['token0'])
+        assert (await carbon_v1_exchange.get_tkn0('', mocked_contract, Event.from_dict(setup_data['carbon_v1_event_update'])) == setup_data['carbon_v1_event_update']['args']['token0'])
         
     # Run the test in an event loop
     asyncio.run(test_carbon_v1_exchange_update())
@@ -305,7 +306,7 @@ def test_test_carbon_v1_exchange_create():
     async def test_carbon_v1_exchange_create():
         assert (carbon_v1_exchange.get_abi() == CARBON_CONTROLLER_ABI)
         assert (await carbon_v1_exchange.get_fee('', mocked_contract) == ('2000', 0.002))
-        assert (await carbon_v1_exchange.get_tkn0('', mocked_contract, setup_data['carbon_v1_event_create']) == setup_data['carbon_v1_event_create']['args']['token0'])
+        assert (await carbon_v1_exchange.get_tkn0('', mocked_contract, Event.from_dict(setup_data['carbon_v1_event_create'])) == setup_data['carbon_v1_event_create']['args']['token0'])
         
     # Run the test in an event loop
     asyncio.run(test_carbon_v1_exchange_create())
@@ -333,7 +334,7 @@ def test_test_carbon_v1_exchange_delete():
     async def test_bancor_pol_exchange():
         assert (bancor_pol_exchange.get_abi() == BANCOR_POL_ABI)
         assert (await bancor_pol_exchange.get_fee('', mocked_contract) == ('0.000', 0.0))
-        assert (await bancor_pol_exchange.get_tkn0('', mocked_contract, setup_data['bancor_pol_trading_enabled_event']) == "0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83")
+        assert (await bancor_pol_exchange.get_tkn0('', mocked_contract, Event.from_dict(setup_data['bancor_pol_trading_enabled_event'])) == "0x86772b1409b61c639EaAc9Ba0AcfBb6E238e5F83")
         
     # Run the test in an event loop
     asyncio.run(test_bancor_pol_exchange())
