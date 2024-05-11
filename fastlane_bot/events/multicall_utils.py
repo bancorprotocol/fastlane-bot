@@ -149,7 +149,7 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
             multicaller.add_call(target_contract.functions.amountAvailableForTrading(pool_info["tkn0_address"]))
         elif exchange in mgr.cfg.CARBON_V1_FORKS:
             multicaller.add_call(target_contract.functions.strategy(pool_info["cid"]))
-        elif exchange == 'balancer':
+        elif exchange == "balancer":
             multicaller.add_call(target_contract.functions.getPoolTokens(pool_info["anchor"]))
         else:
             raise ValueError(f"Exchange {exchange} not supported")
