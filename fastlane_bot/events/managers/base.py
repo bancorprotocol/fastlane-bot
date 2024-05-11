@@ -566,7 +566,7 @@ class BaseManager:
         self.cfg.logger.debug(
             f"[events.managers.base] Retrieved {len(strategies_by_pair)} {exchange_name} strategies"
         )
-        return [s for strat in strategies_by_pair if strat for s in strat if s]
+        return [strategy for strategies in strategies_by_pair for strategy in strategies]
 
     def get_strats_by_state(self, pairs: List[List[Any]], exchange_name: str) -> List[List[int]]:
         """
