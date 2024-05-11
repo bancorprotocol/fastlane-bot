@@ -215,7 +215,7 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
             "address": pool_info["address"],
         }
     elif exchange == "balancer":
-        token, balances, last_change_block = result
+        tokens, balances, last_change_block = result
 
         params = {
             "exchange_name": exchange,
