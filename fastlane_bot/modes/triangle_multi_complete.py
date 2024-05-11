@@ -40,7 +40,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
                 r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True, verbose=True
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                if len(trade_instructions_dic) < 3:
+                if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
                     # Failed to converge
                     continue
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
@@ -48,10 +48,6 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
 
             except Exception as e:
                 self.ConfigObj.logger.debug(f"[triangle multi] {str(e)}")
-                continue
-            if trade_instructions_dic is None:
-                continue
-            if len(trade_instructions_dic) < 2:
                 continue
             profit_src = -r.result
 
