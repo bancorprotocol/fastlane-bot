@@ -159,8 +159,8 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
     if exchange == "bancor_pol":
         # Assert that all `amountAvailableForTrading` results are valid
         assert all(result is not None for result in result_list[1::2])
-        # Replace every invalid `tokenPrice` result with (0, 0)
-        result_list = [result if result is not None else (0, 0) for result in result_list]
+        # Rearrange the results as a list of `(tokenPrice, amountAvailableForTrading)` tuples
+        result_list = zip(result_list[0::2], result_list[1::2])
     else:
         # Assert that all results are valid
         assert all(result is not None for result in result_list)
@@ -248,9 +248,8 @@ def extract_pol_params_for_multicall(result: Any, pool_info: Dict) -> Dict[str, 
         The extracted params.
 
     """
-    p0, p1, tkn_balance = result
-    token_price = Decimal(p1) / Decimal(p0)
-    token_price = int(str(encode_token_price(token_price)))
+    p, tkn_balance = result
+    token_price = encode_token_price(Decimal(p[1]) / Decimal(p[0])) if p is not None else 0
 
     result = {
         "fee": "0.000",
