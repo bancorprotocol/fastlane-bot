@@ -58,7 +58,9 @@ class MultiCaller:
             self.contract_calls
         ).call(block_identifier=block_identifier)
 
-        return [
-            decode(output_types, encoded_output[1])[0] if encoded_output[0] else None
+        results_list = [
+            decode(output_types, encoded_output[1]) if encoded_output[0] else (None,)
             for output_types, encoded_output in zip(self.output_types_list, encoded_data)
         ]
+
+        return [results if len(results) > 1 else results[0] for results in results_list]

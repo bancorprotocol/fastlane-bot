@@ -160,7 +160,7 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
         # Assert that all `amountAvailableForTrading` results are valid
         assert all(result is not None for result in result_list[1::2])
         # Rearrange the results as a list of `(tokenPrice, amountAvailableForTrading)` tuples
-        result_list = zip(result_list[0::2], result_list[1::2])
+        result_list = [result for result in zip(result_list[0::2], result_list[1::2])]
     else:
         # Assert that all results are valid
         assert all(result is not None for result in result_list)
@@ -215,15 +215,15 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
             "address": pool_info["address"],
         }
     elif exchange == "balancer":
-        pool_balances = result
+        token, balances, last_change_block = result
 
         params = {
             "exchange_name": exchange,
             "address": pool_info["address"],
         }
 
-        for idx, bal in enumerate(pool_balances):
-            params[f"tkn{str(idx)}_balance"] = int(bal)
+        for idx, balance in enumerate(balances):
+            params[f"tkn{str(idx)}_balance"] = balance
 
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
