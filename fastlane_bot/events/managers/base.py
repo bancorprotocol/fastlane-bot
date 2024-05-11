@@ -554,6 +554,9 @@ class BaseManager:
         # Fetch strategies for each pair from the CarbonController contract object
         strategies_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
 
+        # Assert that no result is None
+        assert all(result is not None for result in strategies_by_pair)
+
         self.carbon_inititalized[exchange_name] = True
 
         # Log that Carbon is initialized
@@ -675,7 +678,12 @@ class BaseManager:
         for pair in all_pairs:
             multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
 
-        return multicaller.run_calls(self.replay_from_block or "latest")
+        fees_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
+
+        # Assert that no result is None
+        assert all(result is not None for result in fees_by_pair)
+
+        return fees_by_pair
 
     def get_tkn_symbol_and_decimals(
             self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str

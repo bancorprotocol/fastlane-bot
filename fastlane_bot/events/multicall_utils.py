@@ -156,10 +156,14 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
 
     result_list = multicaller.run_calls(current_block)
 
-    # Handling for Bancor POL - combine results into a list of tuples
     if exchange == "bancor_pol":
-        total_pools = len(result_list) // 2
-        result_list = [(result_list[idx][0], result_list[idx][1], result_list[idx + total_pools]) for idx in range(total_pools)]
+        # Assert that no `amountAvailableForTrading` result is None
+        assert all(result is not None for result in result_list[1::2])
+        # Replace every `tokenPrice` result which is None with (0, 0)
+        result_list = [result if result is not None else (0, 0) for result in result_list]
+    else:
+        # Assert that no result is None
+        assert all(result is not None for result in result_list)
 
     for row, result in zip(rows_to_update, result_list):
         pool_info = mgr.pool_data[row]

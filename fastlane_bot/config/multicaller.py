@@ -54,16 +54,11 @@ class MultiCaller:
 
     def run_calls(self, block_identifier: Any = 'latest') -> List[Any]:
         encoded_data = self.multicall_contract.functions.tryAggregate(
-            True,
+            False,
             self.contract_calls
         ).call(block_identifier=block_identifier)
 
-        decoded_data_list = [
-            decode(output_types, encoded_output[1]) if encoded_output[0] else (None,)
+        return [
+            decode(output_types, encoded_output[1])[0] if encoded_output[0] else None
             for output_types, encoded_output in zip(self.output_types_list, encoded_data)
         ]
-
-        return_data = [i[0] for i in decoded_data_list if len(i) == 1]
-        return_data += [i[1] for i in decoded_data_list if len(i) > 1]
-
-        return return_data
