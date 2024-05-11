@@ -554,7 +554,7 @@ class BaseManager:
         # Fetch strategies for each pair from the CarbonController contract object
         strategies_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
 
-        # Assert that no result is None
+        # Assert that all results are valid
         assert all(result is not None for result in strategies_by_pair)
 
         self.carbon_inititalized[exchange_name] = True
@@ -680,7 +680,7 @@ class BaseManager:
 
         fees_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
 
-        # Assert that no result is None
+        # Assert that all results are valid
         assert all(result is not None for result in fees_by_pair)
 
         return fees_by_pair

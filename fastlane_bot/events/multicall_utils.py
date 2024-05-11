@@ -157,12 +157,12 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
     result_list = multicaller.run_calls(current_block)
 
     if exchange == "bancor_pol":
-        # Assert that no `amountAvailableForTrading` result is None
+        # Assert that all `amountAvailableForTrading` results are valid
         assert all(result is not None for result in result_list[1::2])
-        # Replace every `tokenPrice` result which is None with (0, 0)
+        # Replace every invalid `tokenPrice` result with (0, 0)
         result_list = [result if result is not None else (0, 0) for result in result_list]
     else:
-        # Assert that no result is None
+        # Assert that all results are valid
         assert all(result is not None for result in result_list)
 
     for row, result in zip(rows_to_update, result_list):
