@@ -169,8 +169,7 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
         pool_info = mgr.pool_data[row]
         params = extract_params_for_multicall(exchange, result, pool_info, mgr)
         pool = mgr.get_or_init_pool(pool_info)
-        pool, pool_info = update_pool_for_multicall(params, pool_info, pool)
-        mgr.pool_data[row] = pool_info
+        update_pool_for_multicall(params, pool_info, pool)
         update_mgr_exchanges_for_multicall(mgr, exchange, pool, pool_info)
 
 
@@ -270,7 +269,7 @@ def extract_pol_params_for_multicall(result: Any, pool_info: Dict) -> Dict[str, 
     return result
 
 
-def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any) -> Tuple[Pool, Dict]:
+def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any):
     """
     Update the pool for multicall.
 
@@ -283,16 +282,10 @@ def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any
     pool : Any
         The pool.
 
-    Returns
-    -------
-    Tuple[Pool, Dict]
-        The updated pool and pool info.
-
     """
     for key, value in params.items():
         pool_info[key] = value
         pool.state[key] = value
-    return pool, pool_info
 
 
 def update_mgr_exchanges_for_multicall(mgr: Any, exchange: str, pool: Any, pool_info: Dict[str, Any]):
