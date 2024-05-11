@@ -63,4 +63,5 @@ class MultiCaller:
             for output_types, encoded_output in zip(self.output_types_list, encoded_data)
         ]
 
+        # Convert every single-value tuple into a single value
         return [result if len(result) > 1 else result[0] for result in result_list]
