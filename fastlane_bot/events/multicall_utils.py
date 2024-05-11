@@ -167,8 +167,8 @@ def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, 
 
     for row, result in zip(rows_to_update, result_list):
         pool_info = mgr.pool_data[row]
-        params = extract_params_for_multicall(exchange, result, pool_info, mgr)
         pool = mgr.get_or_init_pool(pool_info)
+        params = extract_params_for_multicall(exchange, result, pool_info, mgr)
         update_pool_for_multicall(params, pool_info, pool)
         update_mgr_exchanges_for_multicall(mgr, exchange, pool, pool_info)
 
@@ -189,7 +189,6 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         Manager object containing configuration and pool data.
 
     """
-    params = {}
     if exchange in mgr.cfg.CARBON_V1_FORKS:
         strategy = result
         fake_event = {
@@ -202,7 +201,24 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         params = CarbonV1Pool.parse_event(pool_info["state"], fake_event, "None")
         params["exchange_name"] = exchange
     elif exchange == "bancor_pol":
-        params = extract_pol_params_for_multicall(result, pool_info)
+        p, tkn_balance = result
+        token_price = encode_token_price(Decimal(p[1]) / Decimal(p[0])) if p is not None else 0
+        params = {
+            "fee": "0.000",
+            "fee_float": 0.000,
+            "tkn0_balance": 0,
+            "tkn1_balance": 0,
+            "exchange_name": pool_info["exchange_name"],
+            "address": pool_info["address"],
+            "y_0": tkn_balance,
+            "z_0": tkn_balance,
+            "A_0": 0,
+            "B_0": token_price,
+            "y_1": 0,
+            "z_1": 0,
+            "A_1": 0,
+            "B_1": 0,
+        }
     elif exchange == "bancor_v3":
         pool_balances = result
         params = {
@@ -215,58 +231,16 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         }
     elif exchange == "balancer":
         tokens, balances, last_change_block = result
-
         params = {
             "exchange_name": exchange,
             "address": pool_info["address"],
         }
-
         for idx, balance in enumerate(balances):
             params[f"tkn{str(idx)}_balance"] = balance
-
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
 
     return params
-
-
-def extract_pol_params_for_multicall(result: Any, pool_info: Dict) -> Dict[str, Any]:
-    """
-    Extract the Bancor POL params for multicall.
-
-    Parameters
-    ----------
-    result : Any
-        The result.
-    pool_info : Dict
-        The pool info.
-
-    Returns
-    -------
-    Dict[str, Any]
-        The extracted params.
-
-    """
-    p, tkn_balance = result
-    token_price = encode_token_price(Decimal(p[1]) / Decimal(p[0])) if p is not None else 0
-
-    result = {
-        "fee": "0.000",
-        "fee_float": 0.000,
-        "tkn0_balance": 0,
-        "tkn1_balance": 0,
-        "exchange_name": pool_info["exchange_name"],
-        "address": pool_info["address"],
-        "y_0": tkn_balance,
-        "z_0": tkn_balance,
-        "A_0": 0,
-        "B_0": token_price,
-        "y_1": 0,
-        "z_1": 0,
-        "A_1": 0,
-        "B_1": 0,
-    }
-    return result
 
 
 def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any):
