@@ -46,8 +46,8 @@ def test_test_multi_caller():
     
     # +
     pairs = carbon_contract.caller.pairs()[:10]
-    fee_funcs = [carbon_contract.functions.pairTradingFeePPM(pair[0], pair[1]) for pair in pairs]
-    strat_funcs = [carbon_contract.functions.strategiesByPair(pair[0], pair[1], 0, 5000) for pair in pairs]
+    fee_funcs = [carbon_contract.functions.pairTradingFeePPM(*pair) for pair in pairs]
+    strat_funcs = [carbon_contract.functions.strategiesByPair(*pair, 0, 5000) for pair in pairs]
     funcs = fee_funcs + strat_funcs
 
     for func in funcs:
