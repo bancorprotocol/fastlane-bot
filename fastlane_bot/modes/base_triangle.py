@@ -216,7 +216,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                     non_carbon_curves += [x]
             all_relevant_pairs_info[pair]['non_carbon_curves'] = non_carbon_curves
             all_relevant_pairs_info[pair]['carbon_curves'] = carbon_curves
-            all_relevant_pairs_info[pair]['curves'] = non_carbon_curves + [carbon_curves] if len(carbon_curves) > 0 else non_carbon_curves  # condense carbon curves into a single list
+            all_relevant_pairs_info[pair]['curves'] = non_carbon_curves + carbon_curves
             all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
             all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
         return all_relevant_pairs_info
@@ -226,8 +226,8 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         for triangle in valid_triangles:
             multiverse = [all_relevant_pairs_info[pair]['curves'] for pair in triangle]
             product_of_triangle = list(itertools.product(multiverse[0], multiverse[1], multiverse[2]))
-            flt_triangle_analysis_set += [(flt, item) for items in product_of_triangle for item in items]
-        
+            flt_triangle_analysis_set += [(flt, item) for item in product_of_triangle]
+
         self.ConfigObj.logger.debug(f"[base_triangle.get_analysis_set_per_flt] Length of flt_triangle_analysis_set: {flt, len(flt_triangle_analysis_set)}")
         return flt_triangle_analysis_set
 
