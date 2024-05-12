@@ -82,17 +82,17 @@ class PoolFinder:
 
         for exchange in self._exchanges:
             for pair_chunk in chunked_pairs:
-                mc = MultiCaller(contract=exchange.factory_contract, web3=self._web3, multicall_address=self._multicall_address)
+                mc = MultiCaller(self._web3, self._multicall_address)
                 for pair in pair_chunk:
                     if exchange.base_exchange_name in [UNISWAP_V2_NAME, SOLIDLY_V2_NAME]:
                         mc.add_call(exchange.get_pool_func_call(pair[0], pair[1]))
                     elif exchange.base_exchange_name == UNISWAP_V3_NAME:
                         for fee in self._uni_v3_fee_tiers[exchange.exchange_name]:
                             mc.add_call(exchange.get_pool_func_call(pair[0], pair[1], fee))
-                response = mc.multicall() # TODO: Handle failures gracefully once supported in class `MultiCaller`
+                addresses = mc.run_calls()
                 result[exchange.base_exchange_name].update({
                     self._web3.to_checksum_address(address): exchange.exchange_name
-                    for address in response if address != ZERO_ADDRESS
+                    for address in addresses if address not in [None, ZERO_ADDRESS]
                 })
 
         return result[UNISWAP_V2_NAME], result[UNISWAP_V3_NAME], result[SOLIDLY_V2_NAME]
