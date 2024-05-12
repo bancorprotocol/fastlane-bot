@@ -61,7 +61,7 @@ class PoolFinder:
                                       _find_unsupported_pairs, and _find_unsupported_triangles methods.
 
         Returns:
-            Dict: Returns a dictionary with pools sorted into different exchange types (Uni V2 forks, Uni V3 forks,
+            Dict: Returns a list of dictionaries with pools sorted into different exchange types (Uni V2 forks, Uni V3 forks,
                   and Solidly V2 forks), each associated with their specific supporting pools based on the unsupported
                   configurations identified.
         """
@@ -73,25 +73,7 @@ class PoolFinder:
             unsupported_pairs = PoolFinder._find_unsupported_triangles(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
         else:
             unsupported_pairs = PoolFinder._find_unsupported_pairs(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
-        missing_pools = self._find_pools(unsupported_pairs)
-        return missing_pools[UNISWAP_V2_NAME], missing_pools[UNISWAP_V3_NAME], missing_pools[SOLIDLY_V2_NAME]
 
-
-    def _find_pools(self, unsupported_pairs: List[Tuple]) -> Dict[str, List[str]]:
-        """
-            Collects pool addresses for each exchange, based on a set of unsupported token pairs
-            and flashloan tokens. The function constructs pairs of tokens from unsupported_pairs with each
-            flashloan token and retrieves pool data via multicall. It filters out invalid addresses.
-
-            Args:
-                unsupported_pairs (List[Tuple]): A list of tuples, where each tuple contains two token addresses.
-                flashloan_tokens (List[str]): A list of token addresses available for flashloans.
-
-            Returns:
-                Dict[str, List[str]]: A list of dictionaries, where each dictionary maps an exchange's name
-                                            to a list of valid pool addresses (i.e., non-zero addresses) obtained
-                                            from the multicall across all generated pairs.
-            """
         pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self._flashloan_tokens]
         chunk_size = 400
         # Create the list of chunks
@@ -112,7 +94,8 @@ class PoolFinder:
                     self._web3.to_checksum_address(addr): exchange.exchange_name
                     for addr in response if addr != ZERO_ADDRESS
                 })
-        return result
+
+        return result[UNISWAP_V2_NAME], result[UNISWAP_V3_NAME], result[SOLIDLY_V2_NAME]
 
 
     def _extract_pairs(self, pools: List[Dict[str, Any]]) -> Tuple[List, set]:
