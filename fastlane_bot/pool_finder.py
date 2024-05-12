@@ -109,7 +109,7 @@ class PoolFinder:
                             mc.add_call(exchange.get_pool(pair[0], pair[1], fee))
                 response = mc.multicall()
                 result[exchange.base_exchange_name].update({
-                    mc.web3.to_checksum_address(addr): exchange.exchange_name
+                    self._web3.to_checksum_address(addr): exchange.exchange_name
                     for addr in response if addr != ZERO_ADDRESS
                 })
         return result
