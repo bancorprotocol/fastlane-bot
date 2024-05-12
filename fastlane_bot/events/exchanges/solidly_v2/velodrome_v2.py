@@ -20,4 +20,4 @@ class VelodromeV2(SolidlyV2):
         return str(fee_float), fee_float
 
     def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.factory_contract.functions.getPool, addr1, addr2, True)
+        mc.add_call(self.factory_contract.functions.getPool, addr1, addr2, False)
