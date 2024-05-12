@@ -12,11 +12,10 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple
 
 from web3.contract import Contract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -65,9 +64,3 @@ class BancorV3(Exchange):
             if event.args["pool"] != self.BNT_ADDRESS
             else event.args["tkn_address"]
         )
-
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        """
-        This function is unused for Carbon.
-        """
-        raise NotImplementedError

@@ -91,11 +91,6 @@ class PoolFinder:
                 Dict[str, List[str]]: A list of dictionaries, where each dictionary maps an exchange's name
                                             to a list of valid pool addresses (i.e., non-zero addresses) obtained
                                             from the multicall across all generated pairs.
-
-            Raises:
-                Exception: An exception could be raised from the multicall operation depending on the
-                           implementation specifics of the multicall context manager or the exchange's
-                           get_pool_with_multicall method if it encounters a problem.
             """
         pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self._flashloan_tokens]
         chunk_size = 400
@@ -108,17 +103,15 @@ class PoolFinder:
                 mc = MultiCaller(contract=exchange.factory_contract, web3=self._web3, multicall_address=self._multicall_address)
                 for pair in pair_chunk:
                     if exchange.base_exchange_name in [UNISWAP_V2_NAME, SOLIDLY_V2_NAME]:
-                        exchange.get_pool_with_multicall(mc, pair[0], pair[1])
+                        mc.add_call(exchange.get_pool(pair[0], pair[1]))
                     elif exchange.base_exchange_name == UNISWAP_V3_NAME:
                         for fee in self._uni_v3_fee_tiers[exchange.exchange_name]:
-                            exchange.get_pool_with_multicall(mc, pair[0], pair[1], fee)
+                            mc.add_call(exchange.get_pool(pair[0], pair[1], fee))
                 response = mc.multicall()
-                result[exchange.base_exchange_name] = {
+                result[exchange.base_exchange_name].update({
                     mc.web3.to_checksum_address(addr): exchange.exchange_name
-                    for addr
-                    in response
-                    if addr != ZERO_ADDRESS
-                }
+                    for addr in response if addr != ZERO_ADDRESS
+                })
         return result
 
 
