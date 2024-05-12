@@ -60,5 +60,5 @@ class UniswapV3(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.token1()
 
-    def get_pool(self, addr1, addr2, fee):
+    def get_pool_func_call(self, addr1, addr2, fee):
         return self.factory_contract.functions.getPool(addr1, addr2, fee)
