@@ -17,7 +17,6 @@ from typing import List, Type, Tuple, Any, Dict, Callable
 from fastlane_bot import Config
 from web3.contract import Contract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -245,9 +244,3 @@ class CarbonV1(Exchange):
             ),
             block_number=block_number,
         )
-
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        """
-        This function is unused for Carbon.
-        """
-        raise NotImplementedError

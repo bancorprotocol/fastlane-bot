@@ -17,7 +17,6 @@ from typing import List, Type, Any
 
 from web3.contract import Contract, AsyncContract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI
 from fastlane_bot.events.exchanges.base import Exchange
 from ...exchanges.base import Exchange
@@ -63,8 +62,8 @@ class SolidlyV2(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.token1()
 
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.factory_contract.functions.getPair, addr1, addr2, True)
+    def get_pool(self, addr1, addr2):
+        return self.factory_contract.functions.getPair(addr1, addr2, False)
 
     @property
     @abstractmethod
