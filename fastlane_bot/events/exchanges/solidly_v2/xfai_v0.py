@@ -29,5 +29,5 @@ class XFaiV2(SolidlyV2):
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
 
-    def get_pool(self, addr1, addr2):
+    def get_pool_func_call(self, addr1, addr2):
         return self.factory_contract.functions.getPool(addr1)
