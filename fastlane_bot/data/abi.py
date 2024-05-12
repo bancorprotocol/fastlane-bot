@@ -205,9 +205,9 @@ SOLIDLY_V2_FACTORY_ABI = [
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
+        "type": "function",
         "name": "getPool",
         "stateMutability": "view",
-        "type": "function",
         "inputs": [{"internalType": "address", "name": "tokenA", "type": "address"}, {"internalType": "address", "name": "tokenB", "type": "address"}, {"internalType": "bool", "name": "stable", "type": "bool"}],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     }
