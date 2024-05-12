@@ -12,10 +12,7 @@ from decimal import Decimal
 from typing import Dict, Any
 from typing import List, Tuple
 
-import web3.exceptions
-
 from fastlane_bot.config.multicaller import MultiCaller
-from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.pools import CarbonV1Pool
 from fastlane_bot.events.pools.base import Pool
 
@@ -99,7 +96,7 @@ def encode_token_price(price: Decimal) -> int:
     return encode_float(encode_rate((price)))
 
 
-def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
+def get_pools_for_exchange(exchange: str, mgr: Any) -> List[Any]:
     """
     Handles the initial iteration of the bot.
 
@@ -122,7 +119,7 @@ def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
     ]
 
 
-def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: Any, mgr: Any, current_block: int):
+def multicall_helper(exchange: str, rows_to_update: List, target_contract: Any, mgr: Any, current_block: int):
     """
     Helper function for multicall.
 
@@ -132,79 +129,47 @@ def multicall_helper(exchange: str, rows_to_update: List, multicall_contract: An
         Name of the exchange.
     rows_to_update : List
         List of rows to update.
-    multicall_contract : Any
-        The multicall contract.
+    target_contract : Any
+        The target contract.
     mgr : Any
         Manager object containing configuration and pool data.
     current_block : int
         The current block.
 
     """
-    multicaller = MultiCaller(contract=multicall_contract, block_identifier=current_block, web3=mgr.web3, multicall_address=mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
-    with multicaller as mc:
-        for row in rows_to_update:
-            pool_info = mgr.pool_data[row]
-            pool_info["last_updated_block"] = current_block
-            # Function to be defined elsewhere based on what each exchange type needs
-            multicall_fn(exchange, mc, mgr, multicall_contract, pool_info)
-        result_list = mc.multicall()
-    process_results_for_multicall(exchange, rows_to_update, result_list, mgr)
+    multicaller = MultiCaller(mgr.web3, mgr.cfg.MULTICALL_CONTRACT_ADDRESS)
 
+    for row in rows_to_update:
+        pool_info = mgr.pool_data[row]
+        pool_info["last_updated_block"] = current_block
+        if exchange == "bancor_v3":
+            multicaller.add_call(target_contract.functions.tradingLiquidity(pool_info["tkn1_address"]))
+        elif exchange == "bancor_pol":
+            multicaller.add_call(target_contract.functions.tokenPrice(pool_info["tkn0_address"]))
+            multicaller.add_call(target_contract.functions.amountAvailableForTrading(pool_info["tkn0_address"]))
+        elif exchange in mgr.cfg.CARBON_V1_FORKS:
+            multicaller.add_call(target_contract.functions.strategy(pool_info["cid"]))
+        elif exchange == "balancer":
+            multicaller.add_call(target_contract.functions.getPoolTokens(pool_info["anchor"]))
+        else:
+            raise ValueError(f"Exchange {exchange} not supported")
 
-def multicall_fn(exchange: str, mc: Any, mgr: Any, multicall_contract: Any, pool_info: Dict[str, Any]) -> None:
-    """
-    Function to be defined elsewhere based on what each exchange type needs.
+    result_list = multicaller.run_calls(current_block)
 
-    Parameters
-    ----------
-    exchange : str
-        Name of the exchange.
-    mc : Any
-        The multicaller.
-    mgr : Any
-        Manager object containing configuration and pool data.
-    multicall_contract : Any
-        The multicall contract.
-    pool_info : Dict
-        The pool info.
-
-    """
-    if exchange == "bancor_v3":
-        mc.add_call(multicall_contract.functions.tradingLiquidity, pool_info["tkn1_address"])
-    elif exchange == "bancor_pol":
-        mc.add_call(multicall_contract.functions.tokenPrice, pool_info["tkn0_address"])
-        mc.add_call(multicall_contract.functions.amountAvailableForTrading, pool_info["tkn0_address"])
-    elif exchange in mgr.cfg.CARBON_V1_FORKS:
-        mc.add_call(multicall_contract.functions.strategy, pool_info["cid"])
-    elif exchange == 'balancer':
-        mc.add_call(multicall_contract.functions.getPoolTokens, pool_info["anchor"])
+    if exchange == "bancor_pol":
+        # Assert that all `amountAvailableForTrading` results are valid
+        assert all(result is not None for result in result_list[1::2])
+        # Rearrange the results as a list of `(tokenPrice, amountAvailableForTrading)` tuples
+        result_list = [result for result in zip(result_list[0::2], result_list[1::2])]
     else:
-        raise ValueError(f"Exchange {exchange} not supported.")
+        # Assert that all results are valid
+        assert all(result is not None for result in result_list)
 
-
-def process_results_for_multicall(exchange: str, rows_to_update: List, result_list: List, mgr: Any) -> None:
-    """
-    Process the results for multicall.
-
-    Parameters
-    ----------
-    exchange : str
-        Name of the exchange.
-    rows_to_update : List
-        List of rows to update.
-    result_list : List
-        List of results.
-    mgr : Any
-        Manager object containing configuration and pool data.
-
-
-    """
     for row, result in zip(rows_to_update, result_list):
         pool_info = mgr.pool_data[row]
-        params = extract_params_for_multicall(exchange, result, pool_info, mgr)
         pool = mgr.get_or_init_pool(pool_info)
-        pool, pool_info = update_pool_for_multicall(params, pool_info, pool)
-        mgr.pool_data[row] = pool_info
+        params = extract_params_for_multicall(exchange, result, pool_info, mgr)
+        update_pool_for_multicall(params, pool_info, pool)
         update_mgr_exchanges_for_multicall(mgr, exchange, pool, pool_info)
 
 
@@ -224,7 +189,6 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         Manager object containing configuration and pool data.
 
     """
-    params = {}
     if exchange in mgr.cfg.CARBON_V1_FORKS:
         strategy = result
         fake_event = {
@@ -237,9 +201,24 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         params = CarbonV1Pool.parse_event(pool_info["state"], fake_event, "None")
         params["exchange_name"] = exchange
     elif exchange == "bancor_pol":
-        params = _extract_pol_params_for_multicall(
-            result, pool_info, mgr
-        )
+        p, tkn_balance = result
+        token_price = encode_token_price(Decimal(p[1]) / Decimal(p[0])) if p is not None else 0
+        params = {
+            "fee": "0.000",
+            "fee_float": 0.000,
+            "tkn0_balance": 0,
+            "tkn1_balance": 0,
+            "exchange_name": pool_info["exchange_name"],
+            "address": pool_info["address"],
+            "y_0": tkn_balance,
+            "z_0": tkn_balance,
+            "A_0": 0,
+            "B_0": token_price,
+            "y_1": 0,
+            "z_1": 0,
+            "A_1": 0,
+            "B_1": 0,
+        }
     elif exchange == "bancor_v3":
         pool_balances = result
         params = {
@@ -251,66 +230,20 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
             "address": pool_info["address"],
         }
     elif exchange == "balancer":
-        pool_balances = result
-
+        tokens, balances, last_change_block = result
         params = {
             "exchange_name": exchange,
             "address": pool_info["address"],
         }
-
-        for idx, bal in enumerate(pool_balances):
-            params[f"tkn{str(idx)}_balance"] = int(bal)
-
+        for idx, balance in enumerate(balances):
+            params[f"tkn{str(idx)}_balance"] = balance
     else:
         raise ValueError(f"Exchange {exchange} not supported.")
 
     return params
 
 
-def _extract_pol_params_for_multicall(result: Any, pool_info: Dict, mgr: Any) -> Dict[str, Any]:
-    """
-    Extract the Bancor POL params for multicall.
-
-    Parameters
-    ----------
-    result : Any
-        The result.
-    pool_info : Dict
-        The pool info.
-    mgr : Any
-        Manager object containing configuration and pool data.
-
-    Returns
-    -------
-    Dict[str, Any]
-        The extracted params.
-
-    """
-    tkn0_address = pool_info["tkn0_address"]
-    p0, p1, tkn_balance = result
-    token_price = Decimal(p1) / Decimal(p0)
-    token_price = int(str(encode_token_price(token_price)))
-
-    result = {
-        "fee": "0.000",
-        "fee_float": 0.000,
-        "tkn0_balance": 0,
-        "tkn1_balance": 0,
-        "exchange_name": pool_info["exchange_name"],
-        "address": pool_info["address"],
-        "y_0": tkn_balance,
-        "z_0": tkn_balance,
-        "A_0": 0,
-        "B_0": token_price,
-        "y_1": 0,
-        "z_1": 0,
-        "A_1": 0,
-        "B_1": 0,
-    }
-    return result
-
-
-def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any) -> Tuple[Pool, Dict]:
+def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any):
     """
     Update the pool for multicall.
 
@@ -323,16 +256,10 @@ def update_pool_for_multicall(params: Dict[str, Any], pool_info: Dict, pool: Any
     pool : Any
         The pool.
 
-    Returns
-    -------
-    Tuple[Pool, Dict]
-        The updated pool and pool info.
-
     """
     for key, value in params.items():
         pool_info[key] = value
         pool.state[key] = value
-    return pool, pool_info
 
 
 def update_mgr_exchanges_for_multicall(mgr: Any, exchange: str, pool: Any, pool_info: Dict[str, Any]):
@@ -362,9 +289,9 @@ def update_mgr_exchanges_for_multicall(mgr: Any, exchange: str, pool: Any, pool_
     mgr.exchanges[exchange].pools[exchange_pool_idx] = pool
 
 
-def get_multicall_contract_for_exchange(mgr: Any, exchange: str) -> str:
+def get_pool_contract_for_exchange(mgr: Any, exchange: str) -> str:
     """
-    Get the multicall contract for the exchange.
+    Get the pool contract for the exchange.
 
     Parameters
     ----------
@@ -376,7 +303,7 @@ def get_multicall_contract_for_exchange(mgr: Any, exchange: str) -> str:
     Returns
     -------
     str
-        The multicall contract for the exchange.
+        The pool contract for the exchange.
 
     """
     if exchange == "bancor_v3":
@@ -411,6 +338,6 @@ def multicall_every_iteration(current_block: int, mgr: Any):
     ]
 
     for idx, exchange in enumerate(multicallable_exchanges):
-        multicall_contract = get_multicall_contract_for_exchange(mgr, exchange)
+        pool_contract = get_pool_contract_for_exchange(mgr, exchange)
         rows_to_update = multicallable_pool_rows[idx]
-        multicall_helper(exchange, rows_to_update, multicall_contract, mgr, current_block)
+        multicall_helper(exchange, rows_to_update, pool_contract, mgr, current_block)

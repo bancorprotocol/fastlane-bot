@@ -188,14 +188,14 @@ class BaseManager:
             self._fee_pairs[ex] = fee_pairs
 
     def get_fee_pairs(
-            self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
+            self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
     ) -> Dict[Tuple[str, str], int]:
         """
         Get the fees for each pair and store in a dictionary.
 
         Parameters
         ----------
-        all_pairs : List[Tuple]
+        all_pairs : List[Tuple[str, str]]
             A list of pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -393,7 +393,7 @@ class BaseManager:
 
     def get_carbon_pairs(
             self, carbon_controller: Contract, exchange_name: str, target_tokens: List[str] = None
-    ) -> List[Tuple[str, str, int, int]]:
+    ) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs.
 
@@ -408,7 +408,7 @@ class BaseManager:
 
         Returns
         -------
-        List[Tuple[str, str, int, int]]
+        List[Tuple[str, str]]
             The carbon pairs.
 
         """
@@ -429,7 +429,7 @@ class BaseManager:
                 if pair[1] not in target_tokens:
                     target_tokens.append(pair[1])
         return [
-            (pair[0], pair[1], 0, 5000)
+            pair
             for pair in pairs
             if pair[0] in target_tokens and pair[1] in target_tokens
         ]
@@ -508,7 +508,7 @@ class BaseManager:
 
     def get_strats_by_contract(
             self,
-            pairs: List[Tuple[str, str, int, int]],
+            pairs: List[Tuple[str, str]],
             carbon_controller: Contract,
             exchange_name: str,
     ) -> List[List[Any]]:
@@ -517,7 +517,7 @@ class BaseManager:
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -530,29 +530,17 @@ class BaseManager:
             The strategies.
 
         """
-        multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
-        with multicaller as mc:
-            for pair in pairs:
-                try:
-                    # Loading the strategies for each pair without executing the calls yet
-                    mc.add_call(
-                        carbon_controller.functions.strategiesByPair,
-                        pair[0],
-                        pair[1],
-                        pair[2],
-                        pair[3],
-                    )
-                except ValueError:
-                    print(f"Error fetching strategiesByPair {pair}")
+        for pair in pairs:
+            # Loading the strategies for each pair without executing the calls yet
+            multicaller.add_call(carbon_controller.functions.strategiesByPair(*pair, 0, 5000))
 
-            # Fetch strategies for each pair from the CarbonController contract object
-            strategies_by_pair = mc.multicall()
+        # Fetch strategies for each pair from the CarbonController contract object
+        strategies_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
+
+        # Assert that all results are valid
+        assert all(result is not None for result in strategies_by_pair)
 
         self.carbon_inititalized[exchange_name] = True
 
@@ -563,7 +551,7 @@ class BaseManager:
         self.cfg.logger.debug(
             f"[events.managers.base] Retrieved {len(strategies_by_pair)} {exchange_name} strategies"
         )
-        return [s for strat in strategies_by_pair if strat for s in strat if s]
+        return [strategy for strategies in strategies_by_pair for strategy in strategies]
 
     def get_strats_by_state(self, pairs: List[List[Any]], exchange_name: str) -> List[List[int]]:
         """
@@ -571,7 +559,7 @@ class BaseManager:
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         exchange_name : str
             The carbon exchange/fork name.
@@ -620,14 +608,14 @@ class BaseManager:
         return strategies
 
     def get_strategies(
-            self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract, exchange_name: str
+            self, pairs: List[Tuple[str, str]], carbon_controller: Contract, exchange_name: str
     ) -> List[List[str]]:
         """
         Get the strategies.
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -670,20 +658,17 @@ class BaseManager:
             The fees by pair.
 
         """
-        multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
-        with multicaller as mc:
-            for pair in all_pairs:
-                mc.add_call(
-                    carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
-                )
+        for pair in all_pairs:
+            multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
 
-        return multicaller.multicall()
+        fees_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
+
+        # Assert that all results are valid
+        assert all(result is not None for result in fees_by_pair)
+
+        return fees_by_pair
 
     def get_tkn_symbol_and_decimals(
             self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
