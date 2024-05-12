@@ -214,8 +214,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                     carbon_curves += [x]
                 else:
                     non_carbon_curves += [x]
-            all_relevant_pairs_info[pair]['non_carbon_curves'] = non_carbon_curves
-            all_relevant_pairs_info[pair]['carbon_curves'] = carbon_curves
             all_relevant_pairs_info[pair]['curves'] = non_carbon_curves + carbon_curves
             all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
             all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
