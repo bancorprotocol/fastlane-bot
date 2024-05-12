@@ -62,7 +62,7 @@ class SolidlyV2(Exchange):
     async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.token1()
 
-    def get_pool(self, addr1, addr2):
+    def get_pool_func_call(self, addr1, addr2):
         return self.factory_contract.functions.getPair(addr1, addr2, False)
 
     @property
