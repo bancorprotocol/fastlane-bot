@@ -39,7 +39,6 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
 
         for src_token, miniverse in combos:
             try:
-                r = None
                 CC_cc = CPCContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
