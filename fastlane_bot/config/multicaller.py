@@ -6,9 +6,10 @@ MultiCaller class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import Callable, Any, List, Dict
+from typing import Any, List, Dict
 
 from eth_abi import decode
+from web3.contract.contract import ContractFunction
 
 from fastlane_bot.data.abi import MULTICALL_ABI
 
@@ -45,10 +46,10 @@ class MultiCaller:
 
     def __init__(self, web3: Any, multicall_contract_address: str):
         self.multicall_contract = web3.eth.contract(abi=MULTICALL_ABI, address=multicall_contract_address)
-        self.contract_calls: List[Callable] = []
+        self.contract_calls: List[ContractFunction] = []
         self.output_types_list: List[List[str]] = []
 
-    def add_call(self, call: Callable):
+    def add_call(self, call: ContractFunction):
         self.contract_calls.append({'target': call.address, 'callData': call._encode_transaction_data()})
         self.output_types_list.append([collapse_if_tuple(item) for item in call.abi['outputs']])
 
