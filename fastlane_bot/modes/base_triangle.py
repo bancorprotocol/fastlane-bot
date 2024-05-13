@@ -17,12 +17,10 @@ import pandas as pd
 from fastlane_bot.modes.base import ArbitrageFinderBase
 from fastlane_bot.tools.cpc import T
 
-@staticmethod
 def sort_pairs(pairs):
     # Clean up the pairs alphabetically
     return ["/".join(sorted(pair.split('/'))) for pair in pairs]
 
-@staticmethod
 def flatten_nested_items_in_list(nested_list):
     # unpack nested items
     flattened_list = []
@@ -36,7 +34,6 @@ def flatten_nested_items_in_list(nested_list):
         flattened_list.append(flat_list)
     return flattened_list
 
-@staticmethod
 def get_triangle_groups(flt, x_y_pairs):
     # Get groups of triangles that conform to (flt/x , x/y, y/flt) where x!=y
     triangle_groups = []
@@ -45,7 +42,6 @@ def get_triangle_groups(flt, x_y_pairs):
         triangle_groups += [("/".join(sorted([flt,x])), pair, "/".join(sorted([flt,y])))]
     return triangle_groups
 
-@staticmethod
 def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
     # Get the stats on the triangle group cohort for decision making
     valid_carbon_triangles = []
@@ -250,7 +246,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         return flt_triangle_analysis_set
 
     def get_comprehensive_triangles(
-        self, flashloan_tokens: List[str], CCm: Any, arb_mode: str
+        self, flashloan_tokens: List[str], CCm: Any
     ) -> Tuple[List[str], List[Any]]:
         """
         Get comprehensive combos for triangular arbitrage
@@ -261,8 +257,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             List of flashloan tokens
         CCm : object
             CCm object
-        arb_mode : str
-            Arbitrage mode
 
         Returns
         -------
@@ -306,63 +300,16 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             combos.extend(flt_triangle_analysis_set)
         return combos
 
-    @staticmethod
-    def get_mono_direction_carbon_curves(
-        miniverse: List[Any], trade_instructions_df: pd.DataFrame, token_in: str=None
-    ) -> List[Any]:
-        """
-        Get mono direction carbon curves for triangular arbitrage
-
-        Parameters
-        ----------
-        miniverse : list
-            List of miniverses
-        token_in : str
-            Token in
-        trade_instructions_df : DataFrame
-            Trade instructions dataframe
-
-        Returns
-        -------
-        mono_direction_carbon_curves : list
-            List of mono direction carbon curves
-
-        """
-
-        if token_in is None:
-            columns = trade_instructions_df.columns
-            check_nan = trade_instructions_df.copy().fillna(0)
-            first_bancor_v3_pool = check_nan.iloc[0]
-            second_bancor_v3_pool = check_nan.iloc[1]
-
-            for idx, token in enumerate(columns):
-                if token == T.BNT:
-                    continue
-                if first_bancor_v3_pool[token] < 0:
-                    token_in = token
-                    break
-                if second_bancor_v3_pool[token] < 0:
-                    token_in = token
-                    break
-
-        wrong_direction_cids = []
-        for idx, row in trade_instructions_df.iterrows():
-            if (row[token_in] < 0) and ("-0" in idx or "-1" in idx):
-                wrong_direction_cids.append(idx)
-
-        return [curve for curve in miniverse if curve.cid not in wrong_direction_cids]
     def build_pstart(self, CCm, tkn0list, tkn1):
         tkn0list = [x for x in tkn0list if x not in [tkn1]]
         pstart = {}
         for tkn0 in tkn0list:
             try:
-                price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
+                pstart[tkn0] = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
             except:
                 try:
-                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
+                    pstart[tkn0] = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
                 except Exception as e:
-                    print(str(e))
-                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
-            pstart[tkn0]=price
+                    self.ConfigObj.logger.info(f"[pstart build] {tkn0}/{tkn1} price error {e}")
         pstart[tkn1] = 1
         return pstart
