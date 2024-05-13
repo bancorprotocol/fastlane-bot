@@ -105,3 +105,6 @@ class BancorPol(Exchange):
             cid=cid,
             block_number=block_number,
         )
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

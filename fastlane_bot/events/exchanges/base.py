@@ -123,6 +123,10 @@ class Exchange(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_pool_func_call(self, addr1, addr2, *args, **kwargs):
+        ...
+
     @staticmethod
     @abstractmethod
     async def get_tkn0(address: str, contract: AsyncContract, event: Any) -> str:

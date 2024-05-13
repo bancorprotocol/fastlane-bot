@@ -64,3 +64,6 @@ class BancorV3(Exchange):
             if event.args["pool"] != self.BNT_ADDRESS
             else event.args["tkn_address"]
         )
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

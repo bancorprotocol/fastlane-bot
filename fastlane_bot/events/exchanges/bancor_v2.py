@@ -76,3 +76,6 @@ class BancorV2(Exchange):
 
     async def get_anchor(self, contract: Contract) -> str:
         return await contract.caller.anchor()
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError
