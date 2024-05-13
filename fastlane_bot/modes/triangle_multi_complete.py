@@ -81,19 +81,3 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
-    
-    def build_pstart(self, CCm, tkn0list, tkn1):
-        tkn0list = [x for x in tkn0list if x not in [tkn1]]
-        pstart = {}
-        for tkn0 in tkn0list:
-            try:
-                pstart[tkn0] = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
-            except:
-                try:
-                    pstart[tkn0] = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
-                except Exception as e:
-                    self.ConfigObj.logger.info(f"[pstart build] {tkn0} not supported. w {tkn1} {e}")
-        pstart[tkn1] = 1
-        return pstart
-
-

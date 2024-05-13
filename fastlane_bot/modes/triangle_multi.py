@@ -92,21 +92,3 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
             )
 
         return candidates if self.result == self.AO_CANDIDATES else ops
-    
-    def build_pstart(self, CCm, tkn0list, tkn1):
-        tkn0list = [x for x in tkn0list if x not in [tkn1]]
-        pstart = {}
-        for tkn0 in tkn0list:
-            try:
-                price = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
-            except:
-                try:
-                    price = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
-                except Exception as e:
-                    print(str(e))
-                    self.ConfigObj.logger.debug(f"[pstart build] {tkn0} not supported. w {tkn1} {str(e)}")
-            pstart[tkn0]=price
-        pstart[tkn1] = 1
-        return pstart
-
-
