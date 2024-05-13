@@ -33,16 +33,14 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
         if candidates is None:
             candidates = []
 
-        combos = self.get_combos(
-            self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode
-        )
+        combos = self.get_combos(self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode)
 
         for src_token, miniverse in combos:
             try:
                 CC_cc = CPCContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
                 pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart)) #debug=True, debug2=True
+                r = O.optimize(src_token, params=dict(pstart=pstart))
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
                     # Failed to converge
