@@ -17,12 +17,10 @@ import pandas as pd
 from fastlane_bot.modes.base import ArbitrageFinderBase
 from fastlane_bot.tools.cpc import T
 
-@staticmethod
 def sort_pairs(pairs):
     # Clean up the pairs alphabetically
     return ["/".join(sorted(pair.split('/'))) for pair in pairs]
 
-@staticmethod
 def flatten_nested_items_in_list(nested_list):
     # unpack nested items
     flattened_list = []
@@ -36,7 +34,6 @@ def flatten_nested_items_in_list(nested_list):
         flattened_list.append(flat_list)
     return flattened_list
 
-@staticmethod
 def get_triangle_groups(flt, x_y_pairs):
     # Get groups of triangles that conform to (flt/x , x/y, y/flt) where x!=y
     triangle_groups = []
@@ -45,7 +42,6 @@ def get_triangle_groups(flt, x_y_pairs):
         triangle_groups += [("/".join(sorted([flt,x])), pair, "/".join(sorted([flt,y])))]
     return triangle_groups
 
-@staticmethod
 def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
     # Get the stats on the triangle group cohort for decision making
     valid_carbon_triangles = []
@@ -250,7 +246,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         return flt_triangle_analysis_set
 
     def get_comprehensive_triangles(
-        self, flashloan_tokens: List[str], CCm: Any, arb_mode: str
+        self, flashloan_tokens: List[str], CCm: Any
     ) -> Tuple[List[str], List[Any]]:
         """
         Get comprehensive combos for triangular arbitrage
@@ -261,8 +257,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             List of flashloan tokens
         CCm : object
             CCm object
-        arb_mode : str
-            Arbitrage mode
 
         Returns
         -------
