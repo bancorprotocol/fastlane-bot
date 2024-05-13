@@ -244,3 +244,6 @@ class CarbonV1(Exchange):
             ),
             block_number=block_number,
         )
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError
