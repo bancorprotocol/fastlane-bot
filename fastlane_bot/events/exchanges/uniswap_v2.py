@@ -16,7 +16,6 @@ from typing import List, Type, Tuple, Any
 
 from web3.contract import Contract, AsyncContract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V2_FACTORY_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -64,5 +63,5 @@ class UniswapV2(Exchange):
     async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.caller.token1()
 
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        mc.add_call(self.factory_contract.functions.getPair, addr1, addr2)
+    def get_pool_func_call(self, addr1, addr2):
+        return self.factory_contract.functions.getPair(addr1, addr2)

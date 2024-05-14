@@ -12,11 +12,10 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple
 
 from web3.contract import Contract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
 from ..exchanges.base import Exchange
 from ..pools.base import Pool
@@ -24,7 +23,8 @@ from ..interfaces.event import Event
 from ..interfaces.subscription import Subscription
 
 
-LIQUIDITY_UPDATED_TOPIC = "0x6e96dc5343d067ec486a9920e0304c3610ed05c65e45cc029d9b9fe7ecfa7620"
+TRADING_LIQUIDITY_UPDATED_TOPIC = "0x6e96dc5343d067ec486a9920e0304c3610ed05c65e45cc029d9b9fe7ecfa7620"
+TOTAL_LIQUIDITY_UPDATED_TOPIC = "0x85a03952f50b8c00b32a521c32094023b64ef0b6d4511f423d44c480a62cb145"
 
 
 @dataclass
@@ -51,7 +51,10 @@ class BancorV3(Exchange):
         return [contract.events.TradingLiquidityUpdated]
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
-        return [Subscription(contract.events.TradingLiquidityUpdated, LIQUIDITY_UPDATED_TOPIC)]
+        return [
+            Subscription(contract.events.TradingLiquidityUpdated, TRADING_LIQUIDITY_UPDATED_TOPIC),
+            # Subscription(contract.events.TotalLiquidityUpdated, TOTAL_LIQUIDITY_UPDATED_TOPIC),  # Unused
+        ]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
@@ -66,8 +69,5 @@ class BancorV3(Exchange):
             else event.args["tkn_address"]
         )
 
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        """
-        This function is unused for Carbon.
-        """
+    def get_pool_func_call(self, addr1, addr2):
         raise NotImplementedError

@@ -16,7 +16,6 @@ from typing import List, Type, Tuple, Any, Dict, Callable
 
 from web3.contract import Contract
 
-from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.data.abi import BANCOR_POL_ABI
 from fastlane_bot import Config
 from ..exchanges.base import Exchange
@@ -52,7 +51,7 @@ class BancorPol(Exchange):
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
         return [
             Subscription(contract.events.TokenTraded),
-            Subscription(contract.events.TradingEnabled),
+            Subscription(contract.events.TradingEnabled, "0xae3f48c001771f8e9868e24d47b9e4295b06b1d78072acf96f167074aa3fab64"),
         ]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
@@ -63,12 +62,6 @@ class BancorPol(Exchange):
 
     async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         return self.ETH_ADDRESS if event.args["token"] not in self.ETH_ADDRESS else self.BNT_ADDRESS
-
-    def get_pool_with_multicall(self, mc: MultiCaller, addr1, addr2):
-        """
-        This function is unused for Carbon.
-        """
-        raise NotImplementedError
 
     def save_strategy(
         self,
@@ -112,3 +105,6 @@ class BancorPol(Exchange):
             cid=cid,
             block_number=block_number,
         )
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

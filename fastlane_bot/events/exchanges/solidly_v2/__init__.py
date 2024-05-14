@@ -1,4 +1,4 @@
-from ..base import Exchange
+from .base import SolidlyV2 as SolidlyV2Base
 from .velocimeter_v2 import VelocimeterV2
 from .equalizer_v2 import EqualizerV2
 from .velodrome_v2 import VelodromeV2
@@ -9,7 +9,7 @@ from .nile_v2 import NileV2
 from .xfai_v0 import XFaiV2
 
 
-class SolidlyV2(Exchange):
+class SolidlyV2(SolidlyV2Base):
     def __new__(cls, **kwargs):
         return {
             "velocimeter_v2": VelocimeterV2,

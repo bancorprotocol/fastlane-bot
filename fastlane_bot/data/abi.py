@@ -169,10 +169,8 @@ UNISWAP_V2_FACTORY_ABI = [
         "type": "function",
         "name": "getPair",
         "stateMutability": "view",
-        "constant": True,
         "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "payable": False,
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -207,9 +205,9 @@ SOLIDLY_V2_FACTORY_ABI = [
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
     },
     {
+        "type": "function",
         "name": "getPool",
         "stateMutability": "view",
-        "type": "function",
         "inputs": [{"internalType": "address", "name": "tokenA", "type": "address"}, {"internalType": "address", "name": "tokenB", "type": "address"}, {"internalType": "bool", "name": "stable", "type": "bool"}],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     }
@@ -256,9 +254,7 @@ SCALE_V2_FACTORY_ABI = [
         "type": "function",
         "name": "getPair",
         "stateMutability": "view",
-        "inputs": [{"internalType": "address", "name": "", "type": "address"},
-                   {"internalType": "address", "name": "", "type": "address"},
-                   {"internalType": "bool", "name": "", "type": "bool"}],
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]

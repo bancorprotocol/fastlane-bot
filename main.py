@@ -94,6 +94,7 @@ def process_arguments(args):
         "self_fund": is_true,
         "read_only": is_true,
         "is_args_test": is_true,
+        "pool_finder_period": int,
     }
 
     # Apply the transformations
@@ -225,7 +226,7 @@ def main(args: argparse.Namespace) -> None:
             prefix_path: {args.prefix_path}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
-            pool_finder: {args.pool_finder}
+            pool_finder_period: {args.pool_finder_period}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -306,17 +307,14 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
     event_gatherer = EventGatherer(w3=mgr.w3_async, exchanges=mgr.exchanges, event_contracts=mgr.event_contracts)
 
-    if args.pool_finder != -1:
-        pool_finder = PoolFinder(
-            carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
-            uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS,
-            flashloan_tokens=args.flashloan_tokens,
-            exchanges=mgr.exchanges,
-            web3=mgr.web3,
-            multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS
-        )
-    else:
-        pool_finder = None
+    pool_finder = PoolFinder(
+        carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
+        uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS,
+        flashloan_tokens=args.flashloan_tokens,
+        exchanges=mgr.exchanges,
+        web3=mgr.web3,
+        multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS
+    )
 
     while True:
         try:
@@ -527,11 +525,10 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
-            if pool_finder is not None and (loop_idx % args.pool_finder == 0 or loop_idx == 1):
+            if args.pool_finder_period > 0 and (loop_idx - 1) % args.pool_finder_period == 0:
                 mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
                 uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
-                result = f"Added {len(uni_v2) + len(uni_v3) + len(solidly_v2)} pools." if (uni_v2 or uni_v3 or solidly_v2) else f"No pools added."
-                mgr.cfg.logger.info(result)
+                mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
                 mgr.uniswap_v2_event_mappings.update(uni_v2)
                 mgr.uniswap_v3_event_mappings.update(uni_v3)
                 mgr.solidly_v2_event_mappings.update(solidly_v2)
@@ -735,9 +732,9 @@ if __name__ == "__main__":
         help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
     )
     parser.add_argument(
-        "--pool_finder",
+        "--pool_finder_period",
         default=100,
-        help="If not -1, searches for pools that can service Carbon strategies that do not have viable routes.",
+        help="Searches for pools that can service Carbon strategies that do not have viable routes.",
     )
 
     # Process the arguments
