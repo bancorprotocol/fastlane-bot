@@ -50,7 +50,7 @@ class TxHelpers:
 
         if self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM:
             self.use_access_list = False # TODO: figure out why flashbots is unable to handle this
-            self.send_transaction = self._send_private_transaction
+            self.send_transaction = self._send_regular_transaction
         else:
             self.use_access_list = False
             self.send_transaction = self._send_regular_transaction
