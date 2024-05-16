@@ -23,7 +23,7 @@ def safe_int(value: int or float) -> int:
 def num_format(value: int or float) -> str:
     try:
         return "{0:.4f}".format(value)
-    except Exception as _:
+    except Exception:
         return str(value)
 
 

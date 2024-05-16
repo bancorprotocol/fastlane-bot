@@ -199,5 +199,5 @@ class TxHelpers:
     def _wait_for_transaction_receipt(self, tx_hash: str) -> Optional[dict]:
         try:
             return loads(self.cfg.w3.to_json(self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)))
-        except TimeExhausted as _:
+        except TimeExhausted:
             return None
