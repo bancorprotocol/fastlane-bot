@@ -144,19 +144,19 @@ class CarbonBot:
         ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens}
 
         for p in pools_and_tokens:
+            p.ADDRDEC = ADDRDEC
             try:
-                p.ADDRDEC = ADDRDEC
                 curves += [
                     curve for curve in p.to_cpc()
                     if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
                 ]
             except SolidlyV2StablePoolsNotSupported as e:
                 self.ConfigObj.logger.debug(
-                    f"[bot.get_curves] SolidlyV2StablePoolsNotSupported: {e}\n"
+                    f"[bot.get_curves] Solidly V2 stable pools not supported: {e}\n"
                 )
             except NotImplementedError as e:
                 self.ConfigObj.logger.error(
-                    f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
+                    f"[bot.get_curves] Not supported: {e}\n"
                 )
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(

@@ -49,7 +49,7 @@ class TxHelpers:
         self.wallet_address = self.cfg.w3.eth.account.from_key(self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).address
 
         if self.cfg.NETWORK == self.cfg.NETWORK_ETHEREUM:
-            self.use_access_list = False # TODO: figure out why flashbots is unable to handle this
+            self.use_access_list = True
             self.send_transaction = self._send_private_transaction
         else:
             self.use_access_list = False
@@ -184,12 +184,12 @@ class TxHelpers:
 
     def _send_private_transaction(self, raw_tx: str) -> str:
         response = post(
-            "https://rpc.flashbots.net/fast",
+            "https://rpc.mevblocker.io/noreverts",
             json = {
                 "id": 1,
                 "jsonrpc": "2.0",
-                "method": "eth_sendPrivateTransaction",
-                "params": [{"tx": raw_tx, "maxBlockNumber": hex(self.cfg.w3.eth.block_number + 10)}]
+                "method": "eth_sendRawTransaction",
+                "params": [raw_tx]
             }
         )
         text = loads(response.text)
@@ -199,5 +199,5 @@ class TxHelpers:
     def _wait_for_transaction_receipt(self, tx_hash: str) -> Optional[dict]:
         try:
             return loads(self.cfg.w3.to_json(self.cfg.w3.eth.wait_for_transaction_receipt(tx_hash)))
-        except TimeExhausted as _:
+        except TimeExhausted:
             return None

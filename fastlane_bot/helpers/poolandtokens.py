@@ -280,7 +280,7 @@ class PoolAndTokens:
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
-            raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
+            raise NotImplementedError(f"exchange {self.exchange_name}")
 
         return out
 

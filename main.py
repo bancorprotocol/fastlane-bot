@@ -524,10 +524,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 f"\n********************************************\n\n"
             )
 
-        except Exception as e:
+        except Exception:
             mgr.cfg.logger.error(f"Error in main loop: {format_exc()}")
             mgr.cfg.logger.error(
-                f"[main] Error in main loop: {e}. Continuing... "
                 f"Please report this error to the Fastlane Telegram channel if it persists."
                 f"{mgr.cfg.logging_header}"
             )
