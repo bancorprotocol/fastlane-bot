@@ -39,6 +39,7 @@ from fastlane_bot.events.utils import (
     get_config,
     get_loglevel,
     update_pools_from_events,
+    process_new_events,
     write_pool_data_to_disk,
     init_bot,
     get_cached_events,
@@ -528,27 +529,11 @@ def run(mgr, args, tenderly_uri=None) -> None:
             if args.pool_finder_period > 0 and (loop_idx - 1) % args.pool_finder_period == 0:
                 mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
                 uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
-                mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
-                
-                event_mappings = {
-                    'uniswap_v2': uni_v2,
-                    'uniswap_v3': uni_v3,
-                    'solidly_v2': solidly_v2,
-                }
-                for exchange_name, event_mapping_dict in event_mappings.items():
-                    # Update the manager's event mappings
-                    getattr(mgr, f'{exchange_name}_event_mappings').update(event_mapping_dict)
-                    
-                    # Update the local event_mappings csvs
-                    df = pd.DataFrame.from_dict(getattr(mgr, f'{exchange_name}_event_mappings'), orient='index').reset_index()
-                    if len(df)>0:
-                        df.columns = ['address', 'exchange']
-                        # if the csvs are always sorted then the diffs will be readable
-                        df.sort_values(by=['exchange','address'], inplace=True)
-                        df.to_csv(f"fastlane_bot/data/blockchain_data/{args.blockchain}/{exchange_name}_event_mappings.csv", index=False)
-                
-                # Update the static_pools data for later event filtering
+                process_new_events(uni_v2, mgr.uniswap_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v2_event_mappings.csv")
+                process_new_events(uni_v3, mgr.uniswap_v3_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v3_event_mappings.csv")
+                process_new_events(solidly_v2, mgr.solidly_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/solidly_v2_event_mappings.csv")
                 handle_static_pools_update(mgr)
+                mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
 
             last_block_queried = current_block
 
