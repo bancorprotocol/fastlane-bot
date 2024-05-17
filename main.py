@@ -529,9 +529,26 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
                 uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
                 mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
-                mgr.uniswap_v2_event_mappings.update(uni_v2)
-                mgr.uniswap_v3_event_mappings.update(uni_v3)
-                mgr.solidly_v2_event_mappings.update(solidly_v2)
+                
+                event_mappings = {
+                    'uniswap_v2': uni_v2,
+                    'uniswap_v3': uni_v3,
+                    'solidly_v2': solidly_v2,
+                }
+                for exchange_name, event_mapping_dict in event_mappings.items():
+                    # Update the manager's event mappings
+                    getattr(mgr, f'{exchange_name}_event_mappings').update(event_mapping_dict)
+                    
+                    # Update the local event_mappings csvs
+                    df = pd.DataFrame.from_dict(getattr(mgr, f'{exchange_name}_event_mappings'), orient='index').reset_index()
+                    if len(df)>0:
+                        df.columns = ['address', 'exchange']
+                        # if the csvs are always sorted then the diffs will be readable
+                        df.sort_values(by=['exchange','address'], inplace=True)
+                        df.to_csv(f"fastlane_bot/data/blockchain_data/{args.blockchain}/{exchange_name}_event_mappings.csv", index=False)
+                
+                # Update the static_pools data for later event filtering
+                handle_static_pools_update(mgr)
 
             last_block_queried = current_block
 
