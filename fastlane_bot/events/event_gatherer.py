@@ -42,7 +42,14 @@ class EventGatherer:
                     self._subscriptions.append(sub)
 
     def get_all_events(self, from_block: int, to_block: int):
-        results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*[self._get_events_for_topic(from_block, to_block, sub) for sub in self._subscriptions]))
+        coroutines = []
+        for sub in self._subscriptions:
+            if sub.collect_all:
+                from_block_ = 0
+            else:
+                from_block_ = from_block
+            coroutines.append(self._get_events_for_topic(from_block_, to_block, sub))
+        results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*coroutines))
         return list(chain.from_iterable(results))
 
     async def _get_events_for_topic(self, from_block: int, to_block: int, subscription: Subscription):
