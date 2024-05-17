@@ -70,7 +70,7 @@ class PoolFinder:
         if not carbon_pairs:
             return [], [], []
         self.extract_univ3_fee_tiers(pools)  # TODO: these should be configured per exchange
-        if arb_mode in ["triangle", "multi_triangle"]:
+        if arb_mode in ["multi_triangle", "multi_triangle_complete", "b3_two_hop"]:
             unsupported_pairs = PoolFinder._find_unsupported_triangles(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
         else:
             unsupported_pairs = PoolFinder._find_unsupported_pairs(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)

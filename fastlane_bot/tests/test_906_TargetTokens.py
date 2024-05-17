@@ -88,4 +88,4 @@ def run_command(mode):
 def test_test_flashloan_tokens_b3_two_hop():
 # ------------------------------------------------------------
     
-    run_command("single")
+    run_command("b3_two_hop")

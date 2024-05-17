@@ -586,14 +586,11 @@ if __name__ == "__main__":
         default="multi_pairwise_all",
         help="See arb_mode in bot.py",
         choices=[
-            "single",
-            "multi",
-            "triangle",
             "multi_triangle",
+            "multi_triangle_complete",
             "b3_two_hop",
             "multi_pairwise_pol",
             "multi_pairwise_all",
-            "multi_triangle_complete"
         ],
     )
     parser.add_argument(

@@ -128,8 +128,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi_pairwise_all"
-
 
 # ------------------------------------------------------------
 # Test      064

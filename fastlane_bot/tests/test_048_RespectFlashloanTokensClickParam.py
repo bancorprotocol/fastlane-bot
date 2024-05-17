@@ -84,4 +84,4 @@ def run_command(arb_mode):
 def test_test_flashloan_tokens_is_respected():
 # ------------------------------------------------------------
     
-    run_command("multi")
+    run_command("multi_pairwise_all")

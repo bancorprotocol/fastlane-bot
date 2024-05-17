@@ -132,8 +132,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
-
 
 # ------------------------------------------------------------
 # Test      050
@@ -155,7 +153,7 @@ def test_test_min_profit():
 def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("multi")
+    arb_finder = bot._get_arb_finder("multi_pairwise_all")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
@@ -307,9 +305,8 @@ def test_test_expected_output_bancorv2():
             encoded_trade_instructions, deadline
         )
     ]
-    b2pools = [pool['anchor'] for pool in mgr.pool_data if pool["exchange_name"] in "bancor_v2"]
     bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
+    assert arb_finder.__name__ == "FindArbitrageMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name = FindArbitrageMultiPairwiseAll, found {arb_finder.__name__}"
     assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(r)}"
     assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
     assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"

@@ -107,13 +107,10 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
     - **Triangular**: This includes arbitrage trades between three liquidity pools that can create a triangular route, starting and ending in the same token. For example, USDC > ETH, ETH > LINK, LINK > USDC
     - **Multi**: These modes can trade through multiple Carbon orders as a single trade.
   - **arb_mode options**:
-      - **single**: Pairwise arbitrage between one Carbon curve and one other exchange curve.
-      - **multi** Pairwise arbitrage between **multiple** Carbon curves and one other exchange curve.
-      - **triangle**: Triangular arbitrage between one Carbon curve and two other exchange curves.
-      - **multi_triangle**: Triangular arbitrage between **multiple** Carbon curves and two other exchange curves.
+      - **multi_triangle**: Triangular arbitrage between multiple Carbon curves and two other exchange curves.
+      - **multi_triangle_complete**: Triangular arbitrage between multiple Carbon curves and two other exchange curves (experimental).
       - **b3_two_hop**: Triangular arbitrage - the same as bancor_v3 mode but more gas-efficient.
       - **multi_pairwise_pol**: Pairwise multi-mode that always routes through the Bancor protocol-owned liquidity contract.
-      - **multi_pairwise_bal**: Pairwise multi-mode that always routes through Balancer.
       - **multi_pairwise_all**: **(Default)** Pairwise multi-mode that searches all available exchanges for pairwise arbitrage.
 - **flashloan_tokens** (str): Tokens the bot can use for flash loans. Specify token addresses as a comma-separated string (e.g., 0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C, 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2).
 - **n_jobs** (int): The number of parallel jobs to run. The default, -1, will use all available cores for the process.
@@ -145,7 +142,7 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
 Specify options in the command line. For example:
 
 ```bash
-poetry run python main.py --arb_mode=multi --polling_interval=12 --reorg_delay=10 --loglevel=INFO
+poetry run python main.py --arb_mode=multi_pairwise_all --polling_interval=12 --reorg_delay=10 --loglevel=INFO
 ```
 
 ## Troubleshooting
@@ -176,7 +173,7 @@ poetry run python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --
 
 #### Carbon-focused pairwise arbitrage
 ```commandline
-poetry run python main.py --arb_mode=multi --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
 #### Unfocused pairwise arbitrage
 ```commandline

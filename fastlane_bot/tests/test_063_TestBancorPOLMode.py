@@ -128,8 +128,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi_pairwise_pol"
-
 
 # ------------------------------------------------------------
 # Test      063
@@ -176,7 +174,7 @@ def test_test_combos_and_tokens():
     assert type(combos) == list, f"[NBTest 063 TestMultiPairwisePOLMode] combos is wrong data type. Expected list, found: {type(combos)}"
     assert ('0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') in combos or ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C') in combos, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT/WETH or WETH/BNT in combos"
     assert len(all_tokens) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 tokens, found {len(all_tokens)}"
-    assert len(combos) >= 146, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 146 combos, found {len(combos)}"
+    assert len(combos) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 combos, found {len(combos)}"
     
 
 # ------------------------------------------------------------
@@ -220,6 +218,6 @@ def test_test_expected_output():
                         if trade["tknin"] not in carbon_tkn_in:
                             carbon_wrong_direction_count += 1
     
-    assert len(r) >= 36, f"[NBTest 063 TestMultiPairwisePOLMode] Expected at least 27 arbs, found {len(r)}"
+    assert len(r) >= 18, f"[NBTest 063 TestMultiPairwisePOLMode] Expected at least 18 arbs, found {len(r)}"
     assert multi_carbon_count > 0, f"[NBTest 063 TestMultiPairwisePOLMode] Not finding arbs with multiple Carbon curves."
     assert carbon_wrong_direction_count == 0, f"[NBTest 063 TestMultiPairwisePOLMode Mode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."

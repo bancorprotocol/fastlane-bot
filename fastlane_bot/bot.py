@@ -66,16 +66,13 @@ from fastlane_bot.helpers import (
     split_carbon_trades,
     maximize_last_trade_per_tkn
 )
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer, T
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
-from .modes.pairwise_multi import FindArbitrageMultiPairwise
 from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
-from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
-from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format
 
@@ -103,9 +100,6 @@ class CarbonBot:
     SCALING_FACTOR = 0.999
 
     ARB_FINDER = {
-        "single": FindArbitrageSinglePairwise,
-        "multi": FindArbitrageMultiPairwise,
-        "triangle": ArbitrageFinderTriangleSingle,
         "multi_triangle": ArbitrageFinderTriangleMulti,
         "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
         "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
@@ -554,9 +548,6 @@ class CarbonBot:
         curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
         return curve_prices
     
-    # Global constant for Carbon Forks ordering
-    CARBON_SORTING_ORDER = float('inf')
-
     # Create a sort order mapping function
     def create_sort_order(self, sort_sequence):
         # Create a dictionary mapping from sort sequence to indices, except for Carbon Forks
@@ -564,11 +555,7 @@ class CarbonBot:
 
     # Define the sort key function separately
     def sort_key(self, item, sort_order):
-        # Check if the item is Carbon Forks
-        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
-            return self.CARBON_SORTING_ORDER
-        # Otherwise, use the sort order from the dictionary, or a default high value
-        return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
+        return float('inf') if item[0] in self.ConfigObj.CARBON_V1_FORKS else sort_order.get(item[0], float('inf'))
 
     # Define the custom sort function
     def custom_sort(self, data, sort_sequence):

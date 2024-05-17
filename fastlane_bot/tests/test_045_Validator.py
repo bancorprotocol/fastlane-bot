@@ -137,7 +137,7 @@ pools = db.get_pool_data_with_tokens()
 # ------------------------------------------------------------
 def test_test_validator():
 # ------------------------------------------------------------
-    for arb_mode in ["single", "multi", "multi_triangle"]:
+    for arb_mode in ["multi_triangle"]:
         arb_finder = bot._get_arb_finder(arb_mode)
         finder = arb_finder(
             flashloan_tokens=flashloan_tokens,
