@@ -14,9 +14,10 @@ def _get_event_topic(event):
 
 
 class Subscription:
-    def __init__(self, event: ContractEvent, topic: Optional[str] = None):
+    def __init__(self, event: ContractEvent, topic: Optional[str] = None, collect_all: bool = False):
         self._event = event
         self._topic = _get_event_topic(event) if topic is None else topic
+        self._collect_all = collect_all
         self._subscription_id = None
         self._latest_event_index = (-1, -1) # (block_number, block_index)
 
@@ -30,6 +31,10 @@ class Subscription:
     @property
     def topic(self):
         return self._topic
+    
+    @property
+    def collect_all(self):
+        return self._collect_all
 
     def parse_log(self, log) -> Event:
         try:
