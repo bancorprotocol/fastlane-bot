@@ -13,10 +13,6 @@ from typing import Any, Tuple, Dict, List, Union
 from _decimal import Decimal
 import pandas as pd
 
-from fastlane_bot.tools.cpc import T
-from fastlane_bot.utils import num_format
-
-
 class ArbitrageFinderBase:
     """
     Base class for all arbitrage finder modes
@@ -47,26 +43,9 @@ class ArbitrageFinderBase:
         self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
 
     @abc.abstractmethod
-    def find_arbitrage(
-        self,
-        candidates: List[Any] = None,
-        ops: Tuple = None,
-        best_profit: float = 0,
-        profit_src: float = 0,
-    ) -> Union[List, Tuple]:
+    def find_arbitrage() -> Union[List, Tuple]:
         """
         See subclasses for details
-
-        Parameters
-        ----------
-        candidates : List[Any], optional
-            List of candidates, by default None
-        ops : Tuple, optional
-            Tuple of operations, by default None
-        best_profit : float, optional
-            Best profit so far, by default 0
-        profit_src : float, optional
-            Profit source, by default 0
 
         Returns
         -------
@@ -75,86 +54,66 @@ class ArbitrageFinderBase:
         """
         pass
 
-    def _set_best_ops(
-        self,
-        best_profit: float,
-        ops: Tuple,
-        profit: float,
-        src_token: str,
-        trade_instructions: Any,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-    ) -> Tuple[float, Tuple]:
-        """
-        Set the best operations.
-
-        Parameters:
-
-        """
-        self.ConfigObj.logger.debug("[modes.base._set_best_ops] *************")
-        self.ConfigObj.logger.debug(
-            f"[modes.base._set_best_ops] New best profit: {profit}"
-        )
-
-        # Update the best profit and source token
-        best_profit = profit
-        best_src_token = src_token
-
-        # Update the best trade instructions
-        best_trade_instructions_df = trade_instructions_df
-        best_trade_instructions_dic = trade_instructions_dic
-        best_trade_instructions = trade_instructions
-
-        self.ConfigObj.logger.debug(
-            f"[modes.base._set_best_ops] best_trade_instructions_df: {best_trade_instructions_df}"
-        )
-
-        # Update the optimal operations
-        ops = (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        )
-
-        self.ConfigObj.logger.debug("[modes.base.calculate_profit] *************")
-
-        return best_profit, ops
-
     def get_prices_simple(self, CCm, tkn0, tkn1):
         curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
         curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
         return curve_prices
     
-    # Global constant for 'carbon_v1' order
-    CARBON_SORTING_ORDER = float('inf')
-
     # Create a sort order mapping function
     def create_sort_order(self, sort_sequence):
-        # Create a dictionary mapping from sort sequence to indices, except for 'carbon_v1'
-        return {key: index for index, key in enumerate(sort_sequence) if key != 'carbon_v1'}
+        # Create a dictionary mapping from sort sequence to indices, except for Carbon Forks
+        return {key: index for index, key in enumerate(sort_sequence) if key not in self.ConfigObj.CARBON_V1_FORKS}
 
     # Define the sort key function separately
     def sort_key(self, item, sort_order):
-        # Check if the item is 'carbon_v1'
-        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
-            return self.CARBON_SORTING_ORDER
-        # Otherwise, use the sort order from the dictionary, or a default high value
-        return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
+        return float('inf') if item[0] in self.ConfigObj.CARBON_V1_FORKS else sort_order.get(item[0], float('inf'))
 
     # Define the custom sort function
     def custom_sort(self, data, sort_sequence):
         sort_order = self.create_sort_order(sort_sequence)
         return sorted(data, key=lambda item: self.sort_key(item, sort_order))
 
+    def update_results(
+        self,
+        src_token: str,
+        r,
+        trade_instructions_dic,
+        trade_instructions_df,
+        trade_instructions,
+        candidates,
+        best_profit,
+        ops,
+    ):
+        # Calculate the profit
+        profit = self.calculate_profit(src_token, -r.result, self.CCm)
+        if str(profit) == "nan":
+            self.ConfigObj.logger.debug("profit is nan, skipping")
+        else:
+            # Handle candidates based on conditions
+            candidates += self.handle_candidates(
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
+            # Find the best operations
+            best_profit, ops = self.find_best_operations(
+                best_profit,
+                ops,
+                profit,
+                trade_instructions_df,
+                trade_instructions_dic,
+                src_token,
+                trade_instructions,
+            )
+        return best_profit, ops
+
     def calculate_profit(
         self,
         src_token: str,
         profit_src: float,
         CCm: Any,
-        cids: List[str],
-        profit: int = 0,
     ) -> float:
         """
         Calculate profit based on the source token.
@@ -201,7 +160,6 @@ class ArbitrageFinderBase:
 
     def handle_candidates(
         self,
-        best_profit: float,
         profit: float,
         trade_instructions_df: pd.DataFrame,
         trade_instructions_dic: Dict[str, Any],
@@ -213,8 +171,6 @@ class ArbitrageFinderBase:
 
         Parameters:
         ----------
-        best_profit : float
-            Best profit
         profit : float
             Profit
         trade_instructions_df : pd.DataFrame
@@ -290,29 +246,12 @@ class ArbitrageFinderBase:
         condition_better_profit = profit > best_profit
         condition_zeros_one_token = max(netchange) < 1e-4
         if condition_better_profit and condition_zeros_one_token:
-            return self._set_best_ops(
-                best_profit,
-                ops,
+            best_profit = profit
+            ops = (
                 profit,
-                src_token,
-                trade_instructions,
                 trade_instructions_df,
                 trade_instructions_dic,
+                src_token,
+                trade_instructions,
             )
         return best_profit, ops
-
-    def _check_limit_flashloan_tokens_for_bancor3(self):
-        """
-        Limit the flashloan tokens for bancor v3.
-        """
-        fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
-        if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
-            # Filter out tokens that are not in the existing flashloan_tokens list
-            self.flashloan_tokens = [
-                tkn for tkn in fltkns if tkn in self.flashloan_tokens
-            ]
-            self.ConfigObj.logger.info(
-                f"[modes.base._check_limit_flashloan_tokens_for_bancor3] limiting flashloan_tokens to {self.flashloan_tokens}"
-            )
-        else:
-            self.flashloan_tokens = fltkns

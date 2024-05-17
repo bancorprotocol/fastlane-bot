@@ -138,8 +138,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
-
 
 # ------------------------------------------------------------
 # Test      043
@@ -150,7 +148,7 @@ def test_test_empty_carbon_orders_removed():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi")
+    arb_finder = bot._get_arb_finder("multi_pairwise_all")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,

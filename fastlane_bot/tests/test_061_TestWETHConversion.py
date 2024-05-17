@@ -172,7 +172,7 @@ pools = db.get_pool_data_with_tokens()
 # ## Test_Wrap_Unwrap_Gas_Token_In_Route_Struct
 
 # +
-arb_mode = "multi"
+arb_mode = "multi_pairwise_all"
 
 arb_finder = bot._get_arb_finder(arb_mode)
 finder = arb_finder(

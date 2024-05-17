@@ -57,9 +57,7 @@ def mock_args():
 
 
 arb_mode_happy_path_options = [
-    "single",
-    "multi",
-    "triangle",
+    "multi_pairwise_all",
     "multi_triangle",
     "b3_two_hop",
 ]

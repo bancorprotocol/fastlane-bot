@@ -1,5 +1,5 @@
 """
-Defines the Triangular arbitrage finder class
+Defines the multi-triangle-complete arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
@@ -8,76 +8,135 @@ Defines the Triangular arbitrage finder class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Any, Tuple, Union
+from typing import List, Any, Tuple
+from itertools import product, combinations
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer
-
 
 class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
-    """
-    Triangular arbitrage finder mode
-    """
-
     arb_mode = "multi_triangle_complete"
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
+    def handle_exchange(self):
+        pass
+
+    def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:
         """
-        see base.py
+        Get comprehensive combos for triangular arbitrage
+
+        Parameters
+        ----------
+        flashloan_tokens : list
+            List of flashloan tokens
+        CCm : object
+            CCm object
+        arb_mode : str
+            Arbitrage mode (unused)
+
+        Returns
+        -------
+        combos : list
+            List of combos
+
         """
+        combos = []
+        for flt in flashloan_tokens:
 
-        if candidates is None:
-            candidates = []
+            # Get the Carbon pairs
+            carbon_pairs = sort_pairs(set([x.pair for x in CCm.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]))
+            
+            # Create a set of unique tokens, excluding 'flt'
+            x_tokens = {token for pair in carbon_pairs for token in pair.split('/') if token != flt}
+            
+            # Get relevant pairs containing the flashloan token
+            flt_x_pairs = sort_pairs([f"{x}/{flt}" for x in x_tokens])
+            
+            # Generate all possible 2-item combinations from the unique tokens that arent the flashloan token
+            x_y_pairs = sort_pairs(["{}/{}".format(x, y) for x, y in combinations(x_tokens, 2)])
+            
+            # Note the relevant pairs
+            all_relevant_pairs = flt_x_pairs + x_y_pairs
+            self.ConfigObj.logger.debug(f"len(all_relevant_pairs) {len(all_relevant_pairs)}")
 
-        combos = self.get_comprehensive_triangles(self.flashloan_tokens, self.CCm)
+            # Generate triangle groups
+            triangle_groups = get_triangle_groups(flt, x_y_pairs)
+            self.ConfigObj.logger.debug(f"len(triangle_groups) {len(triangle_groups)}")
 
-        for src_token, miniverse in combos:
-            try:
-                CC_cc = CPCContainer(miniverse)
-                O = MargPOptimizer(CC_cc)
-                pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart))
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
-                    # Failed to converge
-                    continue
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions = r.trade_instructions()
+            # Get pair info for the cohort
+            all_relevant_pairs_info = get_all_relevant_pairs_info(CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
+            
+            # Generate valid triangles for the groups base on arb_mode
+            valid_triangles = get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info)
+            
+            # Get [(flt,curves)] analysis set for the flt
+            flt_triangle_analysis_set = get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info)
+            
+            # The entire analysis set for all flts
+            combos.extend(flt_triangle_analysis_set)
+        return combos
 
-            except Exception as e:
-                self.ConfigObj.logger.info(f"[triangle multi] {e}")
-                continue
-            profit_src = -r.result
+def sort_pairs(pairs):
+    # Clean up the pairs alphabetically
+    return ["/".join(sorted(pair.split('/'))) for pair in pairs]
 
-            # Get the cids
-            cids = [ti["cid"] for ti in trade_instructions_dic]
+def flatten_nested_items_in_list(nested_list):
+    # unpack nested items
+    flattened_list = []
+    for items in nested_list:
+        flat_list = []
+        for item in items:
+            if isinstance(item, list):
+                flat_list.extend(item)
+            else:
+                flat_list.append(item)
+        flattened_list.append(flat_list)
+    return flattened_list
 
-            # Calculate the profit
-            profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-            if str(profit) == "nan":
-                self.ConfigObj.logger.debug("profit is nan, skipping")
-                continue
+def get_triangle_groups(flt, x_y_pairs):
+    # Get groups of triangles that conform to (flt/x , x/y, y/flt) where x!=y
+    triangle_groups = []
+    for pair in x_y_pairs:
+        x,y = pair.split('/')
+        triangle_groups += [("/".join(sorted([flt,x])), pair, "/".join(sorted([flt,y])))]
+    return triangle_groups
 
-            # Handle candidates based on conditions
-            candidates += self.handle_candidates(
-                best_profit,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
+def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
+    # Get pair info for the cohort to allow decision making at the triangle level
+    all_relevant_pairs_info = {}
+    for pair in all_relevant_pairs:            
+        all_relevant_pairs_info[pair] = {}
+        pair_curves = CCm.bypair(pair)
+        carbon_curves = []
+        non_carbon_curves = []
+        for x in pair_curves:
+            if x.params.exchange in carbon_v1_forks:
+                carbon_curves += [x]
+            else:
+                non_carbon_curves += [x]
+        all_relevant_pairs_info[pair]['curves'] = non_carbon_curves + [carbon_curves] if len(carbon_curves) > 0 else non_carbon_curves  # condense carbon curves into a single list
+        all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
+        all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
+    return all_relevant_pairs_info
 
-            # Find the best operations
-            best_profit, ops = self.find_best_operations(
-                best_profit,
-                ops,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
+def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
+    # Get the stats on the triangle group cohort for decision making
+    valid_carbon_triangles = []
+    for triangle in triangle_groups:
+        path_len = 0
+        has_carbon = False
+        for pair in triangle:
+            if all_relevant_pairs_info[pair]['all_counts'] > 0:
+                path_len += 1
+            if all_relevant_pairs_info[pair]['carbon_counts'] > 0:
+                has_carbon = True
+        if path_len == 3 and has_carbon == True:
+            valid_carbon_triangles.append(triangle)
+    return valid_carbon_triangles
 
-        return candidates if self.result == self.AO_CANDIDATES else ops
+def get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info):
+    flt_triangle_analysis_set = []
+    for triangle in valid_triangles:
+        multiverse = [all_relevant_pairs_info[pair]['curves'] for pair in triangle]
+        product_of_triangle = list(product(multiverse[0], multiverse[1], multiverse[2]))
+        triangles_to_run = flatten_nested_items_in_list(product_of_triangle)
+        flt_triangle_analysis_set += list(zip([flt] * len(triangles_to_run), triangles_to_run))        
+    return flt_triangle_analysis_set

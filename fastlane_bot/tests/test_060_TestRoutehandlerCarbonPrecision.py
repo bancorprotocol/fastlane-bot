@@ -166,10 +166,8 @@ pools = db.get_pool_data_with_tokens()
 def test_test_precision_using_all_tokens_in_carbon():
 # ------------------------------------------------------------
     
-    # +
-    arb_mode = "multi"
-    
-    arb_finder = bot._get_arb_finder(arb_mode)
+    # +    
+    arb_finder = bot._get_arb_finder("multi_pairwise_all")
     finder = arb_finder(
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,

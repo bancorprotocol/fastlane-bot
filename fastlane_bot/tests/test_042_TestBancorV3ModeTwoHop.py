@@ -130,8 +130,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "b3_two_hop"
-
 
 # ------------------------------------------------------------
 # Test      042
@@ -366,32 +364,9 @@ def test_test_get_fee_safe():
 # ------------------------------------------------------------
 # Test      042
 # File      test_042_TestBancorV3ModeTwoHop.py
-# Segment   Test_combos
+# Segment   Test_get_combos
 # ------------------------------------------------------------
-def test_test_combos():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    #test_2_pools = [ConstantProductCurve(k=2921921249910.464, x=2760126.9934445512, x_act=2760126.9934445512, y_act=1058618.410258, pair='BNT-FF1C/USDC-eB48', cid='0xc4771395e1389e2e3a12ec22efbb7aff5b1c04e5ce9c7596a82e9dc8fdec725b', fee=0.0, descr='bancor_v3 BNT-FF1C/USDC-eB48 0.000', constr='uv2', params={'exchange': 'bancor_v3', 'tknx_dec': 18, 'tkny_dec': 6, 'tknx_addr': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17713739}), ConstantProductCurve(k=518129588.60853314, x=6351922.348885405, x_act=6351922.348885405, y_act=81.57051679, pair='BNT-FF1C/WBTC-C599', cid='0x3885d978c125e66686e3f678ab64d5b09e61f89bf6e87c9ff66e740fd06aeefa', fee=0.0, descr='bancor_v3 BNT-FF1C/WBTC-C599 0.000', constr='uv2', params={'exchange': 'bancor_v3', 'tknx_dec': 18, 'tkny_dec': 8, 'tknx_addr': '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', 'tkny_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'blocklud': 17713739}), ConstantProductCurve(k=787603837541.6204, x=5107.692365701484, x_act=4.159867948255851, y_act=336571.44633978605, pair='WBTC-C599/USDC-eB48', cid='0x49ed97db2c080b7eac91dfaa7d51d5e8ac34c4dcfbcd3e8f2ed326a2a527b959', fee=0.003, descr='uniswap_v3 WBTC-C599/USDC-eB48 3000', constr='pkpp', params={'exchange': 'uniswap_v3', 'tknx_dec': 8, 'tkny_dec': 6, 'tknx_addr': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 'tkny_addr': '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 'blocklud': 17713395, 'L': 887470.4713632})]
-    flt = {'MKR-79A2', 'TRAC-0A6F', 'MONA-412A', 'WBTC-C599', 'WOO-5D4B', 'MATIC-eBB0', 'BAT-87EF', 'UOS-5C8c', 'LRC-EafD', 'NMR-6671', 'DIP-cD83', 'TEMP-1aB9', 'ICHI-A881', 'USDC-eB48', 'ENS-9D72', 'vBNT-7f94', 'ANKR-EDD4', 'UNI-F984', 'REQ-938a', 'WETH-6Cc2', 'AAVE-DaE9', 'ENJ-3B9c', 'MANA-C942', 'wNXM-2bDE', 'QNT-4675', 'RLC-7375', 'CROWN-E0fa', 'CHZ-b4AF', 'USDT-1ec7', 'DAI-1d0F', 'RPL-A51f', 'HOT-26E2', 'LINK-86CA', 'wstETH-2Ca0'}
-    combos = finder.get_combos(flashloan_tokens=flt, CCm=CCm, arb_mode="b3_two_hop")
-    print(combos)
-    assert len(combos) >= 1122, "[test_bancor_v3_two_hop] Different data used for tests, expected 1122 combos"
-    
-
-# ------------------------------------------------------------
-# Test      042
-# File      test_042_TestBancorV3ModeTwoHop.py
-# Segment   Test_get_miniverse_combos
-# ------------------------------------------------------------
-def test_test_get_miniverse_combos():
+def test_test_get_combos():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("b3_two_hop")
@@ -403,6 +378,5 @@ def test_test_get_miniverse_combos():
                 ConfigObj=bot.ConfigObj,
             )
     flt = {"0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","0x514910771AF9Ca656af840dff83E8264EcF986CA"}
-    combos = finder.get_combos(flashloan_tokens=flt, CCm=CCm, arb_mode="b3_two_hop")
-    all_miniverses = finder.get_miniverse_combos(combos)
-    assert len(all_miniverses) >= 6, f"[test_bancor_v3_two_hop] Different data used for tests, expected 6 miniverses, found {len(all_miniverses)}"
+    combos = finder.get_combos(flashloan_tokens=flt, CCm=CCm)
+    assert len(combos) >= 6, f"[test_bancor_v3_two_hop] Different data used for tests, expected 6 combos, found {len(combos)}"
