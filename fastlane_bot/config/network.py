@@ -194,7 +194,7 @@ class ConfigNetwork(ConfigBase):
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
-    TAX_TOKENS = []
+    TAX_TOKENS = set([])
 
     # BNT_KEY = "BNT-FF1C"
     # ETH_KEY = "ETH-EEeE"
@@ -437,7 +437,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
-    TAX_TOKENS = [
+    TAX_TOKENS = set([
         "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
         "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
         "0x40E64405F18e4FB01c6fc39f4F0c78df5eF9D0E0", # COSMIC
@@ -449,7 +449,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
         "0xaa95f26e30001251fb905d264Aa7b00eE9dF6C18", # KENDU
         "0x6A7eFF1e2c355AD6eb91BEbB5ded49257F3FED98", # OPSEC
         "0x14feE680690900BA0ccCfC76AD70Fd1b95D10e16", # PAAL
-    ]
+    ])
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -768,9 +768,9 @@ class _ConfigNetworkLinea(ConfigNetwork):
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
 
-    TAX_TOKENS = [
+    TAX_TOKENS = set([
         "0x1bE3735Dd0C0Eb229fB11094B6c277192349EBbf", # LUBE
-    ]
+    ])
 
     IS_INJECT_POA_MIDDLEWARE = True
     # Balancer
