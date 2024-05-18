@@ -74,6 +74,7 @@ from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
+from .modes.base import get_prices_simple, custom_sort
 from .utils import num_format
 
 
@@ -542,25 +543,6 @@ class CarbonBot:
         Returns True if the exchange route includes Carbon
         """
         return any(trade.is_carbon for trade in trade_instructions)
-    
-    def get_prices_simple(self, CCm, tkn0, tkn1):
-        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
-        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
-        return curve_prices
-    
-    # Create a sort order mapping function
-    def create_sort_order(self, sort_sequence):
-        # Create a dictionary mapping from sort sequence to indices, except for Carbon Forks
-        return {key: index for index, key in enumerate(sort_sequence) if key not in self.ConfigObj.CARBON_V1_FORKS}
-
-    # Define the sort key function separately
-    def sort_key(self, item, sort_order):
-        return float('inf') if item[0] in self.ConfigObj.CARBON_V1_FORKS else sort_order.get(item[0], float('inf'))
-
-    # Define the custom sort function
-    def custom_sort(self, data, sort_sequence):
-        sort_order = self.create_sort_order(sort_sequence)
-        return sorted(data, key=lambda item: self.sort_key(item, sort_order))
 
     def calculate_profit(
         self,
@@ -594,8 +576,8 @@ class CarbonBot:
         best_profit_fl_token = best_profit
         flashloan_fee_amt_fl_token = Decimal(str(flashloan_fee_amt))
         if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
-            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
-            sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
+            price_curves = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
+            sorted_price_curves = custom_sort(price_curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sort_sequence] {sort_sequence}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
@@ -613,8 +595,8 @@ class CarbonBot:
             best_profit_gastkn = best_profit_fl_token - flashloan_fee_amt_fl_token
 
         try:
-            price_curves_usd = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
-            sorted_price_curves_usd = self.custom_sort(price_curves_usd, sort_sequence)
+            price_curves_usd = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
+            sorted_price_curves_usd = custom_sort(price_curves_usd, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
             self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
             self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
             usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
