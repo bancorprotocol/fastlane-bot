@@ -9,9 +9,9 @@ All rights reserved.
 Licensed under MIT.
 """
 import abc
-from typing import Any, Tuple, Dict, List, Union
+from typing import Any, Tuple, List, Union
 from _decimal import Decimal
-import pandas as pd
+from pandas import DataFrame
 
 class ArbitrageFinderBase:
     """
@@ -65,7 +65,7 @@ class ArbitrageFinderBase:
         best_ops,
     ):
         profit = self.calculate_profit(src_token, -r.result, self.CCm)
-        if str(profit) != "nan" and is_net_change_small(trade_instructions_df):
+        if profit.is_finite() and is_net_change_small(trade_instructions_df):
             if profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
                 candidates.append(
                     (
@@ -91,7 +91,7 @@ class ArbitrageFinderBase:
         src_token: str,
         profit_src: float,
         CCm: Any,
-    ) -> float:
+    ) -> Decimal:
         """
         Calculate profit based on the source token.
         """
@@ -122,10 +122,10 @@ class ArbitrageFinderBase:
                 )
                 raise
         else:
-            best_profit_eth = best_profit_fl_token
+            best_profit_eth = Decimal(str(best_profit_fl_token))
         return best_profit_eth
 
-def is_net_change_small(trade_instructions_df: pd.DataFrame) -> bool:
+def is_net_change_small(trade_instructions_df: DataFrame) -> bool:
     """
     Check if the net change from the trade instructions is sufficiently small.
     """
