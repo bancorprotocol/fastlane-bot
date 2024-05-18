@@ -144,64 +144,6 @@ class ArbitrageFinderBase:
             best_profit_eth = best_profit_fl_token
         return best_profit_eth
 
-    @staticmethod
-    def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
-        """
-        Get the net change from the trade instructions.
-        """
-        try:
-            return trade_instructions_df.iloc[-1]
-        except Exception:
-            return [500]  # an arbitrary large number
-
-    def find_best_operations(
-        self,
-        best_profit: float,
-        ops: Tuple[float, pd.DataFrame, Dict[str, Any], str, Any],
-        profit: float,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-        src_token: str,
-        trade_instructions: Any,
-    ) -> Tuple[float, Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
-        """
-        Find the best operations based on conditions.
-
-        Parameters:
-        ----------
-        best_profit : float
-            Best profit
-        ops : tuple
-            Operations
-        profit : float
-            Profit
-        trade_instructions_df : pd.DataFrame
-            Trade instructions dataframe
-        trade_instructions_dic : dict
-            Trade instructions dictionary
-        src_token : str
-            Source token
-        trade_instructions : any
-            Trade instructions
-
-        Returns:
-        -------
-        best_profit : float
-            Best profit
-        ops : tuple
-            Operations
-        """
-        if profit > best_profit and is_net_change_small(trade_instructions_df):
-            best_profit = profit
-            ops = (
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
-        return best_profit, ops
-
 def is_net_change_small(trade_instructions_df: pd.DataFrame) -> bool:
     """
     Check if the net change from the trade instructions is sufficiently small.
