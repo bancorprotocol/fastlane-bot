@@ -81,33 +81,29 @@ class ArbitrageFinderBase:
         trade_instructions_df,
         trade_instructions,
         candidates,
-        best_profit,
-        ops,
+        best_ops,
     ):
-        # Calculate the profit
         profit = self.calculate_profit(src_token, -r.result, self.CCm)
-        if str(profit) == "nan":
-            self.ConfigObj.logger.debug("profit is nan, skipping")
-        else:
-            # Handle candidates based on conditions
-            candidates += self.handle_candidates(
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
-            # Find the best operations
-            best_profit, ops = self.find_best_operations(
-                best_profit,
-                ops,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
-        return best_profit, ops
+        if str(profit) != "nan" and is_net_change_small(trade_instructions_df):
+            if profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+                candidates.append(
+                    (
+                        profit,
+                        trade_instructions_df,
+                        trade_instructions_dic,
+                        src_token,
+                        trade_instructions,
+                    )
+                )
+            if best_ops is None or profit > best_ops[0]:
+                best_ops = (
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
+        return best_ops
 
     def calculate_profit(
         self,
@@ -158,53 +154,6 @@ class ArbitrageFinderBase:
         except Exception:
             return [500]  # an arbitrary large number
 
-    def handle_candidates(
-        self,
-        profit: float,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-        src_token: str,
-        trade_instructions: Any,
-    ) -> List[Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
-        """
-        Handle candidate addition based on conditions.
-
-        Parameters:
-        ----------
-        profit : float
-            Profit
-        trade_instructions_df : pd.DataFrame
-            Trade instructions dataframe
-        trade_instructions_dic : dict
-            Trade instructions dictionary
-        src_token : str
-            Source token
-        trade_instructions : any
-            Trade instructions
-
-        Returns:
-        -------
-        candidates : list
-            Candidates
-        """
-        netchange = self.get_netchange(trade_instructions_df)
-        condition_zeros_one_token = max(netchange) < 1e-4
-
-        if (
-            condition_zeros_one_token
-            and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
-        ):  # candidate regardless if profitable
-            return [
-                (
-                    profit,
-                    trade_instructions_df,
-                    trade_instructions_dic,
-                    src_token,
-                    trade_instructions,
-                )
-            ]
-        return []
-
     def find_best_operations(
         self,
         best_profit: float,
@@ -242,10 +191,7 @@ class ArbitrageFinderBase:
         ops : tuple
             Operations
         """
-        netchange = self.get_netchange(trade_instructions_df)
-        condition_better_profit = profit > best_profit
-        condition_zeros_one_token = max(netchange) < 1e-4
-        if condition_better_profit and condition_zeros_one_token:
+        if profit > best_profit and is_net_change_small(trade_instructions_df):
             best_profit = profit
             ops = (
                 profit,
@@ -255,3 +201,12 @@ class ArbitrageFinderBase:
                 trade_instructions,
             )
         return best_profit, ops
+
+def is_net_change_small(trade_instructions_df: pd.DataFrame) -> bool:
+    """
+    Check if the net change from the trade instructions is sufficiently small.
+    """
+    try:
+        return max(trade_instructions_df.iloc[-1]) < 1e-4
+    except Exception:
+        return False

@@ -20,8 +20,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         combos = self.get_combos(self.flashloan_tokens, self.CCm)
 
         candidates = []
-        best_profit = 0
-        ops = None
+        best_ops = None
 
         for src_token, miniverse in combos:
             try:
@@ -39,18 +38,17 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 # Failed to converge
                 continue
             # Update the results
-            best_profit, ops = self.update_results(
+            best_ops = self.update_results(
                 src_token,
                 r,
                 trade_instructions_dic,
                 trade_instructions_df,
                 trade_instructions,
                 candidates,
-                best_profit,
-                ops,
+                best_ops,
             )
 
-        return candidates if self.result == self.AO_CANDIDATES else ops
+        return candidates if self.result == self.AO_CANDIDATES else best_ops
 
 def build_pstart(CCm, CC_cc, tkn1, cfg):
     pstart = {tkn1: 1}
