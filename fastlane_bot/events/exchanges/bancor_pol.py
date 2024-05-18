@@ -50,8 +50,8 @@ class BancorPol(Exchange):
 
     def get_subscriptions(self, contract: Contract) -> List[Subscription]:
         return [
-            Subscription(contract.events.TokenTraded),
-            Subscription(contract.events.TradingEnabled, "0xae3f48c001771f8e9868e24d47b9e4295b06b1d78072acf96f167074aa3fab64"),
+            Subscription(contract.events.TokenTraded, collect_all=True),
+            Subscription(contract.events.TradingEnabled, "0xae3f48c001771f8e9868e24d47b9e4295b06b1d78072acf96f167074aa3fab64", collect_all=True),
         ]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
