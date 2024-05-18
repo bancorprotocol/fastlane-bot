@@ -21,8 +21,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
             return all_tokens, combos
 
         candidates = []
-        best_profit = 0
-        ops = None
+        best_ops = None
 
         for tkn0, tkn1 in combos:
             CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
@@ -48,15 +47,14 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                     # Failed to converge
                     continue
                 # Update the results
-                best_profit, ops = self.update_results(
+                best_ops = self.update_results(
                     src_token,
                     r,
                     trade_instructions_dic,
                     trade_instructions_df,
                     trade_instructions,
                     candidates,
-                    best_profit,
-                    ops,
+                    best_ops,
                 )
 
-        return candidates if self.result == self.AO_CANDIDATES else ops
+        return candidates if self.result == self.AO_CANDIDATES else best_ops
