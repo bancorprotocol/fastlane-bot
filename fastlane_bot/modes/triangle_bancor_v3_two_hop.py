@@ -16,8 +16,6 @@ from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 
 class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
-    arb_mode = "b3_two_hop"
-
     def get_combos(self) -> List[Any]:
         fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:

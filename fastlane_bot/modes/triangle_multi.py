@@ -14,8 +14,6 @@ from itertools import product
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
-    arb_mode = "multi_triangle"
-
     def get_combos(self) -> List[Any]:
         combos = []
         all_base_exchange_curves = self.CCm.byparams(exchange="carbon_v1").curves
