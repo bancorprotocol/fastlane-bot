@@ -269,7 +269,7 @@ class CarbonBot:
         *,
         arb_mode: str,
         randomizer: int,
-        data_validator=False,
+        data_validator: bool = False,
         logging_path: str = None,
         replay_mode: bool = False,
         replay_from_block: int = None,
