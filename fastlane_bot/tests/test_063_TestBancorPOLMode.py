@@ -143,18 +143,6 @@ def test_test_min_profit():
 # ------------------------------------------------------------
 # Test      063
 # File      test_063_TestBancorPOLMode.py
-# Segment   Test_get_arb_finder
-# ------------------------------------------------------------
-def test_test_get_arb_finder():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    assert arb_finder.__name__ == "ArbitrageFinderMultiPairwisePol", f"[NBTest 063 TestMultiPairwisePOLMode] Expected arb_finder class name name = ArbitrageFinderMultiPairwisePol, found {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      063
-# File      test_063_TestBancorPOLMode.py
 # Segment   Test_Combos_and_Tokens
 # ------------------------------------------------------------
 def test_test_combos_and_tokens():

@@ -190,10 +190,7 @@ def test_test_empty_carbon_orders_removed():
         }
     ]
     
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count
-    ) = bot._simple_ordering_by_src_token(test_trade, src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(test_trade, src_token)
 
     ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
 

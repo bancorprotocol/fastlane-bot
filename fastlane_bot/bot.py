@@ -204,8 +204,7 @@ class CarbonBot:
             src_token_instr + non_src_token_instr + src_token_end
         )
 
-        tx_in_count = len(src_token_instr)
-        return ordered_trade_instructions_dct, tx_in_count
+        return ordered_trade_instructions_dct
 
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
@@ -315,8 +314,7 @@ class CarbonBot:
         arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
         if data_validator:
-            arb_opp = self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder)
-            if arb_opp is None:
+            if not self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder):
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )
@@ -345,7 +343,7 @@ class CarbonBot:
                 with open(os.path.join(logging_path, filename), "w") as f:
                     f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
-    def validate_optimizer_trades(self, arb_opp, arb_finder):
+    def validate_optimizer_trades(self, arb_opp, arb_finder) -> bool:
         """
         Validates arbitrage trade input using equations that account for fees.
         This has limited coverage, but is very effective for the instances it covers.
@@ -359,62 +357,42 @@ class CarbonBot:
 
         Returns
         -------
-        tuple or None
+        True if valid, False otherwise
         """
 
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb_opp
+        best_trade_instructions_dic = arb_opp[2]
+        best_src_token = arb_opp[3]
 
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
+        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
         cids = []
         for pool in ordered_trade_instructions_dct:
             pool_cid = pool["cid"]
             if "-0" in pool_cid or "-1" in pool_cid:
                 self.ConfigObj.logger.debug(
-                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
-                    f"Carbon, returning to main flow."
+                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
                 )
-                return arb_opp
+                return True
             cids.append(pool_cid)
         if len(cids) > 3:
             self.ConfigObj.logger.warning(
-                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
-                f"to main flow."
+                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
             )
-            return arb_opp
-        max_trade_in = arb_finder.get_optimal_arb_trade_amts(
-            cids=cids, flt=best_src_token
-        )
+            return True
+        max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=best_src_token)
         if max_trade_in is None:
-            return None
+            return False
         if type(max_trade_in) != float and type(max_trade_in) != int:
-            return None
+            return False
         if max_trade_in < 0.0:
-            return None
+            return False
         self.ConfigObj.logger.debug(
             f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
         )
         ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
-        best_trade_instructions_dic = ordered_trade_instructions_dct
+        arb_opp[2] = ordered_trade_instructions_dct
 
-        return (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        )
+        return True
 
     def validate_pool_data(self, arb_opp):
         """
@@ -666,10 +644,7 @@ class CarbonBot:
         ) = arb_opp
 
         # Order the trade instructions
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
+        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(
             best_trade_instructions_dic, best_src_token
         )
 

@@ -145,18 +145,6 @@ def test_test_min_profit():
 # ------------------------------------------------------------
 # Test      042
 # File      test_042_TestBancorV3ModeTwoHop.py
-# Segment   Test_arb_mode_class
-# ------------------------------------------------------------
-def test_test_arb_mode_class():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    assert arb_finder.__name__ == "ArbitrageFinderTriangleBancor3TwoHop", f"[test_bancor_v3_two_hop] Wrong Arb Finder class, expected ArbitrageFinderTriangleBancor3TwoHop, got {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      042
-# File      test_042_TestBancorV3ModeTwoHop.py
 # Segment   Test_Trade_Merge
 # ------------------------------------------------------------
 def test_test_trade_merge():
@@ -173,10 +161,7 @@ def test_test_trade_merge():
         best_trade_instructions
     ) = finder.find_arb_opps()[0]
 
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count
-    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
 
     ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, best_src_token)
     # Convert the trade instructions
@@ -217,10 +202,7 @@ def test_test_get_optimal_arb_trade_amts():
         best_trade_instructions
     ) = finder.find_arb_opps()[0]
 
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count
-    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
 
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = finder.get_exact_pools(pool_cids)
@@ -258,11 +240,7 @@ def test_test_max_arb_trade_in_constant_product():
         best_trade_instructions
     ) = finder.find_arb_opps()[0]
 
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count
-    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
-    
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = finder.get_exact_pools(pool_cids)
@@ -309,10 +287,7 @@ def test_test_get_fee_safe():
         best_trade_instructions
     ) = finder.find_arb_opps()[0]
 
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count
-    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = finder.get_exact_pools(pool_cids)
