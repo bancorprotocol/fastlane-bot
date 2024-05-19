@@ -13,7 +13,7 @@ from itertools import product
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 
-class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
+class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
     arb_mode = "multi_pairwise_pol"
 
     def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:

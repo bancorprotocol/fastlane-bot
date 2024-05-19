@@ -149,7 +149,7 @@ def test_test_get_arb_finder():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwisePol", f"[NBTest 063 TestMultiPairwisePOLMode] Expected arb_finder class name name = FindArbitrageMultiPairwisePol, found {arb_finder.__name__}"
+    assert arb_finder.__name__ == "ArbitrageFinderMultiPairwisePol", f"[NBTest 063 TestMultiPairwisePOLMode] Expected arb_finder class name name = ArbitrageFinderMultiPairwisePol, found {arb_finder.__name__}"
     
 
 # ------------------------------------------------------------
