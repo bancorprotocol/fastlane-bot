@@ -271,24 +271,6 @@ class CarbonBot:
     def _get_arb_finder(cls, arb_mode: str) -> Callable:
         return cls.ARB_FINDER[arb_mode]
 
-    def _find_arbitrage(
-        self,
-        flashloan_tokens: List[str],
-        CCm: CPCContainer,
-        arb_mode: str,
-        randomizer: int
-    ) -> dict:
-        arb_finder = self._get_arb_finder(arb_mode)
-        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
-        finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=random_mode,
-            ConfigObj=self.ConfigObj,
-        )
-        return {"finder": finder, "r": finder.find_arbitrage()}
-
     def _run(
         self,
         flashloan_tokens: List[str],
@@ -324,8 +306,16 @@ class CarbonBot:
             the block number to start replaying from (default: None)
 
         """
-        arbitrage = self._find_arbitrage(flashloan_tokens=flashloan_tokens, CCm=CCm, arb_mode=arb_mode, randomizer=randomizer)
-        finder, r = [arbitrage[key] for key in ["finder", "r"]]
+        arb_finder = self._get_arb_finder(arb_mode)
+        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
+        finder = arb_finder(
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            mode="bothin",
+            result=random_mode,
+            ConfigObj=self.ConfigObj,
+        )
+        r = finder.find_arbitrage()
 
         if r is None or len(r) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
