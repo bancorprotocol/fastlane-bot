@@ -150,8 +150,7 @@ def test_test_min_profit():
 def test_test_trade_merge():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     (
         best_profit,
@@ -159,7 +158,7 @@ def test_test_trade_merge():
         best_trade_instructions_dic,
         best_src_token,
         best_trade_instructions
-    ) = finder.find_arb_opps()[0]
+    ) = arb_finder.find_arb_opps()[0]
 
     ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
 
@@ -191,8 +190,7 @@ def test_test_get_optimal_arb_trade_amts():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     (
         best_profit,
@@ -200,12 +198,12 @@ def test_test_get_optimal_arb_trade_amts():
         best_trade_instructions_dic,
         best_src_token,
         best_trade_instructions
-    ) = finder.find_arb_opps()[0]
+    ) = arb_finder.find_arb_opps()[0]
 
     ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
 
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
-    first_check_pools = finder.get_exact_pools(pool_cids)
+    first_check_pools = arb_finder.get_exact_pools(pool_cids)
     
     assert first_check_pools[0].cid == pool_cids[0], f"[test_bancor_v3_two_hop] Validation, wrong first pool, expected CID: 0x7be3da0f8d0f70d8f7a84a08dd267beea4318ed1c9fb3d602b0f3a3c7bd1cf4a, got CID: {first_check_pools[0].cid}"
     assert first_check_pools[1].cid == pool_cids[1], f"[test_bancor_v3_two_hop] Validation, wrong second pool, expected CID: 0x748ab2bef0d97e5a044268626e6c9c104bab818605d44f650fdeaa03a3c742d2, got CID: {first_check_pools[1].cid}"
@@ -215,7 +213,7 @@ def test_test_get_optimal_arb_trade_amts():
         assert type(pool) == ConstantProductCurve, f"[test_bancor_v3_two_hop] Validation pool type mismatch, got {type(pool)} expected ConstantProductCurve"
         assert pool.cid in pool_cids, f"[test_bancor_v3_two_hop] Validation missing pool.cid {pool.cid} in {pool_cids}"
     
-    optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, 'DAI-1d0F')
+    optimal_arb = arb_finder.get_optimal_arb_trade_amts(pool_cids, 'DAI-1d0F')
     assert type(optimal_arb) == float, f"[test_bancor_v3_two_hop] Optimal arb calculation type is {type(optimal_arb)} not float"
     # -
     
@@ -229,8 +227,7 @@ def test_test_max_arb_trade_in_constant_product():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     (
         best_profit,
@@ -238,32 +235,30 @@ def test_test_max_arb_trade_in_constant_product():
         best_trade_instructions_dic,
         best_src_token,
         best_trade_instructions
-    ) = finder.find_arb_opps()[0]
+    ) = arb_finder.find_arb_opps()[0]
 
     ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
-    first_check_pools = finder.get_exact_pools(pool_cids)
+    first_check_pools = arb_finder.get_exact_pools(pool_cids)
     flt='0x6B175474E89094C44Da98b954EedeAC495271d0F'
     tkn0 = flt
-    tkn1 = finder.get_tkn(pool=first_check_pools[0], tkn_num=1) if finder.get_tkn(pool=first_check_pools[0], tkn_num=1) != flt else finder.get_tkn(pool=first_check_pools[0], tkn_num=0)
-    tkn2 = finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if finder.get_tkn(pool=first_check_pools[1], tkn_num=0) == tkn1 else finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
-    tkn3 = finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if finder.get_tkn(pool=first_check_pools[1], tkn_num=0) != tkn1 else finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
-    tkn5 = finder.get_tkn(pool=first_check_pools[2], tkn_num=1) if finder.get_tkn(pool=first_check_pools[2], tkn_num=1) == flt else finder.get_tkn(pool=first_check_pools[2], tkn_num=0)
-    p0t0 = first_check_pools[0].x if finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].y
-    p0t1 = first_check_pools[0].y if finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].x
-    p1t0 = first_check_pools[1].x if tkn1 == finder.get_tkn(pool=first_check_pools[1], tkn_num=0) else first_check_pools[1].y
-    p1t1 = first_check_pools[1].y if tkn1 == finder.get_tkn(pool=first_check_pools[1], tkn_num=0) else first_check_pools[1].x
-    p2t0 = first_check_pools[2].x if finder.get_tkn(pool=first_check_pools[2], tkn_num=0) != flt else first_check_pools[2].y
-    p2t1 = first_check_pools[2].y if finder.get_tkn(pool=first_check_pools[2], tkn_num=0) != flt else first_check_pools[2].x
-    fee0 = finder.get_fee_safe(first_check_pools[0].fee)
-    fee1 = finder.get_fee_safe(first_check_pools[1].fee)
-    fee2 = finder.get_fee_safe(first_check_pools[2].fee)
-    optimal_arb = finder.get_optimal_arb_trade_amts(pool_cids, '0x6B175474E89094C44Da98b954EedeAC495271d0F')
-    optimal_arb_low_level_check = finder.max_arb_trade_in_constant_product(p0t0=p0t0, p0t1=p0t1, p1t0=p1t0, p1t1=p1t1, p2t0=p2t0, p2t1=p2t1,fee0=fee0, fee1=fee1, fee2=fee2)
+    tkn1 = arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=1) if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=1) != flt else arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0)
+    tkn2 = arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) == tkn1 else arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
+    tkn3 = arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) != tkn1 else arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
+    tkn5 = arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=1) if arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=1) == flt else arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=0)
+    p0t0 = first_check_pools[0].x if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].y
+    p0t1 = first_check_pools[0].y if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].x
+    p1t0 = first_check_pools[1].x if tkn1 == arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) else first_check_pools[1].y
+    p1t1 = first_check_pools[1].y if tkn1 == arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) else first_check_pools[1].x
+    p2t0 = first_check_pools[2].x if arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=0) != flt else first_check_pools[2].y
+    p2t1 = first_check_pools[2].y if arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=0) != flt else first_check_pools[2].x
+    fee0 = arb_finder.get_fee_safe(first_check_pools[0].fee)
+    fee1 = arb_finder.get_fee_safe(first_check_pools[1].fee)
+    fee2 = arb_finder.get_fee_safe(first_check_pools[2].fee)
+    optimal_arb = arb_finder.get_optimal_arb_trade_amts(pool_cids, '0x6B175474E89094C44Da98b954EedeAC495271d0F')
+    optimal_arb_low_level_check = arb_finder.max_arb_trade_in_constant_product(p0t0=p0t0, p0t1=p0t1, p1t0=p1t0, p1t1=p1t1, p2t0=p2t0, p2t1=p2t1,fee0=fee0, fee1=fee1, fee2=fee2)
     assert iseq(optimal_arb, optimal_arb_low_level_check), f"[test_bancor_v3_two_hop] Arb calculation result mismatch, pools likely ordered incorrectly, previous calc: {optimal_arb}, this calc: {optimal_arb_low_level_check}"
-    # max_arb_in = finder.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-    # finder.ConfigObj.logger.info(f"\n\nfirst_check_pools: {first_check_pools}\n\nValidating trade, max_arb_in= {max_arb_in} {tkn0} -> {tkn1} -> {tkn3} -> {tkn5}, token amts: {p0t0, p0t1, p1t0, p1t1, p2t0, p2t1}, fees: {fee0, fee1, fee2}")
     # -
     
 
@@ -276,8 +271,7 @@ def test_test_get_fee_safe():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     (
         best_profit,
@@ -285,16 +279,16 @@ def test_test_get_fee_safe():
         best_trade_instructions_dic,
         best_src_token,
         best_trade_instructions
-    ) = finder.find_arb_opps()[0]
+    ) = arb_finder.find_arb_opps()[0]
 
     ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
-    first_check_pools = finder.get_exact_pools(pool_cids)
-    ext_fee = finder.get_fee_safe(first_check_pools[0].fee)
+    first_check_pools = arb_finder.get_exact_pools(pool_cids)
+    ext_fee = arb_finder.get_fee_safe(first_check_pools[0].fee)
     
     for pool in first_check_pools:
-        ext_fee = finder.get_fee_safe(pool.fee)
+        ext_fee = arb_finder.get_fee_safe(pool.fee)
         assert type(ext_fee) == float, f"[test_bancor_v3_two_hop] Testing external pool, fee type is {type(ext_fee)} not float"
     # -
     
@@ -307,16 +301,15 @@ def test_test_get_fee_safe():
 def test_test_get_combos():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
+    arb_finder = bot.get_arb_finder(
+        arb_mode = "b3_two_hop",
         flashloan_tokens = {
             "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
             "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
             "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
             "0x514910771AF9Ca656af840dff83E8264EcF986CA"
         },
-        CCm = CCm,
-        ConfigObj = bot.ConfigObj
+        CCm = CCm
     )
-    combos = finder.get_combos()
+    combos = arb_finder.get_combos()
     assert len(combos) >= 6, f"[test_bancor_v3_two_hop] Different data used for tests, expected 6 combos, found {len(combos)}"

@@ -148,8 +148,7 @@ def test_test_empty_carbon_orders_removed():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
     
     (
         profit,
@@ -157,7 +156,7 @@ def test_test_empty_carbon_orders_removed():
         trade_instructions_dic,
         src_token,
         trade_instructions
-    ) = finder.find_arb_opps()[11]
+    ) = arb_finder.find_arb_opps()[11]
             
     # Check that this gets filtered out
     test_trade = [

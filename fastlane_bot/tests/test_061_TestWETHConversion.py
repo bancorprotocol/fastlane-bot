@@ -176,10 +176,9 @@ arb_mode = "multi_pairwise_all"
 
 # -
 def test_wrap_unwrap_original():
-    arb_finder = bot._get_arb_finder(arb_mode)
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder(arb_mode, flashloan_tokens=flashloan_tokens, CCm=CCm)
 
-    for arb_opp in finder.find_arb_opps():
+    for arb_opp in arb_finder.find_arb_opps():
         (
             profit,
             trade_instructions_df,

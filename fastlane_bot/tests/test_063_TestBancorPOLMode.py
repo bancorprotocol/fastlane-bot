@@ -148,10 +148,8 @@ def test_test_min_profit():
 def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-
-    combos = finder.find_combos()
+    arb_finder = bot.get_arb_finder("multi_pairwise_pol", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    combos = arb_finder.find_combos()
     assert ('0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') in combos or ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C') in combos, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT/WETH or WETH/BNT in combos"
     assert len(combos) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 combos, found {len(combos)}"
     
@@ -165,9 +163,8 @@ def test_test_expected_output():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-    arb_opps = finder.find_arb_opps()
+    arb_finder = bot.get_arb_finder("multi_pairwise_pol", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
     
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0
