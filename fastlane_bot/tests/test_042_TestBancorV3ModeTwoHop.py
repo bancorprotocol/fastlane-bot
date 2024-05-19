@@ -242,11 +242,7 @@ def test_test_max_arb_trade_in_constant_product():
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = arb_finder.get_exact_pools(pool_cids)
     flt='0x6B175474E89094C44Da98b954EedeAC495271d0F'
-    tkn0 = flt
     tkn1 = arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=1) if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=1) != flt else arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0)
-    tkn2 = arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) == tkn1 else arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
-    tkn3 = arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) if arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) != tkn1 else arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=1)
-    tkn5 = arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=1) if arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=1) == flt else arb_finder.get_tkn(pool=first_check_pools[2], tkn_num=0)
     p0t0 = first_check_pools[0].x if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].y
     p0t1 = first_check_pools[0].y if arb_finder.get_tkn(pool=first_check_pools[0], tkn_num=0) == flt else first_check_pools[0].x
     p1t0 = first_check_pools[1].x if tkn1 == arb_finder.get_tkn(pool=first_check_pools[1], tkn_num=0) else first_check_pools[1].y
@@ -256,9 +252,9 @@ def test_test_max_arb_trade_in_constant_product():
     fee0 = arb_finder.get_fee_safe(first_check_pools[0].fee)
     fee1 = arb_finder.get_fee_safe(first_check_pools[1].fee)
     fee2 = arb_finder.get_fee_safe(first_check_pools[2].fee)
-    optimal_arb = arb_finder.get_optimal_arb_trade_amts(pool_cids, '0x6B175474E89094C44Da98b954EedeAC495271d0F')
-    optimal_arb_low_level_check = arb_finder.max_arb_trade_in_constant_product(p0t0=p0t0, p0t1=p0t1, p1t0=p1t0, p1t1=p1t1, p2t0=p2t0, p2t1=p2t1,fee0=fee0, fee1=fee1, fee2=fee2)
-    assert iseq(optimal_arb, optimal_arb_low_level_check), f"[test_bancor_v3_two_hop] Arb calculation result mismatch, pools likely ordered incorrectly, previous calc: {optimal_arb}, this calc: {optimal_arb_low_level_check}"
+    optimal_arb = arb_finder.get_optimal_arb_trade_amts(pool_cids, flt)
+    optimal_arb_low_level_check = (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5) / (p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
+    assert optimal_arb == optimal_arb_low_level_check, f"[test_bancor_v3_two_hop] Arb calculation result mismatch, pools likely ordered incorrectly, previous calc: {optimal_arb}, this calc: {optimal_arb_low_level_check}"
     # -
     
 
