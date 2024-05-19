@@ -149,10 +149,8 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-
-    combos = finder.find_combos()
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    combos = arb_finder.find_combos()
     assert len(combos) > 1000, f"[NBTest64 TestMultiPairwiseAll Mode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     # -
     
@@ -166,10 +164,8 @@ def test_test_expected_output():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-
-    arb_opps = finder.find_arb_opps()
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
     
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0

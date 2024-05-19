@@ -138,8 +138,6 @@ pools = db.get_pool_data_with_tokens()
 def test_test_validator():
 # ------------------------------------------------------------
     for arb_mode in ["multi_triangle"]:
-        arb_finder = bot._get_arb_finder(arb_mode)
-        finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-        arb_opp = finder.find_arb_opps()[0]
-        validated = bot.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder)
-        assert arb_opp == validated
+        arb_finder = bot.get_arb_finder(arb_mode, flashloan_tokens=flashloan_tokens, CCm=CCm)
+        arb_opp = arb_finder.find_arb_opps()[0]
+        assert bot.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=arb_finder)

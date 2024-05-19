@@ -139,10 +139,8 @@ def test_test_randomizer():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-
-    arb_opps = finder.find_arb_opps()
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
     assert len(arb_opps) >= 26, f"[NB047 Randomizer], expected at least 26 arb opps, found {len(arb_opps)}"
     
     for num_of_items in range(5):

@@ -67,6 +67,7 @@ from fastlane_bot.helpers import (
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
+from .modes.base import ArbitrageFinderBase
 from .modes.pairwise_multi_all import ArbitrageFinderMultiPairwiseAll
 from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
@@ -97,14 +98,6 @@ class CarbonBot:
     ConfigObj: Config = None
 
     SCALING_FACTOR = 0.999
-
-    ARB_FINDER = {
-        "multi_triangle": ArbitrageFinderTriangleMulti,
-        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
-        "multi_pairwise_pol": ArbitrageFinderMultiPairwisePol,
-        "multi_pairwise_all": ArbitrageFinderMultiPairwiseAll,
-        "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
-    }
 
     class NoArbAvailable(Exception):
         pass
@@ -260,9 +253,14 @@ class CarbonBot:
             block_number = self.ConfigObj.w3.eth.block_number
         return self.ConfigObj.w3.eth.get_block(block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
 
-    @classmethod
-    def _get_arb_finder(cls, arb_mode: str) -> Callable:
-        return cls.ARB_FINDER[arb_mode]
+    def get_arb_finder(self, arb_mode: str, flashloan_tokens, CCm) -> ArbitrageFinderBase:
+        return {
+            "multi_triangle": ArbitrageFinderTriangleMulti,
+            "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
+            "multi_pairwise_pol": ArbitrageFinderMultiPairwisePol,
+            "multi_pairwise_all": ArbitrageFinderMultiPairwiseAll,
+            "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
+        }[arb_mode](flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=self.ConfigObj)
 
     def _run(
         self,
@@ -299,9 +297,8 @@ class CarbonBot:
             the block number to start replaying from (default: None)
 
         """
-        arb_finder = self._get_arb_finder(arb_mode)
-        finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=self.ConfigObj)
-        arb_opps = finder.find_arb_opps()
+        arb_finder = self.get_arb_finder(arb_mode, flashloan_tokens, CCm)
+        arb_opps = arb_finder.find_arb_opps()
 
         if len(arb_opps) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
@@ -314,7 +311,7 @@ class CarbonBot:
         arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
         if data_validator:
-            if not self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder):
+            if not self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=arb_finder):
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )

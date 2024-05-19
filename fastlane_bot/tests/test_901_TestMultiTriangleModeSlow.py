@@ -138,17 +138,14 @@ pools = db.get_pool_data_with_tokens()
 def test_test_combos():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("multi_triangle")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
-
-    combos = finder.get_combos()
+    arb_finder = bot.get_arb_finder("multi_triangle", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    combos = arb_finder.get_combos()
     assert len(combos) >= 1225, f"[TestMultiTriangleMode] Using wrong dataset, expected at least 1225 combos, found {len(combos)}"
 
     # +
-    arb_finder = bot._get_arb_finder("multi_triangle")
-    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_finder = bot.get_arb_finder("multi_triangle", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
 
-    arb_opps = finder.find_arb_opps()
     multi_carbon_count = 0
     for arb_opp in arb_opps:
         (
