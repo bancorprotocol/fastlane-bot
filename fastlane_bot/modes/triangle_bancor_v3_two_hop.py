@@ -143,53 +143,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         fee2 = self.get_fee_safe(pools[2].fee)
 
         if pools[1].params.exchange in self.ConfigObj.CARBON_V1_FORKS:
-            return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
+            y = pools[1].y
+            z = pools[1].z
+            A = pools[1].A
+            B = pools[1].B
+            C = (B * z + A * y) ** 2
+            D = B * A * z + A ** 2 * y
+            return (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
 
-        return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-
-    @staticmethod
-    def get_exact_input_with_carbon(p0t0: float, p0t1: float, p2t0: float, p2t1: float, carbon_pool: ConstantProductCurve) -> float:
-        """
-        Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
-
-        Parameters
-        ----------
-        p0t0: float
-        p0t1: float
-        p2t0: float
-        p2t1: float
-        carbon_pool: ConstantProductCurve
-
-        Returns
-        -------
-        float
-        """
-        y = carbon_pool.y
-        z = carbon_pool.z
-        A = carbon_pool.A
-        B = carbon_pool.B
-        C = (B * z + A * y) ** 2
-        D = B * A * z + A ** 2 * y
-        return (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
-
-    @staticmethod
-    def max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
-        """
-        Equation to solve optimal trade input for a constant product -> constant product -> constant product route.
-        Parameters
-        ----------
-        p0t0: float
-        p0t1: float
-        p1t0: float
-        p1t1: float
-        p2t0: float
-        p2t1: float
-        fee0: float
-        fee1: float
-        fee2: float
-        Returns
-        -------
-        float
-
-        """
-        return (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
+        return (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5) / (p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
