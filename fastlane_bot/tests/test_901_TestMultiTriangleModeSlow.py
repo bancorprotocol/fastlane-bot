@@ -155,63 +155,41 @@ def test_test_combos():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi_triangle")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    combos = finder.get_combos(flashloan_tokens=flashloan_tokens, CCm=CCm)
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    combos = finder.get_combos()
     assert len(combos) >= 1225, f"[TestMultiTriangleMode] Using wrong dataset, expected at least 1225 combos, found {len(combos)}"
-    
-    # +
-    # print(len(combos))
-    # for ex in exchanges:
-    #     count = 0
-    #     for pool in CCm:
-    #         if ex in pool.descr:
-    #             count +=1
-    #     print(f"found {count} pools for {ex}")
-    # -
-    
-    # ### Test_find_arbitrage_single
-    
+
     # +
     arb_finder = bot._get_arb_finder("multi_triangle")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    arb_opps = finder.find_arb_opps()
     multi_carbon_count = 0
-    for arb in r:
+    for arb_opp in arb_opps:
         (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = arb
-        if len(best_trade_instructions_dic) > 3:
+            profit,
+            trade_instructions_df,
+            trade_instructions_dic,
+            src_token,
+            trade_instructions,
+        ) = arb_opp
+        if len(trade_instructions_dic) > 3:
             multi_carbon_count += 1
             tkn_in = None
             tkn_out = None
             # Find the first Carbon Curve to establish tknin and tknout
-            for curve in best_trade_instructions_dic:
+            for curve in trade_instructions_dic:
                 if "-0" in curve['cid'] or "-1" in curve['cid']:
                     tkn_in = curve["tknin"]
                     tknout = curve["tknout"]
                     break
-            for curve in best_trade_instructions_dic:
+            for curve in trade_instructions_dic:
                 if "-0" in curve['cid'] or "-1" in curve['cid']:
                     if curve["tknin"] in [tkn_in, tkn_out] and curve["tknout"] in [tkn_in, tkn_out]:
                         assert curve["tknin"] in tkn_in, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
                         assert curve["tknout"] in tkn_out, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."
     
     assert multi_carbon_count > 0, f"[TestMultiTriangleMode] Not finding arbs with multiple Carbon curves."
-    assert len(r) >= 58, f"[TestMultiTriangleMode] Expected at least 58 arbs, found {len(r)}"
+    assert len(arb_opps) >= 58, f"[TestMultiTriangleMode] Expected at least 58 arb opps, found {len(arb_opps)}"
     # -

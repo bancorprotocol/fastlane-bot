@@ -8,7 +8,7 @@ Defines the multi-triangle-complete arbitrage finder class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Any, Tuple
+from typing import Any, List
 from itertools import product, combinations
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
@@ -16,33 +16,12 @@ from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
     arb_mode = "multi_triangle_complete"
 
-    def handle_exchange(self):
-        pass
-
-    def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:
-        """
-        Get comprehensive combos for triangular arbitrage
-
-        Parameters
-        ----------
-        flashloan_tokens : list
-            List of flashloan tokens
-        CCm : object
-            CCm object
-        arb_mode : str
-            Arbitrage mode (unused)
-
-        Returns
-        -------
-        combos : list
-            List of combos
-
-        """
+    def get_combos(self) -> List[Any]:
         combos = []
-        for flt in flashloan_tokens:
 
+        for flt in self.flashloan_tokens:
             # Get the Carbon pairs
-            carbon_pairs = sort_pairs(set([x.pair for x in CCm.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]))
+            carbon_pairs = sort_pairs(set([x.pair for x in self.CCm.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]))
             
             # Create a set of unique tokens, excluding 'flt'
             x_tokens = {token for pair in carbon_pairs for token in pair.split('/') if token != flt}
@@ -62,7 +41,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             self.ConfigObj.logger.debug(f"len(triangle_groups) {len(triangle_groups)}")
 
             # Get pair info for the cohort
-            all_relevant_pairs_info = get_all_relevant_pairs_info(CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
+            all_relevant_pairs_info = get_all_relevant_pairs_info(self.CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
             
             # Generate valid triangles for the groups base on arb_mode
             valid_triangles = get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info)
@@ -72,6 +51,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             
             # The entire analysis set for all flts
             combos.extend(flt_triangle_analysis_set)
+
         return combos
 
 def sort_pairs(pairs):

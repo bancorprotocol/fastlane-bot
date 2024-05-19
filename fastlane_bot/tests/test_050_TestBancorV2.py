@@ -154,17 +154,9 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    all_tokens, combos = finder.find_arbitrage()
-    assert type(all_tokens) == set, f"[NBTest_50_TestBancorV2] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
-    assert type(combos) == list, f"[NBTest_50_TestBancorV2] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) > 100, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    combos = finder.find_combos()
     assert len(combos) > 1000, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     
     
@@ -177,19 +169,12 @@ def test_test_combos_and_tokens():
 def test_test_expected_output_bancorv2():
 # ------------------------------------------------------------
     
-    # +
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
     arb_with_bancor_v2 = []
-    for arb_opp in r:
+    arb_opps = finder.find_arb_opps()
+    for arb_opp in arb_opps:
         pools = []
         for pool in arb_opp[2]:
             pools += [curve for curve in CCm if curve.cid == pool['cid']]
@@ -197,28 +182,9 @@ def test_test_expected_output_bancorv2():
             if pool.params['exchange'] == "bancor_v2":
                 arb_with_bancor_v2.append(arb_opp)
     
-    assert len(r) >= 27, f"[NBTest_50_TestBancorV2] Expected at least 27 arb opps, found {len(r)}"
-    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"            
-    
-    # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    arb_with_bancor_v2 = []
-    for arb_opp in r:
-        pools = []
-        for pool in arb_opp[2]:
-            pools += [curve for curve in CCm if curve.cid == pool['cid']]
-        for pool in pools:
-            if pool.params['exchange'] == "bancor_v2":
-                arb_with_bancor_v2.append(arb_opp)
-    
+    assert len(arb_opps) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(arb_opps)}"
+    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
+
     # get specific arb for tests
     test_arb = arb_with_bancor_v2[0]
     
@@ -307,11 +273,5 @@ def test_test_expected_output_bancorv2():
     ]
     bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
     assert arb_finder.__name__ == "ArbitrageFinderMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name = ArbitrageFinderMultiPairwiseAll, found {arb_finder.__name__}"
-    assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(r)}"
-    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
     assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
     assert route_struct[0]['customAddress'] in bancor_v2_converter_addresses or route_struct[1]['customAddress'] in bancor_v2_converter_addresses, f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: anchor for Bancor V2 pool for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
-    # -
-    
-    
-    

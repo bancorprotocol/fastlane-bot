@@ -1,5 +1,5 @@
 """
-Defines the Multi-pairwise arbitrage finder class for Bancor POL
+Defines the multi-pairwise-pol arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
@@ -8,7 +8,7 @@ Defines the Multi-pairwise arbitrage finder class for Bancor POL
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Any, Tuple
+from typing import Any, List
 from itertools import product
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
@@ -16,35 +16,10 @@ from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
     arb_mode = "multi_pairwise_pol"
 
-    def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:
-        """
-        Get combos for pairwise arbitrage specific to Bancor POL
-
-        Parameters
-        ----------
-        flashloan_tokens : list
-            List of flashloan tokens
-        CCm : object
-            CCm object
-
-        Returns
-        -------
-        all_tokens : list
-            List of all tokens
-
-        """
-
-        bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
+    def get_combos(self) -> List[Any]:
+        bancor_pol_tkns = self.CCm.byparams(exchange="bancor_pol").tokens()
         bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn != self.ConfigObj.WETH_ADDRESS])
-
-        combos = [
-            (tkn0, tkn1)
-            for tkn0, tkn1 in product(bancor_pol_tkns, [self.ConfigObj.WETH_ADDRESS])
-            # tkn1 is always the token being flash loaned
-            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-            if tkn0 != tkn1
-        ]
-        return bancor_pol_tkns, combos
+        return [(tkn0, tkn1) for tkn0, tkn1 in product(bancor_pol_tkns, [self.ConfigObj.WETH_ADDRESS]) if tkn0 != tkn1]
 
     def get_curve_combos(self, CC: Any) -> List[Any]:
         pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]

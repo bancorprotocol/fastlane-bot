@@ -163,50 +163,35 @@ def test_test_trade_merge():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
     (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r
+        best_profit,
+        best_trade_instructions_df,
+        best_trade_instructions_dic,
+        best_src_token,
+        best_trade_instructions
+    ) = finder.find_arb_opps()[0]
+
     (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    best_trade_instructions_dic, best_src_token
-    )
-    ordered_scaled_dcts = bot._basic_scaling(
-                ordered_trade_instructions_dct, best_src_token
-            )
+        ordered_trade_instructions_dct,
+        tx_in_count
+    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, best_src_token)
     # Convert the trade instructions
-    ordered_trade_instructions_objects = bot._convert_trade_instructions(
-        ordered_scaled_dcts)
-    tx_route_handler = TxRouteHandler(
-                trade_instructions=ordered_trade_instructions_objects
-            )
+    ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
+    tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     agg_trade_instructions = (
-                tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-                if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
-                else ordered_trade_instructions_objects
-            )
-    # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-        agg_trade_instructions
+        tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+        if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+        else ordered_trade_instructions_objects
     )
+    # Calculate the trade instructions
+    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
     assert len(calculated_trade_instructions) == 3
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
-        calculated_trade_instructions
-    )
+    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
     assert len(calculated_trade_instructions) == 2
     assert calculated_trade_instructions[0].tknin != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     assert calculated_trade_instructions[0].tknout != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
@@ -222,29 +207,21 @@ def test_test_get_optimal_arb_trade_amts():
     
     # +
     arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
     (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r
+        best_profit,
+        best_trade_instructions_df,
+        best_trade_instructions_dic,
+        best_src_token,
+        best_trade_instructions
+    ) = finder.find_arb_opps()[0]
+
     (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    best_trade_instructions_dic, best_src_token
-    )
-    
-    
+        ordered_trade_instructions_dct,
+        tx_in_count
+    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = finder.get_exact_pools(pool_cids)
     
@@ -271,27 +248,20 @@ def test_test_max_arb_trade_in_constant_product():
     
     # +
     arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
     (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r
+        best_profit,
+        best_trade_instructions_df,
+        best_trade_instructions_dic,
+        best_src_token,
+        best_trade_instructions
+    ) = finder.find_arb_opps()[0]
+
     (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    best_trade_instructions_dic, best_src_token
-    )
+        ordered_trade_instructions_dct,
+        tx_in_count
+    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
@@ -329,27 +299,20 @@ def test_test_get_fee_safe():
     
     # +
     arb_finder = bot._get_arb_finder("b3_two_hop")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
     (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r
+        best_profit,
+        best_trade_instructions_df,
+        best_trade_instructions_dic,
+        best_src_token,
+        best_trade_instructions
+    ) = finder.find_arb_opps()[0]
+
     (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    best_trade_instructions_dic, best_src_token
-    )
+        ordered_trade_instructions_dct,
+        tx_in_count
+    ) = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = finder.get_exact_pools(pool_cids)
@@ -371,12 +334,14 @@ def test_test_get_combos():
     
     arb_finder = bot._get_arb_finder("b3_two_hop")
     finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=False,
-                ConfigObj=bot.ConfigObj,
-            )
-    flt = {"0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C","0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","0x514910771AF9Ca656af840dff83E8264EcF986CA"}
-    combos = finder.get_combos(flashloan_tokens=flt, CCm=CCm)
+        flashloan_tokens = {
+            "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "0x514910771AF9Ca656af840dff83E8264EcF986CA"
+        },
+        CCm = CCm,
+        ConfigObj = bot.ConfigObj
+    )
+    combos = finder.get_combos()
     assert len(combos) >= 6, f"[test_bancor_v3_two_hop] Different data used for tests, expected 6 combos, found {len(combos)}"

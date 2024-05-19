@@ -46,14 +46,12 @@ Licensed under MIT.
 __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"
 
-import random
 import json
 import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import Generator, List, Dict, Tuple, Any, Callable
-from typing import Optional
+from typing import Any, List, Dict, Tuple, Callable, Optional
 
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
@@ -75,7 +73,7 @@ from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .modes.base import get_prices_simple, custom_sort
-from .utils import num_format
+from .utils import num_format, rand_item
 
 
 @dataclass
@@ -259,13 +257,9 @@ class CarbonBot:
         int
             The deadline (as UNIX epoch).
         """
-        block_number = (
-            self.ConfigObj.w3.eth.block_number if block_number is None else block_number
-        )
-        return (
-            self.ConfigObj.w3.eth.get_block(block_number).timestamp
-            + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
-        )
+        if block_number is None:
+            block_number = self.ConfigObj.w3.eth.block_number
+        return self.ConfigObj.w3.eth.get_block(block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
 
     @classmethod
     def _get_arb_finder(cls, arb_mode: str) -> Callable:
@@ -307,35 +301,29 @@ class CarbonBot:
 
         """
         arb_finder = self._get_arb_finder(arb_mode)
-        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
-        finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=random_mode,
-            ConfigObj=self.ConfigObj,
-        )
-        r = finder.find_arbitrage()
+        finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=self.ConfigObj)
+        arb_opps = finder.find_arb_opps()
 
-        if r is None or len(r) == 0:
+        if len(arb_opps) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
             return
 
         self.ConfigObj.logger.info(
-            f"[bot._run] Found {len(r)} eligible arb opportunities."
+            f"[bot._run] Found {len(arb_opps)} eligible arb opportunities."
         )
-        r = self.randomize(arb_opps=r, randomizer=randomizer)
+
+        arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
         if data_validator:
-            r = self.validate_optimizer_trades(arb_opp=r, arb_finder=finder)
-            if r is None:
+            arb_opp = self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=finder)
+            if arb_opp is None:
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )
                 return
             if replay_mode:
                 pass
-            elif self.validate_pool_data(arb_opp=r):
+            elif self.validate_pool_data(arb_opp=arb_opp):
                 self.ConfigObj.logger.debug(
                     "[bot._run] All data checks passed! Pools in sync!"
                 )
@@ -345,7 +333,7 @@ class CarbonBot:
                 )
                 return
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
+        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, arb_opp, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
@@ -513,21 +501,6 @@ class CarbonBot:
         return True
 
     @staticmethod
-    def randomize(arb_opps, randomizer: int = 1):
-        """
-        Sorts arb opportunities by profit, then returns a random element from the top N arbs, with N being the value input in randomizer.
-        :param arb_opps: Arb opportunities
-        :param randomizer: the number of arb ops to choose from after sorting by profit. For example, a value of 3 would be the top 3 arbs by profitability.
-        returns:
-            A randomly selected arb opportunity.
-
-        """
-        arb_opps.sort(key=lambda x: x[0], reverse=True)
-        randomizer = min(max(randomizer, 1), len(arb_opps))
-        top_n_arbs = arb_opps[:randomizer]
-        return random.choice(top_n_arbs)
-
-    @staticmethod
     def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
         """
         Returns True if the exchange route includes Carbon
@@ -659,7 +632,7 @@ class CarbonBot:
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any,
+        arb_opp: Any,
         replay_from_block: int = None
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
@@ -674,8 +647,8 @@ class CarbonBot:
             The container.
         arb_mode: str
             The arbitrage mode.
-        r: Any
-            The result.
+        arb_opp: Any
+            The arbitrage opportunity.
         replay_from_block: int
             the block number to start replaying from (default: None)
 
@@ -690,7 +663,7 @@ class CarbonBot:
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
-        ) = r
+        ) = arb_opp
 
         # Order the trade instructions
         (

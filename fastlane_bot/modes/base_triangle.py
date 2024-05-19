@@ -8,19 +8,15 @@ Defines the base class for triangular arbitrage finder modes
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Tuple, Union
-
+from typing import Any, List, Dict
 from fastlane_bot.tools.cpc import CPCContainer
 from fastlane_bot.tools.optimizer import MargPOptimizer
 from fastlane_bot.modes.base import ArbitrageFinderBase
 
 class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
-    def find_arbitrage(self) -> Union[List, Tuple]:
-        self.handle_exchange()
-        combos = self.get_combos(self.flashloan_tokens, self.CCm)
-
-        candidates = []
-        best_ops = None
+    def find_arbitrage(self) -> Dict[List[Any], List[Any]]:
+        arb_opps = []
+        combos = self.get_combos()
 
         for src_token, miniverse in combos:
             try:
@@ -37,18 +33,21 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
                 # Failed to converge
                 continue
-            # Update the results
-            best_ops = self.update_results(
-                src_token,
-                r,
-                trade_instructions_dic,
-                trade_instructions_df,
-                trade_instructions,
-                candidates,
-                best_ops,
-            )
 
-        return candidates if self.result == self.AO_CANDIDATES else best_ops
+            profit = self.get_profit(src_token, r, trade_instructions_df)
+            if profit is not None:
+                arb_opps.append(
+                    (
+                        profit,
+                        trade_instructions_df,
+                        trade_instructions_dic,
+                        src_token,
+                        trade_instructions,
+                    )
+                )
+
+        arb_opps.sort(key=lambda x: x[0], reverse=True)
+        return {"combos": combos, "arb_opps": arb_opps}
 
 def build_pstart(CCm, CC_cc, tkn1, cfg):
     pstart = {tkn1: 1}

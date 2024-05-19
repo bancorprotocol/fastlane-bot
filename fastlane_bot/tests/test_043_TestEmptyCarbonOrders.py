@@ -149,59 +149,54 @@ def test_test_empty_carbon_orders_removed():
     
     # +
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
     
     (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = r[11]
+        profit,
+        trade_instructions_df,
+        trade_instructions_dic,
+        src_token,
+        trade_instructions
+    ) = finder.find_arb_opps()[11]
             
-    best_trade_instructions_dic
     # Check that this gets filtered out
-    test_trade = [{
-      'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
-      # 'strategy_id': 0,
-      'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-      'amtin': 0.008570336169213988,
-      'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      'amtout': -0.13937506393995136,
-      'error': None},
-     {'cid': '9187623906865338513511114400657741709420-1',
-      'strategy_id': 9187623906865338513511114400657741709420,
-      'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      'amtin': 0,
-      'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-      'amtout': 0,
-      'error': None},
-     {'cid': '9187623906865338513511114400657741709458-1',
-      'strategy_id': 9187623906865338513511114400657741709458,
-      'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      'amtin': 0.13937506393995136,
-      'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-      'amtout': 0.008870336169213988,
-      'error': None}]
+    test_trade = [
+        {
+            'cid': '0x0aadab62b703c91233e4215054caa98283a6cdc65364a8848fc645008c24a053',
+            # 'strategy_id': 0,
+            'tknin': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+            'amtin': 0.008570336169213988,
+            'tknout': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            'amtout': -0.13937506393995136,
+            'error': None
+        },
+        {
+            'cid': '9187623906865338513511114400657741709420-1',
+            'strategy_id': 9187623906865338513511114400657741709420,
+            'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            'amtin': 0,
+            'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+            'amtout': 0,
+            'error': None
+        },
+        {
+            'cid': '9187623906865338513511114400657741709458-1',
+            'strategy_id': 9187623906865338513511114400657741709458,
+            'tknin': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            'amtin': 0.13937506393995136,
+            'tknout': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+            'amtout': 0.008870336169213988,
+            'error': None
+        }
+    ]
     
     (
-    ordered_trade_instructions_dct,
-    tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-    test_trade, best_src_token
-    )
-    print(f"ordered_trade_instructions_dct: {ordered_trade_instructions_dct}")
-    ordered_scaled_dcts = bot._basic_scaling(
-                ordered_trade_instructions_dct, best_src_token
-            )
-    
+        ordered_trade_instructions_dct,
+        tx_in_count
+    ) = bot._simple_ordering_by_src_token(test_trade, src_token)
+
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
+
     ordered_scaled_dcts[0]["tknin_dec_override"] = 8
     ordered_scaled_dcts[0]["tknout_dec_override"] = 18
     ordered_scaled_dcts[0]["exchange_override"] = "uniswap_v2"
@@ -211,36 +206,26 @@ def test_test_empty_carbon_orders_removed():
     ordered_scaled_dcts[2]["tknin_dec_override"] = 18
     ordered_scaled_dcts[2]["tknout_dec_override"] = 8
     ordered_scaled_dcts[2]["exchange_override"] = "carbon_v1"
-    
-    print(f"ordered_scaled_dcts: {ordered_scaled_dcts}")
-    
+
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
     # print(f"ordered_trade_instructions_objects: {ordered_trade_instructions_objects}")
-    tx_route_handler = TxRouteHandler(
-                trade_instructions=ordered_trade_instructions_objects
-            )
+    tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     agg_trade_instructions = (
-                tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-                if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
-                else ordered_trade_instructions_objects
-            )
-    print(f"agg_trade_instructions: {agg_trade_instructions[0]}")
-    # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-        agg_trade_instructions
+        tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
+        if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+        else ordered_trade_instructions_objects
     )
 
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-                calculated_trade_instructions
-            )
+    # Calculate the trade instructions
+    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
+
+    encoded_trade_instructions = tx_route_handler.custom_data_encoder(calculated_trade_instructions)
     deadline = bot._get_deadline(1)
     
     # Get the route struct
     route_struct = [
         asdict(rs)
-        for rs in tx_route_handler.get_route_structs(
-            encoded_trade_instructions, deadline
-        )
+        for rs in tx_route_handler.get_route_structs(encoded_trade_instructions, deadline)
     ]
     for route in route_struct:
         if route["platformId"] == 6:
