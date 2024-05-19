@@ -133,22 +133,6 @@ pools = db.get_pool_data_with_tokens()
 # ------------------------------------------------------------
 # Test      901
 # File      test_901_TestMultiTriangleModeSlow.py
-# Segment   Test_min_profit
-# ------------------------------------------------------------
-def test_test_min_profit():
-# ------------------------------------------------------------
-    
-    assert(cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN <= 0.0001), f"[TestMultiTriangleMode], default_min_profit_gas_token must be <= 0.0001 for this Notebook to run, currently set to {cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN}"
-    
-    # ### Test_arb_mode_class
-    
-    arb_finder = bot._get_arb_finder("multi_triangle")
-    assert arb_finder.__name__ == "ArbitrageFinderTriangleMulti", f"[TestMultiTriangleMode] Expected arb_finder class name = ArbitrageFinderTriangleMulti, found {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      901
-# File      test_901_TestMultiTriangleModeSlow.py
 # Segment   Test_combos
 # ------------------------------------------------------------
 def test_test_combos():

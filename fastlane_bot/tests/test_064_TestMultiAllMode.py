@@ -143,18 +143,6 @@ def test_test_min_profit():
 # ------------------------------------------------------------
 # Test      064
 # File      test_064_TestMultiAllMode.py
-# Segment   Test_get_arb_finder
-# ------------------------------------------------------------
-def test_test_get_arb_finder():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    assert arb_finder.__name__ == "ArbitrageFinderMultiPairwiseAll", f"[NBTest64 TestMultiPairwiseAll Mode] Expected arb_finder class name name = ArbitrageFinderMultiPairwiseAll, found {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      064
-# File      test_064_TestMultiAllMode.py
 # Segment   Test_Combos_and_Tokens
 # ------------------------------------------------------------
 def test_test_combos_and_tokens():

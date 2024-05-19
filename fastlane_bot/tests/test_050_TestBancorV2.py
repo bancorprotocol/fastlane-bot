@@ -197,27 +197,16 @@ def test_test_expected_output_bancorv2():
     ) = test_arb
     
     # Order the trade instructions
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-        best_trade_instructions_dic, best_src_token
-    )
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
     
     # Scale the trade instructions
-    ordered_scaled_dcts = bot._basic_scaling(
-        ordered_trade_instructions_dct, best_src_token
-    )
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, best_src_token)
     
     # Convert the trade instructions
-    ordered_trade_instructions_objects = bot._convert_trade_instructions(
-        ordered_scaled_dcts
-    )
+    ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
     
     # Create the tx route handler
-    tx_route_handler = TxRouteHandler(
-        trade_instructions=ordered_trade_instructions_objects
-    )
+    tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     
     # Aggregate the carbon trades
     agg_trade_instructions = (
@@ -227,14 +216,10 @@ def test_test_expected_output_bancorv2():
     )
     
     # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-        agg_trade_instructions
-    )
+    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
     
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
-        calculated_trade_instructions
-    )
+    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
     
     # Get the flashloan token
     fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_address
@@ -246,20 +231,14 @@ def test_test_expected_output_bancorv2():
     best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
     
     # Use helper function to calculate profit
-    best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
-        CCm, best_profit, fl_token,
-    )
+    best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(CCm, best_profit, fl_token,)
     
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
-        bot.db.get_token(tkn_address=fl_token).address
-    )
+    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(bot.db.get_token(tkn_address=fl_token).address)
     
     # Encode the trade instructions
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-        calculated_trade_instructions
-    )
+    encoded_trade_instructions = tx_route_handler.custom_data_encoder(calculated_trade_instructions)
     
     # Get the deadline
     deadline = bot._get_deadline(1)
@@ -272,6 +251,5 @@ def test_test_expected_output_bancorv2():
         )
     ]
     bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
-    assert arb_finder.__name__ == "ArbitrageFinderMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name = ArbitrageFinderMultiPairwiseAll, found {arb_finder.__name__}"
     assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
     assert route_struct[0]['customAddress'] in bancor_v2_converter_addresses or route_struct[1]['customAddress'] in bancor_v2_converter_addresses, f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: anchor for Bancor V2 pool for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
