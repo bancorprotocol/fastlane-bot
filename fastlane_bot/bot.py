@@ -69,8 +69,8 @@ from fastlane_bot.helpers import (
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
-from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
-from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
+from .modes.pairwise_multi_all import ArbitrageFinderMultiPairwiseAll
+from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
@@ -103,8 +103,8 @@ class CarbonBot:
     ARB_FINDER = {
         "multi_triangle": ArbitrageFinderTriangleMulti,
         "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
-        "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
-        "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
+        "multi_pairwise_pol": ArbitrageFinderMultiPairwisePol,
+        "multi_pairwise_all": ArbitrageFinderMultiPairwiseAll,
         "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
     }
 
