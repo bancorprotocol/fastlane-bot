@@ -51,7 +51,7 @@ import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import Any, List, Dict, Tuple, Callable, Optional
+from typing import Any, List, Dict, Tuple, Optional
 
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
