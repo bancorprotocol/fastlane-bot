@@ -376,8 +376,6 @@ class CarbonBot:
             )
             return True
         max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=best_src_token)
-        if max_trade_in is None:
-            return False
         if type(max_trade_in) != float and type(max_trade_in) != int:
             return False
         if max_trade_in < 0.0:
