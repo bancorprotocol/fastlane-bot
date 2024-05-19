@@ -9,87 +9,60 @@ All rights reserved.
 Licensed under MIT.
 """
 import math
-from typing import List, Tuple, Any
+from typing import Any, List
 from itertools import product
 
 from fastlane_bot.tools.cpc import CPCContainer, ConstantProductCurve
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 
 class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
-    arb_mode = "b3_two_hop"
-
-    def handle_exchange(self):
-        assert self.base_exchange != "bancor_v3", "base_exchange for `b3_two_hop` mode must be `bancor_v3`"
+    def get_combos(self) -> List[Any]:
         fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
             # Filter out tokens that are not in the existing flashloan_tokens list
-            self.flashloan_tokens = [tkn for tkn in fltkns if tkn in self.flashloan_tokens]
+            flashloan_tokens = [tkn for tkn in fltkns if tkn in self.flashloan_tokens]
             self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
         else:
-            self.flashloan_tokens = fltkns
+            flashloan_tokens = fltkns
 
-    def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:
-        all_miniverses = []
-        combos = [
-            (tkn0, tkn1)
-            for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens)
-            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-            if tkn0 != tkn1
-        ]
+        miniverse_combos = []
+        combos = [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]
+
         for tkn0, tkn1 in combos:
-            external_curves = self.CCm.bypairs(f"{tkn0}/{tkn1}")
-            external_curves += self.CCm.bypairs(f"{tkn1}/{tkn0}")
-            external_curves = list(set(external_curves))
-            carbon_curves = [
-                curve
-                for curve in external_curves
-                if curve.params.get("exchange") in self.ConfigObj.CARBON_V1_FORKS
-            ]
-            external_curves = [
-                curve
-                for curve in external_curves
-                if curve.params.get("exchange") not in self.ConfigObj.CARBON_V1_FORKS
-            ]
-            if not external_curves and not carbon_curves:
+            all_curves = list(set(self.CCm.bypairs(f"{tkn0}/{tkn1}")) | set(self.CCm.bypairs(f"{tkn1}/{tkn0}")))
+
+            carbon_curves = [curve for curve in all_curves if curve.params.get("exchange") in self.ConfigObj.CARBON_V1_FORKS]
+            if not carbon_curves:
                 continue
 
-            bancor_v3_curve_0 = (
-                self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}")
-                .byparams(exchange="bancor_v3")
-                .curves
-            )
-            bancor_v3_curve_1 = (
-                self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}")
-                .byparams(exchange="bancor_v3")
-                .curves
-            )
-            if bancor_v3_curve_0 is None or bancor_v3_curve_1 is None:
-                continue
-            if len(bancor_v3_curve_0) == 0 or len(bancor_v3_curve_1) == 0:
+            external_curves = [curve for curve in all_curves if curve.params.get("exchange") not in self.ConfigObj.CARBON_V1_FORKS]
+            if not external_curves:
                 continue
 
-            miniverses = []
-            if len(external_curves) > 0:
-                for curve in external_curves:
-                    miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve]]
-            if len(carbon_curves) > 0:
+            bancor_v3_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
+            if not bancor_v3_curve_0:
+                continue
 
-                if len(carbon_curves) > 0:
-                    base_direction_pair = carbon_curves[0].pair
-                    base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-                    base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+            bancor_v3_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
+            if not bancor_v3_curve_1:
+                continue
 
-                    if len(base_direction_one) > 0:
-                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one]
+            miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve] for curve in external_curves]
 
-                    if len(base_direction_two) > 0:
-                        miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two]
+            base_direction_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
+            base_direction_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
 
-                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
+            if len(base_direction_one) > 0:
+                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one]
 
-            if len(miniverses) > 0:
-                all_miniverses += list(zip([tkn1] * len(miniverses), miniverses))
-        return all_miniverses
+            if len(base_direction_two) > 0:
+                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two]
+
+            miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
+
+            miniverse_combos += [(tkn1, miniverse) for miniverse in miniverses]
+
+        return miniverse_combos
 
     @staticmethod
     def get_tkn(pool: Any, tkn_num: int) -> str:
@@ -170,53 +143,12 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         fee2 = self.get_fee_safe(pools[2].fee)
 
         if pools[1].params.exchange in self.ConfigObj.CARBON_V1_FORKS:
-            return self.get_exact_input_with_carbon(p0t0, p0t1, p2t0, p2t1, pools[1])
+            y = pools[1].y
+            z = pools[1].z
+            A = pools[1].A
+            B = pools[1].B
+            C = (B * z + A * y) ** 2
+            D = B * A * z + A ** 2 * y
+            return (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
 
-        return self.max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0=fee0, fee1=fee1, fee2=fee2)
-
-    @staticmethod
-    def get_exact_input_with_carbon(p0t0: float, p0t1: float, p2t0: float, p2t1: float, carbon_pool: ConstantProductCurve) -> float:
-        """
-        Gets the optimal trade 0 amount for a triangular arb cycle with a single Carbon order in the middle
-
-        Parameters
-        ----------
-        p0t0: float
-        p0t1: float
-        p2t0: float
-        p2t1: float
-        carbon_pool: ConstantProductCurve
-
-        Returns
-        -------
-        float
-        """
-        y = carbon_pool.y
-        z = carbon_pool.z
-        A = carbon_pool.A
-        B = carbon_pool.B
-        C = (B * z + A * y) ** 2
-        D = B * A * z + A ** 2 * y
-        return (z * (-p0t0 * p2t0 * z + math.sqrt(C * p0t0 * p2t0 * p0t1 * p2t1))) / (p0t1 * C + p0t1 * D * p2t0 + z ** 2 * p2t0)
-
-    @staticmethod
-    def max_arb_trade_in_constant_product(p0t0, p0t1, p1t0, p1t1, p2t0, p2t1, fee0, fee1, fee2):
-        """
-        Equation to solve optimal trade input for a constant product -> constant product -> constant product route.
-        Parameters
-        ----------
-        p0t0: float
-        p0t1: float
-        p1t0: float
-        p1t1: float
-        p2t0: float
-        p2t1: float
-        fee0: float
-        fee1: float
-        fee2: float
-        Returns
-        -------
-        float
-
-        """
-        return (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5)/(p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)
+        return (-p1t0*p2t0*p0t0 + (p1t0*p2t0*p0t0*p1t1*p2t1*p0t1*(-fee1*fee2*fee0 + fee1*fee2 + fee1*fee0 - fee1 + fee2*fee0 - fee2 - fee0 + 1)) ** 0.5) / (p1t0*p2t0 - p2t0*p0t1*fee0 + p2t0*p0t1 + p1t1*p0t1*fee1*fee0 - p1t1*p0t1*fee1 - p1t1*p0t1*fee0 + p1t1*p0t1)

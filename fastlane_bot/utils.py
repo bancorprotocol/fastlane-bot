@@ -11,6 +11,7 @@ Licensed under MIT.
 """
 import glob
 import math
+import random
 import os.path
 from dataclasses import dataclass
 
@@ -25,6 +26,10 @@ def num_format(value: int or float) -> str:
         return "{0:.4f}".format(value)
     except Exception:
         return str(value)
+
+
+def rand_item(list_of_items: list, num_of_items: int) -> any:
+    return random.choice(list_of_items[:min(max(num_of_items, 1), len(list_of_items))])
 
 
 @dataclass

@@ -46,14 +46,12 @@ Licensed under MIT.
 __VERSION__ = "3-b2.2"
 __DATE__ = "20/June/2023"
 
-import random
 import json
 import os
 from _decimal import Decimal
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import Generator, List, Dict, Tuple, Any, Callable
-from typing import Optional
+from typing import Any, List, Dict, Tuple, Optional
 
 from fastlane_bot.config import Config
 from fastlane_bot.helpers import (
@@ -69,13 +67,14 @@ from fastlane_bot.helpers import (
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, CPCContainer
 from .config.constants import FLASHLOAN_FEE_MAP
 from .events.interface import QueryInterface
+from .modes.base import ArbitrageFinderBase
 from .modes.pairwise_multi_all import ArbitrageFinderMultiPairwiseAll
 from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .modes.base import get_prices_simple, custom_sort
-from .utils import num_format
+from .utils import num_format, rand_item
 
 
 @dataclass
@@ -99,14 +98,6 @@ class CarbonBot:
     ConfigObj: Config = None
 
     SCALING_FACTOR = 0.999
-
-    ARB_FINDER = {
-        "multi_triangle": ArbitrageFinderTriangleMulti,
-        "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
-        "multi_pairwise_pol": ArbitrageFinderMultiPairwisePol,
-        "multi_pairwise_all": ArbitrageFinderMultiPairwiseAll,
-        "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
-    }
 
     class NoArbAvailable(Exception):
         pass
@@ -206,8 +197,7 @@ class CarbonBot:
             src_token_instr + non_src_token_instr + src_token_end
         )
 
-        tx_in_count = len(src_token_instr)
-        return ordered_trade_instructions_dct, tx_in_count
+        return ordered_trade_instructions_dct
 
     def _basic_scaling(self, best_trade_instructions_dic, best_src_token):
         """
@@ -259,17 +249,18 @@ class CarbonBot:
         int
             The deadline (as UNIX epoch).
         """
-        block_number = (
-            self.ConfigObj.w3.eth.block_number if block_number is None else block_number
-        )
-        return (
-            self.ConfigObj.w3.eth.get_block(block_number).timestamp
-            + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
-        )
+        if block_number is None:
+            block_number = self.ConfigObj.w3.eth.block_number
+        return self.ConfigObj.w3.eth.get_block(block_number).timestamp + self.ConfigObj.DEFAULT_BLOCKTIME_DEVIATION
 
-    @classmethod
-    def _get_arb_finder(cls, arb_mode: str) -> Callable:
-        return cls.ARB_FINDER[arb_mode]
+    def get_arb_finder(self, arb_mode: str, flashloan_tokens, CCm) -> ArbitrageFinderBase:
+        return {
+            "multi_triangle": ArbitrageFinderTriangleMulti,
+            "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
+            "multi_pairwise_pol": ArbitrageFinderMultiPairwisePol,
+            "multi_pairwise_all": ArbitrageFinderMultiPairwiseAll,
+            "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
+        }[arb_mode](flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=self.ConfigObj)
 
     def _run(
         self,
@@ -278,7 +269,7 @@ class CarbonBot:
         *,
         arb_mode: str,
         randomizer: int,
-        data_validator=False,
+        data_validator: bool = False,
         logging_path: str = None,
         replay_mode: bool = False,
         replay_from_block: int = None,
@@ -306,36 +297,28 @@ class CarbonBot:
             the block number to start replaying from (default: None)
 
         """
-        arb_finder = self._get_arb_finder(arb_mode)
-        random_mode = arb_finder.AO_CANDIDATES if randomizer else None
-        finder = arb_finder(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            mode="bothin",
-            result=random_mode,
-            ConfigObj=self.ConfigObj,
-        )
-        r = finder.find_arbitrage()
+        arb_finder = self.get_arb_finder(arb_mode, flashloan_tokens, CCm)
+        arb_opps = arb_finder.find_arb_opps()
 
-        if r is None or len(r) == 0:
+        if len(arb_opps) == 0:
             self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
             return
 
         self.ConfigObj.logger.info(
-            f"[bot._run] Found {len(r)} eligible arb opportunities."
+            f"[bot._run] Found {len(arb_opps)} eligible arb opportunities."
         )
-        r = self.randomize(arb_opps=r, randomizer=randomizer)
+
+        arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
         if data_validator:
-            r = self.validate_optimizer_trades(arb_opp=r, arb_finder=finder)
-            if r is None:
+            if not self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=arb_finder):
                 self.ConfigObj.logger.warning(
                     "[bot._run] Math validation eliminated arb opportunity, restarting."
                 )
                 return
             if replay_mode:
                 pass
-            elif self.validate_pool_data(arb_opp=r):
+            elif self.validate_pool_data(arb_opp=arb_opp):
                 self.ConfigObj.logger.debug(
                     "[bot._run] All data checks passed! Pools in sync!"
                 )
@@ -345,7 +328,7 @@ class CarbonBot:
                 )
                 return
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
+        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, arb_opp, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
@@ -357,7 +340,7 @@ class CarbonBot:
                 with open(os.path.join(logging_path, filename), "w") as f:
                     f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
-    def validate_optimizer_trades(self, arb_opp, arb_finder):
+    def validate_optimizer_trades(self, arb_opp, arb_finder) -> bool:
         """
         Validates arbitrage trade input using equations that account for fees.
         This has limited coverage, but is very effective for the instances it covers.
@@ -371,62 +354,40 @@ class CarbonBot:
 
         Returns
         -------
-        tuple or None
+        True if valid, False otherwise
         """
 
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb_opp
+        best_trade_instructions_dic = arb_opp[2]
+        best_src_token = arb_opp[3]
 
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
+        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
         cids = []
         for pool in ordered_trade_instructions_dct:
             pool_cid = pool["cid"]
             if "-0" in pool_cid or "-1" in pool_cid:
                 self.ConfigObj.logger.debug(
-                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with "
-                    f"Carbon, returning to main flow."
+                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
                 )
-                return arb_opp
+                return True
             cids.append(pool_cid)
         if len(cids) > 3:
             self.ConfigObj.logger.warning(
-                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning "
-                f"to main flow."
+                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
             )
-            return arb_opp
-        max_trade_in = arb_finder.get_optimal_arb_trade_amts(
-            cids=cids, flt=best_src_token
-        )
-        if max_trade_in is None:
-            return None
+            return True
+        max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=best_src_token)
         if type(max_trade_in) != float and type(max_trade_in) != int:
-            return None
+            return False
         if max_trade_in < 0.0:
-            return None
+            return False
         self.ConfigObj.logger.debug(
             f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
         )
         ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
-        best_trade_instructions_dic = ordered_trade_instructions_dct
+        arb_opp[2] = ordered_trade_instructions_dct
 
-        return (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        )
+        return True
 
     def validate_pool_data(self, arb_opp):
         """
@@ -511,28 +472,6 @@ class CarbonBot:
                 return False
 
         return True
-
-    @staticmethod
-    def randomize(arb_opps, randomizer: int = 1):
-        """
-        Sorts arb opportunities by profit, then returns a random element from the top N arbs, with N being the value input in randomizer.
-        :param arb_opps: Arb opportunities
-        :param randomizer: the number of arb ops to choose from after sorting by profit. For example, a value of 3 would be the top 3 arbs by profitability.
-        returns:
-            A randomly selected arb opportunity.
-
-        """
-        arb_opps.sort(key=lambda x: x[0], reverse=True)
-        randomizer = min(max(randomizer, 1), len(arb_opps))
-        top_n_arbs = arb_opps[:randomizer]
-        return random.choice(top_n_arbs)
-
-    @staticmethod
-    def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
-        """
-        Returns True if the exchange route includes Carbon
-        """
-        return any(trade.is_carbon for trade in trade_instructions)
 
     def calculate_profit(
         self,
@@ -659,7 +598,7 @@ class CarbonBot:
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        r: Any,
+        arb_opp: Any,
         replay_from_block: int = None
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
@@ -674,8 +613,8 @@ class CarbonBot:
             The container.
         arb_mode: str
             The arbitrage mode.
-        r: Any
-            The result.
+        arb_opp: Any
+            The arbitrage opportunity.
         replay_from_block: int
             the block number to start replaying from (default: None)
 
@@ -690,13 +629,10 @@ class CarbonBot:
             best_trade_instructions_dic,
             best_src_token,
             best_trade_instructions,
-        ) = r
+        ) = arb_opp
 
         # Order the trade instructions
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = self._simple_ordering_by_src_token(
+        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(
             best_trade_instructions_dic, best_src_token
         )
 
@@ -718,7 +654,7 @@ class CarbonBot:
         # Aggregate the carbon trades
         agg_trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-            if self._carbon_in_trade_route(ordered_trade_instructions_objects)
+            if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
 
