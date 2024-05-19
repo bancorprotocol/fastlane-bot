@@ -168,7 +168,7 @@ def test_test_trade_merge():
     tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     agg_trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-        if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+        if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
     # Calculate the trade instructions
