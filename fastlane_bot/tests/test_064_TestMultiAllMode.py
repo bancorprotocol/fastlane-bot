@@ -162,18 +162,9 @@ def test_test_combos_and_tokens():
     
     # +
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    all_tokens, combos = finder.find_arbitrage()
-    
-    assert type(all_tokens) == set, f"[NBTest64 TestMultiPairwiseAll Mode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
-    assert type(combos) == list, f"[NBTest64 TestMultiPairwiseAll Mode] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) > 100, f"[NBTest64 TestMultiPairwiseAll Mode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    combos = finder.find_combos()
     assert len(combos) > 1000, f"[NBTest64 TestMultiPairwiseAll Mode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     # -
     
@@ -188,29 +179,24 @@ def test_test_expected_output():
     
     # +
     arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    arb_opps = finder.find_arb_opps()
     
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0
-    for arb in r:
+    for arb_opp in arb_opps:
         (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = arb
-        if len(best_trade_instructions_dic) > 2:
+            profit,
+            trade_instructions_df,
+            trade_instructions_dic,
+            src_token,
+            trade_instructions,
+        ) = arb_opp
+        if len(trade_instructions_dic) > 2:
             multi_carbon_count += 1
             carbon_tkn_in = None
-            for trade in best_trade_instructions_dic:
+            for trade in trade_instructions_dic:
                 if "-" in trade["cid"]:
                     if carbon_tkn_in is None:
                         carbon_tkn_in = trade["tknin"]
@@ -220,7 +206,7 @@ def test_test_expected_output():
     
     
     
-    assert len(r) >= 25, f"[NBTest64 TestMultiPairwiseAll Mode] Expected at least 25 arbs, found {len(r)}"
+    assert len(arb_opps) >= 25, f"[NBTest64 TestMultiPairwiseAll Mode] Expected at least 25 arb opps, found {len(arb_opps)}"
     assert multi_carbon_count > 0, f"[NBTest64 TestMultiPairwiseAll Mode] Not finding arbs with multiple Carbon curves."
     assert carbon_wrong_direction_count == 6, f"[NBTest64 TestMultiPairwiseAll Mode] Expected 6 Carbon curves to be in the opposite direction."
     # -

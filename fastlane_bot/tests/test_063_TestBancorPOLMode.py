@@ -161,19 +161,10 @@ def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    all_tokens, combos = finder.find_arbitrage()
-    assert type(all_tokens) == set, f"[NBTest 063 TestMultiPairwisePOLMode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
-    assert "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" in all_tokens, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT address in all_tokens: {(all_tokens)}"
-    assert type(combos) == list, f"[NBTest 063 TestMultiPairwisePOLMode] combos is wrong data type. Expected list, found: {type(combos)}"
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+
+    combos = finder.find_combos()
     assert ('0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C', '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') in combos or ('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', '0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C') in combos, f"[NBTest 063 TestMultiPairwisePOLMode] Expected BNT/WETH or WETH/BNT in combos"
-    assert len(all_tokens) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 tokens, found {len(all_tokens)}"
     assert len(combos) >= 73, f"[NBTest 063 TestMultiPairwisePOLMode] Using wrong dataset, expected at least 73 combos, found {len(combos)}"
     
 
@@ -187,30 +178,23 @@ def test_test_expected_output():
     
     # +
     arb_finder = bot._get_arb_finder("multi_pairwise_pol")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    
-    r = finder.find_arbitrage()
+    finder = arb_finder(flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=bot.ConfigObj)
+    arb_opps = finder.find_arb_opps()
     
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0
-    for arb in r:
+    for arb_opp in arb_opps:
         (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = arb
-        if len(best_trade_instructions_dic) > 2:
+            profit,
+            trade_instructions_df,
+            trade_instructions_dic,
+            src_token,
+            trade_instructions,
+        ) = arb_opp
+        if len(trade_instructions_dic) > 2:
             multi_carbon_count += 1
             carbon_tkn_in = None
-            for trade in best_trade_instructions_dic:
+            for trade in trade_instructions_dic:
                 if "-" in trade["cid"]:
                     if carbon_tkn_in is None:
                         carbon_tkn_in = trade["tknin"]
@@ -218,6 +202,6 @@ def test_test_expected_output():
                         if trade["tknin"] not in carbon_tkn_in:
                             carbon_wrong_direction_count += 1
     
-    assert len(r) >= 18, f"[NBTest 063 TestMultiPairwisePOLMode] Expected at least 18 arbs, found {len(r)}"
+    assert len(arb_opps) >= 18, f"[NBTest 063 TestMultiPairwisePOLMode] Expected at least 18 arb opps, found {len(arb_opps)}"
     assert multi_carbon_count > 0, f"[NBTest 063 TestMultiPairwisePOLMode] Not finding arbs with multiple Carbon curves."
     assert carbon_wrong_direction_count == 0, f"[NBTest 063 TestMultiPairwisePOLMode Mode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."

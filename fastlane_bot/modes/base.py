@@ -9,89 +9,43 @@ All rights reserved.
 Licensed under MIT.
 """
 import abc
-from typing import Any, Tuple, List, Union
 from _decimal import Decimal
-from pandas import DataFrame
+from typing import Any, List, Dict
 
 class ArbitrageFinderBase:
     """
     Base class for all arbitrage finder modes
     """
 
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
-
-    def __init__(
-        self,
-        flashloan_tokens,
-        CCm,
-        mode="bothin",
-        result=AO_CANDIDATES,
-        ConfigObj: Any = None,
-        arb_mode: str = None,
-    ):
+    def __init__(self, flashloan_tokens, CCm, ConfigObj):
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
-        self.mode = mode
-        self.result = result
-        self.best_profit = 0
-        self.best_src_token = None
-        self.best_trade_instructions = None
-        self.best_trade_instructions_df = None
-        self.best_trade_instructions_dic = None
         self.ConfigObj = ConfigObj
-        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
+
+    def find_combos(self) -> List[Any]:
+        return self.find_arbitrage()["combos"]
+
+    def find_arb_opps(self) -> List[Any]:
+        return self.find_arbitrage()["arb_opps"]
 
     @abc.abstractmethod
-    def find_arbitrage() -> Union[List, Tuple]:
+    def find_arbitrage(self) -> Dict[List[Any], List[Any]]:
         """
         See subclasses for details
 
         Returns
         -------
-        Union[List, Tuple]
-            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
+        A dictionary with:
+        - A list of combinations
+        - A list of arbitrage opportunities
         """
-        pass
+        ...
 
-    def update_results(
-        self,
-        src_token: str,
-        r,
-        trade_instructions_dic,
-        trade_instructions_df,
-        trade_instructions,
-        candidates,
-        best_ops,
-    ):
+    def get_profit(self, src_token: str, r, trade_instructions_df):
         profit = self.calculate_profit(src_token, -r.result, self.CCm)
-        if profit.is_finite() and is_net_change_small(trade_instructions_df):
-            if profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
-                candidates.append(
-                    (
-                        profit,
-                        trade_instructions_df,
-                        trade_instructions_dic,
-                        src_token,
-                        trade_instructions,
-                    )
-                )
-            if best_ops is None or profit > best_ops[0]:
-                best_ops = (
-                    profit,
-                    trade_instructions_df,
-                    trade_instructions_dic,
-                    src_token,
-                    trade_instructions,
-                )
-        return best_ops
+        return profit if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN and is_net_change_small(trade_instructions_df) else None
 
-    def calculate_profit(
-        self,
-        src_token: str,
-        profit_src: float,
-        CCm: Any,
-    ) -> Decimal:
+    def calculate_profit(self, src_token: str, profit_src: float, CCm: Any) -> Decimal:
         """
         Calculate profit based on the source token.
         """
@@ -106,10 +60,7 @@ class ArbitrageFinderBase:
             return Decimal(str(profit_src)) / Decimal(str(sorted_price_curves[0][-1]))
         return Decimal(str(profit_src))
 
-def is_net_change_small(trade_instructions_df: DataFrame) -> bool:
-    """
-    Check if the net change from the trade instructions is sufficiently small.
-    """
+def is_net_change_small(trade_instructions_df) -> bool:
     try:
         return max(trade_instructions_df.iloc[-1]) < 1e-4
     except Exception:

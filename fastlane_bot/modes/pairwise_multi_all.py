@@ -1,5 +1,5 @@
 """
-Defines the Multi-pairwise arbitrage finder class
+Defines the multi-pairwise-all arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
@@ -8,7 +8,7 @@ Defines the Multi-pairwise arbitrage finder class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Any, Tuple
+from typing import Any, List
 from itertools import product
 
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
@@ -16,33 +16,10 @@ from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
     arb_mode = "multi_pairwise_all"
 
-    def get_combos(self, flashloan_tokens: List[str], CCm: Any) -> Tuple[List[str], List[Any]]:
-        """
-        Get combos for pairwise arbitrage
-
-        Parameters
-        ----------
-        flashloan_tokens : list
-            List of flashloan tokens
-        CCm : object
-            CCm object
-
-        Returns
-        -------
-        all_tokens : list
-            List of all tokens
-
-        """
-        all_tokens = CCm.tokens()
-        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
-        combos = [
-            (tkn0, tkn1)
-            for tkn0, tkn1 in product(all_tokens, flashloan_tokens_intersect)
-            # tkn1 is always the token being flash loaned
-            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-            if tkn0 != tkn1
-        ]
-        return all_tokens, combos
+    def get_combos(self) -> List[Any]:
+        all_tokens = self.CCm.tokens()
+        flashloan_tokens_intersect = all_tokens.intersection(set(self.flashloan_tokens))
+        return [(tkn0, tkn1) for tkn0, tkn1 in product(all_tokens, flashloan_tokens_intersect) if tkn0 != tkn1]
 
     def get_curve_combos(self, CC: Any) -> List[Any]:
         carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
