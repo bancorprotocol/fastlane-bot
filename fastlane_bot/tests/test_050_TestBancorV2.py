@@ -208,7 +208,7 @@ def test_test_expected_output_bancorv2():
     # Aggregate the carbon trades
     agg_trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-        if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+        if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
     

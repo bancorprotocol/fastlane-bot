@@ -475,13 +475,6 @@ class CarbonBot:
 
         return True
 
-    @staticmethod
-    def _carbon_in_trade_route(trade_instructions: List[TradeInstruction]) -> bool:
-        """
-        Returns True if the exchange route includes Carbon
-        """
-        return any(trade.is_carbon for trade in trade_instructions)
-
     def calculate_profit(
         self,
         CCm: CPCContainer,
@@ -663,7 +656,7 @@ class CarbonBot:
         # Aggregate the carbon trades
         agg_trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-            if self._carbon_in_trade_route(ordered_trade_instructions_objects)
+            if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
 
