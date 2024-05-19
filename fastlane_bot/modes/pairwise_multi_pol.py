@@ -14,8 +14,6 @@ from itertools import product
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 
 class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
-    arb_mode = "multi_pairwise_pol"
-
     def get_combos(self) -> List[Any]:
         bancor_pol_tkns = self.CCm.byparams(exchange="bancor_pol").tokens()
         bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn != self.ConfigObj.WETH_ADDRESS])

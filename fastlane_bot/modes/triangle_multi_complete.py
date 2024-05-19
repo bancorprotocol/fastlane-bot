@@ -14,8 +14,6 @@ from itertools import product, combinations
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 
 class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
-    arb_mode = "multi_triangle_complete"
-
     def get_combos(self) -> List[Any]:
         combos = []
 

@@ -14,8 +14,6 @@ from itertools import product
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
 
 class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
-    arb_mode = "multi_pairwise_all"
-
     def get_combos(self) -> List[Any]:
         all_tokens = self.CCm.tokens()
         flashloan_tokens_intersect = all_tokens.intersection(set(self.flashloan_tokens))
