@@ -306,7 +306,12 @@ def run(mgr, args, tenderly_uri=None) -> None:
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
 
-    event_gatherer = EventGatherer(w3=mgr.w3_async, exchanges=mgr.exchanges, event_contracts=mgr.event_contracts)
+    event_gatherer = EventGatherer(
+        blockchain=args.blockchain,
+        w3=mgr.w3_async,
+        exchanges=mgr.exchanges,
+        event_contracts=mgr.event_contracts
+    )
 
     pool_finder = PoolFinder(
         carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
