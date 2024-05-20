@@ -983,9 +983,7 @@ def handle_subsequent_iterations(
     flashloan_tokens: List[str],
     randomizer: int,
     target_tokens: List[str] = None,
-    loop_idx: int = 0,
     logging_path: str = None,
-    replay_from_block: int = None,
     tenderly_uri: str = None,
     mgr: Any = None,
     forked_from_block: int = None,
@@ -1005,12 +1003,8 @@ def handle_subsequent_iterations(
         The randomizer.
     target_tokens : List[str], optional
         A list of target tokens, by default None
-    loop_idx : int, optional
-        The loop index, by default 0
     logging_path : str, optional
         The logging path, by default None
-    replay_from_block : int, optional
-        The block number to replay from, by default None
     tenderly_uri : str, optional
         The Tenderly URI, by default None
     mgr : Any
@@ -1019,37 +1013,35 @@ def handle_subsequent_iterations(
         The block number to fork from.
 
     """
-    if loop_idx > 0 or replay_from_block:
-        # bot.db.handle_token_key_cleanup()
-        bot.db.remove_unmapped_uniswap_v2_pools()
-        bot.db.remove_zero_liquidity_pools()
-        bot.db.remove_unsupported_exchanges()
-        # bot.db.remove_faulty_token_pools()
-        # bot.db.remove_pools_with_invalid_tokens()
-        # bot.db.ensure_descr_in_pool_data()
+    # bot.db.handle_token_key_cleanup()
+    bot.db.remove_unmapped_uniswap_v2_pools()
+    bot.db.remove_zero_liquidity_pools()
+    bot.db.remove_unsupported_exchanges()
+    # bot.db.remove_faulty_token_pools()
+    # bot.db.remove_pools_with_invalid_tokens()
+    # bot.db.ensure_descr_in_pool_data()
 
-        # Filter the target tokens
-        if target_tokens:
-            bot.db.filter_target_tokens(target_tokens)
+    # Filter the target tokens
+    if target_tokens:
+        bot.db.filter_target_tokens(target_tokens)
 
-        # Log the forked_from_block
-        if forked_from_block:
-            mgr.cfg.logger.info(
-                f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
-            )
-            mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-            bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-            bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-
-        # Run the bot
-        bot.run(
-            flashloan_tokens=flashloan_tokens,
-            arb_mode=arb_mode,
-            randomizer=randomizer,
-            logging_path=logging_path,
-            replay_mode=True if replay_from_block else False,
-            replay_from_block=forked_from_block,
+    # Log the forked_from_block
+    if forked_from_block:
+        mgr.cfg.logger.info(
+            f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}"
         )
+        mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+        bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+        bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+
+    # Run the bot
+    bot.run(
+        flashloan_tokens=flashloan_tokens,
+        arb_mode=arb_mode,
+        randomizer=randomizer,
+        logging_path=logging_path,
+        replay_from_block=forked_from_block,
+    )
 
 
 def handle_duplicates(mgr: Any):
