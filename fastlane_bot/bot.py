@@ -621,7 +621,9 @@ class CarbonBot:
         # Check if the best profit is greater than the minimum profit
         if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
-                f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
+                f"[bot._handle_trade_instructions]:\n"
+                f"- Expected profit: {best_profit_gastkn}\n"
+                f"- Minimum profit:  {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}\n"
             )
             return None, None
 
