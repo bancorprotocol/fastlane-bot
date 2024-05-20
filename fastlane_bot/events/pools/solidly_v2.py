@@ -52,6 +52,7 @@ EXCHANGE_INFO = {
     "lynex_v2"      : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
     "nile_v2"       : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
     "xfai_v0"       : {"balances": _balances_B, "async_balances": _async_balances_B, "is_stable": _is_stable_B, "async_is_stable": _async_is_stable_B},
+    "archly_v2"     : {"balances": _balances_A, "async_balances": _async_balances_A, "is_stable": _is_stable_A, "async_is_stable": _async_is_stable_A},
 }
 
 @dataclass

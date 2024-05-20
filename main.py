@@ -699,7 +699,7 @@ if __name__ == "__main__":
         "--blockchain",
         default="ethereum",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea", "sei"],
+        choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea", "sei", "telos"],
     )
     parser.add_argument(
         "--pool_data_update_frequency",

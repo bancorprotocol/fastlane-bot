@@ -49,6 +49,7 @@ FANTOM = "fantom"
 MANTLE = "mantle"
 LINEA = "linea"
 SEI = "sei"
+TELOS = "telos"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -68,6 +69,7 @@ coingecko_network_map = {
     "kava": "kava",
     "mantle": "mantle",
     "sei": "sei",
+    "telos": "telos",
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -81,6 +83,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "mantle": 0,
     "linea": 0,
     "sei": 0,
+    "telos": 0,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -94,6 +97,7 @@ ALCHEMY_KEY_DICT = {
     "mantle": "WEB3_MANTLE",
     "linea": "WEB3_LINEA",
     "sei": "WEB3_SEI",
+    "telos": "WEB3_TELOS",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -107,6 +111,7 @@ ALCHEMY_RPC_LIST = {
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
     "sei": "https://evm-rpc.arctic-1.seinetwork.io/", # TODO update with mainnet
+    "telos": "https://mainnet15.telos.net/evm",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -146,6 +151,7 @@ STRATUM_V2_NAME = "stratum_v2"
 LYNEX_V2_NAME = "lynex_v2"
 NILE_V2_NAME = "nile_v2"
 XFAI_V0_NAME = "xfai_v0"
+ARCHLY_V2_NAME = 'archly_v2'
 
 SOLIDLY_FORKS = [
     AERODROME_V2_NAME,
@@ -156,6 +162,7 @@ SOLIDLY_FORKS = [
     CLEOPATRA_V2_NAME,
     STRATUM_V2_NAME,
     XFAI_V0_NAME,
+    ARCHLY_V2_NAME,
 ]
 
 EXCHANGE_IDS = {
@@ -179,6 +186,7 @@ EXCHANGE_IDS = {
     CLEOPATRA_V2_NAME: 12,
     STRATUM_V2_NAME: 12,
     XFAI_V0_NAME: 13,
+    ARCHLY_V2_NAME: 11, # TODO CONFIRM
 }
 
 EXCHANGE_POOL_CREATION_EVENT_NAMES = {
@@ -193,6 +201,7 @@ EXCHANGE_POOL_CREATION_EVENT_NAMES = {
     LYNEX_V2_NAME: "PairCreated",
     NILE_V2_NAME: "PairCreated",
     XFAI_V0_NAME: "PoolCreated",
+    ARCHLY_V2_NAME: "PairCreated",
 }
 
 dataframe_key = [
@@ -1083,3 +1092,4 @@ def terraform_blockchain(network_name: str):
 #terraform_blockchain(network_name=MANTLE)
 #terraform_blockchain(network_name=LINEA)
 #terraform_blockchain(network_name=SEI)
+#terraform_blockchain(network_name=TELOS)
