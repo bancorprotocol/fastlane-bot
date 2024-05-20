@@ -99,9 +99,6 @@ class CarbonBot:
 
     SCALING_FACTOR = 0.999
 
-    class NoArbAvailable(Exception):
-        pass
-
     def __post_init__(self):
         """
         The post init method.
@@ -180,8 +177,6 @@ class CarbonBot:
         """
         Reorders a trade_instructions_dct so that all items where the best_src_token is the tknin are before others
         """
-        if best_trade_instructions_dic is None:
-            raise self.NoArbAvailable(f"No arb available for token {best_src_token}")
         src_token_instr = [
             x for x in best_trade_instructions_dic if x["tknin"] == best_src_token
         ]
@@ -270,7 +265,6 @@ class CarbonBot:
         arb_mode: str,
         randomizer: int,
         logging_path: str = None,
-        replay_mode: bool = False,
         replay_from_block: int = None,
     ):
         """
@@ -288,8 +282,6 @@ class CarbonBot:
             randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
         logging_path: str
             the logging path (default: None)
-        replay_mode: bool
-            whether to run in replay mode (default: False)
         replay_from_block: int
             the block number to start replaying from (default: None)
 
@@ -583,7 +575,6 @@ class CarbonBot:
         arb_mode: str = None,
         randomizer: int = 0,
         logging_path: str = None,
-        replay_mode: bool = False,
         replay_from_block: int = None,
     ):
         """
@@ -601,8 +592,6 @@ class CarbonBot:
             the randomizer (default: 0)
         logging_path: str
             the logging path (default: None)
-        replay_mode: bool
-            whether to run in replay mode (default: False)
         replay_from_block: int
             the block number to start replaying from (default: None)
         """
@@ -612,15 +601,11 @@ class CarbonBot:
         if CCm is None:
             CCm = self.get_curves()
 
-        try:
-            self._run(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                arb_mode=arb_mode,
-                randomizer=randomizer,
-                logging_path=logging_path,
-                replay_mode=replay_mode,
-                replay_from_block=replay_from_block,
-            )
-        except self.NoArbAvailable as e:
-            self.ConfigObj.logger.info(e)
+        self._run(
+            flashloan_tokens=flashloan_tokens,
+            CCm=CCm,
+            arb_mode=arb_mode,
+            randomizer=randomizer,
+            logging_path=logging_path,
+            replay_from_block=replay_from_block,
+        )
