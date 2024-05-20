@@ -433,7 +433,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             bot = init_bot(mgr)
 
             if args.use_specific_exchange_for_target_tokens is not None:
-                target_tokens = bot.get_tokens_in_exchange(
+                target_tokens = bot.db.get_tokens_from_exchange(
                     exchange_name=args.use_specific_exchange_for_target_tokens
                 )
                 mgr.cfg.logger.info(
