@@ -535,64 +535,6 @@ class CarbonBot:
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
         return best_profit_gastkn, best_profit_usd
 
-    @staticmethod
-    def calculate_arb(
-        arb_mode: str,
-        best_profit_gastkn: Decimal,
-        best_profit_usd: Decimal,
-        flashloan_tkn_profit: Decimal,
-        calculated_trade_instructions: List[Any],
-        fl_token: str,
-    ) -> dict:
-        """
-        Calculate the arbitrage.
-
-        Parameters
-        ----------
-        arb_mode: str
-            The arbitrage mode.
-        best_profit: Decimal
-            The best profit.
-        best_profit_usd: Decimal
-            The profit in USD.
-        flashloan_tkn_profit: Decimal
-            The profit from flashloan token.
-        calculated_trade_instructions: List[Any]
-            The calculated trade instructions.
-        fl_token: str
-            The flashloan token.
-
-        Returns
-        -------
-        dict
-            The arbitrage.
-        """
-
-        return {
-            "type": arb_mode,
-            "profit_gas_token": num_format(best_profit_gastkn),
-            "profit_usd": num_format(best_profit_usd),
-            "flashloan": [
-                {
-                    "token": fl_token,
-                    "amount": num_format(calculated_trade_instructions[0].amtin),
-                    "profit": num_format(flashloan_tkn_profit)
-                }
-            ],
-            "trades": [
-                {
-                    "trade_index": idx,
-                    "exchange": trade.exchange_name,
-                    "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
-                    "amount_in": num_format(trade.amtin),
-                    "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
-                    "amt_out": num_format(trade.amtout),
-                    "cid0": trade.cid[-10:]
-                }
-                for idx, trade in enumerate(calculated_trade_instructions)
-            ]
-        }
-
     def _handle_trade_instructions(
         self,
         CCm: CPCContainer,
@@ -694,14 +636,30 @@ class CarbonBot:
         )
 
         # Calculate the arbitrage
-        arb = self.calculate_arb(
-            arb_mode,
-            best_profit_gastkn,
-            best_profit_usd,
-            flashloan_tkn_profit,
-            calculated_trade_instructions,
-            fl_token_symbol,
-        )
+        arb = {
+            "type": arb_mode,
+            "profit_gas_token": num_format(best_profit_gastkn),
+            "profit_usd": num_format(best_profit_usd),
+            "flashloan": [
+                {
+                    "token": fl_token_symbol,
+                    "amount": num_format(calculated_trade_instructions[0].amtin),
+                    "profit": num_format(flashloan_tkn_profit)
+                }
+            ],
+            "trades": [
+                {
+                    "trade_index": idx,
+                    "exchange": trade.exchange_name,
+                    "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
+                    "amount_in": num_format(trade.amtin),
+                    "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
+                    "amt_out": num_format(trade.amtout),
+                    "cid0": trade.cid[-10:]
+                }
+                for idx, trade in enumerate(calculated_trade_instructions)
+            ]
+        }
 
         # Log the arbitrage
         self.ConfigObj.logger.info(

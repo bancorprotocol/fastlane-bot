@@ -213,37 +213,6 @@ def test_wrap_unwrap_original():
         calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
         flashloan_struct = tx_route_handler.generate_flashloan_struct(trade_instructions_objects=calculated_trade_instructions)
 
-        # Get the flashloan token
-        fl_token = calculated_trade_instructions[0].tknin_address
-        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
-
-        best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
-
-        # Calculate the best profit
-        best_profit_gastkn, best_profit_usd = bot.calculate_profit(CCm, best_profit, fl_token)
-
-        # Log the best profit
-        cfg.logger.info(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}")
-
-        # Calculate the arbitrage
-        arb = bot.calculate_arb(
-            arb_mode,
-            best_profit_gastkn,
-            best_profit_usd,
-            flashloan_tkn_profit,
-            calculated_trade_instructions,
-            fl_token_symbol,
-        )
-
-        # Log the arbitrage
-        cfg.logger.info(f"calculated arb: {arb}")
-
-        # Get the flashloan amount
-        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-
-        # Log the flashloan amount
-        cfg.logger.info(f"Flashloan amount: {flashloan_amount}")
-
         split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
 
         # Encode the trade instructions
