@@ -626,23 +626,34 @@ class CarbonBot:
             return None, None
 
         # Log the calculated arbitrage
-        self.ConfigObj.logger.info("[bot._handle_trade_instructions] calculated arbitrage:")
-        self.ConfigObj.logger.info(f"- arb mode = {arb_mode}")
-        self.ConfigObj.logger.info(f"- gas profit = {num_format(best_profit_gastkn)}")
-        self.ConfigObj.logger.info(f"- usd profit = {num_format(best_profit_usd)}")
-        self.ConfigObj.logger.info(f"- flashloan token = {fl_token_symbol}")
-        self.ConfigObj.logger.info(f"- flashloan amount = {num_format(calculated_trade_instructions[0].amtin)}")
-        self.ConfigObj.logger.info(f"- flashloan profit = {num_format(flashloan_tkn_profit)}")
-        self.ConfigObj.logger.info(f"- trade instructions:")
-        for idx, trade in enumerate(calculated_trade_instructions):
-            info = {
+        arb_info = [
+            f"arb mode = {arb_mode}",
+            f"gas profit = {num_format(best_profit_gastkn)}",
+            f"usd profit = {num_format(best_profit_usd)}",
+            f"flashloan token = {fl_token_symbol}",
+            f"flashloan amount = {num_format(calculated_trade_instructions[0].amtin)}",
+            f"flashloan profit = {num_format(flashloan_tkn_profit)}"
+        ]
+        arb_ti_info = [
+            {
                 "exchange": trade.exchange_name,
                 "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
                 "amt_in": num_format(trade.amtin),
                 "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
                 "amt_out": num_format(trade.amtout)
             }
-            self.ConfigObj.logger.info(f"  {idx + 1}. {info}")
+            for trade in calculated_trade_instructions
+        ]
+        self.ConfigObj.logger.info(
+            "\n".join(
+                [
+                    "[bot._handle_trade_instructions] calculated arbitrage:",
+                    *[f"- {line}" for line in arb_info],
+                    "- trade instructions:",
+                    *[f"  {index + 1}. {line}" for index, line in enumerate(arb_ti_info)]
+                ]
+            )
+        )
 
         # Split Carbon Orders
         split_calculated_trade_instructions = split_carbon_trades(
