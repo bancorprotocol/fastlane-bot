@@ -981,7 +981,6 @@ def handle_subsequent_iterations(
     bot: CarbonBot,
     flashloan_tokens: List[str],
     randomizer: int,
-    run_data_validator: bool,
     target_tokens: List[str] = None,
     loop_idx: int = 0,
     logging_path: str = None,
@@ -1003,8 +1002,6 @@ def handle_subsequent_iterations(
         A list of flashloan tokens.
     randomizer : int
         The randomizer.
-    run_data_validator : bool
-        Whether to run the data validator.
     target_tokens : List[str], optional
         A list of target tokens, by default None
     loop_idx : int, optional
@@ -1047,7 +1044,6 @@ def handle_subsequent_iterations(
         bot.run(
             flashloan_tokens=flashloan_tokens,
             arb_mode=arb_mode,
-            run_data_validator=run_data_validator,
             randomizer=randomizer,
             logging_path=logging_path,
             replay_mode=True if replay_from_block else False,
