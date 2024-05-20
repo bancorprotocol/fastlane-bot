@@ -220,7 +220,7 @@ def test_wrap_unwrap_original():
         best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
 
         # Calculate the best profit
-        best_profit_fl_token, best_profit_gastkn, best_profit_usd = bot.calculate_profit(CCm, best_profit, fl_token)
+        best_profit_gastkn, best_profit_usd = bot.calculate_profit(CCm, best_profit, fl_token)
 
         # Log the best profit
         cfg.logger.info(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}")
