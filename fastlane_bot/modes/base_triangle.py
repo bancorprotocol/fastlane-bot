@@ -26,7 +26,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 r = O.optimize(src_token, params=dict(pstart=pstart))
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions = r.trade_instructions(O.TIF_OBJECTS)
             except Exception as e:
                 self.ConfigObj.logger.debug(f"[base_triangle] {e}")
                 continue
@@ -37,17 +36,14 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             profit = self.get_profit(src_token, r, trade_instructions_df)
             if profit is not None:
                 arb_opps.append(
-                    (
-                        profit,
-                        trade_instructions_df,
-                        trade_instructions_dic,
-                        src_token,
-                        trade_instructions,
-                    )
+                    {
+                        "profit": profit,
+                        "src_token": src_token,
+                        'trade_instructions_dic': trade_instructions_dic,
+                    }
                 )
 
-        arb_opps.sort(key=lambda x: x[0], reverse=True)
-        return {"combos": combos, "arb_opps": arb_opps}
+        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda x: x["profit"], reverse=True)}
 
 def build_pstart(CCm, CC_cc, tkn1, cfg):
     pstart = {tkn1: 1}

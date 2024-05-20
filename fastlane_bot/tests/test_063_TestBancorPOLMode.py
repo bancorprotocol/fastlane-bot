@@ -169,17 +169,10 @@ def test_test_expected_output():
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0
     for arb_opp in arb_opps:
-        (
-            profit,
-            trade_instructions_df,
-            trade_instructions_dic,
-            src_token,
-            trade_instructions,
-        ) = arb_opp
-        if len(trade_instructions_dic) > 2:
+        if len(arb_opp["trade_instructions_dic"]) > 2:
             multi_carbon_count += 1
             carbon_tkn_in = None
-            for trade in trade_instructions_dic:
+            for trade in arb_opp["trade_instructions_dic"]:
                 if "-" in trade["cid"]:
                     if carbon_tkn_in is None:
                         carbon_tkn_in = trade["tknin"]

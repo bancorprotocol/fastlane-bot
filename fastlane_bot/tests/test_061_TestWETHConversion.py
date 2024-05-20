@@ -179,13 +179,8 @@ def test_wrap_unwrap_original():
     arb_finder = bot.get_arb_finder(arb_mode, flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     for arb_opp in arb_finder.find_arb_opps():
-        (
-            profit,
-            trade_instructions_df,
-            trade_instructions_dic,
-            src_token,
-            trade_instructions
-        ) = arb_opp
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
         # Order the trade instructions
         ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
