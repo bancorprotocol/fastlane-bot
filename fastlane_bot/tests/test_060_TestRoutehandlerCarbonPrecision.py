@@ -166,7 +166,7 @@ pools = db.get_pool_data_with_tokens()
 def test_test_precision_using_all_tokens_in_carbon():
 # ------------------------------------------------------------
     
-    def calculate_trade_outputs(tx_route_handler: TxRouteHandler, trade_instructions: List[TradeInstruction]) -> List[TradeInstruction]:
+    def calculate_trade_outputs(tx_route_handler: TxRouteHandler, trade_instructions: List[TradeInstruction]):
         """
         Refactored calculate trade outputs.
     
@@ -335,14 +335,9 @@ def test_test_precision_using_all_tokens_in_carbon():
     arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     for arb_opp in arb_finder.find_arb_opps():
-        (
-            profit,
-            trade_instructions_df,
-            trade_instructions_dic,
-            src_token,
-            trade_instructions
-        ) = arb_opp
-    
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
+
         # Order the trade instructions
         ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
@@ -363,4 +358,4 @@ def test_test_precision_using_all_tokens_in_carbon():
         )
     
         # Calculate the trade instructions
-        calculated_trade_instructions = calculate_trade_outputs(tx_route_handler=tx_route_handler,trade_instructions=agg_trade_instructions)
+        calculate_trade_outputs(tx_route_handler=tx_route_handler,trade_instructions=agg_trade_instructions)

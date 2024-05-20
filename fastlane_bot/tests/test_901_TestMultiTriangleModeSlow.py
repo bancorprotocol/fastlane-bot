@@ -148,24 +148,17 @@ def test_test_combos():
 
     multi_carbon_count = 0
     for arb_opp in arb_opps:
-        (
-            profit,
-            trade_instructions_df,
-            trade_instructions_dic,
-            src_token,
-            trade_instructions,
-        ) = arb_opp
-        if len(trade_instructions_dic) > 3:
+        if len(arb_opp["trade_instructions_dic"]) > 3:
             multi_carbon_count += 1
             tkn_in = None
             tkn_out = None
             # Find the first Carbon Curve to establish tknin and tknout
-            for curve in trade_instructions_dic:
+            for curve in arb_opp["trade_instructions_dic"]:
                 if "-0" in curve['cid'] or "-1" in curve['cid']:
                     tkn_in = curve["tknin"]
                     tknout = curve["tknout"]
                     break
-            for curve in trade_instructions_dic:
+            for curve in arb_opp["trade_instructions_dic"]:
                 if "-0" in curve['cid'] or "-1" in curve['cid']:
                     if curve["tknin"] in [tkn_in, tkn_out] and curve["tknout"] in [tkn_in, tkn_out]:
                         assert curve["tknin"] in tkn_in, f"[TestMultiTriangleMode] Finding Carbon curves in opposite directions - not supported in this mode."

@@ -347,20 +347,20 @@ class CarbonBot:
 
         Parameters
         ----------
-        arb_opp: tuple
-            The tuple containing an arbitrage opportunity found by the Optimizer
+        arb_opp: dictionary
+            The dictionary containing an arbitrage opportunity found by the Optimizer
         arb_finder: Any
-            The Arb mode class that handles the differences required for each arb route.
+            The Arb Finder class that handles the differences required for each arb route.
 
         Returns
         -------
         True if valid, False otherwise
         """
 
-        best_trade_instructions_dic = arb_opp[2]
-        best_src_token = arb_opp[3]
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
-        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(trade_instructions_dic, src_token)
         cids = []
         for pool in ordered_trade_instructions_dct:
             pool_cid = pool["cid"]
@@ -375,7 +375,7 @@ class CarbonBot:
                 f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
             )
             return True
-        max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=best_src_token)
+        max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=src_token)
         if type(max_trade_in) != float and type(max_trade_in) != int:
             return False
         if max_trade_in < 0.0:
@@ -385,7 +385,7 @@ class CarbonBot:
         )
         ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
 
-        arb_opp[2] = ordered_trade_instructions_dct
+        arb_opp["trade_instructions_dic"] = ordered_trade_instructions_dct
 
         return True
 
@@ -395,22 +395,15 @@ class CarbonBot:
 
         Parameters
         ----------
-        arb_opp: tuple
-            The tuple containing an arbitrage opportunity found by the Optimizer
+        arb_opp: dictionary
+            The dictionary containing an arbitrage opportunity found by the Optimizer
 
         Returns
         -------
         bool
         """
         self.ConfigObj.logger.info("[bot.validate_pool_data] Validating pool data...")
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb_opp
-        for pool in best_trade_instructions_dic:
+        for pool in arb_opp["trade_instructions_dic"]:
             pool_cid = pool["cid"].split("-")[0]
             strategy_id = pool["strategy_id"]
             current_pool = self.db.get_pool(cid=pool_cid)
@@ -539,7 +532,7 @@ class CarbonBot:
         self,
         CCm: CPCContainer,
         arb_mode: str,
-        arb_opp: Any,
+        arb_opp: dict,
         replay_from_block: int = None
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
@@ -554,8 +547,8 @@ class CarbonBot:
             The container.
         arb_mode: str
             The arbitrage mode.
-        arb_opp: Any
-            The arbitrage opportunity.
+        arb_opp: dictionary
+            The dictionary containing an arbitrage opportunity found by the Optimizer
         replay_from_block: int
             the block number to start replaying from (default: None)
 
@@ -564,22 +557,17 @@ class CarbonBot:
         - The hash of the transaction if submitted, None otherwise.
         - The receipt of the transaction if completed, None otherwise.
         """
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb_opp
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
         # Order the trade instructions
         ordered_trade_instructions_dct = self._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
+            trade_instructions_dic, src_token
         )
 
         # Scale the trade instructions
         ordered_scaled_dcts = self._basic_scaling(
-            ordered_trade_instructions_dct, best_src_token
+            ordered_trade_instructions_dct, src_token
         )
 
         # Convert the trade instructions
@@ -621,13 +609,13 @@ class CarbonBot:
         flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
         flashloan_fee_amt = flashloan_fee * (flashloan_amount_wei / 10**int(fl_token_decimals))
 
-        best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
+        flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
             calculated_trade_instructions
         )
 
         # Calculate the best profit
         best_profit_gastkn, best_profit_usd = self.calculate_profit(
-            CCm, best_profit, fl_token, flashloan_fee_amt
+            CCm, flashloan_tkn_profit, fl_token, flashloan_fee_amt
         )
 
         # Check if the best profit is greater than the minimum profit
@@ -698,7 +686,7 @@ class CarbonBot:
             f"[bot._handle_trade_instructions] Route Struct: \n {route_struct_processed}"
         )
         self.ConfigObj.logger.debug(
-            f"[bot._handle_trade_instructions] Trade Instructions: \n {best_trade_instructions_dic}"
+            f"[bot._handle_trade_instructions] Trade Instructions: \n {trade_instructions_dic}"
         )
 
         # Validate and submit the transaction

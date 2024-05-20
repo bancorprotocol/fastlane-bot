@@ -173,7 +173,7 @@ def test_test_expected_output_bancorv2():
     arb_with_bancor_v2 = []
     for arb_opp in arb_opps:
         pools = []
-        for pool in arb_opp[2]:
+        for pool in arb_opp["trade_instructions_dic"]:
             pools += [curve for curve in CCm if curve.cid == pool['cid']]
         for pool in pools:
             if pool.params['exchange'] == "bancor_v2":
@@ -185,13 +185,8 @@ def test_test_expected_output_bancorv2():
     # get specific arb for tests
     test_arb = arb_with_bancor_v2[0]
     
-    (
-        best_profit,
-        best_trade_instructions_df,
-        best_trade_instructions_dic,
-        best_src_token,
-        best_trade_instructions,
-    ) = test_arb
+    best_src_token = test_arb["src_token"]
+    best_trade_instructions_dic = test_arb["trade_instructions_dic"]
     
     # Order the trade instructions
     ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
