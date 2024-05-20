@@ -185,14 +185,14 @@ def test_test_expected_output_bancorv2():
     # get specific arb for tests
     test_arb = arb_with_bancor_v2[0]
     
-    best_src_token = test_arb["src_token"]
-    best_trade_instructions_dic = test_arb["trade_instructions_dic"]
+    src_token = test_arb["src_token"]
+    trade_instructions_dic = test_arb["trade_instructions_dic"]
     
     # Order the trade instructions
-    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
     # Scale the trade instructions
-    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, best_src_token)
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
     
     # Convert the trade instructions
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
