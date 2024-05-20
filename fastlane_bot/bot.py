@@ -654,7 +654,7 @@ class CarbonBot:
                 "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
                 "amt_out": num_format(trade.amtout)
             }
-            self.ConfigObj.logger.info(f"  {idx}. {info}")
+            self.ConfigObj.logger.info(f"  {idx + 1}. {info}")
 
         # Split Carbon Orders
         split_calculated_trade_instructions = split_carbon_trades(
