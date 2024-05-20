@@ -219,20 +219,14 @@ def test_test_expected_output_bancorv2():
     calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
     
     # Get the flashloan token
-    fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_address
+    fl_token = calculated_trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
     if fl_token == T.WETH:
         fl_token = T.NATIVE_ETH
     
-    best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
-    
-    # Use helper function to calculate profit
-    best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(CCm, best_profit, fl_token,)
-    
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(bot.db.get_token(tkn_address=fl_token).address)
     
     # Encode the trade instructions
     encoded_trade_instructions = tx_route_handler.custom_data_encoder(calculated_trade_instructions)

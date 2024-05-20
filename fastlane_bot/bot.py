@@ -479,7 +479,7 @@ class CarbonBot:
         best_profit: Decimal,
         fl_token: str,
         flashloan_fee_amt: int = 0,
-    ) -> Tuple[Decimal, Decimal, Decimal]:
+    ) -> Tuple[Decimal, Decimal]:
         """
         Calculate the actual profit in USD.
 
@@ -496,13 +496,12 @@ class CarbonBot:
 
         Returns
         -------
-        Tuple[Decimal, Decimal, Decimal]
-            The updated best_profit, flt_per_bnt, and profit_usd.
+        Tuple[Decimal, Decimal]
+            best_profit_gastkn, best_profit_usd.
         """
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
         sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
 
-        best_profit_fl_token = best_profit
         flashloan_fee_amt_fl_token = Decimal(str(flashloan_fee_amt))
         if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
             price_curves = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
@@ -513,15 +512,15 @@ class CarbonBot:
             if len(sorted_price_curves)>0:
                 fltkn_gastkn_conversion_rate = sorted_price_curves[0][-1]
                 flashloan_fee_amt_gastkn = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate))
-                best_profit_gastkn = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate)) - flashloan_fee_amt_gastkn
-                self.ConfigObj.logger.debug(f"[bot.calculate_profit] {fl_token, best_profit_fl_token, fltkn_gastkn_conversion_rate, best_profit_gastkn, 'GASTOKEN'}")
+                best_profit_gastkn = Decimal(str(best_profit)) / Decimal(str(fltkn_gastkn_conversion_rate)) - flashloan_fee_amt_gastkn
+                self.ConfigObj.logger.debug(f"[bot.calculate_profit] GASTOKEN: {fltkn_gastkn_conversion_rate, best_profit_gastkn}")
             else:
                 self.ConfigObj.logger.error(
                     f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
                 )
                 raise
         else:
-            best_profit_gastkn = best_profit_fl_token - flashloan_fee_amt_fl_token
+            best_profit_gastkn = best_profit - flashloan_fee_amt_fl_token
 
         try:
             price_curves_usd = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
@@ -534,7 +533,7 @@ class CarbonBot:
 
         best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
-        return best_profit_fl_token, best_profit_gastkn, best_profit_usd
+        return best_profit_gastkn, best_profit_usd
 
     @staticmethod
     def calculate_arb(
@@ -685,7 +684,7 @@ class CarbonBot:
         )
 
         # Calculate the best profit
-        best_profit_fl_token, best_profit_gastkn, best_profit_usd = self.calculate_profit(
+        best_profit_gastkn, best_profit_usd = self.calculate_profit(
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
