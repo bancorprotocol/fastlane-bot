@@ -269,7 +269,6 @@ class CarbonBot:
         *,
         arb_mode: str,
         randomizer: int,
-        data_validator: bool = False,
         logging_path: str = None,
         replay_mode: bool = False,
         replay_from_block: int = None,
@@ -287,8 +286,6 @@ class CarbonBot:
             The arbitrage mode.
         randomizer: int
             randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
-        data_validator: bool
-            If extra data validation should be performed
         logging_path: str
             the logging path (default: None)
         replay_mode: bool
@@ -310,24 +307,6 @@ class CarbonBot:
 
         arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
-        if data_validator:
-            if not self.validate_optimizer_trades(arb_opp=arb_opp, arb_finder=arb_finder):
-                self.ConfigObj.logger.warning(
-                    "[bot._run] Math validation eliminated arb opportunity, restarting."
-                )
-                return
-            if replay_mode:
-                pass
-            elif self.validate_pool_data(arb_opp=arb_opp):
-                self.ConfigObj.logger.debug(
-                    "[bot._run] All data checks passed! Pools in sync!"
-                )
-            else:
-                self.ConfigObj.logger.warning(
-                    "[bot._run] Data validation failed. Updating pools and restarting."
-                )
-                return
-
         tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, arb_opp, replay_from_block)
 
         if tx_hash:
@@ -339,132 +318,6 @@ class CarbonBot:
                 filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
                 with open(os.path.join(logging_path, filename), "w") as f:
                     f.write(f"{tx_hash} {tx_status}: {tx_details}")
-
-    def validate_optimizer_trades(self, arb_opp, arb_finder) -> bool:
-        """
-        Validates arbitrage trade input using equations that account for fees.
-        This has limited coverage, but is very effective for the instances it covers.
-
-        Parameters
-        ----------
-        arb_opp: dictionary
-            The dictionary containing an arbitrage opportunity found by the Optimizer
-        arb_finder: Any
-            The Arb Finder class that handles the differences required for each arb route.
-
-        Returns
-        -------
-        True if valid, False otherwise
-        """
-
-        src_token = arb_opp["src_token"]
-        trade_instructions_dic = arb_opp["trade_instructions_dic"]
-
-        ordered_trade_instructions_dct = self._simple_ordering_by_src_token(trade_instructions_dic, src_token)
-        cids = []
-        for pool in ordered_trade_instructions_dct:
-            pool_cid = pool["cid"]
-            if "-0" in pool_cid or "-1" in pool_cid:
-                self.ConfigObj.logger.debug(
-                    f"[bot.validate_optimizer_trades] Math arb validation not currently supported for arbs with Carbon, returning to main flow."
-                )
-                return True
-            cids.append(pool_cid)
-        if len(cids) > 3:
-            self.ConfigObj.logger.warning(
-                f"[bot.validate_optimizer_trades] Math validation not supported for more than 3 pools, returning to main flow."
-            )
-            return True
-        max_trade_in = arb_finder.get_optimal_arb_trade_amts(cids=cids, flt=src_token)
-        if type(max_trade_in) != float and type(max_trade_in) != int:
-            return False
-        if max_trade_in < 0.0:
-            return False
-        self.ConfigObj.logger.debug(
-            f"[bot.validate_optimizer_trades] max_trade_in equation = {max_trade_in}, optimizer trade in = {ordered_trade_instructions_dct[0]['amtin']}"
-        )
-        ordered_trade_instructions_dct[0]["amtin"] = max_trade_in
-
-        arb_opp["trade_instructions_dic"] = ordered_trade_instructions_dct
-
-        return True
-
-    def validate_pool_data(self, arb_opp):
-        """
-        Validates that the data for each pool in the arbitrage opportunity is fresh.
-
-        Parameters
-        ----------
-        arb_opp: dictionary
-            The dictionary containing an arbitrage opportunity found by the Optimizer
-
-        Returns
-        -------
-        bool
-        """
-        self.ConfigObj.logger.info("[bot.validate_pool_data] Validating pool data...")
-        for pool in arb_opp["trade_instructions_dic"]:
-            pool_cid = pool["cid"].split("-")[0]
-            strategy_id = pool["strategy_id"]
-            current_pool = self.db.get_pool(cid=pool_cid)
-            pool_info = {
-                "cid": pool_cid,
-                "strategy_id": strategy_id,
-                "id": current_pool.id,
-                "address": current_pool.address,
-                "pair_name": current_pool.pair_name,
-                "exchange_name": current_pool.exchange_name,
-                "tkn0_address": current_pool.tkn0_address,
-                "tkn1_address": current_pool.tkn1_address,
-                "tkn0_symbol": current_pool.tkn0_symbol,
-                "tkn1_symbol": current_pool.tkn1_symbol,
-                "tkn0_decimals" : current_pool.tkn0_decimals,
-                "tkn1_decimals": current_pool.tkn1_decimals,
-            }
-
-            self.db.mgr.update_from_pool_info(pool_info=pool_info)
-            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_cid: {pool_cid}")
-            self.ConfigObj.logger.debug(f"[bot.validate_pool_data] pool_info: {pool_info}")
-
-            if current_pool.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
-                if (
-                    current_pool.y_0 != pool_info["y_0"]
-                    or current_pool.y_1 != pool_info["y_1"]
-                ):
-                    self.ConfigObj.logger.debug(
-                        "[bot.validate_pool_data] Carbon pool not up to date, updating and restarting."
-                    )
-                    return False
-            elif current_pool.exchange_name in [
-                "balancer",
-            ]:
-                for idx, balance in enumerate(current_pool.token_balances):
-                    if balance != pool_info[f"tkn{idx}_balance"]:
-                        self.ConfigObj.logger.debug(
-                            "[bot.validate_pool_data] Balancer pool not up to date, updating and restarting."
-                        )
-                        return False
-            elif current_pool.exchange_name in self.ConfigObj.UNI_V3_FORKS:
-                if (
-                    current_pool.liquidity != pool_info["liquidity"]
-                    or current_pool.sqrt_price_q96 != pool_info["sqrt_price_q96"]
-                    or current_pool.tick != pool_info["tick"]
-                ):
-                    self.ConfigObj.logger.debug(
-                        "[bot.validate_pool_data] UniV3 pool not up to date, updating and restarting."
-                    )
-                    return False
-
-            elif (
-                current_pool.tkn0_balance != pool_info["tkn0_balance"]
-                or current_pool.tkn1_balance != pool_info["tkn1_balance"]
-            ):
-                self.ConfigObj.logger.debug(
-                    f"[bot.validate_pool_data] {pool_info['exchange_name']} pool not up to date, updating and restarting."
-                )
-                return False
-
-        return True
 
     def calculate_profit(
         self,
@@ -728,7 +581,6 @@ class CarbonBot:
         flashloan_tokens: List[str] = None,
         CCm: CPCContainer = None,
         arb_mode: str = None,
-        run_data_validator: bool = False,
         randomizer: int = 0,
         logging_path: str = None,
         replay_mode: bool = False,
@@ -745,8 +597,6 @@ class CarbonBot:
             The complete market data container (optional; default: database via get_curves())
         arb_mode: str
             the arbitrage mode (default: None; can be set depending on arbmode)
-        run_data_validator: bool
-            whether to run the data validator (default: False)
         randomizer: int
             the randomizer (default: 0)
         logging_path: str
@@ -767,7 +617,6 @@ class CarbonBot:
                 flashloan_tokens=flashloan_tokens,
                 CCm=CCm,
                 arb_mode=arb_mode,
-                data_validator=run_data_validator,
                 randomizer=randomizer,
                 logging_path=logging_path,
                 replay_mode=replay_mode,
