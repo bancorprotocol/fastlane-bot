@@ -257,13 +257,13 @@ class CarbonBot:
             "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
         }[arb_mode](flashloan_tokens=flashloan_tokens, CCm=CCm, ConfigObj=self.ConfigObj)
 
-    def _run(
+    def run(
         self,
-        flashloan_tokens: List[str],
-        CCm: CPCContainer,
         *,
-        arb_mode: str,
-        randomizer: int,
+        flashloan_tokens: List[str] = None,
+        CCm: CPCContainer = None,
+        arb_mode: str = None,
+        randomizer: int = 1,
         logging_path: str = None,
         replay_from_block: int = None,
     ):
@@ -273,29 +273,32 @@ class CarbonBot:
         Parameters
         ----------
         flashloan_tokens: List[str]
-            The tokens to flashloan.
+            The flashloan tokens
         CCm: CPCContainer
-            The container.
+            The complete market data container
         arb_mode: str
-            The arbitrage mode.
+            The arbitrage mode
         randomizer: int
-            randomizer (int): The number of arb opportunities to randomly pick from, sorted by expected profit.
+            The number of top arbitrage opportunities to randomly choose from
         logging_path: str
-            the logging path (default: None)
+            The logging path
         replay_from_block: int
-            the block number to start replaying from (default: None)
-
+            The block number to start replaying from
         """
+
+        if flashloan_tokens is None:
+            flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
+        if CCm is None:
+            CCm = self.get_curves()
+
         arb_finder = self.get_arb_finder(arb_mode, flashloan_tokens, CCm)
         arb_opps = arb_finder.find_arb_opps()
 
         if len(arb_opps) == 0:
-            self.ConfigObj.logger.info("[bot._run] No eligible arb opportunities.")
+            self.ConfigObj.logger.info("[bot.run] No eligible arb opportunities.")
             return
 
-        self.ConfigObj.logger.info(
-            f"[bot._run] Found {len(arb_opps)} eligible arb opportunities."
-        )
+        self.ConfigObj.logger.info(f"[bot.run] Found {len(arb_opps)} eligible arb opportunities.")
 
         arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
@@ -555,57 +558,4 @@ class CarbonBot:
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
             flashloan_struct=flashloan_struct,
-        )
-
-    def get_tokens_in_exchange(
-        self,
-        exchange_name: str,
-    ) -> List[str]:
-        """
-        Gets all tokens that exist in pools on the specified exchange.
-        :param exchange_name: the exchange name
-        """
-        return self.db.get_tokens_from_exchange(exchange_name=exchange_name)
-
-    def run(
-        self,
-        *,
-        flashloan_tokens: List[str] = None,
-        CCm: CPCContainer = None,
-        arb_mode: str = None,
-        randomizer: int = 0,
-        logging_path: str = None,
-        replay_from_block: int = None,
-    ):
-        """
-        Runs the bot.
-
-        Parameters
-        ----------
-        flashloan_tokens: List[str]
-            The flashloan tokens (optional; default: RUN_FLASHLOAN_TOKENS)
-        CCm: CPCContainer
-            The complete market data container (optional; default: database via get_curves())
-        arb_mode: str
-            the arbitrage mode (default: None; can be set depending on arbmode)
-        randomizer: int
-            the randomizer (default: 0)
-        logging_path: str
-            the logging path (default: None)
-        replay_from_block: int
-            the block number to start replaying from (default: None)
-        """
-
-        if flashloan_tokens is None:
-            flashloan_tokens = self.RUN_FLASHLOAN_TOKENS
-        if CCm is None:
-            CCm = self.get_curves()
-
-        self._run(
-            flashloan_tokens=flashloan_tokens,
-            CCm=CCm,
-            arb_mode=arb_mode,
-            randomizer=randomizer,
-            logging_path=logging_path,
-            replay_from_block=replay_from_block,
         )
