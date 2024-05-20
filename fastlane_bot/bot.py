@@ -630,42 +630,6 @@ class CarbonBot:
             CCm, best_profit, fl_token, flashloan_fee_amt
         )
 
-        # Log the best profit
-        self.ConfigObj.logger.debug(
-            f"[bot._handle_trade_instructions] Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}"
-        )
-
-        # Calculate the arbitrage
-        arb = {
-            "type": arb_mode,
-            "profit_gas_token": num_format(best_profit_gastkn),
-            "profit_usd": num_format(best_profit_usd),
-            "flashloan": [
-                {
-                    "token": fl_token_symbol,
-                    "amount": num_format(calculated_trade_instructions[0].amtin),
-                    "profit": num_format(flashloan_tkn_profit)
-                }
-            ],
-            "trades": [
-                {
-                    "trade_index": idx,
-                    "exchange": trade.exchange_name,
-                    "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
-                    "amount_in": num_format(trade.amtin),
-                    "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
-                    "amt_out": num_format(trade.amtout),
-                    "cid0": trade.cid[-10:]
-                }
-                for idx, trade in enumerate(calculated_trade_instructions)
-            ]
-        }
-
-        # Log the arbitrage
-        self.ConfigObj.logger.info(
-            f"[bot._handle_trade_instructions] calculated arb: {arb}"
-        )
-
         # Check if the best profit is greater than the minimum profit
         if best_profit_gastkn < self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
             self.ConfigObj.logger.info(
@@ -673,10 +637,24 @@ class CarbonBot:
             )
             return None, None
 
-        # Log the flashloan amount
-        self.ConfigObj.logger.debug(
-            f"[bot._handle_trade_instructions] Flashloan amount: {flashloan_amount_wei}"
-        )
+        # Log the calculated arbitrage
+        self.ConfigObj.logger.info("[bot._handle_trade_instructions] calculated arbitrage:")
+        self.ConfigObj.logger.info(f"- arb mode = {arb_mode}")
+        self.ConfigObj.logger.info(f"- gas profit = {num_format(best_profit_gastkn)}")
+        self.ConfigObj.logger.info(f"- usd profit = {num_format(best_profit_usd)}")
+        self.ConfigObj.logger.info(f"- flashloan token = {fl_token_symbol}")
+        self.ConfigObj.logger.info(f"- flashloan amount = {num_format(calculated_trade_instructions[0].amtin)}")
+        self.ConfigObj.logger.info(f"- flashloan profit = {num_format(flashloan_tkn_profit)}")
+        self.ConfigObj.logger.info(f"- trade instructions:")
+        for idx, trade in enumerate(calculated_trade_instructions):
+            info = {
+                "exchange": trade.exchange_name,
+                "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
+                "amt_in": num_format(trade.amtin),
+                "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
+                "amt_out": num_format(trade.amtout)
+            }
+            self.ConfigObj.logger.info(f"  {idx}. {info}")
 
         # Split Carbon Orders
         split_calculated_trade_instructions = split_carbon_trades(
