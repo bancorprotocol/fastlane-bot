@@ -153,12 +153,12 @@ def test_test_trade_merge():
     arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
     arb_opp = arb_finder.find_arb_opps()[0]
 
-    best_src_token = arb_opp["src_token"]
-    best_trade_instructions_dic = arb_opp["trade_instructions_dic"]
+    src_token = arb_opp["src_token"]
+    trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
-    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
 
-    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, best_src_token)
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
     # Convert the trade instructions
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
     tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
@@ -189,10 +189,10 @@ def test_test_get_optimal_arb_trade_amts():
     arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
     arb_opp = arb_finder.find_arb_opps()[0]
 
-    best_src_token = arb_opp["src_token"]
-    best_trade_instructions_dic = arb_opp["trade_instructions_dic"]
+    src_token = arb_opp["src_token"]
+    trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
-    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
 
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = arb_finder.get_exact_pools(pool_cids)
@@ -222,10 +222,10 @@ def test_test_max_arb_trade_in_constant_product():
     arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
     arb_opp = arb_finder.find_arb_opps()[0]
 
-    best_src_token = arb_opp["src_token"]
-    best_trade_instructions_dic = arb_opp["trade_instructions_dic"]
+    src_token = arb_opp["src_token"]
+    trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
-    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = arb_finder.get_exact_pools(pool_cids)
@@ -258,10 +258,10 @@ def test_test_get_fee_safe():
     arb_finder = bot.get_arb_finder("b3_two_hop", flashloan_tokens=flashloan_tokens, CCm=CCm)
     arb_opp = arb_finder.find_arb_opps()[0]
 
-    best_src_token = arb_opp["src_token"]
-    best_trade_instructions_dic = arb_opp["trade_instructions_dic"]
+    src_token = arb_opp["src_token"]
+    trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
-    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(best_trade_instructions_dic, best_src_token)
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
     pool_cids = [curve['cid'] for curve in ordered_trade_instructions_dct]
     first_check_pools = arb_finder.get_exact_pools(pool_cids)
