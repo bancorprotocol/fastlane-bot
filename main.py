@@ -84,7 +84,6 @@ def process_arguments(args):
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
         "use_cached_events": is_true,
-        "run_data_validator": is_true,
         "randomizer": int,
         "limit_bancor3_flashloan_tokens": is_true,
         "timeout": int_or_none,
@@ -214,7 +213,6 @@ def main(args: argparse.Namespace) -> None:
             polling_interval: {args.polling_interval}
             reorg_delay: {args.reorg_delay}
             use_cached_events: {args.use_cached_events}
-            run_data_validator: {args.run_data_validator}
             randomizer: {args.randomizer}
             limit_bancor3_flashloan_tokens: {args.limit_bancor3_flashloan_tokens}
             timeout: {args.timeout}
@@ -451,7 +449,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 bot=bot,
                 flashloan_tokens=args.flashloan_tokens,
                 randomizer=args.randomizer,
-                run_data_validator=args.run_data_validator,
                 target_tokens=args.target_tokens,
                 loop_idx=loop_idx,
                 logging_path=args.logging_path,
@@ -633,11 +630,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--use_cached_events",
-        default='False',
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--run_data_validator",
         default='False',
         help="Set to True for debugging / testing. Set to False for production.",
     )

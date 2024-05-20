@@ -121,7 +121,6 @@ You can configure the Fastlane Arbitrage Bot using the options in the `@click.op
 - **logging_path** (str): The path for log files. **Recommended not to modify.**
 - **loglevel** (str): Logging level, which can be DEBUG, INFO, WARNING, or ERROR.
 - **use_cached_events** (bool): **Testing option.**  This option runs the bot using historical cached events.
-- **run_data_validator** (bool): This option validates that pool data hasn't changed from the time an opportunity was found. This can be useful if the bot has slow cycles, for example if an arb mode takes a long time to run. 
 - **randomizer** (int): The bot will randomly select an opportunity from the number of opportunities specified in this configuration after sorting by profit. For example the default setting 3 means the bot will randomly pick one of the 3 most profitable opportunities it found in the randomizer.
 - **limit_bancor3_flashloan_tokens** (bool): If True, this limits the flashloan tokens to tokens supported by Bancor V3.
 - **default_min_profit_gas_token** (float): The minimum amount of expected profit, denominated in the gas token, to consider executing an arbitrage trade.
@@ -168,18 +167,18 @@ The following examples are command-line inputs that start the bot with different
 #### Bancor V3-focused arbitrage
 
 ```commandline
-poetry run python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --limit_bancor3_flashloan_tokens=True --randomizer=2 --default_min_profit_gas_token=0.01 --exchanges=carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA"
+poetry run python main.py --arb_mode=b3_two_hop --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --limit_bancor3_flashloan_tokens=True --randomizer=2 --default_min_profit_gas_token=0.01 --exchanges=carbon_v1,bancor_v3,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,0x514910771AF9Ca656af840dff83E8264EcF986CA"
 ```
 
 #### Carbon-focused pairwise arbitrage
 ```commandline
-poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
 #### Unfocused pairwise arbitrage
 ```commandline
-poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_pairwise_all --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
 #### Triangular Carbon-focused arbitrage
 ```commandline
-poetry run python main.py --arb_mode=multi_triangle --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --run_data_validator=False --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+poetry run python main.py --arb_mode=multi_triangle --alchemy_max_block_fetch=200 --loglevel=INFO --backdate_pools=False --polling_interval=0 --reorg_delay=0 --default_min_profit_gas_token=0.01 --randomizer=2 --exchanges=bancor_v3,bancor_v2,carbon_v1,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3 --flashloan_tokens="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 ```
