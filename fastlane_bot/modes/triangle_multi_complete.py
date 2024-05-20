@@ -85,12 +85,22 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
         pair_curves = CCm.bypair(pair)
         carbon_curves = []
         non_carbon_curves = []
+        base_direction_one = []
+        base_direction_two = []
+        base_direction_pair = pair_curves[0].pair
         for x in pair_curves:
             if x.params.exchange in carbon_v1_forks:
                 carbon_curves += [x]
+                if x.pair == base_direction_pair:
+                    base_direction_one += [x]
+                else:
+                    base_direction_two += [x]
             else:
                 non_carbon_curves += [x]
-        all_relevant_pairs_info[pair]['curves'] = non_carbon_curves + [carbon_curves] if len(carbon_curves) > 0 else non_carbon_curves  # condense carbon curves into a single list
+        all_relevant_pairs_info[pair]['curves'] = non_carbon_curves
+        # for each direction, condense carbon curves into a single list and add to the non-carbon curves
+        all_relevant_pairs_info[pair]['curves'] += [base_direction_one] if len(base_direction_one) > 0 else None 
+        all_relevant_pairs_info[pair]['curves'] += [base_direction_two] if len(base_direction_two) > 0 else None     
         all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
         all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
     return all_relevant_pairs_info
