@@ -787,14 +787,6 @@ class TxRouteHandler:
 
         return amount_in, amount_out * (1 - Decimal(curve.fee_float))
 
-    @staticmethod
-    def _single_trade_result_constant_product(
-            tokens_in, token0_amt, token1_amt, fee
-    ) -> Decimal:
-        return Decimal(
-            (tokens_in * token1_amt * (1 - Decimal(fee))) / (tokens_in + token0_amt)
-        )
-
     def _calc_balancer_output(self, curve: Pool, tkn_in: str, tkn_out: str, amount_in: Decimal):
         """
         This is a wrapper function that extracts the necessary pool values to pass into the Balancer swap equation and passes them into the low-level function.
@@ -932,12 +924,7 @@ class TxRouteHandler:
             tkn0_amt = self._from_wei_to_decimals(tkn0_amt, tkn0_dec)
             tkn1_amt = self._from_wei_to_decimals(tkn1_amt, tkn1_dec)
 
-            amount_out = self._single_trade_result_constant_product(
-                tokens_in=amount_in,
-                token0_amt=tkn0_amt,
-                token1_amt=tkn1_amt,
-                fee=curve.fee_float,
-            )
+            amount_out = (amount_in * tkn1_amt * (1 - Decimal(curve.fee_float))) / (amount_in + tkn0_amt)
 
         amount_out = amount_out * Decimal("0.9999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
