@@ -50,9 +50,10 @@ def build_pstart(CCm, CC_cc, tkn1, cfg):
     for tkn0 in [x for x in CC_cc.tokens() if x != tkn1]:
         try:
             pstart[tkn0] = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
-        except:
+        except Exception as e:
+            cfg.logger.info(f"[build_pstart] attempt 1: {tkn0}/{tkn1} price error {e}")
             try:
                 pstart[tkn0] = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
             except Exception as e:
-                cfg.logger.info(f"[pstart build] {tkn0}/{tkn1} price error {e}")
+                cfg.logger.info(f"[build_pstart] attempt 2: {tkn0}/{tkn1} price error {e}")
     return pstart
