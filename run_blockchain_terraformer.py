@@ -1,5 +1,4 @@
 import math
-import traceback
 from typing import Tuple, List, Dict
 
 import pandas as pd
@@ -687,8 +686,8 @@ def get_events_recursive(get_logs: any, start_block: int, end_block: int) -> lis
                 event_list_2 = get_events_recursive(get_logs, mid_block + 1, end_block)
                 return event_list_1 + event_list_2
             else:
-                traceback.print_exc(e)
-    return []
+                raise e
+    raise Exception(f"Illegal log query range: {start_block} -> {end_block}")
 
 
 def get_uni_v3_pools(
