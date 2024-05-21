@@ -24,8 +24,9 @@ from typing import List, Any, Dict, Tuple
 import eth_abi
 import pandas as pd
 
-from .tradeinstruction import TradeInstruction
-from ..events.interface import Pool
+from fastlane_bot.helpers.tradeinstruction import TradeInstruction
+from fastlane_bot.events.interface import Pool
+from fastlane_bot.utils import EncodedOrder
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
     ETHEREUM, METAVAULT_V3_NAME
 
@@ -719,14 +720,6 @@ class TxRouteHandler:
             )
         )
 
-    ONE = 2 ** 48
-
-    def decodeFloat(self, value):
-        return (value % self.ONE) << (value // self.ONE)
-
-    def decode(self, value):
-        return self.decodeFloat(int(value)) / self.ONE
-
     def decode_decimal_adjustment(self, value: Decimal, tkn_in_decimals: int or str, tkn_out_decimals: int or str):
         tkn_in_decimals = int(tkn_in_decimals)
         tkn_out_decimals = int(tkn_out_decimals)
@@ -857,9 +850,9 @@ class TxRouteHandler:
             A = 0
 
         # print('[_calc_carbon_output] before decode: ', y, z, A, B)
-        A = self.decode_decimal_adjustment(value=Decimal(str(self.decode(A))), tkn_in_decimals=tkn_in_decimals,
+        A = self.decode_decimal_adjustment(value=Decimal(str(EncodedOrder.decode(A))), tkn_in_decimals=tkn_in_decimals,
                                            tkn_out_decimals=tkn_out_decimals)
-        B = self.decode_decimal_adjustment(value=Decimal(str(self.decode(B))), tkn_in_decimals=tkn_in_decimals,
+        B = self.decode_decimal_adjustment(value=Decimal(str(EncodedOrder.decode(B))), tkn_in_decimals=tkn_in_decimals,
                                            tkn_out_decimals=tkn_out_decimals)
         y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
         z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
