@@ -727,46 +727,6 @@ class TxRouteHandler:
                 (tkn_in_decimals - tkn_out_decimals) / Decimal("2")
         )
 
-    @staticmethod
-    def _get_input_trade_by_target_carbon(
-            y, z, A, B, fee, tkns_out: Decimal, trade_by_source: bool = True
-    ) -> Tuple[Decimal, Decimal]:
-        """
-        Refactored get input trade by target fastlane_bot.
-
-        Parameters
-        ----------
-        y: Decimal
-            The y.
-        z: Decimal
-            The z.
-        A: Decimal
-            The A.
-        B: Decimal
-            The B.
-        fee: Decimal
-            The fee.
-        tkns_out: Decimal
-            The tokens out.
-
-        Returns
-        -------
-        Tuple[Decimal, Decimal]
-            The tokens in and tokens out.
-        """
-        # Fee set to 0 to avoid
-        fee = Decimal(str(fee))
-        tkns_out = min(tkns_out, y)
-        tkns_in = (
-                (tkns_out * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * tkns_out))
-        )
-
-        if not trade_by_source:
-            # Only taking fee if calculating by trade by target. Otherwise fee will be calculated in trade by source function.
-            tkns_in = tkns_in * Decimal(1 - fee)
-
-        return tkns_in, tkns_out
-
     def _get_output_trade_by_source_carbon(
             self, y, z, A, B, fee, tkns_in: Decimal
     ) -> Tuple[Decimal, Decimal]:
@@ -794,18 +754,13 @@ class TxRouteHandler:
             The tuple of tokens in and tokens out.
         """
 
-        fee = Decimal(str(fee))
-        tkns_out = Decimal(
-            (tkns_in * (B * z + A * y) ** 2)
-            / (tkns_in * (B * A * z + A ** 2 * y) + z ** 2)
-        )
-        if tkns_out > y:
-            tkns_in, tkns_out = self._get_input_trade_by_target_carbon(
-                y=y, z=z, A=A, B=B, fee=fee, tkns_out=y, trade_by_source=True
-            )
+        tkns_out = (tkns_in * (B * z + A * y) ** 2) / (tkns_in * (B * A * z + A ** 2 * y) + z ** 2)
 
-        tkns_out = tkns_out * (Decimal("1") - fee)
-        return tkns_in, tkns_out
+        if tkns_out > y:
+            tkns_out = y
+            tkns_in = (y * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * y))
+
+        return tkns_in, tkns_out * (1 - fee)
 
     def _calc_carbon_output(
             self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
