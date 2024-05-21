@@ -17,7 +17,8 @@ from typing import Dict, List, Type, Any
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
-from fastlane_bot.events.pools.base import Pool
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -29,6 +30,7 @@ class Exchange(ABC):
     exchange_name: str
     base_exchange_name: str = ''
     pools: Dict[str, Pool] = field(default_factory=dict)
+    factory_contract: Contract = None
 
     __VERSION__ = "0.0.3"
     __DATE__ = "2024-03-20"
@@ -96,6 +98,10 @@ class Exchange(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+        ...
+
     @staticmethod
     @abstractmethod
     async def get_fee(address: str, contract: AsyncContract) -> float:
@@ -116,6 +122,10 @@ class Exchange(ABC):
 
         """
         pass
+
+    @abstractmethod
+    def get_pool_func_call(self, addr1, addr2, *args, **kwargs):
+        ...
 
     @staticmethod
     @abstractmethod
@@ -181,7 +191,7 @@ class Exchange(ABC):
         return self.pools[key] if key in self.pools else None
 
     @abstractmethod
-    def get_factory_abi(self):
+    def factory_abi(self):
         """
                 Get the ABI of the exchange's Factory contract
 

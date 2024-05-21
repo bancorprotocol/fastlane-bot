@@ -15,7 +15,6 @@ from web3 import Web3, AsyncWeb3
 
 from fastlane_bot.utils import safe_int
 from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
-from fastlane_bot.events.exchanges.solidly_v2 import EXCHANGE_INFO as SOLIDLY_EXCHANGE_INFO
 from fastlane_bot.data.abi import ERC20_ABI, UNISWAP_V2_FACTORY_ABI, UNISWAP_V3_FACTORY_ABI
 
 import asyncio
@@ -49,6 +48,7 @@ BASE = "coinbase_base"
 FANTOM = "fantom"
 MANTLE = "mantle"
 LINEA = "linea"
+SEI = "sei"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -67,6 +67,7 @@ coingecko_network_map = {
     "cosmos": "cosmos",
     "kava": "kava",
     "mantle": "mantle",
+    "sei": "sei",
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -78,7 +79,8 @@ BLOCK_CHUNK_SIZE_MAP = {
     "coinbase_base": 0,
     "fantom": 5000,
     "mantle": 0,
-    "linea": 0
+    "linea": 0,
+    "sei": 0,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -91,6 +93,7 @@ ALCHEMY_KEY_DICT = {
     "fantom": "WEB3_FANTOM",
     "mantle": "WEB3_MANTLE",
     "linea": "WEB3_LINEA",
+    "sei": "WEB3_SEI",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -103,6 +106,7 @@ ALCHEMY_RPC_LIST = {
     "fantom": "https://fantom.blockpi.network/v1/rpc/",
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
+    "sei": "https://evm-rpc.arctic-1.seinetwork.io/", # TODO update with mainnet
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -114,6 +118,7 @@ BALANCER_SUBGRAPH_CHAIN_URL = {
     "coinbase_base": "https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest",
     "avalanche": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2",
     "fantom": "https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx",
+    "sei": "https://thegraph.dev.mvpworkshop.co/subgraphs/name/jelly" # TODO verify this for mainnet
 
 }
 
@@ -675,11 +680,14 @@ def get_events_recursive(get_logs: any, start_block: int, end_block: int) -> lis
             return get_logs(fromBlock=start_block, toBlock=end_block)
         except Exception as e:
             assert "eth_getLogs" in str(e), str(e)
-            mid_block = (start_block + end_block) // 2
-            event_list_1 = get_events_recursive(get_logs, start_block, mid_block)
-            event_list_2 = get_events_recursive(get_logs, mid_block + 1, end_block)
-            return event_list_1 + event_list_2
-    return []
+            if start_block < end_block:
+                mid_block = (start_block + end_block) // 2
+                event_list_1 = get_events_recursive(get_logs, start_block, mid_block)
+                event_list_2 = get_events_recursive(get_logs, mid_block + 1, end_block)
+                return event_list_1 + event_list_2
+            else:
+                raise e
+    raise Exception(f"Illegal log query range: {start_block} -> {end_block}")
 
 
 def get_uni_v3_pools(
@@ -1018,8 +1026,9 @@ def terraform_blockchain(network_name: str):
             univ3_mapdf = pd.concat([univ3_mapdf, m_df], ignore_index=True)
         elif "solidly" in fork:
             add_to_exchange_ids(exchange=exchange_name, fork=fork)
+            solidly_exchange = SolidlyV2(exchange_name=exchange_name)
+            factory_abi = solidly_exchange.factory_abi
 
-            factory_abi = SOLIDLY_EXCHANGE_INFO[exchange_name]["factory_abi"]
             factory_contract = web3.eth.contract(
                 address=factory_address, abi=factory_abi
             )
@@ -1073,3 +1082,4 @@ def terraform_blockchain(network_name: str):
 #terraform_blockchain(network_name=FANTOM)
 #terraform_blockchain(network_name=MANTLE)
 #terraform_blockchain(network_name=LINEA)
+#terraform_blockchain(network_name=SEI)

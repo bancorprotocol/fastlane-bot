@@ -164,6 +164,13 @@ UNISWAP_V2_FACTORY_ABI = [
         "name": "PairCreated",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": False, "internalType": "address", "name": "pair", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -173,6 +180,13 @@ UNISWAP_V3_FACTORY_ABI = [
         "name": "PoolCreated",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "address", "name": "token0", "type": "address"}, {"indexed": True, "internalType": "address", "name": "token1", "type": "address"}, {"indexed": True, "internalType": "uint24", "name": "fee", "type": "uint24"}, {"indexed": False, "internalType": "int24", "name": "tickSpacing", "type": "int24"}, {"indexed": False, "internalType": "address", "name": "pool", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "getPool",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "uint24", "name": "", "type": "uint24"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     }
 ]
 
@@ -189,6 +203,13 @@ SOLIDLY_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "pool", "type": "address"}, {"internalType": "bool", "name": "_stable", "type": "bool"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPool",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "tokenA", "type": "address"}, {"internalType": "address", "name": "tokenB", "type": "address"}, {"internalType": "bool", "name": "stable", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     }
 ]
 
@@ -205,6 +226,13 @@ VELOCIMETER_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -221,6 +249,13 @@ SCALE_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "_pair", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -237,6 +272,13 @@ CLEOPATRA_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"type": "address", "name": "_pair", "internalType": "address"}, {"type": "bool", "name": "_stable", "internalType": "bool"}],
         "outputs": [{"type": "uint256", "name": "", "internalType": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -253,6 +295,13 @@ LYNEX_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "bool", "name": "_stable", "type": "bool"}],
         "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -269,6 +318,13 @@ NILE_V2_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [{"internalType": "address", "name": "_pool", "type": "address"}],
         "outputs": [{"internalType": "uint256", "name": "fee", "type": "uint256"}]
+    },
+    {
+        "type": "function",
+        "name": "getPair",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}, {"internalType": "bool", "name": "", "type": "bool"}],
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}]
     }
 ]
 
@@ -285,6 +341,13 @@ XFAI_V0_FACTORY_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "address", "name": "", "type": "address"}]
+    },
+    {
+        "type": "function",
+        "name": "getPool",
+        "stateMutability": "view",
+        "inputs": [{"internalType": "address", "name": "_token", "type": "address"}],
+        "outputs": [{"internalType": "address", "name": "pool", "type": "address"}],
     }
 ]
 

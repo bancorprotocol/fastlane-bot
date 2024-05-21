@@ -5,9 +5,10 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-
+from fastlane_bot.events.event_gatherer import EventGatherer
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
+from fastlane_bot.pool_finder import PoolFinder
 from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
@@ -38,6 +39,7 @@ from fastlane_bot.events.utils import (
     get_config,
     get_loglevel,
     update_pools_from_events,
+    process_new_events,
     write_pool_data_to_disk,
     init_bot,
     get_cached_events,
@@ -47,7 +49,6 @@ from fastlane_bot.events.utils import (
     get_start_block,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
-    handle_target_token_addresses,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
@@ -94,6 +95,7 @@ def process_arguments(args):
         "self_fund": is_true,
         "read_only": is_true,
         "is_args_test": is_true,
+        "pool_finder_period": int,
     }
 
     # Apply the transformations
@@ -225,6 +227,7 @@ def main(args: argparse.Namespace) -> None:
             prefix_path: {args.prefix_path}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
+            pool_finder_period: {args.pool_finder_period}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -255,10 +258,6 @@ def main(args: argparse.Namespace) -> None:
         cfg, exchanges, args.blockchain, args.static_pool_data_filename, args.read_only
     )
 
-    target_token_addresses = handle_target_token_addresses(
-        static_pool_data, args.target_tokens
-    )
-
     # Break if timeout is hit to test the bot flags
     if args.timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
@@ -284,7 +283,7 @@ def main(args: argparse.Namespace) -> None:
         solidly_v2_event_mappings=solidly_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=args.replay_from_block,
-        target_tokens=target_token_addresses,
+        target_tokens=args.target_tokens,
         tenderly_fork_id=args.tenderly_fork_id,
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
@@ -306,6 +305,23 @@ def run(mgr, args, tenderly_uri=None) -> None:
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
+
+    event_gatherer = EventGatherer(
+        blockchain=mgr.cfg.network.NETWORK,
+        w3=mgr.w3_async,
+        exchanges=mgr.exchanges,
+        event_contracts=mgr.event_contracts
+    )
+
+    pool_finder = PoolFinder(
+        carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
+        uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS,
+        flashloan_tokens=args.flashloan_tokens,
+        exchanges=mgr.exchanges,
+        web3=mgr.web3,
+        multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS
+    )
+
     while True:
         try:
             # ensure 'last_updated_block' is in pool_data for all pools
@@ -357,6 +373,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     start_block,
                     args.cache_latest_only,
                     args.logging_path,
+                    event_gatherer
                 )
             )
             iteration_start_time = time.time()
@@ -514,6 +531,15 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
+            if args.pool_finder_period > 0 and (loop_idx - 1) % args.pool_finder_period == 0:
+                mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
+                uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.pool_data, arb_mode=args.arb_mode)
+                process_new_events(uni_v2, mgr.uniswap_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v2_event_mappings.csv")
+                process_new_events(uni_v3, mgr.uniswap_v3_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v3_event_mappings.csv")
+                process_new_events(solidly_v2, mgr.solidly_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/solidly_v2_event_mappings.csv")
+                handle_static_pools_update(mgr)
+                mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
+
             last_block_queried = current_block
 
             total_iteration_time += time.time() - iteration_start_time
@@ -566,6 +592,7 @@ if __name__ == "__main__":
             "b3_two_hop",
             "multi_pairwise_pol",
             "multi_pairwise_all",
+            "multi_triangle_complete"
         ],
     )
     parser.add_argument(
@@ -671,7 +698,7 @@ if __name__ == "__main__":
         "--blockchain",
         default="ethereum",
         help="A blockchain from the list. Blockchains not in this list do not have a deployed Fast Lane contract and are not supported.",
-        choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea"],
+        choices=["ethereum", "coinbase_base", "fantom", "mantle", "linea", "sei"],
     )
     parser.add_argument(
         "--pool_data_update_frequency",
@@ -709,6 +736,11 @@ if __name__ == "__main__":
         "--rpc_url",
         default=None,
         help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
+    )
+    parser.add_argument(
+        "--pool_finder_period",
+        default=100,
+        help="Searches for pools that can service Carbon strategies that do not have viable routes.",
     )
 
     # Process the arguments

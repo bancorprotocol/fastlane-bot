@@ -15,6 +15,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -34,14 +35,14 @@ class BancorV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Bancor v2 event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event arguments.
 
         Returns
@@ -50,21 +51,21 @@ class BancorV2Pool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        event_args = event["args"]
+        event_args = event.args
         return "_rateN" in event_args
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         **** IMPORTANT ****
         Bancor V2 pools emit 3 events per trade. Only one of them contains the new token balances we want.
         The one we want is the one where _token1 and _token2 match the token addresses of the pool.
         """
-        data["tkn0_address"] = event_args["args"]["_token1"]
-        data["tkn1_address"] = event_args["args"]["_token2"]
-        data["tkn0_balance"] = event_args["args"]["_rateD"]
-        data["tkn1_balance"] = event_args["args"]["_rateN"]
+        data["tkn0_address"] = event.args["_token1"]
+        data["tkn1_address"] = event.args["_token2"]
+        data["tkn0_balance"] = event.args["_rateD"]
+        data["tkn1_balance"] = event.args["_rateN"]
 
         for key, value in data.items():
             self.state[key] = value

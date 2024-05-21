@@ -12,6 +12,8 @@ Licensed under MIT.
 """
 from typing import Dict, Any
 
+from fastlane_bot.config.constants import SOLIDLY_V2_NAME, UNISWAP_V2_NAME, UNISWAP_V3_NAME
+
 
 class ExchangeFactory:
     """
@@ -60,7 +62,16 @@ class ExchangeFactory:
                 creator = self._creators.get(fork_name)
 
         args = self.get_fork_extras(exchange_name=key, cfg=cfg, exchange_initialized=exchange_initialized)
-        return creator(**args)
+        exchange = creator(**args)
+
+        base_exchange_name = cfg.network.exchange_name_base_from_fork(exchange_name=key)
+        if base_exchange_name in [SOLIDLY_V2_NAME, UNISWAP_V2_NAME, UNISWAP_V3_NAME]:
+            exchange.factory_contract = cfg.w3_async.eth.contract(
+                address=cfg.FACTORY_MAPPING[key],
+                abi=exchange.factory_abi,
+            )
+
+        return exchange
 
     def get_fork_extras(self, exchange_name: str, cfg: Any, exchange_initialized: bool) -> Dict[str, str]:
         """
