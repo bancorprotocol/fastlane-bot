@@ -1,5 +1,4 @@
 import asyncio
-import traceback
 from itertools import chain
 from typing import Dict, List
 
@@ -96,5 +95,5 @@ class EventGatherer:
                     )
                     return [log for log_list in log_lists for log in log_list]
                 else:
-                    traceback.print_exc(e)
-        return []
+                    raise e
+        raise Exception(f"Illegal log query range: {from_block} -> {to_block}")
