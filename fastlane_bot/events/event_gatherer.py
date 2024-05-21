@@ -1,7 +1,8 @@
+import asyncio
+import traceback
 from itertools import chain
 from typing import Dict, List
 
-import asyncio
 import nest_asyncio
 
 from web3 import AsyncWeb3
@@ -94,4 +95,6 @@ class EventGatherer:
                         self._get_logs_recursive(mid_block + 1, to_block, topics)
                     )
                     return [log for log_list in log_lists for log in log_list]
+                else:
+                    traceback.print_exc(e)
         return []
