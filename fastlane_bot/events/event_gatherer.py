@@ -87,10 +87,11 @@ class EventGatherer:
                 })
             except Exception as e:
                 assert "eth_getLogs" in str(e), str(e)
-                mid_block = (from_block + to_block) // 2
-                log_lists = await asyncio.gather(
-                    self._get_logs_recursive(from_block, mid_block, topics),
-                    self._get_logs_recursive(mid_block + 1, to_block, topics)
-                )
-                return [log for log_list in log_lists for log in log_list]
+                if from_block < to_block:
+                    mid_block = (from_block + to_block) // 2
+                    log_lists = await asyncio.gather(
+                        self._get_logs_recursive(from_block, mid_block, topics),
+                        self._get_logs_recursive(mid_block + 1, to_block, topics)
+                    )
+                    return [log for log_list in log_lists for log in log_list]
         return []
