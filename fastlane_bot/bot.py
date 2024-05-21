@@ -110,7 +110,6 @@ class CarbonBot:
         "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
         "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
         "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
-        "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
     }
 
     class NoArbAvailable(Exception):
