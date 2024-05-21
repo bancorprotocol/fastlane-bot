@@ -727,41 +727,6 @@ class TxRouteHandler:
                 (tkn_in_decimals - tkn_out_decimals) / Decimal("2")
         )
 
-    def _get_output_trade_by_source_carbon(
-            self, y, z, A, B, fee, tkns_in: Decimal
-    ) -> Tuple[Decimal, Decimal]:
-        """
-        Refactored get output trade by source fastlane_bot.
-
-        Parameters
-        ----------
-        y: Decimal
-            The y.
-        z: Decimal
-            The z.
-        A: Decimal
-            The A.
-        B: Decimal
-            The B.
-        fee: Decimal
-            The fee.
-        tkns_in: Decimal
-            The tokens in.
-
-        Returns
-        -------
-        Tuple[Decimal, Decimal]
-            The tuple of tokens in and tokens out.
-        """
-
-        tkns_out = (tkns_in * (B * z + A * y) ** 2) / (tkns_in * (B * A * z + A ** 2 * y) + z ** 2)
-
-        if tkns_out > y:
-            tkns_out = y
-            tkns_in = (y * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * y))
-
-        return tkns_in, tkns_out * (1 - fee)
-
     def _calc_carbon_output(
             self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
     ):
@@ -814,12 +779,13 @@ class TxRouteHandler:
         # print('[_calc_carbon_output] after decode: ', y, z, A, B)
         assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
-        # print(f"[_calc_carbon_output] Carbon curve decoded: {y, z, A, B}, fee = {Decimal(curve.fee)}, amount_in={amount_in}")
+        amount_out = (amount_in * (B * z + A * y) ** 2) / (amount_in * (B * A * z + A ** 2 * y) + z ** 2)
 
-        amt_in, result = self._get_output_trade_by_source_carbon(
-            y=y, z=z, A=A, B=B, fee=Decimal(curve.fee_float), tkns_in=amount_in
-        )
-        return amt_in, result
+        if amount_out > y:
+            amount_out = y
+            amount_in = (y * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * y))
+
+        return amount_in, amount_out * (1 - Decimal(curve.fee_float))
 
     @staticmethod
     def _single_trade_result_constant_product(
