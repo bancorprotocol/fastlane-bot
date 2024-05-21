@@ -532,105 +532,6 @@ class TxRouteHandler:
                 result.extend(sublist)
         return result
 
-    @staticmethod
-    def _find_match_for_tkn(
-            trades: List[TradeInstruction], tkn: str, input="tknin"
-    ) -> List[Any]:
-        """
-        Refactored find match for trade.
-
-        Parameters
-        ----------
-        trades: List[TradeInstruction]
-            The trades.
-        tkn: str
-            The token.
-        input: str
-            The input.
-
-        Returns
-        -------
-        List[Any]
-            The potential routes.
-        """
-        if input == "tknin":
-            return [(i, x) for i, x in enumerate(trades) if x.tknout == tkn]
-        else:
-            return [(i, x) for i, x in enumerate(trades) if x.tknin == tkn]
-
-    @staticmethod
-    def _find_match_for_amount(
-            trades: List[TradeInstruction], amount: Decimal, input="amtin"
-    ) -> List[Any]:
-        """
-        Refactored find match for amount.
-
-        Parameters
-        ----------
-        trades: List[TradeInstruction]
-            The trades.
-        amount: Decimal
-            The amount.
-        input: str
-            The input.
-
-        Returns
-        -------
-        List[Any]
-            The potential routes.
-        """
-        factor_high = 1.00001
-        factor_low = 0.99999
-        if input == "amtin":
-            return [
-                (i, x)
-                for i, x in enumerate(trades)
-                if (x.amtout >= -amount * factor_high)
-                   & (x.amtout <= -amount * factor_low)
-            ]
-        else:
-            return [
-                (i, x)
-                for i, x in enumerate(trades)
-                if (x.amtin <= -amount * factor_high)
-                   & (x.amtin >= -amount * factor_low)
-            ]
-
-    def _calc_amount0(
-            self,
-            liquidity: Decimal,
-            sqrt_price_times_q96_lower_bound: Decimal,
-            sqrt_price_times_q96_upper_bound: Decimal,
-    ) -> Decimal:
-        """
-        Refactored calc amount0.
-
-        Parameters
-        ----------
-        liquidity: Decimal
-            The liquidity.
-        sqrt_price_times_q96_lower_bound: Decimal
-            The sqrt price times q96 lower bound.
-        sqrt_price_times_q96_upper_bound: Decimal
-            The sqrt price times q96 upper bound.
-
-        Returns
-        -------
-        Decimal
-            The amount0.
-        """
-        if sqrt_price_times_q96_lower_bound > sqrt_price_times_q96_upper_bound:
-            sqrt_price_times_q96_lower_bound, sqrt_price_times_q96_upper_bound = (
-                sqrt_price_times_q96_upper_bound,
-                sqrt_price_times_q96_lower_bound,
-            )
-        return Decimal(
-            liquidity
-            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
-            / sqrt_price_times_q96_upper_bound
-            / sqrt_price_times_q96_lower_bound
-        )
-
     def _calc_amount1(
             self,
             liquidity: Decimal,
@@ -746,17 +647,6 @@ class TxRouteHandler:
                         sqrt_price)) / decimal_tkn0_modifier))
 
         return result
-        # amount = amount_in * decimal_tkn1_modifier * (Decimal(str(1)) - fee)
-        #
-        # price_diff = Decimal((amount_in * decimal_tkn1_modifier * self.ConfigObj.Q96) / liquidity)
-        # price_next = Decimal(sqrt_price + price_diff)
-        #
-        # print(f"p_next: {price_next}")
-        # amount_out = self._calc_amount0(liquidity, price_next, sqrt_price) / self.ConfigObj.Q96
-        #
-        # print(f"Equation result = {result}, calc0 result={amount_out / decimal_tkn0_modifier}")
-        #
-        # return Decimal(amount_out / decimal_tkn0_modifier)
 
     def _calc_uniswap_v3_output(
             self,
@@ -1060,33 +950,6 @@ class TxRouteHandler:
 
         return mulDown(balance_out, complement(power))  # balanceOut.mulDown(power.complement());
 
-    @staticmethod
-    def _calc_balancer_input_given_output(balance_in: Decimal,
-                                          weight_in: Decimal,
-                                          balance_out: Decimal,
-                                          weight_out: Decimal,
-                                          amount_out: Decimal):
-        """
-        This function uses the Balancer swap equation to calculate the token output, given an input.
-
-        :param balance_in: the pool balance of the source token
-        :param weight_in: the pool weight of the source token
-        :param balance_out: the pool balance of the target token
-        :param weight_out: the pool weight of the target token
-        :param amount_in: the number of source tokens trading into the pool
-
-        returns:
-        The number of tokens expected to be received by the trade.
-
-        """
-
-        base = divUp(balance_out, (balance_out - amount_out))
-        exponent = divUp(weight_out, weight_in)
-        power = powUp(base, exponent)
-        ratio = power - Decimal(1)
-        result = mulUp(balance_in, ratio)
-        return result
-
     def _solve_trade_output(
             self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
     ) -> Tuple[Decimal, Decimal, int, int]:
@@ -1212,10 +1075,6 @@ class TxRouteHandler:
                 continue
             if trade.raw_txs != "[]":
                 data = eval(trade.raw_txs)
-                total_out = 0
-                total_in = 0
-                total_in_wei = 0
-                total_out_wei = 0
                 expected_in = trade_instructions[idx].amtin
 
                 remaining_tkn_in = Decimal(str(next_amount_in))
@@ -1235,7 +1094,6 @@ class TxRouteHandler:
                     cid = tx["cid"].split("-")[0]
                     curve = trade_instructions[idx].db.get_pool(cid=cid)
                     strategy_id = curve.strategy_id
-                    tknin_address = tx["tknin"]
 
                     _next_amt_in = Decimal(str(next_amount_in)) * tx["percent_in"]
                     if _next_amt_in > remaining_tkn_in:
@@ -1355,10 +1213,6 @@ class TxRouteHandler:
 # TODO: Those functions should probably be private; also -- are they needed at
 # all? Most of them seem to be extremely trivial
 
-def mulUp(a: Decimal, b: Decimal) -> Decimal:
-    return a * b
-
-
 def divUp(a: Decimal, b: Decimal) -> Decimal:
     if a * b == 0:
         return Decimal(0)
@@ -1380,10 +1234,6 @@ def complement(a: Decimal) -> Decimal:
 
 
 def powUp(a: Decimal, b: Decimal) -> Decimal:
-    return a ** b
-
-
-def powDown(a: Decimal, b: Decimal) -> Decimal:
     return a ** b
 
 
