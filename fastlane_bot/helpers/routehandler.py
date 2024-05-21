@@ -937,11 +937,10 @@ class TxRouteHandler:
         """
 
         denominator = balance_in + amount_in
-        base = divUp(balance_in, denominator)  # balanceIn.divUp(denominator);
-        exponent = divDown(weight_in, weight_out)  # weightIn.divDown(weightOut);
-        power = powUp(base, exponent)  # base.powUp(exponent);
-
-        return mulDown(balance_out, complement(power))  # balanceOut.mulDown(power.complement());
+        base = balance_in / denominator if denominator > 0 else 0
+        exponent = weight_in / weight_out
+        power = base ** exponent
+        return balance_out * (1 - power)
 
     def _solve_trade_output(
             self, curve: Pool, trade: TradeInstruction, amount_in: Decimal = None
@@ -1202,32 +1201,6 @@ class TxRouteHandler:
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
         return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
-
-# TODO: Those functions should probably be private; also -- are they needed at
-# all? Most of them seem to be extremely trivial
-
-def divUp(a: Decimal, b: Decimal) -> Decimal:
-    if a * b == 0:
-        return Decimal(0)
-    else:
-        return a / b
-
-
-def mulDown(a: Decimal, b: Decimal) -> Decimal:
-    return a * b
-
-
-def divDown(a: Decimal, b: Decimal) -> Decimal:
-    result = a / b
-    return result
-
-
-def complement(a: Decimal) -> Decimal:
-    return Decimal(1 - a) if a < 1 else Decimal(0)
-
-
-def powUp(a: Decimal, b: Decimal) -> Decimal:
-    return a ** b
 
 
 class BalancerInputTooLargeError(AssertionError):
