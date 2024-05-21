@@ -9,7 +9,6 @@ from fastlane_bot.events.event_gatherer import EventGatherer
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.pool_finder import PoolFinder
-from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
 
@@ -59,6 +58,18 @@ from fastlane_bot.events.utils import (
 from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
 import argparse
+
+from fastlane_bot import ConfigNetwork
+default_flashloan_tokens = [
+    ConfigNetwork.LINK_ADDRESS,
+    ConfigNetwork.ETH_ADDRESS,
+    ConfigNetwork.BNT_ADDRESS,
+    ConfigNetwork.WBTC_ADDRESS,
+    ConfigNetwork.DAI_ADDRESS,
+    ConfigNetwork.USDC_ADDRESS,
+    ConfigNetwork.USDT_ADDRESS,
+    ConfigNetwork.WETH_ADDRESS,
+]
 
 load_dotenv()
 
@@ -590,9 +601,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--flashloan_tokens",
-        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
-        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-             "a flash loan in.",
+        default=",".join(default_flashloan_tokens),
+        help="Tokens in which the bot can take a flash-loan",
     )
     parser.add_argument(
         "--n_jobs", default=-1, help="Number of parallel jobs to run"

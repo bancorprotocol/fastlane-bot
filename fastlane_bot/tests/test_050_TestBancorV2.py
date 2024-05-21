@@ -20,7 +20,7 @@ from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, T
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from dataclasses import asdict
 import math
 import json
@@ -217,8 +217,8 @@ def test_test_expected_output_bancorv2():
     fl_token = calculated_trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
-    if fl_token == T.WETH:
-        fl_token = T.NATIVE_ETH
+    if fl_token == C.network.WETH_ADDRESS:
+        fl_token = C.network.ETH_ADDRESS
     
     # Get the flashloan amount and token address
     flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
