@@ -67,7 +67,7 @@ class EventGatherer:
 
     async def _get_logs_iterative(self, from_block: int, to_block: int, topics: List[str], chunk_size: int) -> list:
         block_numbers = list(range(from_block, to_block + 1, chunk_size)) + [to_block + 1]
-        log_lists = await asyncio.gather([
+        log_lists = await asyncio.gather(*[
             self._w3.eth.get_logs(filter_params={
                 "fromBlock": r[0],
                 "toBlock": r[1],
