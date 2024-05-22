@@ -1,12 +1,14 @@
 import asyncio
 from itertools import chain
 from typing import Dict, List
+from traceback import format_exc
 
 import nest_asyncio
 
 from web3 import AsyncWeb3
 from web3.contract import Contract
 
+from fastlane_bot.config import Config
 from fastlane_bot.config.constants import BLOCK_CHUNK_SIZE_MAP
 from .interfaces.subscription import Subscription
 from .exchanges.base import Exchange
@@ -22,7 +24,7 @@ class EventGatherer:
 
     def __init__(
         self,
-        blockchain: str,
+        config: Config,
         w3: AsyncWeb3,
         exchanges: Dict[str, Exchange],
         event_contracts: Dict[str, Contract],
@@ -32,7 +34,7 @@ class EventGatherer:
             manager: The Manager object
             w3: The connected AsyncWeb3 object.
         """
-        self._blockchain = blockchain
+        self._config = config
         self._w3 = w3
         self._subscriptions = []
         unique_topics = set()
@@ -59,7 +61,7 @@ class EventGatherer:
         return [subscription.parse_log(log) for log in await self._get_logs_for_topics(from_block, to_block, [subscription.topic])]
 
     async def _get_logs_for_topics(self, from_block: int, to_block: int, topics: List[str]):
-        chunk_size = BLOCK_CHUNK_SIZE_MAP[self._blockchain]
+        chunk_size = BLOCK_CHUNK_SIZE_MAP[self._config.network.NETWORK]
         if chunk_size > 0:
             return await self._get_logs_iterative(from_block, to_block, topics, chunk_size)
         else:
@@ -86,7 +88,8 @@ class EventGatherer:
                     "topics": topics
                 })
             except Exception as e:
-                assert "eth_getLogs" in str(e), str(e)
+                if "eth_getLogs" not in str(e):
+                    self._config.logger.error(f"Unexpected exception in EventGatherer: {format_exc()}")
                 if from_block < to_block:
                     mid_block = (from_block + to_block) // 2
                     log_lists = await asyncio.gather(

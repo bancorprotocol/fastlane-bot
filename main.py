@@ -307,7 +307,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
     handle_static_pools_update(mgr)
 
     event_gatherer = EventGatherer(
-        blockchain=mgr.cfg.network.NETWORK,
+        config=mgr.cfg,
         w3=mgr.w3_async,
         exchanges=mgr.exchanges,
         event_contracts=mgr.event_contracts
