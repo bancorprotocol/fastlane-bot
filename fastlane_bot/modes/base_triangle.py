@@ -22,7 +22,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             try:
                 CC_cc = CPCContainer(miniverse)
                 O = MargPOptimizer(CC_cc)
-                pstart = build_pstart(self.CCm, CC_cc, src_token, self.ConfigObj)
+                pstart = build_pstart(self.CCm, CC_cc, src_token)
                 r = O.optimize(src_token, params=dict(pstart=pstart))
                 trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                 trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
@@ -45,15 +45,13 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda x: x["profit"], reverse=True)}
 
-def build_pstart(CCm, CC_cc, tkn1, cfg):
+def build_pstart(CCm, CC_cc, tkn1):
     pstart = {tkn1: 1}
-    for tkn0 in [x for x in CC_cc.tokens() if x != tkn1]:
-        try:
-            pstart[tkn0] = CCm.bytknx(tkn0).bytkny(tkn1)[0].p
-        except Exception as e:
-            cfg.logger.info(f"[build_pstart] attempt 1: {tkn0}/{tkn1} price error {e}")
-            try:
-                pstart[tkn0] = 1/CCm.bytknx(tkn1).bytkny(tkn0)[0].p
-            except Exception as e:
-                cfg.logger.info(f"[build_pstart] attempt 2: {tkn0}/{tkn1} price error {e}")
+    for tkn0 in [tkn for tkn in CC_cc.tokens() if tkn != tkn1]:
+        for s in [+1, -1]:
+            tknx, tkny = [tkn0, tkn1][::s]
+            res = CCm.bytknx(tknx).bytkny(tkny)
+            if res:
+                pstart[tkn0] = res[0].p ** s
+                break
     return pstart
