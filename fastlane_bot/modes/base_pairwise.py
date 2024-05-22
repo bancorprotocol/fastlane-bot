@@ -18,20 +18,19 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
         arb_opps = []
         combos = self.get_combos()
 
-        for tkn0, tkn1 in combos:
-            CC = self.CCm.bypairs(f"{tkn0}/{tkn1}")
+        for dst_token, src_token in combos:
+            CC = self.CCm.bypairs(f"{dst_token}/{src_token}")
             if len(CC) < 2:
                 continue
 
             for curve_combo in self.get_curve_combos(CC):
-                src_token = tkn1
                 if len(curve_combo) < 2:
                     continue
                 try:
                     CC_cc = CPCContainer(curve_combo)
                     O = PairOptimizer(CC_cc)
-                    pstart = {tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p}
-                    r = O.optimize(src_token, params=dict(pstart=pstart))
+                    params = get_params(CC_cc, dst_token, src_token)
+                    r = O.optimize(src_token, params=params)
                     trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
                     trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
                 except Exception as e:
@@ -52,3 +51,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                     )
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda x: x["profit"], reverse=True)}
+
+def get_params(CC_cc, dst_token, src_token):
+    pstart = {dst_token: CC_cc.bypairs(f"{dst_token}/{src_token}")[0].p}
+    return {"pstart": pstart}
