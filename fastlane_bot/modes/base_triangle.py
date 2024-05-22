@@ -20,12 +20,12 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         for src_token, miniverse in combos:
             try:
-                CC_cc = CPCContainer(miniverse)
-                O = MargPOptimizer(CC_cc)
-                params = get_params(self.CCm, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=params)
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                container = CPCContainer(miniverse)
+                optimizer = MargPOptimizer(container)
+                params = get_params(self.CCm, container.tokens(), src_token)
+                optimization = optimizer.optimize(src_token, params=params)
+                trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
+                trade_instructions_df = optimization.trade_instructions(optimizer.TIF_DFAGGR)
             except Exception as e:
                 self.ConfigObj.logger.debug(f"[base_triangle] {e}")
                 continue
@@ -33,7 +33,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                 # Failed to converge
                 continue
 
-            profit = self.get_profit(src_token, r, trade_instructions_df)
+            profit = self.get_profit(src_token, optimization, trade_instructions_df)
             if profit is not None:
                 arb_opps.append(
                     {
@@ -43,18 +43,18 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                     }
                 )
 
-        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda x: x["profit"], reverse=True)}
+        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
 def get_params(CCm, dst_tokens, src_token):
     pstart = {src_token: 1}
     for dst_token in [token for token in dst_tokens if token != src_token]:
-        res = CCm.bytknx(dst_token).bytkny(src_token)
-        if res:
-            pstart[dst_token] = res[0].p
+        CC = CCm.bytknx(dst_token).bytkny(src_token)
+        if CC:
+            pstart[dst_token] = CC[0].p
         else:
-            res = CCm.bytknx(src_token).bytkny(dst_token)
-            if res:
-                pstart[dst_token] = 1 / res[0].p
+            CC = CCm.bytknx(src_token).bytkny(dst_token)
+            if CC:
+                pstart[dst_token] = 1 / CC[0].p
             else:
                 return None
     return {"pstart": pstart}

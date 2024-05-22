@@ -41,11 +41,11 @@ class ArbitrageFinderBase:
         """
         ...
 
-    def get_profit(self, src_token: str, r, trade_instructions_df):
-        profit = self.calculate_profit(src_token, -r.result, self.CCm)
+    def get_profit(self, src_token: str, optimization, trade_instructions_df):
+        profit = self.calculate_profit(src_token, -optimization.result, self.CCm)
         return profit if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN and is_net_change_small(trade_instructions_df) else None
 
-    def calculate_profit(self, src_token: str, profit_src: float, CCm: Any) -> Decimal:
+    def calculate_profit(self, src_token: str, src_profit: float, CCm: Any) -> Decimal:
         """
         Calculate profit based on the source token.
         """
@@ -57,8 +57,8 @@ class ArbitrageFinderBase:
             self.ConfigObj.logger.debug(f"[modes.base.calculate_profit price_curves] {price_curves}")
             self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
             assert len(sorted_price_curves) > 0, f"[modes.base.calculate_profit] Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
-            return Decimal(str(profit_src)) / Decimal(str(sorted_price_curves[0][-1]))
-        return Decimal(str(profit_src))
+            return Decimal(str(src_profit)) / Decimal(str(sorted_price_curves[0][-1]))
+        return Decimal(str(src_profit))
 
 def is_net_change_small(trade_instructions_df) -> bool:
     try:
@@ -66,9 +66,9 @@ def is_net_change_small(trade_instructions_df) -> bool:
     except Exception:
         return False
 
-def get_prices_simple(CCm, tkn0, tkn1):
-    curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
-    curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
+def get_prices_simple(CCm, dst_token, src_token):
+    curve_prices = [(CC.params['exchange'],CC.descr,CC.cid,CC.p) for CC in CCm.bytknx(dst_token).bytkny(src_token)]
+    curve_prices += [(CC.params['exchange'],CC.descr,CC.cid,1/CC.p) for CC in CCm.bytknx(src_token).bytkny(dst_token)]
     return curve_prices
 
 def custom_sort(data, sort_sequence, carbon_v1_forks):

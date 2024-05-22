@@ -27,12 +27,12 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                 if len(curve_combo) < 2:
                     continue
                 try:
-                    CC_cc = CPCContainer(curve_combo)
-                    O = PairOptimizer(CC_cc)
-                    params = get_params(CC_cc, dst_token, src_token)
-                    r = O.optimize(src_token, params=params)
-                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                    container = CPCContainer(curve_combo)
+                    optimizer = PairOptimizer(container)
+                    params = get_params(container, dst_token, src_token)
+                    optimization = optimizer.optimize(src_token, params=params)
+                    trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
+                    trade_instructions_df = optimization.trade_instructions(optimizer.TIF_DFAGGR)
                 except Exception as e:
                     self.ConfigObj.logger.debug(f"[base_pairwise] {e}")
                     continue
@@ -40,7 +40,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                     # Failed to converge
                     continue
 
-                profit = self.get_profit(src_token, r, trade_instructions_df)
+                profit = self.get_profit(src_token, optimization, trade_instructions_df)
                 if profit is not None:
                     arb_opps.append(
                         {
@@ -50,8 +50,8 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                         }
                     )
 
-        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda x: x["profit"], reverse=True)}
+        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
-def get_params(CC_cc, dst_token, src_token):
-    pstart = {dst_token: CC_cc.bypairs(f"{dst_token}/{src_token}")[0].p}
+def get_params(container, dst_token, src_token):
+    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}")[0].p}
     return {"pstart": pstart}
