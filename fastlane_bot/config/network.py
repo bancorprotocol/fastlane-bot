@@ -872,6 +872,10 @@ class _ConfigNetworkTelos(ConfigNetwork):
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
 
+    TAX_TOKENS = set([
+        "0x3E51e37350356B2D3ad84bD8146e48ac63E371a8", # BABYZAP
+    ])
+
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
     Fastlane bot config -- network [Ethereum Tenderly]

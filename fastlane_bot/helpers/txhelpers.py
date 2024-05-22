@@ -113,7 +113,7 @@ class TxHelpers:
         if self.cfg.SUPPORTS_EIP1559:
             gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
         else:
-            gas_cost_wei = tx["gas"]
+            gas_cost_wei = tx["gas"] * tx["gasPrice"]
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
