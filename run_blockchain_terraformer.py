@@ -679,7 +679,6 @@ def get_events_recursive(get_logs: any, start_block: int, end_block: int) -> lis
         try:
             return get_logs(fromBlock=start_block, toBlock=end_block)
         except Exception as e:
-            assert "eth_getLogs" in str(e), str(e)
             if start_block < end_block:
                 mid_block = (start_block + end_block) // 2
                 event_list_1 = get_events_recursive(get_logs, start_block, mid_block)

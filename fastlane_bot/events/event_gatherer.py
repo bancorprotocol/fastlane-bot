@@ -86,7 +86,6 @@ class EventGatherer:
                     "topics": topics
                 })
             except Exception as e:
-                assert "eth_getLogs" in str(e), str(e)
                 if from_block < to_block:
                     mid_block = (from_block + to_block) // 2
                     log_lists = await asyncio.gather(
