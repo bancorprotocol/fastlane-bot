@@ -793,17 +793,18 @@ def save_events_to_json(
     mgr.cfg.logger.debug(f"[events.utils.save_events_to_json] Saved events to {path}")
 
 
-def process_new_events(new_event_mappings, event_mappings, filename):
+def process_new_events(new_event_mappings, event_mappings, filename, read_only):
     # Update the manager's event mappings
     event_mappings.update(new_event_mappings)
     
-    # Update the local event_mappings csvs
-    df = pd.DataFrame.from_dict(event_mappings, orient='index').reset_index()
-    if len(df)>0:
-        df.columns = ['address', 'exchange']
-        # if the csvs are always sorted then the diffs will be readable
-        df.sort_values(by=['exchange','address'], inplace=True)
-        df.to_csv(filename, index=False)
+    if not read_only:
+        # Update the local event_mappings csvs
+        df = pd.DataFrame.from_dict(event_mappings, orient='index').reset_index()
+        if len(df)>0:
+            df.columns = ['address', 'exchange']
+            # if the csvs are always sorted then the diffs will be readable
+            df.sort_values(by=['exchange','address'], inplace=True)
+            df.to_csv(filename, index=False)
 
 
 def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Event]):
