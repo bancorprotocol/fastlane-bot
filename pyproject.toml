@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "fastlane_bot"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 psutil = "^5.9.6"
 packaging = "21.3"
 requests = "^2.31.0"
@@ -18,7 +18,6 @@ python-dotenv = "^0.16.0"
 joblib = "^1.2.0"
 pandas = "^1.5.2"
 alchemy-sdk = "^0.1.1"
-pyarrow = "^11.0.0"
 networkx = "^3.0"
 matplotlib = "^3.7.1"
 dataclass_wizard = "^0.22.2"
