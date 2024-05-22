@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from typing import List, Tuple, Dict, Any
 
+from fastlane_bot.config import Config
 from fastlane_bot.config.constants import ZERO_ADDRESS, UNISWAP_V2_NAME, UNISWAP_V3_NAME, SOLIDLY_V2_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges.base import Exchange
@@ -51,7 +52,7 @@ class PoolFinder:
                 self._uni_v3_fee_tiers[pool["exchange_name"]].add(int(pool["fee"]))
 
 
-    def get_pools_for_unsupported_pairs(self, pools: List[Dict[str, Any]], arb_mode: str):
+    def get_pools_for_unsupported_pairs(self, config: Config, pools: List[Dict[str, Any]], arb_mode: str):
         """
         Main flow for Poolfinder.
 
@@ -73,6 +74,9 @@ class PoolFinder:
             unsupported_pairs = PoolFinder._find_unsupported_triangles(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
         else:
             unsupported_pairs = PoolFinder._find_unsupported_pairs(self._flashloan_tokens, carbon_pairs=carbon_pairs, external_pairs=other_pairs)
+        config.logger.info(f"Searching pools to support the following carbon pairs:")
+        for pair in unsupported_pairs:
+            config.logger.info(pair)
 
         pairs = [(tkn, token) for pair in unsupported_pairs for tkn in pair for token in self._flashloan_tokens]
         chunk_size = 400
