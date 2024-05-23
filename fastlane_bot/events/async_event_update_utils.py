@@ -24,7 +24,6 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
 from fastlane_bot.events.pools.utils import get_pool_cid
 from .interfaces.event import Event
@@ -352,7 +351,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
 
     # split contracts into chunks of 1000
     contracts = _get_pool_contracts(mgr)
-    chunks = get_contract_chunks(contracts)
+    chunks = [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
     tokens_and_fee_df = _process_contract_chunks(
         mgr=mgr,
         base_filename="tokens_and_fee_df_",
@@ -364,10 +363,11 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
     contracts, tokens_df = _get_token_contracts(mgr, tokens_and_fee_df)
+    chunks = [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
     tokens_df = _process_contract_chunks(
         mgr=mgr,
         base_filename="missing_tokens_df_",
-        chunks=get_contract_chunks(contracts),
+        chunks=chunks,
         dirname=dirname,
         filename="missing_tokens_df.csv",
         subset=["address"],

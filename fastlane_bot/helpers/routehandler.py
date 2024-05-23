@@ -26,7 +26,6 @@ import pandas as pd
 
 from fastlane_bot.helpers.tradeinstruction import TradeInstruction
 from fastlane_bot.events.interface import Pool
-from fastlane_bot.utils import EncodedOrder
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
     ETHEREUM, METAVAULT_V3_NAME
 
@@ -720,13 +719,6 @@ class TxRouteHandler:
             )
         )
 
-    def decode_decimal_adjustment(self, value: Decimal, tkn_in_decimals: int or str, tkn_out_decimals: int or str):
-        tkn_in_decimals = int(tkn_in_decimals)
-        tkn_out_decimals = int(tkn_out_decimals)
-        return value * Decimal("10") ** (
-                (tkn_in_decimals - tkn_out_decimals) / Decimal("2")
-        )
-
     def _calc_carbon_output(
             self, curve: Pool, tkn_in: str, tkn_in_decimals: int, tkn_out_decimals: int, amount_in: Decimal
     ):
@@ -745,47 +737,46 @@ class TxRouteHandler:
         Returns
         -------
         Decimal
+            The amount in.
             The amount out.
         """
         assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, "[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
-        amount_in = Decimal(str(amount_in))
 
-        tkn0_address = curve.pair_name.split("/")[0]
-        tkn1_address = curve.pair_name.split("/")[1]
-        tkn0_address = self.native_gas_token_to_wrapped(tkn=tkn0_address)
-        tkn1_address = self.native_gas_token_to_wrapped(tkn=tkn1_address)
+        tkns = [self.native_gas_token_to_wrapped(tkn=tkn) for tkn in curve.pair_name.split("/")]
 
-        # print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, ")
+        assert tkn_in in tkns, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkns}"
 
-        assert tkn_in == tkn0_address or tkn_in == tkn1_address, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkn0_address} & {tkn1_address}"
+        encoded_order = {
+            tkns[0]: {
+                'y': curve.y_1,
+                'z': curve.z_1,
+                'A': curve.A_1,
+                'B': curve.B_1,
+            },
+            tkns[1]: {
+                'y': curve.y_0,
+                'z': curve.z_0,
+                'A': curve.A_0,
+                'B': curve.B_0,
+            },
+        }[tkn_in]
 
-        # print(f"[_calc_carbon_output] tkn0_address={tkn0_address}, tkn1_address={tkn1_address}, tkn_int={tkn_in}, using curve0={tkn_in == tkn1_address}")
-        y, z, A, B = (
-            (curve.y_0, curve.z_0, curve.A_0, curve.B_0)
-            if tkn_in == tkn1_address
-            else (curve.y_1, curve.z_1, curve.A_1, curve.B_1)
-        )
-
-        if A is None:
-            A = 0
-
-        # print('[_calc_carbon_output] before decode: ', y, z, A, B)
-        A = self.decode_decimal_adjustment(value=Decimal(str(EncodedOrder.decode(A))), tkn_in_decimals=tkn_in_decimals,
-                                           tkn_out_decimals=tkn_out_decimals)
-        B = self.decode_decimal_adjustment(value=Decimal(str(EncodedOrder.decode(B))), tkn_in_decimals=tkn_in_decimals,
-                                           tkn_out_decimals=tkn_out_decimals)
-        y = Decimal(y) / Decimal("10") ** Decimal(str(tkn_out_decimals))
-        z = Decimal(z) / Decimal("10") ** Decimal(str(tkn_out_decimals))
-        # print('[_calc_carbon_output] after decode: ', y, z, A, B)
+        y, z, A, B = [encoded_order[key] for key in ['y', 'z', 'A', 'B']]
         assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
-        amount_out = (amount_in * (B * z + A * y) ** 2) / (amount_in * (B * A * z + A ** 2 * y) + z ** 2)
+        fee = 1 - Decimal(curve.fee_float)
 
-        if amount_out > y:
-            amount_out = y
-            amount_in = (y * z ** 2) / ((A * y + B * z) * (A * y + B * z - A * y))
+        source_scale = 10 ** tkn_in_decimals
+        target_scale = 10 ** tkn_out_decimals
 
-        return amount_in, amount_out * (1 - Decimal(curve.fee_float))
+        source = int(amount_in * source_scale)
+        target = (source * (B * z + A * y) ** 2) // (source * (B * A * z + A ** 2 * y) + z ** 2)
+
+        if target > y:
+            target = y
+            source = (y * z ** 2) // ((A * y + B * z) * (A * y + B * z - A * y))
+
+        return Decimal(source) / source_scale, Decimal(target) / target_scale * fee
 
     def _calc_balancer_output(self, curve: Pool, tkn_in: str, tkn_out: str, amount_in: Decimal):
         """
