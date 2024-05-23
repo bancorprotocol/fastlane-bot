@@ -67,7 +67,7 @@ def test_test_poolandtokens_carbon():
                 tkn0_decimals=strategy["tkn0_decimals"],
                 tkn1_decimals=strategy["tkn1_decimals"],
             )
-            prices_overlap = pool_and_tokens._carbon_to_cpc_and_type()["prices_overlap"]
+            prices_overlap = pool_and_tokens._carbon_to_cpc_dict()["prices_overlap"]
             expected = "overlapping" if strategy["overlap"] else "disjoint"
             actual = "overlapping" if prices_overlap else "disjoint"
             assert actual == expected, f"expected {expected} strategy, got {actual} strategy: {dumps(strategy,indent=4)}"

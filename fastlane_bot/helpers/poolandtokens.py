@@ -12,7 +12,7 @@ __DATE__ = "05/May/2023"
 import math
 from _decimal import Decimal
 from dataclasses import dataclass
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Tuple
 
 from fastlane_bot.config import Config
 
@@ -397,7 +397,7 @@ class PoolAndTokens:
     class DoubleInvalidCurveError(ValueError):
         pass
 
-    def _carbon_to_cpc_and_type(self) -> ConstantProductCurve:
+    def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
 
@@ -499,11 +499,11 @@ class PoolAndTokens:
                     if typed_args["yint"] < yint0:
                         typed_args["yint"] = yint0
 
-        return {'strategy_typed_args': strategy_typed_args, 'prices_overlap': prices_overlap}
+        return {"strategy_typed_args": strategy_typed_args, "prices_overlap": prices_overlap}
 
     def _carbon_to_cpc(self) -> ConstantProductCurve:
         cpc_list = []
-        for typed_args in self._carbon_to_cpc_and_type()['strategy_typed_args']:
+        for typed_args in self._carbon_to_cpc_dict()["strategy_typed_args"]:
             try:
                 cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
             except Exception as e:
