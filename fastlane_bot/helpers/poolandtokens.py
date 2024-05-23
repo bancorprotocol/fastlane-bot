@@ -397,7 +397,7 @@ class PoolAndTokens:
     class DoubleInvalidCurveError(ValueError):
         pass
 
-    def _carbon_to_cpc(self) -> ConstantProductCurve:
+    def _carbon_to_cpc_and_type(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
 
@@ -467,6 +467,8 @@ class PoolAndTokens:
             for i in [0, 1] if encoded_orders[i]["y"] > 0 and encoded_orders[i]["B"] > 0
         ]
 
+        prices_overlap = False
+
         pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
 
         # Only overlapping strategies are selected for modification
@@ -497,8 +499,11 @@ class PoolAndTokens:
                     if typed_args["yint"] < yint0:
                         typed_args["yint"] = yint0
 
+        return {'strategy_typed_args': strategy_typed_args, 'prices_overlap': prices_overlap}
+
+    def _carbon_to_cpc(self) -> ConstantProductCurve:
         cpc_list = []
-        for typed_args in strategy_typed_args:
+        for typed_args in self._carbon_to_cpc_and_type()['strategy_typed_args']:
             try:
                 cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
             except Exception as e:
