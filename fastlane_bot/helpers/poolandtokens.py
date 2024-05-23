@@ -467,20 +467,20 @@ class PoolAndTokens:
             for i in [0, 1] if encoded_orders[i]["y"] > 0 and encoded_orders[i]["B"] > 0
         ]
 
+        pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
+
         # Only overlapping strategies are selected for modification
         if len(strategy_typed_args) == 2:
-            pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
-
             p_marg_0 = (decoded_orders[0]["marginalRate"] * converters[0]) ** -1
             p_marg_1 = (decoded_orders[1]["marginalRate"] * converters[1]) ** +1
 
             # evaluate that the marginal prices are within the pmarg_threshold
             percent_component_met = abs(p_marg_0 - p_marg_1) <= pmarg_threshold * max(p_marg_0, p_marg_1)
 
-            # overlapping strategies by defintion cannot have A=0 i.e. there must be no limit orders
+            # verify that the strategy does not consist of any limit orders
             no_limit_orders = not any(encoded_order["A"] == 0 for encoded_order in encoded_orders)
 
-            # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
+            # evaluate if the price boundaries pa/pb overlap at one end
             min0, max0 = sorted([strategy_typed_args[0]["pa"] ** +1, strategy_typed_args[0]["pb"] ** +1]) 
             min1, max1 = sorted([strategy_typed_args[1]["pa"] ** -1, strategy_typed_args[1]["pb"] ** -1]) 
             prices_overlap = max(min0, min1) < min(max0, max1)
@@ -488,12 +488,11 @@ class PoolAndTokens:
             # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
             if percent_component_met and no_limit_orders and prices_overlap:
                 # calculate the geometric mean
-                geomean_p_marg = (p_marg_0 * p_marg_1).sqrt()
-                # modify the y_int based on the new geomean to the limit of y #TODO check that this math is correct
+                M = 1 / (p_marg_0 * p_marg_1).sqrt().sqrt()
+                # modify the y_int based on the new geomean to the limit of y
                 for typed_args in strategy_typed_args:
                     H = typed_args["pa"].sqrt()
                     L = typed_args["pb"].sqrt()
-                    M = 1/geomean_p_marg.sqrt()
                     yint0 = typed_args["y"] * (H - L) / (M - L) if M > L else typed_args["y"]
                     if typed_args["yint"] < yint0:
                         typed_args["yint"] = yint0
