@@ -358,7 +358,7 @@ class CarbonBot:
                 )
                 return
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
+        tx_hash, tx_receipt, log_dict = self._handle_trade_instructions(CCm, arb_mode, r, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
@@ -368,7 +368,13 @@ class CarbonBot:
             if logging_path:
                 filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
                 with open(os.path.join(logging_path, filename), "w") as f:
-                    f.write(f"{tx_hash} {tx_status}: {tx_details}")
+                            log_entry = {
+                                "tx_hash": tx_hash,
+                                "tx_status": tx_status,
+                                "tx_details": tx_details,
+                                "log_dict": log_dict
+                            }
+                            json.dump(log_entry, f, indent=4)
 
     def validate_optimizer_trades(self, arb_opp, arb_finder):
         """
@@ -817,7 +823,7 @@ class CarbonBot:
             self.ConfigObj.logger.info(
                 f"[bot._handle_trade_instructions] Opportunity with profit: {num_format(best_profit_gastkn)} does not meet minimum profit: {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}, discarding."
             )
-            return None, None
+            return None, None, None
 
         # Log the flashloan amount
         self.ConfigObj.logger.debug(
@@ -855,89 +861,17 @@ class CarbonBot:
 
         maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
-        # Get the cids
-        cids = [(ti.cid,ti.strategy_id) for ti in ordered_trade_instructions_objects]
-
-        # Check if the network is tenderly and submit the transaction accordingly
-        if self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_TENDERLY:
-            return (
-                self._validate_and_submit_transaction_tenderly(
-                    ConfigObj=self.ConfigObj,
-                    flashloan_struct=flashloan_struct,
-                    route_struct=route_struct_maximized,
-                    src_amount=flashloan_amount_wei,
-                    src_address=flashloan_token_address,
-                ),
-                cids,
-                route_struct_maximized,
-                log_dict,
-            )
-
-        # Log the route_struct
-        self.handle_logging_for_trade_instructions(
-            4,  # The log id
-            flashloan_amount=flashloan_amount_wei,
-            flashloan_token_symbol=fl_token_symbol,
-            flashloan_token_address=flashloan_token_address,
-            route_struct=route_struct_maximized,
-            best_trade_instructions_dic=best_trade_instructions_dic,
+        # Use helper function to update the log dict
+        log_dict = self.update_log_dict(
+            arb_mode,
+            best_profit_gastkn,
+            best_profit_usd,
+            flashloan_struct,
+            route_struct_processed,
+            split_calculated_trade_instructions,
         )
 
-        # Get the tx helpers class
-        tx_helpers = TxHelpers(ConfigObj=self.ConfigObj)
-
-        # Return the validate and submit transaction
-        return (
-            tx_helpers.validate_and_submit_transaction(
-                route_struct=route_struct_maximized,
-                src_amt=flashloan_amount_wei,
-                src_address=flashloan_token_address,
-                expected_profit_gastkn=best_profit_gastkn,
-                expected_profit_usd=best_profit_usd,
-                safety_override=False,
-                verbose=True,
-                log_object=log_dict,
-                flashloan_struct=flashloan_struct,
-            ),
-            cids,
-            route_struct,
-            log_dict,
-        )
-
-    def handle_logging_for_trade_instructions(self, log_id: int, **kwargs):
-        """
-        Handles logging for trade instructions based on log_id.
-
-        Parameters
-        ----------
-        log_id : int
-            The ID for log type.
-        **kwargs : dict
-            Additional parameters required for logging.
-
-        Returns
-        -------
-        None
-        """
-        log_actions = {
-            1: self.log_best_profit,
-            2: self.log_calculated_arb,
-            3: self.log_flashloan_amount,
-            4: self.log_flashloan_details,
-        }
-        log_action = log_actions.get(log_id)
-        if log_action:
-            log_action(**kwargs)
-
-    def log_best_profit(self, best_profit: Optional[float] = None):
-        """
-        Logs the best profit.
-
-        Parameters
-        ----------
-        best_profit : Optional[float], optional
-            The best profit, by default None
-        """
+        # Log the flashloan details
         self.ConfigObj.logger.debug(
             f"[bot._handle_trade_instructions] Flashloan of {fl_token_symbol}, amount: {flashloan_amount_wei}"
         )
@@ -959,6 +893,7 @@ class CarbonBot:
             expected_profit_gastkn=best_profit_gastkn,
             expected_profit_usd=best_profit_usd,
             flashloan_struct=flashloan_struct,
+            log_dict=log_dict
         )
 
     def get_tokens_in_exchange(
@@ -1024,3 +959,61 @@ class CarbonBot:
             )
         except self.NoArbAvailable as e:
             self.ConfigObj.logger.info(e)
+
+    @staticmethod
+    def update_log_dict(
+        arb_mode: str,
+        best_profit_gastkn: Decimal,
+        best_profit_usd: Decimal,
+        flashloan_struct: List[Any],
+        route_struct: List[Any],
+        calculated_trade_instructions: List[Any],
+    ) -> Dict[str, Any]:
+        """
+        Update the log dictionary.
+
+        Parameters
+        ----------
+        arb_mode: str
+            The arbitrage mode.
+        best_profit: Decimal
+            The best profit.
+        best_profit_usd: Decimal
+            The profit in USD.
+        flashloan_struct: List[Any]
+            The flashloan struct.
+        route_struct: List[Any]
+                    The route struct.
+        calculated_trade_instructions: List[Any]
+            The calculated trade instructions.
+
+        Returns
+        -------
+        dict
+            The updated log dictionary.
+        """
+        log_dict = {
+            "type": arb_mode,
+            "profit_gas_token": num_format(best_profit_gastkn),
+            "profit_usd": num_format(best_profit_usd),
+            "flashloan_struct": flashloan_struct,
+            "route_struct": route_struct,
+            "trades": [],
+        }
+
+        for idx, trade in enumerate(calculated_trade_instructions):
+            tknin = {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin
+            tknout = {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout
+            log_dict["trades"].append(
+                {
+                    "trade_index": idx,
+                    "exchange": trade.exchange_name,
+                    "tkn_in": tknin,
+                    "amount_in": num_format(trade.amtin),
+                    "tkn_out": tknout,
+                    "amt_out": num_format(trade.amtout),
+                    "cid0": trade.cid[-10:],
+                }
+            )
+
+        return log_dict

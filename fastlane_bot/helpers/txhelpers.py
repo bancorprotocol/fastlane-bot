@@ -62,7 +62,8 @@ class TxHelpers:
         src_address: str,
         expected_profit_gastkn: Decimal,
         expected_profit_usd: Decimal,
-        flashloan_struct: List[Dict]
+        flashloan_struct: List[Dict],
+        log_dict: Dict
     ) -> Tuple[Optional[str], Optional[dict]]:
         """
         This method validates and submits a transaction to the arb contract.
@@ -104,7 +105,7 @@ class TxHelpers:
             self._update_transaction(tx)
         except Exception as e:
             self.cfg.logger.info(f"Transaction {dumps(tx, indent=4)}\nFailed with {e}")
-            return None, None
+            return None, None, None
 
         tx["gas"] += self.cfg.DEFAULT_GAS_SAFETY_OFFSET
 
@@ -132,9 +133,9 @@ class TxHelpers:
             self.cfg.logger.info(f"Waiting for transaction {tx_hash} receipt")
             tx_receipt = self._wait_for_transaction_receipt(tx_hash)
             self.cfg.logger.info(f"Transaction receipt: {dumps(tx_receipt, indent=4)}")
-            return tx_hash, tx_receipt
+            return tx_hash, tx_receipt, log_dict
 
-        return None, None
+        return None, None, None
 
     def check_and_approve_tokens(self, tokens: List):
         """
