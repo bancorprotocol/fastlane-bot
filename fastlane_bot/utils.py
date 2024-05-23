@@ -52,8 +52,19 @@ def find_latest_timestamped_folder(logging_path=None):
     return list_of_folders[0]  # The first one is the latest
 
 
-ONE = 2**48
+ONE = 2 ** 48
 
+MAX_UINT128 = 2 ** 128 - 1
+MAX_UINT256 = 2 ** 256 - 1
+
+def check(val, max): assert 0 <= val <= max; return val
+
+def uint128(n): return check(n, MAX_UINT128)
+def add(a, b): return check(a + b, MAX_UINT256)
+def sub(a, b): return check(a - b, MAX_UINT256)
+def mul(a, b): return check(a * b, MAX_UINT256)
+def mulDivF(a, b, c): return check(a * b // c, MAX_UINT256)
+def mulDivC(a, b, c): return check((a * b + c - 1) // c, MAX_UINT256)
 
 def bitLength(value: int) -> int:
     return len(bin(value).lstrip('0b')) if value > 0 else 0
@@ -97,3 +108,64 @@ def decodeOrder(order: dict) -> dict:
         'highestRate'  : decodeRate(B + A),
         'marginalRate' : decodeRate(B + A if y == z else B + A * y / z),
     }
+
+#
+#      x * (A * y + B * z) ^ 2
+# ---------------------------------
+#  A * x * (A * y + B * z) + z ^ 2
+#
+def tradeBySourceAmountFunc(x, y, z, A, B):
+    if (A == 0):
+        return mulDivF(x, mul(B, B), mul(ONE, ONE))
+
+    temp1 = mul(z, ONE)
+    temp2 = add(mul(y, A), mul(z, B))
+    temp3 = mul(temp2, x)
+
+    factor1 = mulDivC(temp1, temp1, MAX_UINT256)
+    factor2 = mulDivC(temp3, A, MAX_UINT256)
+    factor = max(factor1, factor2)
+
+    temp4 = mulDivC(temp1, temp1, factor)
+    temp5 = mulDivC(temp3, A, factor)
+    if temp4 + temp5 <= MAX_UINT256:
+        return mulDivF(temp2, temp3 // factor, temp4 + temp5)
+    return temp2 // add(A, mulDivC(temp1, temp1, temp3))
+
+#
+#                  x * z ^ 2
+# -------------------------------------------
+#  (A * y + B * z) * (A * y + B * z - A * x)
+#
+def tradeByTargetAmountFunc(x, y, z, A, B):
+    if (A == 0):
+        return mulDivC(x, mul(ONE, ONE), mul(B, B))
+
+    temp1 = mul(z, ONE)
+    temp2 = add(mul(y, A), mul(z, B))
+    temp3 = sub(temp2, mul(x, A))
+
+    factor1 = mulDivC(temp1, temp1, MAX_UINT256)
+    factor2 = mulDivC(temp2, temp3, MAX_UINT256)
+    factor = max(factor1, factor2)
+
+    temp4 = mulDivC(temp1, temp1, factor)
+    temp5 = mulDivF(temp2, temp3, factor)
+    return mulDivC(x, temp4, temp5)
+
+def tradeFunc(amount, order, func, fallback):
+    x = amount
+    y = order['y']
+    z = order['z']
+    A = decodeFloat(order['A'])
+    B = decodeFloat(order['B'])
+    try:
+        return uint128(func(x, y, z, A, B))
+    except:
+        return fallback
+
+def tradeBySourceAmount(amount: int, order: dict) -> int:
+    return tradeFunc(amount, order, tradeBySourceAmountFunc, 0)
+
+def tradeByTargetAmount(amount: int, order: dict) -> int:
+    return tradeFunc(amount, order, tradeByTargetAmountFunc, MAX_UINT128)

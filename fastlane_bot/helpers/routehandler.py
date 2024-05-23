@@ -26,6 +26,7 @@ import pandas as pd
 
 from fastlane_bot.helpers.tradeinstruction import TradeInstruction
 from fastlane_bot.events.interface import Pool
+from fastlane_bot.utils import tradeBySourceAmount, tradeByTargetAmount, safe_int
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
     ETHEREUM, METAVAULT_V3_NAME
 
@@ -748,35 +749,38 @@ class TxRouteHandler:
 
         encoded_order = {
             tkns[0]: {
-                'y': curve.y_1,
-                'z': curve.z_1,
-                'A': curve.A_1,
-                'B': curve.B_1,
+                'y': safe_int(curve.y_1),
+                'z': safe_int(curve.z_1),
+                'A': safe_int(curve.A_1),
+                'B': safe_int(curve.B_1),
             },
             tkns[1]: {
-                'y': curve.y_0,
-                'z': curve.z_0,
-                'A': curve.A_0,
-                'B': curve.B_0,
+                'y': safe_int(curve.y_0),
+                'z': safe_int(curve.z_0),
+                'A': safe_int(curve.A_0),
+                'B': safe_int(curve.B_0),
             },
         }[tkn_in]
 
-        y, z, A, B = [encoded_order[key] for key in ['y', 'z', 'A', 'B']]
-        assert y > 0, f"Trade incoming to empty Carbon curve: {curve}"
+        target_liquidity = encoded_order['y']
+        assert target_liquidity > 0, f"Trade incoming to empty Carbon curve: {curve}"
 
         fee = 1 - Decimal(curve.fee_float)
 
         source_scale = 10 ** tkn_in_decimals
         target_scale = 10 ** tkn_out_decimals
 
-        source = int(amount_in * source_scale)
-        target = (source * (B * z + A * y) ** 2) // (source * (B * A * z + A ** 2 * y) + z ** 2)
+        source_amount = int(amount_in * source_scale)
+        target_amount = tradeBySourceAmount(source_amount, encoded_order)
 
-        if target > y:
-            target = y
-            source = (y * z ** 2) // ((A * y + B * z) * (A * y + B * z - A * y))
+        if target_amount > target_liquidity:
+            target_amount = target_liquidity
+            source_amount = tradeByTargetAmount(target_amount, encoded_order)
 
-        return Decimal(source) / source_scale, Decimal(target) / target_scale * fee
+        real_source_amount = Decimal(source_amount) / source_scale
+        real_target_amount = Decimal(target_amount) / target_scale * fee
+
+        return real_source_amount, real_target_amount
 
     def _calc_balancer_output(self, curve: Pool, tkn_in: str, tkn_out: str, amount_in: Decimal):
         """
