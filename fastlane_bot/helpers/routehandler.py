@@ -741,29 +741,28 @@ class TxRouteHandler:
             The amount in.
             The amount out.
         """
-        assert tkn_in != self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, "[routehandler.py _calc_carbon_output] Function does not expect native gas token as input."
 
-        tkns = [self.native_gas_token_to_wrapped(tkn=tkn) for tkn in curve.pair_name.split("/")]
-
-        assert tkn_in in tkns, f"Token in: {tkn_in} does not match tokens in Carbon Curve: {tkns}"
+        key_token = self.native_gas_token_to_wrapped(tkn=tkn_in)
+        both_tokens = [self.native_gas_token_to_wrapped(tkn=tkn) for tkn in curve.pair_name.split("/")]
+        assert key_token in both_tokens, f"Token {key_token} does not match tokens {both_tokens} in carbon curve"
 
         encoded_order = {
-            tkns[0]: {
+            both_tokens[0]: {
                 'y': safe_int(curve.y_1),
                 'z': safe_int(curve.z_1),
                 'A': safe_int(curve.A_1),
                 'B': safe_int(curve.B_1),
             },
-            tkns[1]: {
+            both_tokens[1]: {
                 'y': safe_int(curve.y_0),
                 'z': safe_int(curve.z_0),
                 'A': safe_int(curve.A_0),
                 'B': safe_int(curve.B_0),
             },
-        }[tkn_in]
+        }[key_token]
 
         target_liquidity = encoded_order['y']
-        assert target_liquidity > 0, f"Trade incoming to empty Carbon curve: {curve}"
+        assert target_liquidity > 0, f"Trade incoming to empty carbon curve: {curve}"
 
         fee = 1 - Decimal(curve.fee_float)
 
