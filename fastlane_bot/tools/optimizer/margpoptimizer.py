@@ -373,6 +373,13 @@ class MargPOptimizer(CPCArbOptimizer):
                 p = np.exp(plog10 * np.log(10))
                 criterium = np.linalg.norm(dplog10)
                 
+                # this fix could cut down on some of the logging noise by raising a ConvergenceError early
+                if max(p) > 1e50:
+                    raise self.ConvergenceError(f"price vector component exceeds maximum price [p={p}]")
+                if min(p) < 1e-50:
+                    raise self.ConvergenceError(f"price vector component below minimum price [p={p}]")
+
+                
                 # ...print out some info if requested...
                 if P("verbose"):
                     print(f"\n[margp_optimizer] ========== cycle {i} =======>>>")
