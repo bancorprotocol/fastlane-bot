@@ -155,6 +155,20 @@ CARBON_CONTROLLER_ABI = [
         "stateMutability": "view",
         "inputs": [],
         "outputs": [{"internalType": "uint32", "name": "", "type": "uint32"}]
+    },
+    {
+        "type": "function",
+        "name": "deleteStrategy",
+        "stateMutability": "nonpayable",
+        "inputs": [{"internalType": "uint256","name": "strategyId","type": "uint256"}],
+        "outputs": []
+    },
+    {
+        "type":"function",
+        "name":"createStrategy",
+        "stateMutability":"payable",
+        "inputs":[{"internalType":"Token","name":"token0","type":"address"},{"internalType":"Token","name":"token1","type":"address"},{"components":[{"internalType":"uint128","name":"y","type":"uint128"},{"internalType":"uint128","name":"z","type":"uint128"},{"internalType":"uint64","name":"A","type":"uint64"},{"internalType":"uint64","name":"B","type":"uint64"}],"internalType":"structOrder[2]","name":"orders","type":"tuple[2]"}],
+        "outputs":[{"internalType":"uint256","name":"","type":"uint256"}]
     }
 ]
 

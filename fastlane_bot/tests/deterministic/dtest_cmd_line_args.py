@@ -46,11 +46,11 @@ class TestCommandLineArgs:
     pool_data_update_frequency: int = -1
     use_specific_exchange_for_target_tokens: str = None
     prefix_path: str = ""
-    version_check_frequency: int = 1
     self_fund: str = "False"
     read_only: str = "False"
     is_args_test: str = "False"
     rpc_url: str = None
+    pool_finder_period: int = -1
 
     @staticmethod
     def args_to_command_line(args):

@@ -113,7 +113,7 @@ class TestTxHelper:
             args.logger.debug(f"len(pool_data): {len(pool_data)}")
 
         transactions = self.read_transaction_files(most_recent_log_folder)
-        successful_txs = [tx for tx in transactions if "'status': 1" in tx]
+        successful_txs = [tx for tx in transactions if '"tx_status": "succeeded",' in tx]
         args.logger.debug(f"Found {len(successful_txs)} successful transactions.")
 
         return successful_txs
@@ -132,9 +132,15 @@ class TestTxHelper:
         if not tx_data:
             return tx_data
 
+        # filter out the non-deterministic factors derieved from unique strategyids
         for trade in tx_data["trades"]:
             if trade["exchange"] in constants.CARBON_V1_FORKS and "cid0" in trade:
                 del trade["cid0"]
+        for trade in tx_data["route_struct"]:
+            if "deadline" in trade:
+                del trade['deadline']
+            if trade["platformId"] == 6  and "customData" in trade:
+                del trade["customData"]
         return tx_data
 
     @staticmethod
@@ -151,14 +157,10 @@ class TestTxHelper:
             dict: The transaction data for the given strategy_id.
         """
         for tx in txt_all_successful_txs:
-            if str(strategy_id) in tx:
+            if hex(strategy_id).replace("0x","") in tx:
                 return json.loads(
-                    tx.split(
-                        """
-
-"""
-                    )[-1]
-                )
+                    tx
+                )['log_dict']
 
     @staticmethod
     def load_json_file(file_name: str, args: argparse.Namespace) -> Dict:
@@ -290,7 +292,7 @@ class TestTxHelper:
             dict: The test strategy txhashs.
         """
         test_strategy_txhashs = self.load_json_file("test_strategy_txhashs.json", args)
-        sleep_seconds = int(35 * len(test_strategy_txhashs.keys()) + 15)
+        sleep_seconds = int(20 * len(test_strategy_txhashs.keys()) + 15)
         args.logger.debug(f"sleep_seconds: {sleep_seconds}")
         time.sleep(sleep_seconds)
         return test_strategy_txhashs
