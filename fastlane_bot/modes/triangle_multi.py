@@ -16,7 +16,7 @@ from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
     def get_combos(self) -> List[Any]:
         combos = []
-        all_curves = list(set(self.CCm.byparams(exchange=exchange).curves for exchange in self.ConfigObj.CARBON_V1_FORKS))
+        all_curves = [self.CCm.byparams(exchange=exchange).curves for exchange in self.ConfigObj.CARBON_V1_FORKS]
 
         for flt in self.flashloan_tokens:
             for non_flt_curve in [curve for curve in all_curves if flt not in curve.pair]:
