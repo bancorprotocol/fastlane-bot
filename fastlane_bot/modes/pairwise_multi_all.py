@@ -20,23 +20,23 @@ class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
         return [(tkn0, tkn1) for tkn0, tkn1 in product(all_tokens, flashloan_tokens_intersect) if tkn0 != tkn1]
 
     def get_curve_combos(self, CC: Any) -> List[Any]:
-        carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        non_carbon_curves = [x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
-        curve_combos = [[_curve0] + [_curve1] for _curve0 in non_carbon_curves for _curve1 in non_carbon_curves if _curve0 != _curve1]
+        carbon_curves = [curve for curve in CC.curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        other_curves  = [curve for curve in CC.curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
+        base_dir_one  = [curve for curve in CC.curves[:1] if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        base_dir_two  = [curve for curve in CC.curves[1:] if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
 
-        if len(carbon_curves) > 0:
-            base_direction_pair = carbon_curves[0].pair
-            base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-            base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
-            curve_combos = []
+        curve_combos = []
 
-            if len(base_direction_one) > 0:
-                curve_combos += [[curve] + base_direction_one for curve in non_carbon_curves]
+        if len(base_dir_one) > 0:
+            curve_combos += [[curve] + base_dir_one for curve in other_curves]
 
-            if len(base_direction_two) > 0:
-                curve_combos += [[curve] + base_direction_two for curve in non_carbon_curves]
+        if len(base_dir_two) > 0:
+            curve_combos += [[curve] + base_dir_two for curve in other_curves]
 
-            if len(carbon_curves) >= 2:
-                curve_combos += [carbon_curves]
+        if len(carbon_curves) > 1:
+            curve_combos += [carbon_curves]
 
-        return curve_combos
+        if curve_combos:
+            return curve_combos
+    
+        return [[_curve0] + [_curve1] for _curve0 in other_curves for _curve1 in other_curves if _curve0 != _curve1]

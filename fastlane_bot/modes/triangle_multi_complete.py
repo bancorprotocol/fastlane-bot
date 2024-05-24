@@ -83,29 +83,17 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
     for pair in all_relevant_pairs:            
         all_relevant_pairs_info[pair] = {}
         pair_curves = CCm.bypair(pair)
-        carbon_curves = []
-        non_carbon_curves = []
-        base_direction_one = []
-        base_direction_two = []
-        if len(pair_curves) > 0:
-            base_direction_pair = pair_curves[0].pair
-            for x in pair_curves:
-                if x.params.exchange in carbon_v1_forks:
-                    carbon_curves += [x]
-                    if x.pair == base_direction_pair:
-                        base_direction_one += [x]
-                    else:
-                        base_direction_two += [x]
-                else:
-                    non_carbon_curves += [x]
-        all_relevant_pairs_info[pair]['curves'] = non_carbon_curves
-        # for each direction, condense carbon curves into a single list and add to the non-carbon curves
-        if len(base_direction_one) > 0:
-            all_relevant_pairs_info[pair]['curves'].append(base_direction_one)
-        if len(base_direction_two) > 0:
-            all_relevant_pairs_info[pair]['curves'].append(base_direction_two)
-        all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
-        all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
+        carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
+        other_curves  = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
+        base_dir_one  = [curve for curve in pair_curves[:1] if curve.params.exchange in carbon_v1_forks]
+        base_dir_two  = [curve for curve in pair_curves[1:] if curve.params.exchange in carbon_v1_forks]
+        all_relevant_pairs_info[pair]['curves'] = other_curves
+        if len(base_dir_one) > 0:
+            all_relevant_pairs_info[pair]['curves'].append(base_dir_one)
+        if len(base_dir_two) > 0:
+            all_relevant_pairs_info[pair]['curves'].append(base_dir_two)
+        all_relevant_pairs_info[pair]['total_count'] = len(pair_curves)
+        all_relevant_pairs_info[pair]['carbon_count'] = len(carbon_curves)
     return all_relevant_pairs_info
 
 def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
@@ -115,9 +103,9 @@ def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
         path_len = 0
         has_carbon = False
         for pair in triangle:
-            if all_relevant_pairs_info[pair]['all_counts'] > 0:
+            if all_relevant_pairs_info[pair]['total_count'] > 0:
                 path_len += 1
-            if all_relevant_pairs_info[pair]['carbon_counts'] > 0:
+            if all_relevant_pairs_info[pair]['carbon_count'] > 0:
                 has_carbon = True
         if path_len == 3 and has_carbon == True:
             valid_carbon_triangles.append(triangle)

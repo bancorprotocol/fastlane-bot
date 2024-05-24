@@ -20,20 +20,15 @@ class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
         return [(tkn0, tkn1) for tkn0, tkn1 in product(bancor_pol_tkns, [self.ConfigObj.WETH_ADDRESS]) if tkn0 != tkn1]
 
     def get_curve_combos(self, CC: Any) -> List[Any]:
-        pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
-        carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        non_carbon_curves = [x for x in CC.curves if x.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
-        curve_combos = [[curve] + pol_curves for curve in non_carbon_curves]
+        pol_curves   = [curve for curve in CC.curves if curve.params.exchange == "bancor_pol"]
+        base_dir_one = [curve for curve in CC.curves[:1] if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        base_dir_two = [curve for curve in CC.curves[1:] if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        curve_combos = [[curve] + pol_curves for curve in CC.curves if curve.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
 
-        if len(carbon_curves) > 0:
-            base_direction_pair = carbon_curves[0].pair
-            base_direction_one = [curve for curve in carbon_curves if curve.pair == base_direction_pair]
-            base_direction_two = [curve for curve in carbon_curves if curve.pair != base_direction_pair]
+        if len(base_dir_one) > 0:
+            curve_combos += [[curve] + base_dir_one for curve in pol_curves]
 
-            if len(base_direction_one) > 0:
-                curve_combos += [[curve] + base_direction_one for curve in pol_curves]
-
-            if len(base_direction_two) > 0:
-                curve_combos += [[curve] + base_direction_two for curve in pol_curves]
+        if len(base_dir_two) > 0:
+            curve_combos += [[curve] + base_dir_two for curve in pol_curves]
 
         return curve_combos
