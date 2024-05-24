@@ -103,7 +103,7 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
         if len(base_direction_one) > 0:
             all_relevant_pairs_info[pair]['curves'].append(base_direction_one)
         if len(base_direction_two) > 0:
-            all_relevant_pairs_info[pair]['curves'].append(base_direction_two)  
+            all_relevant_pairs_info[pair]['curves'].append(base_direction_two)
         all_relevant_pairs_info[pair]['all_counts'] = len(pair_curves)
         all_relevant_pairs_info[pair]['carbon_counts'] = len(carbon_curves)
     return all_relevant_pairs_info

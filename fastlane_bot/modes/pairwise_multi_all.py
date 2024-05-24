@@ -21,8 +21,8 @@ class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
 
     def get_curve_combos(self, CC: Any) -> List[Any]:
         carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        not_carbon_curves = [x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
-        curve_combos = [[_curve0] + [_curve1] for _curve0 in not_carbon_curves for _curve1 in not_carbon_curves if (_curve0 != _curve1)]
+        non_carbon_curves = [x for x in CC.curves if x.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
+        curve_combos = [[_curve0] + [_curve1] for _curve0 in non_carbon_curves for _curve1 in non_carbon_curves if (_curve0 != _curve1)]
 
         if len(carbon_curves) > 0:
             base_direction_pair = carbon_curves[0].pair
@@ -31,10 +31,10 @@ class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
             curve_combos = []
 
             if len(base_direction_one) > 0:
-                curve_combos += [[curve] + base_direction_one for curve in not_carbon_curves]
+                curve_combos += [[curve] + base_direction_one for curve in non_carbon_curves]
 
             if len(base_direction_two) > 0:
-                curve_combos += [[curve] + base_direction_two for curve in not_carbon_curves]
+                curve_combos += [[curve] + base_direction_two for curve in non_carbon_curves]
 
             if len(carbon_curves) >= 2:
                 curve_combos += [carbon_curves]

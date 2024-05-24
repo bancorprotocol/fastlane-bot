@@ -22,8 +22,8 @@ class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
     def get_curve_combos(self, CC: Any) -> List[Any]:
         pol_curves = [x for x in CC.curves if x.params.exchange == "bancor_pol"]
         carbon_curves = [x for x in CC.curves if x.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        not_carbon_curves = [x for x in CC.curves if x.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
-        curve_combos = [[curve] + pol_curves for curve in not_carbon_curves]
+        non_carbon_curves = [x for x in CC.curves if x.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
+        curve_combos = [[curve] + pol_curves for curve in non_carbon_curves]
 
         if len(carbon_curves) > 0:
             base_direction_pair = carbon_curves[0].pair
