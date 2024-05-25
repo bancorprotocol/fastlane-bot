@@ -24,37 +24,35 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             flashloan_tokens = fltkns
 
         miniverse_combos = []
-        combos = [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]
 
-        for tkn0, tkn1 in combos:
+        for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
             all_curves = list(set(self.CCm.bypairs(f"{tkn0}/{tkn1}")) | set(self.CCm.bypairs(f"{tkn1}/{tkn0}")))
 
             carbon_curves = [curve for curve in all_curves if curve.params.get("exchange") in self.ConfigObj.CARBON_V1_FORKS]
-            if not carbon_curves:
+            if len(carbon_curves) == 0:
                 continue
 
             external_curves = [curve for curve in all_curves if curve.params.get("exchange") not in self.ConfigObj.CARBON_V1_FORKS]
-            if not external_curves:
+            if len(external_curves) == 0:
                 continue
 
             bancor_v3_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
-            if not bancor_v3_curve_0:
+            if len(bancor_v3_curve_0) == 0:
                 continue
 
             bancor_v3_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
-            if not bancor_v3_curve_1:
+            if len(bancor_v3_curve_1) == 0:
                 continue
 
+            base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
+            base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
             miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve] for curve in external_curves]
 
-            base_direction_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
-            base_direction_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
+            if len(base_dir_one) > 0:
+                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_dir_one]
 
-            if len(base_direction_one) > 0:
-                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_one]
-
-            if len(base_direction_two) > 0:
-                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_direction_two]
+            if len(base_dir_two) > 0:
+                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_dir_two]
 
             miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
 
