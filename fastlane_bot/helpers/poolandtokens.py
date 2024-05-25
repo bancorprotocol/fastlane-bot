@@ -19,7 +19,7 @@ from fastlane_bot.config import Config
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import decodeOrder
+from fastlane_bot.utils import decodeOrder, encodeOrder
 
 
 class SolidlyV2StablePoolsNotSupported(Exception):
@@ -490,14 +490,17 @@ class PoolAndTokens:
             # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
             if percent_component_met and no_limit_orders and prices_overlap:
                 # calculate the geometric mean
-                M = 1 / (p_marg_0 * p_marg_1).sqrt().sqrt()
+                pm = 1 / (p_marg_0 * p_marg_1).sqrt()
                 # modify the y_int based on the new geomean to the limit of y
                 for typed_args in strategy_typed_args:
-                    H = typed_args["pa"].sqrt()
-                    L = typed_args["pb"].sqrt()
-                    yint0 = typed_args["y"] * (H - L) / (M - L) if M > L else typed_args["y"]
-                    if typed_args["yint"] < yint0:
-                        typed_args["yint"] = yint0
+                    yint = encodeOrder({
+                        'liquidity': typed_args["y"],
+                        'lowestRate': typed_args["pb"],
+                        'highestRate': typed_args["pa"],
+                        'marginalRate': pm,
+                    })["z"]
+                    if typed_args["yint"] < yint:
+                        typed_args["yint"] = yint
 
         return {"strategy_typed_args": strategy_typed_args, "prices_overlap": prices_overlap}
 
