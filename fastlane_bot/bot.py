@@ -74,7 +74,7 @@ from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .modes.base import get_prices_simple, custom_sort
-from .utils import num_format, rand_item
+from .utils import rand_item
 
 
 @dataclass
@@ -478,19 +478,19 @@ class CarbonBot:
         # Log the arbitrage details
         arb_info = [
             f"arb mode = {arb_mode}",
-            f"gas profit = {num_format(best_profit_gastkn)}",
-            f"usd profit = {num_format(best_profit_usd)}",
+            f"gas profit = {best_profit_gastkn}",
+            f"usd profit = {best_profit_usd}",
             f"flashloan token = {fl_token_symbol}",
-            f"flashloan amount = {num_format(calculated_trade_instructions[0].amtin)}",
-            f"flashloan profit = {num_format(flashloan_tkn_profit)}"
+            f"flashloan amount = {calculated_trade_instructions[0].amtin}",
+            f"flashloan profit = {flashloan_tkn_profit}"
         ]
         arb_ti_info = [
             {
                 "exchange": trade.exchange_name,
                 "tkn_in": {trade.tknin_symbol: trade.tknin} if trade.tknin_symbol != trade.tknin else trade.tknin,
-                "amt_in": num_format(trade.amtin),
+                "amt_in": trade.amtin,
                 "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
-                "amt_out": num_format(trade.amtout)
+                "amt_out": trade.amtout
             }
             for trade in calculated_trade_instructions
         ]

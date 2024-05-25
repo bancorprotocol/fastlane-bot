@@ -25,7 +25,6 @@ from typing import List, Any, Dict, Tuple, Optional
 from web3.exceptions import TimeExhausted
 
 from fastlane_bot.config import Config
-from fastlane_bot.utils import num_format
 from fastlane_bot.data.abi import ERC20_ABI
 
 MAX_UINT256 = 2 ** 256 - 1
@@ -81,13 +80,6 @@ class TxHelpers:
         """
 
         self.cfg.logger.info("[helpers.txhelpers.validate_and_submit_transaction] Validating trade...")
-        self.cfg.logger.debug(
-            f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
-            f"- Routes: {route_struct}\n"
-            f"- Source amount: {src_amt}\n"
-            f"- Source token: {src_address}\n"
-            f"- Expected profit: {num_format(expected_profit_gastkn)} GAS token ({num_format(expected_profit_usd)} USD)\n"
-        )
 
         if self.cfg.SELF_FUND:
             fn_name = "fundAndArb"
@@ -122,8 +114,8 @@ class TxHelpers:
 
         self.cfg.logger.info(
             f"[helpers.txhelpers.validate_and_submit_transaction]:\n"
-            f"- Expected cost: {num_format(gas_cost_eth)} GAS token ({num_format(gas_cost_usd)} USD)\n"
-            f"- Expected gain: {num_format(gas_gain_eth)} GAS token ({num_format(gas_gain_usd)} USD)\n"
+            f"- Expected cost: {gas_cost_eth} GAS token ({gas_cost_usd} USD)\n"
+            f"- Expected gain: {gas_gain_eth} GAS token ({gas_gain_usd} USD)\n"
         )
 
         if gas_gain_eth > gas_cost_eth:

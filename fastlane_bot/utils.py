@@ -1,34 +1,25 @@
 """
 Various utility functions
 
-NOTE: Those functions would more naturally fit in `helpers` 
-TODO-MIKE, TODO-KEVIN: check how hard this is
-
 ---
 (c) Copyright Bprotocol foundation 2023-24.
 All rights reserved.
 Licensed under MIT.
 """
-import glob
-import random
-import os.path
+from glob import glob
+from random import choice
+from os.path import join
 from decimal import Decimal
 
 
-def safe_int(value: int or float) -> int:
-    assert value == int(value), f"non-integer `float` value {value}"
-    return int(value)
-
-
-def num_format(value: int or float) -> str:
-    try:
-        return "{0:.4f}".format(value)
-    except Exception:
-        return str(value)
+def safe_int(value) -> int:
+    int_value = int(value)
+    assert value == int_value, f"non-integer `float` value {value}"
+    return int_value
 
 
 def rand_item(list_of_items: list, num_of_items: int) -> any:
-    return random.choice(list_of_items[:min(max(num_of_items, 1), len(list_of_items))])
+    return choice(list_of_items[:min(max(num_of_items, 1), len(list_of_items))])
 
 
 def find_latest_timestamped_folder(logging_path=None):
@@ -42,8 +33,8 @@ def find_latest_timestamped_folder(logging_path=None):
         str: Path to the latest timestamped folder, or None if no folder is found.
     """
     search_path = logging_path if logging_path else "."
-    search_path = os.path.join(search_path, "logs/*")
-    list_of_folders = glob.glob(search_path)
+    search_path = join(search_path, "logs/*")
+    list_of_folders = glob(search_path)
 
     if not list_of_folders:
         return None
