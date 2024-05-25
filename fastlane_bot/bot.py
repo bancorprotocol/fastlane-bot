@@ -475,7 +475,7 @@ class CarbonBot:
             )
             return None, None
 
-        # Log the calculated arbitrage
+        # Log the arbitrage details
         arb_info = [
             f"arb mode = {arb_mode}",
             f"gas profit = {num_format(best_profit_gastkn)}",
@@ -494,16 +494,15 @@ class CarbonBot:
             }
             for trade in calculated_trade_instructions
         ]
-        self.ConfigObj.logger.info(
-            "\n".join(
-                [
-                    "[bot._handle_trade_instructions] calculated arbitrage:",
-                    *[f"- {line}" for line in arb_info],
-                    "- trade instructions:",
-                    *[f"  {index + 1}. {line}" for index, line in enumerate(arb_ti_info)]
-                ]
-            )
+        arb_details = "\n".join(
+            [
+                "arbitrage details:",
+                *[f"- {line}" for line in arb_info],
+                "- trade instructions:",
+                *[f"  {index + 1}. {line}" for index, line in enumerate(arb_ti_info)]
+            ]
         )
+        self.ConfigObj.logger.info(f"[bot._handle_trade_instructions] {arb_details}")
 
         # Split Carbon Orders
         split_calculated_trade_instructions = split_carbon_trades(
@@ -551,7 +550,7 @@ class CarbonBot:
         )
 
         # Validate and submit the transaction
-        return self.tx_helpers.validate_and_submit_transaction(
+        tx_hash, tx_receipt = self.tx_helpers.validate_and_submit_transaction(
             route_struct=route_struct_processed,
             src_amt=flashloan_amount_wei,
             src_address=fl_token,
@@ -559,3 +558,5 @@ class CarbonBot:
             expected_profit_usd=best_profit_usd,
             flashloan_struct=flashloan_struct,
         )
+
+        return tx_hash, tx_receipt
