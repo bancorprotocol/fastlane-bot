@@ -494,10 +494,10 @@ class PoolAndTokens:
                 # modify the y_int based on the new geomean to the limit of y
                 for typed_args in strategy_typed_args:
                     yint = encodeOrder({
-                        'liquidity': typed_args["y"],
-                        'lowestRate': typed_args["pb"],
-                        'highestRate': typed_args["pa"],
-                        'marginalRate': pm,
+                        "liquidity": typed_args["y"],
+                        "lowestRate": typed_args["pb"],
+                        "highestRate": typed_args["pa"],
+                        "marginalRate": pm,
                     })["z"]
                     if typed_args["yint"] < yint:
                         typed_args["yint"] = yint
