@@ -397,7 +397,7 @@ class PoolAndTokens:
     class DoubleInvalidCurveError(ValueError):
         pass
 
-    def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
+    def _carbon_to_cpc(self) -> ConstantProductCurve:
         """
         constructor: from a single Carbon order (see class docstring for other parameters)*
 
@@ -419,6 +419,15 @@ class PoolAndTokens:
         a difference for the result)
         """
 
+        cpc_list = []
+        for typed_args in self._carbon_to_cpc_dict()["strategy_typed_args"]:
+            try:
+                cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
+            except Exception as e:
+                self.ConfigObj.logger.debug(f"[_carbon_to_cpc] curve {typed_args} error {e}")
+        return cpc_list
+
+    def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
         encoded_orders = [
             {
                 "y": int(self.y_1),
@@ -434,6 +443,8 @@ class PoolAndTokens:
             },
         ]
 
+        decoded_orders = [decodeOrder(encoded_order) for encoded_order in encoded_orders]
+
         decimals = [
             10 ** self.tkn1_decimals,
             10 ** self.tkn0_decimals,
@@ -443,8 +454,6 @@ class PoolAndTokens:
             Decimal(10) ** (self.tkn0_decimals - self.tkn1_decimals),
             Decimal(10) ** (self.tkn1_decimals - self.tkn0_decimals),
         ]
-
-        decoded_orders = [decodeOrder(encoded_order) for encoded_order in encoded_orders]
 
         is_carbon = self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
         pair = self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS)
@@ -476,8 +485,8 @@ class PoolAndTokens:
             p_marg_0 = (decoded_orders[0]["marginalRate"] * converters[0]) ** -1
             p_marg_1 = (decoded_orders[1]["marginalRate"] * converters[1]) ** +1
 
-            # evaluate that the marginal prices are within the pmarg_threshold
-            percent_component_met = abs(p_marg_0 - p_marg_1) <= pmarg_threshold * max(p_marg_0, p_marg_1)
+            # evaluate that the marginal prices are within the threshold
+            percent_component_met = abs(p_marg_0 - p_marg_1) <= max(p_marg_0, p_marg_1) * pmarg_threshold
 
             # verify that the strategy does not consist of any limit orders
             no_limit_orders = not any(encoded_order["A"] == 0 for encoded_order in encoded_orders)
@@ -487,7 +496,7 @@ class PoolAndTokens:
             min1, max1 = sorted([strategy_typed_args[1]["pa"] ** -1, strategy_typed_args[1]["pb"] ** -1])
             prices_overlap = max(min0, min1) < min(max0, max1)
 
-            # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
+            # if all conditions are met then this is likely an overlapping strategy
             if percent_component_met and no_limit_orders and prices_overlap:
                 # calculate the geometric mean
                 pm = 1 / (p_marg_0 * p_marg_1).sqrt()
@@ -503,15 +512,6 @@ class PoolAndTokens:
                         typed_args["yint"] = yint
 
         return {"strategy_typed_args": strategy_typed_args, "prices_overlap": prices_overlap}
-
-    def _carbon_to_cpc(self) -> ConstantProductCurve:
-        cpc_list = []
-        for typed_args in self._carbon_to_cpc_dict()["strategy_typed_args"]:
-            try:
-                cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
-            except Exception as e:
-                self.ConfigObj.logger.debug(f"[_carbon_to_cpc] curve {typed_args} error {e}")
-        return cpc_list
 
     def _univ3_to_cpc(self) -> List[Any]:
         """
