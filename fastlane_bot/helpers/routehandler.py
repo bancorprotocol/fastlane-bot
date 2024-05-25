@@ -26,7 +26,7 @@ import pandas as pd
 
 from fastlane_bot.helpers.tradeinstruction import TradeInstruction
 from fastlane_bot.events.interface import Pool
-from fastlane_bot.utils import tradeBySourceAmount, tradeByTargetAmount, safe_int
+from fastlane_bot.utils import tradeBySourceAmount, tradeByTargetAmount
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
     ETHEREUM, METAVAULT_V3_NAME
 
@@ -748,16 +748,16 @@ class TxRouteHandler:
 
         encoded_order = {
             both_tokens[0]: {
-                'y': safe_int(curve.y_1),
-                'z': safe_int(curve.z_1),
-                'A': safe_int(curve.A_1),
-                'B': safe_int(curve.B_1),
+                'y': int(curve.y_1),
+                'z': int(curve.z_1),
+                'A': int(curve.A_1),
+                'B': int(curve.B_1),
             },
             both_tokens[1]: {
-                'y': safe_int(curve.y_0),
-                'z': safe_int(curve.z_0),
-                'A': safe_int(curve.A_0),
-                'B': safe_int(curve.B_0),
+                'y': int(curve.y_0),
+                'z': int(curve.z_0),
+                'A': int(curve.A_0),
+                'B': int(curve.B_0),
             },
         }[key_token]
 

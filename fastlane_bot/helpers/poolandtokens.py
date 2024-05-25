@@ -19,7 +19,7 @@ from fastlane_bot.config import Config
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import decodeOrder, safe_int
+from fastlane_bot.utils import decodeOrder
 
 
 class SolidlyV2StablePoolsNotSupported(Exception):
@@ -421,16 +421,16 @@ class PoolAndTokens:
 
         encoded_orders = [
             {
-                "y": safe_int(self.y_1),
-                "z": safe_int(self.z_1),
-                "A": safe_int(self.A_1),
-                "B": safe_int(self.B_1),
+                "y": int(self.y_1),
+                "z": int(self.z_1),
+                "A": int(self.A_1),
+                "B": int(self.B_1),
             },
             {
-                "y": safe_int(self.y_0),
-                "z": safe_int(self.z_0),
-                "A": safe_int(self.A_0),
-                "B": safe_int(self.B_0),
+                "y": int(self.y_0),
+                "z": int(self.z_0),
+                "A": int(self.A_0),
+                "B": int(self.B_0),
             },
         ]
 
