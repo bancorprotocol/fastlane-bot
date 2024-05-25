@@ -478,20 +478,18 @@ class PoolAndTokens:
 
         prices_overlap = False
 
-        pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
-
         # Only overlapping strategies are selected for modification
         if len(strategy_typed_args) == 2:
             p_marg_0 = (decoded_orders[0]["marginalRate"] * converters[0]) ** -1
             p_marg_1 = (decoded_orders[1]["marginalRate"] * converters[1]) ** +1
 
-            # evaluate that the marginal prices are within the threshold
-            percent_component_met = abs(p_marg_0 - p_marg_1) <= max(p_marg_0, p_marg_1) * pmarg_threshold
+            # check if the marginal prices are within a 1% threshold (may included stable/stable pairs)
+            percent_component_met = abs(p_marg_0 - p_marg_1) <= max(p_marg_0, p_marg_1) / 100
 
             # verify that the strategy does not consist of any limit orders
             no_limit_orders = not any(encoded_order["A"] == 0 for encoded_order in encoded_orders)
 
-            # evaluate if the price boundaries pa/pb overlap at one end
+            # check if the price boundaries pa/pb overlap at one end
             min0, max0 = sorted([strategy_typed_args[0]["pa"] ** +1, strategy_typed_args[0]["pb"] ** +1])
             min1, max1 = sorted([strategy_typed_args[1]["pa"] ** -1, strategy_typed_args[1]["pb"] ** -1])
             prices_overlap = max(min0, min1) < min(max0, max1)
