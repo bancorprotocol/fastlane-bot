@@ -21,8 +21,8 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             # Get the Carbon pairs
             carbon_pairs = sort_pairs(set([curve.pair for curve in self.CCm.curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]))
 
-            # Create a set of unique tokens, excluding 'flt'
-            x_tokens = {token for pair in carbon_pairs for token in pair.split('/') if token != flt}
+            # Create a set of unique tokens excluding the flashloan token
+            x_tokens = {token for pair in carbon_pairs for token in pair.split("/") if token != flt}
 
             # Get relevant pairs containing the flashloan token
             flt_x_pairs = sort_pairs([f"{x_token}/{flt}" for x_token in x_tokens])
@@ -44,17 +44,17 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             # Generate valid triangles for the groups base on arb_mode
             valid_triangles = get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info)
 
-            # Get [(flt,curves)] analysis set for the flt
+            # Get [(flt,curves)] analysis set for the flashloan token
             flt_triangle_analysis_set = get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info)
 
-            # The entire analysis set for all flts
+            # The entire analysis set for all flashloan tokens
             combos.extend(flt_triangle_analysis_set)
 
         return combos
 
 def sort_pairs(pairs):
     # Clean up the pairs alphabetically
-    return ["/".join(sorted(pair.split('/'))) for pair in pairs]
+    return ["/".join(sorted(pair.split("/"))) for pair in pairs]
 
 def flatten_nested_items_in_list(nested_list):
     # unpack nested items
@@ -73,7 +73,7 @@ def get_triangle_groups(flt, x_y_pairs):
     # Get groups of triangles that conform to (flt/x , x/y, y/flt) where x!=y
     triangle_groups = []
     for pair in x_y_pairs:
-        x, y = pair.split('/')
+        x, y = pair.split("/")
         triangle_groups += [("/".join(sorted([flt, x])), pair, "/".join(sorted([flt, y])))]
     return triangle_groups
 
@@ -85,25 +85,25 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
         carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
         other_curves = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
         all_relevant_pairs_info[pair] = {
-            'has_any': len(pair_curves) > 0,
-            'has_carbon': len(carbon_curves) > 0,
-            'curves': other_curves
+            "has_any": len(pair_curves) > 0,
+            "has_carbon": len(carbon_curves) > 0,
+            "curves": other_curves
         }
         if len(carbon_curves) > 0:
             base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
             base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
             if len(base_dir_one) > 0:
-                all_relevant_pairs_info[pair]['curves'].append(base_dir_one)
+                all_relevant_pairs_info[pair]["curves"].append(base_dir_one)
             if len(base_dir_two) > 0:
-                all_relevant_pairs_info[pair]['curves'].append(base_dir_two)
+                all_relevant_pairs_info[pair]["curves"].append(base_dir_two)
     return all_relevant_pairs_info
 
 def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
     # Get the stats on the triangle group cohort for decision making
     valid_carbon_triangles = []
     for triangle in triangle_groups:
-        path_len = sum(all_relevant_pairs_info[pair]['has_any'] for pair in triangle)
-        has_carbon = any(all_relevant_pairs_info[pair]['has_carbon'] for pair in triangle)
+        path_len = sum(all_relevant_pairs_info[pair]["has_any"] for pair in triangle)
+        has_carbon = any(all_relevant_pairs_info[pair]["has_carbon"] for pair in triangle)
         if path_len == 3 and has_carbon == True:
             valid_carbon_triangles.append(triangle)
     return valid_carbon_triangles
@@ -111,7 +111,7 @@ def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
 def get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info):
     flt_triangle_analysis_set = []
     for triangle in valid_triangles:
-        multiverse = [all_relevant_pairs_info[pair]['curves'] for pair in triangle]
+        multiverse = [all_relevant_pairs_info[pair]["curves"] for pair in triangle]
         product_of_triangle = list(product(multiverse[0], multiverse[1], multiverse[2]))
         triangles_to_run = flatten_nested_items_in_list(product_of_triangle)
         flt_triangle_analysis_set += list(zip([flt] * len(triangles_to_run), triangles_to_run))
