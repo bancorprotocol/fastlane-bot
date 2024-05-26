@@ -294,7 +294,7 @@ def _process_contract_chunks(
 
 def _get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
-    for add, en, event, key, value in mgr.pools_to_add_from_contracts:
+    for event in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
         ex = mgr.exchanges[exchange_name]
         abi = ex.get_abi()
@@ -322,11 +322,6 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
 
     orig_num_pools_in_data = len(mgr.pool_data)
     mgr.cfg.logger.info("Async process now updating pools from contracts...")
-
-    all_events = [
-        event
-        for address, exchange_name, event, key, value in mgr.pools_to_add_from_contracts
-    ]
 
     # split contracts into chunks of 1000
     contracts = _get_pool_contracts(mgr)
@@ -471,7 +466,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
     # update the pool_data from events
-    update_pools_from_events(-1, mgr, all_events)
+    update_pools_from_events(-1, mgr, mgr.pools_to_add_from_contracts)
 
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
