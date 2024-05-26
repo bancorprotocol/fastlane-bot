@@ -85,8 +85,8 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
         carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
         other_curves = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
         all_relevant_pairs_info[pair] = {
-            'all_counts': len(pair_curves),
-            'carbon_counts': len(carbon_curves),
+            'has_any': len(pair_curves) > 0,
+            'has_carbon': len(carbon_curves) > 0,
             'curves': other_curves
         }
         if len(carbon_curves) > 0:
@@ -102,13 +102,8 @@ def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
     # Get the stats on the triangle group cohort for decision making
     valid_carbon_triangles = []
     for triangle in triangle_groups:
-        path_len = 0
-        has_carbon = False
-        for pair in triangle:
-            if all_relevant_pairs_info[pair]['all_counts'] > 0:
-                path_len += 1
-            if all_relevant_pairs_info[pair]['carbon_counts'] > 0:
-                has_carbon = True
+        path_len = sum(all_relevant_pairs_info[pair]['has_any'] for pair in triangle)
+        has_carbon = any(all_relevant_pairs_info[pair]['has_carbon'] for pair in triangle)
         if path_len == 3 and has_carbon == True:
             valid_carbon_triangles.append(triangle)
     return valid_carbon_triangles
