@@ -32,11 +32,8 @@ def async_backdate_from_contracts(mgr: Any, rows: List[int]):
     for chunk in chunks:
         loop = asyncio.get_event_loop()
         vals = loop.run_until_complete(async_main_backdate_from_contracts(chunk, w3_async=mgr.w3_async))
-        idxes = [val[0] for val in vals]
-        updated_pool_info = [val[1] for val in vals]
-        for i, idx in enumerate(idxes):
-            updated_pool_data = updated_pool_info[i]
-            mgr.pool_data[idx] = updated_pool_data
+        for val in vals:
+            mgr.pool_data[val[0]] = val[1]
 
 
 def get_backdate_contracts(
@@ -53,8 +50,8 @@ def get_backdate_contracts(
                 "tenderly_fork_id": mgr.tenderly_fork_id,
                 "pool_info": pool_info,
                 "contract": mgr.w3_async.eth.contract(
-                    address=mgr.pool_data[idx]["address"],
-                    abi=abis[mgr.pool_data[idx]["exchange_name"]],
+                    address=pool_info["address"],
+                    abi=abis[pool_info["exchange_name"]],
                 ),
             }
         )

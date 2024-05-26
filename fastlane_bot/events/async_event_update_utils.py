@@ -51,28 +51,7 @@ async def _get_missing_tkn(mgr: Any, contract: AsyncContract, tkn: str) -> pd.Da
         decimals = await contract.functions.decimals().call()
     except Exception:
         decimals = None
-    try:
-        df = pd.DataFrame(
-            [
-                {
-                    "address": tkn,
-                    "symbol": symbol,
-                    "decimals": decimals,
-                }
-            ]
-        )
-    except Exception as e:
-        mgr.cfg.logger.error(f"Failed to get token info for {tkn} {e}")
-        df = pd.DataFrame(
-            [
-                {
-                    "address": tkn,
-                    "symbol": None,
-                    "decimals": decimals,
-                }
-            ]
-        )
-    return df
+    return pd.DataFrame([{"address": tkn, "symbol": symbol, "decimals": decimals}])
 
 
 async def _get_missing_tkns(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
