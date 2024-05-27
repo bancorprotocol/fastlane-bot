@@ -42,13 +42,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
 
                 profit = self.get_profit(src_token, optimization, trade_instructions_df)
                 if profit is not None:
-                    arb_opps.append(
-                        {
-                            "profit": profit,
-                            "src_token": src_token,
-                            'trade_instructions_dic': trade_instructions_dic,
-                        }
-                    )
+                    arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
