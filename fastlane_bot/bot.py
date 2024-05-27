@@ -339,16 +339,16 @@ class CarbonBot:
         Tuple[Decimal, Decimal]
             best_profit_gastkn, best_profit_usd.
         """
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit] input: {best_profit, fl_token, flashloan_fee_amt}")
-
         src_profit = Decimal(str(best_profit)) - Decimal(str(flashloan_fee_amt))
         best_profit_gastkn = arb_finder.calculate_profit(fl_token, src_profit)
 
         try:
             best_profit_usd = 1 / arb_finder.calculate_profit(self.ConfigObj.STABLECOIN_ADDRESS, 1 / src_profit)
-        except Exception:
+        except Exception as e:
+            self.ConfigObj.logger.info(f"[bot.calculate_profit] error: {e}")
             best_profit_usd = Decimal("NaN")
 
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] input: {best_profit, fl_token, flashloan_fee_amt}")
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] output: {best_profit_gastkn, best_profit_usd}")
 
         return best_profit_gastkn, best_profit_usd
