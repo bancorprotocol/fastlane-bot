@@ -21,6 +21,7 @@ class ArbitrageFinderBase:
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
         self.ConfigObj = ConfigObj
+        self.sort_order = {key: index for index, key in enumerate(['bancor_v2', 'bancor_v3'] + ConfigObj.UNI_V2_FORKS + ConfigObj.UNI_V3_FORKS)}
 
     def find_combos(self) -> List[Any]:
         return self.find_arbitrage()["combos"]
@@ -50,11 +51,10 @@ class ArbitrageFinderBase:
         Calculate profit based on the source token.
         """
         if src_token not in [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            sort_sequence = ['bancor_v2', 'bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
-            price_curves = get_prices_simple(self.CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
-            sorted_price_curves = custom_sort(price_curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
-            assert len(sorted_price_curves) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
-            return Decimal(str(src_profit)) / Decimal(str(sorted_price_curves[0][-1]))
+            source_prices = get_source_prices(self.CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
+            sorted_prices = get_sorted_prices(self.sort_order, self.ConfigObj.CARBON_V1_FORKS, source_prices)
+            assert len(sorted_prices) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
+            return Decimal(str(src_profit)) / Decimal(str(sorted_prices[0][-1]))
         return Decimal(str(src_profit))
 
 def is_net_change_small(trade_instructions_df) -> bool:
@@ -63,11 +63,10 @@ def is_net_change_small(trade_instructions_df) -> bool:
     except Exception:
         return False
 
-def get_prices_simple(CCm, dst_token, src_token):
-    curve_prices_1 = [(CC.params['exchange'], CC.descr, CC.cid, CC.p / 1) for CC in CCm.bytknx(dst_token).bytkny(src_token)]
-    curve_prices_2 = [(CC.params['exchange'], CC.descr, CC.cid, 1 / CC.p) for CC in CCm.bytknx(src_token).bytkny(dst_token)]
-    return curve_prices_1 + curve_prices_2
+def get_source_prices(CCm, dst_token, src_token):
+    prices_1 = [(CC.params['exchange'], CC.descr, CC.cid, CC.p / 1) for CC in CCm.bytknx(dst_token).bytkny(src_token)]
+    prices_2 = [(CC.params['exchange'], CC.descr, CC.cid, 1 / CC.p) for CC in CCm.bytknx(src_token).bytkny(dst_token)]
+    return prices_1 + prices_2
 
-def custom_sort(data, sort_sequence, carbon_v1_forks):
-    sort_order = {key: index for index, key in enumerate(sort_sequence) if key not in carbon_v1_forks}
-    return sorted(data, key=lambda item: float('inf') if item[0] in carbon_v1_forks else sort_order.get(item[0], float('inf')))
+def get_sorted_prices(sort_order, carbon_v1_forks, prices):
+    return sorted(prices, key=lambda item: float('inf') if item[0] in carbon_v1_forks else sort_order.get(item[0], float('inf')))
