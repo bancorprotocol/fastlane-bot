@@ -906,7 +906,6 @@ def init_bot(mgr: Any) -> CarbonBot:
         mgr=mgr,
         ConfigObj=mgr.cfg,
         state=mgr.pool_data,
-        uniswap_v2_event_mappings=mgr.uniswap_v2_event_mappings,
         exchanges=mgr.exchanges,
     )
     bot = CarbonBot(ConfigObj=mgr.cfg)
