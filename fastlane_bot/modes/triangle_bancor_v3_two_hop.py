@@ -15,6 +15,8 @@ from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 
 class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
     def get_combos(self) -> List[Any]:
+        miniverse_combos = []
+
         fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
             # Filter out tokens that are not in the existing flashloan_tokens list
@@ -22,8 +24,6 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
         else:
             flashloan_tokens = fltkns
-
-        miniverse_combos = []
 
         for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
             bancor_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
