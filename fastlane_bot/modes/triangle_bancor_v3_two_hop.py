@@ -26,7 +26,9 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             flashloan_tokens = fltkns
 
         bancor_curves_dict = [
-            {tkn: self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn}").byparams(exchange="bancor_v3").curves}
+            {
+                tkn: self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn}").byparams(exchange="bancor_v3").curves
+            }
             for tkn in flashloan_tokens
         ]
 
