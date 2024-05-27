@@ -287,7 +287,7 @@ class ConfigNetwork(ConfigBase):
     @staticmethod
     def gas_strategy(web3):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
-        max_priority_fee = 0 #web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
         return {
             "maxFeePerGas": gas_price + max_priority_fee,
             "maxPriorityFeePerGas": max_priority_fee
