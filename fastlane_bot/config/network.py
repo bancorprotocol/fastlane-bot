@@ -794,7 +794,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     NETWORK_ID = "1" # TODO
     NETWORK_NAME = "sei"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
-    RPC_ENDPOINT = "https://evm-rpc.arctic-1.seinetwork.io/" # TODO currently Sei devnet
+    RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
     network_df = get_multichain_addresses(network=NETWORK_NAME)
