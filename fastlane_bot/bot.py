@@ -73,7 +73,6 @@ from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .modes.base import get_prices_simple, custom_sort
 from .utils import num_format, rand_item
 
 
