@@ -2,15 +2,27 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.9...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v...HEAD)
+
+- last\_updated\_block error when mgr.pool\_data is empty [\#583](https://github.com/bancorprotocol/fastlane-bot/issues/583)
+
+Closed issues
+
+- Bot should only import from top level [\#625](https://github.com/bancorprotocol/fastlane-bot/issues/625)
+- Dealing with overlapping strategies in the Optimizer [\#595](https://github.com/bancorprotocol/fastlane-bot/issues/595)
+- cvxpy [\#537](https://github.com/bancorprotocol/fastlane-bot/issues/537)
+
+## [v](https://github.com/bancorprotocol/fastlane-bot/tree/v) (2024-05-06)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.1.9...v)
 
 - \_encoded\_data\[0\] index error [\#584](https://github.com/bancorprotocol/fastlane-bot/issues/584)
-- last\_updated\_block error when mgr.pool\_data is empty [\#583](https://github.com/bancorprotocol/fastlane-bot/issues/583)
 - Tests 048, 903 and 906 are broken [\#579](https://github.com/bancorprotocol/fastlane-bot/issues/579)
 - The terraformer script is malfunctioning [\#577](https://github.com/bancorprotocol/fastlane-bot/issues/577)
 - Key `last_updated_block` not found in dictionary [\#564](https://github.com/bancorprotocol/fastlane-bot/issues/564)
 - Erroneous trade instructions possibly not filtered out [\#554](https://github.com/bancorprotocol/fastlane-bot/issues/554)
 - Optimzer test fails randomly [\#472](https://github.com/bancorprotocol/fastlane-bot/issues/472)
+- Removed fraxswap - not yet supported [\#552](https://github.com/bancorprotocol/fastlane-bot/pull/552) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Solidly V2 stable pools not supported [\#566](https://github.com/bancorprotocol/fastlane-bot/issues/566)
 - Fix test 900 [\#562](https://github.com/bancorprotocol/fastlane-bot/issues/562)
@@ -20,6 +32,44 @@
 Closed issues
 
 - Main Loop Function / Exception Handling [\#489](https://github.com/bancorprotocol/fastlane-bot/issues/489)
+
+Merged pull requests
+
+- Release candidate [\#619](https://github.com/bancorprotocol/fastlane-bot/pull/619) ([zavelevsky](https://github.com/zavelevsky))
+- Add 1 ppm fee to univ3 cal calculator [\#590](https://github.com/bancorprotocol/fastlane-bot/pull/590) ([barakman](https://github.com/barakman))
+- NBTest: allowing import from tools without fastlane\_bot [\#589](https://github.com/bancorprotocol/fastlane-bot/pull/589) ([sklbancor](https://github.com/sklbancor))
+- OptimizerTesting [\#587](https://github.com/bancorprotocol/fastlane-bot/pull/587) ([sklbancor](https://github.com/sklbancor))
+- Fix issue 584 in multicaller.py [\#586](https://github.com/bancorprotocol/fastlane-bot/pull/586) ([barakman](https://github.com/barakman))
+- Chore/requirements [\#581](https://github.com/bancorprotocol/fastlane-bot/pull/581) ([platonfloria](https://github.com/platonfloria))
+- feat: databricks init script [\#580](https://github.com/bancorprotocol/fastlane-bot/pull/580) ([platonfloria](https://github.com/platonfloria))
+- Test900 fails [\#578](https://github.com/bancorprotocol/fastlane-bot/pull/578) ([sklbancor](https://github.com/sklbancor))
+- Inject async poa middleware when needed [\#576](https://github.com/bancorprotocol/fastlane-bot/pull/576) ([barakman](https://github.com/barakman))
+- Update data files 24 april [\#573](https://github.com/bancorprotocol/fastlane-bot/pull/573) ([barakman](https://github.com/barakman))
+- Remove `MultiProviderContractWrapper` [\#571](https://github.com/bancorprotocol/fastlane-bot/pull/571) ([barakman](https://github.com/barakman))
+- Remove time-assertions in various tests [\#570](https://github.com/bancorprotocol/fastlane-bot/pull/570) ([barakman](https://github.com/barakman))
+- Refrain from including the access-list when it contains an error [\#569](https://github.com/bancorprotocol/fastlane-bot/pull/569) ([barakman](https://github.com/barakman))
+- Clean the `manager` module [\#568](https://github.com/bancorprotocol/fastlane-bot/pull/568) ([barakman](https://github.com/barakman))
+- Gracefully handle solidly stable pools not supported errors [\#567](https://github.com/bancorprotocol/fastlane-bot/pull/567) ([barakman](https://github.com/barakman))
+- Improve error logging when sending private transactions [\#565](https://github.com/bancorprotocol/fastlane-bot/pull/565) ([barakman](https://github.com/barakman))
+- Add support for XfaiV0 as a fork of SolidlyV2 [\#563](https://github.com/bancorprotocol/fastlane-bot/pull/563) ([barakman](https://github.com/barakman))
+- Module bot cleanup [\#559](https://github.com/bancorprotocol/fastlane-bot/pull/559) ([barakman](https://github.com/barakman))
+- Get rid of checking arb-contract version [\#557](https://github.com/bancorprotocol/fastlane-bot/pull/557) ([barakman](https://github.com/barakman))
+- Merge rc to dev [\#545](https://github.com/bancorprotocol/fastlane-bot/pull/545) ([zavelevsky](https://github.com/zavelevsky))
+- Class TxHelpers Revision \(April 11\) [\#542](https://github.com/bancorprotocol/fastlane-bot/pull/542) ([barakman](https://github.com/barakman))
+- chore: poetry project setup [\#534](https://github.com/bancorprotocol/fastlane-bot/pull/534) ([platonfloria](https://github.com/platonfloria))
+- Exclude known tax tokens [\#528](https://github.com/bancorprotocol/fastlane-bot/pull/528) ([barakman](https://github.com/barakman))
+- Merge main to dev april 08 [\#527](https://github.com/bancorprotocol/fastlane-bot/pull/527) ([barakman](https://github.com/barakman))
+- Fixing small stuff [\#513](https://github.com/bancorprotocol/fastlane-bot/pull/513) ([sklbancor](https://github.com/sklbancor))
+- Clean the `async_event_update_utils` module [\#511](https://github.com/bancorprotocol/fastlane-bot/pull/511) ([barakman](https://github.com/barakman))
+- Clean ABIs following the removal of the factory address retrieval [\#507](https://github.com/bancorprotocol/fastlane-bot/pull/507) ([barakman](https://github.com/barakman))
+- Fix json import [\#487](https://github.com/bancorprotocol/fastlane-bot/pull/487) ([barakman](https://github.com/barakman))
+- Remove unused module receipt-handler [\#482](https://github.com/bancorprotocol/fastlane-bot/pull/482) ([barakman](https://github.com/barakman))
+- Remove the pool-shutdown module, script and test [\#481](https://github.com/bancorprotocol/fastlane-bot/pull/481) ([barakman](https://github.com/barakman))
+- Clean the submit-handler and router-handler modules [\#479](https://github.com/bancorprotocol/fastlane-bot/pull/479) ([barakman](https://github.com/barakman))
+- Remove unused class `TxHelper` [\#476](https://github.com/bancorprotocol/fastlane-bot/pull/476) ([barakman](https://github.com/barakman))
+- Docstrings for files [\#450](https://github.com/bancorprotocol/fastlane-bot/pull/450) ([sklbancor](https://github.com/sklbancor))
+- ABI Cleanup [\#435](https://github.com/bancorprotocol/fastlane-bot/pull/435) ([barakman](https://github.com/barakman))
+- Solidly curves [\#322](https://github.com/bancorprotocol/fastlane-bot/pull/322) ([sklbancor](https://github.com/sklbancor))
 
 ## [v3.1.9](https://github.com/bancorprotocol/fastlane-bot/tree/v3.1.9) (2024-04-15)
 
