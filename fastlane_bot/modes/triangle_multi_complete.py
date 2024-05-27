@@ -81,7 +81,7 @@ def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
     # Get pair info for the cohort to allow decision making at the triangle level
     all_relevant_pairs_info = {}
     for pair in all_relevant_pairs:
-        pair_curves = CCm.bypair(pair)
+        pair_curves = CCm.bypair(pair).curves
         carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
         other_curves = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
         all_relevant_pairs_info[pair] = {

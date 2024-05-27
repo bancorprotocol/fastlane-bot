@@ -47,5 +47,5 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
 def get_params(container, dst_token, src_token):
-    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}")[0].p}
+    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}").curves[0].p}
     return {"pstart": pstart}

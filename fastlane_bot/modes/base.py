@@ -57,7 +57,7 @@ class ArbitrageFinderBase:
             source_prices = get_source_prices(self.CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
             sorted_prices = get_sorted_prices(self.sort_order, self.ConfigObj.CARBON_V1_FORKS, source_prices)
             assert len(sorted_prices) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
-            return Decimal(str(src_profit)) / Decimal(str(sorted_prices[0][-1]))
+            return Decimal(str(src_profit)) / Decimal(str(sorted_prices[0]))
         return Decimal(str(src_profit))
 
 def is_net_change_small(trade_instructions_df) -> bool:
@@ -67,8 +67,8 @@ def is_net_change_small(trade_instructions_df) -> bool:
         return False
 
 def get_source_prices(CCm, dst_token, src_token):
-    prices_1 = [(CC.params['exchange'], CC.descr, CC.cid, CC.p / 1) for CC in CCm.bytknx(dst_token).bytkny(src_token)]
-    prices_2 = [(CC.params['exchange'], CC.descr, CC.cid, 1 / CC.p) for CC in CCm.bytknx(src_token).bytkny(dst_token)]
+    prices_1 = [curve.p / 1 for curve in CCm.bytknx(dst_token).bytkny(src_token).curves]
+    prices_2 = [1 / curve.p for curve in CCm.bytknx(src_token).bytkny(dst_token).curves]
     return prices_1 + prices_2
 
 def get_sorted_prices(sort_order, carbon_v1_forks, prices):

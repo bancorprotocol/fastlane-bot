@@ -44,11 +44,11 @@ def get_params(container, src_token):
     for dst_token in [token for token in container.tokens() if token != src_token]:
         CC = container.bytknx(dst_token).bytkny(src_token)
         if CC:
-            pstart[dst_token] = CC[0].p
+            pstart[dst_token] = CC.curves[0].p
         else:
             CC = container.bytknx(src_token).bytkny(dst_token)
             if CC:
-                pstart[dst_token] = 1 / CC[0].p
+                pstart[dst_token] = 1 / CC.curves[0].p
             else:
                 return None
     return {"pstart": pstart}
