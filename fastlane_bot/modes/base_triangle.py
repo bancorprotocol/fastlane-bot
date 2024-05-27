@@ -22,7 +22,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             try:
                 container = CPCContainer(miniverse)
                 optimizer = MargPOptimizer(container)
-                params = get_params(self.CCm, container.tokens(), src_token)
+                params = get_params(container, src_token)
                 optimization = optimizer.optimize(src_token, params=params)
                 trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
                 trade_instructions_df = optimization.trade_instructions(optimizer.TIF_DFAGGR)
@@ -45,14 +45,14 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
-def get_params(CCm, dst_tokens, src_token):
+def get_params(container, src_token):
     pstart = {src_token: 1}
-    for dst_token in [token for token in dst_tokens if token != src_token]:
-        CC = CCm.bytknx(dst_token).bytkny(src_token)
+    for dst_token in [token for token in container.tokens() if token != src_token]:
+        CC = container.bytknx(dst_token).bytkny(src_token)
         if CC:
             pstart[dst_token] = CC[0].p
         else:
-            CC = CCm.bytknx(src_token).bytkny(dst_token)
+            CC = container.bytknx(src_token).bytkny(dst_token)
             if CC:
                 pstart[dst_token] = 1 / CC[0].p
             else:
