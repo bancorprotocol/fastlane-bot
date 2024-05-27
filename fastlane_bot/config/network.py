@@ -203,6 +203,7 @@ class ConfigNetwork(ConfigBase):
     # LINK_KEY = "LINK-86CA"
     # USDT_KEY = "USDT-1ec7"
     SELF_FUND = False
+    TX_TYPE = 2
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -285,13 +286,19 @@ class ConfigNetwork(ConfigBase):
     # HOOKS
     #######################################################################################
     @staticmethod
-    def gas_strategy(web3):
+    def gas_strategy(web3, tx_type):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
-        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
-        return {
-            "maxFeePerGas": gas_price + max_priority_fee,
-            "maxPriorityFeePerGas": max_priority_fee
-        }
+        if tx_type < 2:
+            return {
+                "gasPrice": gas_price
+            }
+        if tx_type == 2:
+            max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+            return {
+                "maxFeePerGas": gas_price + max_priority_fee,
+                "maxPriorityFeePerGas": max_priority_fee
+            }
+        raise Exception(f"Transaction type {tx_type} not supported")
 
     @classmethod
     def new(cls, network=None):
@@ -797,6 +804,8 @@ class _ConfigNetworkSei(ConfigNetwork):
     RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/?x-apikey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
+    TX_TYPE = 0
+
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC56Eb3d03C5D7720DAf33a3718affb9BcAb03FBc"
     MULTICALL_CONTRACT_ADDRESS = "0xe033Bed7cae4114Af84Be1e9F1CA7DEa07Dfe1Cf"
@@ -811,6 +820,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     STABLECOIN_ADDRESS = "0xace5f7Ea93439Af39b46d2748fA1aC19951c8d7C" #TODO USDC on devnet
 
     IS_INJECT_POA_MIDDLEWARE = False
+
     # Balancer
     BALANCER_VAULT_ADDRESS = "0x7ccBebeb88696f9c8b061f1112Bb970158e29cA5" # # TODO Jellyswap on devnet
 
