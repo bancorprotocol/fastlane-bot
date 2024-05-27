@@ -98,7 +98,7 @@ class TxHelpers:
             args = [flashloan_struct, route_struct]
             value = 0
 
-        tx = self._create_transaction(self.arb_contract, fn_name, args, value)
+        tx = self._create_transaction(self.arb_contract, fn_name, args, value, self.cfg.SUPPORTS_EIP1559)
 
         try:
             self._update_transaction(tx)
@@ -110,7 +110,10 @@ class TxHelpers:
 
         raw_tx = self._sign_transaction(tx)
 
-        gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
+        if self.cfg.SUPPORTS_EIP1559:
+            gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
+        else:
+            gas_cost_wei = tx["gas"] * tx["gasPrice"]
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
@@ -150,22 +153,32 @@ class TxHelpers:
             allowance = token_contract.caller.allowance(self.wallet_address, self.arb_contract.address)
             self.cfg.logger.info(f"Remaining allowance for token {token_address} = {allowance}")
             if allowance == 0:
-                tx = self._create_transaction(token_contract, "approve", [self.arb_contract.address, MAX_UINT256], 0)
+                tx = self._create_transaction(token_contract, "approve", [self.arb_contract.address, MAX_UINT256], 0, self.cfg.SUPPORTS_EIP1559)
                 self._update_transaction(tx)
                 raw_tx = self._sign_transaction(tx)
                 tx_hash = self._send_regular_transaction(raw_tx)
                 self._wait_for_transaction_receipt(tx_hash)
 
-    def _create_transaction(self, contract, fn_name: str, args: list, value: int) -> dict:
-        return {
-            "type": 2,
-            "value": value,
-            "chainId": self.chain_id,
-            "from": self.wallet_address,
-            "to": contract.address,
-            "data": contract.encode_abi(fn_name=fn_name, args=args),
-            "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
-        }
+    def _create_transaction(self, contract, fn_name: str, args: list, value: int, supports_eip1559: bool) -> dict:
+        if supports_eip1559:
+            return {
+                "type": 2,
+                "value": value,
+                "chainId": self.chain_id,
+                "from": self.wallet_address,
+                "to": contract.address,
+                "data": contract.encode_abi(fn_name=fn_name, args=args),
+                "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
+            }
+        else:
+            return {
+                "value": value,
+                "chainId": self.chain_id,
+                "from": self.wallet_address,
+                "to": contract.address,
+                "data": contract.encode_abi(fn_name=fn_name, args=args),
+                "nonce": self.cfg.w3.eth.get_transaction_count(self.wallet_address)
+            }
 
     def _update_transaction(self, tx: dict):
         tx["gas"] = self.cfg.w3.eth.estimate_gas(tx) # may throw an exception
@@ -174,7 +187,7 @@ class TxHelpers:
             if tx["gas"] > result["gasUsed"] and "error" not in result:
                 tx["gas"] = result["gasUsed"]
                 tx["accessList"] = loads(self.cfg.w3.to_json(result["accessList"]))
-        tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
+        tx.update(self.cfg.network.gas_strategy(self.cfg.w3, self.cfg.SUPPORTS_EIP1559))
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction.hex()

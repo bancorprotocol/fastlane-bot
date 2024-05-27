@@ -16,6 +16,7 @@ FLASHLOAN_FEE_MAP = {
     "coinbase_base": 0,
     "fantom": 0.0003,
     "mantle": 0,
+    "telos": 0,
 }
 
 ETHEREUM = "ethereum"
@@ -46,4 +47,5 @@ BLOCK_CHUNK_SIZE_MAP = {
     "mantle": 0,
     "linea": 0,
     "sei": 0,
+    "telos": 0,
 }

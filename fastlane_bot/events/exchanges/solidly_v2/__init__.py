@@ -7,6 +7,7 @@ from .cleopatra_v2 import CleopatraV2
 from .lynex_v2 import LynexV2
 from .nile_v2 import NileV2
 from .xfai_v0 import XFaiV2
+from .archly_v2 import ArchlyV2
 
 
 class SolidlyV2(SolidlyV2Base):
@@ -22,4 +23,5 @@ class SolidlyV2(SolidlyV2Base):
             "lynex_v2": LynexV2,
             "nile_v2": NileV2,
             "xfai_v0": XFaiV2,
+            "archly_v2": ArchlyV2,
         }[kwargs["exchange_name"]](**kwargs)

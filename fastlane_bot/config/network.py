@@ -261,6 +261,7 @@ class ConfigNetwork(ConfigBase):
     DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal("0.02")
 
     IS_INJECT_POA_MIDDLEWARE = False
+    SUPPORTS_EIP1559 = True
     # SUNDRY SECTION
     #######################################################################################
     COINGECKO_URL = "https://tokens.coingecko.com/uniswap/all.json"
@@ -277,6 +278,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_MANTLE = S.NETWORK_MANTLE
     NETWORK_LINEA = S.NETWORK_LINEA
     NETWORK_SEI = S.NETWORK_SEI
+    NETWORK_TELOS = S.NETWORK_TELOS
 
     # FLAGS
     #######################################################################################
@@ -285,13 +287,18 @@ class ConfigNetwork(ConfigBase):
     # HOOKS
     #######################################################################################
     @staticmethod
-    def gas_strategy(web3):
+    def gas_strategy(web3, supports_eip1559):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
-        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
-        return {
-            "maxFeePerGas": gas_price + max_priority_fee,
-            "maxPriorityFeePerGas": max_priority_fee
-        }
+        if supports_eip1559:
+            max_priority_fee = 0 #web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+            return {
+                "maxFeePerGas": gas_price + max_priority_fee,
+                "maxPriorityFeePerGas": max_priority_fee
+            }
+        else:
+            return {
+                "gasPrice": gas_price,
+            }
 
     @classmethod
     def new(cls, network=None):
@@ -320,6 +327,8 @@ class ConfigNetwork(ConfigBase):
             return _ConfigNetworkLinea(_direct=False)  
         elif network == cls.NETWORK_SEI:
             return _ConfigNetworkSei(_direct=False)    
+        elif network == cls.NETWORK_TELOS:
+            return _ConfigNetworkTelos(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -820,6 +829,52 @@ class _ConfigNetworkSei(ConfigNetwork):
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkTelos(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_TELOS
+    NETWORK_ID = "40"
+    NETWORK_NAME = "telos"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=telos&dkey="
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_TELOS")
+
+    SUPPORTS_EIP1559 = False
+    GAS_ORACLE_ADDRESS = None
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0x8c05EA305235a67c7095a32Ad4a2Ee2688aDe636"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+    IS_NO_FLASHLOAN_AVAILABLE = False
+
+    CARBON_CONTROLLER_ADDRESS = (
+        GRAPHENE_CONTROLLER_ADDRESS
+    ) = "0xb4A4f26eC3A4Fd405468A610ba811720Ecd9E4d4"
+    CARBON_CONTROLLER_VOUCHER = (
+        GRAPHENE_CONTROLLER_VOUCHER
+    ) = "0xA1a058aEc4D7C4654E704e42E4E9C2f32871B44c"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E"
+    NATIVE_GAS_TOKEN_SYMBOL = "TLOS"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WTLOS"
+    STABLECOIN_ADDRESS = "0x8D97Cea50351Fb4329d591682b148D43a0C3611b"
+
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0xbccc4b4c6530F82FE309c5E845E50b5E9C89f2AD" # Symmetric
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xD102cE6A4dB07D247fcc28F366A623Df0938CA9E": "WTLOS",
+        "0x8D97Cea50351Fb4329d591682b148D43a0C3611b": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+    TAX_TOKENS = set([
+        "0x3E51e37350356B2D3ad84bD8146e48ac63E371a8", # BABYZAP
+    ])
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """
