@@ -285,10 +285,10 @@ class ConfigNetwork(ConfigBase):
     # HOOKS
     #######################################################################################
     @staticmethod
-    def gas_strategy(web3, max_priority_fee_supported=True):
+    def gas_strategy(web3, avoid_max_priority_fee=False):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
         max_priority_fee = 0
-        if max_priority_fee_supported:
+        if not avoid_max_priority_fee:
             max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
         
         return {
