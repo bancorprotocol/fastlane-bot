@@ -12,8 +12,9 @@ Licensed under MIT.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Type, Any
+from typing import Dict, List, Type, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
@@ -50,6 +51,9 @@ class Exchange(ABC):
 
         """
         return list(self.pools.values())
+
+    def get_event_contract(self, w3: Union[Web3, AsyncWeb3]) -> Union[Contract, AsyncContract]:
+        return w3.eth.contract(abi=self.get_abi())
 
     @abstractmethod
     def add_pool(self, pool: Pool):
@@ -99,7 +103,7 @@ class Exchange(ABC):
         pass
 
     @abstractmethod
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
         ...
 
     @staticmethod

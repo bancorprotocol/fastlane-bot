@@ -12,8 +12,9 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.config.constants import AGNI_V3_NAME, PANCAKESWAP_V3_NAME, FUSIONX_V3_NAME, ECHODEX_V3_NAME, SECTA_V3_NAME
@@ -46,7 +47,8 @@ class UniswapV3(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Swap] if self.exchange_initialized else []
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
         return [Subscription(contract.events.Swap)]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
