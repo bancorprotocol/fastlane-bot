@@ -28,8 +28,9 @@ class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
                 if len(carbon_curves) == 0:
                     continue
 
-                y_match_curves = self.CCm.bypairs(set(self.CCm.filter_pairs(onein=tknx)) & set(self.CCm.filter_pairs(onein=flt)))
-                x_match_curves = self.CCm.bypairs(set(self.CCm.filter_pairs(onein=tkny)) & set(self.CCm.filter_pairs(onein=flt)))
+                filtered_curves = {tkn : set(self.CCm.filter_pairs(onein=tkn)) for tkn in [tknx, tkny, flt]}
+                y_match_curves = self.CCm.bypairs(filtered_curves[tknx] & filtered_curves[flt]).curves
+                x_match_curves = self.CCm.bypairs(filtered_curves[tkny] & filtered_curves[flt]).curves
 
                 y_match_other_curves = [curve for curve in y_match_curves if curve.params.exchange != "carbon_v1"]
                 if len(y_match_other_curves) == 0:

@@ -35,26 +35,20 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
             profit = self.get_profit(src_token, optimization, trade_instructions_df)
             if profit is not None:
-                arb_opps.append(
-                    {
-                        "profit": profit,
-                        "src_token": src_token,
-                        'trade_instructions_dic': trade_instructions_dic,
-                    }
-                )
+                arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
 def get_params(container, src_token):
     pstart = {src_token: 1}
     for dst_token in [token for token in container.tokens() if token != src_token]:
-        CC = container.bytknx(dst_token).bytkny(src_token)
-        if CC:
-            pstart[dst_token] = CC[0].p
+        curves = container.bytknx(dst_token).bytkny(src_token).curves
+        if len(curves) > 0:
+            pstart[dst_token] = curves[0].p
         else:
-            CC = container.bytknx(src_token).bytkny(dst_token)
-            if CC:
-                pstart[dst_token] = 1 / CC[0].p
+            curves = container.bytknx(src_token).bytkny(dst_token).curves
+            if len(curves) > 0:
+                pstart[dst_token] = 1 / curves[0].p
             else:
                 return None
     return {"pstart": pstart}

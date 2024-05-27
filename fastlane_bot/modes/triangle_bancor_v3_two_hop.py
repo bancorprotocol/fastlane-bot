@@ -17,27 +17,24 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
     def get_combos(self) -> List[Any]:
         miniverse_combos = []
 
-        fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
+        CC = self.CCm.byparams(exchange="bancor_v3")
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
             # Filter out tokens that are not in the existing flashloan_tokens list
-            flashloan_tokens = [tkn for tkn in fltkns if tkn in self.flashloan_tokens]
+            flashloan_tokens = [tkn for tkn in CC.tknys() if tkn in self.flashloan_tokens]
             self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
         else:
-            flashloan_tokens = fltkns
+            flashloan_tokens = CC.tknys()
+
+        bancor_curves_dict = {tkn: CC.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn}").curves for tkn in flashloan_tokens}
 
         for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
-            bancor_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
-            if len(bancor_curve_0) == 0:
-                continue
-
-            bancor_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
-            if len(bancor_curve_1) == 0:
+            if len(bancor_curves_dict[tkn0]) == 0 or len(bancor_curves_dict[tkn1]) == 0:
                 continue
 
             all_curves = list(set(self.CCm.bypairs(f"{tkn0}/{tkn1}")) | set(self.CCm.bypairs(f"{tkn1}/{tkn0}")))
             carbon_curves = [curve for curve in all_curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             other_curves = [curve for curve in all_curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
-            bancor_curves = bancor_curve_0 + bancor_curve_1
+            bancor_curves = bancor_curves_dict[tkn0] + bancor_curves_dict[tkn1]
 
             base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
             base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]

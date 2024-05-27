@@ -19,15 +19,15 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
         combos = self.get_combos()
 
         for dst_token, src_token in combos:
-            CC = self.CCm.bypairs(f"{dst_token}/{src_token}")
-            if len(CC) < 2:
+            curves = self.CCm.bypairs(f"{dst_token}/{src_token}").curves
+            if len(curves) < 2:
                 continue
 
-            for curve_combo in self.get_curve_combos(CC):
-                if len(curve_combo) < 2:
+            for curve_combos in self.get_curve_combos(curves):
+                if len(curve_combos) < 2:
                     continue
                 try:
-                    container = CPCContainer(curve_combo)
+                    container = CPCContainer(curve_combos)
                     optimizer = PairOptimizer(container)
                     params = get_params(container, dst_token, src_token)
                     optimization = optimizer.optimize(src_token, params=params)
@@ -42,16 +42,10 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
 
                 profit = self.get_profit(src_token, optimization, trade_instructions_df)
                 if profit is not None:
-                    arb_opps.append(
-                        {
-                            "profit": profit,
-                            "src_token": src_token,
-                            'trade_instructions_dic': trade_instructions_dic,
-                        }
-                    )
+                    arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
 
 def get_params(container, dst_token, src_token):
-    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}")[0].p}
+    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}").curves[0].p}
     return {"pstart": pstart}
