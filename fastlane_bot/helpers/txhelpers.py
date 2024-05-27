@@ -174,7 +174,7 @@ class TxHelpers:
             if tx["gas"] > result["gasUsed"] and "error" not in result:
                 tx["gas"] = result["gasUsed"]
                 tx["accessList"] = loads(self.cfg.w3.to_json(result["accessList"]))
-        tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
+        tx.update(self.cfg.network.gas_strategy(self.cfg.w3, self.cfg.network == self.cfg.NETWORK_SEI))
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction.hex()
