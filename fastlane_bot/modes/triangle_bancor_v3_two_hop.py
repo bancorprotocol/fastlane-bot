@@ -26,33 +26,32 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         miniverse_combos = []
 
         for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
+            bancor_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
+            if len(bancor_curve_0) == 0:
+                continue
+
+            bancor_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
+            if len(bancor_curve_1) == 0:
+                continue
+
             all_curves = list(set(self.CCm.bypairs(f"{tkn0}/{tkn1}")) | set(self.CCm.bypairs(f"{tkn1}/{tkn0}")))
-
-            carbon_curves = [curve for curve in all_curves if curve.params.get("exchange") in self.ConfigObj.CARBON_V1_FORKS]
-            if len(carbon_curves) == 0:
-                continue
-
-            external_curves = [curve for curve in all_curves if curve.params.get("exchange") not in self.ConfigObj.CARBON_V1_FORKS]
-            if len(external_curves) == 0:
-                continue
-
-            bancor_v3_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
-            if len(bancor_v3_curve_0) == 0:
-                continue
-
-            bancor_v3_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
-            if len(bancor_v3_curve_1) == 0:
-                continue
+            carbon_curves = [curve for curve in all_curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+            other_curves = [curve for curve in all_curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
+            bancor_curves = bancor_curve_0 + bancor_curve_1
 
             base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
             base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
-            miniverses = [bancor_v3_curve_0 + bancor_v3_curve_1 + [curve] for curve in external_curves]
+
+            miniverses = []
+
+            if len(other_curves) > 0:
+                miniverses += [bancor_curves + [curve] for curve in other_curves]
 
             if len(base_dir_one) > 0:
-                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_dir_one]
+                miniverses += [bancor_curves + base_dir_one]
 
             if len(base_dir_two) > 0:
-                miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_dir_two]
+                miniverses += [bancor_curves + base_dir_two]
 
             miniverse_combos += [(tkn1, miniverse) for miniverse in miniverses]
 
