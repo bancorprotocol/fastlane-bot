@@ -73,7 +73,6 @@ from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .modes.base import get_prices_simple, custom_sort
 from .utils import rand_item
 
 
@@ -302,7 +301,7 @@ class CarbonBot:
 
         arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
 
-        tx_hash, tx_receipt = self._handle_trade_instructions(CCm, arb_mode, arb_opp, replay_from_block)
+        tx_hash, tx_receipt = self._handle_trade_instructions(arb_finder, arb_mode, arb_opp, replay_from_block)
 
         if tx_hash:
             tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
@@ -316,18 +315,18 @@ class CarbonBot:
 
     def calculate_profit(
         self,
-        CCm: CPCContainer,
+        arb_finder: ArbitrageFinderBase,
         best_profit: Decimal,
         fl_token: str,
         flashloan_fee_amt: int = 0,
     ) -> Tuple[Decimal, Decimal]:
         """
-        Calculate the actual profit in USD.
+        Calculate the best profit in GAS token and in USD.
 
         Parameters
         ----------
-        CCm: CPCContainer
-            The container.
+        arb_finder: ArbitrageFinderBase
+            The arbitrage finder.
         best_profit: Decimal
             The best profit.
         fl_token: str
@@ -340,45 +339,23 @@ class CarbonBot:
         Tuple[Decimal, Decimal]
             best_profit_gastkn, best_profit_usd.
         """
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit] best_profit, fl_token, flashloan_fee_amt: {best_profit, fl_token, flashloan_fee_amt}")
-        sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
-
-        flashloan_fee_amt_fl_token = Decimal(str(flashloan_fee_amt))
-        if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
-            price_curves = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
-            sorted_price_curves = custom_sort(price_curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sort_sequence] {sort_sequence}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
-            if len(sorted_price_curves)>0:
-                fltkn_gastkn_conversion_rate = sorted_price_curves[0][-1]
-                flashloan_fee_amt_gastkn = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate))
-                best_profit_gastkn = Decimal(str(best_profit)) / Decimal(str(fltkn_gastkn_conversion_rate)) - flashloan_fee_amt_gastkn
-                self.ConfigObj.logger.debug(f"[bot.calculate_profit] GASTOKEN: {fltkn_gastkn_conversion_rate, best_profit_gastkn}")
-            else:
-                self.ConfigObj.logger.error(
-                    f"[bot.calculate_profit] Failed to get conversion rate for {fl_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
-                )
-                raise
-        else:
-            best_profit_gastkn = best_profit - flashloan_fee_amt_fl_token
+        src_profit = Decimal(str(best_profit)) - Decimal(str(flashloan_fee_amt))
+        best_profit_gastkn = arb_finder.calculate_profit(fl_token, src_profit)
 
         try:
-            price_curves_usd = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
-            sorted_price_curves_usd = custom_sort(price_curves_usd, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
-            usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
-        except Exception:
-            usd_gastkn_conversion_rate = Decimal("NaN")
+            best_profit_usd = 1 / arb_finder.calculate_profit(self.ConfigObj.STABLECOIN_ADDRESS, 1 / src_profit)
+        except Exception as e:
+            best_profit_usd = Decimal("NaN")
+            self.ConfigObj.logger.info(f"[bot.calculate_profit] error: {e}")
 
-        best_profit_usd = best_profit_gastkn * usd_gastkn_conversion_rate
-        self.ConfigObj.logger.debug(f"[bot.calculate_profit] {'GASTOKEN', best_profit_gastkn, usd_gastkn_conversion_rate, best_profit_usd, 'USD'}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] input: {best_profit, fl_token, flashloan_fee_amt}")
+        self.ConfigObj.logger.debug(f"[bot.calculate_profit] output: {best_profit_gastkn, best_profit_usd}")
+
         return best_profit_gastkn, best_profit_usd
 
     def _handle_trade_instructions(
         self,
-        CCm: CPCContainer,
+        arb_finder: ArbitrageFinderBase,
         arb_mode: str,
         arb_opp: dict,
         replay_from_block: int = None
@@ -391,8 +368,8 @@ class CarbonBot:
         
         Parameters
         ----------
-        CCm: CPCContainer
-            The container.
+        arb_finder: ArbitrageFinderBase
+            The arbitrage finder.
         arb_mode: str
             The arbitrage mode.
         arb_opp: dictionary
@@ -463,7 +440,7 @@ class CarbonBot:
 
         # Calculate the best profit
         best_profit_gastkn, best_profit_usd = self.calculate_profit(
-            CCm, flashloan_tkn_profit, fl_token, flashloan_fee_amt
+            arb_finder, flashloan_tkn_profit, fl_token, flashloan_fee_amt
         )
 
         # Check if the best profit is greater than the minimum profit
