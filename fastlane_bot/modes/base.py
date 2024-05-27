@@ -21,7 +21,14 @@ class ArbitrageFinderBase:
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
         self.ConfigObj = ConfigObj
-        self.sort_order = {key: index for index, key in enumerate(["bancor_v2", "bancor_v3"] + ConfigObj.UNI_V2_FORKS + ConfigObj.UNI_V3_FORKS)}
+        self.sort_order = {
+            key: index for index, key in enumerate(
+                ["bancor_v2", "bancor_v3"]
+                + ConfigObj.UNI_V2_FORKS
+                + ConfigObj.UNI_V3_FORKS
+                + ConfigObj.CARBON_V1_FORKS
+            )
+        }
 
     def find_combos(self) -> List[Any]:
         return self.find_arbitrage()["combos"]
