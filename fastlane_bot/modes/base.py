@@ -43,8 +43,11 @@ class ArbitrageFinderBase:
         ...
 
     def get_profit(self, src_token: str, optimization, trade_instructions_df):
-        profit = self.calculate_profit(src_token, -optimization.result)
-        return profit if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN and is_net_change_small(trade_instructions_df) else None
+        if is_net_change_small(trade_instructions_df):
+            profit = self.calculate_profit(src_token, -optimization.result)
+            if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+                return profit
+        return None
 
     def calculate_profit(self, src_token: str, src_profit: float) -> Decimal:
         """
