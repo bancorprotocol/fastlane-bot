@@ -12,8 +12,9 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BALANCER_VAULT_ABI, BALANCER_POOL_ABI_V1
@@ -48,7 +49,7 @@ class Balancer(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.AuthorizerChanged]
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
         return []
 
     async def get_fee(self, pool_id: str, contract: Contract) -> Tuple[str, float]:
