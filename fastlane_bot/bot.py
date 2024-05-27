@@ -347,9 +347,9 @@ class CarbonBot:
         if fl_token not in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS]:
             price_curves = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token)
             sorted_price_curves = custom_sort(price_curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sort_sequence] {sort_sequence}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
+            # self.ConfigObj.logger.debug(f"[bot.calculate_profit sort_sequence] {sort_sequence}")
+            # self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves] {price_curves}")
+            # self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves] {sorted_price_curves}")
             if len(sorted_price_curves)>0:
                 fltkn_gastkn_conversion_rate = sorted_price_curves[0][-1]
                 flashloan_fee_amt_gastkn = Decimal(str(flashloan_fee_amt_fl_token)) / Decimal(str(fltkn_gastkn_conversion_rate))
@@ -366,8 +366,8 @@ class CarbonBot:
         try:
             price_curves_usd = get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.STABLECOIN_ADDRESS)
             sorted_price_curves_usd = custom_sort(price_curves_usd, sort_sequence, self.ConfigObj.CARBON_V1_FORKS)
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
-            self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
+            # self.ConfigObj.logger.debug(f"[bot.calculate_profit price_curves_usd] {price_curves_usd}")
+            # self.ConfigObj.logger.debug(f"[bot.calculate_profit sorted_price_curves_usd] {sorted_price_curves_usd}")
             usd_gastkn_conversion_rate = Decimal(str(sorted_price_curves_usd[0][-1]))
         except Exception:
             usd_gastkn_conversion_rate = Decimal("NaN")
