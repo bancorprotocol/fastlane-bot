@@ -804,7 +804,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/?x-apikey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
-    TX_TYPE = 0
+    TX_TYPE = 1
 
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC56Eb3d03C5D7720DAf33a3718affb9BcAb03FBc"
