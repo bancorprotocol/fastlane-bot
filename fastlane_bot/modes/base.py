@@ -21,7 +21,8 @@ class ArbitrageFinderBase:
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
         self.ConfigObj = ConfigObj
-        self.sort_order = {key: index for index, key in enumerate(['bancor_v2', 'bancor_v3'] + ConfigObj.UNI_V2_FORKS + ConfigObj.UNI_V3_FORKS)}
+        self.exchanges = ["bancor_v2", "bancor_v3"] + ConfigObj.UNI_V2_FORKS + ConfigObj.UNI_V3_FORKS
+        self.sort_order = {key: index for index, key in enumerate(self.exchanges)}
 
     def find_combos(self) -> List[Any]:
         return self.find_arbitrage()["combos"]
@@ -54,10 +55,9 @@ class ArbitrageFinderBase:
         Calculate profit based on the source token.
         """
         if src_token not in [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            source_prices = get_source_prices(self.CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
-            sorted_prices = get_sorted_prices(self.sort_order, self.ConfigObj.CARBON_V1_FORKS, source_prices)
-            assert len(sorted_prices) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
-            return Decimal(str(src_profit)) / Decimal(str(sorted_prices[0]))
+            items = get_items(self.CCm, self.sort_order, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
+            assert len(items) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
+            return Decimal(str(src_profit)) / Decimal(str(items[0]["price"]))
         return Decimal(str(src_profit))
 
 def is_net_change_small(trade_instructions_df) -> bool:
@@ -66,10 +66,7 @@ def is_net_change_small(trade_instructions_df) -> bool:
     except Exception:
         return False
 
-def get_source_prices(CCm, dst_token, src_token):
-    prices_1 = [curve.p / 1 for curve in CCm.bytknx(dst_token).bytkny(src_token).curves]
-    prices_2 = [1 / curve.p for curve in CCm.bytknx(src_token).bytkny(dst_token).curves]
-    return prices_1 + prices_2
-
-def get_sorted_prices(sort_order, carbon_v1_forks, prices):
-    return sorted(prices, key=lambda item: float('inf') if item[0] in carbon_v1_forks else sort_order.get(item[0], float('inf')))
+def get_items(CCm, sort_order, dst_token, src_token):
+    list1 = [{"exchange": curve.params.exchange, "price": curve.p / 1} for curve in CCm.bytknx(dst_token).bytkny(src_token).curves]
+    list2 = [{"exchange": curve.params.exchange, "price": 1 / curve.p} for curve in CCm.bytknx(src_token).bytkny(dst_token).curves]
+    return sorted([item for item in list1 + list2 if item["exchange"] in sort_order], key=lambda item: sort_order[item["exchange"]])
