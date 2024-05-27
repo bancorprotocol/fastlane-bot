@@ -30,6 +30,6 @@ class EventManager(BaseManager):
             event
             for exchange in self.exchanges.values()
             for event in exchange.get_events(
-                self.event_contracts[exchange.exchange_name]
+                exchange.get_event_contract(self.web3)
             )
         ]

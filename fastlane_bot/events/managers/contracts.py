@@ -83,57 +83,18 @@ class ContractsManager(BaseManager):
         """
         Initialize the exchange contracts.
         """
-        tracker = []
+        for fork in self.cfg.UNI_V2_FORKS:
+            self.pool_contracts[fork] = {}
+        for fork in self.cfg.UNI_V3_FORKS:
+            self.pool_contracts[fork] = {}
+        for fork in self.cfg.CARBON_V1_FORKS:
+            self.pool_contracts[fork] = {}
+            self.carbon_inititalized[fork] = False
+        for fork in self.cfg.SOLIDLY_V2_FORKS:
+            self.pool_contracts[fork] = {}
+
         for exchange_name in self.SUPPORTED_EXCHANGES:
-
-            if exchange_name in tracker:
-                continue
-            self.event_contracts[exchange_name] = self.web3.eth.contract(
-                abi=self.exchanges[exchange_name].get_abi(),
-            )
             self.pool_contracts[exchange_name] = {}
-
-            if exchange_name in self.cfg.UNI_V2_FORKS:
-                fork_contract = self.web3.eth.contract(
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
-                for fork in self.cfg.UNI_V2_FORKS:
-                    self.event_contracts[fork] = fork_contract
-                    self.pool_contracts[fork] = {}
-                    tracker.append(fork)
-
-            elif exchange_name in self.cfg.UNI_V3_FORKS:
-                fork_contract = self.web3.eth.contract(
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
-                for fork in self.cfg.UNI_V3_FORKS:
-                    self.event_contracts[fork] = fork_contract
-                    self.pool_contracts[fork] = {}
-                    tracker.append(fork)
-            elif exchange_name in self.cfg.CARBON_V1_FORKS:
-                fork_contract = self.web3.eth.contract(
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
-                for fork in self.cfg.CARBON_V1_FORKS:
-                    self.event_contracts[fork] = fork_contract
-                    self.pool_contracts[fork] = {}
-                    tracker.append(fork)
-                    self.carbon_inititalized[fork] = False
-            elif exchange_name in self.cfg.SOLIDLY_V2_FORKS:
-                fork_contract = self.web3.eth.contract(
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
-                for fork in self.cfg.SOLIDLY_V2_FORKS:
-                    self.event_contracts[fork] = fork_contract
-                    self.pool_contracts[fork] = {}
-
-                    tracker.append(fork)
-
-            else:
-                self.event_contracts[exchange_name] = self.web3.eth.contract(
-                    abi=self.exchanges[exchange_name].get_abi(),
-                )
-                self.pool_contracts[exchange_name] = {}
 
             if exchange_name == "bancor_v3":
                 self.pool_contracts[exchange_name][
