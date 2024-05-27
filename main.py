@@ -310,7 +310,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
         config=mgr.cfg,
         w3=mgr.w3_async,
         exchanges=mgr.exchanges,
-        event_contracts=mgr.event_contracts
     )
 
     pool_finder = PoolFinder(

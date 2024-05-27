@@ -46,7 +46,6 @@ from fastlane_bot.events.exchanges.solidly_v2 import SolidlyV2
 ])
 def test_event_topic(config, cls, exchange_name, event_topics):
     exchange = cls(exchange_name=exchange_name)
-    contract = config.w3.eth.contract(abi=exchange.get_abi())
-    for subscription in exchange.get_subscriptions(contract):
+    for subscription in exchange.get_subscriptions(config.w3):
         assert event_topics.pop(subscription._event.event_name) == subscription.topic
     assert event_topics == {}
