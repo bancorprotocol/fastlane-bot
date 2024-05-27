@@ -14,6 +14,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from fastlane_bot import Bot, Config
+from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.pools.utils import get_pool_cid
@@ -85,7 +86,7 @@ def test_test_update_from_event_uniswap_v2():
     
     assert event['args']['reserve0'] != [pool['tkn0_balance'] for pool in manager.pool_data if pool['address'] == event['address']][0]
     
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
     
     assert event['address'] in [pool['address'] for pool in manager.pool_data]
     assert event['args']['reserve0'] == [pool['tkn0_balance'] for pool in manager.pool_data if pool['address'] == event['address']][0]
@@ -105,7 +106,7 @@ def test_test_update_from_event_uniswap_v3():
     
     assert event['args']['liquidity'] != [pool['liquidity'] for pool in manager.pool_data if pool['address'] == event['address']][0]
     
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
     
     assert event['address'] in [pool['address'] for pool in manager.pool_data]
     assert event['args']['liquidity'] == [pool['liquidity'] for pool in manager.pool_data if pool['address'] == event['address']][0]
@@ -126,8 +127,8 @@ def test_test_update_from_event_carbon_v1_update():
     event_create_for_update = event_data['carbon_v1_event_create_for_update']
     event = event_data['carbon_v1_event_update']
     
-    manager.update_from_event(event_create_for_update)
-    pools_to_add_from_contracts = [event[2]['args']['id'] for event in manager.pools_to_add_from_contracts]
+    manager.update_from_event(Event.from_dict(event_create_for_update))
+    pools_to_add_from_contracts = [event[2].args['id'] for event in manager.pools_to_add_from_contracts]
     
     assert event['args']['id'] in pools_to_add_from_contracts
     
@@ -148,7 +149,7 @@ def test_test_update_from_event_carbon_v1_create():
     manager.pool_data = [pool for pool in manager.pool_data if pool['cid'] != event['args']['id']]
     assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
     
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
     
     assert event['args']['id'] not in [pool['cid'] for pool in manager.pool_data]
     # -
@@ -171,7 +172,7 @@ def test_test_update_from_event_carbon_v1_delete():
     manager.pool_data = [pool for pool in manager.pool_data if pool['cid'] != cid]
     assert cid not in [pool['cid'] for pool in manager.pool_data]
     
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
     assert cid in [p[-1] for p in manager.pools_to_add_from_contracts]
     fake_pool_data = {
         "address": event['address'],
@@ -183,5 +184,5 @@ def test_test_update_from_event_carbon_v1_delete():
     manager.pool_data.append(fake_pool_data)
     event['event'] = 'StrategyDeleted'
 
-    manager.update_from_event(event)
+    manager.update_from_event(Event.from_dict(event))
     assert cid not in [pool['cid'] for pool in manager.pool_data]

@@ -12,13 +12,15 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V2_FACTORY_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -31,13 +33,12 @@ class UniswapV2(Exchange):
     fee: str = None
     router_address: str = None
     exchange_initialized: bool = False
-
     @property
     def fee_float(self):
         return float(self.fee)
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return UNISWAP_V2_FACTORY_ABI
 
     def add_pool(self, pool: Pool):
@@ -49,6 +50,10 @@ class UniswapV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
 
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
+        return [Subscription(contract.events.Sync)]
+
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         return self.fee, self.fee_float
 
@@ -59,3 +64,6 @@ class UniswapV2(Exchange):
     @staticmethod
     async def get_tkn1(address: str, contract: AsyncContract, event: Any) -> str:
         return await contract.caller.token1()
+
+    def get_pool_func_call(self, addr1, addr2):
+        return self.factory_contract.functions.getPair(addr1, addr2)

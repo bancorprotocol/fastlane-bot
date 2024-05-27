@@ -26,6 +26,23 @@ from fastlane_bot.utils import EncodedOrder
 class SolidlyV2StablePoolsNotSupported(Exception):
     pass
 
+FEE_LOOKUP = {
+        0.000001: Univ3Calculator.FEE1,
+        0.000008: Univ3Calculator.FEE8,
+        0.00001: Univ3Calculator.FEE10,
+        0.00004: Univ3Calculator.FEE40,
+        0.00008: Univ3Calculator.FEE80,
+        0.0001: Univ3Calculator.FEE100,
+        0.00025: Univ3Calculator.FEE250,
+        0.0003: Univ3Calculator.FEE300,
+        0.00045: Univ3Calculator.FEE450,
+        0.0005: Univ3Calculator.FEE500,
+        0.0010: Univ3Calculator.FEE1000,
+        0.0025: Univ3Calculator.FEE2500,
+        0.0030: Univ3Calculator.FEE3000,
+        0.01: Univ3Calculator.FEE10000,
+    }
+
 @dataclass
 class PoolAndTokens:
     """
@@ -280,7 +297,7 @@ class PoolAndTokens:
         elif self.exchange_name in self.ConfigObj.SUPPORTED_EXCHANGES:
             out = self._other_to_cpc()
         else:
-            raise NotImplementedError(f"Exchange {self.exchange_name} not implemented.")
+            raise NotImplementedError(f"exchange {self.exchange_name}")
 
         return out
 
@@ -403,10 +420,25 @@ class PoolAndTokens:
         allow to omit yint (in which case it is set to y, but this does not make
         a difference for the result)
         """
+        def calculate_parameters(y: Decimal, pa: Decimal, pb: Decimal, pm: Decimal, n: Decimal):
+            H = pa.sqrt() ** n
+            L = pb.sqrt() ** n
+            M = pm.sqrt() ** n
+            A = H - L
+            B = L
+            z = y * (H - L) / (M - L) if M > L else y
+            return z
+        
+        def check_overlap(pa0, pb0, pa1, pb1):
+            min0, max0 = sorted([pa0, pb0]) 
+            min1, max1 = sorted([1 / pa1, 1 / pb1]) 
+            prices_overlap = max(min0, min1) < min(max0, max1)
+            return prices_overlap 
 
         # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
         lst = []
         errors = []
+        strategy_typed_args = []
         for i in [0, 1]:
 
             S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
@@ -450,6 +482,7 @@ class PoolAndTokens:
             decimal_converter = decimal_converter(i)
 
             p_start = Decimal(encoded_order.p_start) * decimal_converter
+            p_marg = Decimal(encoded_order.p_marg) * decimal_converter
             p_end = Decimal(encoded_order.p_end) * decimal_converter
             yint = Decimal(yint) / (
                 Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
@@ -457,6 +490,7 @@ class PoolAndTokens:
             y = Decimal(y) / (
                 Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
             )
+            is_limit_order = p_start==p_end
 
             tkny = 1 if i == 0 else 0
             typed_args = {
@@ -466,7 +500,9 @@ class PoolAndTokens:
                 "yint": yint,
                 "y": y,
                 "pb": p_end,
+                "p_marg": p_marg,  # deleted later since not supported by from_carbon()
                 "pa": p_start,
+                "is_limit_order": is_limit_order, # deleted later since not supported by from_carbon()
                 "tkny": self.pair_name.split("/")[tkny].replace(
                     self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
                 ),
@@ -476,6 +512,54 @@ class PoolAndTokens:
                 "descr": self.descr,
                 "params": self._params,
             }
+
+            strategy_typed_args += [typed_args]
+
+        # Only overlapping strategies are selected for modification
+        if len(strategy_typed_args) == 2:
+            
+            is_overlapping = False
+            pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
+
+            # evaluate that the marginal prices are within the pmarg_threshold
+            pmarg0, pmarg1 = [x['p_marg'] for x in strategy_typed_args]
+            pmarg0_inv = 1/pmarg0  # one of the orders must be flipped since prices are always dy/dx - but must flip same geomean_pmarg later
+            percent_component = pmarg_threshold * max(pmarg0_inv, pmarg1)
+            percent_component_met = abs(pmarg0_inv - pmarg1) <= percent_component
+
+            # overlapping strategies by defintion cannot have A=0 i.e. there must be no limit orders
+            no_limit_orders = (strategy_typed_args[0]['is_limit_order'] == False) and (strategy_typed_args[1]['is_limit_order'] == False)
+
+            # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
+            prices_overlap = check_overlap(strategy_typed_args[0]['pa'], strategy_typed_args[0]['pb'], strategy_typed_args[1]['pa'], strategy_typed_args[1]['pb'])
+
+            # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
+            is_overlapping = percent_component_met and no_limit_orders and prices_overlap
+
+            if is_overlapping:
+                # calculate the geometric mean
+                geomean_p_marg = Decimal.sqrt(pmarg0_inv * pmarg1)
+                
+                # modify the y_int based on the new geomean to the limit of y    #TODO check that this math is correct
+                typed_args0 = strategy_typed_args[0]
+                new_yint0 = calculate_parameters(y=typed_args0['y'], pa=typed_args0['pa'], pb=typed_args0['pb'], pm=(1/geomean_p_marg), n=1)
+                if new_yint0 < typed_args0['y']:
+                    new_yint0 = typed_args0['y']
+                typed_args0['yint'] = new_yint0
+
+                typed_args1 = strategy_typed_args[1]
+                new_yint1 = calculate_parameters(y=typed_args1['y'], pa=typed_args1['pa'], pb=typed_args1['pb'], pm=(geomean_p_marg), n=1)
+                if new_yint1 < typed_args1['y']:
+                    new_yint1 = typed_args1['y']
+                typed_args1['yint'] = new_yint1
+
+                # repack the strateg_typed_args
+                strategy_typed_args = [typed_args0, typed_args1]
+
+        for typed_args in strategy_typed_args:
+            # delete new args that arent supported by from_carbon()
+            del typed_args["p_marg"]
+            del typed_args["is_limit_order"]
             try:
                 if typed_args["y"] > 0:
                     lst.append(
@@ -492,22 +576,7 @@ class PoolAndTokens:
 
         return lst
 
-    FEE_LOOKUP = {
-        0.000001: Univ3Calculator.FEE1,
-        0.000008: Univ3Calculator.FEE8,
-        0.00001: Univ3Calculator.FEE10,
-        0.00004: Univ3Calculator.FEE40,
-        0.00008: Univ3Calculator.FEE80,
-        0.0001: Univ3Calculator.FEE100,
-        0.00025: Univ3Calculator.FEE250,
-        0.0003: Univ3Calculator.FEE300,
-        0.00045: Univ3Calculator.FEE450,
-        0.0005: Univ3Calculator.FEE500,
-        0.0010: Univ3Calculator.FEE1000,
-        0.0025: Univ3Calculator.FEE2500,
-        0.0030: Univ3Calculator.FEE3000,
-        0.01: Univ3Calculator.FEE10000,
-    }
+
 
     def _univ3_to_cpc(self) -> List[Any]:
         """
@@ -532,10 +601,10 @@ class PoolAndTokens:
             "tick": self.tick,
             "liquidity": self.liquidity,
         }
-        feeconst = self.FEE_LOOKUP.get(float(self.fee_float))
+        feeconst = FEE_LOOKUP.get(float(self.fee_float))
         if feeconst is None:
             raise ValueError(
-                f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{self.FEE_LOOKUP}]]"
+                f"Illegal fee for Uniswap v3 pool: {self.fee_float} [{FEE_LOOKUP}]]"
             )
         uni3 = Univ3Calculator.from_dict(args, feeconst, addrdec=self.ADDRDEC)
         params = uni3.cpc_params()

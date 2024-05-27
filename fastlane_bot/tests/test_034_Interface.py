@@ -35,7 +35,6 @@ require("3.0", __VERSION__)
 
 cfg_mock = Mock()
 cfg_mock.logger = MagicMock()
-cfg_mock.GAS_TKN_IN_FLASHLOAN_TOKENS = False
 qi = QueryInterface(mgr=None, ConfigObj=cfg_mock)
 qi.state = [{'exchange_name': 'uniswap_v2', 'address': '0x123', 'tkn0_key': 'TKN-0x123', 'tkn1_key': 'TKN-0x456', 'pair_name': 'Pair-0x789', 'liquidity': 10}, {'exchange_name': 'sushiswap_v2', 'address': '0xabc', 'tkn0_key': 'TKN-0xabc', 'tkn1_key': 'TKN-0xdef', 'pair_name': 'Pair-0xghi', 'liquidity': 0}]
 

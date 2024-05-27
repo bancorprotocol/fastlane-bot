@@ -15,6 +15,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
+from ..interfaces.event import Event
 from fastlane_bot.events.pools.utils import get_pool_cid
 
 
@@ -36,34 +37,31 @@ class CarbonV1Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         see base class.
         """
-        event_args = event["args"]
+        event_args = event.args
         return "order0" in event_args
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         See base class.
         """
-        event_type = event_args["event"]
-        assert event_type not in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"], (
+        assert event.event not in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"], (
             "This event should not be " "handled by this class."
         )
-        data = CarbonV1Pool.parse_event(data, event_args, event_type)
+        data = CarbonV1Pool.parse_event(data, event)
         data["router"] = self.router_address
         for key, value in data.items():
             self.state[key] = value
         return data
 
     @staticmethod
-    def parse_event(
-        data: Dict[str, Any], event_args: Dict[str, Any], event_type: str
-    ) -> Dict[str, Any]:
+    def parse_event(data: Dict[str, Any], event: Event) -> Dict[str, Any]:
         """
         Parse the event args into a dict.
 
@@ -71,18 +69,16 @@ class CarbonV1Pool(Pool):
         ----------
         data : Dict[str, Any]
             The data to update.
-        event_args : Dict[str, Any]
-            The event arguments.
-        event_type : str
-            The event type.
+        event_args : Event
+            The event object.
 
         Returns
         -------
         Dict[str, Any]
             The updated data.
         """
-        order0, order1 = CarbonV1Pool.parse_orders(event_args, event_type)
-        data["strategy_id"] = event_args["args"].get("id")
+        order0, order1 = CarbonV1Pool.parse_orders(event)
+        data["strategy_id"] = event.args.get("id")
         if isinstance(order0, list) and isinstance(order1, list):
             data["y_0"] = order0[0]
             data["z_0"] = order0[1]
@@ -105,9 +101,7 @@ class CarbonV1Pool(Pool):
         return data
 
     @staticmethod
-    def parse_orders(
-        event_args: Dict[str, Any], event_type: str
-    ) -> Tuple[List[int], List[int]]:
+    def parse_orders(event: Event) -> Tuple[List[int], List[int]]:
         """
         Parse the orders from the event args. If the event type is StrategyDeleted, then the orders are set to 0.
 
@@ -115,17 +109,15 @@ class CarbonV1Pool(Pool):
         ----------
         event_args : Dict[str, Any]
             The event arguments.
-        event_type : str
-            The event type.
 
         Returns
         -------
         Tuple[List[int], List[int]]
             The parsed orders.
         """
-        if event_type not in ["StrategyDeleted"]:
-            order0 = event_args["args"].get("order0")
-            order1 = event_args["args"].get("order1")
+        if event.event not in ["StrategyDeleted"]:
+            order0 = event.args.get("order0")
+            order1 = event.args.get("order1")
         else:
             order0 = [0, 0, 0, 0]
             order1 = [0, 0, 0, 0]

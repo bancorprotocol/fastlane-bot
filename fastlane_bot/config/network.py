@@ -194,7 +194,7 @@ class ConfigNetwork(ConfigBase):
     USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WETH_ADDRESS = WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
-    TAX_TOKENS = []
+    TAX_TOKENS = set([])
 
     # BNT_KEY = "BNT-FF1C"
     # ETH_KEY = "ETH-EEeE"
@@ -279,7 +279,6 @@ class ConfigNetwork(ConfigBase):
 
     # FLAGS
     #######################################################################################
-    GAS_TKN_IN_FLASHLOAN_TOKENS = None
     IS_NO_FLASHLOAN_AVAILABLE = False
 
     # HOOKS
@@ -317,7 +316,7 @@ class ConfigNetwork(ConfigBase):
         elif network == cls.NETWORK_MANTLE:
             return _ConfigNetworkMantle(_direct=False)
         elif network == cls.NETWORK_LINEA:
-            return _ConfigNetworkLinea(_direct=False)    
+            return _ConfigNetworkLinea(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -426,7 +425,7 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     RPC_ENDPOINT = "https://eth-mainnet.alchemyapi.io/v2/"
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_ALCHEMY_PROJECT_ID")
 
-    MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
     # NATIVE_GAS_TOKEN_KEY = "ETH-EEeE"
     # WRAPPED_GAS_TOKEN_KEY = "WETH-6Cc2"
     # STABLECOIN_KEY = "USDC-eB48"
@@ -437,13 +436,19 @@ class _ConfigNetworkMainnet(ConfigNetwork):
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
-    TAX_TOKENS = [
+    TAX_TOKENS = set([
         "0x5a3e6A77ba2f983eC0d371ea3B475F8Bc0811AD5", # 0x0
         "0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9", # BITCOIN
+        "0x40E64405F18e4FB01c6fc39f4F0c78df5eF9D0E0", # COSMIC
+        "0xae41b275aaAF484b541A5881a2dDED9515184CCA", # CSWAP
         "0xf94e7d0710709388bCe3161C32B4eEA56d3f91CC", # DSync
+        "0x69420E3A3aa9E17Dea102Bb3a9b3B73dcDDB9528", # ELON
         "0x1258D60B224c0C5cD888D37bbF31aa5FCFb7e870", # GPU
+        "0x292fcDD1B104DE5A00250fEBbA9bC6A5092A0076", # HASHAI
+        "0xaa95f26e30001251fb905d264Aa7b00eE9dF6C18", # KENDU
         "0x6A7eFF1e2c355AD6eb91BEbB5ded49257F3FED98", # OPSEC
-    ]
+        "0x14feE680690900BA0ccCfC76AD70Fd1b95D10e16", # PAAL
+    ])
 
     # FACTORY, CONVERTER, AND CONTROLLER ADDRESSES
     #######################################################################################
@@ -762,9 +767,9 @@ class _ConfigNetworkLinea(ConfigNetwork):
     WRAPPED_GAS_TOKEN_SYMBOL = "WETH"
     STABLECOIN_ADDRESS = "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
 
-    TAX_TOKENS = [
+    TAX_TOKENS = set([
         "0x1bE3735Dd0C0Eb229fB11094B6c277192349EBbf", # LUBE
-    ]
+    ])
 
     IS_INJECT_POA_MIDDLEWARE = True
     # Balancer
@@ -810,7 +815,7 @@ class _ConfigNetworkTenderly(ConfigNetwork):
     FASTLANE_CONTRACT_ADDRESS = "0x41Eeba3355d7D6FF628B7982F3F9D055c39488cB"
     CARBON_CONTROLLER_ADDRESS = "0xC537e898CD774e2dCBa3B14Ea6f34C93d5eA45e1"
     CARBON_CONTROLLER_VOUCHER = "0x3660F04B79751e31128f6378eAC70807e38f554E"
-    MULTICALL_CONTRACT_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
 
     # Uniswap
     UNISWAP_V2_ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"

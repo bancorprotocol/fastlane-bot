@@ -27,6 +27,7 @@ from fastlane_bot.data.abi import ERC20_ABI
 from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
 from fastlane_bot.events.pools.utils import get_pool_cid
+from .interfaces.event import Event
 
 nest_asyncio.apply()
 
@@ -89,7 +90,7 @@ async def _get_missing_tkns(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.concat(vals)
 
 
-async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Any):
+async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str, contract: AsyncContract, event: Event):
     """
     This function uses the exchange object to get the tokens and fee for a given pool.
 
@@ -97,7 +98,7 @@ async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str
         ex(Any): The exchange object
         address(str): The pool address
         contract(AsyncContract): The contract object
-        event(Any): The event object
+        event(Event): The event object
 
     Returns:
         The tokens and fee info for the pool
@@ -119,7 +120,7 @@ async def _get_token_and_fee(mgr: Any, exchange_name: str, ex: Any, address: str
             elif tkn1 == mgr.cfg.BNT_ADDRESS:
                 tkn0 = connector_token
 
-        strategy_id = 0 if not ex.is_carbon_v1_fork else str(event["args"]["id"])
+        strategy_id = 0 if not ex.is_carbon_v1_fork else str(event.args["id"])
         pool_info = {
             "exchange_name": exchange_name,
             "address": address,
@@ -212,8 +213,6 @@ def _get_new_pool_data(
     all_keys = set()
     for pool in mgr.pool_data:
         all_keys.update(pool.keys())
-    if "last_updated_block" not in all_keys:
-        all_keys.update("last_updated_block")
     pool_data_keys: frozenset = frozenset(all_keys)
     new_pool_data: List[Dict] = []
     for idx, pool in tokens_and_fee_df.iterrows():
@@ -321,7 +320,7 @@ def _get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
         exchange_name = mgr.exchange_name_from_event(event)
         ex = mgr.exchanges[exchange_name]
         abi = ex.get_abi()
-        address = event["address"]
+        address = event.address
         contracts.append(
             {
                 "exchange_name": exchange_name,
@@ -394,6 +393,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
         mgr, current_block, tokens_and_fee_df, tokens_df
     )
 
+    if len(new_pool_data) == 0:
+        mgr.cfg.logger.info("No pools found in contracts")
+        return
+
     new_pool_data_df = pd.DataFrame(new_pool_data).sort_values(
         "last_updated_block", ascending=False
     )
@@ -409,6 +412,10 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
             "tkn1_decimals",
         ]
     )
+
+    if new_pool_data_df.empty:
+        mgr.cfg.logger.info("No valid pools found in contracts")
+        return
 
     new_pool_data_df["descr"] = (
             new_pool_data_df["exchange_name"]
@@ -436,22 +443,26 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
 
     duplicate_new_pool_ct = len(duplicate_cid_rows)
 
-    all_pools_df = (
-        pd.DataFrame(mgr.pool_data)
-        .sort_values("last_updated_block", ascending=False)
-        .drop_duplicates(subset=["cid"])
-        .set_index("cid")
-    )
+    if len(mgr.pool_data) > 0:
+        all_pools_df = (
+            pd.DataFrame(mgr.pool_data)
+            .sort_values("last_updated_block", ascending=False)
+            .drop_duplicates(subset=["cid"])
+            .set_index("cid")
+        )
 
-    new_pool_data_df = new_pool_data_df[all_pools_df.columns]
+        new_pool_data_df = new_pool_data_df[all_pools_df.columns]
 
-    # add new_pool_data to pool_data, ensuring no duplicates
-    all_pools_df.update(new_pool_data_df, overwrite=True)
+        # add new_pool_data to pool_data, ensuring no duplicates
+        all_pools_df.update(new_pool_data_df, overwrite=True)
 
-    new_pool_data_df = new_pool_data_df[
-        ~new_pool_data_df.index.isin(all_pools_df.index)
-    ]
-    all_pools_df = pd.concat([all_pools_df, new_pool_data_df])
+        new_pool_data_df = new_pool_data_df[
+            ~new_pool_data_df.index.isin(all_pools_df.index)
+        ]
+        all_pools_df = pd.concat([all_pools_df, new_pool_data_df])
+    else:
+        all_pools_df = new_pool_data_df
+
     all_pools_df[["tkn0_decimals", "tkn1_decimals"]] = (
         all_pools_df[["tkn0_decimals", "tkn1_decimals"]].fillna(0).astype(int)
     )

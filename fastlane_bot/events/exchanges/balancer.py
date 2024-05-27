@@ -12,13 +12,15 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BALANCER_VAULT_ABI, BALANCER_POOL_ABI_V1
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -37,7 +39,7 @@ class Balancer(Exchange):
         return BALANCER_VAULT_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Balancer
         return BALANCER_VAULT_ABI
 
@@ -46,6 +48,9 @@ class Balancer(Exchange):
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.AuthorizerChanged]
+
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        return []
 
     async def get_fee(self, pool_id: str, contract: Contract) -> Tuple[str, float]:
         pool = self.get_pool(pool_id)
@@ -84,3 +89,6 @@ class Balancer(Exchange):
         tokens = pool_balances[0]
         token_balances = pool_balances[1]
         return token_balances[index]
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

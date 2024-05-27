@@ -17,7 +17,6 @@ __VERSION__ = "1.1.1"
 __DATE__ = "02/May/2023"
 
 import decimal
-import math
 from _decimal import Decimal
 from dataclasses import dataclass
 from typing import List, Any, Dict, Tuple
@@ -74,21 +73,12 @@ def maximize_last_trade_per_tkn(route_struct: List[Dict[str, Any]]):
     :param route_struct: the route struct object
     """
 
-    tkns_traded = [route_struct[0]["sourceToken"]]
+    tkns_traded = set([route_struct[0]["sourceToken"]])
     for j, trade in enumerate(reversed(route_struct)):
         idx = len(route_struct) - 1 - j
-        if type(trade) == dict:
-            if trade["sourceToken"] in tkns_traded:
-                continue
-            else:
-                route_struct[idx]["sourceAmount"] = 0
-                tkns_traded.append(trade["sourceToken"])
-        elif type(trade) == RouteStruct:
-            if trade.sourceToken in tkns_traded:
-                continue
-            else:
-                route_struct[idx].sourceAmount = 0
-                tkns_traded.append(trade.sourceToken)
+        if trade["sourceToken"] not in tkns_traded:
+            tkns_traded.add(trade["sourceToken"])
+            route_struct[idx]["sourceAmount"] = 0
 
 
 @dataclass
@@ -109,14 +99,9 @@ class TxRouteHandler:
     trade_instructions: List[TradeInstruction]
 
     def __post_init__(self):
-        self.contains_carbon = True
-        self.ConfigObj = self.trade_instructions[0].ConfigObj
-        if not self.trade_instructions:
-            raise ValueError("No trade instructions found.")
         if len(self.trade_instructions) < 2:
             raise ValueError("Length of trade instructions must be greater than 1.")
-        if sum([1 if self.trade_instructions[i]._is_carbon else 0 for i in range(len(self.trade_instructions))]) == 0:
-            self.contains_carbon = False
+        self.ConfigObj = self.trade_instructions[0].ConfigObj
 
     @staticmethod
     def custom_data_encoder(
@@ -268,17 +253,12 @@ class TxRouteHandler:
 
         assert not deadline is None, "deadline cannot be None"
 
-        pools = [
-            self._cid_to_pool(trade_instruction.cid, trade_instruction.db)
-            for trade_instruction in trade_instructions
-        ]
-
         return [
             self._to_route_struct(
                 min_target_amount=trade_instruction.amtout_wei,
                 deadline=deadline,
                 target_address=trade_instruction.get_real_tkn_out,
-                custom_address=self.get_custom_address(pool),
+                custom_address=self.get_custom_address(trade_instruction.db.get_pool(cid=trade_instruction.cid)),
                 platform_id=trade_instruction.platform_id,
                 customInt=trade_instruction.custom_int,
                 customData=trade_instruction.custom_data,
@@ -286,7 +266,7 @@ class TxRouteHandler:
                 source_amount=trade_instruction.amtin_wei,
                 exchange_name=trade_instruction.exchange_name,
             )
-            for trade_instruction, pool in zip(trade_instructions, pools)
+            for trade_instruction in trade_instructions
         ]
 
     def get_custom_address(
@@ -314,7 +294,7 @@ class TxRouteHandler:
         else:
             return pool.tkn0_address
 
-    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
+    def generate_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> List[Dict]:
         """
         Generates the flashloan struct for submitting FlashLoanAndArbV2 transactions
         :param trade_instructions_objects: a list of TradeInstruction objects
@@ -322,54 +302,41 @@ class TxRouteHandler:
         :return:
             list
         """
-        return self._get_flashloan_struct(trade_instructions_objects=trade_instructions_objects)
+        is_FL_NATIVE_permitted = self.ConfigObj.NETWORK == self.ConfigObj.NETWORK_ETHEREUM
 
-    def _get_flashloan_platform_id(self, tkn: str) -> int:
-        """
-        Returns the platform ID to take the flashloan from
-        :param tkn: str
-
-        :return:
-            int
-        """
-
-        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
-            return 7
-
-        # Using Bancor V3 to flashloan BNT, ETH, WBTC, LINK, USDC, USDT
-        if tkn in [self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS, self.ConfigObj.WBTC_ADDRESS,
-                   self.ConfigObj.LINK_ADDRESS, self.ConfigObj.BNT_ADDRESS, self.ConfigObj.ETH_ADDRESS,
-                   self.ConfigObj.WBTC_ADDRESS, self.ConfigObj.LINK_ADDRESS]:
-            return 2
+        if trade_instructions_objects[0].tknin_is_native and not is_FL_NATIVE_permitted:
+            source_token = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
+        elif trade_instructions_objects[0].tknin_is_native and is_FL_NATIVE_permitted:
+            source_token = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
+        elif trade_instructions_objects[0].tknin_is_wrapped:
+            source_token = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
         else:
-            return 7
+            source_token = trade_instructions_objects[0].tknin_address
 
-    def _get_flashloan_struct(self, trade_instructions_objects: List[TradeInstruction]) -> list:
-        """
-        Turns an object containing trade instructions into a struct with flashloan tokens and amounts ready to send to the smart contract.
-        :param flash_tokens: an object containing flashloan tokens in the format {tkn: {"tkn": tkn_address, "flash_amt": tkn_amt}}
-        """
-        flash_tokens = self._extract_single_flashloan_token(trade_instructions=trade_instructions_objects)
-        flashloans = []
-        balancer = {"platformId": 7, "sourceTokens": [], "sourceAmounts": []}
-        has_balancer = False
-
-        for tkn in flash_tokens.keys():
-            platform_id = self._get_flashloan_platform_id(tkn)
-            source_token = flash_tokens[tkn]["tkn"]
-            source_amounts = abs(flash_tokens[tkn]["flash_amt"])
-            if platform_id == 7:
-                has_balancer = True
-                balancer["sourceTokens"].append(source_token)
-                balancer["sourceAmounts"].append(source_amounts)
-            else:
-                source_token = self.wrapped_gas_token_to_native(source_token)
-                flashloans.append(
-                    {"platformId": platform_id, "sourceTokens": [source_token], "sourceAmounts": [source_amounts]})
-        if has_balancer:
-            flashloans.append(balancer)
-
-        return flashloans
+        if self.ConfigObj.NETWORK in [
+            self.ConfigObj.NETWORK_ETHEREUM,
+            self.ConfigObj.NETWORK_TENDERLY
+        ] and source_token in [
+            self.ConfigObj.BNT_ADDRESS,
+            self.ConfigObj.ETH_ADDRESS,
+            self.ConfigObj.WBTC_ADDRESS,
+            self.ConfigObj.LINK_ADDRESS
+        ]:
+            return [
+                {
+                    "platformId": 2,
+                    "sourceTokens": [self.wrapped_gas_token_to_native(source_token)],
+                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+                }
+            ]
+        else:
+            return [
+                {
+                    "platformId": 7,
+                    "sourceTokens": [source_token],
+                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+                }
+            ]
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
@@ -378,106 +345,18 @@ class TxRouteHandler:
             The token address
         returns: str
             The token address, converted to wrapped gas token if the input was the native gas token
-
         """
         return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
 
     def wrapped_gas_token_to_native(self, tkn: str):
         """
-        Checks if a Token is a wrapped gas token and converts it to the native gas token.
-
-        This is only relevant on the Ethereum network
-
-        :param tkn: the token address
-
-        returns:
-        the token address
+        This function returns the native gas token address if the input token is the wrapped gas token, otherwise it returns the input token address.
+        :param tkn: str
+            The token address
+        returns: str
+            The token address, converted to native gas token if the input was the wrapped gas token
         """
-
-        if self.ConfigObj.NETWORK not in ["ethereum", "tenderly"]:
-            return tkn
-
-        if tkn in [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        else:
-            return tkn
-
-    def _extract_single_flashloan_token(self, trade_instructions: List[TradeInstruction]) -> Dict:
-        """
-        Generate a flashloan tokens and amounts.
-        :param trade_instructions: A list of trade instruction objects
-        """
-
-        is_FL_NATIVE_permitted = False
-        if self.ConfigObj.NETWORK in [self.ConfigObj.NETWORK_ETHEREUM]:
-            is_FL_NATIVE_permitted = True
-
-        if trade_instructions[0].tknin_is_native and not is_FL_NATIVE_permitted:
-            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-            self.ConfigObj.logger.info(
-                f"[routehandler._extract_single_flashloan_token] Not permitted to flashloan NATIVE - Switching to WRAPPED")
-        elif trade_instructions[0].tknin_is_native and is_FL_NATIVE_permitted:
-            tknin_address = self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS
-        elif trade_instructions[0].tknin_is_wrapped:
-            tknin_address = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-        else:
-            tknin_address = trade_instructions[0].tknin_address
-        flash_tokens = {
-            tknin_address:
-                {
-                    "tkn": tknin_address,
-                    "flash_amt": trade_instructions[0].amtin_wei,
-                    "decimals": trade_instructions[0].tknin_decimals}
-        }
-
-        return flash_tokens
-
-    def _extract_flashloan_tokens(self, trade_instructions: List[TradeInstruction]) -> Dict:
-        """
-        Generate a list of the flashloan tokens and amounts.
-        :param trade_instructions: A list of trade instruction objects
-        """
-        token_change = {}
-        flash_tokens = {}
-        for trade in trade_instructions:
-            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
-            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
-
-            token_change[tknin_address] = {"tkn": tknin_address, "amtin": 0, "amtout": 0, "balance": 0}
-            token_change[tknout_address] = {"tkn": tknout_address, "amtin": 0, "amtout": 0, "balance": 0}
-
-        for trade in trade_instructions:
-            tknin_address = self.wrapped_gas_token_to_native(trade.tknin_address)
-            tknout_address = self.wrapped_gas_token_to_native(trade.tknout_address)
-
-            token_change[tknin_address]["amtin"] = token_change[tknin_address]["amtin"] + trade.amtin_wei
-            token_change[tknin_address]["balance"] = token_change[tknin_address]["balance"] - trade.amtin_wei
-            token_change[tknout_address]["amtout"] = token_change[tknout_address]["amtout"] + trade.amtout_wei
-            token_change[tknout_address]["balance"] = token_change[tknout_address]["balance"] + trade.amtout_wei
-
-            if token_change[tknin_address]["balance"] < 0:
-                flash_tokens[tknin_address] = {"tkn": trade._tknin_address,
-                                               "flash_amt": token_change[tknin_address]["amtin"],
-                                               "decimals": trade.tknin_decimals}
-
-        return flash_tokens
-
-
-    def get_arb_contract_args(
-            self, trade_instructions: List[TradeInstruction], deadline: int
-    ) -> Tuple[List[RouteStruct], int]:
-        """
-        Gets the arguments needed to instantiate the `ArbContract` class.
-
-        Returns
-        -------
-        List[Any]
-            The arguments needed to instantiate the `ArbContract` class.
-        """
-        route_struct = self.get_route_structs(
-            trade_instructions=trade_instructions, deadline=deadline
-        )
-        return route_struct
+        return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn
 
     @staticmethod
     def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
@@ -551,11 +430,10 @@ class TxRouteHandler:
 
         for idx, trade in enumerate(calculated_trade_instructions):
             if idx > 0:
-                if trade.exchange_name == "bancor_v3" and calculated_trade_instructions[
-                    idx - 1].exchange_name == "bancor_v3":
+                if trade.exchange_name == calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
                     trade_before = calculated_trade_instructions[idx - 1]
                     # This checks for a two-hop trade through BNT and combines them
-                    if trade_before.tknout_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C" and trade.tknin_address in "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C":
+                    if trade_before.tknout_address == trade.tknin_address == trade.ConfigObj.BNT_ADDRESS:
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
                                                                  amtin=trade_before.amtin, amtout=trade.amtout,
                                                                  tknin=trade_before.tknin_address,
@@ -821,10 +699,10 @@ class TxRouteHandler:
         """
         amount_in = amount_in * (Decimal(str(1)) - fee)
 
-        price_next = Decimal(str(math.floor((
-                int(liquidity * self.ConfigObj.Q96 * sqrt_price)
-                / int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)))
-        ))
+        price_next = Decimal(
+            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+            // int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)
+        )
         amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
 
         return Decimal(amount_out / decimal_tkn1_modifier)
@@ -1474,9 +1352,6 @@ class TxRouteHandler:
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
         return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
-
-    def _cid_to_pool(self, cid: str, db: any) -> Pool:
-        return db.get_pool(cid=cid)
 
 # TODO: Those functions should probably be private; also -- are they needed at
 # all? Most of them seem to be extremely trivial

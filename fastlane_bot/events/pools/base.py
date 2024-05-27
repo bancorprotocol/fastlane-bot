@@ -18,6 +18,8 @@ from typing import Dict, Any, List
 from web3 import Web3
 from web3.contract import Contract
 
+from ..interfaces.event import Event
+
 
 @dataclass
 class Pool(ABC):
@@ -34,7 +36,7 @@ class Pool(ABC):
     __DATE__ = "2023-07-03"
 
     state: Dict[str, Any] = field(default_factory=dict)
-
+    factory_contract = None
     @classmethod
     @abstractmethod
     def event_matches_format(
@@ -61,37 +63,37 @@ class Pool(ABC):
 
     @staticmethod
     def get_common_data(
-        event: Dict[str, Any], pool_info: Dict[str, Any]
+        event: Event, pool_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Get common (common to all Pool child classes) data from an event and pool info.
 
         Args:
-            event (Dict[str, Any]): The event data.
+            event (Event): The event data.
             pool_info (Dict[str, Any]): The pool information.
 
         Returns:
             Dict[str, Any]: A dictionary containing common data extracted from the event and pool info.
         """
         return {
-            "last_updated_block": event["blockNumber"],
+            "last_updated_block": event.block_number,
             "timestamp": datetime.now().strftime("%H:%M:%S"),
             "pair_name": pool_info["pair_name"],
             "descr": pool_info["descr"],
-            "address": event["address"],
+            "address": event.address,
         }
 
     @staticmethod
     @abstractmethod
     def update_from_event(
-        event_args: Dict[str, Any], data: Dict[str, Any]
+        event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Update the pool state from an event.
 
         Parameters
         ----------
-        event_args : Dict[str, Any]
+        event : Event
             The event arguments.
         data : Dict[str, Any]
             The pool data.

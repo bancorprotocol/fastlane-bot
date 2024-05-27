@@ -12,13 +12,20 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.event import Event
+from ..interfaces.subscription import Subscription
+
+
+TRADING_LIQUIDITY_UPDATED_TOPIC = "0x6e96dc5343d067ec486a9920e0304c3610ed05c65e45cc029d9b9fe7ecfa7620"
+TOTAL_LIQUIDITY_UPDATED_TOPIC = "0x85a03952f50b8c00b32a521c32094023b64ef0b6d4511f423d44c480a62cb145"
 
 
 @dataclass
@@ -37,22 +44,32 @@ class BancorV3(Exchange):
         return BANCOR_V3_POOL_COLLECTION_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor V3
         return BANCOR_V3_POOL_COLLECTION_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TradingLiquidityUpdated]
 
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
+        return [
+            Subscription(contract.events.TradingLiquidityUpdated, TRADING_LIQUIDITY_UPDATED_TOPIC),
+            # Subscription(contract.events.TotalLiquidityUpdated, TOTAL_LIQUIDITY_UPDATED_TOPIC),  # Unused
+        ]
+
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
         return "0.000", 0.000
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         return self.BNT_ADDRESS
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         return (
-            event["args"]["pool"]
-            if event["args"]["pool"] != self.BNT_ADDRESS
-            else event["args"]["tkn_address"]
+            event.args["pool"]
+            if event.args["pool"] != self.BNT_ADDRESS
+            else event.args["tkn_address"]
         )
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

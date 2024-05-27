@@ -492,9 +492,8 @@ class QueryInterface:
                     token_set.add(self.create_token(record, f"tkn{str(idx)}_"))
                 except AttributeError:
                     pass
-        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
-            token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
+        token_set.add(Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18))
+        token_set.add(Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18))
         return list(token_set)
 
     def populate_tokens(self):
@@ -509,11 +508,11 @@ class QueryInterface:
                     self.token_list[token.address] = token
                 except AttributeError:
                     pass
-        if self.ConfigObj.GAS_TKN_IN_FLASHLOAN_TOKENS:
-            native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
-            wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
-            self.token_list[native_gas_tkn.address] = native_gas_tkn
-            self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
+        # native and wrapped gas token info populated everytime
+        native_gas_tkn = Token(symbol=self.ConfigObj.NATIVE_GAS_TOKEN_SYMBOL, address=self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, decimals=18)
+        wrapped_gas_tkn = Token(symbol=self.ConfigObj.WRAPPED_GAS_TOKEN_SYMBOL, address=self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, decimals=18)
+        self.token_list[native_gas_tkn.address] = native_gas_tkn
+        self.token_list[wrapped_gas_tkn.address] = wrapped_gas_tkn
 
     def create_token(self, record: Dict[str, Any], prefix: str) -> Token:
         """

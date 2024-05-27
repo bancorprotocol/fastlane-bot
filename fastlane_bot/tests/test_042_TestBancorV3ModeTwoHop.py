@@ -206,7 +206,7 @@ def test_test_trade_merge():
     )
     assert len(calculated_trade_instructions) == 3
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = TxRouteHandler.aggregate_bancor_v3_trades(
+    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
         calculated_trade_instructions
     )
     assert len(calculated_trade_instructions) == 2

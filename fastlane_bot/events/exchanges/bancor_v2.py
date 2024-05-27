@@ -12,13 +12,16 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any
+from typing import List, Type, Tuple, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.event import Event
+from ..interfaces.subscription import Subscription
 
 
 @dataclass
@@ -37,12 +40,16 @@ class BancorV2(Exchange):
         return BANCOR_V2_CONVERTER_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         # Not used for Bancor V2
         return BANCOR_V2_CONVERTER_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
+
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
+        return [Subscription(contract.events.TokenRateUpdate)]
 
     # def async convert_address(self, address: str, contract: Contract) -> str:
     #     return
@@ -59,15 +66,18 @@ class BancorV2(Exchange):
             fee_float = float(fee) / 1e6
         return fee, fee_float
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         if event:
-            return event["args"]["_token1"]
-        return await contract.caller.reserveTokens()[0]
+            return event.args["_token1"]
+        return await contract.functions.reserveTokens()[0]
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         if event:
-            return event["args"]["_token2"]
-        return await contract.caller.reserveTokens()[1]
+            return event.args["_token2"]
+        return await contract.functions.reserveTokens()[1]
 
     async def get_anchor(self, contract: Contract) -> str:
         return await contract.caller.anchor()
+
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

@@ -144,19 +144,19 @@ class CarbonBot:
         ADDRDEC = {t.address: (t.address, int(t.decimals)) for t in tokens}
 
         for p in pools_and_tokens:
+            p.ADDRDEC = ADDRDEC
             try:
-                p.ADDRDEC = ADDRDEC
                 curves += [
                     curve for curve in p.to_cpc()
                     if all(curve.params[tkn] not in self.ConfigObj.TAX_TOKENS for tkn in ['tknx_addr', 'tkny_addr'])
                 ]
             except SolidlyV2StablePoolsNotSupported as e:
                 self.ConfigObj.logger.debug(
-                    f"[bot.get_curves] SolidlyV2StablePoolsNotSupported: {e}\n"
+                    f"[bot.get_curves] Solidly V2 stable pools not supported: {e}\n"
                 )
             except NotImplementedError as e:
                 self.ConfigObj.logger.error(
-                    f"[bot.get_curves] Pool type not yet supported, error: {e}\n"
+                    f"[bot.get_curves] Not supported: {e}\n"
                 )
             except ZeroDivisionError as e:
                 self.ConfigObj.logger.error(
@@ -241,36 +241,17 @@ class CarbonBot:
         List[Dict[str, Any]]
             The trade instructions.
         """
-        errorless_trade_instructions_dicts = [
-            {k: v for k, v in trade_instructions_dic[i].items() if k != "error"}
-            for i in range(len(trade_instructions_dic))
-        ]
-        result = (
-            {
-                **ti,
+        return [
+            TradeInstruction(**{
+                **{k: v for k, v in ti.items() if k != "error"},
                 "raw_txs": "[]",
                 "pair_sorting": "",
                 "ConfigObj": self.ConfigObj,
                 "db": self.db,
-            }
-            for ti in errorless_trade_instructions_dicts
-            if ti is not None
-        )
-        result = self._add_strategy_id_to_trade_instructions_dic(result)
-        result = [TradeInstruction(**ti) for ti in result]
-        return result
-
-    def _add_strategy_id_to_trade_instructions_dic(
-        self, trade_instructions_dic: Generator
-    ) -> List[Dict[str, Any]]:
-        lst = []
-        for ti in trade_instructions_dic:
-            cid = ti["cid"].split('-')[0]
-            ti["strategy_id"] = self.db.get_pool(
-                cid=cid
-            ).strategy_id
-            lst.append(ti)
-        return lst
+                "strategy_id": self.db.get_pool(cid=ti["cid"].split('-')[0]).strategy_id
+            })
+            for ti in trade_instructions_dic if ti["error"] is None
+        ]
 
     def _get_deadline(self, block_number) -> int:
         """

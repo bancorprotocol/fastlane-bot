@@ -14,6 +14,7 @@ from typing import Dict, Any, List
 from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -34,27 +35,26 @@ class UniswapV3Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v3 event.
         """
-        event_args = event["args"]
+        event_args = event.args
         return (
             "sqrtPriceX96" in event_args
-            and event["address"] in static_pools[f"{exchange_name}_pools"]
+            and event.address in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         See base class.
         """
-        event_args = event_args["args"]
-        data["liquidity"] = event_args["liquidity"]
-        data["sqrt_price_q96"] = event_args["sqrtPriceX96"]
-        data["tick"] = event_args["tick"]
+        data["liquidity"] = event.args["liquidity"]
+        data["sqrt_price_q96"] = event.args["sqrtPriceX96"]
+        data["tick"] = event.args["tick"]
 
         for key, value in data.items():
             self.state[key] = value

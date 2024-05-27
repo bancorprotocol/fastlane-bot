@@ -28,6 +28,7 @@ from fastlane_bot.data.abi import (
 )
 from fastlane_bot.events.managers.base import BaseManager
 from fastlane_bot.events.pools.utils import get_pool_cid
+from ..interfaces.event import Event
 
 
 class ContractsManager(BaseManager):
@@ -203,7 +204,7 @@ class ContractsManager(BaseManager):
         self,
         exchange_name: str = None,
         address: str = None,
-        event: Any = None,
+        event: Event = None,
         tenderly_exchanges: List[str] = None,
     ) -> Dict[str, Any]:
         """
@@ -244,8 +245,8 @@ class ContractsManager(BaseManager):
 
         t0_addr = self.exchanges[exchange_name].get_tkn0(address, pool_contract, event)
         t1_addr = self.exchanges[exchange_name].get_tkn1(address, pool_contract, event)
-        block_number = event["blockNumber"]
-        strategy_id = event["args"]["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None
+        block_number = event.block_number
+        strategy_id = event.args["id"] if exchange_name in self.cfg.CARBON_V1_FORKS else None
         temp_pool_info = {
             "exchange_name": exchange_name,
             "fee": f"{fee}",

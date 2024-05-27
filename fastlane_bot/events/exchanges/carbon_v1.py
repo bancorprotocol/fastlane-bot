@@ -12,15 +12,23 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any, Dict, Callable
+from typing import List, Type, Tuple, Any, Dict, Callable, Union
 
 from fastlane_bot import Config
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
-from fastlane_bot.events.exchanges.base import Exchange
-from fastlane_bot.events.pools.base import Pool
-from fastlane_bot.events.pools.utils import get_pool_cid
+from ..exchanges.base import Exchange
+from ..pools.base import Pool
+from ..interfaces.event import Event
+from ..interfaces.subscription import Subscription
+from ..pools.utils import get_pool_cid
+
+
+STRATEGY_CREATED_TOPIC = "0xff24554f8ccfe540435cfc8854831f8dcf1cf2068708cfaf46e8b52a4ccc4c8d"
+STRATEGY_UPDATED_TOPIC = "0x720da23a5c920b1d8827ec83c4d3c4d90d9419eadb0036b88cb4c2ffa91aef7d"
+STRATEGY_DELETED_TOPIC = "0x4d5b6e0627ea711d8e9312b6ba56f50e0b51d41816fd6fd38643495ac81d38b6"
 
 
 @dataclass
@@ -60,7 +68,7 @@ class CarbonV1(Exchange):
         return CARBON_CONTROLLER_ABI
 
     @property
-    def get_factory_abi(self):
+    def factory_abi(self):
         return CARBON_CONTROLLER_ABI
 
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
@@ -72,6 +80,17 @@ class CarbonV1(Exchange):
             contract.events.TradingFeePPMUpdated,
             contract.events.PairCreated,
         ] if self.exchange_initialized else []
+
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
+        return [
+            Subscription(contract.events.StrategyCreated, STRATEGY_CREATED_TOPIC),
+            Subscription(contract.events.StrategyUpdated, STRATEGY_UPDATED_TOPIC),
+            Subscription(contract.events.StrategyDeleted, STRATEGY_DELETED_TOPIC),
+            Subscription(contract.events.PairTradingFeePPMUpdated),
+            Subscription(contract.events.TradingFeePPMUpdated),
+            Subscription(contract.events.PairCreated),
+        ]
 
     async def get_fee(
         self, address: str, contract: Contract
@@ -94,7 +113,7 @@ class CarbonV1(Exchange):
             fee = await contract.tradingFeePPM()
         return f"{fee}", fee / 1e6
 
-    async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         """
         Get the token0 address from the contract or event.
 
@@ -116,9 +135,9 @@ class CarbonV1(Exchange):
         if event is None:
             return await contract.caller.token0()
         else:
-            return event["args"]["token0"]
+            return event.args["token0"]
 
-    async def get_tkn1(self, address: str, contract: Contract, event: Any) -> str:
+    async def get_tkn1(self, address: str, contract: Contract, event: Event) -> str:
         """
         Get the token1 address from the contract or event.
 
@@ -140,7 +159,7 @@ class CarbonV1(Exchange):
         if event is None:
             return await contract.caller.token1()
         else:
-            return event["args"]["token1"]
+            return event.args["token1"]
 
     def delete_strategy(self, id: str):
         """
@@ -228,3 +247,5 @@ class CarbonV1(Exchange):
             block_number=block_number,
         )
 
+    def get_pool_func_call(self, addr1, addr2):
+        raise NotImplementedError

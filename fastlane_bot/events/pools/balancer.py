@@ -15,7 +15,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from .base import Pool
-from fastlane_bot import Config
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -46,7 +46,7 @@ class BalancerPool(Pool):
         return False
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         See base class.

@@ -18,6 +18,7 @@ import web3.exceptions
 
 from fastlane_bot.data.abi import ERC20_ABI, BANCOR_POL_ABI
 from fastlane_bot.events.pools.base import Pool
+from ..interfaces.event import Event
 from _decimal import Decimal
 
 
@@ -41,14 +42,14 @@ class BancorPolPool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Bancor pol event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event arguments.
 
         Returns
@@ -57,11 +58,11 @@ class BancorPolPool(Pool):
             True if the event matches the format of a Bancor v3 event, False otherwise.
 
         """
-        event_args = event["args"]
-        return "token" in event_args and "token0" not in event_args
+        event_args = event.args
+        return ("token" in event_args) and ("token0" not in event_args) and (event_args['token'] == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         This updates the pool balance from TokenTraded events.
@@ -69,12 +70,12 @@ class BancorPolPool(Pool):
         See base class.
         """
 
-        event_type = event_args["event"]
+        event_type = event.event
         if event_type in "TradingEnabled":
-            data["tkn0_address"] = event_args["args"]["token"]
-            data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" if event_args["args"]["token"] not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+            data["tkn0_address"] = event.args["token"]
+            data["tkn1_address"] = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" if event.args["token"] not in "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" else "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
 
-        if event_args["args"]["token"] == self.state["tkn0_address"] and event_type in [
+        if event.args["token"] == self.state["tkn0_address"] and event_type in [
             "TokenTraded"
         ]:
             # *** Balance now updated from multicall ***

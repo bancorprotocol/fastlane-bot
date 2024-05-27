@@ -17,12 +17,13 @@ from web3.contract import Contract
 
 from fastlane_bot import Config
 from fastlane_bot.config.constants import PANCAKESWAP_V2_NAME, PANCAKESWAP_V3_NAME, VELOCIMETER_V2_NAME, AGNI_V3_NAME, \
-    SOLIDLY_V2_NAME, FUSIONX_V3_NAME
+    FUSIONX_V3_NAME
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.exchanges import exchange_factory
 from fastlane_bot.events.exchanges.base import Exchange
 from fastlane_bot.events.pools.utils import get_pool_cid
 from fastlane_bot.events.pools import pool_factory
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -77,7 +78,6 @@ class BaseManager:
     token_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     erc20_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     exchanges: Dict[str, Exchange] = field(default_factory=dict)
-    factory_contracts: Dict[str, Contract or Type[Contract]] = field(default_factory=dict)
     uniswap_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
     uniswap_v3_event_mappings: Dict[str, str] = field(default_factory=dict)
     solidly_v2_event_mappings: Dict[str, str] = field(default_factory=dict)
@@ -128,25 +128,10 @@ class BaseManager:
                 self.SUPPORTED_BASE_EXCHANGES.append(base_exchange_name)
 
             self.exchanges[exchange_name] = exchange_factory.get_exchange(key=exchange_name, cfg=self.cfg, exchange_initialized=initialize_events)
-            if base_exchange_name in SOLIDLY_V2_NAME:
-                self.exchanges[exchange_name] = self.handle_solidly_exchanges(exchange=self.exchanges[exchange_name])
 
         self.init_exchange_contracts()
         self.set_carbon_v1_fee_pairs()
         self.init_tenderly_event_contracts()
-
-    def handle_solidly_exchanges(self, exchange):
-        """
-        Handles getting stable & volatile fees for Solidly forks
-        """
-        exchange_name = exchange.exchange_name
-        self.factory_contracts[exchange_name] = self.w3_async.eth.contract(
-            address=self.cfg.FACTORY_MAPPING[exchange_name],
-            abi=exchange.get_factory_abi,
-        )
-        exchange.factory_contract = self.factory_contracts[exchange.exchange_name]
-
-        return exchange
 
     @property
     def fee_pairs(self) -> Dict:
@@ -203,14 +188,14 @@ class BaseManager:
             self._fee_pairs[ex] = fee_pairs
 
     def get_fee_pairs(
-            self, all_pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract
+            self, all_pairs: List[Tuple[str, str]], carbon_controller: Contract
     ) -> Dict[Tuple[str, str], int]:
         """
         Get the fees for each pair and store in a dictionary.
 
         Parameters
         ----------
-        all_pairs : List[Tuple]
+        all_pairs : List[Tuple[str, str]]
             A list of pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -241,13 +226,13 @@ class BaseManager:
         )
         return fee_pairs
 
-    def exchange_name_from_event(self, event: Dict[str, Any]) -> str:
+    def exchange_name_from_event(self, event: Event) -> str:
         """
         Get the exchange name from the event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
 
         Returns
@@ -255,8 +240,8 @@ class BaseManager:
         str
             The exchange name.
         """
-        if 'id' in event['args']:
-            carbon_controller_address = event['address']
+        if 'id' in event.args:
+            carbon_controller_address = event.address
             for ex in self.cfg.CARBON_CONTROLLER_MAPPING:
                 if self.cfg.CARBON_CONTROLLER_MAPPING[ex] == carbon_controller_address:
                     return ex
@@ -270,7 +255,7 @@ class BaseManager:
         return None
 
     def check_forked_exchange_names(
-            self, exchange_name_default: str = None, address: str = None, event: Any = None
+            self, exchange_name_default: str = None, address: str = None, event: Event = None
     ) -> str:
         """
         Check the forked exchange names. If the exchange name is forked (Sushiswap from UniswapV2, etc) return the
@@ -282,7 +267,7 @@ class BaseManager:
             The default exchange name.
         address : str, optional
             The address.
-        event : Any, optional
+        event : Event, optional
             The event.
 
         Returns
@@ -408,7 +393,7 @@ class BaseManager:
 
     def get_carbon_pairs(
             self, carbon_controller: Contract, exchange_name: str, target_tokens: List[str] = None
-    ) -> List[Tuple[str, str, int, int]]:
+    ) -> List[Tuple[str, str]]:
         """
         Get the carbon pairs.
 
@@ -423,7 +408,7 @@ class BaseManager:
 
         Returns
         -------
-        List[Tuple[str, str, int, int]]
+        List[Tuple[str, str]]
             The carbon pairs.
 
         """
@@ -444,7 +429,7 @@ class BaseManager:
                 if pair[1] not in target_tokens:
                     target_tokens.append(pair[1])
         return [
-            (pair[0], pair[1], 0, 5000)
+            pair
             for pair in pairs
             if pair[0] in target_tokens and pair[1] in target_tokens
         ]
@@ -523,7 +508,7 @@ class BaseManager:
 
     def get_strats_by_contract(
             self,
-            pairs: List[Tuple[str, str, int, int]],
+            pairs: List[Tuple[str, str]],
             carbon_controller: Contract,
             exchange_name: str,
     ) -> List[List[Any]]:
@@ -532,7 +517,7 @@ class BaseManager:
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -545,29 +530,17 @@ class BaseManager:
             The strategies.
 
         """
-        multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
-        with multicaller as mc:
-            for pair in pairs:
-                try:
-                    # Loading the strategies for each pair without executing the calls yet
-                    mc.add_call(
-                        carbon_controller.functions.strategiesByPair,
-                        pair[0],
-                        pair[1],
-                        pair[2],
-                        pair[3],
-                    )
-                except ValueError:
-                    print(f"Error fetching strategiesByPair {pair}")
+        for pair in pairs:
+            # Loading the strategies for each pair without executing the calls yet
+            multicaller.add_call(carbon_controller.functions.strategiesByPair(*pair, 0, 5000))
 
-            # Fetch strategies for each pair from the CarbonController contract object
-            strategies_by_pair = mc.multicall()
+        # Fetch strategies for each pair from the CarbonController contract object
+        strategies_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
+
+        # Assert that all results are valid
+        assert all(result is not None for result in strategies_by_pair)
 
         self.carbon_inititalized[exchange_name] = True
 
@@ -578,7 +551,7 @@ class BaseManager:
         self.cfg.logger.debug(
             f"[events.managers.base] Retrieved {len(strategies_by_pair)} {exchange_name} strategies"
         )
-        return [s for strat in strategies_by_pair if strat for s in strat if s]
+        return [strategy for strategies in strategies_by_pair for strategy in strategies]
 
     def get_strats_by_state(self, pairs: List[List[Any]], exchange_name: str) -> List[List[int]]:
         """
@@ -586,7 +559,7 @@ class BaseManager:
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         exchange_name : str
             The carbon exchange/fork name.
@@ -635,14 +608,14 @@ class BaseManager:
         return strategies
 
     def get_strategies(
-            self, pairs: List[Tuple[str, str, int, int]], carbon_controller: Contract, exchange_name: str
+            self, pairs: List[Tuple[str, str]], carbon_controller: Contract, exchange_name: str
     ) -> List[List[str]]:
         """
         Get the strategies.
 
         Parameters
         ----------
-        pairs : List[Tuple[str, str, int, int]]
+        pairs : List[Tuple[str, str]]
             The pairs.
         carbon_controller : Contract
             The CarbonController contract object.
@@ -685,20 +658,17 @@ class BaseManager:
             The fees by pair.
 
         """
-        multicaller = MultiCaller(
-            contract=carbon_controller,
-            block_identifier=self.replay_from_block or "latest",
-            multicall_address=self.cfg.MULTICALL_CONTRACT_ADDRESS,
-            web3=self.web3
-        )
+        multicaller = MultiCaller(self.web3, self.cfg.MULTICALL_CONTRACT_ADDRESS)
 
-        with multicaller as mc:
-            for pair in all_pairs:
-                mc.add_call(
-                    carbon_controller.functions.pairTradingFeePPM, pair[0], pair[1]
-                )
+        for pair in all_pairs:
+            multicaller.add_call(carbon_controller.functions.pairTradingFeePPM(*pair))
 
-        return multicaller.multicall()
+        fees_by_pair = multicaller.run_calls(self.replay_from_block or "latest")
+
+        # Assert that all results are valid
+        assert all(result is not None for result in fees_by_pair)
+
+        return fees_by_pair
 
     def get_tkn_symbol_and_decimals(
             self, web3: Web3, erc20_contracts: Dict[str, Contract], cfg: Config, addr: str
@@ -793,11 +763,11 @@ class BaseManager:
         if key != "strategy_id" and (pool_info is None or not pool_info):
             # Uses method in ContractsManager.add_pool_info_from_contract class to get pool info from contract
             pool_info = self.add_pool_info_from_contract(
-                address=addr, event=event, block_number=event["blockNumber"]
+                address=addr, event=event, block_number=event.block_number
             )
 
         # if addr in self.cfg.CARBON_CONTROLLER_MAPPING:
-        #     cid = event["args"]["id"] if event is not None else pool_info["strategy_id"]
+        #     cid = event.args["id"] if event is not None else pool_info["strategy_id"]
         #
         #     for pool in self.pool_data:
         #         if pool["cid"] == cid:
@@ -810,14 +780,14 @@ class BaseManager:
         return pool_info
 
     def get_key_and_value(
-            self, event: Dict[str, Any], addr: str, ex_name: str
+            self, event: Event, addr: str, ex_name: str
     ) -> Tuple[str, Any]:
         """
         Get the key and value.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
         addr : str
             The address.
@@ -831,38 +801,38 @@ class BaseManager:
 
         """
         if ex_name == "bancor_pol":
-            return "token", event["args"]["token"]
+            return "token", event.args["token"]
         if ex_name in self.cfg.CARBON_V1_FORKS:
-            info = {'exchange_name': ex_name, 'strategy_id': event["args"]["id"]}
+            info = {'exchange_name': ex_name, 'strategy_id': event.args["id"]}
             return "cid", get_pool_cid(info, self.cfg.CARBON_V1_FORKS)
         if ex_name in self.cfg.ALL_FORK_NAMES_WITHOUT_CARBON:
             return "address", addr
         if ex_name == "bancor_v2":
             return ("tkn0_address", "tkn1_address"), (
-                event["args"]["_token1"],
-                event["args"]["_token2"],
+                event.args["_token1"],
+                event.args["_token2"],
             )
         if ex_name == "bancor_v3":
             value = (
-                event["args"]["tkn_address"]
-                if event["args"]["tkn_address"] != self.cfg.BNT_ADDRESS
-                else event["args"]["pool"]
+                event.args["tkn_address"]
+                if event.args["tkn_address"] != self.cfg.BNT_ADDRESS
+                else event.args["pool"]
             )
             return "tkn1_address", value
         raise ValueError(
             f"[managers.base.get_key_and_value] Exchange {ex_name} not supported"
         )
 
-    def handle_strategy_deleted(self, event: Dict[str, Any]) -> None:
+    def handle_strategy_deleted(self, event: Event) -> None:
         """
         Handle the strategy deleted event.
 
         Parameters
         ----------
-        event : Dict[str, Any]
+        event : Event
             The event.
         """
-        strategy_id = event["args"]["id"]
+        strategy_id = event.args["id"]
         exchange_name = self.exchange_name_from_event(event)
         cids = [p["cid"] for p in self.pool_data if
                 p["strategy_id"] == strategy_id and p["exchange_name"] == exchange_name]
@@ -901,13 +871,13 @@ class BaseManager:
             The pool key value.
         """
         if key == "cid":
-            return event["args"]["id"]
+            return event.args["id"]
         elif key == "address":
-            return event["address"]
+            return event.address
         elif key == "tkn0_address":
-            return event["args"]["token0"]
+            return event.args["token0"]
         elif key == "tkn1_address":
-            return event["args"]["token1"]
+            return event.args["token1"]
 
     print_events = []
 

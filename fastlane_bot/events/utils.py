@@ -31,15 +31,15 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.data.abi import FAST_LANE_CONTRACT_ABI
 from fastlane_bot.exceptions import ReadOnlyException
 from fastlane_bot.events.interface import QueryInterface
-from fastlane_bot.events.managers.manager import Manager
 
 from fastlane_bot.helpers import TxHelpers
 from fastlane_bot.utils import safe_int
+from .interfaces.event import Event
 
 
 def filter_latest_events(
-    mgr: Manager, events: List[List[AttributeDict]]
-) -> List[AttributeDict]:
+    mgr: Any, events: List[Event]
+) -> List[Event]:
     """
     This function filters out the latest events for each pool. Given a nested list of events, it iterates through all events
     and keeps track of the latest event (i.e., with the highest block number) for each pool. The key used to identify each pool
@@ -54,19 +54,16 @@ def filter_latest_events(
         List[AttributeDict]: A list of events, each representing the latest event for its corresponding pool.
     """
     latest_entry_per_pool = {}
-    all_events = [event for event_list in events for event in event_list]
 
     # Handles the case where multiple pools are created in the same block
-    all_events.reverse()
+    events.reverse()
 
     bancor_v2_anchor_addresses = {
         pool["anchor"] for pool in mgr.pool_data if pool["exchange_name"] == "bancor_v2"
     }
 
-    for event in all_events:
-        pool_type = mgr.pool_type_from_exchange_name(
-            mgr.exchange_name_from_event(event)
-        )
+    for event in events:
+        pool_type = mgr.pool_type_from_exchange_name(mgr.exchange_name_from_event(event))
         if pool_type:
             key = pool_type.unique_key()
         else:
@@ -74,43 +71,33 @@ def filter_latest_events(
         if key == "cid":
             key = "id"
         elif key == "tkn1_address":
-            if event["args"]["pool"] != mgr.cfg.BNT_ADDRESS:
+            if event.args["pool"] != mgr.cfg.BNT_ADDRESS:
                 key = "pool"
             else:
                 key = "tkn_address"
 
-        unique_key = event[key] if key in event else event["args"][key]
+        unique_key = event.address if key == "address" else event.args[key]
+        # unique_key = event.args[key]
 
         # Skip events for Bancor v2 anchors
         if (
             key == "address"
-            and "_token1" in event["args"]
+            and "_token1" in event.args
             and (
-                event["args"]["_token1"] in bancor_v2_anchor_addresses
-                or event["args"]["_token2"] in bancor_v2_anchor_addresses
+                event.args["_token1"] in bancor_v2_anchor_addresses
+                or event.args["_token2"] in bancor_v2_anchor_addresses
             )
         ):
             continue
 
         if unique_key in latest_entry_per_pool:
-            if event["blockNumber"] > latest_entry_per_pool[unique_key]["blockNumber"]:
+            if event.block_number > latest_entry_per_pool[unique_key].block_number:
                 latest_entry_per_pool[unique_key] = event
-            elif (
-                event["blockNumber"] == latest_entry_per_pool[unique_key]["blockNumber"]
-            ):
-                if (
-                    event["transactionIndex"]
-                    == latest_entry_per_pool[unique_key]["transactionIndex"]
-                ):
-                    if (
-                        event["logIndex"]
-                        > latest_entry_per_pool[unique_key]["logIndex"]
-                    ):
+            elif event.block_number == latest_entry_per_pool[unique_key].block_number:
+                if event.transaction_index == latest_entry_per_pool[unique_key].transaction_index:
+                    if event.log_index > latest_entry_per_pool[unique_key].log_index:
                         latest_entry_per_pool[unique_key] = event
-                elif (
-                    event["transactionIndex"]
-                    > latest_entry_per_pool[unique_key]["transactionIndex"]
-                ):
+                elif event.transaction_index > latest_entry_per_pool[unique_key].transaction_index:
                     latest_entry_per_pool[unique_key] = event
                 else:
                     continue
@@ -138,7 +125,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
         If the input object does not match any of the specified types, it is returned as is.
     """
     if isinstance(obj, AttributeDict):
-        return dict(obj)
+        return complex_handler(dict(obj))
     elif isinstance(obj, HexBytes):
         return obj.hex()
     elif isinstance(obj, bytes):
@@ -148,7 +135,7 @@ def complex_handler(obj: Any) -> Union[Dict, str, List, Set, Any]:
     elif isinstance(obj, (list, tuple)):
         return [complex_handler(i) for i in obj]
     elif isinstance(obj, set):
-        return list(obj)
+        return complex_handler(list(obj))
     else:
         return obj
 
@@ -637,10 +624,6 @@ def get_config(
 
     cfg.LIMIT_BANCOR3_FLASHLOAN_TOKENS = limit_bancor3_flashloan_tokens
     cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN = Decimal(default_min_profit_gas_token)
-    cfg.GAS_TKN_IN_FLASHLOAN_TOKENS = (
-        cfg.NATIVE_GAS_TOKEN_ADDRESS in flashloan_tokens
-        or cfg.WRAPPED_GAS_TOKEN_ADDRESS in flashloan_tokens
-    )
     return cfg
 
 
@@ -810,7 +793,21 @@ def save_events_to_json(
     mgr.cfg.logger.debug(f"[events.utils.save_events_to_json] Saved events to {path}")
 
 
-def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Any]):
+def process_new_events(new_event_mappings, event_mappings, filename, read_only):
+    # Update the manager's event mappings
+    event_mappings.update(new_event_mappings)
+    
+    if not read_only:
+        # Update the local event_mappings csvs
+        df = pd.DataFrame.from_dict(event_mappings, orient='index').reset_index()
+        if len(df)>0:
+            df.columns = ['address', 'exchange']
+            # if the csvs are always sorted then the diffs will be readable
+            df.sort_values(by=['exchange','address'], inplace=True)
+            df.to_csv(filename, index=False)
+
+
+def update_pools_from_events(n_jobs: int, mgr: Any, latest_events: List[Event]):
     """
     Updates the pools with the given events.
 
@@ -1059,36 +1056,6 @@ def handle_subsequent_iterations(
         )
 
 
-def verify_state_changed(bot: CarbonBot, initial_state: List[Dict[str, Any]], mgr: Any):
-    """
-    Verifies that the state has changed.
-
-    Parameters
-    ----------
-    bot : CarbonBot
-        The bot object.
-    initial_state : Dict[str, Any]
-        The initial state.
-    mgr : Any
-        The manager object.
-
-    """
-    # Compare the initial state to the final state, and update the state if it has changed
-    final_state = mgr.pool_data.copy()
-    final_state_bancor_pol = [
-        final_state[i]
-        for i in range(len(final_state))
-        if final_state[i]["exchange_name"] == mgr.cfg.BANCOR_POL_NAME
-    ]
-    # assert bot.db.state == final_state, "\n *** bot failed to update state *** \n"
-    if initial_state != final_state_bancor_pol:
-        mgr.cfg.logger.debug("[events.utils.verify_state_changed] State has changed...")
-    else:
-        mgr.cfg.logger.warning(
-            "[events.utils.verify_state_changed] State has not changed... This may indicate an error"
-        )
-
-
 def handle_duplicates(mgr: Any):
     """
     Handles the duplicates in the pool data.
@@ -1103,29 +1070,6 @@ def handle_duplicates(mgr: Any):
     mgr.deduplicate_pool_data()
     cids = [pool["cid"] for pool in mgr.pool_data]
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
-
-
-def get_pools_for_exchange(exchange: str, mgr: Any) -> [Any]:
-    """
-    Handles the initial iteration of the bot.
-
-    Parameters
-    ----------
-    mgr : Any
-        The manager object.
-    exchange : str
-        The exchange for which to get pools
-
-    Returns
-    -------
-    List[Any]
-        A list of pools for the specified exchange.
-    """
-    return [
-        idx
-        for idx, pool in enumerate(mgr.pool_data)
-        if pool["exchange_name"] == exchange
-    ]
 
 
 def handle_initial_iteration(
@@ -1234,6 +1178,7 @@ def get_latest_events(
     start_block: int,
     cache_latest_only: bool,
     logging_path: str,
+    event_gatherer: "EventGatherer"
 ) -> List[Any]:
     """
     Gets the latest events.
@@ -1271,17 +1216,8 @@ def get_latest_events(
             f"[events.utils.get_latest_events] tenderly_events: {len(tenderly_events)}"
         )
 
-    # Get all event filters, events, and flatten them
-    events = [
-        complex_handler(event)
-        for event in [
-            complex_handler(event)
-            for event in get_all_events(
-                n_jobs,
-                get_event_filters(n_jobs, mgr, start_block, current_block),
-            )
-        ]
-    ]
+    # Get all events
+    events = event_gatherer.get_all_events(from_block=start_block, to_block=current_block)
 
     # Filter out the latest events per pool, save them to disk, and update the pools
     latest_events = filter_latest_events(mgr, events)
@@ -1299,7 +1235,7 @@ def get_latest_events(
                     if not pool_type.event_matches_format(event)
                 ]
 
-    carbon_pol_events = [event for event in latest_events if "token" in event["args"]]
+    carbon_pol_events = [event for event in latest_events if "token" in event.args]
     mgr.cfg.logger.info(
         f"[events.utils.get_latest_events] Found {len(latest_events)} new events, {len(carbon_pol_events)} carbon_pol_events"
     )
@@ -1730,66 +1666,6 @@ def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
         )
 
     return forks_to_keep
-
-
-def verify_min_bnt_is_respected(bot: CarbonBot, mgr: Any):
-    """
-    Verifies that the bot respects the min profit. Used for testing.
-
-    Parameters
-    ----------
-    bot : CarbonBot
-        The bot object.
-    mgr : Any
-        The manager object.
-
-    """
-    # Verify MIN_PROFIT_BNT is set and respected
-    assert (
-        bot.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
-        == mgr.cfg.DEFAULT_MIN_PROFIT_GAS_TOKEN
-    ), "bot failed to update min profit"
-    mgr.cfg.logger.debug(
-        "[events.utils.verify_min_bnt_is_respected] Bot successfully updated min profit"
-    )
-
-
-def handle_target_token_addresses(static_pool_data: pd.DataFrame, target_tokens: List):
-    """
-    Get the addresses of the target tokens.
-
-    Parameters
-    ----------
-    static_pool_data : pd.DataFrame
-        The static pool data.
-    target_tokens : List
-        The target tokens.
-
-    Returns
-    -------
-    List
-        The addresses of the target tokens.
-
-    """
-    # Get the addresses of the target tokens
-    target_token_addresses = []
-    if target_tokens:
-        for token in target_tokens:
-            target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn0_address"] == token][
-                    "tkn0_address"
-                ].tolist()
-            )
-            target_token_addresses = (
-                target_token_addresses
-                + static_pool_data[static_pool_data["tkn1_address"] == token][
-                    "tkn1_address"
-                ].tolist()
-            )
-    target_token_addresses = list(set(target_token_addresses))
-    return target_token_addresses
-
 
 def get_current_block(
     last_block: int,

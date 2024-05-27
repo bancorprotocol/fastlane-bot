@@ -15,6 +15,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from fastlane_bot.events.pools.base import Pool
+from ..interfaces.event import Event
 
 
 @dataclass
@@ -41,26 +42,25 @@ class UniswapV2Pool(Pool):
 
     @classmethod
     def event_matches_format(
-        cls, event: Dict[str, Any], static_pools: Dict[str, Any], exchange_name: str = None
+        cls, event: Event, static_pools: Dict[str, Any], exchange_name: str = None
     ) -> bool:
         """
         Check if an event matches the format of a Uniswap v2 event.
         """
-        event_args = event["args"]
+        event_args = event.args
         return (
             "reserve0" in event_args
-            and event["address"] in static_pools[f"{exchange_name}_pools"]
+            and event.address in static_pools[f"{exchange_name}_pools"]
         )
 
     def update_from_event(
-        self, event_args: Dict[str, Any], data: Dict[str, Any]
+        self, event: Event, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         See base class.
         """
-        event_args = event_args["args"]
-        data["tkn0_balance"] = event_args["reserve0"]
-        data["tkn1_balance"] = event_args["reserve1"]
+        data["tkn0_balance"] = event.args["reserve0"]
+        data["tkn1_balance"] = event.args["reserve1"]
         for key, value in data.items():
             self.state[key] = value
 

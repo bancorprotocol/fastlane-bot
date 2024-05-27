@@ -19,13 +19,6 @@ class ReadOnlyException(Exception):
                 f"create this file.")
 
 
-class AsyncUpdateRetryException(Exception):
-    """
-    Exception raised when async_update_pools_from_contracts fails and needs to be retried.
-    """
-    pass
-
-
 class FlashloanUnavailableException(Exception):
     """
     Exception raised when not configured to use self_fund on a blockchain that does not support Flashloans.

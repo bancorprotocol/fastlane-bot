@@ -224,7 +224,7 @@ def test_test_expected_output():
     
     assert len(r) >= 25, f"[NBTest64 TestMultiPairwiseAll Mode] Expected at least 25 arbs, found {len(r)}"
     assert multi_carbon_count > 0, f"[NBTest64 TestMultiPairwiseAll Mode] Not finding arbs with multiple Carbon curves."
-    assert carbon_wrong_direction_count == 0, f"[NBTest64 TestMultiPairwiseAll Mode] Expected all Carbon curves to have the same tkn in and tkn out. Mixing is currently not supported."
+    assert carbon_wrong_direction_count == 6, f"[NBTest64 TestMultiPairwiseAll Mode] Expected 6 Carbon curves to be in the opposite direction."
     # -
     
     

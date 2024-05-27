@@ -5,9 +5,10 @@ This is the main file for configuring the bot and running the fastlane bot.
 (c) Copyright Bprotocol foundation 2023.
 Licensed under MIT
 """
-
-from fastlane_bot.exceptions import AsyncUpdateRetryException, ReadOnlyException, FlashloanUnavailableException
+from fastlane_bot.events.event_gatherer import EventGatherer
+from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
+from fastlane_bot.pool_finder import PoolFinder
 from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
@@ -38,18 +39,16 @@ from fastlane_bot.events.utils import (
     get_config,
     get_loglevel,
     update_pools_from_events,
+    process_new_events,
     write_pool_data_to_disk,
     init_bot,
     get_cached_events,
     handle_subsequent_iterations,
-    verify_state_changed,
     handle_duplicates,
     get_latest_events,
     get_start_block,
     set_network_to_mainnet_if_replay,
     set_network_to_tenderly_if_replay,
-    verify_min_bnt_is_respected,
-    handle_target_token_addresses,
     get_current_block,
     handle_tenderly_event_exchanges,
     handle_static_pools_update,
@@ -96,6 +95,7 @@ def process_arguments(args):
         "self_fund": is_true,
         "read_only": is_true,
         "is_args_test": is_true,
+        "pool_finder_period": int,
     }
 
     # Apply the transformations
@@ -227,6 +227,7 @@ def main(args: argparse.Namespace) -> None:
             prefix_path: {args.prefix_path}
             self_fund: {args.self_fund}
             read_only: {args.read_only}
+            pool_finder_period: {args.pool_finder_period}
 
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -257,10 +258,6 @@ def main(args: argparse.Namespace) -> None:
         cfg, exchanges, args.blockchain, args.static_pool_data_filename, args.read_only
     )
 
-    target_token_addresses = handle_target_token_addresses(
-        static_pool_data, args.target_tokens
-    )
-
     # Break if timeout is hit to test the bot flags
     if args.timeout == 1:
         cfg.logger.info("Timeout to test the bot flags")
@@ -286,7 +283,7 @@ def main(args: argparse.Namespace) -> None:
         solidly_v2_event_mappings=solidly_v2_event_mappings,
         tokens=tokens.to_dict(orient="records"),
         replay_from_block=args.replay_from_block,
-        target_tokens=target_token_addresses,
+        target_tokens=args.target_tokens,
         tenderly_fork_id=args.tenderly_fork_id,
         tenderly_event_exchanges=tenderly_event_exchanges,
         w3_tenderly=w3_tenderly,
@@ -308,19 +305,28 @@ def run(mgr, args, tenderly_uri=None) -> None:
     start_timeout = time.time()
     mainnet_uri = mgr.cfg.w3.provider.endpoint_uri
     handle_static_pools_update(mgr)
+
+    event_gatherer = EventGatherer(
+        config=mgr.cfg,
+        w3=mgr.w3_async,
+        exchanges=mgr.exchanges,
+    )
+
+    pool_finder = PoolFinder(
+        carbon_forks=mgr.cfg.network.CARBON_V1_FORKS,
+        uni_v3_forks=mgr.cfg.network.UNI_V3_FORKS,
+        flashloan_tokens=args.flashloan_tokens,
+        exchanges=mgr.exchanges,
+        web3=mgr.web3,
+        multicall_address=mgr.cfg.network.MULTICALL_CONTRACT_ADDRESS
+    )
+
     while True:
         try:
-            # Save initial state of pool data to assert whether it has changed
-            initial_state = mgr.pool_data.copy()
-
             # ensure 'last_updated_block' is in pool_data for all pools
-            for idx, pool in enumerate(mgr.pool_data):
+            for pool in mgr.pool_data:
                 if "last_updated_block" not in pool:
                     pool["last_updated_block"] = last_block_queried
-                    mgr.pool_data[idx] = pool
-                if not pool["last_updated_block"]:
-                    pool["last_updated_block"] = last_block_queried
-                    mgr.pool_data[idx] = pool
 
             # Get current block number, then adjust to the block number reorg_delay blocks ago to avoid reorgs
             start_block, replay_from_block = get_start_block(
@@ -366,6 +372,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     start_block,
                     args.cache_latest_only,
                     args.logging_path,
+                    event_gatherer
                 )
             )
             iteration_start_time = time.time()
@@ -379,7 +386,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
                     f"Adding {len(mgr.pools_to_add_from_contracts)} new pools from contracts, "
                     f"{len(mgr.pool_data)} total pools currently exist. Current block: {current_block}."
                 )
-                _run_async_update_with_retries(mgr, current_block=current_block)
+                async_update_pools_from_contracts(mgr, current_block=current_block)
                 mgr.pools_to_add_from_contracts = []
 
             # Increment the loop index
@@ -425,12 +432,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
 
             # Re-initialize the bot
             bot = init_bot(mgr)
-
-            # Verify that the state has changed
-            verify_state_changed(bot=bot, initial_state=initial_state, mgr=mgr)
-
-            # Verify that the minimum profit in BNT is respected
-            verify_min_bnt_is_respected(bot=bot, mgr=mgr)
 
             if args.use_specific_exchange_for_target_tokens is not None:
                 target_tokens = bot.get_tokens_in_exchange(
@@ -529,6 +530,16 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.solidly_v2_event_mappings = dict(
                     solidly_v2_event_mappings[["address", "exchange"]].values
                 )
+
+            if args.pool_finder_period > 0 and (loop_idx - 1) % args.pool_finder_period == 0:
+                mgr.cfg.logger.info(f"Searching for unsupported Carbon pairs.")
+                uni_v2, uni_v3, solidly_v2 = pool_finder.get_pools_for_unsupported_pairs(mgr.cfg, mgr.pool_data, arb_mode=args.arb_mode)
+                process_new_events(uni_v2, mgr.uniswap_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v2_event_mappings.csv", args.read_only)
+                process_new_events(uni_v3, mgr.uniswap_v3_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/uniswap_v3_event_mappings.csv", args.read_only)
+                process_new_events(solidly_v2, mgr.solidly_v2_event_mappings, f"fastlane_bot/data/blockchain_data/{args.blockchain}/solidly_v2_event_mappings.csv", args.read_only)
+                handle_static_pools_update(mgr)
+                mgr.cfg.logger.info(f"Number of pools added: {len(uni_v2) + len(uni_v3) + len(solidly_v2)}")
+
             last_block_queried = current_block
 
             total_iteration_time += time.time() - iteration_start_time
@@ -539,10 +550,9 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 f"\n********************************************\n\n"
             )
 
-        except Exception as e:
+        except Exception:
             mgr.cfg.logger.error(f"Error in main loop: {format_exc()}")
             mgr.cfg.logger.error(
-                f"[main] Error in main loop: {e}. Continuing... "
                 f"Please report this error to the Fastlane Telegram channel if it persists."
                 f"{mgr.cfg.logging_header}"
             )
@@ -551,27 +561,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 mgr.cfg.logger.info("Timeout hit... stopping bot")
                 mgr.cfg.logger.info("[main] Timeout hit... stopping bot")
                 break
-
-
-def _run_async_update_with_retries(mgr, current_block, max_retries=5):
-    failed_async_calls = 0
-
-    while failed_async_calls < max_retries:
-        try:
-            async_update_pools_from_contracts(mgr, current_block)
-            return  # Successful execution
-        except AsyncUpdateRetryException as e:
-            failed_async_calls += 1
-            mgr.cfg.logger.error(f"Attempt {failed_async_calls} failed: {e}")
-            mgr.update_remaining_pools()
-
-    # Handling failure after retries
-    mgr.cfg.logger.error(
-        f"[main run.py] async_update_pools_from_contracts failed after "
-        f"{len(mgr.pools_to_add_from_contracts)} attempts. List of failed pools: {mgr.pools_to_add_from_contracts}"
-    )
-
-    raise AsyncUpdateRetryException("[main.py] async_update_pools_from_contracts failed after maximum retries.")
 
 
 if __name__ == "__main__":
@@ -602,7 +591,7 @@ if __name__ == "__main__":
             "multi_triangle",
             "b3_two_hop",
             "multi_pairwise_pol",
-            "multi_pairwise_all",
+            "multi_pairwise_all"
         ],
     )
     parser.add_argument(
@@ -746,6 +735,11 @@ if __name__ == "__main__":
         "--rpc_url",
         default=None,
         help="Custom RPC URL. If not set, the bot will use the default Alchemy RPC URL for the blockchain (if available).",
+    )
+    parser.add_argument(
+        "--pool_finder_period",
+        default=100,
+        help="Searches for pools that can service Carbon strategies that do not have viable routes.",
     )
 
     # Process the arguments

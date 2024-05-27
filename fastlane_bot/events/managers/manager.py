@@ -18,33 +18,33 @@ from fastlane_bot.data.abi import BANCOR_V3_NETWORK_INFO_ABI
 from fastlane_bot.events.managers.contracts import ContractsManager
 from fastlane_bot.events.managers.events import EventManager
 from fastlane_bot.events.managers.pools import PoolManager
-from fastlane_bot.events.pools.utils import get_pool_cid
+from ..interfaces.event import Event
 
 
 class Manager(PoolManager, EventManager, ContractsManager):
-    def update_from_event(self, event: Dict[str, Any]):
+    def update_from_event(self, event: Event):
         """
         Updates the state of the pool data from an event. StrategyCreated and StrategyUpdated events are handled as
         the "default" event types to process.
 
         Args:
-            event (Dict[str, Any]): The event to process.
+            event (Event): The event to process.
 
         """
         ex_name = self.exchange_name_from_event(event)
-        if event["event"] in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"]:
+        if event.event in ["TradingFeePPMUpdated", "PairTradingFeePPMUpdated"]:
             self.handle_trading_fee_updated()
             return
 
-        if event["event"] == "PairCreated":
+        if event.event == "PairCreated":
             self.set_carbon_v1_fee_pairs()
             return
 
-        if event["event"] == "StrategyDeleted":
+        if event.event == "StrategyDeleted":
             self.handle_strategy_deleted(event)
             return
 
-        addr = self.web3.to_checksum_address(event["address"])
+        addr = self.web3.to_checksum_address(event.address)
         if not ex_name:
             return
 
@@ -63,9 +63,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info["descr"] = self.pool_descr_from_info(pool_info)
 
         pool = self.get_or_init_pool(pool_info)
-        data = pool.update_from_event(
-            event or {}, pool.get_common_data(event, pool_info)
-        )
+        data = pool.update_from_event(event, pool.get_common_data(event, pool_info))
         self.update_pool_data(pool_info, data)
 
     def update_from_pool_info(
@@ -166,18 +164,18 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
     def handle_pair_trading_fee_updated(
             self,
-            event: Dict[str, Any] = None,
+            event: Event = None,
     ):
         """
         Handle the pair trading fee updated event by updating the fee pairs and pool info for the given pair.
 
         Parameters
         ----------
-        event : Dict[str, Any], optional
+        event : Event, optional
             The event, by default None.
         """
-        tkn0_address = event["args"]["token0"]
-        tkn1_address = event["args"]["token1"]
+        tkn0_address = event.args["token0"]
+        tkn1_address = event.args["token1"]
 
         for exchange_name in self.cfg.CARBON_V1_FORKS:
             if exchange_name in self.exchanges:
@@ -250,7 +248,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
         remaining_pools = []
         all_events = [pool[2] for pool in self.pools_to_add_from_contracts]
         for event in all_events:
-            addr = self.web3.to_checksum_address(event["address"])
+            addr = self.web3.to_checksum_address(event.address)
             ex_name = self.exchange_name_from_event(event)
             if not ex_name:
                 self.cfg.logger.warning("[update_remaining_pools] ex_name not found from event")

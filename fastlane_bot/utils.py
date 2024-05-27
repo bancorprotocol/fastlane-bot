@@ -23,7 +23,7 @@ def safe_int(value: int or float) -> int:
 def num_format(value: int or float) -> str:
     try:
         return "{0:.4f}".format(value)
-    except Exception as _:
+    except Exception:
         return str(value)
 
 
@@ -68,6 +68,10 @@ class EncodedOrder:
     def decodeFloat(cls, value):
         """undoes the mantisse/exponent encoding in A,B"""
         return (value % cls.ONE) << (value // cls.ONE)
+    
+    @classmethod
+    def decodeRate(cls, value):
+        return (value / cls.ONE) ** 2
 
     @classmethod
     def decode(cls, value):
@@ -178,17 +182,12 @@ class EncodedOrder:
 
     @property
     def p_marg(self):
+        A = self.decodeFloat(int(self.A))
+        B = self.decodeFloat(int(self.B))
         if self.y == self.z:
-            return self.p_start
-        elif self.y == 0:
-            return self.p_end
-        raise NotImplementedError("p_marg not implemented for non-full / empty orders")
-        A = self.decodeFloat(self.A)
-        B = self.decodeFloat(self.B)
-        return self.decode(B + A * self.y / self.z) ** 2
-        # https://github.com/bancorprotocol/carbon-simulator/blob/beta/benchmark/core/trade/impl.py
-        # 'marginalRate' : decodeRate(B + A if y == z else B + A * y / z),
-
+            return self.decodeRate(B + A)
+        else:
+            return self.decodeRate(B + A * self.y/self.z)
 
 def find_latest_timestamped_folder(logging_path=None):
     """
