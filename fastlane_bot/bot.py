@@ -345,8 +345,8 @@ class CarbonBot:
         try:
             best_profit_usd = 1 / arb_finder.calculate_profit(self.ConfigObj.STABLECOIN_ADDRESS, 1 / src_profit)
         except Exception as e:
-            self.ConfigObj.logger.info(f"[bot.calculate_profit] error: {e}")
             best_profit_usd = Decimal("NaN")
+            self.ConfigObj.logger.info(f"[bot.calculate_profit] error: {e}")
 
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] input: {best_profit, fl_token, flashloan_fee_amt}")
         self.ConfigObj.logger.debug(f"[bot.calculate_profit] output: {best_profit_gastkn, best_profit_usd}")
