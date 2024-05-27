@@ -25,19 +25,19 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         else:
             flashloan_tokens = fltkns
 
-        for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
-            bancor_curve_0 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn0}").byparams(exchange="bancor_v3").curves
-            if len(bancor_curve_0) == 0:
-                continue
+        bancor_curves_dict = [
+            {tkn: self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn}").byparams(exchange="bancor_v3").curves}
+            for tkn in flashloan_tokens
+        ]
 
-            bancor_curve_1 = self.CCm.bypairs(f"{self.ConfigObj.BNT_ADDRESS}/{tkn1}").byparams(exchange="bancor_v3").curves
-            if len(bancor_curve_1) == 0:
+        for tkn0, tkn1 in [(tkn0, tkn1) for tkn0, tkn1 in product(flashloan_tokens, flashloan_tokens) if tkn0 != tkn1]:
+            bancor_curves = bancor_curves_dict[tkn0] + bancor_curves_dict[tkn1]
+            if len(bancor_curves) < 2:
                 continue
 
             all_curves = list(set(self.CCm.bypairs(f"{tkn0}/{tkn1}")) | set(self.CCm.bypairs(f"{tkn1}/{tkn0}")))
             carbon_curves = [curve for curve in all_curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
             other_curves = [curve for curve in all_curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
-            bancor_curves = bancor_curve_0 + bancor_curve_1
 
             base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
             base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
