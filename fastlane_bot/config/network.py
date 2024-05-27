@@ -287,7 +287,7 @@ class ConfigNetwork(ConfigBase):
     @staticmethod
     def gas_strategy(web3):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
-        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+        max_priority_fee = 0 #web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
         return {
             "maxFeePerGas": gas_price + max_priority_fee,
             "maxPriorityFeePerGas": max_priority_fee
@@ -798,8 +798,8 @@ class _ConfigNetworkSei(ConfigNetwork):
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
     network_df = get_multichain_addresses(network=NETWORK_NAME)
-    FASTLANE_CONTRACT_ADDRESS = "0x6619871118D144c1c28eC3b23036FC1f0829ed3a"
-    MULTICALL_CONTRACT_ADDRESS = "0x1E05037b9c4fEFaF3c45CD6F4F2C3197e6A43cD8"
+    FASTLANE_CONTRACT_ADDRESS = "0xC56Eb3d03C5D7720DAf33a3718affb9BcAb03FBc"
+    MULTICALL_CONTRACT_ADDRESS = "0xe033Bed7cae4114Af84Be1e9F1CA7DEa07Dfe1Cf"
 
     CARBON_CONTROLLER_ADDRESS = "0xe4816658ad10bF215053C533cceAe3f59e1f1087"
     CARBON_CONTROLLER_VOUCHER = "0xA4682A2A5Fe02feFF8Bd200240A41AD0E6EaF8d5"
