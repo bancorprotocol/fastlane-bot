@@ -19,9 +19,9 @@ class ArbitrageFinderMultiPairwiseAll(ArbitrageFinderPairwiseBase):
         flashloan_tokens_intersect = all_tokens.intersection(set(self.flashloan_tokens))
         return [(tkn0, tkn1) for tkn0, tkn1 in product(all_tokens, flashloan_tokens_intersect) if tkn0 != tkn1]
 
-    def get_curve_combos(self, CC: Any) -> List[Any]:
-        carbon_curves = [curve for curve in CC.curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        other_curves = [curve for curve in CC.curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
+    def get_curve_combos(self, curves: List[Any]) -> List[Any]:
+        carbon_curves = [curve for curve in curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        other_curves = [curve for curve in curves if curve.params.exchange not in self.ConfigObj.CARBON_V1_FORKS]
 
         if len(carbon_curves) > 0:
             curve_combos = []

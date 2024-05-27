@@ -19,10 +19,10 @@ class ArbitrageFinderMultiPairwisePol(ArbitrageFinderPairwiseBase):
         bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn != self.ConfigObj.WETH_ADDRESS])
         return [(tkn0, tkn1) for tkn0, tkn1 in product(bancor_pol_tkns, [self.ConfigObj.WETH_ADDRESS]) if tkn0 != tkn1]
 
-    def get_curve_combos(self, CC: Any) -> List[Any]:
-        pol_curves = [curve for curve in CC.curves if curve.params.exchange == "bancor_pol"]
-        carbon_curves = [curve for curve in CC.curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
-        other_curves = [curve for curve in CC.curves if curve.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
+    def get_curve_combos(self, curves: List[Any]) -> List[Any]:
+        pol_curves = [curve for curve in curves if curve.params.exchange == "bancor_pol"]
+        carbon_curves = [curve for curve in curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]
+        other_curves = [curve for curve in curves if curve.params.exchange not in ["bancor_pol"] + self.ConfigObj.CARBON_V1_FORKS]
         curve_combos = [[curve] + pol_curves for curve in other_curves]
 
         if len(carbon_curves) > 0:
