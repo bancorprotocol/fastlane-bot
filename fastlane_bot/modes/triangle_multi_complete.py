@@ -16,13 +16,16 @@ from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
 class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
     def get_combos(self) -> List[Any]:
         combos = []
+        flashloan_tokens = [x.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) for x in self.flashloan_tokens]
+        flashloan_tokens = list(set(flashloan_tokens))
 
-        for flt in self.flashloan_tokens:
+        for flt in flashloan_tokens:
             # Get the Carbon pairs
             carbon_pairs = sort_pairs(set([curve.pair for curve in self.CCm.curves if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS]))
 
             # Create a set of unique tokens excluding the flashloan token
             x_tokens = {token for pair in carbon_pairs for token in pair.split("/") if token != flt}
+            x_tokens = list(set([x.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS) for x in x_tokens]))
 
             # Get relevant pairs containing the flashloan token
             flt_x_pairs = sort_pairs([f"{x_token}/{flt}" for x_token in x_tokens])
@@ -32,11 +35,11 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
 
             # Note the relevant pairs
             all_relevant_pairs = flt_x_pairs + x_y_pairs
-            self.ConfigObj.logger.debug(f"len(all_relevant_pairs) {len(all_relevant_pairs)}")
+            self.ConfigObj.logger.debug(f"[triangle_multi_complete.get_combos] all_relevant_pairs: {len(all_relevant_pairs)}")
 
             # Generate triangle groups
             triangle_groups = get_triangle_groups(flt, x_y_pairs)
-            self.ConfigObj.logger.debug(f"len(triangle_groups) {len(triangle_groups)}")
+            self.ConfigObj.logger.debug(f"[triangle_multi_complete.get_combos] triangle_groups: {len(triangle_groups)}")
 
             # Get pair info for the cohort
             all_relevant_pairs_info = get_all_relevant_pairs_info(self.CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
@@ -46,6 +49,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
 
             # Get [(flt,curves)] analysis set for the flashloan token
             flt_triangle_analysis_set = get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info)
+            self.ConfigObj.logger.debug(f"[triangle_multi_complete.get_combos] flt_triangle_analysis_set {flt, len(flt_triangle_analysis_set)}")
 
             # The entire analysis set for all flashloan tokens
             combos.extend(flt_triangle_analysis_set)
