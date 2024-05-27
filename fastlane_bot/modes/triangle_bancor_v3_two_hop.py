@@ -54,8 +54,6 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
             if len(base_dir_two) > 0:
                 miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + base_dir_two]
 
-            miniverses += [bancor_v3_curve_0 + bancor_v3_curve_1 + carbon_curves]
-
             miniverse_combos += [(tkn1, miniverse) for miniverse in miniverses]
 
         return miniverse_combos
