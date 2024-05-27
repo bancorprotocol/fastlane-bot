@@ -50,9 +50,6 @@ class ArbitrageFinderBase:
         return None
 
     def calculate_profit(self, src_token: str, src_profit: float) -> Decimal:
-        """
-        Calculate profit based on the source token.
-        """
         if src_token not in [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
             items = get_items(self.CCm, self.sort_order, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
             assert len(items) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
