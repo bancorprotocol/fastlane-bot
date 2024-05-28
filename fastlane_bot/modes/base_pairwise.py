@@ -29,7 +29,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                 try:
                     container = CPCContainer(curve_combos)
                     optimizer = PairOptimizer(container)
-                    params = get_params(container, dst_token, src_token)
+                    params = self.get_params(container, [dst_token], src_token)
                     optimization = optimizer.optimize(src_token, params=params)
                     trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
                     trade_instructions_df = optimization.trade_instructions(optimizer.TIF_DFAGGR)
@@ -45,7 +45,3 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                     arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 
         return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}
-
-def get_params(container, dst_token, src_token):
-    pstart = {dst_token: container.bypairs(f"{dst_token}/{src_token}").curves[0].p}
-    return {"pstart": pstart}
