@@ -41,14 +41,15 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
 def get_params(container, src_token):
     pstart = {src_token: 1}
-    for dst_token in [token for token in container.tokens() if token != src_token]:
-        curves = container.bytknx(dst_token).bytkny(src_token).curves
-        if len(curves) > 0:
-            pstart[dst_token] = curves[0].p
-        else:
-            curves = container.bytknx(src_token).bytkny(dst_token).curves
+    for dst_token in container.tokens():
+        if dst_token != src_token:
+            curves = container.bytknx(dst_token).bytkny(src_token).curves
             if len(curves) > 0:
-                pstart[dst_token] = 1 / curves[0].p
+                pstart[dst_token] = curves[0].p
             else:
-                return None
+                curves = container.bytknx(src_token).bytkny(dst_token).curves
+                if len(curves) > 0:
+                    pstart[dst_token] = 1 / curves[0].p
+                else:
+                    return None
     return {"pstart": pstart}

@@ -26,7 +26,6 @@ class ArbitrageFinderBase:
                 ["bancor_v2", "bancor_v3"]
                 + ConfigObj.UNI_V2_FORKS
                 + ConfigObj.UNI_V3_FORKS
-                + ConfigObj.CARBON_V1_FORKS
             )
         }
 
@@ -58,9 +57,9 @@ class ArbitrageFinderBase:
 
     def calculate_profit(self, src_token: str, src_profit: float) -> Decimal:
         if src_token not in [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
-            items = get_items(self.CCm, self.sort_order, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
-            assert len(items) > 0, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
-            return Decimal(str(src_profit)) / Decimal(str(items[0]["price"]))
+            price = get_reliable_price(self.CCm, self.sort_order, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
+            assert price is not None, f"Failed to get conversion rate for {src_token} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}"
+            return Decimal(str(src_profit)) / Decimal(str(price))
         return Decimal(str(src_profit))
 
 def is_net_change_small(trade_instructions_df) -> bool:
@@ -69,7 +68,8 @@ def is_net_change_small(trade_instructions_df) -> bool:
     except Exception:
         return False
 
-def get_items(CCm, sort_order, dst_token, src_token):
+def get_reliable_price(CCm, sort_order, dst_token, src_token):
     list1 = [{"exchange": curve.params.exchange, "price": curve.p / 1} for curve in CCm.bytknx(dst_token).bytkny(src_token).curves]
     list2 = [{"exchange": curve.params.exchange, "price": 1 / curve.p} for curve in CCm.bytknx(src_token).bytkny(dst_token).curves]
-    return sorted([item for item in list1 + list2 if item["exchange"] in sort_order], key=lambda item: sort_order[item["exchange"]])
+    items = sorted(list1 + list2, key = lambda item: sort_order.get(item["exchange"], float('inf')))
+    return items[0]["price"] if len(items) > 0 else None
