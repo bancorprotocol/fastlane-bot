@@ -258,31 +258,17 @@ class QueryInterface:
         """
         Remove unmapped uniswap_v2 pools
         """
-        initial_state = self.state.copy()
+        unmapped_uniswap_v2_pools = [
+            pool for pool in self.state
+            if pool["exchange_name"] in self.cfg.UNI_V2_FORKS and pool["address"] not in self.uniswap_v2_event_mappings
+        ]
         self.state = [
             pool for pool in self.state
-            if pool["exchange_name"] not in self.cfg.UNI_V2_FORKS or pool["address"] in self.uniswap_v2_event_mappings
+            if pool not in unmapped_uniswap_v2_pools
         ]
         self.cfg.logger.debug(
-            f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
+            f"{len(unmapped_uniswap_v2_pools)} unmapped uniswap_v2 pools removed, {len(self.state)} pools remaining"
         )
-
-        # Log the total number of pools filtered out for each exchange
-        self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
-        unmapped_pools = [pool for pool in initial_state if pool not in self.state]
-        assert len(unmapped_pools) == len(initial_state) - len(self.state)
-        # uniswap_v3_unmapped = [
-        #     pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v3"
-        # ]
-        # self.log_pool_numbers(uniswap_v3_unmapped, "uniswap_v3")
-        uniswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "uniswap_v2"
-        ]
-        self.log_pool_numbers(uniswap_v2_unmapped, "uniswap_v2")
-        sushiswap_v2_unmapped = [
-            pool for pool in unmapped_pools if pool["exchange_name"] == "sushiswap_v2"
-        ]
-        self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
 
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
