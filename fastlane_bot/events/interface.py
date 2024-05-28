@@ -260,39 +260,13 @@ class QueryInterface:
         """
         initial_state = self.state.copy()
         self.state = [
-            pool
-            for pool in self.state
-            if pool["exchange_name"] != "uniswap_v2"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V2_FORKS
-                and pool["address"] in self.uniswap_v2_event_mappings
-            )
+            pool for pool in self.state
+            if pool["exchange_name"] not in self.cfg.UNI_V2_FORKS or pool["address"] in self.uniswap_v2_event_mappings
         ]
         self.cfg.logger.debug(
             f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
         )
-        self.log_umapped_pools_by_exchange(initial_state)
 
-    def remove_unmapped_uniswap_v3_pools(self) -> None:
-        """
-        Remove unmapped uniswap_v2 pools
-        """
-        initial_state = self.state.copy()
-        self.state = [
-            pool
-            for pool in self.state
-            if pool["exchange_name"] != "uniswap_v3"
-            or (
-                pool["exchange_name"] in self.cfg.UNI_V3_FORKS
-                and pool["address"] in self.uniswap_v3_event_mappings
-            )
-        ]
-        self.cfg.logger.debug(
-            f"Removed {len(initial_state) - len(self.state)} unmapped uniswap_v2/sushi pools. {len(self.state)} uniswap_v2/sushi pools remaining"
-        )
-        self.log_umapped_pools_by_exchange(initial_state)
-
-    def log_umapped_pools_by_exchange(self, initial_state):
         # Log the total number of pools filtered out for each exchange
         self.ConfigObj.logger.debug("Unmapped uniswap_v2/sushi pools:")
         unmapped_pools = [pool for pool in initial_state if pool not in self.state]
@@ -310,30 +284,6 @@ class QueryInterface:
         ]
         self.log_pool_numbers(sushiswap_v2_unmapped, "sushiswap_v2")
 
-    def remove_faulty_token_pools(self) -> None:
-        """
-        Remove pools with faulty tokens
-        """
-        self.cfg.logger.debug(
-            f"Total number of pools. {len(self.state)} before removing faulty token pools"
-        )
-
-        safe_pools = []
-        for pool in self.state:
-            self.cfg.logger.info(pool)
-            try:
-                self.get_token(pool["tkn0_address"])
-                self.get_token(pool["tkn1_address"])
-                safe_pools.append(pool)
-            except Exception as e:
-
-                self.cfg.logger.warning(f"[events.interface] Exception: {e}")
-                self.cfg.logger.warning(
-                    f"Removing pool for exchange={pool['pair_name']}, pair_name={pool['pair_name']} token={pool['tkn0_key']} from state for faulty token"
-                )
-
-        self.state = safe_pools
-
     def update_state(self, state: List[Dict[str, Any]]) -> None:
         """
         Update the state.
@@ -347,12 +297,6 @@ class QueryInterface:
         self.state = state.copy()
         if self.state == state:
             self.cfg.logger.warning("WARNING: State not updated")
-
-    def drop_all_tables(self) -> None:
-        """
-        Drop all tables. Deprecated.
-        """
-        raise DeprecationWarning("Method not implemented")
 
     def get_pool_data_with_tokens(self) -> List[PoolAndTokens]:
         """

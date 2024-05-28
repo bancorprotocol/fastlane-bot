@@ -1013,13 +1013,9 @@ def handle_subsequent_iterations(
         The block number to fork from.
 
     """
-    # bot.db.handle_token_key_cleanup()
     bot.db.remove_unmapped_uniswap_v2_pools()
     bot.db.remove_zero_liquidity_pools()
     bot.db.remove_unsupported_exchanges()
-    # bot.db.remove_faulty_token_pools()
-    # bot.db.remove_pools_with_invalid_tokens()
-    # bot.db.ensure_descr_in_pool_data()
 
     # Filter the target tokens
     if target_tokens:
