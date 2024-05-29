@@ -12,8 +12,9 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple
+from typing import List, Type, Tuple, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import BANCOR_V2_CONVERTER_ABI
@@ -46,7 +47,8 @@ class BancorV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TokenRateUpdate]
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
         return [Subscription(contract.events.TokenRateUpdate)]
 
     # def async convert_address(self, address: str, contract: Contract) -> str:

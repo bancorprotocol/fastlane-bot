@@ -27,7 +27,6 @@ class EventGatherer:
         config: Config,
         w3: AsyncWeb3,
         exchanges: Dict[str, Exchange],
-        event_contracts: Dict[str, Contract],
     ):
         """ Initializes the EventManager.
         Args:
@@ -37,13 +36,11 @@ class EventGatherer:
         self._config = config
         self._w3 = w3
         self._subscriptions = []
-        unique_topics = set()
 
-        for exchange_name, exchange in exchanges.items():
-            subscriptions = exchange.get_subscriptions(event_contracts[exchange_name])
+        for exchange in exchanges.values():
+            subscriptions = exchange.get_subscriptions(w3)
             for sub in subscriptions:
-                if sub.topic not in unique_topics:
-                    unique_topics.add(sub.topic)
+                if sub.topic not in [s.topic for s in self._subscriptions]:
                     self._subscriptions.append(sub)
 
     def get_all_events(self, from_block: int, to_block: int):

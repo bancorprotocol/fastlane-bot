@@ -13,8 +13,9 @@ Licensed under MIT.
 """
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List, Type, Any
+from typing import List, Type, Any, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract, AsyncContract
 
 from fastlane_bot.data.abi import SOLIDLY_V2_POOL_ABI
@@ -50,7 +51,8 @@ class SolidlyV2(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.Sync] if self.exchange_initialized else []
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
         return [Subscription(contract.events.Sync)]
 
     def get_abi(self):

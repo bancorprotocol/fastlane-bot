@@ -12,8 +12,9 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple
+from typing import List, Type, Tuple, Union
 
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import BANCOR_V3_POOL_COLLECTION_ABI
@@ -50,7 +51,8 @@ class BancorV3(Exchange):
     def get_events(self, contract: Contract) -> List[Type[Contract]]:
         return [contract.events.TradingLiquidityUpdated]
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
         return [
             Subscription(contract.events.TradingLiquidityUpdated, TRADING_LIQUIDITY_UPDATED_TOPIC),
             # Subscription(contract.events.TotalLiquidityUpdated, TOTAL_LIQUIDITY_UPDATED_TOPIC),  # Unused
