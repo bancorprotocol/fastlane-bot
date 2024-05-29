@@ -698,8 +698,6 @@ class TxRouteHandler:
         decimal_tkn0_modifier = Decimal(str(decimal_tkn0_modifier))
         decimal_tkn1_modifier = Decimal(str(decimal_tkn1_modifier))
 
-        # print(f"[_calc_uniswap_v3_output] tkn_in={tkn_in}, tkn_0_address={tkn_0_address}, tkn_1_address={tkn_1_address}, tkn0_in={tkn_in == tkn_0_address}, liquidity={liquidity}, fee={fee}, sqrt_price={sqrt_price}, decimal_tkn0_modifier={decimal_tkn0_modifier}, decimal_tkn1_modifier={decimal_tkn1_modifier}")
-
         return (
             self._swap_token0_in(
                 amount_in=amount_in,
