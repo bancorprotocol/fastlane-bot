@@ -106,7 +106,7 @@ ALCHEMY_RPC_LIST = {
     "fantom": "https://fantom.blockpi.network/v1/rpc/",
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
-    "sei": "https://evm-rpc.arctic-1.seinetwork.io/", # TODO update with mainnet
+    "sei": "https://evm-rpc.sei-apis.com/?x-apikey=",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
