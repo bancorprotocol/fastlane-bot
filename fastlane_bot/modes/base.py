@@ -70,12 +70,12 @@ class ArbitrageFinderBase:
         for exchange in ["bancor_v2", "bancor_v3", *self.ConfigObj.UNI_V2_FORKS, *self.ConfigObj.UNI_V3_FORKS]:
             list1 = [curve.p / 1 for curve in container1.byparams(exchange=exchange).curves]
             list2 = [1 / curve.p for curve in container2.byparams(exchange=exchange).curves]
-            price = [list1 + list2 + [None]][0]
+            price = (list1 + list2 + [None])[0]
             if price is not None:
                 return price
         list1 = [curve.p / 1 for curve in container1.curves]
         list2 = [1 / curve.p for curve in container2.curves]
-        return [list1 + list2 + [None]][0]
+        return (list1 + list2 + [None])[0]
 
 def is_net_change_small(trade_instructions_df) -> bool:
     try:
