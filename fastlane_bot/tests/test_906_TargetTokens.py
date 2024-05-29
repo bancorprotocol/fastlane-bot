@@ -7,9 +7,8 @@
 # ------------------------------------------------------------
 
 
-
 """
-This module contains the tests which ensure the target_tokens parameter is respected.
+This module contains the tests the `b3_two_hop` arb-mode with the `target_tokens` parameter.
 """
 from fastlane_bot import Bot, ConfigNetwork
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
@@ -31,9 +30,6 @@ def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
     
-    with open("log.txt", "w") as f:
-        f.write(f"Searching for main.py in {cwd}")
-                
     print(f"Searching for main.py in {cwd}")
     while True:
         # Check if main.py exists in the current directory
@@ -50,19 +46,18 @@ def find_main_py():
             cwd = new_cwd
        
        
-def run_command(mode):
+# ------------------------------------------------------------
+# Test      906
+# File      test_906_TargetTokens.py
+# Segment   Test b3_two_hop with target tokens
+# ------------------------------------------------------------
+def test_test_b3_two_hop_with_target_tokens():
+# ------------------------------------------------------------
     
-    # Find the correct path to main.py
-    main_script_path = find_main_py()
-    print(f"Found main.py in {main_script_path}")
-    main_script_path = main_script_path + "/main.py"
-
-    # Run the command
     cmd = [
         "python",
-        main_script_path,
-        f"--arb_mode={mode}",
-        # "--use_cached_events=True",
+        find_main_py() + "/main.py",
+        f"--arb_mode=b3_two_hop",
         "--alchemy_max_block_fetch=5",
         "--logging_path=fastlane_bot/data/",
         "--timeout=120",
@@ -71,15 +66,4 @@ def run_command(mode):
     ]
 
     result = subprocess.run(cmd, text=True, capture_output=True, check=True)
-    print(result.stderr)
-
-
-# ------------------------------------------------------------
-# Test      906
-# File      test_906_TargetTokens.py
-# Segment   Test Flashloan Tokens b3_two_hop
-# ------------------------------------------------------------
-def test_test_flashloan_tokens_b3_two_hop():
-# ------------------------------------------------------------
-    
-    run_command("b3_two_hop")
+    assert result.returncode == 0
