@@ -18,10 +18,9 @@ class ArbitrageFinderTriangleBancor3TwoHop(ArbitrageFinderTriangleBase):
         miniverse_combos = []
 
         CC = self.CCm.byparams(exchange="bancor_v3")
+
         if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
-            # Filter out tokens that are not in the existing flashloan_tokens list
-            flashloan_tokens = [tkn for tkn in CC.tknys() if tkn in self.flashloan_tokens]
-            self.ConfigObj.logger.info(f"limiting flashloan_tokens to {self.flashloan_tokens}")
+            flashloan_tokens = list(set(CC.tknys()) & set(self.flashloan_tokens))
         else:
             flashloan_tokens = CC.tknys()
 
