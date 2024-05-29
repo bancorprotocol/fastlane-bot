@@ -49,7 +49,7 @@ def find_main_py():
 # ------------------------------------------------------------
 # Test      048
 # File      test_048_RespectFlashloanTokensClickParam.py
-# Segment   Test flashloan_tokens is Respected
+# Segment   Test multi_pairwise_all with flashloan tokens
 # ------------------------------------------------------------
 def test_test_multi_pairwise_all_with_flashloan_tokens():
 # ------------------------------------------------------------
