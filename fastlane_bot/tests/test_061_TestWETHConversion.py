@@ -23,7 +23,6 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 
-from fastlane_bot.utils import num_format
 from fastlane_bot.helpers import add_wrap_or_unwrap_trades_to_route, split_carbon_trades
 from fastlane_bot.events.managers.manager import Manager
 from dataclasses import asdict

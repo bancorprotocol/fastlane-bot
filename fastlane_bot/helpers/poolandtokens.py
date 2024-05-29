@@ -9,18 +9,17 @@ Licensed under MIT.
 __VERSION__ = "1.2"
 __DATE__ = "05/May/2023"
 
-import decimal
 import math
 from _decimal import Decimal
 from dataclasses import dataclass
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Tuple
 
 from fastlane_bot.config import Config
 
 # from fastlane_bot.config import SUPPORTED_EXCHANGES, CARBON_V1_NAME, UNISWAP_V3_NAME
 from fastlane_bot.helpers.univ3calc import Univ3Calculator
 from fastlane_bot.tools.cpc import ConstantProductCurve
-from fastlane_bot.utils import EncodedOrder
+from fastlane_bot.utils import decodeOrder, encodeOrder
 
 
 class SolidlyV2StablePoolsNotSupported(Exception):
@@ -283,11 +282,11 @@ class PoolAndTokens:
         self.fee = float(Decimal(str(self.fee)))
         if self.exchange_name in self.ConfigObj.UNI_V3_FORKS:
             out = self._univ3_to_cpc()
-        elif self.exchange_name in [
-            self.ConfigObj.BANCOR_POL_NAME,
-        ] + self.ConfigObj.CARBON_V1_FORKS:
+        elif self.exchange_name == self.ConfigObj.BANCOR_POL_NAME:
             out = self._carbon_to_cpc()
-        elif self.exchange_name in self.ConfigObj.BALANCER_NAME:
+        elif self.exchange_name in self.ConfigObj.CARBON_V1_FORKS:
+            out = self._carbon_to_cpc()
+        elif self.exchange_name == self.ConfigObj.BALANCER_NAME:
             out = self._balancer_to_cpc()
         elif self.exchange_name in self.ConfigObj.SOLIDLY_V2_FORKS:
             if self.pool_type == "volatile":
@@ -409,7 +408,6 @@ class PoolAndTokens:
         :A:         alternative to pa, pb: A = sqrt(pa) - sqrt(pb) in dy/dy
         :B:         alternative to pa, pb: B = sqrt(pb) in dy/dy
         :tkny:      token y
-        :isdydx:    if True prices in dy/dx, if False in quote direction of the pair
 
         *Note that ALL parameters are mandatory, except that EITHER pa, bp OR A, B
         must be given but not both; we do not correct for incorrect assignment of
@@ -420,163 +418,98 @@ class PoolAndTokens:
         allow to omit yint (in which case it is set to y, but this does not make
         a difference for the result)
         """
-        def calculate_parameters(y: Decimal, pa: Decimal, pb: Decimal, pm: Decimal, n: Decimal):
-            H = pa.sqrt() ** n
-            L = pb.sqrt() ** n
-            M = pm.sqrt() ** n
-            A = H - L
-            B = L
-            z = y * (H - L) / (M - L) if M > L else y
-            return z
-        
-        def check_overlap(pa0, pb0, pa1, pb1):
-            min0, max0 = sorted([pa0, pb0]) 
-            min1, max1 = sorted([1 / pa1, 1 / pb1]) 
-            prices_overlap = max(min0, min1) < min(max0, max1)
-            return prices_overlap 
 
-        # if idx == 0, use the first curve, otherwise use the second curve. change the numerical values to Decimal
-        lst = []
-        errors = []
-        strategy_typed_args = []
-        for i in [0, 1]:
-
-            S = Decimal(self.A_1) if i == 0 else Decimal(self.A_0)
-            B = Decimal(self.B_1) if i == 0 else Decimal(self.B_0)
+        cpc_list = []
+        for typed_args in self._carbon_to_cpc_dict()["strategy_typed_args"]:
             try:
-                if B <= 0:
-                    continue
-            except decimal.InvalidOperation:
-                continue
-            y = Decimal(self.y_1) if i == 0 else Decimal(self.y_0)
-            z = yint = Decimal(self.z_1) if i == 0 else Decimal(self.z_0)
-            try:
-                if y <= Decimal("0"):
-                    continue
-            except decimal.InvalidOperation:
-                # print(
-                #     f"decimal.InvalidOperation attributes: {self.exchange_name}, {self.pair_name}, {self.cid}, y={y}, y_0={self.y_0}, y_1={self.y_1}, skipping..."
-                # )
-                continue
-            encoded_order = EncodedOrder(
-                **{
-                    "token": self.pair_name.split("/")[i].replace(
-                        self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                    ),
-                    "A": S,
-                    "B": B,
-                    "y": y,
-                    "z": z,
-                }
-            )
+                cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(typed_args)))
+            except Exception as e:
+                self.ConfigObj.logger.debug(f"[_carbon_to_cpc] curve {typed_args} error {e}")
+        return cpc_list
 
-            def decimal_converter(idx):
-                if idx == 0:
-                    dec0 = self.tkn0_decimals
-                    dec1 = self.tkn1_decimals
-                else:
-                    dec0 = self.tkn1_decimals
-                    dec1 = self.tkn0_decimals
-                return Decimal(str(10 ** (dec0 - dec1)))
+    def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
+        encoded_orders = [
+            {
+                "y": int(self.y_1),
+                "z": int(self.z_1),
+                "A": int(self.A_1),
+                "B": int(self.B_1),
+            },
+            {
+                "y": int(self.y_0),
+                "z": int(self.z_0),
+                "A": int(self.A_0),
+                "B": int(self.B_0),
+            },
+        ]
 
-            decimal_converter = decimal_converter(i)
+        decoded_orders = [decodeOrder(encoded_order) for encoded_order in encoded_orders]
 
-            p_start = Decimal(encoded_order.p_start) * decimal_converter
-            p_marg = Decimal(encoded_order.p_marg) * decimal_converter
-            p_end = Decimal(encoded_order.p_end) * decimal_converter
-            yint = Decimal(yint) / (
-                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
-            )
-            y = Decimal(y) / (
-                Decimal("10") ** [self.tkn1_decimals, self.tkn0_decimals][i]
-            )
-            is_limit_order = p_start==p_end
+        decimals = [
+            10 ** self.tkn1_decimals,
+            10 ** self.tkn0_decimals,
+        ]
 
-            tkny = 1 if i == 0 else 0
-            typed_args = {
-                "cid": f"{self.cid}-{i}"
-                if self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
-                else self.cid,
-                "yint": yint,
-                "y": y,
-                "pb": p_end,
-                "p_marg": p_marg,  # deleted later since not supported by from_carbon()
-                "pa": p_start,
-                "is_limit_order": is_limit_order, # deleted later since not supported by from_carbon()
-                "tkny": self.pair_name.split("/")[tkny].replace(
-                    self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-                ),
-                "pair": self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS),
+        converters = [
+            Decimal(10) ** (self.tkn0_decimals - self.tkn1_decimals),
+            Decimal(10) ** (self.tkn1_decimals - self.tkn0_decimals),
+        ]
+
+        is_carbon = self.exchange_name in self.ConfigObj.CARBON_V1_FORKS
+        pair = self.pair_name.replace(self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS)
+        tokens = pair.split("/")
+
+        strategy_typed_args = [
+            {
+                "cid": f"{self.cid}-{i}" if is_carbon else self.cid,
+                "yint": Decimal(encoded_orders[i]["z"]) / decimals[i],
+                "y": Decimal(encoded_orders[i]["y"]) / decimals[i],
+                "pb": decoded_orders[i]["lowestRate"] * converters[i],
+                "pa": decoded_orders[i]["highestRate"] * converters[i],
+                "tkny": tokens[1 - i],
+                "pair": pair,
                 "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,
                 "params": self._params,
             }
+            for i in [0, 1] if encoded_orders[i]["y"] > 0 and encoded_orders[i]["B"] > 0
+        ]
 
-            strategy_typed_args += [typed_args]
+        prices_overlap = False
 
         # Only overlapping strategies are selected for modification
         if len(strategy_typed_args) == 2:
-            
-            is_overlapping = False
-            pmarg_threshold = Decimal("0.01") # 1%  # WARNING using this condition alone can included stable/stable pairs incidently
+            p_marg_0 = (decoded_orders[0]["marginalRate"] * converters[0]) ** -1
+            p_marg_1 = (decoded_orders[1]["marginalRate"] * converters[1]) ** +1
 
-            # evaluate that the marginal prices are within the pmarg_threshold
-            pmarg0, pmarg1 = [x['p_marg'] for x in strategy_typed_args]
-            pmarg0_inv = 1/pmarg0  # one of the orders must be flipped since prices are always dy/dx - but must flip same geomean_pmarg later
-            percent_component = pmarg_threshold * max(pmarg0_inv, pmarg1)
-            percent_component_met = abs(pmarg0_inv - pmarg1) <= percent_component
+            # check if the marginal prices are within a 1% threshold (may included stable/stable pairs)
+            percent_component_met = abs(p_marg_0 - p_marg_1) <= max(p_marg_0, p_marg_1) / 100
 
-            # overlapping strategies by defintion cannot have A=0 i.e. there must be no limit orders
-            no_limit_orders = (strategy_typed_args[0]['is_limit_order'] == False) and (strategy_typed_args[1]['is_limit_order'] == False)
+            # verify that the strategy does not consist of any limit orders
+            no_limit_orders = not any(encoded_order["A"] == 0 for encoded_order in encoded_orders)
 
-            # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
-            prices_overlap = check_overlap(strategy_typed_args[0]['pa'], strategy_typed_args[0]['pb'], strategy_typed_args[1]['pa'], strategy_typed_args[1]['pb'])
+            # check if the price boundaries pa/pb overlap at one end
+            min0, max0 = sorted([strategy_typed_args[0]["pa"] ** +1, strategy_typed_args[0]["pb"] ** +1])
+            min1, max1 = sorted([strategy_typed_args[1]["pa"] ** -1, strategy_typed_args[1]["pb"] ** -1])
+            prices_overlap = max(min0, min1) < min(max0, max1)
 
-            # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
-            is_overlapping = percent_component_met and no_limit_orders and prices_overlap
-
-            if is_overlapping:
+            # if all conditions are met then this is likely an overlapping strategy
+            if percent_component_met and no_limit_orders and prices_overlap:
                 # calculate the geometric mean
-                geomean_p_marg = Decimal.sqrt(pmarg0_inv * pmarg1)
-                
-                # modify the y_int based on the new geomean to the limit of y    #TODO check that this math is correct
-                typed_args0 = strategy_typed_args[0]
-                new_yint0 = calculate_parameters(y=typed_args0['y'], pa=typed_args0['pa'], pb=typed_args0['pb'], pm=(1/geomean_p_marg), n=1)
-                if new_yint0 < typed_args0['y']:
-                    new_yint0 = typed_args0['y']
-                typed_args0['yint'] = new_yint0
+                pm = 1 / (p_marg_0 * p_marg_1).sqrt()
+                # modify the y_int based on the new geomean to the limit of y
+                for typed_args in strategy_typed_args:
+                    yint = encodeOrder({
+                        "liquidity": typed_args["y"],
+                        "lowestRate": typed_args["pb"],
+                        "highestRate": typed_args["pa"],
+                        "marginalRate": pm,
+                    })["z"]
+                    if typed_args["yint"] < yint:
+                        typed_args["yint"] = yint
 
-                typed_args1 = strategy_typed_args[1]
-                new_yint1 = calculate_parameters(y=typed_args1['y'], pa=typed_args1['pa'], pb=typed_args1['pb'], pm=(geomean_p_marg), n=1)
-                if new_yint1 < typed_args1['y']:
-                    new_yint1 = typed_args1['y']
-                typed_args1['yint'] = new_yint1
-
-                # repack the strateg_typed_args
-                strategy_typed_args = [typed_args0, typed_args1]
-
-        for typed_args in strategy_typed_args:
-            # delete new args that arent supported by from_carbon()
-            del typed_args["p_marg"]
-            del typed_args["is_limit_order"]
-            try:
-                if typed_args["y"] > 0:
-                    lst.append(
-                        ConstantProductCurve.from_carbon(
-                            **self._convert_to_float(typed_args)
-                        )
-                    )
-                # else:
-                #     self.ConfigObj.logger.debug(f"empty carbon pool [{typed_args['cid']}]")
-            except Exception as e:
-                errmsg = f"[_carbon_to_cpc] error in curve {i} [probably empty: {typed_args}] - [{e}]\n"
-                self.ConfigObj.logger.debug(errmsg)
-                errors += [errmsg]
-
-        return lst
-
-
+        return {"strategy_typed_args": strategy_typed_args, "prices_overlap": prices_overlap}
 
     def _univ3_to_cpc(self) -> List[Any]:
         """

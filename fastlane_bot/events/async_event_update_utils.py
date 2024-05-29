@@ -24,7 +24,6 @@ from web3.contract import AsyncContract
 
 from fastlane_bot.config.constants import CARBON_V1_NAME
 from fastlane_bot.data.abi import ERC20_ABI
-from fastlane_bot.events.async_utils import get_contract_chunks
 from fastlane_bot.events.utils import update_pools_from_events
 from fastlane_bot.events.pools.utils import get_pool_cid
 from .interfaces.event import Event
@@ -52,28 +51,7 @@ async def _get_missing_tkn(mgr: Any, contract: AsyncContract, tkn: str) -> pd.Da
         decimals = await contract.functions.decimals().call()
     except Exception:
         decimals = None
-    try:
-        df = pd.DataFrame(
-            [
-                {
-                    "address": tkn,
-                    "symbol": symbol,
-                    "decimals": decimals,
-                }
-            ]
-        )
-    except Exception as e:
-        mgr.cfg.logger.error(f"Failed to get token info for {tkn} {e}")
-        df = pd.DataFrame(
-            [
-                {
-                    "address": tkn,
-                    "symbol": None,
-                    "decimals": decimals,
-                }
-            ]
-        )
-    return df
+    return pd.DataFrame([{"address": tkn, "symbol": symbol, "decimals": decimals}])
 
 
 async def _get_missing_tkns(mgr: Any, c: List[Dict[str, Any]]) -> pd.DataFrame:
@@ -316,7 +294,7 @@ def _process_contract_chunks(
 
 def _get_pool_contracts(mgr: Any) -> List[Dict[str, Any]]:
     contracts = []
-    for add, en, event, key, value in mgr.pools_to_add_from_contracts:
+    for event in mgr.pools_to_add_from_contracts:
         exchange_name = mgr.exchange_name_from_event(event)
         ex = mgr.exchanges[exchange_name]
         abi = ex.get_abi()
@@ -345,14 +323,9 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     orig_num_pools_in_data = len(mgr.pool_data)
     mgr.cfg.logger.info("Async process now updating pools from contracts...")
 
-    all_events = [
-        event
-        for address, exchange_name, event, key, value in mgr.pools_to_add_from_contracts
-    ]
-
     # split contracts into chunks of 1000
     contracts = _get_pool_contracts(mgr)
-    chunks = get_contract_chunks(contracts)
+    chunks = [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
     tokens_and_fee_df = _process_contract_chunks(
         mgr=mgr,
         base_filename="tokens_and_fee_df_",
@@ -364,10 +337,11 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
     contracts, tokens_df = _get_token_contracts(mgr, tokens_and_fee_df)
+    chunks = [contracts[i : i + 1000] for i in range(0, len(contracts), 1000)]
     tokens_df = _process_contract_chunks(
         mgr=mgr,
         base_filename="missing_tokens_df_",
-        chunks=get_contract_chunks(contracts),
+        chunks=chunks,
         dirname=dirname,
         filename="missing_tokens_df.csv",
         subset=["address"],
@@ -492,7 +466,7 @@ def async_update_pools_from_contracts(mgr: Any, current_block: int):
     )
 
     # update the pool_data from events
-    update_pools_from_events(-1, mgr, all_events)
+    update_pools_from_events(-1, mgr, mgr.pools_to_add_from_contracts)
 
     mgr.cfg.logger.info(
         f"Async Updating pools from contracts took {(time.time() - start_time):0.4f} seconds"
