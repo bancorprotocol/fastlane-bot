@@ -80,7 +80,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "fantom": 5000,
     "mantle": 0,
     "linea": 0,
-    "sei": 0,
+    "sei": 2000,
 }
 
 ALCHEMY_KEY_DICT = {
