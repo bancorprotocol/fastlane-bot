@@ -615,10 +615,10 @@ def organize_pool_details_solidly_v2(
     last_updated_block = pool_data["blockNumber"]
 
     if exchange == XFAI_V0_NAME:
-        stable_pool = "volatile"
+        pool_type = "volatile"
         tokens = [pool_data["args"]["token"], "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f"] # TODO Use the constant WRAPPED_GAS_TOKEN_ADDRESS for this network
     else:
-        stable_pool = "stable" if pool_data["args"]["stable"] else "volatile"
+        pool_type = "stable" if pool_data["args"]["stable"] else "volatile"
         tokens = [pool_data["args"]["token0"], pool_data["args"]["token1"]]
 
     pool_contract = async_web3.eth.contract(address=pool_address, abi=exchange_object.get_abi())
@@ -653,7 +653,7 @@ def organize_pool_details_solidly_v2(
         "tkn0_balance": 0,
         "tkn1_balance": 0,
         "exchange": exchange,
-        "pool_type": stable_pool,
+        "pool_type": pool_type,
     }
 
     return {**pool_info, **token_info}
