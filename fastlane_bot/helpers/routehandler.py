@@ -598,15 +598,11 @@ class TxRouteHandler:
         Decimal
             The amount out.
         """
-        amount_in = amount_in * (Decimal(str(1)) - fee)
+        price_next_n = int(liquidity * self.ConfigObj.Q96 * sqrt_price)
+        price_next_d = int(liquidity * self.ConfigObj.Q96 + amount_in * (1 - fee) * decimal_tkn0_modifier * sqrt_price)
+        amount_out = self._calc_amount1(liquidity, sqrt_price, Decimal(price_next_n // price_next_d)) / self.ConfigObj.Q96
 
-        price_next = Decimal(
-            int(liquidity * self.ConfigObj.Q96 * sqrt_price)
-            // int(liquidity * self.ConfigObj.Q96 + amount_in * decimal_tkn0_modifier * sqrt_price)
-        )
-        amount_out = self._calc_amount1(liquidity, sqrt_price, price_next) / self.ConfigObj.Q96
-
-        return Decimal(amount_out / decimal_tkn1_modifier)
+        return amount_out / decimal_tkn1_modifier
 
     def _swap_token1_in(
             self,
