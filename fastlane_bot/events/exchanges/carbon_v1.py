@@ -12,9 +12,10 @@ All rights reserved.
 Licensed under MIT.
 """
 from dataclasses import dataclass
-from typing import List, Type, Tuple, Any, Dict, Callable
+from typing import List, Type, Tuple, Any, Dict, Callable, Union
 
 from fastlane_bot import Config
+from web3 import Web3, AsyncWeb3
 from web3.contract import Contract
 
 from fastlane_bot.data.abi import CARBON_CONTROLLER_ABI
@@ -80,7 +81,8 @@ class CarbonV1(Exchange):
             contract.events.PairCreated,
         ] if self.exchange_initialized else []
 
-    def get_subscriptions(self, contract: Contract) -> List[Subscription]:
+    def get_subscriptions(self, w3: Union[Web3, AsyncWeb3]) -> List[Subscription]:
+        contract = self.get_event_contract(w3)
         return [
             Subscription(contract.events.StrategyCreated, STRATEGY_CREATED_TOPIC),
             Subscription(contract.events.StrategyUpdated, STRATEGY_UPDATED_TOPIC),
