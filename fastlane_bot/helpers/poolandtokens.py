@@ -468,7 +468,6 @@ class PoolAndTokens:
                 "pa": decoded_orders[i]["highestRate"] * converters[i],
                 "tkny": tokens[1 - i],
                 "pair": pair,
-                "params": {"exchange": self.exchange_name},
                 "fee": self.fee,
                 "descr": self.descr,
                 "params": self._params,
