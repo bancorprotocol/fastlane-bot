@@ -42,27 +42,6 @@ def get_triangle_groups(flt, x_y_pairs):
         triangle_groups += [("/".join(sorted([flt,x])), pair, "/".join(sorted([flt,y])))]
     return triangle_groups
 
-def get_all_relevant_pairs_info(CCm, all_relevant_pairs, carbon_v1_forks):
-    # Get pair info for the cohort to allow decision making at the triangle level
-    all_relevant_pairs_info = {}
-    for pair in all_relevant_pairs:
-        pair_curves = CCm.bypair(pair)
-        carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
-        other_curves = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
-        all_relevant_pairs_info[pair] = {
-            "has_any": len(pair_curves) > 0,
-            "has_carbon": len(carbon_curves) > 0,
-            "curves": other_curves
-        }
-        if len(carbon_curves) > 0:
-            base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
-            base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
-            if len(base_dir_one) > 0:
-                all_relevant_pairs_info[pair]["curves"].append(base_dir_one)
-            if len(base_dir_two) > 0:
-                all_relevant_pairs_info[pair]["curves"].append(base_dir_two)
-    return all_relevant_pairs_info
-
 def get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info):
     # Get the stats on the triangle group cohort for decision making
     valid_carbon_triangles = []
@@ -239,6 +218,27 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
                         )
         return combos
 
+    def get_all_relevant_pairs_info(self, CCm, all_relevant_pairs, carbon_v1_forks):
+        # Get pair info for the cohort to allow decision making at the triangle level
+        all_relevant_pairs_info = {}
+        for pair in all_relevant_pairs:
+            pair_curves = CCm.bypair(pair)
+            carbon_curves = [curve for curve in pair_curves if curve.params.exchange in carbon_v1_forks]
+            other_curves = [curve for curve in pair_curves if curve.params.exchange not in carbon_v1_forks]
+            all_relevant_pairs_info[pair] = {
+                "has_any": len(pair_curves) > 0,
+                "has_carbon": len(carbon_curves) > 0,
+                "curves": other_curves
+            }
+            if len(carbon_curves) > 0:
+                base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
+                base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
+                if len(base_dir_one) > 0:
+                    all_relevant_pairs_info[pair]["curves"].append(base_dir_one)
+                if len(base_dir_two) > 0:
+                    all_relevant_pairs_info[pair]["curves"].append(base_dir_two)
+        return all_relevant_pairs_info
+
     def get_comprehensive_triangles(
         self, flashloan_tokens: List[str], CCm: Any
     ) -> Tuple[List[str], List[Any]]:
@@ -285,7 +285,7 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
             self.ConfigObj.logger.debug(f"[triangle_multi_complete.get_combos] triangle_groups: {len(triangle_groups)}")
 
             # Get pair info for the cohort
-            all_relevant_pairs_info = get_all_relevant_pairs_info(self.CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
+            all_relevant_pairs_info = self.get_all_relevant_pairs_info(self.CCm, all_relevant_pairs, self.ConfigObj.CARBON_V1_FORKS)
 
             # Generate valid triangles for the groups base on arb_mode
             valid_triangles = get_triangle_groups_stats(triangle_groups, all_relevant_pairs_info)
@@ -299,7 +299,6 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
 
         return combos
     
-
     def build_pstart(self, CCm, tkn0list, tkn1):
         tkn0list = [x for x in tkn0list if x not in [tkn1]]
         pstart = {}
