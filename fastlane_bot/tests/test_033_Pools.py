@@ -10,11 +10,12 @@
 
 import json
 
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot
 from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.pools import BancorPolPool, BancorV2Pool, BancorV3Pool, CarbonV1Pool, SolidlyV2Pool, \
     UniswapV2Pool, UniswapV3Pool
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))

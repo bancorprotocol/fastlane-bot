@@ -11,11 +11,12 @@
 from web3.datastructures import AttributeDict
 from web3.types import HexBytes
 
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot
 from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.pools import UniswapV2Pool, UniswapV3Pool, BancorV3Pool, CarbonV1Pool
 from fastlane_bot.events.utils import filter_latest_events, complex_handler
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))

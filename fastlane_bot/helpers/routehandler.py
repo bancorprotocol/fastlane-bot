@@ -26,7 +26,6 @@ import pandas as pd
 
 from .tradeinstruction import TradeInstruction
 from ..events.interface import Pool
-from ..tools.cpc import T
 from fastlane_bot.config.constants import AGNI_V3_NAME, BUTTER_V3_NAME, CLEOPATRA_V3_NAME, PANCAKESWAP_V3_NAME, \
     ETHEREUM, METAVAULT_V3_NAME
 

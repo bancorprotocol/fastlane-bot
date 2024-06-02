@@ -10,10 +10,11 @@
 
 import json
 
+from arb_optimizer import ConstantProductCurve as CPC
+
 from fastlane_bot import Bot
 from fastlane_bot.events.interfaces.event import Event
 from fastlane_bot.events.exchanges.balancer import Balancer
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3, BancorV2, BancorPol, SolidlyV2
 from fastlane_bot.data.abi import UNISWAP_V2_POOL_ABI, UNISWAP_V3_POOL_ABI, BANCOR_V3_POOL_COLLECTION_ABI, \
     CARBON_CONTROLLER_ABI, BANCOR_V2_CONVERTER_ABI, BANCOR_POL_ABI, BALANCER_VAULT_ABI, PANCAKESWAP_V3_POOL_ABI, SOLIDLY_V2_POOL_ABI

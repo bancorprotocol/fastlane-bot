@@ -1,0 +1,3 @@
+[submodule "arb-optimizer"]
+	path = arb-optimizer
+	url = https://github.com/bancorprotocol/arb-optimizer.git

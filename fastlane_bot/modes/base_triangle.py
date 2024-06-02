@@ -12,10 +12,7 @@ import abc
 import itertools
 from typing import List, Any, Tuple, Union
 
-import pandas as pd
-
 from fastlane_bot.modes.base import ArbitrageFinderBase
-from fastlane_bot.tools.cpc import T
 
 def sort_pairs(pairs):
     # Clean up the pairs alphabetically

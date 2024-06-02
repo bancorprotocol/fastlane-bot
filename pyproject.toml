@@ -28,6 +28,7 @@ protobuf = "^4.24.4"
 tqdm = "^4.64.1"
 web3 = "^6.16.0"
 nest-asyncio = "^1.5.8"
+arb-optimizer = {path = "arb-optimizer"}
 
 
 [tool.poetry.group.dev.dependencies]

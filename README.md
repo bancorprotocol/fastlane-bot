@@ -37,7 +37,7 @@ Install Fastlane Arbitrage Bot from PyPi using the following command:
 Clone the repo from Bancor's GitHub and install:
 
 ```bash
-git clone https://github.com/bancorprotocol/fastlane-bot
+git clone --recurse-submodules https://github.com/bancorprotocol/fastlane-bot
 cd fastlane-bot
 pip install poetry
 poetry install

@@ -26,9 +26,8 @@ carbon/tools/*
 */.coverage
 */.coverage.*
 */.cover
-NBTest/carbon/*
-NBTest/carbon
-resources/NBTest/fastlane_bot
+
+.python-version
 
 /.env
 *.env
@@ -72,6 +71,5 @@ logs/*
 /fastlane_bot/data/blockchain_data/*/token_detail/
 missing_tokens_df.csv
 tokens_and_fee_df.csv
-fastlane_bot/tests/nbtest/*
 
 .python-version

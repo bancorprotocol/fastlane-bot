@@ -8,14 +8,14 @@ Defines the Multi-pairwise arbitrage finder class for Bancor POL
 All rights reserved.
 Licensed under MIT.
 """
+import itertools
 from typing import List, Any, Tuple, Union, Hashable
 
 import pandas as pd
-import itertools
+
+from arb_optimizer import CurveContainer, PairOptimizer
+
 from fastlane_bot.modes.base_pairwise import ArbitrageFinderPairwiseBase
-from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer, PairOptimizer
-from fastlane_bot.tools.cpc import T
 
 
 class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
@@ -152,12 +152,12 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         """
         Run main flow to find arbitrage.
         """
-        CC_cc = CPCContainer(curves)
+        CC_cc = CurveContainer(curves)
         O = PairOptimizer(CC_cc)
         pstart = {
             tkn0: CC_cc.bypairs(f"{tkn0}/{tkn1}")[0].p
         }  # this intentionally selects the non_carbon curve
-        r = O.optimize(src_token, params=dict(pstart=pstart))
+        r = O.optimize(src_token)
         profit_src = -r.result
         trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
         return O, profit_src, r, trade_instructions_df
@@ -174,14 +174,14 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
         return new_curves
 
     def get_combos_pol(self,
-        CCm: CPCContainer, flashloan_tokens: List[str]
+        CCm: CurveContainer, flashloan_tokens: List[str]
     ) -> Tuple[List[Any], List[Any]]:
         """
         Get combos for pairwise arbitrage specific to Bancor POL
 
         Parameters
         ----------
-        CCm : CPCContainer
+        CCm : CurveContainer
             Container for all the curves
         flashloan_tokens : list
             List of flashloan tokens
@@ -193,12 +193,14 @@ class FindArbitrageMultiPairwisePol(ArbitrageFinderPairwiseBase):
 
         """
 
+        gas_tokens = [self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]  # TODO: fix
+
         bancor_pol_tkns = CCm.byparams(exchange="bancor_pol").tokens()
-        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in [T.ETH, T.WETH]])
+        bancor_pol_tkns = set([tkn for tkn in bancor_pol_tkns if tkn not in gas_tokens])
 
         combos = [
             (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, [T.ETH, T.WETH])
+            for tkn0, tkn1 in itertools.product(bancor_pol_tkns, gas_tokens)
             # tkn1 is always the token being flash loaned
             # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
             if tkn0 != tkn1
